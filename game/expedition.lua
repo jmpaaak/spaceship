@@ -5,6 +5,17 @@ local function slotCount(distance, slotDistance)
     return math.ceil(distance / slotDistance)
 end
 
+local function settle(run)
+    local payout = run.pendingSampleValue + run.pendingSlotReward
+    run.money = run.money + payout
+    run.lastSettlement = payout
+    run.pendingSampleValue = 0
+    run.pendingSlotReward = 0
+    run.sampleCount = 0
+    run.slotOpportunities = 0
+    run.phase = "settlement"
+end
+
 function M.new(options)
     options = options or {}
     return {
@@ -16,9 +27,15 @@ function M.new(options)
         climbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
         slotDistance = options.slotDistance or 100,
+        slotReward = options.slotReward or 10,
         returnDistance = 0,
         slotOpportunities = 0,
         slotSpins = 0,
+        sampleCount = 0,
+        pendingSampleValue = 0,
+        pendingSlotReward = 0,
+        money = options.money or 0,
+        lastSettlement = 0,
     }
 end
 
@@ -32,6 +49,14 @@ function M.useSlot(run)
     if run.phase ~= "returning" or run.slotOpportunities <= 0 then return false end
     run.slotOpportunities = run.slotOpportunities - 1
     run.slotSpins = run.slotSpins + 1
+    run.pendingSlotReward = run.pendingSlotReward + run.slotReward
+    return true
+end
+
+function M.collectSample(run, value)
+    if run.phase ~= "ascending" or type(value) ~= "number" or value <= 0 then return false end
+    run.sampleCount = run.sampleCount + 1
+    run.pendingSampleValue = run.pendingSampleValue + value
     return true
 end
 
@@ -40,7 +65,7 @@ function M.update(run, dt)
 
     if run.phase == "returning" then
         run.altitude = math.max(0, run.altitude - run.returnSpeed * dt)
-        if run.altitude == 0 then run.phase = "settlement" end
+        if run.altitude == 0 then settle(run) end
         return
     end
 

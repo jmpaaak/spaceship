@@ -37,14 +37,18 @@ function M:update(dt)
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
         self.message = string.format("RETURNING  %d SLOT CHANCES", self.expedition.slotOpportunities)
     elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
-        self.message = "SAFE EARTH RETURN  SETTLEMENT"
+        self.message = string.format("SETTLED +$%d  BALANCE $%d", self.expedition.lastSettlement, self.expedition.money)
     end
-    for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
-        local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
-        if dx * dx + dy * dy <= (planet.radius + 14) ^ 2 and not self.discovered[planet.id] then
-            self.discovered[planet.id] = true
-            self.discoveredCount = self.discoveredCount + 1
-            self.message = "NEW PLANET DISCOVERED  " .. planet.id
+    if self.expedition.phase == "ascending" then
+        for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
+            local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
+            if dx * dx + dy * dy <= (planet.radius + 14) ^ 2 and not self.discovered[planet.id] then
+                self.discovered[planet.id] = true
+                self.discoveredCount = self.discoveredCount + 1
+                local value = world.sampleValue(planet)
+                expedition.collectSample(self.expedition, value)
+                self.message = string.format("SAMPLE +$%d  %s", value, planet.id)
+            end
         end
     end
 end
@@ -107,7 +111,7 @@ function M:draw()
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
     love.graphics.rectangle("fill", 0, 0, viewport.width, 34)
     love.graphics.setColor(0.7, 0.9, 1)
-    love.graphics.print(string.format("ALT %04d  SAMPLES %02d", math.floor(self.expedition.altitude), self.discoveredCount), 5, 4)
+    love.graphics.print(string.format("ALT %04d  SAMPLES %02d  $%d", math.floor(self.expedition.altitude), self.expedition.sampleCount, self.expedition.money), 5, 4)
     love.graphics.print(string.format("FUEL %03d  %-9s S%02d", math.floor(self.ship.fuel), string.upper(self.expedition.phase), self.expedition.slotOpportunities), 5, 18)
     love.graphics.setColor(0.85, 0.9, 1)
     love.graphics.printf(self.message, 4, viewport.height - 30, viewport.width - 8, "center")

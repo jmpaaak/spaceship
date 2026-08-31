@@ -40,6 +40,11 @@ function M.nearbyPlanets(x, y, radiusInSectors)
     return result
 end
 
+function M.sampleValue(planet)
+    local height = math.max(0, -planet.y)
+    return 10 + math.floor(height / 100) * 5
+end
+
 function M.stars(sectorX, sectorY)
     local stars = {}
     for i = 1, 18 do
