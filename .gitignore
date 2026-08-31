@@ -7,3 +7,5 @@ tmp/
 .venv/
 __pycache__/
 *.swp
+loop/.lock/
+loop/STOP

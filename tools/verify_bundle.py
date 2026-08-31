@@ -10,6 +10,6 @@ assert "main.lua" in names
 assert "conf.lua" in names
 for name in names:
     assert name != ".git"
-    assert not name.startswith((".git/", ".github/", "build/", "tmp/", "logs/", ".venv/"))
+    assert not name.startswith((".git/", ".github/", "build/", "loop/", "tmp/", "logs/", ".venv/"))
     assert os.path.basename(name) not in {".DS_Store", ".env"}
 print(f"LOVE_BUNDLE_OK:{path}:{len(names)}")

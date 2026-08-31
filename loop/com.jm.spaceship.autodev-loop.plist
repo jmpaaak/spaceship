@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jm.spaceship.autodev-loop</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/jm/orca/workspaces/interactive-story-game-factory/spaceship/loop/loop.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/jm/orca/workspaces/interactive-story-game-factory/spaceship</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/jm/Applications/love.app/Contents/MacOS:/Users/jm/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>LOOP_ROOT</key>
+    <string>/Users/jm/orca/workspaces/interactive-story-game-factory/spaceship</string>
+    <key>HOME</key><string>/Users/jm</string>
+    <key>USER</key><string>jm</string>
+    <key>LOGNAME</key><string>jm</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+  <key>ProcessType</key><string>Interactive</string>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key><string>/Users/jm/orca/workspaces/interactive-story-game-factory/spaceship/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/jm/orca/workspaces/interactive-story-game-factory/spaceship/logs/launchd.err.log</string>
+</dict>
+</plist>

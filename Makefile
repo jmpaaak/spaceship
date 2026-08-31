@@ -15,7 +15,7 @@ love:
 	@mkdir -p "$(BUILD_DIR)"
 	@rm -f "$(LOVE_PACKAGE)"
 	@$(ZIP) -q -9 -r "$(LOVE_PACKAGE)" . \
-		-x '.git' -x '.git/*' -x '.github/*' -x 'build/*' \
+		-x '.git' -x '.git/*' -x '.github/*' -x 'build/*' -x 'loop/*' \
 		-x 'tmp/*' -x 'logs/*' -x '.venv/*' -x '__pycache__/*' \
 		-x '.env' -x '.env.*' -x '.DS_Store' -x '*.swp'
 

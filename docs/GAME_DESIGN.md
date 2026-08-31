@@ -1,29 +1,58 @@
-# Spaceship — Game Direction
+# Spaceship — Game Design
 
-## Fantasy
+## 한 문장
 
-Pilot a small, persistent spacecraft beyond mapped space. Every sector can reveal an unknown world, strange environment, resource, signal, or story.
+지구에서 세로로 출발해 가능한 한 멀리 상승하며 행성 표본을 수집하고, 연료가 다하면 귀환 슬롯을 거쳐 표본을 돈으로 바꾸고 우주선을 강화해 다시 도전하는 모바일 로그라이트.
 
-## Core loop
+## 플랫폼과 화면
 
-1. Read the starfield and choose a direction.
-2. Manage momentum and limited fuel while crossing procedural sectors.
-3. Approach an unknown planet closely enough to discover it.
-4. Record the world in the ship log.
-5. Decide whether to investigate, harvest, trade, repair, or continue deeper.
+- 핸드폰 **세로 모드 전용** 플레이
+- 내부 해상도 `180×320`, nearest-neighbor 확대
+- 지구는 화면 아래, 진행 방향은 화면 위
+- 터치 좌우 이동을 기본 입력으로 하며 키보드는 개발용 보조 입력
 
-## Current vertical slice
+## 원정 루프
 
-- Infinite deterministic sector coordinates
-- Rotation, thrust, inertia, drag, and fuel consumption
-- Procedural stars and planets
-- Proximity-based planet discovery counter
-- Pixel-perfect 320×180 landscape presentation
+1. 지구에서 현재 우주선과 강화를 확인하고 출발한다.
+2. 연료를 소모하며 위로 상승한다.
+3. 멀리 갈수록 희귀하고 가치 높은 행성이 등장한다.
+4. 행성을 스치거나 탐사 범위에 넣어 표본을 얻는다.
+5. 행성에 강하게 충돌하면 내구도가 감소한다.
+6. 연료가 0이 되면 자동 귀환이 시작된다.
+7. 상승한 거리만큼 귀환 시간이 주어지고, 그동안 슬롯 머신을 돌려 추가 보상을 얻는다.
+8. 지구에 안전하게 도착하면 표본과 슬롯 보상을 돈으로 정산한다.
+9. 돈으로 새 우주선을 구매하거나 연료·내구도·조종·표본 수익을 강화하고 다시 출발한다.
 
-## Next milestones
+## 실패와 기록
 
-- Landing/exploration scene per planet archetype
-- Persistent discovery log and named procedural worlds
-- Fuel/resource decisions and ship upgrades
-- Signals, anomalies, hazards, and encounters
-- Seeded save files and expedition endings
+- 내구도가 0이 되면 우주선이 파괴되어 지구로 귀환하지 못한다.
+- 해당 파괴 시점까지 얻은 미정산 표본을 모두 잃는다.
+- 보유 돈, 구매 우주선, 강화 상태도 초기화한다.
+- 단 하나, 지금까지 가장 높게 올라간 **개인 최고 높이**만 영구 저장한다.
+- 안전 귀환과 더 높은 위험을 감수한 상승 사이에 명확한 긴장을 만든다.
+
+## 귀환 슬롯
+
+- 연료 0에서 자동 귀환 phase로 전환한다.
+- 귀환해야 할 거리에 비례해 슬롯 기회 또는 슬롯 시간 예산을 계산한다.
+- 플레이어는 귀환 중 슬롯을 돌려 돈 배수, 표본 보너스, 수리권, 다음 원정 연료 보너스 등을 얻는다.
+- 슬롯은 귀환 성공 전까지 잠정 보상이며 파괴되면 확정되지 않는다.
+
+## 에셋 정책 — AetherAI only
+
+- 우주선, 지구, 행성, 표본, 충돌 이펙트, 슬롯 심볼, 상점 아이콘, 배경 오브젝트를 포함한 **모든 최종 시각 에셋은 AetherForgeAI/AetherAI 공식 UI 또는 공식 API에서 생성·다운로드한 결과만 사용한다.**
+- crawling, scraping, bot, macro로 서비스를 자동 조작하지 않는다.
+- 각 에셋은 source URL, terms URL, generation/asset ID, prompt, model/style/settings, 다운로드 시각, 원본 SHA-256, dimensions와 실제 런타임 QA를 기록한다.
+- Python/Pillow, Lua 도형, 다른 이미지 생성기 결과는 최종 에셋으로 사용할 수 없다.
+- 인증 전 Lua 도형은 충돌·게임플레이를 검증하기 위한 명시적 `DEV PLACEHOLDER`로만 허용하며 최종 미술 완료나 승인으로 간주하지 않는다.
+
+## 첫 플레이 가능한 목표
+
+- `launch → ascending → returning/slots → settlement/shop → relaunch`
+- 행성 표본 획득과 가치 증가
+- 행성 충돌·내구도 감소·파괴 시 전체 메타 초기화
+- 연료 소진 자동 귀환
+- 거리 기반 슬롯 기회
+- 안전 귀환 후 돈 정산과 최소 2종 강화
+- 최고 높이 영구 저장
+- 세로 `180×320` 실제 LÖVE 캡처와 헤드리스 테스트
