@@ -2,9 +2,9 @@ function love.conf(t)
     local headless = os.getenv("GAME_HEADLESS") == "1"
     local scale = math.max(1, math.min(4, math.floor(tonumber(os.getenv("GAME_SCALE")) or 3)))
 
-    t.identity = "love2d-game-skeleton"
+    t.identity = "spaceship"
     t.version = "11.5"
-    t.window.title = "LÖVE2D Game Skeleton"
+    t.window.title = "Spaceship"
     t.window.width = 320 * scale
     t.window.height = 180 * scale
     t.window.resizable = true

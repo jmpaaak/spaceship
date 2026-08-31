@@ -1,15 +1,16 @@
-# LÖVE2D Game Skeleton
+# Spaceship
 
-A small, tested foundation for landscape pixel games built with LÖVE 11.5.
+**우주선을 타고 무한한 미지의 행성들을 찾아 떠나는 탐험 게임.**
 
-## Included
+This repository was generated from [`jmpaaak/love2d-game-skeleton`](https://github.com/jmpaaak/love2d-game-skeleton) and initialized as a playable LÖVE2D prototype.
 
-- 320×180 virtual canvas with nearest-neighbor scaling
-- reusable viewport/input coordinate transform
-- scene stack and keyboard-controlled player
-- bounded headless smoke mode
-- deterministic `.love` packaging with private/build-file exclusions
-- Lua unit tests and GitHub Actions CI
+## Playable now
+
+- Rotate with **A/D** or **Left/Right**
+- Thrust with **W**, **Up**, or **Space**
+- Drift through deterministic, effectively unbounded space sectors
+- Discover procedural planets by flying close to them
+- Track sector coordinates, fuel, and discovery count
 
 ## Run
 
@@ -17,21 +18,24 @@ A small, tested foundation for landscape pixel games built with LÖVE 11.5.
 love .
 ```
 
-Move with WASD or arrow keys. Press Escape to quit.
-
 ## Verify
 
 ```bash
-make verify LOVE=/path/to/love LUA=/path/to/lua
+make verify LOVE=/path/to/love
 ```
 
-## Create a game
+The verification target runs engine-hosted unit tests, a headless source smoke test, creates a clean `.love` package, inspects its contents, and launches the packaged game.
 
-Use the repository as a GitHub template, then change the identity/title in `conf.lua` and replace `game/scenes/play.lua` with the first playable vertical slice.
+## Direction
 
-## Provenance
+See [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) for the exploration loop and next milestones.
 
-This skeleton was distilled from reusable engine patterns in `man-of-korea`; it contains no story content, purchased assets, generated art, credentials, logs, or user data from that project.
+## Technology
+
+- LÖVE 11.5 / Lua
+- 320×180 internal canvas
+- nearest-neighbor landscape scaling
+- deterministic procedural sector generation
 
 ## License
 

@@ -11,7 +11,7 @@ function love.load()
         if os.getenv("GAME_UNIT") == "1" then
             require("game.self_test").run()
         end
-        print("LOVE2D_GAME_SKELETON_SMOKE_OK")
+        print("SPACESHIP_SMOKE_OK")
         love.event.quit(0)
         return
     end
