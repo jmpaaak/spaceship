@@ -1,4 +1,5 @@
 local shipModule = require("game.ship")
+local expedition = require("game.expedition")
 local viewport = require("game.viewport")
 local world = require("game.world")
 local M = {}
@@ -12,26 +13,27 @@ end
 
 function M.new()
     local ship = shipModule.new()
-    if os.getenv("GAME_CAPTURE") == "1" then
-        for sy = -1, 1 do
-            for sx = -1, 1 do
-                local planets = world.planets(sx, sy)
-                if #planets > 0 then
-                    ship.x, ship.y = planets[1].x - 54, planets[1].y
-                    return setmetatable({ ship = ship, discovered = {}, discoveredCount = 0, message = "UNCHARTED SPACE AHEAD" }, M)
-                end
-            end
-        end
-    end
-    return setmetatable({ ship = ship, discovered = {}, discoveredCount = 0, message = "UNCHARTED SPACE AHEAD" }, M)
+    return setmetatable({
+        ship = ship,
+        expedition = expedition.new(),
+        discovered = {},
+        discoveredCount = 0,
+        message = "PRESS SPACE TO LAUNCH",
+    }, M)
 end
 
 function M:update(dt)
-    shipModule.update(self.ship, dt, {
-        left = love.keyboard.isDown("left", "a"),
-        right = love.keyboard.isDown("right", "d"),
-        thrust = love.keyboard.isDown("up", "w", "space"),
-    })
+    local left = love.keyboard.isDown("left", "a")
+    local right = love.keyboard.isDown("right", "d")
+    if self.expedition.phase == "ascending" then
+        self.ship.x = self.ship.x + ((right and 1 or 0) - (left and 1 or 0)) * 55 * dt
+        expedition.update(self.expedition, dt)
+        self.ship.y = -self.expedition.altitude
+        self.ship.fuel = self.expedition.fuel
+        if self.expedition.phase == "returning" then
+            self.message = string.format("RETURNING  %d SLOT CHANCES", self.expedition.slotOpportunities)
+        end
+    end
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
         local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
         if dx * dx + dy * dy <= (planet.radius + 14) ^ 2 and not self.discovered[planet.id] then
@@ -39,6 +41,12 @@ function M:update(dt)
             self.discoveredCount = self.discoveredCount + 1
             self.message = "NEW PLANET DISCOVERED  " .. planet.id
         end
+    end
+end
+
+function M:keypressed(key)
+    if key == "space" or key == "return" or key == "up" or key == "w" then
+        if expedition.launch(self.expedition) then self.message = "ASCENDING  STEER LEFT / RIGHT" end
     end
 end
 
@@ -59,6 +67,14 @@ function M:draw()
             end
         end
     end
+    local earthX, earthY = math.floor(-cameraX), math.floor(75 - cameraY)
+    if earthY < viewport.height + 64 then
+        love.graphics.setColor(0.15, 0.45, 0.9)
+        love.graphics.circle("fill", earthX, earthY, 58)
+        love.graphics.setColor(0.25, 0.8, 0.45)
+        love.graphics.circle("fill", earthX - 18, earthY - 18, 15)
+        love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
+    end
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
         local x, y = math.floor(planet.x - cameraX), math.floor(planet.y - cameraY)
         if x > -24 and x < viewport.width + 24 and y > -24 and y < viewport.height + 24 then
@@ -73,7 +89,7 @@ function M:draw()
     love.graphics.rotate(self.ship.angle + math.pi / 2)
     love.graphics.setColor(0.8, 0.95, 1)
     love.graphics.polygon("fill", 0, -7, -5, 6, 0, 3, 5, 6)
-    if love.keyboard.isDown("up", "w", "space") then
+    if self.expedition.phase == "ascending" then
         love.graphics.setColor(1, 0.55, 0.15)
         love.graphics.polygon("fill", -2, 5, 0, 11, 2, 5)
     end
@@ -82,8 +98,8 @@ function M:draw()
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
     love.graphics.rectangle("fill", 0, 0, viewport.width, 34)
     love.graphics.setColor(0.7, 0.9, 1)
-    love.graphics.print(string.format("ALT %04d  SAMPLES %02d", math.max(0, math.floor(-self.ship.y)), self.discoveredCount), 5, 4)
-    love.graphics.print(string.format("FUEL %03d  SECTOR %d,%d", math.floor(self.ship.fuel), sx, sy), 5, 18)
+    love.graphics.print(string.format("ALT %04d  SAMPLES %02d", math.floor(self.expedition.altitude), self.discoveredCount), 5, 4)
+    love.graphics.print(string.format("FUEL %03d  %-9s S%02d", math.floor(self.ship.fuel), string.upper(self.expedition.phase), self.expedition.slotOpportunities), 5, 18)
     love.graphics.setColor(0.85, 0.9, 1)
     love.graphics.printf(self.message, 4, viewport.height - 30, viewport.width - 8, "center")
     love.graphics.setColor(1, 0.65, 0.2, 0.85)

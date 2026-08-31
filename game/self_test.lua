@@ -1,6 +1,7 @@
 local viewport = require("game.viewport")
 local shipModule = require("game.ship")
 local world = require("game.world")
+local expedition = require("game.expedition")
 local M = {}
 
 function M.run()
@@ -25,6 +26,17 @@ function M.run()
     end
     local sx, sy = world.sectorAt(-1, -193)
     assert(sx == -1 and sy == -2)
+
+    local run = expedition.new({ fuel = 2, fuelBurnRate = 1, climbSpeed = 60, slotDistance = 100 })
+    assert(run.phase == "launch" and run.altitude == 0 and run.slotOpportunities == 0)
+    assert(expedition.launch(run) and run.phase == "ascending")
+    expedition.update(run, 1)
+    assert(run.phase == "ascending" and run.fuel == 1 and run.altitude == 60)
+    expedition.update(run, 1)
+    assert(run.phase == "returning" and run.fuel == 0 and run.altitude == 120)
+    assert(run.maxAltitude == 120 and run.returnDistance == 120 and run.slotOpportunities == 2)
+    expedition.update(run, 1)
+    assert(run.altitude == 120 and run.slotOpportunities == 2)
     print("SPACESHIP_UNIT_OK")
 end
 
