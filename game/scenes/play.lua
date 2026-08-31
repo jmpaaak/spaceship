@@ -25,14 +25,19 @@ end
 function M:update(dt)
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
+    local previousPhase = self.expedition.phase
     if self.expedition.phase == "ascending" then
         self.ship.x = self.ship.x + ((right and 1 or 0) - (left and 1 or 0)) * 55 * dt
+    end
+    if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         expedition.update(self.expedition, dt)
         self.ship.y = -self.expedition.altitude
         self.ship.fuel = self.expedition.fuel
-        if self.expedition.phase == "returning" then
-            self.message = string.format("RETURNING  %d SLOT CHANCES", self.expedition.slotOpportunities)
-        end
+    end
+    if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
+        self.message = string.format("RETURNING  %d SLOT CHANCES", self.expedition.slotOpportunities)
+    elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
+        self.message = "SAFE EARTH RETURN  SETTLEMENT"
     end
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
         local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
@@ -46,7 +51,11 @@ end
 
 function M:keypressed(key)
     if key == "space" or key == "return" or key == "up" or key == "w" then
-        if expedition.launch(self.expedition) then self.message = "ASCENDING  STEER LEFT / RIGHT" end
+        if self.expedition.phase == "returning" and expedition.useSlot(self.expedition) then
+            self.message = string.format("SLOT SPIN %d  %d CHANCES LEFT", self.expedition.slotSpins, self.expedition.slotOpportunities)
+        elseif expedition.launch(self.expedition) then
+            self.message = "ASCENDING  STEER LEFT / RIGHT"
+        end
     end
 end
 

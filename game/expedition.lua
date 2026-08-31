@@ -14,9 +14,11 @@ function M.new(options)
         fuel = options.fuel or 100,
         fuelBurnRate = options.fuelBurnRate or 5,
         climbSpeed = options.climbSpeed or 30,
+        returnSpeed = options.returnSpeed or 45,
         slotDistance = options.slotDistance or 100,
         returnDistance = 0,
         slotOpportunities = 0,
+        slotSpins = 0,
     }
 end
 
@@ -26,8 +28,23 @@ function M.launch(run)
     return true
 end
 
+function M.useSlot(run)
+    if run.phase ~= "returning" or run.slotOpportunities <= 0 then return false end
+    run.slotOpportunities = run.slotOpportunities - 1
+    run.slotSpins = run.slotSpins + 1
+    return true
+end
+
 function M.update(run, dt)
-    if run.phase ~= "ascending" or dt <= 0 then return end
+    if dt <= 0 then return end
+
+    if run.phase == "returning" then
+        run.altitude = math.max(0, run.altitude - run.returnSpeed * dt)
+        if run.altitude == 0 then run.phase = "settlement" end
+        return
+    end
+
+    if run.phase ~= "ascending" then return end
 
     local ascentTime = dt
     if run.fuelBurnRate > 0 then

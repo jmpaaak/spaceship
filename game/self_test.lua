@@ -27,7 +27,13 @@ function M.run()
     local sx, sy = world.sectorAt(-1, -193)
     assert(sx == -1 and sy == -2)
 
-    local run = expedition.new({ fuel = 2, fuelBurnRate = 1, climbSpeed = 60, slotDistance = 100 })
+    local run = expedition.new({
+        fuel = 2,
+        fuelBurnRate = 1,
+        climbSpeed = 60,
+        returnSpeed = 50,
+        slotDistance = 100,
+    })
     assert(run.phase == "launch" and run.altitude == 0 and run.slotOpportunities == 0)
     assert(expedition.launch(run) and run.phase == "ascending")
     expedition.update(run, 1)
@@ -35,8 +41,13 @@ function M.run()
     expedition.update(run, 1)
     assert(run.phase == "returning" and run.fuel == 0 and run.altitude == 120)
     assert(run.maxAltitude == 120 and run.returnDistance == 120 and run.slotOpportunities == 2)
+    assert(expedition.useSlot(run) and run.slotOpportunities == 1 and run.slotSpins == 1)
+    assert(expedition.useSlot(run) and run.slotOpportunities == 0 and run.slotSpins == 2)
+    assert(not expedition.useSlot(run) and run.slotOpportunities == 0 and run.slotSpins == 2)
     expedition.update(run, 1)
-    assert(run.altitude == 120 and run.slotOpportunities == 2)
+    assert(run.phase == "returning" and run.altitude == 70)
+    expedition.update(run, 2)
+    assert(run.phase == "settlement" and run.altitude == 0)
     print("SPACESHIP_UNIT_OK")
 end
 
