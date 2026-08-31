@@ -5,8 +5,8 @@ function love.conf(t)
     t.identity = "spaceship"
     t.version = "11.5"
     t.window.title = "Spaceship"
-    t.window.width = 320 * scale
-    t.window.height = 180 * scale
+    t.window.width = 180 * scale
+    t.window.height = 320 * scale
     t.window.resizable = true
     t.window.highdpi = true
     t.window.vsync = 1
