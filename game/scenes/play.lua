@@ -10,7 +10,19 @@ local function planetColor(hue)
 end
 
 function M.new()
-    return setmetatable({ ship = shipModule.new(), discovered = {}, discoveredCount = 0, message = "UNCHARTED SPACE AHEAD" }, M)
+    local ship = shipModule.new()
+    if os.getenv("GAME_CAPTURE") == "1" then
+        for sy = -1, 1 do
+            for sx = -1, 1 do
+                local planets = world.planets(sx, sy)
+                if #planets > 0 then
+                    ship.x, ship.y = planets[1].x - 54, planets[1].y
+                    return setmetatable({ ship = ship, discovered = {}, discoveredCount = 0, message = "UNCHARTED SPACE AHEAD" }, M)
+                end
+            end
+        end
+    end
+    return setmetatable({ ship = ship, discovered = {}, discoveredCount = 0, message = "UNCHARTED SPACE AHEAD" }, M)
 end
 
 function M:update(dt)

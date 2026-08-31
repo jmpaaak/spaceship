@@ -5,6 +5,8 @@ local PlayScene = require("game.scenes.play")
 local canvas
 local scenes
 local headless = os.getenv("GAME_HEADLESS") == "1"
+local captureRequested = os.getenv("GAME_CAPTURE") == "1"
+local captureQueued = false
 
 function love.load()
     if headless then
@@ -34,6 +36,14 @@ function love.draw()
     local scale, x, y = viewport.fit(width, height, false)
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(canvas, x, y, 0, scale, scale)
+    if captureRequested and not captureQueued then
+        captureQueued = true
+        love.graphics.captureScreenshot(function(imageData)
+            imageData:encode("png", "spaceship-runtime-preview.png")
+            print("SPACESHIP_CAPTURE_OK:" .. love.filesystem.getSaveDirectory() .. "/spaceship-runtime-preview.png")
+            love.event.quit(0)
+        end)
+    end
 end
 
 function love.keypressed(key)
