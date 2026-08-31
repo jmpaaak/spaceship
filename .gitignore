@@ -1,0 +1,9 @@
+build/
+.DS_Store
+.env
+.env.*
+logs/
+tmp/
+.venv/
+__pycache__/
+*.swp
