@@ -128,9 +128,15 @@
 - EARTH SHOP 요약 카드와 SHIP DESTROYED 요약 카드가 해당 원정의 최고 도달 고도를 `PEAK ALT N`으로 함께 표시한다. 정산은 `expedition.lastAltitude`, 파괴는 `expedition.lastLostAltitude`에 최고 상승 고도(`maxAltitude`)를 저장하며 재출발 시 두 값 모두 0으로 초기화된다. 추가 줄에 맞춰 두 카드의 배경 박스 높이와 아래쪽 상점/재출발 터치 영역 좌표를 확장·이동했다.
 - engine-hosted 정산 테스트가 정산·귀환 유지·재출발 각 시점의 `lastAltitude` 값을, 파괴 테스트가 `lastLostAltitude` 저장과 재출발 뒤 초기화를 검증한다.
 
+- 출발 시점의 개인 최고 높이(`launchBestAltitude`)를 원정 시작마다 스냅샷하고, 정산·파괴 시 이번 원정 중 개인 최고 높이가 실제로 갱신됐는지 `lastNewBest`·`lastLostNewBest`로 저장한다. EARTH SHOP과 SHIP DESTROYED 요약 카드는 `PEAK ALT N` 바로 아래에 노란 `NEW BEST!` 배지를 조건부로 표시해 표본·슬롯·고도 요약과 함께 한 화면에서 갱신 여부를 확인할 수 있다. 파괴 카드는 추가 줄에 맞춰 배경 박스 높이와 아래 줄 좌표를 확장·이동했다.
+- engine-hosted 정산 테스트가 최고 높이 갱신 시 `lastNewBest == true`, 갱신되지 않는 낮은 귀환 고도에서 `lastNewBest == false`를 검증하고, 파괴 테스트가 최고 높이 갱신 시 `lastLostNewBest == true`, 재출발 뒤 `false`로 초기화됨을 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=destroyed` 개발 전용 진입 경로에 `maxAltitude`/`bestAltitude` 400 시딩 추가)로 `SHIP DESTROYED`, `LOST TOTAL $155`, `SAMPLES (2) $80`, `SPINS (1) $75`, `PEAK ALT 400`, 노란 `NEW BEST!`, `META RESET BEST 400`, `NEXT SHIP STARTER`, `FUEL LV.0 HULL LV.0`, `TAP: START OVER`가 겹침·잘림 없이 `1080×1920` 세로 화면 안에 표시되는 것을 확인했다 (`build/spaceship-runtime-preview-destroyed.png`).
+- 안전 귀환 `NEW BEST!` 배지를 실제 캡처하려고 `main.lua`에 `GAME_CAPTURE_PHASE=settlement-newbest` 개발 전용 진입 경로를 추가해 확인하는 과정에서, EARTH SHOP 요약 카드가 실제 폰트 폭 기준으로 `SETTLEMENT TOTAL $N`이 136px 폭 박스에서 줄바꿈되고 `SPINS (n) $N`이 36px 폭 오른쪽 정렬 박스에 잘려 다음 줄과 겹치는 실제 렌더링 결함을 발견했다. 카드 문구를 `TOTAL $N`으로 줄이고 SAMPLES·SPINS·PEAK ALT·NEW BEST! 네 줄을 전체 폭 중앙 정렬로 세로 스택해 겹침을 제거했으며, 박스 높이를 54→62로 확장했다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1080×1920`)로 `EARTH SHOP` 요약 카드의 `TOTAL $155`, `SAMPLES (2) $80`, `SPINS (1) $75`, `PEAK ALT 400`, 노란 `NEW BEST!`가 겹침 없이 표시되는 것을 확인했다 (`build/spaceship-runtime-preview-settlement-newbest.png`). 단, 같은 캡처에서 EARTH SHOP 패널의 요약 카드 아래 연료/내구도/SCOUT 구매 행들과 `NO-HIT`/`SLOTS` 예측 줄들이 서로 겹쳐 읽을 수 없는 기존 레이아웃 결함이 별도로 확인됐다(이번 슬라이스 범위 밖, 다음 슬라이스로 이관).
+
 ## 다음 한 가지
 
-- 정산/파괴 요약 카드에 이번 원정에서 처음 발견한 새 개인 최고 높이 갱신 여부를 `NEW BEST!` 배지로 강조해, 표본·슬롯·고도 요약과 함께 한 화면에서 확인할 수 있게 한다.
+- EARTH SHOP 요약 카드 아래 연료·내구도·SCOUT 구매 행과 `NO-HIT`/`SLOTS` 예측 텍스트가 실제 폰트 폭 기준으로 서로 겹쳐 읽을 수 없는 레이아웃 결함을 실제 폭 측정 후 좌표를 다시 설계해 고치고, 실제 LÖVE runtime capture로 겹침 없는 렌더링을 재확인한다.
 
 ## 완료 조건
 

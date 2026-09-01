@@ -29,11 +29,34 @@ function love.load()
         require("game.expedition").buyFuelUpgrade(run)
         require("game.expedition").buyDurabilityUpgrade(run)
         require("game.expedition").launch(run)
+        run.maxAltitude = 400
+        run.altitude = 400
+        run.bestAltitude = 400
         run.sampleCount = 2
         run.pendingSampleValue = 80
         run.slotSpins = 1
         run.pendingSlotReward = 75
         require("game.expedition").damage(run, run.durability)
+    elseif capturePhase == "settlement-newbest" then
+        local run = scenes.current.expedition
+        run.bestAltitude = 300
+        require("game.expedition").launch(run)
+        run.phase = "settlement"
+        run.maxAltitude = 400
+        run.altitude = 400
+        run.bestAltitude = 400
+        run.lastAltitude = 400
+        run.lastNewBest = true
+        run.sampleCount = 0
+        run.slotSpins = 0
+        run.pendingSampleValue = 0
+        run.pendingSlotReward = 0
+        run.lastSampleCount = 2
+        run.lastSampleSettlement = 80
+        run.lastSlotSpinsCount = 1
+        run.lastSlotSettlement = 75
+        run.lastSettlement = 155
+        run.money = 155
     end
 end
 

@@ -55,6 +55,7 @@ local function settle(run)
     run.lastSampleCount = run.sampleCount
     run.lastSlotSpinsCount = run.slotSpins
     run.lastAltitude = run.maxAltitude
+    run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.pendingSampleValue = 0
     run.pendingSlotReward = 0
     run.sampleCount = 0
@@ -71,6 +72,7 @@ local function destroy(run)
     run.lastLostSlotSpinsCount = run.slotSpins
     run.lastLostSlotValue = run.pendingSlotReward
     run.lastLostAltitude = run.maxAltitude
+    run.lastLostNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.sampleCount = 0
     run.pendingSampleValue = 0
     run.pendingSlotReward = 0
@@ -101,6 +103,9 @@ function M.new(options)
         altitude = 0,
         maxAltitude = 0,
         bestAltitude = options.bestAltitude or 0,
+        launchBestAltitude = options.bestAltitude or 0,
+        lastNewBest = false,
+        lastLostNewBest = false,
         fuel = baseFuel,
         baseFuel = baseFuel,
         maxFuel = baseFuel,
@@ -148,6 +153,9 @@ end
 
 function M.launch(run)
     if run.phase ~= "launch" and run.phase ~= "settlement" and run.phase ~= "destroyed" then return false end
+    run.launchBestAltitude = run.bestAltitude
+    run.lastNewBest = false
+    run.lastLostNewBest = false
     if run.phase ~= "launch" then
         run.altitude = 0
         run.maxAltitude = 0

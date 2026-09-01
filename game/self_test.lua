@@ -163,12 +163,24 @@ function M.run()
     assert(run.sampleCount == 0 and run.pendingSampleValue == 0 and run.pendingSlotReward == 0)
     assert(run.lastSampleCount == 1 and run.lastSlotSpinsCount == 2)
     assert(run.lastAltitude == 120)
+    assert(run.lastNewBest == true)
     expedition.update(run, 1)
     assert(run.money == 85 and run.lastSettlement == 85)
     assert(run.lastSampleSettlement == 75 and run.lastSlotSettlement == 10)
     assert(run.lastAltitude == 120)
+    assert(run.lastNewBest == true)
     assert(expedition.launch(run) and run.lastSampleCount == 0 and run.lastSlotSpinsCount == 0)
     assert(run.lastAltitude == 0)
+
+    local lowerRun = expedition.new({ bestAltitude = 500 })
+    lowerRun.phase = "returning"
+    lowerRun.altitude = 5
+    lowerRun.maxAltitude = 300
+    lowerRun.returnSpeed = 10
+    expedition.update(lowerRun, 1)
+    assert(lowerRun.phase == "settlement" and lowerRun.lastAltitude == 300)
+    assert(lowerRun.lastNewBest == false)
+    assert(lowerRun.bestAltitude == 500)
 
     local slotRolls = { 3, 3, 3, 1, 1, 2, 3, 3, 3 }
     local nextSlotRoll = 0
@@ -576,10 +588,12 @@ function M.run()
     assert(destroyedRun.lastLostSampleCount == 1 and destroyedRun.lastLostSampleValue == 70)
     assert(destroyedRun.lastLostSlotSpinsCount == 0 and destroyedRun.lastLostSlotValue == 0)
     assert(destroyedRun.lastLostAltitude == 80)
+    assert(destroyedRun.lastLostNewBest == true)
     assert(expedition.launch(destroyedRun) and destroyedRun.phase == "ascending")
     assert(destroyedRun.altitude == 0 and destroyedRun.durability == destroyedRun.maxDurability)
     assert(destroyedRun.bestAltitude == 80)
     assert(destroyedRun.lastLostSampleCount == 0 and destroyedRun.lastLostSampleValue == 0)
+    assert(destroyedRun.lastLostNewBest == false)
 
     local testSave = "self-test-best-altitude.txt"
     love.filesystem.remove(testSave)
