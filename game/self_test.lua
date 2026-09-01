@@ -272,6 +272,7 @@ function M.run()
     })
     local starterLoadout = loadoutScene:loadoutLines()
     assert(starterLoadout.ship == "SHIP STARTER")
+    assert(starterLoadout.stats == "MAX FUEL 100  HULL 3")
     assert(starterLoadout.upgrades == "FUEL LV.0  HULL LV.0")
     loadoutScene.expedition.phase = "settlement"
     loadoutScene.expedition.money = loadoutScene.expedition.fuelUpgradeCost
@@ -282,11 +283,13 @@ function M.run()
     assert(expedition.selectShip(loadoutScene.expedition, "scout"))
     local upgradedLoadout = loadoutScene:loadoutLines()
     assert(upgradedLoadout.ship == "SHIP SCOUT")
+    assert(upgradedLoadout.stats == "MAX FUEL 160  HULL 3")
     assert(upgradedLoadout.upgrades == "FUEL LV.1  HULL LV.1")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()
     assert(resetLoadout.ship == "SHIP STARTER")
+    assert(resetLoadout.stats == "MAX FUEL 100  HULL 3")
     assert(resetLoadout.upgrades == "FUEL LV.0  HULL LV.0")
 
     local nextLaunchScene = PlayScene.new({

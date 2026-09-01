@@ -71,16 +71,19 @@
 - engine-hosted 상점 표시 테스트가 STARTER 기본 상태와 연료·내구도 강화 후 선택한 SCOUT 상태에서 구매 후 최대 연료·내구도 미리보기를 검증한다.
 - EARTH SHOP의 SCOUT 구매 블록은 구매·선택 시 적용될 대상 우주선과 실제 다음 출발 능력치를 `SCOUT MAX FUEL N  HULL N`으로 직접 표시한다.
 - engine-hosted 상점 표시 테스트가 기본 강화와 연료·내구도 1단계 강화 상태에서 SCOUT의 정확한 최대 연료·내구도 미리보기를 검증한다.
+- LAUNCH LOADOUT 패널에 선택 우주선과 강화가 반영된 실제 다음 출발 능력치 `MAX FUEL N  HULL N`을 표시한다.
+- engine-hosted loadout 테스트가 STARTER 기본 능력치, 강화된 SCOUT 능력치와 파괴 후 초기화된 능력치를 검증한다.
+- 실제 LÖVE runtime capture `build/spaceship-runtime-preview.png`에서 `MAX FUEL 100  HULL 3`을 포함한 4줄 launch loadout, `TAP TO LAUNCH`, `DEV PLACEHOLDER`가 겹침이나 잘림 없이 `540×960` 세로 화면 안에 표시되는 것을 확인했다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- LAUNCH LOADOUT 패널에 선택 우주선 기준의 실제 최대 연료·내구도를 표시하고 engine-hosted 표시 테스트를 추가한다.
+- LAUNCH LOADOUT 패널에 현재 최대 연료 기준의 무충돌 예상 상승 고도와 귀환 슬롯 기회를 표시하고 engine-hosted 계산·표시 테스트를 추가한다.
 
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)
-- 세로 실제 런타임 캡처 `540×960`에서 launch loadout, `TAP TO LAUNCH`, `DEV PLACEHOLDER` 표시 확인
+- 세로 실제 런타임 캡처 `540×960`에서 실제 최대 연료·내구도를 포함한 launch loadout, `TAP TO LAUNCH`, `DEV PLACEHOLDER` 표시 확인
 - 개인 최고 높이 영구 저장 engine-hosted 자동 테스트 통과
 - 출발·정산 HUD의 개인 최고 높이 복구 표시 engine-hosted 자동 테스트 통과
