@@ -46,6 +46,20 @@ function M:collisionRisk(planet)
     }
 end
 
+function M:hudLines()
+    local run = self.expedition
+    local samples
+    if run.phase == "ascending" or run.phase == "returning" then
+        samples = string.format("SAMPLES %02d  AT RISK $%d", run.sampleCount, run.pendingSampleValue)
+    end
+    return {
+        primary = string.format("ALT %04d  CASH $%d", math.floor(run.altitude), run.money),
+        samples = samples,
+        status = string.format("F%03d H%d/%d %-9s S%02d", math.floor(run.fuel), run.durability,
+            run.maxDurability, string.upper(run.phase), run.slotOpportunities),
+    }
+end
+
 function M:update(dt)
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
@@ -221,7 +235,7 @@ function M:draw()
                 local risk = self:collisionRisk(planet)
                 if risk then
                     local previewX = math.max(2, math.min(viewport.width - 66, x - 33))
-                    local previewY = math.max(36, y - planet.radius - 24)
+                    local previewY = math.max(48, y - planet.radius - 24)
                     love.graphics.setColor(0.45, 0.95, 1)
                     love.graphics.printf(risk.sampleLabel, previewX, previewY, 66, "center")
                     if risk.lethal then
@@ -245,11 +259,20 @@ function M:draw()
     end
     love.graphics.pop()
 
+    local hud = self:hudLines()
+    local hudHeight = hud.samples and 46 or 34
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
-    love.graphics.rectangle("fill", 0, 0, viewport.width, 34)
+    love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
     love.graphics.setColor(0.7, 0.9, 1)
-    love.graphics.print(string.format("ALT %04d  SAMPLES %02d  $%d", math.floor(self.expedition.altitude), self.expedition.sampleCount, self.expedition.money), 5, 4)
-    love.graphics.print(string.format("F%03d H%d/%d %-9s S%02d", math.floor(self.expedition.fuel), self.expedition.durability, self.expedition.maxDurability, string.upper(self.expedition.phase), self.expedition.slotOpportunities), 5, 18)
+    love.graphics.print(hud.primary, 5, 4)
+    if hud.samples then
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.print(hud.samples, 5, 16)
+        love.graphics.setColor(0.7, 0.9, 1)
+        love.graphics.print(hud.status, 5, 30)
+    else
+        love.graphics.print(hud.status, 5, 18)
+    end
     if self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
         love.graphics.rectangle("fill", 12, 122, viewport.width - 24, 156)

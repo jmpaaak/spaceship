@@ -47,7 +47,15 @@ function M.run()
     assert(lethalWarning.sampleValue == 60 and lethalWarning.sampleLabel == "SAMPLE $60")
     riskScene.expedition.phase = "returning"
     assert(riskScene:collisionRisk({ y = -500 }) == nil)
+    riskScene.expedition.altitude = 725
+    riskScene.expedition.sampleCount = 3
+    riskScene.expedition.pendingSampleValue = 95
+    local returningHud = riskScene:hudLines()
+    assert(returningHud.samples == "SAMPLES 03  AT RISK $95")
     riskScene.expedition.phase = "ascending"
+    local ascendingHud = riskScene:hudLines()
+    assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")
+    riskScene.expedition.altitude = 500
     local nearbyPlanets = world.nearbyPlanets
     world.nearbyPlanets = function()
         return { { id = "risk-test", x = 0, y = -500, radius = 7 } }
