@@ -89,12 +89,14 @@
 - EARTH SHOP에서 이미 보유한 STARTER/SCOUT을 전환하면 성공 메시지에 새로 선택한 우주선의 무충돌 예상 상승 고도와 슬롯 기회를 즉시 표시한다. engine-hosted 입력 테스트가 키보드 STARTER 선택의 `NO-HIT 720  SLOTS 8`과 터치 SCOUT 선택의 `NO-HIT 960  SLOTS 10`을 검증한다.
 - EARTH SHOP에서 이미 보유한 STARTER/SCOUT을 전환하면 성공 메시지에 새 우주선의 실제 최대 연료·내구도도 함께 표시한다. engine-hosted 입력 테스트가 키보드 STARTER 선택의 `MAX FUEL 120  HULL 4`와 터치 SCOUT 선택의 `MAX FUEL 160  HULL 3`을 각각의 무충돌 예측과 함께 검증한다.
 - EARTH SHOP에서 내구도 강화를 구매하면 성공 메시지에 선택 우주선의 실제 최대 연료·내구도, 무충돌 예상 상승 고도·슬롯 기회와 남은 잔액을 함께 표시한다. engine-hosted 입력 테스트가 강화된 STARTER의 `MAX FUEL 120  HULL 4`, `NO-HIT 720  SLOTS 8`과 SCOUT의 `MAX FUEL 140  HULL 3`, `NO-HIT 840  SLOTS 9`를 검증한다.
+- EARTH SHOP의 내구도 강화 구매 행 아래에 구매 후 선택 우주선의 실제 `MAX FUEL N  HULL N`과 `NO-HIT N  SLOTS N`을 표시한다. 연료 강화와 우주선 선택 변경 직후에도 미리보기가 즉시 갱신되며, 추가 두 행에 맞춰 상점 배치와 터치 영역을 조정했다.
+- engine-hosted 상점 표시 테스트가 기본 STARTER의 `MAX FUEL 100  HULL 4`, `NO-HIT 600  SLOTS 6`, 연료 강화 STARTER의 `MAX FUEL 120  HULL 4`, `NO-HIT 720  SLOTS 8`, 강화된 SCOUT의 `MAX FUEL 160  HULL 4`, `NO-HIT 960  SLOTS 10` 미리보기를 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- EARTH SHOP의 내구도 강화 구매 행 아래에 구매 후 선택 우주선의 실제 `MAX FUEL N  HULL N`과 `NO-HIT N  SLOTS N` 미리보기를 표시하고 engine-hosted 상점 표시 테스트를 추가한다.
+- EARTH SHOP의 연료·내구도 구매 행에 현재 강화 레벨과 구매 후 레벨을 표시해 반복 구매 시 진행 단계를 비교할 수 있게 하고 engine-hosted 상점 표시 테스트를 추가한다.
 
 ## 완료 조건
 
