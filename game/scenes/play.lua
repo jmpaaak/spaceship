@@ -116,7 +116,10 @@ function M:keypressed(key)
     end
     if key == "space" or key == "return" or key == "up" or key == "w" then
         if self.expedition.phase == "returning" and expedition.useSlot(self.expedition) then
-            self.message = string.format("SLOT SPIN %d  %d CHANCES LEFT", self.expedition.slotSpins, self.expedition.slotOpportunities)
+            self.message = string.format("%s +$%d  %d LEFT",
+                table.concat(self.expedition.lastSlotSymbols, " "),
+                self.expedition.lastSlotReward,
+                self.expedition.slotOpportunities)
         else
             local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
             if expedition.launch(self.expedition) then
@@ -251,6 +254,16 @@ function M:draw()
         love.graphics.printf("HOLD LEFT", 5, 262, 76, "center")
         love.graphics.printf("HOLD RIGHT", 99, 262, 76, "center")
     elseif self.expedition.phase == "returning" then
+        if self.expedition.lastSlotSymbols then
+            love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
+            love.graphics.rectangle("fill", 18, 210, 144, 36)
+            love.graphics.setColor(0.85, 0.95, 1)
+            love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 20, 216, 140, "center")
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.printf(string.format("WIN +$%d  PENDING $%d",
+                self.expedition.lastSlotReward,
+                self.expedition.pendingSlotReward), 20, 231, 140, "center")
+        end
         love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
         love.graphics.rectangle("fill", 28, 254, 124, 24)
         love.graphics.setColor(0.85, 0.95, 1)

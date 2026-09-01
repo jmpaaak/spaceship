@@ -1,5 +1,26 @@
 local M = {}
 
+local slotSymbols = { "COMET", "PLANET", "STAR" }
+
+local function slotReward(symbols)
+    if symbols[1] == symbols[2] and symbols[2] == symbols[3] then
+        if symbols[1] == "STAR" then return 75 end
+        return 40
+    end
+    if symbols[1] == symbols[2] or symbols[1] == symbols[3] or symbols[2] == symbols[3] then
+        return 15
+    end
+    return 5
+end
+
+local function spinSlot(run)
+    local symbols = {}
+    for reel = 1, 3 do
+        symbols[reel] = slotSymbols[run.slotRandom(#slotSymbols)]
+    end
+    return symbols, slotReward(symbols)
+end
+
 local function refreshShipStats(run)
     local fuelBonus = 0
     local durabilityBonus = 0
@@ -37,6 +58,8 @@ local function destroy(run)
     run.pendingSlotReward = 0
     run.slotOpportunities = 0
     run.slotSpins = 0
+    run.lastSlotSymbols = nil
+    run.lastSlotReward = 0
     run.returnDistance = 0
     run.money = 0
     run.lastSettlement = 0
@@ -77,10 +100,12 @@ function M.new(options)
         climbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
         slotDistance = options.slotDistance or 100,
-        slotReward = options.slotReward or 10,
         returnDistance = 0,
         slotOpportunities = 0,
         slotSpins = 0,
+        slotRandom = options.slotRandom or math.random,
+        lastSlotSymbols = nil,
+        lastSlotReward = 0,
         sampleCount = 0,
         pendingSampleValue = 0,
         pendingSlotReward = 0,
@@ -99,6 +124,8 @@ function M.launch(run)
         run.returnDistance = 0
         run.slotOpportunities = 0
         run.slotSpins = 0
+        run.lastSlotSymbols = nil
+        run.lastSlotReward = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
         run.pendingSlotReward = 0
@@ -146,9 +173,12 @@ end
 
 function M.useSlot(run)
     if run.phase ~= "returning" or run.slotOpportunities <= 0 then return false end
+    local symbols, reward = spinSlot(run)
     run.slotOpportunities = run.slotOpportunities - 1
     run.slotSpins = run.slotSpins + 1
-    run.pendingSlotReward = run.pendingSlotReward + run.slotReward
+    run.lastSlotSymbols = symbols
+    run.lastSlotReward = reward
+    run.pendingSlotReward = run.pendingSlotReward + reward
     return true
 end
 

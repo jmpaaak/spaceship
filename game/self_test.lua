@@ -30,13 +30,18 @@ function M.run()
     assert(sx == -1 and sy == -2)
     assert(world.sampleValue({ y = -500 }) > world.sampleValue({ y = -50 }))
 
+    local basicSlotRolls = { 1, 2, 3, 2, 3, 1 }
+    local nextBasicSlotRoll = 0
     local run = expedition.new({
         fuel = 2,
         fuelBurnRate = 1,
         climbSpeed = 60,
         returnSpeed = 50,
         slotDistance = 100,
-        slotReward = 10,
+        slotRandom = function()
+            nextBasicSlotRoll = nextBasicSlotRoll + 1
+            return basicSlotRolls[nextBasicSlotRoll]
+        end,
     })
     assert(run.phase == "launch" and run.altitude == 0 and run.slotOpportunities == 0)
     assert(expedition.launch(run) and run.phase == "ascending")
@@ -54,10 +59,40 @@ function M.run()
     assert(run.phase == "returning" and run.altitude == 70)
     expedition.update(run, 2)
     assert(run.phase == "settlement" and run.altitude == 0)
-    assert(run.money == 95 and run.lastSettlement == 95)
+    assert(run.money == 85 and run.lastSettlement == 85)
     assert(run.sampleCount == 0 and run.pendingSampleValue == 0 and run.pendingSlotReward == 0)
     expedition.update(run, 1)
-    assert(run.money == 95 and run.lastSettlement == 95)
+    assert(run.money == 85 and run.lastSettlement == 85)
+
+    local slotRolls = { 3, 3, 3, 1, 1, 2, 3, 3, 3 }
+    local nextSlotRoll = 0
+    local slotRun = expedition.new({
+        returnSpeed = 100,
+        slotRandom = function()
+            nextSlotRoll = nextSlotRoll + 1
+            return slotRolls[nextSlotRoll]
+        end,
+    })
+    slotRun.phase = "returning"
+    slotRun.altitude = 10
+    slotRun.slotOpportunities = 2
+    slotRun.pendingSampleValue = 40
+    assert(expedition.useSlot(slotRun))
+    assert(table.concat(slotRun.lastSlotSymbols, "-") == "STAR-STAR-STAR")
+    assert(slotRun.lastSlotReward == 75 and slotRun.pendingSlotReward == 75)
+    assert(expedition.useSlot(slotRun))
+    assert(table.concat(slotRun.lastSlotSymbols, "-") == "COMET-COMET-PLANET")
+    assert(slotRun.lastSlotReward == 15 and slotRun.pendingSlotReward == 90)
+    expedition.update(slotRun, 1)
+    assert(slotRun.phase == "settlement" and slotRun.money == 130 and slotRun.lastSettlement == 130)
+    assert(slotRun.pendingSlotReward == 0 and slotRun.lastSlotReward == 15)
+    assert(expedition.launch(slotRun))
+    slotRun.phase = "returning"
+    slotRun.slotOpportunities = 1
+    assert(expedition.useSlot(slotRun) and slotRun.pendingSlotReward == 75)
+    assert(expedition.damage(slotRun, slotRun.durability))
+    assert(slotRun.phase == "destroyed" and slotRun.money == 0 and slotRun.pendingSlotReward == 0)
+    assert(slotRun.lastSlotSymbols == nil and slotRun.lastSlotReward == 0)
 
     local shopRun = expedition.new({
         fuel = 10,
@@ -138,8 +173,11 @@ function M.run()
     assert(touchScene.ship.x == -55)
     touchScene.expedition.phase = "returning"
     touchScene.expedition.slotOpportunities = 1
+    touchScene.expedition.slotRandom = function() return 3 end
     touchScene:touchpressed("slot", 90, 160)
     assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 0)
+    assert(table.concat(touchScene.expedition.lastSlotSymbols, " ") == "STAR STAR STAR")
+    assert(touchScene.message == "STAR STAR STAR +$75  0 LEFT")
     touchScene.expedition.phase = "settlement"
     touchScene.expedition.money = touchScene.expedition.fuelUpgradeCost
         + touchScene.expedition.durabilityUpgradeCost + touchScene.expedition.scoutShipCost
