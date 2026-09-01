@@ -123,6 +123,11 @@ function M.run()
     assert(wipedReturn.selectedShipId == "starter" and not wipedReturn.ownedShips.scout)
     assert(wipedReturn.bestAltitude == 750)
     assert(returnCollisionScene.message == "SHIP DESTROYED  BEST 750  META RESET")
+    assert(wipedReturn.lastLostSampleCount == 2 and wipedReturn.lastLostSampleValue == 80)
+    assert(wipedReturn.lastLostSlotSpinsCount == 1 and wipedReturn.lastLostSlotValue == 75)
+    assert(expedition.launch(wipedReturn))
+    assert(wipedReturn.lastLostSampleCount == 0 and wipedReturn.lastLostSampleValue == 0)
+    assert(wipedReturn.lastLostSlotSpinsCount == 0 and wipedReturn.lastLostSlotValue == 0)
 
     local basicSlotRolls = { 1, 2, 3, 2, 3, 1 }
     local nextBasicSlotRoll = 0
@@ -565,9 +570,12 @@ function M.run()
     assert(destroyedRun.fuelUpgradeLevel == 0 and destroyedRun.maxFuel == destroyedRun.baseFuel)
     assert(destroyedRun.durabilityUpgradeLevel == 0 and destroyedRun.maxDurability == destroyedRun.baseDurability)
     assert(destroyedRun.bestAltitude == 80)
+    assert(destroyedRun.lastLostSampleCount == 1 and destroyedRun.lastLostSampleValue == 70)
+    assert(destroyedRun.lastLostSlotSpinsCount == 0 and destroyedRun.lastLostSlotValue == 0)
     assert(expedition.launch(destroyedRun) and destroyedRun.phase == "ascending")
     assert(destroyedRun.altitude == 0 and destroyedRun.durability == destroyedRun.maxDurability)
     assert(destroyedRun.bestAltitude == 80)
+    assert(destroyedRun.lastLostSampleCount == 0 and destroyedRun.lastLostSampleValue == 0)
 
     local testSave = "self-test-best-altitude.txt"
     love.filesystem.remove(testSave)

@@ -65,6 +65,10 @@ local function destroy(run)
     run.phase = "destroyed"
     run.fuel = 0
     run.durability = 0
+    run.lastLostSampleCount = run.sampleCount
+    run.lastLostSampleValue = run.pendingSampleValue
+    run.lastLostSlotSpinsCount = run.slotSpins
+    run.lastLostSlotValue = run.pendingSlotReward
     run.sampleCount = 0
     run.pendingSampleValue = 0
     run.pendingSlotReward = 0
@@ -131,6 +135,10 @@ function M.new(options)
         lastSlotSettlement = 0,
         lastSampleCount = 0,
         lastSlotSpinsCount = 0,
+        lastLostSampleCount = 0,
+        lastLostSampleValue = 0,
+        lastLostSlotSpinsCount = 0,
+        lastLostSlotValue = 0,
     }
 end
 
@@ -154,6 +162,10 @@ function M.launch(run)
         run.lastSlotSettlement = 0
         run.lastSampleCount = 0
         run.lastSlotSpinsCount = 0
+        run.lastLostSampleCount = 0
+        run.lastLostSampleValue = 0
+        run.lastLostSlotSpinsCount = 0
+        run.lastLostSlotValue = 0
     end
     run.phase = "ascending"
     return true

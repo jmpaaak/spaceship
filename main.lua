@@ -21,6 +21,20 @@ function love.load()
     canvas = love.graphics.newCanvas(viewport.width, viewport.height)
     canvas:setFilter("nearest", "nearest")
     scenes = sceneStack.new(PlayScene.new())
+    local capturePhase = os.getenv("GAME_CAPTURE_PHASE")
+    if capturePhase == "destroyed" then
+        local run = scenes.current.expedition
+        run.phase = "settlement"
+        run.money = run.fuelUpgradeCost + run.durabilityUpgradeCost + 25
+        require("game.expedition").buyFuelUpgrade(run)
+        require("game.expedition").buyDurabilityUpgrade(run)
+        require("game.expedition").launch(run)
+        run.sampleCount = 2
+        run.pendingSampleValue = 80
+        run.slotSpins = 1
+        run.pendingSlotReward = 75
+        require("game.expedition").damage(run, run.durability)
+    end
 end
 
 function love.update(dt)

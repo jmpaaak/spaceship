@@ -589,15 +589,27 @@ function M:draw()
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-        love.graphics.rectangle("fill", 12, 198, viewport.width - 24, 80)
+        love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 108)
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf("SHIP DESTROYED", 16, 204, viewport.width - 32, "center")
-        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), 16, 218, viewport.width - 32, "center")
+        love.graphics.printf("SHIP DESTROYED", 16, 178, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf("NEXT " .. loadout.ship, 16, 234, viewport.width - 32, "center")
+        love.graphics.printf(string.format("LOST TOTAL $%d",
+            (self.expedition.lastLostSampleValue or 0) + (self.expedition.lastLostSlotValue or 0)),
+            16, 190, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, 16, 248, viewport.width - 32, "center")
-        love.graphics.printf("TAP: START OVER", 16, 264, viewport.width - 32, "center")
+        love.graphics.printf(string.format("SAMPLES (%d) $%d",
+            self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
+            16, 202, viewport.width - 32, "center")
+        love.graphics.printf(string.format("SPINS (%d) $%d",
+            self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0),
+            16, 213, viewport.width - 32, "center")
+        love.graphics.setColor(1, 0.55, 0.45)
+        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), 16, 226, viewport.width - 32, "center")
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.printf("NEXT " .. loadout.ship, 16, 240, viewport.width - 32, "center")
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(loadout.upgrades, 16, 252, viewport.width - 32, "center")
+        love.graphics.printf("TAP: START OVER", 16, 266, viewport.width - 32, "center")
     elseif self.expedition.phase == "ascending" then
         local steering = self:steeringButtonState()
         if steering.leftActive then

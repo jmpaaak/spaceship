@@ -121,9 +121,13 @@
 - 정산이 확정될 때 획득 표본 수와 슬롯 스핀 횟수를 `lastSampleCount`·`lastSlotSpinsCount`로 함께 저장하며, EARTH SHOP 상단 요약 카드가 `SETTLEMENT TOTAL $N`과 `SAMPLES (n) $N`·`SPINS (n) $N`을 한 번에 표시한다. 재출발·파괴 시 두 값도 0으로 초기화된다.
 - engine-hosted 정산 테스트가 안전 귀환 정산 시 저장된 표본 수·슬롯 스핀 횟수와 재출발 뒤 초기화를 검증한다.
 
+- 파괴(내구도 0) 시 잃은 표본 수·표본 가치와 슬롯 스핀 횟수·잠정 슬롯 보상을 `lastLostSampleCount`·`lastLostSampleValue`·`lastLostSlotSpinsCount`·`lastLostSlotValue`로 저장하며, SHIP DESTROYED 화면이 `LOST TOTAL $N`과 `SAMPLES (n) $N`·`SPINS (n) $N`을 안전 귀환 EARTH SHOP과 같은 형식으로 표시한다. 재출발 시 네 값 모두 0으로 초기화된다.
+- engine-hosted 파괴 테스트가 상승·귀환 양쪽 경로의 파괴에서 잃은 표본 수·가치·슬롯 스핀 횟수·보상 저장과 재출발 뒤 초기화를 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=destroyed` 개발 전용 진입 경로로 파괴 상태 재현)로 `SHIP DESTROYED`, `LOST TOTAL $155`, `SAMPLES (2) $80`, `SPINS (1) $75`, `META RESET BEST 0`, `NEXT SHIP STARTER`, `FUEL LV.0  HULL LV.0`, `TAP: START OVER`가 겹침·잘림 없이 `1080×1920` 세로 화면 안에 표시되는 것을 확인했다.
+
 ## 다음 한 가지
 
-- 파괴(내구도 0) 화면에도 해당 원정에서 잃은 표본 수·슬롯 스핀 횟수·미정산 가치를 요약해 안전 귀환과 비교할 수 있게 한다.
+- 정산/파괴 요약 카드에 원정별 최고 도달 고도도 함께 표시해 잃은 표본/슬롯 가치와 도달 고도를 한 화면에서 비교할 수 있게 한다.
 
 ## 완료 조건
 
