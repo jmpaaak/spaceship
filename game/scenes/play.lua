@@ -197,7 +197,7 @@ function M:slotButtonState()
     }
 end
 
-function M:update(dt)
+function M:steeringButtonState()
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
     for _, touch in pairs(self.touches) do
@@ -207,10 +207,16 @@ function M:update(dt)
             right = true
         end
     end
+    return { leftActive = left, rightActive = right }
+end
+
+function M:update(dt)
+    local steering = self:steeringButtonState()
     local previousPhase = self.expedition.phase
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         self.ship.x = self.ship.x
-            + ((right and 1 or 0) - (left and 1 or 0)) * steeringSpeed * dt
+            + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
+            * steeringSpeed * dt
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         expedition.update(self.expedition, dt)
@@ -524,11 +530,24 @@ function M:draw()
         love.graphics.printf(loadout.upgrades, 16, 248, viewport.width - 32, "center")
         love.graphics.printf("TAP: START OVER", 16, 264, viewport.width - 32, "center")
     elseif self.expedition.phase == "ascending" then
-        love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
+        local steering = self:steeringButtonState()
+        if steering.leftActive then
+            love.graphics.setColor(0.35, 0.9, 1, 0.8)
+        else
+            love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
+        end
         love.graphics.rectangle("fill", 5, 254, 76, 24)
+        if steering.rightActive then
+            love.graphics.setColor(0.35, 0.9, 1, 0.8)
+        else
+            love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
+        end
         love.graphics.rectangle("fill", 99, 254, 76, 24)
-        love.graphics.setColor(0.85, 0.95, 1)
+        love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
+            steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
         love.graphics.printf("HOLD LEFT", 5, 262, 76, "center")
+        love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
+            steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
         love.graphics.printf("HOLD RIGHT", 99, 262, 76, "center")
     elseif self.expedition.phase == "returning" then
         if self.expedition.lastSlotSymbols then
@@ -542,8 +561,18 @@ function M:draw()
                 self.expedition.pendingSlotReward), 20, 231, 140, "center")
         end
         local slotButton = self:slotButtonState()
-        love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+        local steering = self:steeringButtonState()
+        if steering.leftActive then
+            love.graphics.setColor(0.35, 0.9, 1, 0.95)
+        else
+            love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+        end
         love.graphics.rectangle("fill", 5, returnControls.top, 50, 24)
+        if steering.rightActive then
+            love.graphics.setColor(0.35, 0.9, 1, 0.95)
+        else
+            love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+        end
         love.graphics.rectangle("fill", 125, returnControls.top, 50, 24)
         if slotButton.enabled then
             love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
@@ -551,8 +580,11 @@ function M:draw()
             love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
         end
         love.graphics.rectangle("fill", 60, returnControls.top, 60, 24)
-        love.graphics.setColor(0.85, 0.95, 1)
+        love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
+            steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
         love.graphics.printf("LEFT", 5, 262, 50, "center")
+        love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
+            steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
         love.graphics.printf("RIGHT", 125, 262, 50, "center")
         if slotButton.enabled then
             love.graphics.setColor(0.85, 0.95, 1)
