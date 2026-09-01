@@ -50,8 +50,12 @@ function M:hudLines()
     local run = self.expedition
     local samples
     local best
+    local earth
     if run.phase == "ascending" or run.phase == "returning" then
         samples = string.format("SAMPLES %02d  AT RISK $%d", run.sampleCount, run.pendingSampleValue)
+        if run.phase == "returning" then
+            earth = string.format("EARTH IN %d", math.ceil(run.altitude))
+        end
     elseif run.phase == "launch" or run.phase == "settlement" then
         best = string.format("PERSONAL BEST %04d", math.floor(run.bestAltitude))
     end
@@ -59,6 +63,7 @@ function M:hudLines()
         primary = string.format("ALT %04d  CASH $%d", math.floor(run.altitude), run.money),
         samples = samples,
         best = best,
+        earth = earth,
         status = string.format("F%03d H%d/%d %-9s S%02d", math.floor(run.fuel), run.durability,
             run.maxDurability, string.upper(run.phase), run.slotOpportunities),
     }
@@ -303,7 +308,7 @@ function M:draw()
     love.graphics.pop()
 
     local hud = self:hudLines()
-    local hudHeight = (hud.samples or hud.best) and 46 or 34
+    local hudHeight = hud.earth and 58 or ((hud.samples or hud.best) and 46 or 34)
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
     love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
     love.graphics.setColor(0.7, 0.9, 1)
@@ -313,6 +318,10 @@ function M:draw()
         love.graphics.print(hud.samples, 5, 16)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.print(hud.status, 5, 30)
+        if hud.earth then
+            love.graphics.setColor(0.4, 0.85, 1)
+            love.graphics.print(hud.earth, 5, 43)
+        end
     elseif hud.best then
         love.graphics.print(hud.status, 5, 18)
         love.graphics.setColor(1, 0.8, 0.3)

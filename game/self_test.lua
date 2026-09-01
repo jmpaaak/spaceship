@@ -52,9 +52,11 @@ function M.run()
     riskScene.expedition.pendingSampleValue = 95
     local returningHud = riskScene:hudLines()
     assert(returningHud.samples == "SAMPLES 03  AT RISK $95")
+    assert(returningHud.earth == "EARTH IN 725")
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
     assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")
+    assert(ascendingHud.earth == nil)
     riskScene.expedition.altitude = 500
     local nearbyPlanets = world.nearbyPlanets
     world.nearbyPlanets = function()
