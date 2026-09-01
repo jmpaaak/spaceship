@@ -1,5 +1,17 @@
 local M = {}
 
+local function refreshShipStats(run)
+    local fuelBonus = 0
+    local durabilityBonus = 0
+    if run.selectedShipId == "scout" then
+        fuelBonus = run.scoutFuelBonus
+        durabilityBonus = run.scoutDurabilityBonus
+    end
+    run.maxFuel = run.baseFuel + fuelBonus + run.fuelUpgradeLevel * run.fuelUpgradeAmount
+    run.maxDurability = run.baseDurability + durabilityBonus
+        + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
+end
+
 local function slotCount(distance, slotDistance)
     if distance <= 0 then return 0 end
     return math.ceil(distance / slotDistance)
@@ -29,9 +41,10 @@ local function destroy(run)
     run.money = 0
     run.lastSettlement = 0
     run.fuelUpgradeLevel = 0
-    run.maxFuel = run.baseFuel
     run.durabilityUpgradeLevel = 0
-    run.maxDurability = run.baseDurability
+    run.ownedShips = { starter = true }
+    run.selectedShipId = "starter"
+    refreshShipStats(run)
 end
 
 function M.new(options)
@@ -55,6 +68,11 @@ function M.new(options)
         durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
         durabilityUpgradeCost = options.durabilityUpgradeCost or 75,
         durabilityUpgradeLevel = 0,
+        scoutShipCost = options.scoutShipCost or 125,
+        scoutFuelBonus = options.scoutFuelBonus or 40,
+        scoutDurabilityBonus = options.scoutDurabilityBonus or -1,
+        ownedShips = { starter = true },
+        selectedShipId = "starter",
         fuelBurnRate = options.fuelBurnRate or 5,
         climbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
@@ -94,7 +112,7 @@ function M.buyFuelUpgrade(run)
     if run.phase ~= "settlement" or run.money < run.fuelUpgradeCost then return false end
     run.money = run.money - run.fuelUpgradeCost
     run.fuelUpgradeLevel = run.fuelUpgradeLevel + 1
-    run.maxFuel = run.baseFuel + run.fuelUpgradeLevel * run.fuelUpgradeAmount
+    refreshShipStats(run)
     return true
 end
 
@@ -102,7 +120,27 @@ function M.buyDurabilityUpgrade(run)
     if run.phase ~= "settlement" or run.money < run.durabilityUpgradeCost then return false end
     run.money = run.money - run.durabilityUpgradeCost
     run.durabilityUpgradeLevel = run.durabilityUpgradeLevel + 1
-    run.maxDurability = run.baseDurability + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
+    refreshShipStats(run)
+    return true
+end
+
+function M.buyShip(run, shipId)
+    if run.phase ~= "settlement" or shipId ~= "scout" or run.ownedShips.scout
+        or run.money < run.scoutShipCost then
+        return false
+    end
+    run.money = run.money - run.scoutShipCost
+    run.ownedShips.scout = true
+    return true
+end
+
+function M.selectShip(run, shipId)
+    if run.phase ~= "settlement" or not run.ownedShips[shipId]
+        or (shipId ~= "starter" and shipId ~= "scout") then
+        return false
+    end
+    run.selectedShipId = shipId
+    refreshShipStats(run)
     return true
 end
 

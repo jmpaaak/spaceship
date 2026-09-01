@@ -87,6 +87,31 @@ function M.run()
     assert(expedition.launch(hullShopRun) and hullShopRun.phase == "ascending")
     assert(hullShopRun.durability == 3)
 
+    local shipShopRun = expedition.new({
+        fuel = 10,
+        durability = 3,
+        scoutShipCost = 90,
+        scoutFuelBonus = 5,
+        scoutDurabilityBonus = -1,
+        money = 100,
+    })
+    assert(not expedition.buyShip(shipShopRun, "scout"))
+    shipShopRun.phase = "settlement"
+    assert(expedition.buyShip(shipShopRun, "scout"))
+    assert(shipShopRun.money == 10 and shipShopRun.ownedShips.scout)
+    assert(shipShopRun.selectedShipId == "starter")
+    assert(not expedition.buyShip(shipShopRun, "scout") and shipShopRun.money == 10)
+    assert(expedition.selectShip(shipShopRun, "scout"))
+    assert(shipShopRun.selectedShipId == "scout")
+    assert(shipShopRun.maxFuel == 15 and shipShopRun.maxDurability == 2)
+    assert(expedition.launch(shipShopRun) and shipShopRun.fuel == 15 and shipShopRun.durability == 2)
+    assert(not expedition.damage(shipShopRun, 1))
+    assert(expedition.damage(shipShopRun, 1))
+    assert(shipShopRun.phase == "destroyed")
+    assert(shipShopRun.selectedShipId == "starter" and shipShopRun.ownedShips.starter)
+    assert(not shipShopRun.ownedShips.scout)
+    assert(shipShopRun.maxFuel == 10 and shipShopRun.maxDurability == 3)
+
     local shopScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
@@ -95,6 +120,10 @@ function M.run()
     shopScene:keypressed("h")
     assert(shopScene.expedition.durabilityUpgradeLevel == 1 and shopScene.expedition.maxDurability == 4)
     assert(shopScene.message == "HULL UPGRADED  MAX 4")
+    shopScene.expedition.money = shopScene.expedition.scoutShipCost
+    shopScene:keypressed("v")
+    assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
+    assert(shopScene.message == "SCOUT PURCHASED AND SELECTED")
 
     local touchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -112,11 +141,14 @@ function M.run()
     touchScene:touchpressed("slot", 90, 160)
     assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 0)
     touchScene.expedition.phase = "settlement"
-    touchScene.expedition.money = touchScene.expedition.fuelUpgradeCost + touchScene.expedition.durabilityUpgradeCost
-    touchScene:touchpressed("fuel", 90, 226)
-    touchScene:touchpressed("hull", 90, 244)
+    touchScene.expedition.money = touchScene.expedition.fuelUpgradeCost
+        + touchScene.expedition.durabilityUpgradeCost + touchScene.expedition.scoutShipCost
+    touchScene:touchpressed("fuel", 90, 204)
+    touchScene:touchpressed("hull", 90, 222)
+    touchScene:touchpressed("ship", 90, 244)
     assert(touchScene.expedition.fuelUpgradeLevel == 1)
     assert(touchScene.expedition.durabilityUpgradeLevel == 1)
+    assert(touchScene.expedition.ownedShips.scout and touchScene.expedition.selectedShipId == "scout")
     touchScene:touchpressed("relaunch", 90, 264)
     assert(touchScene.expedition.phase == "ascending")
 
