@@ -83,6 +83,11 @@ function M.run()
     assert(riskScene.expedition.durability == 1)
     assert(riskScene.message == "COLLISION -2  HULL 1/3")
 
+    assert(PlayScene.clampLabelX(90, 92, 180) == 44)
+    assert(PlayScene.clampLabelX(178, 92, 180) == 86)
+    assert(PlayScene.clampLabelX(2, 92, 180) == 2)
+    assert(PlayScene.clampLabelX(90, 44, 180) == 68)
+
     local returnCollisionScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 750 end, save = function() return false end },
     })

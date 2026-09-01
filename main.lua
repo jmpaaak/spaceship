@@ -57,6 +57,18 @@ function love.load()
         run.lastSlotSettlement = 75
         run.lastSettlement = 155
         run.money = 155
+    elseif capturePhase == "ascending-wide-warning" then
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 1000
+        scene.ship.y = -1000
+        scene.ship.x = 0
+        local world = require("game.world")
+        world.nearbyPlanets = function()
+            return { { id = "wide-warning", x = 85, y = -1020, radius = 10, hue = 0.1 } }
+        end
+        world.collisionDamage = function() return 3 end
+        world.sampleValue = function() return 999 end
     end
 end
 

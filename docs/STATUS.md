@@ -138,9 +138,14 @@
 - `PlayScene:touchpressed`의 정산 phase 터치 y 임계값(`FUEL`/`HULL`/`SCOUT`/`RELAUNCH`)을 새 행 좌표(150-179 / 179-212 / 212-256 / 256-320)에 맞춰 갱신했다. 기존 engine-hosted 터치 테스트(`y=174/208/244/300`)가 모두 새 임계값 범위 안에 들어가 별도 좌표 변경 없이 통과한다.
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 `EARTH SHOP` 요약 카드 아래 `T/F FUEL LV.0>1 $50 LEFT $105`, `NO-HIT 720 SLOTS 8`, `T/H HULL LV.0>1 $75 LEFT $80`, `MAX FUEL 100 HULL 4`, `NO-HIT 600 SLOTS 6`, `SCOUT +40 FUEL / -1 HULL`, `SCOUT MAX FUEL 140 HULL 2`, `NO-HIT 840 SLOTS 9`, `T/V BUY SCOUT $125 LEFT $30`, `NEXT STARTER`, `MAX FUEL 100 HULL 3`, `FUEL LV.0 HULL LV.0`, `NO-HIT 600 SLOTS 6`, `TAP: RELAUNCH`가 서로 겹치거나 잘리지 않고 세로 화면 안에 표시되는 것을 확인했다 (`build/spaceship-runtime-preview-settlement-newbest-current.png`, `build/spaceship-runtime-preview-settlement-newbest.png`).
 
+- SHIP DESTROYED 화면도 EARTH SHOP과 같은 좁은 고정폭 컬럼(`viewport.width - 32` 전체폭 12줄, 기존 12px 줄간격) 문제를 실제 폰트 폭으로 확인해 EARTH SHOP과 동일한 씬 캐시 `love.graphics.newFont(8)`(높이 10px) 작은 폰트와 전체폭 중앙 정렬 패턴을 적용했다. `y=178`부터 11px 간격으로 `SHIP DESTROYED`, `LOST TOTAL $N`, `SAMPLES (n) $N`, `SPINS (n) $N`, `PEAK ALT N`, 조건부 `NEW BEST!`, `META RESET BEST N`, `NEXT <SHIP>`, `FUEL LV.n HULL LV.n`, `TAP: START OVER`가 패널(y 174~308) 안에 순서대로 배치되도록 재계산했으며 draw 종료 시 이전 폰트로 복원한다.
+- 상승·귀환 중 표시되는 `RISK -N`/`SAMPLE $N` 접근 경고 라벨의 기존 66px 고정폭 `printf(..., "center")`를 실제 폰트 폭 기준 좌표로 교체했다. 새 `PlayScene.clampLabelX(centerX, textWidth, viewportWidth, margin)` 헬퍼가 현재 폰트의 실제 텍스트 폭으로 라벨을 행성 중심에 맞춰 좌측 정렬 `print`로 그리되 화면 좌우 2px 여백 안으로 clamp해, 화면 가장자리 근처 행성의 넓은 라벨이 잘리지 않도록 했다.
+- engine-hosted 테스트가 `PlayScene.clampLabelX`의 중앙 정렬 좌표, 우측 경계 clamp(`178`쪽), 좌측 경계 clamp(`2`쪽)와 좁은 텍스트의 정상 중앙 좌표 4가지 경우를 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-wide-warning` 개발 전용 진입 경로로 화면 오른쪽 가장자리 근처 행성 배치)로 `SAMPLE $999`, `LETHAL -3` 라벨이 `1440×2560` 세로 화면 오른쪽 가장자리 안쪽에 잘리지 않고 표시되는 것을 확인했다 (`build/spaceship-runtime-preview-ascending-wide-warning.png`).
+
 ## 다음 한 가지
 
-- 파괴 화면(`SHIP DESTROYED`)도 같은 부류의 좁은 고정폭 컬럼(`NEXT <SHIP>`, `FUEL LV.n HULL LV.n` 등)을 쓰는지 실제 폰트 폭으로 재확인하고, 필요하면 EARTH SHOP과 동일한 작은 폰트/전체폭 중앙 정렬 패턴을 적용한다. 또한 상승/귀환 중 표시되는 `RISK -N`/`SAMPLE $N` 접근 경고 라벨의 66px 고정폭도 실제 폰트 폭 기준으로 잘리는지 측정해 확인한다.
+- 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 12줄 안팎의 텍스트가 이제 패널 안에 들어가지만, 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다. 다음 슬라이스는 핵심 루프 상태머신 자체의 다음 미구현 조각(예: 슬롯 심볼별 명확한 확률/기대값 밸런싱, 또는 표본 종류별 시각 구분)으로 이동한다.
 
 ## 완료 조건
 

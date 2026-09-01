@@ -22,6 +22,18 @@ local function planetColor(hue)
     return 0.65, 0.45, 0.95
 end
 
+local warningLabelMargin = 2
+
+local function clampLabelX(centerX, textWidth, viewportWidth, margin)
+    margin = margin or warningLabelMargin
+    local x = centerX - textWidth / 2
+    local maxX = viewportWidth - margin - textWidth
+    if x > maxX then x = maxX end
+    if x < margin then x = margin end
+    return x
+end
+M.clampLabelX = clampLabelX
+
 local slotReelStagger = 0.15
 local slotSpinDuration = slotReelStagger * 3
 
@@ -463,12 +475,13 @@ function M:draw()
             love.graphics.circle("line", x, y, planet.radius + 2)
             local risk = self:approachWarning(planet, y, shipScreenY)
             if risk then
-                local previewX = math.max(2, math.min(viewport.width - 66, x - 33))
+                local font = love.graphics.getFont()
                 local previewY
                 if risk.sampleLabel then
                     previewY = math.max(48, y - planet.radius - 24)
                     love.graphics.setColor(0.45, 0.95, 1)
-                    love.graphics.printf(risk.sampleLabel, previewX, previewY, 66, "center")
+                    love.graphics.print(risk.sampleLabel,
+                        clampLabelX(x, font:getWidth(risk.sampleLabel), viewport.width), previewY)
                     previewY = previewY + 11
                 else
                     previewY = math.max(72, y - planet.radius - 12)
@@ -478,7 +491,8 @@ function M:draw()
                 else
                     love.graphics.setColor(1, 0.8, 0.25)
                 end
-                love.graphics.printf(risk.label, previewX, previewY, 66, "center")
+                love.graphics.print(risk.label,
+                    clampLabelX(x, font:getWidth(risk.label), viewport.width), previewY)
             end
         end
     end
@@ -619,33 +633,49 @@ function M:draw()
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
         love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 134)
+        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        local previousFont = love.graphics.getFont()
+        love.graphics.setFont(self.smallFont)
+        local fullX, fullW = 16, viewport.width - 32
+        local row = 178
+        local rowStep = 11
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf("SHIP DESTROYED", 16, 178, viewport.width - 32, "center")
+        love.graphics.printf("SHIP DESTROYED", fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(string.format("LOST TOTAL $%d",
             (self.expedition.lastLostSampleValue or 0) + (self.expedition.lastLostSlotValue or 0)),
-            16, 190, viewport.width - 32, "center")
+            fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(string.format("SAMPLES (%d) $%d",
             self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
-            16, 202, viewport.width - 32, "center")
+            fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.printf(string.format("SPINS (%d) $%d",
             self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0),
-            16, 213, viewport.width - 32, "center")
+            fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
         love.graphics.printf(string.format("PEAK ALT %d", math.floor(self.expedition.lastLostAltitude or 0)),
-            16, 224, viewport.width - 32, "center")
+            fullX, row, fullW, "center")
+        row = row + rowStep
         if self.expedition.lastLostNewBest then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf("NEW BEST!", 16, 235, viewport.width - 32, "center")
+            love.graphics.printf("NEW BEST!", fullX, row, fullW, "center")
+            row = row + rowStep
         end
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), 16, 247, viewport.width - 32, "center")
+        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf("NEXT " .. loadout.ship, 16, 261, viewport.width - 32, "center")
+        love.graphics.printf("NEXT " .. loadout.ship, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, 16, 273, viewport.width - 32, "center")
-        love.graphics.printf("TAP: START OVER", 16, 287, viewport.width - 32, "center")
+        love.graphics.printf(loadout.upgrades, fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.printf("TAP: START OVER", fullX, row, fullW, "center")
+        love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
         local steering = self:steeringButtonState()
         if steering.leftActive then
