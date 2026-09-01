@@ -232,8 +232,9 @@ function M:keypressed(key)
     end
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
         if expedition.buyDurabilityUpgrade(self.expedition) then
-            self.message = string.format("HULL UPGRADED  MAX %d  BALANCE $%d",
-                self.expedition.maxDurability, self.expedition.money)
+            self.message = string.format("HULL UPGRADED  MAX FUEL %d  HULL %d  %s  BALANCE $%d",
+                self.expedition.maxFuel, self.expedition.maxDurability,
+                launchForecastLine(self.expedition), self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.durabilityUpgradeCost, "HULL UPGRADE")

@@ -208,7 +208,8 @@ function M.run()
     shopScene:keypressed("h")
     assert(shopScene.expedition.durabilityUpgradeLevel == 1 and shopScene.expedition.maxDurability == 4)
     assert(shopScene.expedition.money == 10)
-    assert(shopScene.message == "HULL UPGRADED  MAX 4  BALANCE $10")
+    assert(shopScene.message
+        == "HULL UPGRADED  MAX FUEL 120  HULL 4  NO-HIT 720  SLOTS 8  BALANCE $10")
     shopScene.expedition.money = shopScene.expedition.scoutShipCost + 20
     shopScene:touchpressed("ship", 90, 244)
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
@@ -230,6 +231,21 @@ function M.run()
     assert(scoutFuelMessageScene.expedition.money == 20)
     assert(scoutFuelMessageScene.message
         == "FUEL TANK UPGRADED  MAX 160  NO-HIT 960  SLOTS 10  BALANCE $20")
+
+    local scoutHullMessageScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scoutHullMessageScene.expedition.phase = "settlement"
+    scoutHullMessageScene.expedition.money = scoutHullMessageScene.expedition.scoutShipCost
+        + scoutHullMessageScene.expedition.durabilityUpgradeCost + 20
+    scoutHullMessageScene:keypressed("v")
+    assert(scoutHullMessageScene.expedition.selectedShipId == "scout")
+    scoutHullMessageScene:keypressed("h")
+    assert(scoutHullMessageScene.expedition.durabilityUpgradeLevel == 1
+        and scoutHullMessageScene.expedition.maxDurability == 3)
+    assert(scoutHullMessageScene.expedition.money == 20)
+    assert(scoutHullMessageScene.message
+        == "HULL UPGRADED  MAX FUEL 140  HULL 3  NO-HIT 840  SLOTS 9  BALANCE $20")
 
     local shortfallScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
