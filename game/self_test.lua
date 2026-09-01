@@ -218,6 +218,13 @@ function M.run()
     assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 0)
     assert(table.concat(touchScene.expedition.lastSlotSymbols, " ") == "STAR STAR STAR")
     assert(touchScene.message == "STAR STAR STAR +$75  0 LEFT")
+    local emptySlotButton = touchScene:slotButtonState()
+    assert(not emptySlotButton.enabled and emptySlotButton.label == "NO SLOT CHANCES")
+    touchScene:touchpressed("empty-slot", 90, 266)
+    assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 0)
+    touchScene.expedition.slotOpportunities = 2
+    local readySlotButton = touchScene:slotButtonState()
+    assert(readySlotButton.enabled and readySlotButton.label == "TAP: SLOT SPIN  2 LEFT")
     touchScene.expedition.phase = "settlement"
     touchScene.expedition.money = touchScene.expedition.fuelUpgradeCost
         + touchScene.expedition.durabilityUpgradeCost + touchScene.expedition.scoutShipCost

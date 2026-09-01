@@ -92,6 +92,17 @@ function M:shopLoadoutLines()
     }
 end
 
+function M:slotButtonState()
+    local chances = self.expedition.slotOpportunities
+    if self.expedition.phase ~= "returning" or chances <= 0 then
+        return { enabled = false, label = "NO SLOT CHANCES" }
+    end
+    return {
+        enabled = true,
+        label = string.format("TAP: SLOT SPIN  %d LEFT", chances),
+    }
+end
+
 function M:update(dt)
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
@@ -370,10 +381,19 @@ function M:draw()
                 self.expedition.lastSlotReward,
                 self.expedition.pendingSlotReward), 20, 231, 140, "center")
         end
-        love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+        local slotButton = self:slotButtonState()
+        if slotButton.enabled then
+            love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+        else
+            love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
+        end
         love.graphics.rectangle("fill", 28, 254, 124, 24)
-        love.graphics.setColor(0.85, 0.95, 1)
-        love.graphics.printf("TAP: SLOT SPIN", 28, 262, 124, "center")
+        if slotButton.enabled then
+            love.graphics.setColor(0.85, 0.95, 1)
+        else
+            love.graphics.setColor(0.55, 0.58, 0.65)
+        end
+        love.graphics.printf(slotButton.label, 28, 262, 124, "center")
     end
     love.graphics.setColor(0.85, 0.9, 1)
     love.graphics.printf(self.message, 4, viewport.height - 30, viewport.width - 8, "center")

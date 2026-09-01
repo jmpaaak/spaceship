@@ -53,12 +53,14 @@
 - engine-hosted 상점 표시 테스트가 SCOUT 구매 전과 구매·선택 후 모두 교환 조건과 현재 선택 우주선 능력치를 함께 반환하는지 검증한다.
 - EARTH SHOP의 우주선 버튼은 구매 전 `BUY SCOUT $125`, 구매 후에는 현재 선택의 반대편인 `SELECT STARTER`/`SELECT SCOUT`를 표시해 누르면 일어날 동작을 정확히 안내한다.
 - engine-hosted 입력·표시 테스트가 구매 상태와 양쪽 선택 상태의 버튼 문구, `V` 키와 우주선 행 터치에 따른 선택 전환·메시지·다음 출발 표시 갱신을 검증한다.
+- 귀환 슬롯 버튼은 `TAP: SLOT SPIN  N LEFT`로 남은 기회를 표시하고, 모두 사용하면 흐리게 비활성화된 `NO SLOT CHANCES` 상태로 바뀐다.
+- engine-hosted 슬롯 버튼 테스트가 남은 기회 표시, 기회 소진 상태와 소진 후 터치가 추가 슬롯을 실행하지 않는 것을 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- 귀환 슬롯 버튼에 남은 기회 수를 함께 표시하고, 기회를 모두 사용한 뒤에는 실행 불가능한 `NO SLOT CHANCES` 상태로 바꾸는 engine-hosted 표시 테스트를 추가한다.
+- 귀환 HUD에 지구까지 남은 거리 `EARTH IN N`을 표시해 슬롯을 사용할 수 있는 남은 귀환 구간을 알 수 있게 하고 engine-hosted 표시 테스트를 추가한다.
 
 ## 완료 조건
 
