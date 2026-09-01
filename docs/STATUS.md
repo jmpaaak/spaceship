@@ -86,12 +86,13 @@
 - EARTH SHOP에서 연료 강화를 구매하면 성공 메시지에 갱신된 최대 연료와 함께 무충돌 예상 상승 고도·슬롯 기회 및 남은 잔액을 표시한다. 기본 STARTER 1단계는 `NO-HIT 720  SLOTS 8`, SCOUT 1단계는 `NO-HIT 960  SLOTS 10`으로 즉시 안내한다.
 - engine-hosted 입력 테스트가 STARTER와 SCOUT 각각의 연료 강화 직후 실제 선택 우주선 기준 예측값과 잔액이 성공 메시지에 표시되는지 검증한다.
 - EARTH SHOP에서 SCOUT을 구매·선택하면 성공 메시지에 선택된 SCOUT의 무충돌 예상 상승 고도와 슬롯 기회를 표시한다. engine-hosted 입력 테스트가 연료·내구도 강화 1단계 상태의 `NO-HIT 960  SLOTS 10`과 구매 후 잔액을 검증한다.
+- EARTH SHOP에서 이미 보유한 STARTER/SCOUT을 전환하면 성공 메시지에 새로 선택한 우주선의 무충돌 예상 상승 고도와 슬롯 기회를 즉시 표시한다. engine-hosted 입력 테스트가 키보드 STARTER 선택의 `NO-HIT 720  SLOTS 8`과 터치 SCOUT 선택의 `NO-HIT 960  SLOTS 10`을 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- EARTH SHOP에서 이미 보유한 STARTER/SCOUT 선택을 전환한 직후 성공 메시지에도 선택된 우주선의 무충돌 예상 상승 고도와 슬롯 기회를 표시하고 engine-hosted 입력 테스트를 추가한다.
+- EARTH SHOP에서 이미 보유한 STARTER/SCOUT 선택을 전환한 직후 성공 메시지에 새 우주선의 최대 연료·내구도도 함께 표시하고 engine-hosted 입력 테스트를 추가한다.
 
 ## 완료 조건
 
