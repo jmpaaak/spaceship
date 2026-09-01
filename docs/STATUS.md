@@ -42,15 +42,18 @@
 - engine-hosted 접근 경고 테스트가 고도 500·1000에서 표시되는 예상 표본 가치와 문구를 검증한다.
 - 상승·귀환 HUD에 `SAMPLES NN  AT RISK $N`을 표시해 현재 원정에서 파괴 시 잃는 미정산 표본 가치를 계속 확인할 수 있다.
 - engine-hosted HUD 테스트가 상승과 귀환 양쪽에서 표본 수와 미정산 표본 가치가 함께 표시되는지 검증한다.
+- 출발·정산 HUD에 영구 기록을 `PERSONAL BEST NNNN`으로 표시하며, 새 scene이 저장소에서 복구한 기록도 즉시 반영한다.
+- engine-hosted HUD 테스트가 출발·정산 phase의 최고 높이 표시와 저장 후 새 scene에서 복구된 표시를 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- 출발·정산 화면에 영구 저장된 개인 최고 높이를 표시하고 새 scene에서 복구된 기록이 HUD에 반영되는 engine-hosted 테스트를 추가한다.
+- 출발 화면에 선택한 우주선과 연료·내구도 강화 레벨을 표시하고, 파괴 후 기본 우주선·강화 0으로 초기화된 출발 정보가 보이는 engine-hosted 테스트를 추가한다.
 
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)
 - 세로 실제 런타임 캡처 `540×960`에서 `TAP TO LAUNCH`와 `DEV PLACEHOLDER` 표시 확인
 - 개인 최고 높이 영구 저장 engine-hosted 자동 테스트 통과
+- 출발·정산 HUD의 개인 최고 높이 복구 표시 engine-hosted 자동 테스트 통과

@@ -289,6 +289,10 @@ function M.run()
     }
     local persistedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
     assert(persistedScene.expedition.bestAltitude == 40)
+    assert(persistedScene:hudLines().best == "PERSONAL BEST 0040")
+    persistedScene.expedition.phase = "settlement"
+    assert(persistedScene:hudLines().best == "PERSONAL BEST 0040")
+    persistedScene.expedition.phase = "launch"
     persistedScene.expedition.fuel = 1
     persistedScene.expedition.maxFuel = 1
     persistedScene.expedition.fuelBurnRate = 1
@@ -298,6 +302,7 @@ function M.run()
     assert(persistedScene.expedition.phase == "returning" and savedBest == 60)
     local restartedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
     assert(restartedScene.expedition.bestAltitude == 60)
+    assert(restartedScene:hudLines().best == "PERSONAL BEST 0060")
     print("SPACESHIP_UNIT_OK")
 end
 
