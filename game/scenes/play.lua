@@ -17,17 +17,20 @@ local returnControls = {
 }
 
 -- Settlement (EARTH SHOP) touch rows, top-to-bottom. Each row's height is a
--- real finger touch target on the device, not just a text layout band.
--- Evenly split across the 150-320 canvas range (170px / 4 = 42.5px each) so
--- every row clears the 34px minimum flagged in docs/STATUS.md instead of the
--- previous 29px/33px fuel/hull rows; full 44pt accessibility parity on the
--- smallest supported window (integer scale 1) needs a larger panel redesign
--- tracked separately. See game/self_test.lua for the device-scale check.
+-- Actual finger touch target on the device, not just a text layout band.
+-- Evenly split across the 140-320 canvas range (180px / 4 = 45px each) so
+-- every row clears the 44pt accessibility minimum (see
+-- game/self_test.lua's canvasPixelsToPoints check) at the smallest
+-- supported window (integer scale 1, 1x device pixel ratio), superseding
+-- the previous 150-320/42px rows that only cleared the lower 34px bar.
+-- The settlement panel's summary-card font/spacing was shrunk to free the
+-- extra 10px of vertical room this needed. See game/self_test.lua for the
+-- device-scale check.
 local settlementTouchRows = {
-    { key = "fuel", top = 150, bottom = 192 },
-    { key = "hull", top = 192, bottom = 234 },
-    { key = "ship", top = 234, bottom = 277 },
-    { key = "relaunch", top = 277, bottom = 320 },
+    { key = "fuel", top = 140, bottom = 185 },
+    { key = "hull", top = 185, bottom = 230 },
+    { key = "ship", top = 230, bottom = 275 },
+    { key = "relaunch", top = 275, bottom = 320 },
 }
 M.settlementTouchRows = settlementTouchRows
 
@@ -621,27 +624,34 @@ function M:draw()
         love.graphics.printf(loadout.odds, 16, 274, viewport.width - 32, "center")
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
+        -- The summary card is drawn with the same scene-cached small font as
+        -- the shop rows (instead of the default 14px font) and tightened to
+        -- a 9px line step. This frees enough vertical room above the fixed
+        -- 320px canvas bottom for PlayScene.settlementTouchRows to grow each
+        -- row to the 44pt real-device accessibility minimum (see
+        -- game/self_test.lua) at the smallest supported window (integer
+        -- scale 1), not just the previous 34px minimum.
+        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        local previousFont = love.graphics.getFont()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
         love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf("EARTH SHOP", 16, 74, viewport.width - 32, "center")
         love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
-        love.graphics.rectangle("fill", 18, 90, viewport.width - 36, 62)
+        love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
+        love.graphics.setFont(self.smallFont)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(string.format("TOTAL $%d", self.expedition.lastSettlement), 22, 94, viewport.width - 44, "center")
+        love.graphics.printf(string.format("TOTAL $%d", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(string.format("SAMPLES (%d) $%d", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 105, viewport.width - 44, "center")
-        love.graphics.printf(string.format("SPINS (%d) $%d", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 22, 116, viewport.width - 44, "center")
+        love.graphics.printf(string.format("SAMPLES (%d) $%d", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 100, viewport.width - 44, "center")
+        love.graphics.printf(string.format("SPINS (%d) $%d", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 22, 109, viewport.width - 44, "center")
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(string.format("PEAK ALT %d", math.floor(self.expedition.lastAltitude or 0)), 22, 127, viewport.width - 44, "center")
+        love.graphics.printf(string.format("PEAK ALT %d", math.floor(self.expedition.lastAltitude or 0)), 22, 118, viewport.width - 44, "center")
         if self.expedition.lastNewBest then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf("NEW BEST!", 22, 138, viewport.width - 44, "center")
+            love.graphics.printf("NEW BEST!", 22, 127, viewport.width - 44, "center")
         end
         local nextLaunch = self:shopLoadoutLines()
-        self.smallFont = self.smallFont or love.graphics.newFont(8)
-        local previousFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
         local actionX, actionW = 16, 102
         local statusX, statusW = 120, 48
         local fullX, fullW = 16, viewport.width - 32

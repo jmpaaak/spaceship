@@ -719,6 +719,17 @@ function M.run()
         assert(row.bottom - row.top >= 34,
             "settlement touch row " .. row.key .. " is under the 34px minimum")
     end
+    -- The smallest supported window (integer scale 1, e.g. 180x320) at a 1x
+    -- device pixel ratio is the worst case for touch-target accessibility.
+    -- iOS/Android guidelines require ~44pt minimum; verify every settlement
+    -- row actually clears that bar via the real canvas-to-points conversion,
+    -- not just the previously-checked 34px minimum.
+    for _, row in ipairs(PlayScene.settlementTouchRows) do
+        local heightPoints = viewport.canvasPixelsToPoints(row.bottom - row.top, 180, 320, 1, false)
+        assert(heightPoints >= 44,
+            "settlement touch row " .. row.key .. " is under the 44pt accessibility minimum at scale 1 ("
+                .. heightPoints .. "pt)")
+    end
     local rowTouchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })

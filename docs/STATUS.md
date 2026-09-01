@@ -182,9 +182,15 @@
 - engine-hosted 테스트가 `PlayScene.destroyedTouchArea`의 폭·높이가 34px 이상인지 확인하고, 네 모서리와 중앙 5개 좌표에서 `destroyed` phase 터치가 실제로 재출발(`phase == "ascending"`)을 일으키는지 검증한다.
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
 
+- EARTH SHOP의 `settlementTouchRows` 4행(`fuel`/`hull`/`ship`/`relaunch`)이 정수 배율 1(가장 작은 지원 창), 1x 기기 픽셀 비율 기준으로 iOS/Android 권장 44pt 접근성 최소값을 충족하도록 확장했다. 이전 34px(150~320, 42.5px 균등분할) 행을 140~320 범위 45px 균등분할로 넓혔다. 필요한 세로 공간은 요약 카드(`TOTAL`/`SAMPLES`/`SPINS`/`PEAK ALT`/`NEW BEST!`)를 상점 행과 같은 씬 캐시 `love.graphics.newFont(8)` 작은 폰트로 전환하고 줄 간격을 좁혀(9px 간격, 카드 배경 박스 62px→46px) 확보했다.
+- `game/viewport.lua`의 기존 `M.canvasPixelsToPoints` 헬퍼로 캔버스 픽셀을 실제 기기 포인트로 환산해 engine-hosted 테스트가 실기기 접근성 기준을 직접 검증한다.
+- engine-hosted 테스트가 네 행 모두 34px 최소값(레거시 검증 유지)과 새 44pt 접근성 최소값(정수 배율 1, 1x 기기 픽셀 비율) 둘 다 충족하는지 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 좁혀진 요약 카드와 상점 12줄 전체가 서로 겹치거나 `TAP: RELAUNCH`가 `DEV PLACEHOLDER` 푸터와 겹치지 않는 것을 vision으로 확인했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
 ## 다음 한 가지
 
-- `settlementTouchRows`의 34px 최소값은 정수 배율 1(가장 작은 창)에서 iOS/Android 권장 44pt에는 못 미친다. 패널을 넓히는 더 큰 레이아웃 개편이 필요하며 별도 슬라이스로 남는다.
+- `settlementTouchRows`가 이제 정수 배율 1에서 44pt 접근성 최소값을 충족하지만, SHIP DESTROYED의 `destroyedTouchArea`는 전체 캔버스라 여전히 여유가 크다. 다음 슬라이스는 `ascending`/`returning`의 좌우 조종 hold 버튼과 슬롯 버튼도 같은 44pt 기준으로 재검증하는 것이다.
 
 ## 완료 조건
 
