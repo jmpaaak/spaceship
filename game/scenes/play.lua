@@ -54,11 +54,29 @@ function M:update(dt)
 end
 
 function M:keypressed(key)
+    if self.expedition.phase == "settlement" and (key == "f" or key == "down" or key == "s") then
+        if expedition.buyFuelUpgrade(self.expedition) then
+            self.message = string.format("FUEL TANK UPGRADED  MAX %d", self.expedition.maxFuel)
+        else
+            self.message = string.format("NEED $%d FOR FUEL UPGRADE", self.expedition.fuelUpgradeCost)
+        end
+        return
+    end
     if key == "space" or key == "return" or key == "up" or key == "w" then
         if self.expedition.phase == "returning" and expedition.useSlot(self.expedition) then
             self.message = string.format("SLOT SPIN %d  %d CHANCES LEFT", self.expedition.slotSpins, self.expedition.slotOpportunities)
-        elseif expedition.launch(self.expedition) then
-            self.message = "ASCENDING  STEER LEFT / RIGHT"
+        else
+            local relaunching = self.expedition.phase == "settlement"
+            if expedition.launch(self.expedition) then
+                if relaunching then
+                    self.ship.x = 0
+                    self.ship.y = 0
+                    self.ship.fuel = self.expedition.fuel
+                    self.discovered = {}
+                    self.discoveredCount = 0
+                end
+                self.message = "ASCENDING  STEER LEFT / RIGHT"
+            end
         end
     end
 end
@@ -113,6 +131,14 @@ function M:draw()
     love.graphics.setColor(0.7, 0.9, 1)
     love.graphics.print(string.format("ALT %04d  SAMPLES %02d  $%d", math.floor(self.expedition.altitude), self.expedition.sampleCount, self.expedition.money), 5, 4)
     love.graphics.print(string.format("FUEL %03d  %-9s S%02d", math.floor(self.ship.fuel), string.upper(self.expedition.phase), self.expedition.slotOpportunities), 5, 18)
+    if self.expedition.phase == "settlement" then
+        love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
+        love.graphics.rectangle("fill", 12, 214, viewport.width - 24, 62)
+        love.graphics.setColor(0.7, 0.9, 1)
+        love.graphics.printf(string.format("EARTH SHOP  FUEL LV.%d  MAX %d", self.expedition.fuelUpgradeLevel, self.expedition.maxFuel), 16, 222, viewport.width - 32, "center")
+        love.graphics.printf(string.format("F / DOWN: +%d FUEL  $%d", self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 240, viewport.width - 32, "center")
+        love.graphics.printf("SPACE: RELAUNCH", 16, 258, viewport.width - 32, "center")
+    end
     love.graphics.setColor(0.85, 0.9, 1)
     love.graphics.printf(self.message, 4, viewport.height - 30, viewport.width - 8, "center")
     love.graphics.setColor(1, 0.65, 0.2, 0.85)

@@ -18,11 +18,17 @@ end
 
 function M.new(options)
     options = options or {}
+    local baseFuel = options.fuel or 100
     return {
         phase = "launch",
         altitude = 0,
         maxAltitude = 0,
-        fuel = options.fuel or 100,
+        fuel = baseFuel,
+        baseFuel = baseFuel,
+        maxFuel = baseFuel,
+        fuelUpgradeAmount = options.fuelUpgradeAmount or 20,
+        fuelUpgradeCost = options.fuelUpgradeCost or 50,
+        fuelUpgradeLevel = 0,
         fuelBurnRate = options.fuelBurnRate or 5,
         climbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
@@ -40,8 +46,28 @@ function M.new(options)
 end
 
 function M.launch(run)
-    if run.phase ~= "launch" then return false end
+    if run.phase ~= "launch" and run.phase ~= "settlement" then return false end
+    if run.phase == "settlement" then
+        run.altitude = 0
+        run.maxAltitude = 0
+        run.fuel = run.maxFuel
+        run.returnDistance = 0
+        run.slotOpportunities = 0
+        run.slotSpins = 0
+        run.sampleCount = 0
+        run.pendingSampleValue = 0
+        run.pendingSlotReward = 0
+        run.lastSettlement = 0
+    end
     run.phase = "ascending"
+    return true
+end
+
+function M.buyFuelUpgrade(run)
+    if run.phase ~= "settlement" or run.money < run.fuelUpgradeCost then return false end
+    run.money = run.money - run.fuelUpgradeCost
+    run.fuelUpgradeLevel = run.fuelUpgradeLevel + 1
+    run.maxFuel = run.baseFuel + run.fuelUpgradeLevel * run.fuelUpgradeAmount
     return true
 end
 

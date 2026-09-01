@@ -56,6 +56,21 @@ function M.run()
     assert(run.sampleCount == 0 and run.pendingSampleValue == 0 and run.pendingSlotReward == 0)
     expedition.update(run, 1)
     assert(run.money == 95 and run.lastSettlement == 95)
+
+    local shopRun = expedition.new({
+        fuel = 10,
+        fuelUpgradeAmount = 5,
+        fuelUpgradeCost = 50,
+        money = 75,
+    })
+    assert(not expedition.buyFuelUpgrade(shopRun))
+    shopRun.phase = "settlement"
+    assert(expedition.buyFuelUpgrade(shopRun))
+    assert(shopRun.money == 25 and shopRun.fuelUpgradeLevel == 1 and shopRun.maxFuel == 15)
+    assert(not expedition.buyFuelUpgrade(shopRun))
+    shopRun.maxAltitude = 120
+    assert(expedition.launch(shopRun) and shopRun.phase == "ascending")
+    assert(shopRun.fuel == 15 and shopRun.altitude == 0 and shopRun.maxAltitude == 0 and shopRun.lastSettlement == 0)
     print("SPACESHIP_UNIT_OK")
 end
 
