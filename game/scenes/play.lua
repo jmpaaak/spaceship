@@ -780,18 +780,22 @@ function M:draw()
             love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
         end
         love.graphics.rectangle("fill", 60, returnControls.top, 60, 24)
+        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        local previousReturnButtonFont = love.graphics.getFont()
+        love.graphics.setFont(self.smallFont)
         love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
             steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
-        love.graphics.printf("LEFT", 5, 262, 50, "center")
+        love.graphics.printf("LEFT", 5, 263, 50, "center")
         love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
-        love.graphics.printf("RIGHT", 125, 262, 50, "center")
+        love.graphics.printf("RIGHT", 125, 263, 50, "center")
         if slotButton.enabled then
             love.graphics.setColor(0.85, 0.95, 1)
         else
             love.graphics.setColor(0.55, 0.58, 0.65)
         end
-        love.graphics.printf(slotButton.compactLabel, 60, 262, 60, "center")
+        love.graphics.printf(slotButton.compactLabel, 60, 263, 60, "center")
+        love.graphics.setFont(previousReturnButtonFont)
     end
     love.graphics.setColor(0.85, 0.9, 1)
     local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 50 or viewport.height - 30
