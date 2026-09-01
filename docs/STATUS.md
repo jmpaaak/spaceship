@@ -59,12 +59,14 @@
 - engine-hosted HUD 테스트가 `EARTH IN N`이 귀환 중에만 표시되고 상승 중에는 숨겨지는지 검증한다.
 - 귀환 HUD에 시작 거리 대비 완료율과 예상 잔여 시간을 `RETURN N%  Ns LEFT`로 함께 표시해 남은 슬롯 플레이 구간을 즉시 비교할 수 있다.
 - engine-hosted HUD 테스트가 귀환 고도 변화에 따른 완료율·잔여 시간 갱신과 상승 중 표시 비활성화를 검증한다.
+- EARTH SHOP의 연료·내구도·SCOUT 구매 행은 현재 잔액이 가격 이상이면 초록색 `READY`, 부족하면 빨간색 `SHORT`를 표시하며, 구매한 SCOUT은 선택 행에서 `OWNED`로 표시한다.
+- engine-hosted 상점 표시 테스트가 잔액 0과 연료 가격과 정확히 같은 잔액에서 세 항목의 `READY`/`SHORT` 상태를 비교하고 SCOUT 구매 후 `OWNED` 전환을 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- EARTH SHOP의 각 구매 항목에 현재 잔액 기준 구매 가능/자금 부족 상태를 표시하고 engine-hosted 표시 테스트를 추가한다.
+- EARTH SHOP의 `SHORT` 구매 항목에 실제 부족 금액을 표시하고 잔액 변화에 따른 engine-hosted 표시 테스트를 추가한다.
 
 ## 완료 조건
 

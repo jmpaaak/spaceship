@@ -90,19 +90,39 @@ end
 function M:shopLoadoutLines()
     local run = self.expedition
     local shipAction
+    local shipAffordable
+    local shipStatus
     if not run.ownedShips.scout then
         shipAction = string.format("BUY SCOUT $%d", run.scoutShipCost)
+        shipAffordable = run.money >= run.scoutShipCost
+        shipStatus = shipAffordable and "READY" or "SHORT"
     elseif run.selectedShipId == "scout" then
         shipAction = "SELECT STARTER"
+        shipAffordable = true
+        shipStatus = "OWNED"
     else
         shipAction = "SELECT SCOUT"
+        shipAffordable = true
+        shipStatus = "OWNED"
     end
+    local fuelAffordable = run.money >= run.fuelUpgradeCost
+    local hullAffordable = run.money >= run.durabilityUpgradeCost
     return {
         ship = string.format("NEXT %s", string.upper(run.selectedShipId)),
         stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
         scoutTradeoff = string.format("SCOUT %+d FUEL / %+d HULL",
             run.scoutFuelBonus, run.scoutDurabilityBonus),
         shipAction = shipAction,
+        shipStatus = shipStatus,
+        shipAffordable = shipAffordable,
+        fuelAction = string.format("T/F FUEL L%d +%d $%d", run.fuelUpgradeLevel,
+            run.fuelUpgradeAmount, run.fuelUpgradeCost),
+        fuelStatus = fuelAffordable and "READY" or "SHORT",
+        fuelAffordable = fuelAffordable,
+        hullAction = string.format("T/H HULL L%d +%d $%d", run.durabilityUpgradeLevel,
+            run.durabilityUpgradeAmount, run.durabilityUpgradeCost),
+        hullStatus = hullAffordable and "READY" or "SHORT",
+        hullAffordable = hullAffordable,
     }
 end
 
@@ -359,12 +379,22 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(string.format("SAMPLES $%d", self.expedition.lastSampleSettlement), 16, 156, viewport.width - 32, "center")
         love.graphics.printf(string.format("SLOTS $%d", self.expedition.lastSlotSettlement), 16, 168, viewport.width - 32, "center")
-        love.graphics.printf(string.format("TAP/F: FUEL LV.%d +%d  $%d", self.expedition.fuelUpgradeLevel, self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 190, viewport.width - 32, "center")
-        love.graphics.printf(string.format("TAP/H: HULL LV.%d +%d  $%d", self.expedition.durabilityUpgradeLevel, self.expedition.durabilityUpgradeAmount, self.expedition.durabilityUpgradeCost), 16, 208, viewport.width - 32, "center")
         local nextLaunch = self:shopLoadoutLines()
         love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(nextLaunch.fuelAction, 16, 190, 108, "left")
+        love.graphics.printf(nextLaunch.hullAction, 16, 208, 108, "left")
+        love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
+            nextLaunch.fuelAffordable and 1 or 0.4, nextLaunch.fuelAffordable and 0.55 or 0.35)
+        love.graphics.printf(nextLaunch.fuelStatus, 124, 190, 40, "right")
+        love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
+            nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
+        love.graphics.printf(nextLaunch.hullStatus, 124, 208, 40, "right")
+        love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.scoutTradeoff, 16, 224, viewport.width - 32, "center")
-        love.graphics.printf("TAP/V: " .. nextLaunch.shipAction, 16, 238, viewport.width - 32, "center")
+        love.graphics.printf("T/V " .. nextLaunch.shipAction, 16, 238, 108, "left")
+        love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
+            nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
+        love.graphics.printf(nextLaunch.shipStatus, 124, 238, 40, "right")
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, 16, 252, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
