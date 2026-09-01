@@ -87,6 +87,11 @@ function M:loadoutLines()
     }
 end
 
+local function purchaseStatus(money, cost)
+    if money >= cost then return "READY", true end
+    return string.format("SHORT $%d", cost - money), false
+end
+
 function M:shopLoadoutLines()
     local run = self.expedition
     local shipAction
@@ -94,8 +99,7 @@ function M:shopLoadoutLines()
     local shipStatus
     if not run.ownedShips.scout then
         shipAction = string.format("BUY SCOUT $%d", run.scoutShipCost)
-        shipAffordable = run.money >= run.scoutShipCost
-        shipStatus = shipAffordable and "READY" or "SHORT"
+        shipStatus, shipAffordable = purchaseStatus(run.money, run.scoutShipCost)
     elseif run.selectedShipId == "scout" then
         shipAction = "SELECT STARTER"
         shipAffordable = true
@@ -105,8 +109,8 @@ function M:shopLoadoutLines()
         shipAffordable = true
         shipStatus = "OWNED"
     end
-    local fuelAffordable = run.money >= run.fuelUpgradeCost
-    local hullAffordable = run.money >= run.durabilityUpgradeCost
+    local fuelStatus, fuelAffordable = purchaseStatus(run.money, run.fuelUpgradeCost)
+    local hullStatus, hullAffordable = purchaseStatus(run.money, run.durabilityUpgradeCost)
     return {
         ship = string.format("NEXT %s", string.upper(run.selectedShipId)),
         stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
@@ -117,11 +121,11 @@ function M:shopLoadoutLines()
         shipAffordable = shipAffordable,
         fuelAction = string.format("T/F FUEL L%d +%d $%d", run.fuelUpgradeLevel,
             run.fuelUpgradeAmount, run.fuelUpgradeCost),
-        fuelStatus = fuelAffordable and "READY" or "SHORT",
+        fuelStatus = fuelStatus,
         fuelAffordable = fuelAffordable,
         hullAction = string.format("T/H HULL L%d +%d $%d", run.durabilityUpgradeLevel,
             run.durabilityUpgradeAmount, run.durabilityUpgradeCost),
-        hullStatus = hullAffordable and "READY" or "SHORT",
+        hullStatus = hullStatus,
         hullAffordable = hullAffordable,
     }
 end
@@ -381,20 +385,20 @@ function M:draw()
         love.graphics.printf(string.format("SLOTS $%d", self.expedition.lastSlotSettlement), 16, 168, viewport.width - 32, "center")
         local nextLaunch = self:shopLoadoutLines()
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.fuelAction, 16, 190, 108, "left")
-        love.graphics.printf(nextLaunch.hullAction, 16, 208, 108, "left")
+        love.graphics.printf(nextLaunch.fuelAction, 16, 190, 88, "left")
+        love.graphics.printf(nextLaunch.hullAction, 16, 208, 88, "left")
         love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
             nextLaunch.fuelAffordable and 1 or 0.4, nextLaunch.fuelAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.fuelStatus, 124, 190, 40, "right")
+        love.graphics.printf(nextLaunch.fuelStatus, 104, 190, 60, "right")
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
             nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.hullStatus, 124, 208, 40, "right")
+        love.graphics.printf(nextLaunch.hullStatus, 104, 208, 60, "right")
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.scoutTradeoff, 16, 224, viewport.width - 32, "center")
-        love.graphics.printf("T/V " .. nextLaunch.shipAction, 16, 238, 108, "left")
+        love.graphics.printf("T/V " .. nextLaunch.shipAction, 16, 238, 88, "left")
         love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
             nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.shipStatus, 124, 238, 40, "right")
+        love.graphics.printf(nextLaunch.shipStatus, 104, 238, 60, "right")
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, 16, 252, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
