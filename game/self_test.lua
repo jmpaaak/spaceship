@@ -60,9 +60,11 @@ function M.run()
     expedition.update(run, 2)
     assert(run.phase == "settlement" and run.altitude == 0)
     assert(run.money == 85 and run.lastSettlement == 85)
+    assert(run.lastSampleSettlement == 75 and run.lastSlotSettlement == 10)
     assert(run.sampleCount == 0 and run.pendingSampleValue == 0 and run.pendingSlotReward == 0)
     expedition.update(run, 1)
     assert(run.money == 85 and run.lastSettlement == 85)
+    assert(run.lastSampleSettlement == 75 and run.lastSlotSettlement == 10)
 
     local slotRolls = { 3, 3, 3, 1, 1, 2, 3, 3, 3 }
     local nextSlotRoll = 0
@@ -85,13 +87,16 @@ function M.run()
     assert(slotRun.lastSlotReward == 15 and slotRun.pendingSlotReward == 90)
     expedition.update(slotRun, 1)
     assert(slotRun.phase == "settlement" and slotRun.money == 130 and slotRun.lastSettlement == 130)
+    assert(slotRun.lastSampleSettlement == 40 and slotRun.lastSlotSettlement == 90)
     assert(slotRun.pendingSlotReward == 0 and slotRun.lastSlotReward == 15)
     assert(expedition.launch(slotRun))
+    assert(slotRun.lastSampleSettlement == 0 and slotRun.lastSlotSettlement == 0)
     slotRun.phase = "returning"
     slotRun.slotOpportunities = 1
     assert(expedition.useSlot(slotRun) and slotRun.pendingSlotReward == 75)
     assert(expedition.damage(slotRun, slotRun.durability))
     assert(slotRun.phase == "destroyed" and slotRun.money == 0 and slotRun.pendingSlotReward == 0)
+    assert(slotRun.lastSampleSettlement == 0 and slotRun.lastSlotSettlement == 0)
     assert(slotRun.lastSlotSymbols == nil and slotRun.lastSlotReward == 0)
 
     local shopRun = expedition.new({

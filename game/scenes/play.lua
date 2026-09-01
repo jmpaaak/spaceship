@@ -143,13 +143,13 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "settlement" then
-        if y >= 194 and y < 214 then
+        if y >= 184 and y < 206 then
             self:keypressed("f")
-        elseif y >= 214 and y < 234 then
+        elseif y >= 206 and y < 224 then
             self:keypressed("h")
-        elseif y >= 234 and y < 258 then
+        elseif y >= 224 and y < 250 then
             self:keypressed("v")
-        elseif y >= 258 and y <= 280 then
+        elseif y >= 250 and y <= 280 then
             self:keypressed("space")
         end
         return
@@ -222,11 +222,16 @@ function M:draw()
     love.graphics.print(string.format("F%03d H%d/%d %-9s S%02d", math.floor(self.expedition.fuel), self.expedition.durability, self.expedition.maxDurability, string.upper(self.expedition.phase), self.expedition.slotOpportunities), 5, 18)
     if self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, 180, viewport.width - 24, 98)
+        love.graphics.rectangle("fill", 12, 122, viewport.width - 24, 156)
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf("EARTH SHOP", 16, 184, viewport.width - 32, "center")
-        love.graphics.printf(string.format("TAP/F: FUEL LV.%d +%d  $%d", self.expedition.fuelUpgradeLevel, self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 202, viewport.width - 32, "center")
-        love.graphics.printf(string.format("TAP/H: HULL LV.%d +%d  $%d", self.expedition.durabilityUpgradeLevel, self.expedition.durabilityUpgradeAmount, self.expedition.durabilityUpgradeCost), 16, 220, viewport.width - 32, "center")
+        love.graphics.printf("EARTH SHOP", 16, 126, viewport.width - 32, "center")
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.printf(string.format("SETTLEMENT TOTAL $%d", self.expedition.lastSettlement), 16, 142, viewport.width - 32, "center")
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(string.format("SAMPLES $%d", self.expedition.lastSampleSettlement), 16, 156, viewport.width - 32, "center")
+        love.graphics.printf(string.format("SLOTS $%d", self.expedition.lastSlotSettlement), 16, 168, viewport.width - 32, "center")
+        love.graphics.printf(string.format("TAP/F: FUEL LV.%d +%d  $%d", self.expedition.fuelUpgradeLevel, self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 190, viewport.width - 32, "center")
+        love.graphics.printf(string.format("TAP/H: HULL LV.%d +%d  $%d", self.expedition.durabilityUpgradeLevel, self.expedition.durabilityUpgradeAmount, self.expedition.durabilityUpgradeCost), 16, 208, viewport.width - 32, "center")
         local shipText
         local shipStats
         if self.expedition.ownedShips.scout then
@@ -236,9 +241,9 @@ function M:draw()
             shipText = string.format("TAP/V: BUY SCOUT $%d", self.expedition.scoutShipCost)
             shipStats = string.format("+%d FUEL  %d HULL", self.expedition.scoutFuelBonus, self.expedition.scoutDurabilityBonus)
         end
-        love.graphics.printf(shipText, 16, 234, viewport.width - 32, "center")
-        love.graphics.printf(shipStats, 16, 246, viewport.width - 32, "center")
-        love.graphics.printf("TAP: RELAUNCH", 16, 262, viewport.width - 32, "center")
+        love.graphics.printf(shipText, 16, 226, viewport.width - 32, "center")
+        love.graphics.printf(shipStats, 16, 238, viewport.width - 32, "center")
+        love.graphics.printf("TAP: RELAUNCH", 16, 258, viewport.width - 32, "center")
     elseif self.expedition.phase == "destroyed" then
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
         love.graphics.rectangle("fill", 12, 214, viewport.width - 24, 62)
