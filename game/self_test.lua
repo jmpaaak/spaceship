@@ -744,6 +744,46 @@ function M.run()
     assert(rowTouchScene.expedition.ownedShips.scout and rowTouchScene.expedition.selectedShipId == "scout")
     assert(rowTouchScene.expedition.phase == "ascending")
 
+    -- The returning-phase LEFT/RIGHT/SPIN band was a 24px-tall row (only
+    -- ~24pt at the smallest supported window), well under the same 44pt
+    -- accessibility minimum settlementTouchRows was fixed to meet. Verify
+    -- the widened band clears 44pt and that touches at its top/bottom
+    -- edges (not just its vertical center) still register steering and
+    -- slot input.
+    local returnControls = PlayScene.returnControls
+    assert(returnControls.bottom - returnControls.top >= 34,
+        "returning control band is under the 34px minimum")
+    local returnBandPoints = viewport.canvasPixelsToPoints(
+        returnControls.bottom - returnControls.top, 180, 320, 1, false)
+    assert(returnBandPoints >= 44,
+        "returning control band is under the 44pt accessibility minimum at scale 1 (" .. returnBandPoints .. "pt)")
+
+    local returnEdgeScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    returnEdgeScene.expedition.phase = "returning"
+    returnEdgeScene.expedition.altitude = 500
+    returnEdgeScene.expedition.returnDistance = 500
+    returnEdgeScene.expedition.returnSpeed = 0
+    returnEdgeScene.expedition.slotOpportunities = 2
+    returnEdgeScene.expedition.slotRandom = function() return 10 end
+    local edgeNearbyPlanets = world.nearbyPlanets
+    world.nearbyPlanets = function() return {} end
+    returnEdgeScene:touchpressed("edge-left", 20, returnControls.top)
+    local edgeLeftSteering = returnEdgeScene:steeringButtonState()
+    assert(edgeLeftSteering.leftActive and not edgeLeftSteering.rightActive,
+        "returning band top edge did not register left steering")
+    returnEdgeScene:touchreleased("edge-left")
+    returnEdgeScene:touchpressed("edge-right", 160, returnControls.bottom - 1)
+    local edgeRightSteering = returnEdgeScene:steeringButtonState()
+    assert(not edgeRightSteering.leftActive and edgeRightSteering.rightActive,
+        "returning band bottom edge did not register right steering")
+    returnEdgeScene:touchreleased("edge-right")
+    returnEdgeScene:touchpressed("edge-slot", 90, returnControls.top)
+    assert(returnEdgeScene.expedition.slotSpins == 1 and returnEdgeScene.expedition.slotOpportunities == 1,
+        "returning band top edge did not register slot spin at slot x range")
+    world.nearbyPlanets = edgeNearbyPlanets
+
     local destroyedArea = PlayScene.destroyedTouchArea
     assert(destroyedArea.bottom - destroyedArea.top >= 34,
         "destroyed touch area height is under the 34px minimum")

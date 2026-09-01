@@ -188,9 +188,14 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 좁혀진 요약 카드와 상점 12줄 전체가 서로 겹치거나 `TAP: RELAUNCH`가 `DEV PLACEHOLDER` 푸터와 겹치지 않는 것을 vision으로 확인했다.
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
 
+- `settlementTouchRows` 4행에 이어 귀환(`returning`) 화면의 `LEFT`/`RIGHT`/`SPIN N` 조종·슬롯 터치 버튼도 정수 배율 1, 1x 기기 픽셀 비율 기준 44pt 접근성 최소값 미만이었음을 발견해 고쳤다. 기존 `returnControls`는 24px(254~278) 세로 폭이었고 `viewport.canvasPixelsToPoints`로 환산하면 24pt로 44pt 미달이었다. `game/scenes/play.lua`의 `returnControls`를 244~288(44px)로 넓혔다. 위쪽 슬롯 릴 결과 박스를 36px→34px(210~244)로 살짝 줄여 새 버튼 밴드와 겹치지 않게 했고, 아래쪽 메시지 텍스트(y=290)와도 2px 여유를 유지한다. draw 쪽 버튼 사각형·라벨 y좌표도 `returnControls.top/bottom`에서 동적으로 계산하도록 바꿔 밴드 높이와 항상 일치시켰다. `PlayScene.returnControls`를 새로 노출해 engine-hosted 테스트가 상수에 직접 접근할 수 있게 했다.
+- engine-hosted 테스트가 `PlayScene.returnControls`의 34px/44pt 최소값 충족과, 새 밴드의 위쪽 끝(top)·아래쪽 끝(bottom-1) 경계 좌표에서 실제로 좌/우 조종과 슬롯 스핀이 발생하는지(밴드 중앙만이 아니라 상하 경계 모두) 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=returning-odds`, `1440×2560`)로 넓어진 `LEFT`/`SPIN 3`/`RIGHT` 버튼이 명확히 분리된 박스로 렌더링되고 위쪽 `ODDS` 줄, 아래쪽 `TAP TO LAUNCH`/`DEV PLACEHOLDER` 텍스트와 겹치지 않는 것을 vision으로 확인했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
 ## 다음 한 가지
 
-- `settlementTouchRows`가 이제 정수 배율 1에서 44pt 접근성 최소값을 충족하지만, SHIP DESTROYED의 `destroyedTouchArea`는 전체 캔버스라 여전히 여유가 크다. 다음 슬라이스는 `ascending`/`returning`의 좌우 조종 hold 버튼과 슬롯 버튼도 같은 44pt 기준으로 재검증하는 것이다.
+- 귀환 `LEFT`/`RIGHT`/`SPIN N` 버튼도 EARTH SHOP의 44pt 접근성 기준으로 맞췄다(24px→44px 세로 폭). 다음 슬라이스는 이 슬라이스에서 손대지 않은 `SHIP DESTROYED`의 실제 폭 대비 여유(이미 큼)를 넘어, 두 상승 조종 버튼(`HOLD LEFT`/`HOLD RIGHT`, 24px)에 대해서도 44pt 최소값을 재검증하고 필요하면 확장하는 것이다.
 
 ## 완료 조건
 

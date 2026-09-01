@@ -7,14 +7,24 @@ local M = {}
 M.__index = M
 
 local steeringSpeed = 55
+-- Returning-phase LEFT/RIGHT/SPIN touch band. Was a 24px-tall row
+-- (254-278), which only clears ~24pt at the smallest supported window
+-- (integer scale 1, 1x device pixel ratio) -- well under the iOS/Android
+-- ~44pt accessibility minimum PlayScene.settlementTouchRows was already
+-- fixed to meet (see game/self_test.lua's canvasPixelsToPoints check).
+-- Widened to a 44 canvas px band (244-288). The slot-reel result box above
+-- was shrunk from 36px to 34px tall (210-244) so it stops exactly where
+-- this band starts, and the message text below still starts at
+-- viewport.height - 30 == 290, 2px clear of this band's bottom (288).
 local returnControls = {
-    top = 254,
-    bottom = 278,
+    top = 244,
+    bottom = 288,
     leftMaxX = 55,
     slotMinX = 60,
     slotMaxX = 120,
     rightMinX = 125,
 }
+M.returnControls = returnControls
 
 -- Settlement (EARTH SHOP) touch rows, top-to-bottom. Each row's height is a
 -- Actual finger touch target on the device, not just a text layout band.
@@ -790,14 +800,14 @@ function M:draw()
         love.graphics.setFont(previousOddsFont)
         if self.slotSpin then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 18, 210, 144, 36)
+            love.graphics.rectangle("fill", 18, 210, 144, 34)
             love.graphics.setColor(0.85, 0.95, 1)
             love.graphics.printf(table.concat(self:currentSlotReels(), "  "), 20, 216, 140, "center")
             love.graphics.setColor(1, 0.8, 0.3)
             love.graphics.printf("SPINNING...", 20, 231, 140, "center")
         elseif self.expedition.lastSlotSymbols then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 18, 210, 144, 36)
+            love.graphics.rectangle("fill", 18, 210, 144, 34)
             love.graphics.setColor(0.85, 0.95, 1)
             love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 20, 216, 140, "center")
             love.graphics.setColor(1, 0.8, 0.3)
@@ -807,39 +817,41 @@ function M:draw()
         end
         local slotButton = self:slotButtonState()
         local steering = self:steeringButtonState()
+        local returnBandHeight = returnControls.bottom - returnControls.top
+        local returnLabelY = returnControls.top + math.floor((returnBandHeight - 10) / 2)
         if steering.leftActive then
             love.graphics.setColor(0.35, 0.9, 1, 0.95)
         else
             love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
         end
-        love.graphics.rectangle("fill", 5, returnControls.top, 50, 24)
+        love.graphics.rectangle("fill", 5, returnControls.top, 50, returnBandHeight)
         if steering.rightActive then
             love.graphics.setColor(0.35, 0.9, 1, 0.95)
         else
             love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
         end
-        love.graphics.rectangle("fill", 125, returnControls.top, 50, 24)
+        love.graphics.rectangle("fill", 125, returnControls.top, 50, returnBandHeight)
         if slotButton.enabled then
             love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
         else
             love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
         end
-        love.graphics.rectangle("fill", 60, returnControls.top, 60, 24)
+        love.graphics.rectangle("fill", 60, returnControls.top, 60, returnBandHeight)
         self.smallFont = self.smallFont or love.graphics.newFont(8)
         local previousReturnButtonFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
             steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
-        love.graphics.printf("LEFT", 5, 263, 50, "center")
+        love.graphics.printf("LEFT", 5, returnLabelY, 50, "center")
         love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
-        love.graphics.printf("RIGHT", 125, 263, 50, "center")
+        love.graphics.printf("RIGHT", 125, returnLabelY, 50, "center")
         if slotButton.enabled then
             love.graphics.setColor(0.85, 0.95, 1)
         else
             love.graphics.setColor(0.55, 0.58, 0.65)
         end
-        love.graphics.printf(slotButton.compactLabel, 60, 263, 60, "center")
+        love.graphics.printf(slotButton.compactLabel, 60, returnLabelY, 60, "center")
         love.graphics.setFont(previousReturnButtonFont)
     end
     love.graphics.setColor(0.85, 0.9, 1)
