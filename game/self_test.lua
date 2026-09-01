@@ -561,7 +561,7 @@ function M.run()
     touchScene.expedition.money = touchScene.expedition.fuelUpgradeCost
         + touchScene.expedition.durabilityUpgradeCost + touchScene.expedition.scoutShipCost
     touchScene:touchpressed("fuel", 90, 174)
-    touchScene:touchpressed("hull", 90, 208)
+    touchScene:touchpressed("hull", 45, 208)
     touchScene:touchpressed("ship", 90, 244)
     assert(touchScene.expedition.fuelUpgradeLevel == 1)
     assert(touchScene.expedition.durabilityUpgradeLevel == 1)
@@ -620,18 +620,23 @@ function M.run()
     assert(starterNextLaunch.yieldAction == "T/Y YIELD LV.0>1 $60")
     assert(starterNextLaunch.yieldPreview == "YIELD x1.25")
     assert(starterNextLaunch.yieldStatus == "SHORT $60" and not starterNextLaunch.yieldAffordable)
+    assert(starterNextLaunch.steeringAction == "T/G STEER LV.0>1 $65")
+    assert(starterNextLaunch.steeringPreview == "STEER SPEED 70")
+    assert(starterNextLaunch.steeringStatus == "SHORT $65" and not starterNextLaunch.steeringAffordable)
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
     local fuelReadyNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(fuelReadyNextLaunch.fuelStatus == "LEFT $0" and fuelReadyNextLaunch.fuelAffordable)
     assert(fuelReadyNextLaunch.hullStatus == "SHORT $25" and not fuelReadyNextLaunch.hullAffordable)
     assert(fuelReadyNextLaunch.shipStatus == "SHORT $75" and not fuelReadyNextLaunch.shipAffordable)
     assert(fuelReadyNextLaunch.yieldStatus == "SHORT $10" and not fuelReadyNextLaunch.yieldAffordable)
+    assert(fuelReadyNextLaunch.steeringStatus == "SHORT $15" and not fuelReadyNextLaunch.steeringAffordable)
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(balancePreviewNextLaunch.fuelStatus == "LEFT $150" and balancePreviewNextLaunch.fuelAffordable)
     assert(balancePreviewNextLaunch.hullStatus == "LEFT $125" and balancePreviewNextLaunch.hullAffordable)
     assert(balancePreviewNextLaunch.shipStatus == "LEFT $75" and balancePreviewNextLaunch.shipAffordable)
     assert(balancePreviewNextLaunch.yieldStatus == "LEFT $140" and balancePreviewNextLaunch.yieldAffordable)
+    assert(balancePreviewNextLaunch.steeringStatus == "LEFT $135" and balancePreviewNextLaunch.steeringAffordable)
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
         + nextLaunchScene.expedition.durabilityUpgradeCost + nextLaunchScene.expedition.scoutShipCost
         + nextLaunchScene.expedition.sampleYieldUpgradeCost
@@ -849,7 +854,7 @@ function M.run()
     rowTouchScene.expedition.phase = "settlement"
     rowTouchScene.expedition.money = rowTouchScene.expedition.fuelUpgradeCost
         + rowTouchScene.expedition.durabilityUpgradeCost + rowTouchScene.expedition.scoutShipCost
-        + rowTouchScene.expedition.sampleYieldUpgradeCost
+        + rowTouchScene.expedition.sampleYieldUpgradeCost + rowTouchScene.expedition.steeringUpgradeCost
     for _, row in ipairs(PlayScene.settlementTouchRows) do
         if row.columns then
             for _, column in ipairs(row.columns) do
@@ -864,6 +869,7 @@ function M.run()
     assert(rowTouchScene.expedition.fuelUpgradeLevel == 1)
     assert(rowTouchScene.expedition.durabilityUpgradeLevel == 1)
     assert(rowTouchScene.expedition.sampleYieldUpgradeLevel == 1)
+    assert(rowTouchScene.expedition.steeringUpgradeLevel == 1)
     assert(rowTouchScene.expedition.ownedShips.scout and rowTouchScene.expedition.selectedShipId == "scout")
     assert(rowTouchScene.expedition.phase == "ascending")
 

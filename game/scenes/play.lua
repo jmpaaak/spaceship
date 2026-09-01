@@ -43,9 +43,20 @@ M.returnControls = returnControls
 -- share one 44px-tall row, split left/right at x=90 (each half is 90
 -- canvas px wide, far past the 44pt accessibility minimum on the width
 -- axis too), keeping all four rows at the full 44 canvas px band height.
+-- STEERING is the fourth GAME_DESIGN.md meta upgrade axis (see
+-- game/self_test.lua's steeringRun scenario); it reuses the same
+-- column-split pattern by sharing the HULL row (left=HULL, right=STEERING)
+-- instead of adding a fifth 36px-tall row that would fall back under the
+-- 44pt accessibility minimum.
 local settlementTouchRows = {
     { key = "fuel", top = 144, bottom = 188 },
-    { key = "hull", top = 188, bottom = 232 },
+    {
+        top = 188, bottom = 232,
+        columns = {
+            { key = "hull", left = 0, right = 90 },
+            { key = "steering", left = 90, right = 180 },
+        },
+    },
     {
         top = 232, bottom = 276,
         columns = {
@@ -260,6 +271,7 @@ function M:shopLoadoutLines()
     local fuelStatus, fuelAffordable = purchaseStatus(run.money, run.fuelUpgradeCost)
     local hullStatus, hullAffordable = purchaseStatus(run.money, run.durabilityUpgradeCost)
     local yieldStatus, yieldAffordable = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
+    local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
     return {
         ship = string.format("NEXT %s", string.upper(run.selectedShipId)),
         stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
@@ -293,6 +305,12 @@ function M:shopLoadoutLines()
             1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount),
         yieldStatus = yieldStatus,
         yieldAffordable = yieldAffordable,
+        steeringAction = string.format("T/G STEER LV.%d>%d $%d",
+            run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
+        steeringPreview = string.format("STEER SPEED %d",
+            run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
+        steeringStatus = steeringStatus,
+        steeringAffordable = steeringAffordable,
         odds = self:slotOddsLine(),
     }
 end
@@ -560,6 +578,8 @@ function M:touchpressed(id, x, y)
                     self:keypressed("f")
                 elseif key == "hull" then
                     self:keypressed("h")
+                elseif key == "steering" then
+                    self:keypressed("g")
                 elseif key == "yield" then
                     self:keypressed("y")
                 elseif key == "ship" then
@@ -749,7 +769,7 @@ function M:draw()
         local statusX, statusW = 120, 48
         local fullX, fullW = 16, viewport.width - 32
         local row = 140
-        local rowStep = 10
+        local rowStep = 9
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.fuelAction, actionX, row, actionW, "left")
         love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
@@ -770,6 +790,15 @@ function M:draw()
         row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(nextLaunch.hullPreviewForecast, fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(nextLaunch.steeringAction, actionX, row, actionW, "left")
+        love.graphics.setColor(nextLaunch.steeringAffordable and 0.45 or 1,
+            nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
+        love.graphics.printf(nextLaunch.steeringStatus, statusX, row, statusW, "right")
+        row = row + rowStep
+        love.graphics.setColor(0.4, 0.85, 1)
+        love.graphics.printf(nextLaunch.steeringPreview, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.yieldAction, actionX, row, actionW, "left")
