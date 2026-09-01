@@ -163,10 +163,15 @@
 - engine-hosted 테스트가 `settlement` phase의 `hudLines().status == \"F100 H3/3 SETTLE S00\"`를 검증한다.
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 수정 후 상태 줄이 `F100 H3/3 SETTLE S00`으로 화면 안에 완전히 표시되고, EARTH SHOP 12줄 레이아웃 전체가 겹침·잘림 없이 표시되는 것을 vision으로 재확인했다 (`build/spaceship-runtime-preview-settlement-newbest-statusfix.png`, 로컬 산출물로 커밋 제외).
 
+- `다음 한 가지`의 축약 상태 줄 재확인 작업 중 `ascending` phase를 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-wide-warning`, `1440×2560`)로 재검사해 `F099 H3/3 ASCEND S00` 상태 줄 자체는 잘리지 않았지만, 별도의 실제 레이아웃 결함을 vision으로 발견했다: 하단 조종 버튼의 기본 폰트(높이 14px) `HOLD RIGHT` 문구(실측 폭 75px)가 76px 버튼 박스 폭에 비해 좁은 여유로 자동 줄바꿈되어 두 번째 줄(`RIGHT`)이 버튼 배경 상자(y 254~278) 아래로 흘러나와 `TAP TO LAUNCH` 문구와 겹치는 것을 확인했다(`build/spaceship-runtime-preview-ascending-wide-warning-recheck.png`).
+- `game/scenes/play.lua`의 `ascending` phase 조종 버튼 라벨을 EARTH SHOP/SHIP DESTROYED/귀환 ODDS 줄과 같은 씬 캐시 `love.graphics.newFont(8)`(작은 폰트, 실측 `HOLD RIGHT` 폭 50px)로 전환해 76px 버튼 폭 안에 한 줄로 들어가도록 고쳤다. draw 종료 전에 이전 폰트로 복원한다. 이 결함은 `ascending` HUD 상태 줄 자체와 무관하게 조종 버튼 라벨에서 발생했으며, `launch → ascending` 어느 시점에도 이미 존재했던 기존 결함이었다(이번 슬라이스에서 처음 발견·수정).
+- 상승 중 `love.graphics` 헤드리스 비활성화로 실제 렌더 폭을 engine-hosted 테스트로 직접 검증할 수 없어(`conf.lua`가 `GAME_HEADLESS=1`일 때 `graphics` 모듈을 끔, `self_test.lua`가 `:draw()`를 호출하지 않음), 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-wide-warning`, `1440×2560`)로 수정 후 `HOLD RIGHT`가 버튼 상자 안에 한 줄로 표시되고 `TAP TO LAUNCH`와 겹치지 않는 것을 vision으로 재확인했다 (`build/spaceship-runtime-preview-ascending-wide-warning-holdfix.png`, 로컬 산출물로 커밋 제외). `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과.
+
 ## 다음 한 가지
 
 - 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다.
-- `launch`·`ascending`·`returning`·`destroyed` phase의 HUD 상태 줄도 새 6자 축약(`LAUNCH`/`ASCEND`/`RETURN`/`DESTRO`)이 실제 폭 기준으로 잘리지 않는지 실기기 캡처로 각각 재확인이 필요하다(이번 슬라이스는 `settlement`만 실제 캡처로 검증했다).
+- `returning`·`destroyed`·`launch` phase의 HUD 상태 줄도 새 6자 축약(`RETURN`/`DESTRO`/`LAUNCH`)이 실제 폭 기준으로 잘리지 않는지 실기기 캡처로 각각 재확인이 필요하다(이번 슬라이스는 `settlement`·`ascending` 두 phase만 실제 캡처로 검증했다. `ascending`은 상태 줄 자체는 문제없었으나 하단 조종 버튼 라벨 겹침 결함을 별도로 발견·수정했다).
+- `returning` phase 하단 `LEFT`/`RIGHT`/`SPIN N` 버튼 라벨도 같은 좁은-폭 줄바꿈 결함이 있는지 실제 캡처로 재확인이 필요하다(현재는 기본 폰트를 그대로 쓰며 문자열이 `ascending`의 `HOLD LEFT/RIGHT`보다 짧아 위험은 낮지만 미확인).
 
 ## 완료 조건
 

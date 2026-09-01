@@ -726,12 +726,16 @@ function M:draw()
             love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
         end
         love.graphics.rectangle("fill", 99, 254, 76, 24)
+        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        local previousSteeringFont = love.graphics.getFont()
+        love.graphics.setFont(self.smallFont)
         love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
             steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
-        love.graphics.printf("HOLD LEFT", 5, 262, 76, "center")
+        love.graphics.printf("HOLD LEFT", 5, 263, 76, "center")
         love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
-        love.graphics.printf("HOLD RIGHT", 99, 262, 76, "center")
+        love.graphics.printf("HOLD RIGHT", 99, 263, 76, "center")
+        love.graphics.setFont(previousSteeringFont)
     elseif self.expedition.phase == "returning" then
         self.smallFont = self.smallFont or love.graphics.newFont(8)
         local previousOddsFont = love.graphics.getFont()
