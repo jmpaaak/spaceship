@@ -136,6 +136,7 @@ local function destroy(run)
     run.fuelUpgradeLevel = 0
     run.durabilityUpgradeLevel = 0
     run.sampleYieldUpgradeLevel = 0
+    run.steeringUpgradeLevel = 0
     run.ownedShips = { starter = true }
     run.selectedShipId = "starter"
     refreshShipStats(run)
@@ -168,6 +169,10 @@ function M.new(options)
         sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.25,
         sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 60,
         sampleYieldUpgradeLevel = 0,
+        baseSteeringSpeed = options.steeringSpeed or 55,
+        steeringUpgradeAmount = options.steeringUpgradeAmount or 15,
+        steeringUpgradeCost = options.steeringUpgradeCost or 65,
+        steeringUpgradeLevel = 0,
         scoutShipCost = options.scoutShipCost or 125,
         scoutFuelBonus = options.scoutFuelBonus or 40,
         scoutDurabilityBonus = options.scoutDurabilityBonus or -1,
@@ -262,6 +267,23 @@ function M.buySampleYieldUpgrade(run)
     if run.phase ~= "settlement" or run.money < run.sampleYieldUpgradeCost then return false end
     run.money = run.money - run.sampleYieldUpgradeCost
     run.sampleYieldUpgradeLevel = run.sampleYieldUpgradeLevel + 1
+    return true
+end
+
+-- Steering is the fourth meta upgrade axis named in
+-- docs/GAME_DESIGN.md's meta loop ("연료·내구도·조종·표본 수익을 강화":
+-- fuel/hull/steering/sample-yield). It scales the ship's left/right
+-- steering speed applied while ascending/returning (game/scenes/play.lua),
+-- giving players a way to spend money on better planet-collision avoidance
+-- rather than capacity or money yield.
+function M.steeringSpeed(run)
+    return run.baseSteeringSpeed + run.steeringUpgradeLevel * run.steeringUpgradeAmount
+end
+
+function M.buySteeringUpgrade(run)
+    if run.phase ~= "settlement" or run.money < run.steeringUpgradeCost then return false end
+    run.money = run.money - run.steeringUpgradeCost
+    run.steeringUpgradeLevel = run.steeringUpgradeLevel + 1
     return true
 end
 

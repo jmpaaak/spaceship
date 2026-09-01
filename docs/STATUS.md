@@ -223,6 +223,16 @@
 - EARTH SHOP의 YIELD/SHIP 터치 행이 하나의 44px 밴드를 좌우로 나눠 공유하는 방식은 접근성 최소값은 만족하지만, 그려지는 텍스트 줄(y=190~200 YIELD, y=240~270대 SHIP 관련 여러 줄)과 터치 밴드 경계가 완전히 1:1로 정렬되지는 않는 기존 패턴(연료/내구도 행도 동일하게 느슨한 정렬이었음)을 그대로 유지했다. 다음 슬라이스에서는 이 5행 레이아웃을 텍스트 줄과 더 타이트하게 정렬하거나, 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export 가용성 확인)로 전환하는 것을 검토한다.
 - 이번 슬라이스에서 `SAMPLE $N` 경고 라벨의 표본 수익 강화 배수 누락을 고쳤다. 다음 슬라이스 후보: (1) 위 YIELD/SHIP 터치-텍스트 정렬 정리, (2) 귀환 슬롯 보상(`slotExpectedValue` 등)에도 유사한 강화 배수 누락이 없는지 점검, (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+- `docs/GAME_DESIGN.md`의 메타 루프(`돈으로 새 우주선을 구매하거나 연료·내구도·조종·표본 수익을 강화하고 다시 출발한다`)가 요구한 4개 강화 축 중 `조종`(STEERING)만 그동안 구현되지 않았음을 발견해 EARTH SHOP 엔진 로직에 추가했다. `game/expedition.lua`에 `baseSteeringSpeed`(기본 55)·`steeringUpgradeAmount`(기본 `15`)·`steeringUpgradeCost`(기본 `$65`)·`steeringUpgradeLevel`(기본 0) 필드와 `M.steeringSpeed(run)`(`base + level * amount`)·`M.buySteeringUpgrade(run)`(phase/비용 검증 후 레벨 증가)를 추가했다. `game/scenes/play.lua`의 상승·귀환 조종 이동이 기존 고정 상수 `steeringSpeed = 55` 대신 `expedition.steeringSpeed(self.expedition)`를 매 프레임 조회해 실제 이동 속도에 강화가 반영된다. 파괴(`destroy`) 시 다른 세 강화(연료·내구도·표본 수익)와 동일하게 `steeringUpgradeLevel`을 0으로 초기화한다.
+- EARTH SHOP에서 `G` 키로 조종 강화를 구매할 수 있으며(터치 UI·상점 패널 표시·`shopLoadoutLines()` 미리보기는 이번 슬라이스 범위 밖, 다음 슬라이스로 이관), 성공 시 `STEERING UPGRADED  LV.n  SPEED n  BALANCE $n`을, 실패 시 기존 세 강화와 같은 형식의 `NEED $N MORE FOR STEERING UPGRADE`를 표시한다.
+- engine-hosted 테스트가 `steeringSpeed`의 기본값(`55`)과 강화 후 값(`70`), `buySteeringUpgrade`의 phase/비용 제한, 강화 레벨이 재출발(relaunch) 뒤에도 유지되는지, 파괴 시 레벨 초기화와 속도 복귀(`55`)를, 실제 `PlayScene:update`에서 강화된 속도(`70`)로 조종이 이동하는지(고정 상수가 아니라 `expedition.steeringSpeed(run)` 조회임을 검증), `PlayScene:keypressed(\"g\")`의 구매 성공/실패를 검증한다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
+## 다음 한 가지 (갱신)
+
+- STEERING 강화는 이번 슬라이스에서 엔진 로직(`expedition.steeringSpeed`/`buySteeringUpgrade`)과 키보드 구매(`G`)만 추가했다. `SAMPLE YIELD`가 그랬던 것처럼 다음 슬라이스에서 터치 타겟(`settlementTouchRows`에 6번째 행/컬럼 추가)과 `shopLoadoutLines()`의 `steeringAction`/`steeringPreview`/`steeringStatus` EARTH SHOP 패널 표시, `LAUNCH LOADOUT` 표시를 추가해 연료·내구도·표본 수익과 동일한 터치 우선 UX로 맞춰야 한다.
+- 다음 슬라이스 후보: (1) STEERING 강화 터치 UI·상점 패널 표시 추가, (2) 위 YIELD/SHIP 터치-텍스트 정렬 정리, (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+
 
 ## 완료 조건
 

@@ -6,7 +6,6 @@ local world = require("game.world")
 local M = {}
 M.__index = M
 
-local steeringSpeed = 55
 -- Returning-phase LEFT/RIGHT/SPIN touch band. Was a 24px-tall row
 -- (254-278), which only clears ~24pt at the smallest supported window
 -- (integer scale 1, 1x device pixel ratio) -- well under the iOS/Android
@@ -388,7 +387,7 @@ function M:update(dt)
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         self.ship.x = self.ship.x
             + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
-            * steeringSpeed * dt
+            * expedition.steeringSpeed(self.expedition) * dt
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         expedition.update(self.expedition, dt)
@@ -473,6 +472,19 @@ function M:keypressed(key)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.sampleYieldUpgradeCost, "SAMPLE YIELD UPGRADE")
+        end
+        return
+    end
+    if self.expedition.phase == "settlement" and key == "g" then
+        if expedition.buySteeringUpgrade(self.expedition) then
+            self.message = string.format(
+                "STEERING UPGRADED  LV.%d  SPEED %d  BALANCE $%d",
+                self.expedition.steeringUpgradeLevel,
+                expedition.steeringSpeed(self.expedition),
+                self.expedition.money)
+        else
+            self.message = purchaseShortfallMessage(self.expedition.money,
+                self.expedition.steeringUpgradeCost, "STEERING UPGRADE")
         end
         return
     end
