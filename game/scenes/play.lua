@@ -22,6 +22,9 @@ local function planetColor(hue)
     return 0.65, 0.45, 0.95
 end
 
+local slotReelStagger = 0.15
+local slotSpinDuration = slotReelStagger * 3
+
 function M.new(options)
     options = options or {}
     local ship = shipModule.new()
@@ -34,6 +37,7 @@ function M.new(options)
         collided = {},
         discoveredCount = 0,
         floatingTexts = {},
+        slotSpin = nil,
         touches = {},
         message = "TAP TO LAUNCH",
     }, M)
@@ -188,6 +192,9 @@ end
 
 function M:slotButtonState()
     local chances = self.expedition.slotOpportunities
+    if self.slotSpin then
+        return { enabled = false, label = "SLOT SPINNING...", compactLabel = "SPINNING" }
+    end
     if self.expedition.phase ~= "returning" or chances <= 0 then
         return { enabled = false, label = "NO SLOT CHANCES", compactLabel = "NO SLOTS" }
     end
@@ -196,6 +203,35 @@ function M:slotButtonState()
         label = string.format("TAP: SLOT SPIN  %d LEFT", chances),
         compactLabel = string.format("SPIN %d", chances),
     }
+end
+
+function M:beginSlotSpin()
+    self.slotSpin = {
+        elapsed = 0,
+        reelStagger = slotReelStagger,
+        duration = slotSpinDuration,
+        symbols = self.expedition.lastSlotSymbols,
+        reward = self.expedition.lastSlotReward,
+        opportunitiesAfter = self.expedition.slotOpportunities,
+    }
+    self.message = "SLOT SPINNING..."
+end
+
+function M:currentSlotReels()
+    if not self.slotSpin then
+        return self.expedition.lastSlotSymbols
+    end
+    local reels = {}
+    for i = 1, 3 do
+        local stopTime = i * self.slotSpin.reelStagger
+        if self.slotSpin.elapsed >= stopTime then
+            reels[i] = self.slotSpin.symbols[i]
+        else
+            local cycle = math.floor(self.slotSpin.elapsed * 12) + i
+            reels[i] = expedition.slotSymbols[(cycle % #expedition.slotSymbols) + 1]
+        end
+    end
+    return reels
 end
 
 function M:steeringButtonState()
@@ -220,6 +256,16 @@ function M:update(dt)
         ft.y = ft.y - 20 * dt
         if ft.timer <= 0 then
             table.remove(self.floatingTexts, i)
+        end
+    end
+    if self.slotSpin then
+        self.slotSpin.elapsed = self.slotSpin.elapsed + dt
+        if self.slotSpin.elapsed >= self.slotSpin.duration then
+            self.message = string.format("%s +$%d  %d LEFT",
+                table.concat(self.slotSpin.symbols, " "),
+                self.slotSpin.reward,
+                self.slotSpin.opportunitiesAfter)
+            self.slotSpin = nil
         end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
@@ -321,11 +367,8 @@ function M:keypressed(key)
         return
     end
     if key == "space" or key == "return" or key == "up" or key == "w" then
-        if self.expedition.phase == "returning" and expedition.useSlot(self.expedition) then
-            self.message = string.format("%s +$%d  %d LEFT",
-                table.concat(self.expedition.lastSlotSymbols, " "),
-                self.expedition.lastSlotReward,
-                self.expedition.slotOpportunities)
+        if self.expedition.phase == "returning" and not self.slotSpin and expedition.useSlot(self.expedition) then
+            self:beginSlotSpin()
         else
             local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
             if expedition.launch(self.expedition) then
@@ -574,7 +617,14 @@ function M:draw()
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
         love.graphics.printf("HOLD RIGHT", 99, 262, 76, "center")
     elseif self.expedition.phase == "returning" then
-        if self.expedition.lastSlotSymbols then
+        if self.slotSpin then
+            love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
+            love.graphics.rectangle("fill", 18, 210, 144, 36)
+            love.graphics.setColor(0.85, 0.95, 1)
+            love.graphics.printf(table.concat(self:currentSlotReels(), "  "), 20, 216, 140, "center")
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.printf("SPINNING...", 20, 231, 140, "center")
+        elseif self.expedition.lastSlotSymbols then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
             love.graphics.rectangle("fill", 18, 210, 144, 36)
             love.graphics.setColor(0.85, 0.95, 1)

@@ -1,6 +1,7 @@
 local M = {}
 
 local slotSymbols = { "COMET", "PLANET", "STAR" }
+M.slotSymbols = slotSymbols
 
 local function slotReward(symbols)
     if symbols[1] == symbols[2] and symbols[2] == symbols[3] then
