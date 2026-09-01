@@ -260,6 +260,7 @@ function M.run()
     assert(starterNextLaunch.ship == "NEXT STARTER")
     assert(starterNextLaunch.stats == "MAX FUEL 100  HULL 3")
     assert(starterNextLaunch.scoutTradeoff == "SCOUT +40 FUEL / -1 HULL")
+    assert(starterNextLaunch.shipAction == "BUY SCOUT $125")
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
         + nextLaunchScene.expedition.durabilityUpgradeCost + nextLaunchScene.expedition.scoutShipCost
     nextLaunchScene:keypressed("f")
@@ -273,10 +274,17 @@ function M.run()
     assert(scoutNextLaunch.ship == "NEXT SCOUT")
     assert(scoutNextLaunch.stats == "MAX FUEL 160  HULL 3")
     assert(scoutNextLaunch.scoutTradeoff == "SCOUT +40 FUEL / -1 HULL")
+    assert(scoutNextLaunch.shipAction == "SELECT STARTER")
     nextLaunchScene:keypressed("v")
     local reselectedNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(reselectedNextLaunch.ship == "NEXT STARTER")
     assert(reselectedNextLaunch.stats == "MAX FUEL 120  HULL 4")
+    assert(reselectedNextLaunch.shipAction == "SELECT SCOUT")
+    assert(nextLaunchScene.message == "STARTER SELECTED")
+    nextLaunchScene:touchpressed("ship", 90, 244)
+    assert(nextLaunchScene.expedition.selectedShipId == "scout")
+    assert(nextLaunchScene.message == "SCOUT SELECTED")
+    assert(nextLaunchScene:shopLoadoutLines().shipAction == "SELECT STARTER")
 
     local destroyedRun = expedition.new({
         fuel = 10,

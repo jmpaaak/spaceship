@@ -75,11 +75,20 @@ end
 
 function M:shopLoadoutLines()
     local run = self.expedition
+    local shipAction
+    if not run.ownedShips.scout then
+        shipAction = string.format("BUY SCOUT $%d", run.scoutShipCost)
+    elseif run.selectedShipId == "scout" then
+        shipAction = "SELECT STARTER"
+    else
+        shipAction = "SELECT SCOUT"
+    end
     return {
         ship = string.format("NEXT %s", string.upper(run.selectedShipId)),
         stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
         scoutTradeoff = string.format("SCOUT %+d FUEL / %+d HULL",
             run.scoutFuelBonus, run.scoutDurabilityBonus),
+        shipAction = shipAction,
     }
 end
 
@@ -322,16 +331,10 @@ function M:draw()
         love.graphics.printf(string.format("SLOTS $%d", self.expedition.lastSlotSettlement), 16, 168, viewport.width - 32, "center")
         love.graphics.printf(string.format("TAP/F: FUEL LV.%d +%d  $%d", self.expedition.fuelUpgradeLevel, self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 190, viewport.width - 32, "center")
         love.graphics.printf(string.format("TAP/H: HULL LV.%d +%d  $%d", self.expedition.durabilityUpgradeLevel, self.expedition.durabilityUpgradeAmount, self.expedition.durabilityUpgradeCost), 16, 208, viewport.width - 32, "center")
-        local shipText
-        if self.expedition.ownedShips.scout then
-            shipText = string.format("TAP/V: SHIP %s", string.upper(self.expedition.selectedShipId))
-        else
-            shipText = string.format("TAP/V: BUY SCOUT $%d", self.expedition.scoutShipCost)
-        end
         local nextLaunch = self:shopLoadoutLines()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.scoutTradeoff, 16, 224, viewport.width - 32, "center")
-        love.graphics.printf(shipText, 16, 238, viewport.width - 32, "center")
+        love.graphics.printf("TAP/V: " .. nextLaunch.shipAction, 16, 238, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, 16, 252, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)

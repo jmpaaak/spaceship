@@ -51,12 +51,14 @@
 - engine-hosted 상점 loadout 테스트가 기본 능력치, 두 강화 구매, SCOUT 선택과 STARTER 재선택에 따른 다음 출발 최대 연료·내구도 갱신을 검증한다.
 - EARTH SHOP에 SCOUT의 교환 조건 `SCOUT +40 FUEL / -1 HULL`을 구매 전후 항상 표시해 현재 `NEXT <SHIP>` 및 실제 최대 능력치와 동시에 비교할 수 있다.
 - engine-hosted 상점 표시 테스트가 SCOUT 구매 전과 구매·선택 후 모두 교환 조건과 현재 선택 우주선 능력치를 함께 반환하는지 검증한다.
+- EARTH SHOP의 우주선 버튼은 구매 전 `BUY SCOUT $125`, 구매 후에는 현재 선택의 반대편인 `SELECT STARTER`/`SELECT SCOUT`를 표시해 누르면 일어날 동작을 정확히 안내한다.
+- engine-hosted 입력·표시 테스트가 구매 상태와 양쪽 선택 상태의 버튼 문구, `V` 키와 우주선 행 터치에 따른 선택 전환·메시지·다음 출발 표시 갱신을 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- 보유한 우주선의 전환 버튼을 현재 우주선 이름이 아니라 실제 다음 동작인 `SELECT STARTER`/`SELECT SCOUT`로 표시하고 engine-hosted 입력·표시 테스트를 추가한다.
+- 귀환 슬롯 버튼에 남은 기회 수를 함께 표시하고, 기회를 모두 사용한 뒤에는 실행 불가능한 `NO SLOT CHANCES` 상태로 바꾸는 engine-hosted 표시 테스트를 추가한다.
 
 ## 완료 조건
 
