@@ -82,6 +82,14 @@ function M:keypressed(key)
         end
         return
     end
+    if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
+        if expedition.buyDurabilityUpgrade(self.expedition) then
+            self.message = string.format("HULL UPGRADED  MAX %d", self.expedition.maxDurability)
+        else
+            self.message = string.format("NEED $%d FOR HULL UPGRADE", self.expedition.durabilityUpgradeCost)
+        end
+        return
+    end
     if key == "space" or key == "return" or key == "up" or key == "w" then
         if self.expedition.phase == "returning" and expedition.useSlot(self.expedition) then
             self.message = string.format("SLOT SPIN %d  %d CHANCES LEFT", self.expedition.slotSpins, self.expedition.slotOpportunities)
@@ -154,10 +162,11 @@ function M:draw()
     love.graphics.print(string.format("F%03d H%d/%d %-9s S%02d", math.floor(self.expedition.fuel), self.expedition.durability, self.expedition.maxDurability, string.upper(self.expedition.phase), self.expedition.slotOpportunities), 5, 18)
     if self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, 214, viewport.width - 24, 62)
+        love.graphics.rectangle("fill", 12, 198, viewport.width - 24, 78)
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf(string.format("EARTH SHOP  FUEL LV.%d  MAX %d", self.expedition.fuelUpgradeLevel, self.expedition.maxFuel), 16, 222, viewport.width - 32, "center")
-        love.graphics.printf(string.format("F / DOWN: +%d FUEL  $%d", self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 240, viewport.width - 32, "center")
+        love.graphics.printf("EARTH SHOP", 16, 204, viewport.width - 32, "center")
+        love.graphics.printf(string.format("F: FUEL LV.%d +%d  $%d", self.expedition.fuelUpgradeLevel, self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 222, viewport.width - 32, "center")
+        love.graphics.printf(string.format("H: HULL LV.%d +%d  $%d", self.expedition.durabilityUpgradeLevel, self.expedition.durabilityUpgradeAmount, self.expedition.durabilityUpgradeCost), 16, 240, viewport.width - 32, "center")
         love.graphics.printf("SPACE: RELAUNCH", 16, 258, viewport.width - 32, "center")
     elseif self.expedition.phase == "destroyed" then
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)

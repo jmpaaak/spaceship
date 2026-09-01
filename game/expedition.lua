@@ -30,6 +30,8 @@ local function destroy(run)
     run.lastSettlement = 0
     run.fuelUpgradeLevel = 0
     run.maxFuel = run.baseFuel
+    run.durabilityUpgradeLevel = 0
+    run.maxDurability = run.baseDurability
 end
 
 function M.new(options)
@@ -45,10 +47,14 @@ function M.new(options)
         baseFuel = baseFuel,
         maxFuel = baseFuel,
         durability = baseDurability,
+        baseDurability = baseDurability,
         maxDurability = baseDurability,
         fuelUpgradeAmount = options.fuelUpgradeAmount or 20,
         fuelUpgradeCost = options.fuelUpgradeCost or 50,
         fuelUpgradeLevel = 0,
+        durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
+        durabilityUpgradeCost = options.durabilityUpgradeCost or 75,
+        durabilityUpgradeLevel = 0,
         fuelBurnRate = options.fuelBurnRate or 5,
         climbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
@@ -89,6 +95,14 @@ function M.buyFuelUpgrade(run)
     run.money = run.money - run.fuelUpgradeCost
     run.fuelUpgradeLevel = run.fuelUpgradeLevel + 1
     run.maxFuel = run.baseFuel + run.fuelUpgradeLevel * run.fuelUpgradeAmount
+    return true
+end
+
+function M.buyDurabilityUpgrade(run)
+    if run.phase ~= "settlement" or run.money < run.durabilityUpgradeCost then return false end
+    run.money = run.money - run.durabilityUpgradeCost
+    run.durabilityUpgradeLevel = run.durabilityUpgradeLevel + 1
+    run.maxDurability = run.baseDurability + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
     return true
 end
 

@@ -74,6 +74,28 @@ function M.run()
     assert(expedition.launch(shopRun) and shopRun.phase == "ascending")
     assert(shopRun.fuel == 15 and shopRun.altitude == 0 and shopRun.maxAltitude == 0 and shopRun.lastSettlement == 0)
 
+    local hullShopRun = expedition.new({
+        durability = 2,
+        durabilityUpgradeCost = 60,
+        money = 85,
+    })
+    assert(not expedition.buyDurabilityUpgrade(hullShopRun))
+    hullShopRun.phase = "settlement"
+    assert(expedition.buyDurabilityUpgrade(hullShopRun))
+    assert(hullShopRun.money == 25 and hullShopRun.durabilityUpgradeLevel == 1 and hullShopRun.maxDurability == 3)
+    assert(not expedition.buyDurabilityUpgrade(hullShopRun))
+    assert(expedition.launch(hullShopRun) and hullShopRun.phase == "ascending")
+    assert(hullShopRun.durability == 3)
+
+    local shopScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    shopScene.expedition.phase = "settlement"
+    shopScene.expedition.money = shopScene.expedition.durabilityUpgradeCost
+    shopScene:keypressed("h")
+    assert(shopScene.expedition.durabilityUpgradeLevel == 1 and shopScene.expedition.maxDurability == 4)
+    assert(shopScene.message == "HULL UPGRADED  MAX 4")
+
     local destroyedRun = expedition.new({
         fuel = 10,
         durability = 2,
@@ -81,19 +103,24 @@ function M.run()
         climbSpeed = 80,
         fuelUpgradeAmount = 5,
         fuelUpgradeCost = 50,
-        money = 90,
+        durabilityUpgradeCost = 40,
+        money = 140,
     })
     destroyedRun.phase = "settlement"
     assert(expedition.buyFuelUpgrade(destroyedRun))
+    assert(expedition.buyDurabilityUpgrade(destroyedRun))
     assert(expedition.launch(destroyedRun))
     expedition.update(destroyedRun, 1)
     assert(expedition.collectSample(destroyedRun, 70))
+    assert(not expedition.damage(destroyedRun, 1))
+    assert(destroyedRun.durability == 2 and destroyedRun.phase == "ascending")
     assert(not expedition.damage(destroyedRun, 1))
     assert(destroyedRun.durability == 1 and destroyedRun.phase == "ascending")
     assert(expedition.damage(destroyedRun, 1))
     assert(destroyedRun.phase == "destroyed" and destroyedRun.durability == 0)
     assert(destroyedRun.money == 0 and destroyedRun.sampleCount == 0 and destroyedRun.pendingSampleValue == 0)
     assert(destroyedRun.fuelUpgradeLevel == 0 and destroyedRun.maxFuel == destroyedRun.baseFuel)
+    assert(destroyedRun.durabilityUpgradeLevel == 0 and destroyedRun.maxDurability == destroyedRun.baseDurability)
     assert(destroyedRun.bestAltitude == 80)
     assert(expedition.launch(destroyedRun) and destroyedRun.phase == "ascending")
     assert(destroyedRun.altitude == 0 and destroyedRun.durability == destroyedRun.maxDurability)
