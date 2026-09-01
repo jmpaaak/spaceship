@@ -18,6 +18,11 @@ function love.load()
         return
     end
     if os.getenv("GAME_FONTPROBE") == "1" then
+        local smallSlotFont = love.graphics.newFont(8)
+        for _, s in ipairs({ "PLANET  PLANET  PLANET", "COMET  COMET  COMET", "STAR  STAR  STAR",
+            "WIN +$40  FUEL +15", "WIN +$75  REPAIR +1", "WIN +$40  PENDING $40" }) do
+            print(string.format("SMALLSLOTFONTPROBE|%s|%d", s, smallSlotFont:getWidth(s)))
+        end
         local font = love.graphics.newFont(8)
         local samples = {
             "T/H HULL LV.0>1 $75", "T/H HULL LV.9>10 $75",
@@ -75,6 +80,7 @@ function love.load()
         run.lastSlotSettlement = 75
         run.lastSettlement = 155
         run.money = 155
+        run.bankedFuelBonus = 15
     elseif capturePhase == "ascending-wide-warning" then
         local scene = scenes.current
         require("game.expedition").launch(scene.expedition)
@@ -152,6 +158,23 @@ function love.load()
         run.lastSlotSettlement = 0
         run.lastAltitude = 0
         run.lastNewBest = false
+    elseif capturePhase == "returning-fuelbonus" then
+        -- Real-runtime capture for the new next-expedition fuel-bonus slot
+        -- reward (docs/GAME_DESIGN.md 귀환 슬롯: 다음 원정 연료 보너스).
+        -- Forces a completed PLANET-PLANET-PLANET spin result so the
+        -- WIN +$N FUEL +N message renders in the slot result box.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.phase = "returning"
+        scene.expedition.altitude = 500
+        scene.expedition.returnDistance = 500
+        scene.expedition.slotOpportunities = 2
+        scene.expedition.lastSlotSymbols = { "PLANET", "PLANET", "PLANET" }
+        scene.expedition.lastSlotReward = 40
+        scene.expedition.lastSlotFuelBonus = 15
+        scene.expedition.pendingFuelBonus = 15
+        local world = require("game.world")
+        world.nearbyPlanets = function() return {} end
     end
 end
 

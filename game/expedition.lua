@@ -80,6 +80,25 @@ local function slotRepairVoucher(symbols)
 end
 M.slotRepairVoucher = slotRepairVoucher
 
+-- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "다음 원정 연료 보너스"
+-- (next-expedition fuel bonus) as one of the reward kinds a slot spin can
+-- grant, alongside money and repair vouchers. A PLANET-PLANET-PLANET
+-- triple (40% per reel, 6.4% overall -- rarer than a mismatched-symbol
+-- payout but far more common than the STAR jackpot) grants a fuel bonus.
+-- Unlike the repair voucher, this bonus cannot help the current, already
+-- fuel-empty expedition; it is banked at safe settlement and applied to
+-- the *next* launch's starting fuel instead.
+local slotFuelBonusAmount = 15
+M.slotFuelBonusAmount = slotFuelBonusAmount
+
+local function slotFuelBonus(symbols)
+    if symbols[1] == "PLANET" and symbols[2] == "PLANET" and symbols[3] == "PLANET" then
+        return slotFuelBonusAmount
+    end
+    return 0
+end
+M.slotFuelBonus = slotFuelBonus
+
 local function refreshShipStats(run)
     local fuelBonus = 0
     local durabilityBonus = 0
@@ -114,6 +133,8 @@ local function settle(run)
     run.lastSlotSpinsCount = run.slotSpins
     run.lastAltitude = run.maxAltitude
     run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
+    run.bankedFuelBonus = run.pendingFuelBonus
+    run.pendingFuelBonus = 0
     run.pendingSampleValue = 0
     run.pendingSlotReward = 0
     run.sampleCount = 0
@@ -139,6 +160,9 @@ local function destroy(run)
     run.lastSlotSymbols = nil
     run.lastSlotReward = 0
     run.lastSlotRepair = 0
+    run.lastSlotFuelBonus = 0
+    run.pendingFuelBonus = 0
+    run.bankedFuelBonus = 0
     run.returnDistance = 0
     run.money = 0
     run.lastSettlement = 0
@@ -202,6 +226,9 @@ function M.new(options)
         lastSlotSymbols = nil,
         lastSlotReward = 0,
         lastSlotRepair = 0,
+        lastSlotFuelBonus = 0,
+        pendingFuelBonus = 0,
+        bankedFuelBonus = 0,
         sampleCount = 0,
         pendingSampleValue = 0,
         pendingSlotReward = 0,
@@ -228,7 +255,8 @@ function M.launch(run)
     if run.phase ~= "launch" then
         run.altitude = 0
         run.maxAltitude = 0
-        run.fuel = run.maxFuel
+        run.fuel = run.maxFuel + (run.bankedFuelBonus or 0)
+        run.bankedFuelBonus = 0
         run.durability = run.maxDurability
         run.returnDistance = 0
         run.slotOpportunities = 0
@@ -236,6 +264,8 @@ function M.launch(run)
         run.lastSlotSymbols = nil
         run.lastSlotReward = 0
         run.lastSlotRepair = 0
+        run.lastSlotFuelBonus = 0
+        run.pendingFuelBonus = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
         run.pendingSlotReward = 0
@@ -334,6 +364,9 @@ function M.useSlot(run)
     local applied = math.min(voucher, run.maxDurability - run.durability)
     run.durability = run.durability + applied
     run.lastSlotRepair = applied
+    local fuelBonus = slotFuelBonus(symbols)
+    run.lastSlotFuelBonus = fuelBonus
+    run.pendingFuelBonus = (run.pendingFuelBonus or 0) + fuelBonus
     return true
 end
 

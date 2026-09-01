@@ -252,6 +252,12 @@ function M:loadoutLines()
     }
 end
 
+function M:summaryFuelBonusLine()
+    local bonus = self.expedition.bankedFuelBonus or 0
+    if bonus <= 0 then return nil end
+    return string.format("NEXT LAUNCH FUEL +%d", bonus)
+end
+
 local function purchaseStatus(money, cost)
     if money >= cost then return string.format("LEFT $%d", money - cost), true end
     return string.format("SHORT $%d", cost - money), false
@@ -368,6 +374,7 @@ function M:beginSlotSpin()
         symbols = self.expedition.lastSlotSymbols,
         reward = self.expedition.lastSlotReward,
         repair = self.expedition.lastSlotRepair,
+        fuelBonus = self.expedition.lastSlotFuelBonus,
         opportunitiesAfter = self.expedition.slotOpportunities,
     }
     self.message = "SLOT SPINNING..."
@@ -422,6 +429,12 @@ function M:update(dt)
                     table.concat(self.slotSpin.symbols, " "),
                     self.slotSpin.reward,
                     self.slotSpin.repair,
+                    self.slotSpin.opportunitiesAfter)
+            elseif self.slotSpin.fuelBonus and self.slotSpin.fuelBonus > 0 then
+                self.message = string.format("%s +$%d FUEL +%d  %d LEFT",
+                    table.concat(self.slotSpin.symbols, " "),
+                    self.slotSpin.reward,
+                    self.slotSpin.fuelBonus,
                     self.slotSpin.opportunitiesAfter)
             else
                 self.message = string.format("%s +$%d  %d LEFT",
@@ -782,6 +795,25 @@ function M:draw()
         love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf("EARTH SHOP", 16, 74, viewport.width - 32, "center")
+        local fuelBonusLine = self:summaryFuelBonusLine()
+        -- The previously-verified capture (build/spaceship-runtime-preview-
+        -- settlement-newbest-*.png) fit exactly one extra summary line
+        -- (NEW BEST!) at y=127 with shop rows starting unshifted at
+        -- row=140 and the last shop line (TAP: RELAUNCH) landing just
+        -- above the y=307 DEV PLACEHOLDER footer. A second real capture
+        -- of both NEW BEST! and the new NEXT LAUNCH FUEL bonus stacked as
+        -- separate lines pushed TAP: RELAUNCH into the footer (found and
+        -- reverted in this slice; see docs/STATUS.md). To keep the
+        -- verified-safe unshifted baseline, when both are present they
+        -- share a single combined line instead of adding a second row.
+        local summaryExtraLine
+        if self.expedition.lastNewBest and fuelBonusLine then
+            summaryExtraLine = "NEW BEST!  FUEL +" .. tostring(self.expedition.bankedFuelBonus)
+        elseif self.expedition.lastNewBest then
+            summaryExtraLine = "NEW BEST!"
+        elseif fuelBonusLine then
+            summaryExtraLine = fuelBonusLine
+        end
         love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
         love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
         love.graphics.setFont(self.smallFont)
@@ -792,9 +824,9 @@ function M:draw()
         love.graphics.printf(string.format("SPINS (%d) $%d", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 22, 109, viewport.width - 44, "center")
         love.graphics.setColor(0.6, 0.8, 1)
         love.graphics.printf(string.format("PEAK ALT %d", math.floor(self.expedition.lastAltitude or 0)), 22, 118, viewport.width - 44, "center")
-        if self.expedition.lastNewBest then
+        if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf("NEW BEST!", 22, 127, viewport.width - 44, "center")
+            love.graphics.printf(summaryExtraLine, 22, 127, viewport.width - 44, "center")
         end
         local nextLaunch = self:shopLoadoutLines()
         local actionX, actionW = shopActionColumnX, shopActionColumnW
@@ -952,7 +984,15 @@ function M:draw()
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(0.6, 0.8, 1)
         love.graphics.printf(self:slotOddsLine(), 12, 197, viewport.width - 24, "center")
-        love.graphics.setFont(previousOddsFont)
+        -- The slot result panel's symbol/WIN lines previously used the
+        -- default font (measured 160px for "PLANET  PLANET  PLANET" and
+        -- 155px for "WIN +$40  PENDING $40" via GAME_FONTPROBE) inside a
+        -- 140px-wide printf box, which auto-wrapped the widest strings to
+        -- a second line and collided with the fixed y=231 WIN row below
+        -- (confirmed via a real LÖVE runtime capture,
+        -- GAME_CAPTURE_PHASE=returning-fuelbonus). The same small font
+        -- (8px, measured max 108px symbol row / 103px WIN row) already
+        -- used for the ODDS line above fits both rows without wrapping.
         if self.slotSpin then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
             love.graphics.rectangle("fill", 18, 210, 144, 34)
@@ -970,12 +1010,17 @@ function M:draw()
                 love.graphics.printf(string.format("WIN +$%d  REPAIR +%d",
                     self.expedition.lastSlotReward,
                     self.expedition.lastSlotRepair), 20, 231, 140, "center")
+            elseif self.expedition.lastSlotFuelBonus and self.expedition.lastSlotFuelBonus > 0 then
+                love.graphics.printf(string.format("WIN +$%d  FUEL +%d",
+                    self.expedition.lastSlotReward,
+                    self.expedition.lastSlotFuelBonus), 20, 231, 140, "center")
             else
                 love.graphics.printf(string.format("WIN +$%d  PENDING $%d",
                     self.expedition.lastSlotReward,
                     self.expedition.pendingSlotReward), 20, 231, 140, "center")
             end
         end
+        love.graphics.setFont(previousOddsFont)
         local slotButton = self:slotButtonState()
         local steering = self:steeringButtonState()
         local returnBandHeight = returnControls.bottom - returnControls.top

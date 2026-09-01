@@ -1097,6 +1097,103 @@ function M.run()
     assert(repairMessageScene.message == "STAR STAR STAR +$75 REPAIR +1  0 LEFT",
         "slot spin completion message must include the repair bonus: " .. tostring(repairMessageScene.message))
 
+    -- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "다음 원정 연료
+    -- 보너스" (next-expedition fuel bonus) as one of the reward kinds a
+    -- return slot spin can grant. Only money and repair vouchers existed
+    -- until now. A PLANET-PLANET-PLANET triple (40% per reel, 6.4%
+    -- overall -- rarer than any generic triple's $40 payout but more
+    -- common than the STAR jackpot) grants a fuel bonus that is banked at
+    -- safe settlement and applied to the *next* expedition's starting
+    -- fuel (not the current one, since the ship has already exhausted its
+    -- fuel by the time it is returning).
+    local fuelBonusRun = expedition.new({
+        slotRandom = function() return 6 end, -- PLANET (cumulative 6..9)
+    })
+    fuelBonusRun.phase = "returning"
+    fuelBonusRun.slotOpportunities = 1
+    assert(expedition.useSlot(fuelBonusRun))
+    assert(table.concat(fuelBonusRun.lastSlotSymbols, "-") == "PLANET-PLANET-PLANET")
+    assert(fuelBonusRun.lastSlotReward == 40 and fuelBonusRun.pendingSlotReward == 40)
+    assert(fuelBonusRun.lastSlotFuelBonus == 15, "PLANET triple must grant a 15 fuel bonus")
+    assert(fuelBonusRun.pendingFuelBonus == 15, "fuel bonus must accumulate as pending until settlement")
+    assert(fuelBonusRun.bankedFuelBonus == 0, "fuel bonus must not be banked before safe settlement")
+
+    -- Non-jackpot, non-PLANET-triple combos grant no fuel bonus.
+    assert(noRepairRun.lastSlotFuelBonus == 0)
+    assert((noRepairRun.pendingFuelBonus or 0) == 0)
+
+    -- Safe settlement banks the pending fuel bonus for the next launch and
+    -- clears the pending counter; the current settlement's fuel is
+    -- untouched (it only applies at the *next* M.launch).
+    fuelBonusRun.altitude = 1
+    expedition.update(fuelBonusRun, 1) -- drives altitude to 0 and calls settle()
+    assert(fuelBonusRun.phase == "settlement")
+    assert(fuelBonusRun.bankedFuelBonus == 15, "safe settlement must bank the pending fuel bonus")
+    assert(fuelBonusRun.pendingFuelBonus == 0, "pending fuel bonus must clear once banked")
+
+    -- The next launch applies the banked fuel bonus on top of maxFuel and
+    -- clears the bank so it cannot be reused on a later launch.
+    assert(expedition.launch(fuelBonusRun))
+    assert(fuelBonusRun.fuel == fuelBonusRun.maxFuel + 15,
+        "next launch must add the banked fuel bonus to starting fuel")
+    assert(fuelBonusRun.bankedFuelBonus == 0, "banked fuel bonus must be consumed by the launch it funds")
+
+    -- A second launch (no new bonus earned) must not carry over a bonus.
+    fuelBonusRun.phase = "settlement"
+    assert(expedition.launch(fuelBonusRun))
+    assert(fuelBonusRun.fuel == fuelBonusRun.maxFuel,
+        "launches without a freshly banked bonus must start at plain maxFuel")
+
+    -- Destruction forfeits any pending/banked fuel bonus like the other
+    -- pending rewards (samples, slot money, repair).
+    local destroyedFuelBonusRun = expedition.new({
+        slotRandom = function() return 6 end,
+    })
+    destroyedFuelBonusRun.phase = "returning"
+    destroyedFuelBonusRun.slotOpportunities = 1
+    assert(expedition.useSlot(destroyedFuelBonusRun))
+    assert(destroyedFuelBonusRun.pendingFuelBonus == 15)
+    assert(expedition.damage(destroyedFuelBonusRun, destroyedFuelBonusRun.durability))
+    assert(destroyedFuelBonusRun.phase == "destroyed")
+    assert(destroyedFuelBonusRun.pendingFuelBonus == 0, "destruction must forfeit the pending fuel bonus")
+    assert(destroyedFuelBonusRun.bankedFuelBonus == 0, "destruction must forfeit any banked fuel bonus too")
+    assert(destroyedFuelBonusRun.lastSlotFuelBonus == 0, "destruction must clear the last-spin fuel bonus receipt")
+
+    -- The returning-phase slot result message should surface the fuel
+    -- bonus alongside money/repair, and the launch message should surface
+    -- the banked bonus actually applied to the new expedition.
+    local fuelBonusMessageRolls = { 6, 6, 6 }
+    local nextFuelBonusMessageRoll = 0
+    local fuelBonusMessageScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    fuelBonusMessageScene.expedition.slotRandom = function()
+        nextFuelBonusMessageRoll = nextFuelBonusMessageRoll + 1
+        return fuelBonusMessageRolls[nextFuelBonusMessageRoll]
+    end
+    fuelBonusMessageScene.expedition.phase = "returning"
+    fuelBonusMessageScene.expedition.altitude = 500
+    fuelBonusMessageScene.expedition.slotOpportunities = 1
+    fuelBonusMessageScene:keypressed("up")
+    fuelBonusMessageScene:update(fuelBonusMessageScene.slotSpin.duration + 0.01)
+    assert(fuelBonusMessageScene.message == "PLANET PLANET PLANET +$40 FUEL +15  0 LEFT",
+        "slot spin completion message must include the fuel bonus: " .. tostring(fuelBonusMessageScene.message))
+
+    -- The EARTH SHOP summary card (settlement phase) must surface a
+    -- banked next-expedition fuel bonus so the player can see the reward
+    -- they earned before relaunching, mirroring how SAMPLES/SPINS/PEAK
+    -- ALT/NEW BEST already summarize other settlement outcomes.
+    local fuelBonusSummaryScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    fuelBonusSummaryScene.expedition.bankedFuelBonus = 0
+    assert(fuelBonusSummaryScene:summaryFuelBonusLine() == nil,
+        "no fuel bonus banked must show no summary line")
+    fuelBonusSummaryScene.expedition.bankedFuelBonus = 15
+    assert(fuelBonusSummaryScene:summaryFuelBonusLine() == "NEXT LAUNCH FUEL +15",
+        "banked fuel bonus must be summarized as NEXT LAUNCH FUEL +N: "
+            .. tostring(fuelBonusSummaryScene:summaryFuelBonusLine()))
+
     print("SPACESHIP_UNIT_OK")
 end
 
