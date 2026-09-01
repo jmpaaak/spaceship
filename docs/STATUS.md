@@ -288,3 +288,13 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 EARTH SHOP의 `T/F FUEL...`/`T/H HULL...`/`T/G STEER...`/`T/Y YIELD...`/`T/V BUY SCOUT...` 다섯 행 모두 액션·상태 텍스트가 한 줄로 렌더링되고 서로 겹치거나 아래 행과 충돌하지 않는 것을 vision으로 확인했다. `LEFT $105`/`LEFT $80`/`LEFT $90`/`LEFT $95`/`LEFT $30` 상태 문자열이 모두 정상 표시됐다(잔액이 충분한 캡처라 `SHORT $N` 분기 자체는 아직 실기기 캡처로 직접 확인하지 못했고, 대신 실측 폰트 폭 기반 engine-hosted 테스트로 `SHORT $125`(52px) 최악 케이스를 수치로 검증했다).
 - 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리(지난 사이클에서 시도했으나 폰트 프로브 타임아웃으로 되돌림, 이번 사이클의 `GAME_FONTPROBE` 진입 경로로 향후 재시도 가능), (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 귀환 슬롯 수리권(REPAIR) 보상 추가 (완료)
+
+- `docs/GAME_DESIGN.md`의 "플레이어는 귀환 중 슬롯을 돌려 돈 배수, 표본 보너스, 수리권, 다음 원정 연료 보너스 등을 얻는다" 요구 중 그동안 돈 보상만 구현되고 수리권(REPAIR)이 빠져 있던 것을 발견해 EARTH SHOP 슬롯 로직에 추가했다. `game/expedition.lua`에 `slotRepairVoucher(symbols)`를 추가해 가장 희귀한 조합인 `STAR-STAR-STAR` 트리플(릴당 10%, 전체 0.1%)에서만 내구도 1을 회복하는 수리권을 지급하도록 했다. `M.useSlot`이 스핀 결과에서 계산한 수리량을 `run.maxDurability - run.durability`로 clamp해 실제 회복량을 `run.durability`에 적용하고 `run.lastSlotRepair`에 실제 적용된 값을 저장한다(최대 내구도 상태에서 다시 STAR 트리플이 나오면 `lastSlotRepair == 0`).
+- `game/scenes/play.lua`의 슬롯 스핀 완료 메시지와 귀환 phase draw의 슬롯 결과 패널이 `lastSlotRepair > 0`일 때만 `WIN +$N REPAIR +N` 형식으로 수리 보너스를 추가 표시하고, 그 외에는 기존 `WIN +$N PENDING $N`/스핀 완료 메시지 형식을 그대로 유지한다.
+- 재출발(`launch`)과 파괴(`destroy`) 시 다른 슬롯 관련 필드(`lastSlotReward`, `lastSlotSymbols`)와 동일하게 `lastSlotRepair`도 0으로 초기화된다.
+- engine-hosted 테스트가 STAR 트리플의 수리 1 적용과 `lastSlotRepair == 1`, 이미 최대 내구도인 상태에서 수리량이 적용되지 않고 `lastSlotRepair == 0`인 경우, 비잭팟 조합에서 수리가 발생하지 않는 경우, 재출발과 파괴 시 수리 영수증 필드 초기화, 그리고 `PlayScene`의 실제 스핀 완료 메시지(`"STAR STAR STAR +$75 REPAIR +1  0 LEFT"`)를 검증한다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+- `main.lua`에 `GAME_CAPTURE_PHASE=returning-repair` 개발 전용 진입 경로를 추가했다. 실제 LÖVE runtime capture(`1080×1920`)로 귀환 슬롯 결과 패널에 `STAR STAR STAR`와 `WIN +$75  REPAIR +1`이 겹침·잘림 없이 표시되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-returning-repair.png`, 로컬 산출물로 커밋 제외).
+- 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) `docs/GAME_DESIGN.md`가 언급한 "다음 원정 연료 보너스" 슬롯 보상도 아직 미구현이므로 유사한 방식으로 추가 검토, (4) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+

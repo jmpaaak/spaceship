@@ -367,6 +367,7 @@ function M:beginSlotSpin()
         duration = slotSpinDuration,
         symbols = self.expedition.lastSlotSymbols,
         reward = self.expedition.lastSlotReward,
+        repair = self.expedition.lastSlotRepair,
         opportunitiesAfter = self.expedition.slotOpportunities,
     }
     self.message = "SLOT SPINNING..."
@@ -416,10 +417,18 @@ function M:update(dt)
     if self.slotSpin then
         self.slotSpin.elapsed = self.slotSpin.elapsed + dt
         if self.slotSpin.elapsed >= self.slotSpin.duration then
-            self.message = string.format("%s +$%d  %d LEFT",
-                table.concat(self.slotSpin.symbols, " "),
-                self.slotSpin.reward,
-                self.slotSpin.opportunitiesAfter)
+            if self.slotSpin.repair and self.slotSpin.repair > 0 then
+                self.message = string.format("%s +$%d REPAIR +%d  %d LEFT",
+                    table.concat(self.slotSpin.symbols, " "),
+                    self.slotSpin.reward,
+                    self.slotSpin.repair,
+                    self.slotSpin.opportunitiesAfter)
+            else
+                self.message = string.format("%s +$%d  %d LEFT",
+                    table.concat(self.slotSpin.symbols, " "),
+                    self.slotSpin.reward,
+                    self.slotSpin.opportunitiesAfter)
+            end
             self.slotSpin = nil
         end
     end
@@ -957,9 +966,15 @@ function M:draw()
             love.graphics.setColor(0.85, 0.95, 1)
             love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 20, 216, 140, "center")
             love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(string.format("WIN +$%d  PENDING $%d",
-                self.expedition.lastSlotReward,
-                self.expedition.pendingSlotReward), 20, 231, 140, "center")
+            if self.expedition.lastSlotRepair and self.expedition.lastSlotRepair > 0 then
+                love.graphics.printf(string.format("WIN +$%d  REPAIR +%d",
+                    self.expedition.lastSlotReward,
+                    self.expedition.lastSlotRepair), 20, 231, 140, "center")
+            else
+                love.graphics.printf(string.format("WIN +$%d  PENDING $%d",
+                    self.expedition.lastSlotReward,
+                    self.expedition.pendingSlotReward), 20, 231, 140, "center")
+            end
         end
         local slotButton = self:slotButtonState()
         local steering = self:steeringButtonState()

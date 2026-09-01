@@ -117,6 +117,24 @@ function love.load()
         scene.expedition.slotOpportunities = 3
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
+    elseif capturePhase == "returning-repair" then
+        -- Real-runtime capture for the new repair-voucher slot reward
+        -- (docs/GAME_DESIGN.md 귀환 슬롯: 수리권). Forces a completed
+        -- STAR-STAR-STAR spin result so the WIN +$N REPAIR +N message
+        -- renders in the slot result box.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.phase = "returning"
+        scene.expedition.altitude = 500
+        scene.expedition.returnDistance = 500
+        scene.expedition.durability = 1
+        scene.expedition.slotOpportunities = 2
+        scene.expedition.lastSlotSymbols = { "STAR", "STAR", "STAR" }
+        scene.expedition.lastSlotReward = 75
+        scene.expedition.lastSlotRepair = 1
+        scene.expedition.durability = 2
+        local world = require("game.world")
+        world.nearbyPlanets = function() return {} end
     elseif capturePhase == "settlement-shortfunds" then
         -- Real-runtime capture for the "남은 다음 슬라이스 후보 (1)" item in
         -- docs/STATUS.md: verify the SHORT $N status branch (as opposed to

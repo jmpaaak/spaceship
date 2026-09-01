@@ -1018,6 +1018,85 @@ function M.run()
         "ascending band bottom edge did not register right steering")
     ascendEdgeScene:touchreleased("ascend-edge-right")
 
+    -- docs/GAME_DESIGN.md's 귀환 슬롯 section lists repair vouchers
+    -- (수리권) as one of the reward kinds a return slot spin can grant,
+    -- alongside money. Only money payouts existed until now. A STAR-STAR-
+    -- STAR jackpot is the rarest/most valuable combo (10% per reel, 0.1%
+    -- overall), so it also restores 1 durability point (capped at
+    -- run.maxDurability) as its repair-voucher bonus on top of the $75
+    -- money reward. Non-jackpot combos grant no repair.
+    local repairRun = expedition.new({
+        slotRandom = function() return 10 end, -- always STAR (weight cumulative 10)
+    })
+    repairRun.durability = 1
+    repairRun.phase = "returning"
+    repairRun.slotOpportunities = 1
+    assert(expedition.useSlot(repairRun))
+    assert(table.concat(repairRun.lastSlotSymbols, "-") == "STAR-STAR-STAR")
+    assert(repairRun.lastSlotReward == 75 and repairRun.pendingSlotReward == 75)
+    assert(repairRun.durability == 2, "STAR triple must repair 1 durability point")
+    assert(repairRun.lastSlotRepair == 1, "lastSlotRepair must report the actual repair applied")
+
+    local repairAtCapRun = expedition.new({
+        durability = 3,
+        slotRandom = function() return 10 end,
+    })
+    repairAtCapRun.phase = "returning"
+    repairAtCapRun.slotOpportunities = 1
+    assert(expedition.useSlot(repairAtCapRun))
+    assert(repairAtCapRun.durability == 3, "repair must not exceed maxDurability")
+    assert(repairAtCapRun.lastSlotRepair == 0, "no repair should be reported once durability is already full")
+
+    local noRepairRolls = { 1, 6, 10 } -- COMET-PLANET-STAR, no match, no repair
+    local nextNoRepairRoll = 0
+    local noRepairRun = expedition.new({
+        slotRandom = function()
+            nextNoRepairRoll = nextNoRepairRoll + 1
+            return noRepairRolls[nextNoRepairRoll]
+        end,
+    })
+    noRepairRun.durability = 1
+    noRepairRun.phase = "returning"
+    noRepairRun.slotOpportunities = 1
+    assert(expedition.useSlot(noRepairRun))
+    assert(noRepairRun.durability == 1, "non-jackpot combos must not repair durability")
+    assert(noRepairRun.lastSlotRepair == 0)
+
+    -- relaunch and destruction must reset the repair receipt like the
+    -- other last-spin fields (lastSlotReward, lastSlotSymbols).
+    repairRun.phase = "settlement"
+    assert(expedition.launch(repairRun))
+    assert(repairRun.lastSlotRepair == 0, "relaunch must clear the previous spin's repair receipt")
+    repairRun.phase = "returning"
+    repairRun.slotOpportunities = 1
+    repairRun.durability = 1
+    assert(expedition.useSlot(repairRun))
+    assert(repairRun.lastSlotRepair == 1)
+    assert(expedition.damage(repairRun, repairRun.durability))
+    assert(repairRun.phase == "destroyed" and repairRun.lastSlotRepair == 0,
+        "destruction must clear the repair receipt like other pending/last-spin fields")
+
+    -- The returning-phase slot result message should surface the repair
+    -- bonus so players can see it landed, alongside the existing money
+    -- win/pending text.
+    local repairMessageRolls = { 10, 10, 10 }
+    local nextRepairMessageRoll = 0
+    local repairMessageScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    repairMessageScene.expedition.slotRandom = function()
+        nextRepairMessageRoll = nextRepairMessageRoll + 1
+        return repairMessageRolls[nextRepairMessageRoll]
+    end
+    repairMessageScene.expedition.phase = "returning"
+    repairMessageScene.expedition.altitude = 500
+    repairMessageScene.expedition.durability = 1
+    repairMessageScene.expedition.slotOpportunities = 1
+    repairMessageScene:keypressed("up")
+    repairMessageScene:update(repairMessageScene.slotSpin.duration + 0.01)
+    assert(repairMessageScene.message == "STAR STAR STAR +$75 REPAIR +1  0 LEFT",
+        "slot spin completion message must include the repair bonus: " .. tostring(repairMessageScene.message))
+
     print("SPACESHIP_UNIT_OK")
 end
 

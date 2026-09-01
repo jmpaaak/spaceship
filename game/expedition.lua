@@ -68,6 +68,18 @@ local function spinSlot(run)
     return symbols, slotReward(symbols)
 end
 
+-- docs/GAME_DESIGN.md's 귀환 슬롯 section lists repair vouchers (수리권)
+-- as one of the reward kinds a slot spin can grant, alongside money. Only
+-- the rarest/most valuable combo (STAR-STAR-STAR jackpot, 10% per reel,
+-- 0.1% overall) also grants a repair voucher worth 1 durability point.
+local function slotRepairVoucher(symbols)
+    if symbols[1] == "STAR" and symbols[2] == "STAR" and symbols[3] == "STAR" then
+        return 1
+    end
+    return 0
+end
+M.slotRepairVoucher = slotRepairVoucher
+
 local function refreshShipStats(run)
     local fuelBonus = 0
     local durabilityBonus = 0
@@ -126,6 +138,7 @@ local function destroy(run)
     run.slotSpins = 0
     run.lastSlotSymbols = nil
     run.lastSlotReward = 0
+    run.lastSlotRepair = 0
     run.returnDistance = 0
     run.money = 0
     run.lastSettlement = 0
@@ -188,6 +201,7 @@ function M.new(options)
         slotRandom = options.slotRandom or math.random,
         lastSlotSymbols = nil,
         lastSlotReward = 0,
+        lastSlotRepair = 0,
         sampleCount = 0,
         pendingSampleValue = 0,
         pendingSlotReward = 0,
@@ -221,6 +235,7 @@ function M.launch(run)
         run.slotSpins = 0
         run.lastSlotSymbols = nil
         run.lastSlotReward = 0
+        run.lastSlotRepair = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
         run.pendingSlotReward = 0
@@ -315,6 +330,10 @@ function M.useSlot(run)
     run.lastSlotSymbols = symbols
     run.lastSlotReward = reward
     run.pendingSlotReward = run.pendingSlotReward + reward
+    local voucher = slotRepairVoucher(symbols)
+    local applied = math.min(voucher, run.maxDurability - run.durability)
+    run.durability = run.durability + applied
+    run.lastSlotRepair = applied
     return true
 end
 
