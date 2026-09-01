@@ -39,6 +39,13 @@ function M.run()
     riskScene.expedition.phase = "ascending"
     riskScene.expedition.altitude = 500
     riskScene.expedition.durability = 3
+    local warning = riskScene:collisionRisk({ y = -500 })
+    assert(warning.damage == 2 and not warning.lethal and warning.label == "RISK -2")
+    local lethalWarning = riskScene:collisionRisk({ y = -1000 })
+    assert(lethalWarning.damage == 3 and lethalWarning.lethal and lethalWarning.label == "LETHAL -3")
+    riskScene.expedition.phase = "returning"
+    assert(riskScene:collisionRisk({ y = -500 }) == nil)
+    riskScene.expedition.phase = "ascending"
     local nearbyPlanets = world.nearbyPlanets
     world.nearbyPlanets = function()
         return { { id = "risk-test", x = 0, y = -500, radius = 7 } }

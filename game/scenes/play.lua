@@ -32,6 +32,17 @@ function M:persistBestAltitude()
     return self.bestAltitudeStore:save(self.expedition.bestAltitude)
 end
 
+function M:collisionRisk(planet)
+    if self.expedition.phase ~= "ascending" then return nil end
+    local damage = world.collisionDamage(planet)
+    local lethal = damage >= self.expedition.durability
+    return {
+        damage = damage,
+        lethal = lethal,
+        label = string.format(lethal and "LETHAL -%d" or "RISK -%d", damage),
+    }
+end
+
 function M:update(dt)
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
@@ -203,6 +214,18 @@ function M:draw()
             love.graphics.circle("fill", x, y, planet.radius)
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)
+            if y >= 40 and y < shipScreenY then
+                local risk = self:collisionRisk(planet)
+                if risk then
+                    if risk.lethal then
+                        love.graphics.setColor(1, 0.3, 0.25)
+                    else
+                        love.graphics.setColor(1, 0.8, 0.25)
+                    end
+                    local riskX = math.max(2, math.min(viewport.width - 52, x - 26))
+                    love.graphics.printf(risk.label, riskX, math.max(36, y - planet.radius - 13), 52, "center")
+                end
+            end
         end
     end
     love.graphics.push()
