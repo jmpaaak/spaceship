@@ -46,7 +46,17 @@ function M.run()
     assert(lethalWarning.damage == 3 and lethalWarning.lethal and lethalWarning.label == "LETHAL -3")
     assert(lethalWarning.sampleValue == 60 and lethalWarning.sampleLabel == "SAMPLE $60")
     riskScene.expedition.phase = "returning"
-    assert(riskScene:collisionRisk({ y = -500 }) == nil)
+    local returningPlanet = { id = "return-warning", y = -500 }
+    local returningWarning = riskScene:approachWarning(returningPlanet, 205, 185)
+    assert(returningWarning.damage == 2 and not returningWarning.lethal
+        and returningWarning.label == "RISK -2")
+    assert(returningWarning.sampleValue == nil and returningWarning.sampleLabel == nil)
+    local returningLethalWarning = riskScene:approachWarning({ y = -1000 }, 205, 185)
+    assert(returningLethalWarning.damage == 3 and returningLethalWarning.lethal
+        and returningLethalWarning.label == "LETHAL -3")
+    assert(riskScene:approachWarning(returningPlanet, 165, 185) == nil)
+    riskScene.collided[returningPlanet.id] = true
+    assert(riskScene:approachWarning(returningPlanet, 205, 185) == nil)
     riskScene.expedition.altitude = 725
     riskScene.expedition.returnDistance = 1000
     riskScene.expedition.returnSpeed = 45

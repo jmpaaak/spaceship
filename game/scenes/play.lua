@@ -33,17 +33,29 @@ function M:persistBestAltitude()
 end
 
 function M:collisionRisk(planet)
-    if self.expedition.phase ~= "ascending" then return nil end
+    local phase = self.expedition.phase
+    if phase ~= "ascending" and phase ~= "returning" then return nil end
     local damage = world.collisionDamage(planet)
     local lethal = damage >= self.expedition.durability
-    local sampleValue = world.sampleValue(planet)
-    return {
+    local risk = {
         damage = damage,
         lethal = lethal,
         label = string.format(lethal and "LETHAL -%d" or "RISK -%d", damage),
-        sampleValue = sampleValue,
-        sampleLabel = string.format("SAMPLE $%d", sampleValue),
     }
+    if phase == "ascending" then
+        risk.sampleValue = world.sampleValue(planet)
+        risk.sampleLabel = string.format("SAMPLE $%d", risk.sampleValue)
+    end
+    return risk
+end
+
+function M:approachWarning(planet, planetScreenY, shipScreenY)
+    if planet.id and self.collided[planet.id] then return nil end
+    local phase = self.expedition.phase
+    local approaching = phase == "ascending" and planetScreenY >= 40 and planetScreenY < shipScreenY
+        or phase == "returning" and planetScreenY > shipScreenY and planetScreenY < viewport.height
+    if not approaching then return nil end
+    return self:collisionRisk(planet)
 end
 
 function M:hudLines()
@@ -361,20 +373,24 @@ function M:draw()
             love.graphics.circle("fill", x, y, planet.radius)
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)
-            if y >= 40 and y < shipScreenY then
-                local risk = self:collisionRisk(planet)
-                if risk then
-                    local previewX = math.max(2, math.min(viewport.width - 66, x - 33))
-                    local previewY = math.max(48, y - planet.radius - 24)
+            local risk = self:approachWarning(planet, y, shipScreenY)
+            if risk then
+                local previewX = math.max(2, math.min(viewport.width - 66, x - 33))
+                local previewY
+                if risk.sampleLabel then
+                    previewY = math.max(48, y - planet.radius - 24)
                     love.graphics.setColor(0.45, 0.95, 1)
                     love.graphics.printf(risk.sampleLabel, previewX, previewY, 66, "center")
-                    if risk.lethal then
-                        love.graphics.setColor(1, 0.3, 0.25)
-                    else
-                        love.graphics.setColor(1, 0.8, 0.25)
-                    end
-                    love.graphics.printf(risk.label, previewX, previewY + 11, 66, "center")
+                    previewY = previewY + 11
+                else
+                    previewY = math.max(72, y - planet.radius - 12)
                 end
+                if risk.lethal then
+                    love.graphics.setColor(1, 0.3, 0.25)
+                else
+                    love.graphics.setColor(1, 0.8, 0.25)
+                end
+                love.graphics.printf(risk.label, previewX, previewY, 66, "center")
             end
         end
     end
