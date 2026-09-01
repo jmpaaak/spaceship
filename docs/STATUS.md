@@ -148,10 +148,13 @@
 - engine-hosted 테스트가 `world.sampleTier`의 세 구간 경계값(299/300, 799/800)과 `PlayScene.sampleTierColor`의 세 등급이 서로 다른 색을 반환하는지 검증한다.
 - `main.lua`에 `GAME_CAPTURE_PHASE=ascending-sample-tiers` 개발 전용 진입 경로를 추가해 세 등급(`common`/`rare`/`epic`)의 모의 행성을 동시에 배치했다. 실제 LÖVE runtime capture(`1080×1920`)로 `common` 흰색 링, `rare` 청록색 링, `epic` 금색 링이 서로 다른 색으로 렌더링되는 것을 확인했다 (`build/spaceship-runtime-preview-ascending-sample-tiers.png`).
 
+- 귀환 슬롯의 세 심볼(`COMET`/`PLANET`/`STAR`)이 기존에 균등 확률로 뽑히던 것을 명확한 확률/기대값 밸런싱으로 교체했다. `game/expedition.lua`에 `slotWeights`(`COMET 5`, `PLANET 4`, `STAR 1`, 총 가중치 10)를 추가해 `COMET 50%`·`PLANET 40%`·`STAR 10%`의 확률로 뽑히게 했고, `M.slotSymbolProbability(symbol)`·`M.weightedSlotSymbol(roll)`·`M.slotExpectedValue()`를 노출해 심볼별 확률과 스핀당 기대 보상(가중치 브루트포스로 계산한 정확값)을 다른 코드나 향후 UI가 조회할 수 있게 했다. 스핀 로직(`spinSlot`)은 `run.slotRandom(#slotSymbols)`(균등 1~3) 대신 `run.slotRandom(slotTotalWeight)`(1~10)로 굴려 가중치 심볼을 뽑는다.
+- engine-hosted 테스트가 `slotTotalWeight == 10`, 세 심볼의 정확한 확률(`0.5`/`0.4`/`0.1`), `weightedSlotSymbol`의 경계값 매핑(`1~5→COMET`, `6~9→PLANET`, `10→STAR`)과 `slotExpectedValue()`의 확률 합 `1`·스핀당 기대 보상 `18.585`를 검증한다. 기존 귀환/파괴/터치 시나리오 테스트의 주입 `slotRandom` 값도 새 1~10 스케일과 심볼 매핑에 맞춰 갱신해(`STAR`=10, `PLANET`=6, `COMET`=1) 계속 같은 시나리오(스타 트리플, COMET-COMET-PLANET 등)를 재현하도록 했다.
+
 ## 다음 한 가지
 
 - 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 12줄 안팎의 텍스트가 이제 패널 안에 들어가지만, 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다.
-- 표본 등급별 링 색을 실제 LÖVE runtime capture로 확인했다. 다음 슬라이스는 핵심 루프 상태머신의 다음 미구현 조각(예: 슬롯 심볼별 명확한 확률/기대값 밸런싱)으로 이동한다.
+- 슬롯 심볼별 확률/기대값(`COMET 50%`/`PLANET 40%`/`STAR 10%`, 스핀당 기대 보상 `$18.585`)을 엔진 로직에 확정했다. 다음 슬라이스는 귀환 슬롯 UI에 심볼 확률 또는 기대 배당을 화면에 노출하거나, 핵심 루프 상태머신의 다른 미구현 조각(예: 조종 강화 상점 항목)으로 이동한다.
 
 ## 완료 조건
 

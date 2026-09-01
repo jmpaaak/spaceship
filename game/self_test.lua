@@ -150,7 +150,7 @@ function M.run()
     assert(wipedReturn.lastLostSampleCount == 0 and wipedReturn.lastLostSampleValue == 0)
     assert(wipedReturn.lastLostSlotSpinsCount == 0 and wipedReturn.lastLostSlotValue == 0)
 
-    local basicSlotRolls = { 1, 2, 3, 2, 3, 1 }
+    local basicSlotRolls = { 1, 6, 10, 6, 10, 1 }
     local nextBasicSlotRoll = 0
     local run = expedition.new({
         fuel = 2,
@@ -203,7 +203,7 @@ function M.run()
     assert(lowerRun.lastNewBest == false)
     assert(lowerRun.bestAltitude == 500)
 
-    local slotRolls = { 3, 3, 3, 1, 1, 2, 3, 3, 3 }
+    local slotRolls = { 10, 10, 10, 1, 1, 6, 10, 10, 10 }
     local nextSlotRoll = 0
     local slotRun = expedition.new({
         returnSpeed = 100,
@@ -399,7 +399,7 @@ function M.run()
     touchScene.expedition.returnDistance = 500
     touchScene.expedition.returnSpeed = 0
     touchScene.expedition.slotOpportunities = 2
-    touchScene.expedition.slotRandom = function() return 3 end
+    touchScene.expedition.slotRandom = function() return 10 end
     local returnStartX = touchScene.ship.x
     nearbyPlanets = world.nearbyPlanets
     world.nearbyPlanets = function() return {} end
@@ -684,6 +684,20 @@ function M.run()
     assert(sampleFloatingText.y < startingFloatingY)
     floatingTextScene:update(0.6)
     assert(#floatingTextScene.floatingTexts == 0)
+
+    assert(expedition.slotTotalWeight == 10)
+    assert(math.abs(expedition.slotSymbolProbability("COMET") - 0.5) < 1e-9)
+    assert(math.abs(expedition.slotSymbolProbability("PLANET") - 0.4) < 1e-9)
+    assert(math.abs(expedition.slotSymbolProbability("STAR") - 0.1) < 1e-9)
+    assert(expedition.weightedSlotSymbol(1) == "COMET")
+    assert(expedition.weightedSlotSymbol(5) == "COMET")
+    assert(expedition.weightedSlotSymbol(6) == "PLANET")
+    assert(expedition.weightedSlotSymbol(9) == "PLANET")
+    assert(expedition.weightedSlotSymbol(10) == "STAR")
+    local ev, probabilitySum = expedition.slotExpectedValue()
+    assert(math.abs(probabilitySum - 1) < 1e-9)
+    assert(ev > 0 and ev < 25)
+    assert(math.abs(ev - 18.585) < 0.01)
 
     print("SPACESHIP_UNIT_OK")
 end

@@ -3,6 +3,21 @@ local M = {}
 local slotSymbols = { "COMET", "PLANET", "STAR" }
 M.slotSymbols = slotSymbols
 
+-- Weighted so rarer symbols carry the bigger payout: COMET is the common
+-- filler, PLANET is mid-rare, STAR is the rare jackpot symbol.
+local slotWeights = { COMET = 5, PLANET = 4, STAR = 1 }
+M.slotWeights = slotWeights
+
+local slotTotalWeight = 0
+for _, symbol in ipairs(slotSymbols) do
+    slotTotalWeight = slotTotalWeight + slotWeights[symbol]
+end
+M.slotTotalWeight = slotTotalWeight
+
+function M.slotSymbolProbability(symbol)
+    return slotWeights[symbol] / slotTotalWeight
+end
+
 local function slotReward(symbols)
     if symbols[1] == symbols[2] and symbols[2] == symbols[3] then
         if symbols[1] == "STAR" then return 75 end
@@ -13,11 +28,42 @@ local function slotReward(symbols)
     end
     return 5
 end
+M.slotReward = slotReward
+
+local function weightedSlotSymbol(roll)
+    local cumulative = 0
+    for _, symbol in ipairs(slotSymbols) do
+        cumulative = cumulative + slotWeights[symbol]
+        if roll <= cumulative then return symbol end
+    end
+    return slotSymbols[#slotSymbols]
+end
+M.weightedSlotSymbol = weightedSlotSymbol
+
+-- Exact expected payout of a single spin given the current symbol weights,
+-- computed by brute-forcing every reel combination (used for balance tests
+-- and future UI display, not just an approximation).
+function M.slotExpectedValue()
+    local total = 0
+    local probabilitySum = 0
+    for _, a in ipairs(slotSymbols) do
+        for _, b in ipairs(slotSymbols) do
+            for _, c in ipairs(slotSymbols) do
+                local probability = M.slotSymbolProbability(a)
+                    * M.slotSymbolProbability(b)
+                    * M.slotSymbolProbability(c)
+                total = total + probability * slotReward({ a, b, c })
+                probabilitySum = probabilitySum + probability
+            end
+        end
+    end
+    return total, probabilitySum
+end
 
 local function spinSlot(run)
     local symbols = {}
     for reel = 1, 3 do
-        symbols[reel] = slotSymbols[run.slotRandom(#slotSymbols)]
+        symbols[reel] = weightedSlotSymbol(run.slotRandom(slotTotalWeight))
     end
     return symbols, slotReward(symbols)
 end
