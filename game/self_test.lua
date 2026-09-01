@@ -61,6 +61,19 @@ function M.run()
     local lethalWarning = riskScene:collisionRisk({ y = -1000 })
     assert(lethalWarning.damage == 3 and lethalWarning.lethal and lethalWarning.label == "LETHAL -3")
     assert(lethalWarning.sampleValue == 60 and lethalWarning.sampleLabel == "SAMPLE $60")
+    -- The SAMPLE YIELD upgrade multiplies the actual money awarded by
+    -- expedition.collectSample (see collectSample's `awarded` return value
+    -- and its use in PlayScene's floating "+$N" text), but the RISK/SAMPLE
+    -- approach-warning preview label was still built directly from
+    -- world.sampleValue(planet), ignoring the multiplier. That made the
+    -- preview understate the real payout once a player owned any SAMPLE
+    -- YIELD level, so it must also apply expedition.sampleYieldMultiplier.
+    riskScene.expedition.sampleYieldUpgradeLevel = 1
+    local yieldWarning = riskScene:collisionRisk({ y = -500 })
+    assert(yieldWarning.sampleValue == 44 and yieldWarning.sampleLabel == "SAMPLE $44",
+        "collisionRisk sampleValue/sampleLabel must apply the SAMPLE YIELD multiplier ("
+            .. tostring(yieldWarning.sampleValue) .. " " .. tostring(yieldWarning.sampleLabel) .. ")")
+    riskScene.expedition.sampleYieldUpgradeLevel = 0
     riskScene.expedition.phase = "returning"
     local returningPlanet = { id = "return-warning", y = -500 }
     local returningWarning = riskScene:approachWarning(returningPlanet, 205, 185)

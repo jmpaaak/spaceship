@@ -214,9 +214,14 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1080×1920`)로 새 `T/Y YIELD LV.0>1 $60  LEFT $95`, `YIELD x1.25` 줄이 기존 12줄과 겹치거나 화면을 벗어나지 않고 `TAP: RELAUNCH`까지 패널 안에 표시되는 것을 vision으로 확인했다 (`build/spaceship-runtime-preview-settlement-newbest-yieldtouch.png`, 로컬 산출물로 커밋 제외). 요약 카드부터 `TAP: RELAUNCH`/`DEV PLACEHOLDER`까지 전체 21줄이 겹침·잘림 없이 세로 순서대로 표시됨을 확인했다.
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
 
+- 상승 중 접근 행성 위에 표시되는 `SAMPLE $N` 위험 경고 라벨(`PlayScene:collisionRisk`)이 `SAMPLE YIELD` 강화 배수를 반영하지 않고 항상 `world.sampleValue(planet)` 원본 값만 표시하던 버그를 고쳤다. 실제 획득 시 지급액(`expedition.collectSample`의 `awarded`, 플로팅 `+$N` 텍스트에 이미 반영됨)과 경고 라벨이 강화 1단계 이상 상태에서 서로 다른 숫자를 보여주고 있었다. `collisionRisk`가 이제 `expedition.sampleYieldMultiplier(run)`을 적용한 반올림 값을 `sampleValue`/`sampleLabel`에 사용한다.
+- engine-hosted 테스트가 `SAMPLE YIELD` 레벨 0(배수 `x1`)과 레벨 1(배수 `x1.25`) 상태에서 고도 500 행성의 `collisionRisk` 경고가 각각 `SAMPLE $35`·`SAMPLE $44`를 반환하는지 검증한다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
 ## 다음 한 가지
 
 - EARTH SHOP의 YIELD/SHIP 터치 행이 하나의 44px 밴드를 좌우로 나눠 공유하는 방식은 접근성 최소값은 만족하지만, 그려지는 텍스트 줄(y=190~200 YIELD, y=240~270대 SHIP 관련 여러 줄)과 터치 밴드 경계가 완전히 1:1로 정렬되지는 않는 기존 패턴(연료/내구도 행도 동일하게 느슨한 정렬이었음)을 그대로 유지했다. 다음 슬라이스에서는 이 5행 레이아웃을 텍스트 줄과 더 타이트하게 정렬하거나, 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export 가용성 확인)로 전환하는 것을 검토한다.
+- 이번 슬라이스에서 `SAMPLE $N` 경고 라벨의 표본 수익 강화 배수 누락을 고쳤다. 다음 슬라이스 후보: (1) 위 YIELD/SHIP 터치-텍스트 정렬 정리, (2) 귀환 슬롯 보상(`slotExpectedValue` 등)에도 유사한 강화 배수 누락이 없는지 점검, (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
 
 ## 완료 조건

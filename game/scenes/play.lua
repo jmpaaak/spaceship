@@ -156,7 +156,8 @@ function M:collisionRisk(planet)
         label = string.format(lethal and "LETHAL -%d" or "RISK -%d", damage),
     }
     if phase == "ascending" then
-        risk.sampleValue = world.sampleValue(planet)
+        local baseValue = world.sampleValue(planet)
+        risk.sampleValue = math.floor(baseValue * expedition.sampleYieldMultiplier(self.expedition) + 0.5)
         risk.sampleLabel = string.format("SAMPLE $%d", risk.sampleValue)
     end
     return risk
