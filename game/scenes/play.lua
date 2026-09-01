@@ -52,6 +52,20 @@ M.settlementTouchRows = settlementTouchRows
 local destroyedTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
 M.destroyedTouchArea = destroyedTouchArea
 
+-- Ascending-phase HOLD LEFT/HOLD RIGHT steering buttons. touchpressed for
+-- this phase already accepts a tap anywhere on the internal canvas (no y
+-- restriction; see the "ascending" branch below), so the *functional*
+-- touch target already spans the full 180x320 canvas -- far beyond the
+-- 44pt accessibility minimum. This constant only documents/tests the
+-- *visual* button box drawn on screen, which was a 24px-tall row
+-- (254-278, only ~24pt at the smallest supported window, integer scale 1,
+-- 1x device pixel ratio) -- under the same 44pt bar returnControls and
+-- settlementTouchRows were widened to meet. Widened to match
+-- returnControls exactly (244-288, 44 canvas px) for visual consistency,
+-- even though it does not gate touch acceptance.
+local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
+M.ascendControls = ascendControls
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
@@ -774,22 +788,24 @@ function M:draw()
         else
             love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
         end
-        love.graphics.rectangle("fill", 5, 254, 76, 24)
+        local ascendBandHeight = ascendControls.bottom - ascendControls.top
+        love.graphics.rectangle("fill", 5, ascendControls.top, 76, ascendBandHeight)
         if steering.rightActive then
             love.graphics.setColor(0.35, 0.9, 1, 0.8)
         else
             love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
         end
-        love.graphics.rectangle("fill", 99, 254, 76, 24)
+        love.graphics.rectangle("fill", 99, ascendControls.top, 76, ascendBandHeight)
         self.smallFont = self.smallFont or love.graphics.newFont(8)
         local previousSteeringFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
+        local ascendLabelY = ascendControls.top + math.floor((ascendBandHeight - 10) / 2)
         love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
             steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
-        love.graphics.printf("HOLD LEFT", 5, 263, 76, "center")
+        love.graphics.printf("HOLD LEFT", 5, ascendLabelY, 76, "center")
         love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
-        love.graphics.printf("HOLD RIGHT", 99, 263, 76, "center")
+        love.graphics.printf("HOLD RIGHT", 99, ascendLabelY, 76, "center")
         love.graphics.setFont(previousSteeringFont)
     elseif self.expedition.phase == "returning" then
         self.smallFont = self.smallFont or love.graphics.newFont(8)

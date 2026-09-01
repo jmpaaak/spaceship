@@ -807,6 +807,35 @@ function M.run()
             "destroyed tap at (" .. point.x .. "," .. point.y .. ") did not restart the run")
     end
 
+    -- Ascending-phase HOLD LEFT/HOLD RIGHT button box was drawn 24px tall
+    -- (only ~24pt at the smallest supported window), under the same 44pt
+    -- accessibility minimum returnControls/settlementTouchRows were fixed
+    -- to meet. touchpressed for this phase already accepts any tap on the
+    -- full canvas regardless of y (functionally already >=44pt), so this
+    -- test verifies the *visual* button box constant directly.
+    local ascendControls = PlayScene.ascendControls
+    assert(ascendControls.bottom - ascendControls.top >= 34,
+        "ascending control band is under the 34px minimum")
+    local ascendBandPoints = viewport.canvasPixelsToPoints(
+        ascendControls.bottom - ascendControls.top, 180, 320, 1, false)
+    assert(ascendBandPoints >= 44,
+        "ascending control band is under the 44pt accessibility minimum at scale 1 (" .. ascendBandPoints .. "pt)")
+
+    local ascendEdgeScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    ascendEdgeScene.expedition.phase = "ascending"
+    ascendEdgeScene:touchpressed("ascend-edge-left", 20, ascendControls.top)
+    local ascendEdgeLeftSteering = ascendEdgeScene:steeringButtonState()
+    assert(ascendEdgeLeftSteering.leftActive and not ascendEdgeLeftSteering.rightActive,
+        "ascending band top edge did not register left steering")
+    ascendEdgeScene:touchreleased("ascend-edge-left")
+    ascendEdgeScene:touchpressed("ascend-edge-right", 160, ascendControls.bottom - 1)
+    local ascendEdgeRightSteering = ascendEdgeScene:steeringButtonState()
+    assert(not ascendEdgeRightSteering.leftActive and ascendEdgeRightSteering.rightActive,
+        "ascending band bottom edge did not register right steering")
+    ascendEdgeScene:touchreleased("ascend-edge-right")
+
     print("SPACESHIP_UNIT_OK")
 end
 

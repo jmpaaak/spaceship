@@ -193,9 +193,14 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=returning-odds`, `1440×2560`)로 넓어진 `LEFT`/`SPIN 3`/`RIGHT` 버튼이 명확히 분리된 박스로 렌더링되고 위쪽 `ODDS` 줄, 아래쪽 `TAP TO LAUNCH`/`DEV PLACEHOLDER` 텍스트와 겹치지 않는 것을 vision으로 확인했다.
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
 
+- 상승(`ascending`) `HOLD LEFT`/`HOLD RIGHT` 조종 버튼의 시각적 버튼 박스도 EARTH SHOP·귀환과 같은 44pt 접근성 기준으로 맞췄다. 이 phase는 이미 `touchpressed`가 y 좌표 제한 없이 전체 180×320 캔버스를 조종 입력으로 받아들이고 있어 *기능적* 터치 타겟은 원래부터 44pt를 크게 초과했지만, 실제로 그려지는 버튼 배경 박스는 24px(254~278, 정수 배율 1·1x 기기 픽셀 비율 기준 ~24pt)로 시각적 피드백 영역이 좁았다. `game/scenes/play.lua`에 `PlayScene.ascendControls`(`top=244, bottom=288`, `returnControls`와 동일한 44 canvas px 밴드)를 추가하고 버튼 사각형·라벨 y좌표를 이 상수 기준 동적 계산으로 교체했다.
+- engine-hosted 테스트가 `PlayScene.ascendControls`의 34px/44pt 최소값 충족과 밴드 상하 경계 좌표에서 실제 좌/우 조종이 등록되는지 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-wide-warning`, `1440×2560`)로 넓어진 `HOLD LEFT`/`HOLD RIGHT` 버튼이 명확히 분리된 박스로 렌더링되고 `TAP TO LAUNCH`/`DEV PLACEHOLDER`와 겹치지 않는 것을 vision으로 확인했다 (`build/spaceship-runtime-preview-ascending-controlfix.png`, 로컬 산출물로 커밋 제외).
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
 ## 다음 한 가지
 
-- 귀환 `LEFT`/`RIGHT`/`SPIN N` 버튼도 EARTH SHOP의 44pt 접근성 기준으로 맞췄다(24px→44px 세로 폭). 다음 슬라이스는 이 슬라이스에서 손대지 않은 `SHIP DESTROYED`의 실제 폭 대비 여유(이미 큼)를 넘어, 두 상승 조종 버튼(`HOLD LEFT`/`HOLD RIGHT`, 24px)에 대해서도 44pt 최소값을 재검증하고 필요하면 확장하는 것이다.
+- 상승·귀환·EARTH SHOP·SHIP DESTROYED 4개 phase의 주요 터치 타겟이 모두 44pt 접근성 최소값을 충족하도록 검증·확장했다. 다음 슬라이스는 남은 UI 표면(예: 슬롯 릴 결과 박스, 발사 로드아웃 패널 등 비-액션 표시 요소는 제외)에서 아직 검증하지 않은 터치 상호작용이 있는지 전체를 다시 스캔하거나, 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export)로 전환하는 것이다.
 
 ## 완료 조건
 
