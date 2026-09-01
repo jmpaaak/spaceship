@@ -133,6 +133,26 @@ M.clampLabelX = clampLabelX
 local slotReelStagger = 0.15
 local slotSpinDuration = slotReelStagger * 3
 
+-- EARTH SHOP action/status two-column layout for the fuel/hull/steering/
+-- yield/ship rows. Measured with a real LÖVE font probe
+-- (GAME_FONTPROBE=1 love .) against the small scene-cached font
+-- (love.graphics.newFont(8)): the widest action string
+-- ("T/G STEER LV.9>10 $65") is 100px and the widest status string
+-- ("SHORT $125") is 52px. The previous actionW=102/statusX=120/statusW=48
+-- columns left the status column only 48px -- 4px under its own worst
+-- case -- so a wide "SHORT $N" status could wrap to a second line inside
+-- its own printf box and overlap the row drawn immediately below (only
+-- 9px of row spacing). The panel background spans x=12..168
+-- (viewport.width - 24 wide from x=12), so the two columns are sized to
+-- exactly cover their measured worst case within that inner width with
+-- no wasted margin: action 16..116 (100px), status 116..168 (52px).
+local shopActionColumnX, shopActionColumnW = 16, 100
+local shopStatusColumnX, shopStatusColumnW = 116, 52
+M.shopActionColumnX = shopActionColumnX
+M.shopActionColumnW = shopActionColumnW
+M.shopStatusColumnX = shopStatusColumnX
+M.shopStatusColumnW = shopStatusColumnW
+
 function M.new(options)
     options = options or {}
     local ship = shipModule.new()
@@ -768,8 +788,8 @@ function M:draw()
             love.graphics.printf("NEW BEST!", 22, 127, viewport.width - 44, "center")
         end
         local nextLaunch = self:shopLoadoutLines()
-        local actionX, actionW = 16, 102
-        local statusX, statusW = 120, 48
+        local actionX, actionW = shopActionColumnX, shopActionColumnW
+        local statusX, statusW = shopStatusColumnX, shopStatusColumnW
         local fullX, fullW = 16, viewport.width - 32
         local row = 140
         local rowStep = 9

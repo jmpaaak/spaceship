@@ -834,6 +834,21 @@ function M.run()
         assert(row.bottom - row.top >= 34,
             "settlement touch row " .. (row.key or "columns") .. " is under the 34px minimum")
     end
+
+    -- EARTH SHOP fuel/hull/steering/yield/ship rows print an action string
+    -- (left column) and a status string (right column, "LEFT $N"/"SHORT $N"/
+    -- "OWNED") side by side. A real LÖVE font probe (GAME_FONTPROBE=1 love .)
+    -- against the small scene-cached font (love.graphics.newFont(8)) measured
+    -- the widest action string ("T/G STEER LV.9>10 $65") at 100px and the
+    -- widest status string ("SHORT $125") at 52px. Verify the drawn columns
+    -- clear both measured worst cases so long status text cannot wrap onto a
+    -- second line and overlap the row spaced only 9px below.
+    assert(PlayScene.shopActionColumnW >= 100,
+        "EARTH SHOP action column is under the measured worst-case action text width")
+    assert(PlayScene.shopStatusColumnW >= 52,
+        "EARTH SHOP status column is under the measured worst-case status text width")
+    assert(PlayScene.shopStatusColumnX >= PlayScene.shopActionColumnX + PlayScene.shopActionColumnW,
+        "EARTH SHOP status column overlaps the action column")
     -- The smallest supported window (integer scale 1, e.g. 180x320) at a 1x
     -- device pixel ratio is the worst case for touch-target accessibility.
     -- iOS/Android guidelines require ~44pt minimum; verify every settlement

@@ -17,6 +17,24 @@ function love.load()
         love.event.quit(0)
         return
     end
+    if os.getenv("GAME_FONTPROBE") == "1" then
+        local font = love.graphics.newFont(8)
+        local samples = {
+            "T/H HULL LV.0>1 $75", "T/H HULL LV.9>10 $75",
+            "T/G STEER LV.0>1 $65", "T/G STEER LV.9>10 $65",
+            "T/Y YIELD LV.0>1 $60", "T/Y YIELD LV.9>10 $60",
+            "T/V BUY SCOUT $125", "T/V SELECT STARTER", "T/V SELECT SCOUT",
+            "LEFT $999", "SHORT $999", "OWNED",
+            "LEFT $9999", "SHORT $125", "LEFT $105", "SHORT $105",
+            "FUEL LV.0 HULL LV.0 YIELD LV.0 STEER LV.0",
+            "FUEL LV.9 HULL LV.9 YIELD LV.9 STEER LV.9",
+        }
+        for _, s in ipairs(samples) do
+            print(string.format("FONTPROBE|%s|%d", s, font:getWidth(s)))
+        end
+        love.event.quit(0)
+        return
+    end
     love.graphics.setDefaultFilter("nearest", "nearest")
     canvas = love.graphics.newCanvas(viewport.width, viewport.height)
     canvas:setFilter("nearest", "nearest")

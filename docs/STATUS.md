@@ -271,3 +271,13 @@
 - 세로 실제 런타임 캡처 `540×960`에서 실제 최대 연료·내구도와 `NO-HIT 600  SLOTS 6`을 포함한 launch loadout, `TAP TO LAUNCH`, `DEV PLACEHOLDER` 표시 확인
 - 개인 최고 높이 영구 저장 engine-hosted 자동 테스트 통과
 - 출발·정산 HUD의 개인 최고 높이 복구 표시 engine-hosted 자동 테스트 통과
+
+## EARTH SHOP 액션/상태 컬럼 폭 결함 수정 (완료)
+
+- 지난 사이클의 "다음 슬라이스 후보 (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬 정리" 재시도 전에, `main.lua`에 `GAME_FONTPROBE=1` 개발 전용 진입 경로를 추가해 씬 캐시 작은 폰트(`love.graphics.newFont(8)`, 높이 10px)로 EARTH SHOP 액션/상태 문자열들의 실제 폭을 측정했다. 그 결과 가장 넓은 액션 문자열 `T/G STEER LV.9>10 $65`가 100px, 가장 넓은 상태 문자열 `SHORT $125`가 52px로 측정됐는데, 기존 `game/scenes/play.lua`의 `settlement` draw 분기가 쓰던 `actionX=16, actionW=102`(액션은 여유 있음)와 `statusX=120, statusW=48`(상태는 자기 자신의 측정 폭보다 4px 좁음)이 실제 렌더링에서 `SHORT $N` 같은 넓은 상태 문자열을 `printf`가 자동 줄바꿈해 9px 아래의 다음 행과 겹칠 수 있는 실제 결함이었다. `love.graphics` 헤드리스 비활성화로 이 겹침 자체는 engine-hosted 테스트로 직접 렌더링 검증할 수 없다(기존 결함들과 동일한 제약).
+- `game/scenes/play.lua`에 이름 있는 상수 `PlayScene.shopActionColumnX/shopActionColumnW`(16, 100)와 `PlayScene.shopStatusColumnX/shopStatusColumnW`(116, 52)를 추가해 두 컬럼이 측정된 최악 폭을 정확히 커버하고 서로 겹치지 않게 했다(패널 내부 폭 `x=12..168`, 액션 `16..116`, 상태 `116..168`). `settlement` draw 분기의 로컬 `actionX/actionW`, `statusX/statusW` 변수를 이 새 상수로 교체했다.
+- engine-hosted 테스트(RED 확인: 기존 상수 `102`/`48`은 각각 100px·52px 측정값 기준으로 통과했을 액션 검증은 통과하지만 상태 검증(`>= 52`)에서 `48 >= 52`가 거짓이라 즉시 실패하는 것을 확인한 뒤 구현)가 `shopActionColumnW >= 100`, `shopStatusColumnW >= 52`와 두 컬럼이 겹치지 않는지(`shopStatusColumnX >= shopActionColumnX + shopActionColumnW`)를 검증한다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 EARTH SHOP의 `T/F FUEL...`/`T/H HULL...`/`T/G STEER...`/`T/Y YIELD...`/`T/V BUY SCOUT...` 다섯 행 모두 액션·상태 텍스트가 한 줄로 렌더링되고 서로 겹치거나 아래 행과 충돌하지 않는 것을 vision으로 확인했다. `LEFT $105`/`LEFT $80`/`LEFT $90`/`LEFT $95`/`LEFT $30` 상태 문자열이 모두 정상 표시됐다(잔액이 충분한 캡처라 `SHORT $N` 분기 자체는 아직 실기기 캡처로 직접 확인하지 못했고, 대신 실측 폰트 폭 기반 engine-hosted 테스트로 `SHORT $125`(52px) 최악 케이스를 수치로 검증했다).
+- 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리(지난 사이클에서 시도했으나 폰트 프로브 타임아웃으로 되돌림, 이번 사이클의 `GAME_FONTPROBE` 진입 경로로 향후 재시도 가능), (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+
