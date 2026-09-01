@@ -44,16 +44,19 @@
 - engine-hosted HUD 테스트가 상승과 귀환 양쪽에서 표본 수와 미정산 표본 가치가 함께 표시되는지 검증한다.
 - 출발·정산 HUD에 영구 기록을 `PERSONAL BEST NNNN`으로 표시하며, 새 scene이 저장소에서 복구한 기록도 즉시 반영한다.
 - engine-hosted HUD 테스트가 출발·정산 phase의 최고 높이 표시와 저장 후 새 scene에서 복구된 표시를 검증한다.
+- 출발 화면의 `LAUNCH LOADOUT` 패널이 선택 우주선과 연료·내구도 강화 레벨을 표시하며, 파괴 화면도 메타 초기화 뒤 다음 출발이 `SHIP STARTER`, `FUEL LV.0  HULL LV.0`임을 표시한다.
+- engine-hosted loadout 테스트가 기본 장비, SCOUT 선택과 두 강화 구매, 파괴 뒤 기본 우주선·강화 0 초기화의 표시 문자열을 검증한다.
+- 실제 LÖVE runtime capture `build/spaceship-runtime-preview.png`에서 `LAUNCH LOADOUT`, `SHIP STARTER`, `FUEL LV.0  HULL LV.0`이 `540×960` 세로 화면 안에 표시되는 것을 확인했다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- 출발 화면에 선택한 우주선과 연료·내구도 강화 레벨을 표시하고, 파괴 후 기본 우주선·강화 0으로 초기화된 출발 정보가 보이는 engine-hosted 테스트를 추가한다.
+- EARTH SHOP에 현재 선택 우주선과 강화까지 반영된 다음 출발의 최종 최대 연료·내구도를 항상 표시하고, 구매·선택 변경 때 즉시 갱신되는 engine-hosted 테스트를 추가한다.
 
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)
-- 세로 실제 런타임 캡처 `540×960`에서 `TAP TO LAUNCH`와 `DEV PLACEHOLDER` 표시 확인
+- 세로 실제 런타임 캡처 `540×960`에서 launch loadout, `TAP TO LAUNCH`, `DEV PLACEHOLDER` 표시 확인
 - 개인 최고 높이 영구 저장 engine-hosted 자동 테스트 통과
 - 출발·정산 HUD의 개인 최고 높이 복구 표시 engine-hosted 자동 테스트 통과

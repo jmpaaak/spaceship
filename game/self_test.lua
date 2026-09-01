@@ -230,6 +230,28 @@ function M.run()
     touchScene:touchpressed("relaunch", 90, 264)
     assert(touchScene.expedition.phase == "ascending")
 
+    local loadoutScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    local starterLoadout = loadoutScene:loadoutLines()
+    assert(starterLoadout.ship == "SHIP STARTER")
+    assert(starterLoadout.upgrades == "FUEL LV.0  HULL LV.0")
+    loadoutScene.expedition.phase = "settlement"
+    loadoutScene.expedition.money = loadoutScene.expedition.fuelUpgradeCost
+        + loadoutScene.expedition.durabilityUpgradeCost + loadoutScene.expedition.scoutShipCost
+    assert(expedition.buyFuelUpgrade(loadoutScene.expedition))
+    assert(expedition.buyDurabilityUpgrade(loadoutScene.expedition))
+    assert(expedition.buyShip(loadoutScene.expedition, "scout"))
+    assert(expedition.selectShip(loadoutScene.expedition, "scout"))
+    local upgradedLoadout = loadoutScene:loadoutLines()
+    assert(upgradedLoadout.ship == "SHIP SCOUT")
+    assert(upgradedLoadout.upgrades == "FUEL LV.1  HULL LV.1")
+    assert(expedition.launch(loadoutScene.expedition))
+    assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
+    local resetLoadout = loadoutScene:loadoutLines()
+    assert(resetLoadout.ship == "SHIP STARTER")
+    assert(resetLoadout.upgrades == "FUEL LV.0  HULL LV.0")
+
     local destroyedRun = expedition.new({
         fuel = 10,
         durability = 2,

@@ -64,6 +64,15 @@ function M:hudLines()
     }
 end
 
+function M:loadoutLines()
+    local run = self.expedition
+    return {
+        ship = string.format("SHIP %s", string.upper(run.selectedShipId)),
+        upgrades = string.format("FUEL LV.%d  HULL LV.%d",
+            run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
+    }
+end
+
 function M:update(dt)
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
@@ -281,7 +290,17 @@ function M:draw()
     else
         love.graphics.print(hud.status, 5, 18)
     end
-    if self.expedition.phase == "settlement" then
+    if self.expedition.phase == "launch" then
+        local loadout = self:loadoutLines()
+        love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
+        love.graphics.rectangle("fill", 12, 220, viewport.width - 24, 58)
+        love.graphics.setColor(0.7, 0.9, 1)
+        love.graphics.printf("LAUNCH LOADOUT", 16, 226, viewport.width - 32, "center")
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.printf(loadout.ship, 16, 242, viewport.width - 32, "center")
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(loadout.upgrades, 16, 258, viewport.width - 32, "center")
+    elseif self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
         love.graphics.rectangle("fill", 12, 122, viewport.width - 24, 156)
         love.graphics.setColor(0.7, 0.9, 1)
@@ -306,12 +325,17 @@ function M:draw()
         love.graphics.printf(shipStats, 16, 238, viewport.width - 32, "center")
         love.graphics.printf("TAP: RELAUNCH", 16, 258, viewport.width - 32, "center")
     elseif self.expedition.phase == "destroyed" then
+        local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-        love.graphics.rectangle("fill", 12, 214, viewport.width - 24, 62)
+        love.graphics.rectangle("fill", 12, 198, viewport.width - 24, 80)
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf("SHIP DESTROYED", 16, 222, viewport.width - 32, "center")
-        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), 16, 240, viewport.width - 32, "center")
-        love.graphics.printf("TAP: START OVER", 16, 258, viewport.width - 32, "center")
+        love.graphics.printf("SHIP DESTROYED", 16, 204, viewport.width - 32, "center")
+        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), 16, 218, viewport.width - 32, "center")
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.printf("NEXT " .. loadout.ship, 16, 234, viewport.width - 32, "center")
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(loadout.upgrades, 16, 248, viewport.width - 32, "center")
+        love.graphics.printf("TAP: START OVER", 16, 264, viewport.width - 32, "center")
     elseif self.expedition.phase == "ascending" then
         love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
         love.graphics.rectangle("fill", 5, 254, 76, 24)
