@@ -45,6 +45,11 @@ function M.sampleValue(planet)
     return 10 + math.floor(height / 100) * 5
 end
 
+function M.collisionDamage(planet)
+    local height = math.max(0, -planet.y)
+    return 1 + math.floor(height / 500)
+end
+
 function M.stars(sectorX, sectorY)
     local stars = {}
     for i = 1, 18 do

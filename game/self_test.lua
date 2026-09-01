@@ -29,6 +29,24 @@ function M.run()
     local sx, sy = world.sectorAt(-1, -193)
     assert(sx == -1 and sy == -2)
     assert(world.sampleValue({ y = -500 }) > world.sampleValue({ y = -50 }))
+    assert(world.collisionDamage({ y = -499 }) == 1)
+    assert(world.collisionDamage({ y = -500 }) == 2)
+    assert(world.collisionDamage({ y = -1500 }) == 4)
+
+    local riskScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    riskScene.expedition.phase = "ascending"
+    riskScene.expedition.altitude = 500
+    riskScene.expedition.durability = 3
+    local nearbyPlanets = world.nearbyPlanets
+    world.nearbyPlanets = function()
+        return { { id = "risk-test", x = 0, y = -500, radius = 7 } }
+    end
+    riskScene:update(0)
+    world.nearbyPlanets = nearbyPlanets
+    assert(riskScene.expedition.durability == 1)
+    assert(riskScene.message == "COLLISION -2  HULL 1/3")
 
     local basicSlotRolls = { 1, 2, 3, 2, 3, 1 }
     local nextBasicSlotRoll = 0

@@ -70,12 +70,13 @@ function M:update(dt)
             end
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
                 self.collided[planet.id] = true
-                if expedition.damage(self.expedition, 1) then
+                local damage = world.collisionDamage(planet)
+                if expedition.damage(self.expedition, damage) then
                     self:persistBestAltitude()
                     self.message = string.format("SHIP DESTROYED  BEST %d  META RESET", math.floor(self.expedition.bestAltitude))
                     break
                 end
-                self.message = string.format("COLLISION  HULL %d/%d", self.expedition.durability, self.expedition.maxDurability)
+                self.message = string.format("COLLISION -%d  HULL %d/%d", damage, self.expedition.durability, self.expedition.maxDurability)
             end
         end
     end
