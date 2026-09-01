@@ -31,6 +31,14 @@ local settlementTouchRows = {
 }
 M.settlementTouchRows = settlementTouchRows
 
+-- SHIP DESTROYED restart touch target. Unlike EARTH SHOP's four stacked
+-- rows, this phase has a single action (restart), so touchpressed accepts
+-- any tap on the full 180x320 internal canvas rather than a narrow band.
+-- Documented and engine-tested explicitly so this stays true if the
+-- destroyed phase ever grows per-row touch targets like settlement did.
+local destroyedTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
+M.destroyedTouchArea = destroyedTouchArea
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
@@ -468,8 +476,15 @@ function M:touchpressed(id, x, y)
         end
         return
     end
-    if self.expedition.phase == "launch" or self.expedition.phase == "destroyed" then
+    if self.expedition.phase == "launch" then
         self:keypressed("space")
+        return
+    end
+    if self.expedition.phase == "destroyed" then
+        local area = destroyedTouchArea
+        if x >= area.left and x < area.right and y >= area.top and y < area.bottom then
+            self:keypressed("space")
+        end
     end
 end
 

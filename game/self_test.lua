@@ -733,6 +733,29 @@ function M.run()
     assert(rowTouchScene.expedition.ownedShips.scout and rowTouchScene.expedition.selectedShipId == "scout")
     assert(rowTouchScene.expedition.phase == "ascending")
 
+    local destroyedArea = PlayScene.destroyedTouchArea
+    assert(destroyedArea.bottom - destroyedArea.top >= 34,
+        "destroyed touch area height is under the 34px minimum")
+    assert(destroyedArea.right - destroyedArea.left >= 34,
+        "destroyed touch area width is under the 34px minimum")
+    local destroyedCorners = {
+        { x = destroyedArea.left, y = destroyedArea.top },
+        { x = destroyedArea.right - 1, y = destroyedArea.top },
+        { x = destroyedArea.left, y = destroyedArea.bottom - 1 },
+        { x = destroyedArea.right - 1, y = destroyedArea.bottom - 1 },
+        { x = math.floor((destroyedArea.left + destroyedArea.right) / 2),
+          y = math.floor((destroyedArea.top + destroyedArea.bottom) / 2) },
+    }
+    for _, point in ipairs(destroyedCorners) do
+        local destroyedTouchScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        destroyedTouchScene.expedition.phase = "destroyed"
+        destroyedTouchScene:touchpressed("destroyed-tap", point.x, point.y)
+        assert(destroyedTouchScene.expedition.phase == "ascending",
+            "destroyed tap at (" .. point.x .. "," .. point.y .. ") did not restart the run")
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

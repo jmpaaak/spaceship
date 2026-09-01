@@ -174,13 +174,16 @@
 - `launch`·`returning`·`destroyed` phase의 6자 축약 HUD 상태 줄(`LAUNCH`/`RETURN`/`DESTRO`)을 실제 LÖVE 폰트 프로브(`/tmp/fontcheck_status`)로 측정한 결과, 기본 폰트(높이 14px)에서 가장 넓은 `F100 H3/3 LAUNCH S00`도 146px로 뷰포트 180px 폭 안에 24px 이상 여유가 있음을 확인했다. 실제 LÖVE runtime capture(`1440×2560`, 각각 기본 진입/`GAME_CAPTURE_PHASE=returning-odds`/`GAME_CAPTURE_PHASE=destroyed`)로 세 phase 모두 상태 줄이 잘리거나 다른 텍스트와 겹치지 않는 것을 vision으로 확인했다 (`build/spaceship-runtime-preview-launch-status-check.png`, `build/spaceship-runtime-preview-returning-status-check.png`, `build/spaceship-runtime-preview-destroyed-status-check.png`, 로컬 산출물로 커밋 제외). 이전 슬라이스에서 이미 검증한 `settlement`·`ascending`과 합쳐 5개 phase 상태 줄 전체가 실기기 캡처로 검증 완료됐다.
 - 같은 `destroyed` 캡처에서 `SHIP DESTROYED` 요약 카드 전체(제목, `LOST TOTAL`, `SAMPLES`, `SPINS`, `PEAK ALT`, `META RESET BEST`, `NEXT SHIP`, `FUEL/HULL LV.`, `TAP: START OVER`)가 겹침·잘림 없이 표시되는 것도 함께 재확인했다.
 
-- EARTH SHOP 상점의 손가락 터치 타겟 크기 결함(연료 29px, 내구도 33px 행)을 고쳤다. `game/scenes/play.lua`에 `PlayScene.settlementTouchRows`(`fuel`/`hull`/`ship`/`relaunch` 4행, y 150~320 범위를 균등 분할한 42~43px 행)를 추가해 `touchpressed`가 하드코딩 임계값 대신 이 표를 순회하도록 교체했다. 모든 행이 이전 STATUS.md에서 지적한 34px 최소값 이상(42px 이상)이 됐다. `game/viewport.lua`에도 캔버스 픽셀을 물리 화면 포인트로 환산하는 `M.canvasPixelsToPoints` 헬퍼를 추가해 향후 실기기 접근성 검증에 재사용할 수 있게 했다.
+- EARTH SHOP의 손가락 터치 타겟 크기 결함(연료 29px, 내구도 33px 행)을 고쳤다. `game/scenes/play.lua`에 `PlayScene.settlementTouchRows`(`fuel`/`hull`/`ship`/`relaunch` 4행, y 150~320 범위를 균등 분할한 42~43px 행)를 추가해 `touchpressed`가 하드코딩 임계값 대신 이 표를 순회하도록 교체했다. 모든 행이 이전 STATUS.md에서 지적한 34px 최소값 이상(42px 이상)이 됐다. `game/viewport.lua`에도 캔버스 픽셀을 물리 화면 포인트로 환산하는 `M.canvasPixelsToPoints` 헬퍼를 추가해 향후 실기기 접근성 검증에 재사용할 수 있게 했다.
 - engine-hosted 테스트가 `PlayScene.settlementTouchRows`의 네 행 모두 34px 이상인지 확인하고, 각 행 중앙 좌표를 터치했을 때 연료·내구도 강화, SCOUT 구매·선택, 재출발이 실제로 발생하는지 검증한다.
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`). draw 쪽 y 좌표(`row=154, rowStep=10` 텍스트 레이아웃)는 새 터치 행 범위 안에 그대로 들어가 별도 조정 없이 통과했다.
 
+- SHIP DESTROYED 화면의 터치 타겟 크기도 EARTH SHOP과 같은 34px 최소값 기준으로 명시적으로 검증했다. 이 phase는 유일한 동작(재출발)이라 이전부터 `touchpressed`가 임의 좌표를 받아들이고 있었지만, 그 범위가 문서화·테스트되지 않은 암묵적 동작이었다. `game/scenes/play.lua`에 `PlayScene.destroyedTouchArea`(내부 캔버스 전체 `180×320`, `top/bottom/left/right`)를 명시적으로 추가하고 `touchpressed`가 이 표의 경계로 좌표를 검사하도록 교체했다. 전체 캔버스가 대상이라 폭(180px)·높이(320px) 모두 34px 최소값을 크게 초과한다.
+- engine-hosted 테스트가 `PlayScene.destroyedTouchArea`의 폭·높이가 34px 이상인지 확인하고, 네 모서리와 중앙 5개 좌표에서 `destroyed` phase 터치가 실제로 재출발(`phase == "ascending"`)을 일으키는지 검증한다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
 ## 다음 한 가지
 
-- SHIP DESTROYED 화면도 EARTH SHOP과 마찬가지로 34px 이상의 터치 타겟 크기를 갖도록 실기기 손가락 터치 검토를 반영해야 한다 (현재는 전체 화면 탭으로 재출발만 있어 개별 행 문제가 없음, 다음 슬라이스에서 확인).
 - `settlementTouchRows`의 34px 최소값은 정수 배율 1(가장 작은 창)에서 iOS/Android 권장 44pt에는 못 미친다. 패널을 넓히는 더 큰 레이아웃 개편이 필요하며 별도 슬라이스로 남는다.
 
 ## 완료 조건
