@@ -252,6 +252,30 @@ function M.run()
     assert(resetLoadout.ship == "SHIP STARTER")
     assert(resetLoadout.upgrades == "FUEL LV.0  HULL LV.0")
 
+    local nextLaunchScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    nextLaunchScene.expedition.phase = "settlement"
+    local starterNextLaunch = nextLaunchScene:shopLoadoutLines()
+    assert(starterNextLaunch.ship == "NEXT STARTER")
+    assert(starterNextLaunch.stats == "MAX FUEL 100  HULL 3")
+    nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
+        + nextLaunchScene.expedition.durabilityUpgradeCost + nextLaunchScene.expedition.scoutShipCost
+    nextLaunchScene:keypressed("f")
+    local fueledNextLaunch = nextLaunchScene:shopLoadoutLines()
+    assert(fueledNextLaunch.stats == "MAX FUEL 120  HULL 3")
+    nextLaunchScene:keypressed("h")
+    local reinforcedNextLaunch = nextLaunchScene:shopLoadoutLines()
+    assert(reinforcedNextLaunch.stats == "MAX FUEL 120  HULL 4")
+    nextLaunchScene:keypressed("v")
+    local scoutNextLaunch = nextLaunchScene:shopLoadoutLines()
+    assert(scoutNextLaunch.ship == "NEXT SCOUT")
+    assert(scoutNextLaunch.stats == "MAX FUEL 160  HULL 3")
+    nextLaunchScene:keypressed("v")
+    local reselectedNextLaunch = nextLaunchScene:shopLoadoutLines()
+    assert(reselectedNextLaunch.ship == "NEXT STARTER")
+    assert(reselectedNextLaunch.stats == "MAX FUEL 120  HULL 4")
+
     local destroyedRun = expedition.new({
         fuel = 10,
         durability = 2,
