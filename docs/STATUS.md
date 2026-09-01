@@ -159,10 +159,14 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1080×1920`)로 EARTH SHOP 패널에 새 `odds` 줄을 추가한 뒤 vision으로 확인한 결과, 기존에 이미 존재하던 레이아웃 결함(14줄 텍스트가 `rowStep=11`·`row=158` 시작으로 패널 하단(y=320)과 `DEV PLACEHOLDER` 푸터(y=307)를 넘어 `TAP: RELAUNCH`가 푸터 텍스트와 겹침)을 재확인했다. `game/scenes/play.lua`의 settlement 분기에서 `row=158→154`, `rowStep=11→10`으로 좁혀 마지막 줄(`TAP: RELAUNCH`, 14번째 행)이 y≈284에서 그려지도록 해 푸터(y=307)와 겹치지 않게 했다. 기존 `touchpressed` y 임계값(150-179/179-212/212-256/256-320)은 새 행 좌표(fuel≈154, hull≈184, ship≈234, relaunch≈284) 범위 안에 그대로 들어가 별도 조정 없이 통과한다.
 - engine-hosted 정산/상점/터치 테스트(`make test`)가 좁힌 행 간격에서도 모두 GREEN이다. 이 결함은 오늘 이전 커밋(`b8aff33`)에서부터 존재했으며 이번 슬라이스에서 처음 근본 수정됐다.
 
+- 좁힌 EARTH SHOP 행 간격(`row=154`, `rowStep=10`)을 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 재캡처해 vision으로 확인한 결과 `TAP: RELAUNCH`와 `DEV PLACEHOLDER` 사이에 겹침이 없음을 최종 확인했다. 같은 캡처에서 최상단 HUD 상태 줄 `F100 H3/3 SETTLEMENT S00`(실제 폰트 폭 175px, 뷰포트 180px에서 clamp/여백 없이 화면 우측 끝까지 붙어 잘릴 위험이 있는 폭)이 발견되어, `PlayScene:hudLines()`의 `status` 포맷을 `%-9s`(phase 전체 이름)에서 `%-6s`(phase 이름을 6자로 잘라 SETTLE/ASCEND/RETURN/LAUNCH/DESTRO로 표시, 실제 최대 폭 146~168px)로 좁혔다.
+- engine-hosted 테스트가 `settlement` phase의 `hudLines().status == \"F100 H3/3 SETTLE S00\"`를 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 수정 후 상태 줄이 `F100 H3/3 SETTLE S00`으로 화면 안에 완전히 표시되고, EARTH SHOP 12줄 레이아웃 전체가 겹침·잘림 없이 표시되는 것을 vision으로 재확인했다 (`build/spaceship-runtime-preview-settlement-newbest-statusfix.png`, 로컬 산출물로 커밋 제외).
+
 ## 다음 한 가지
 
-- 좁힌 EARTH SHOP 행 간격(`row=154`, `rowStep=10`)을 실제 LÖVE runtime capture로 재캡처해 `TAP: RELAUNCH`가 `DEV PLACEHOLDER`와 실제로 겹치지 않는지 vision으로 최종 확인하는 캡처 작업이 남아 있다(이번 사이클은 배경 LÖVE 캡처 프로세스가 반복적으로 여러 분 동안 응답하지 않아 좌표 계산 근거로만 수정하고 재캡처를 완료하지 못했다).
 - 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다.
+- `launch`·`ascending`·`returning`·`destroyed` phase의 HUD 상태 줄도 새 6자 축약(`LAUNCH`/`ASCEND`/`RETURN`/`DESTRO`)이 실제 폭 기준으로 잘리지 않는지 실기기 캡처로 각각 재확인이 필요하다(이번 슬라이스는 `settlement`만 실제 캡처로 검증했다).
 
 ## 완료 조건
 

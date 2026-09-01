@@ -124,8 +124,8 @@ function M:hudLines()
         best = best,
         earth = earth,
         returnProgress = returnProgress,
-        status = string.format("F%03d H%d/%d %-9s S%02d", math.floor(run.fuel), run.durability,
-            run.maxDurability, string.upper(run.phase), run.slotOpportunities),
+        status = string.format("F%03d H%d/%d %-6s S%02d", math.floor(run.fuel), run.durability,
+            run.maxDurability, string.upper(run.phase):sub(1, 6), run.slotOpportunities),
     }
 end
 

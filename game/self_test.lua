@@ -84,6 +84,8 @@ function M.run()
     assert(returningHud.returnProgress == "RETURN 28%  17s LEFT")
     riskScene.expedition.altitude = 250
     assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
+    riskScene.expedition.phase = "settlement"
+    assert(riskScene:hudLines().status == "F100 H3/3 SETTLE S00")
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
     assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")
