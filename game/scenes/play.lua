@@ -33,6 +33,7 @@ function M.new(options)
         discovered = {},
         collided = {},
         discoveredCount = 0,
+        floatingTexts = {},
         touches = {},
         message = "TAP TO LAUNCH",
     }, M)
@@ -213,6 +214,14 @@ end
 function M:update(dt)
     local steering = self:steeringButtonState()
     local previousPhase = self.expedition.phase
+    for i = #self.floatingTexts, 1, -1 do
+        local ft = self.floatingTexts[i]
+        ft.timer = ft.timer - dt
+        ft.y = ft.y - 20 * dt
+        if ft.timer <= 0 then
+            table.remove(self.floatingTexts, i)
+        end
+    end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         self.ship.x = self.ship.x
             + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
@@ -240,6 +249,12 @@ function M:update(dt)
                 self.discoveredCount = self.discoveredCount + 1
                 local value = world.sampleValue(planet)
                 expedition.collectSample(self.expedition, value)
+                table.insert(self.floatingTexts, {
+                    text = string.format("+$%d", value),
+                    x = planet.x,
+                    y = planet.y,
+                    timer = 1.0,
+                })
                 self.message = string.format("SAMPLE +$%d  %s", value, planet.id)
             end
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
@@ -321,6 +336,7 @@ function M:keypressed(key)
                     self.discovered = {}
                     self.collided = {}
                     self.discoveredCount = 0
+                    self.floatingTexts = {}
                 end
                 self.message = "ASCENDING  STEER LEFT / RIGHT"
             end
@@ -421,6 +437,14 @@ function M:draw()
                 end
                 love.graphics.printf(risk.label, previewX, previewY, 66, "center")
             end
+        end
+    end
+    for _, ft in ipairs(self.floatingTexts) do
+        local fx, fy = math.floor(ft.x - cameraX), math.floor(ft.y - cameraY)
+        if fx >= -30 and fx <= viewport.width + 30 and fy >= -20 and fy <= viewport.height + 20 then
+            local alpha = math.max(0, math.min(1, ft.timer))
+            love.graphics.setColor(0.45, 1, 0.6, alpha)
+            love.graphics.printf(ft.text, fx - 30, fy - 10, 60, "center")
         end
     end
     love.graphics.push()

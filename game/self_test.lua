@@ -607,6 +607,32 @@ function M.run()
     local restartedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
     assert(restartedScene.expedition.bestAltitude == 60)
     assert(restartedScene:hudLines().best == "PERSONAL BEST 0060")
+
+    local floatingTextScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    assert(#floatingTextScene.floatingTexts == 0)
+    floatingTextScene.expedition.phase = "ascending"
+    floatingTextScene.expedition.altitude = 500
+    floatingTextScene.ship.y = -500
+    local floatingTextNearby = world.nearbyPlanets
+    world.nearbyPlanets = function()
+        return { { id = "floating-text-sample", x = 0, y = -500, radius = 7 } }
+    end
+    floatingTextScene:update(0)
+    world.nearbyPlanets = floatingTextNearby
+    assert(#floatingTextScene.floatingTexts == 1)
+    local sampleFloatingText = floatingTextScene.floatingTexts[1]
+    assert(sampleFloatingText.text == "+$35")
+    assert(sampleFloatingText.timer == 1.0)
+    local startingFloatingY = sampleFloatingText.y
+    floatingTextScene:update(0.5)
+    assert(#floatingTextScene.floatingTexts == 1)
+    assert(math.abs(sampleFloatingText.timer - 0.5) < 1e-9)
+    assert(sampleFloatingText.y < startingFloatingY)
+    floatingTextScene:update(0.6)
+    assert(#floatingTextScene.floatingTexts == 0)
+
     print("SPACESHIP_UNIT_OK")
 end
 
