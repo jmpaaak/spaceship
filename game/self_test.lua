@@ -274,6 +274,7 @@ function M.run()
     assert(starterLoadout.ship == "SHIP STARTER")
     assert(starterLoadout.stats == "MAX FUEL 100  HULL 3")
     assert(starterLoadout.upgrades == "FUEL LV.0  HULL LV.0")
+    assert(starterLoadout.forecast == "NO-HIT 600  SLOTS 6")
     loadoutScene.expedition.phase = "settlement"
     loadoutScene.expedition.money = loadoutScene.expedition.fuelUpgradeCost
         + loadoutScene.expedition.durabilityUpgradeCost + loadoutScene.expedition.scoutShipCost
@@ -285,6 +286,7 @@ function M.run()
     assert(upgradedLoadout.ship == "SHIP SCOUT")
     assert(upgradedLoadout.stats == "MAX FUEL 160  HULL 3")
     assert(upgradedLoadout.upgrades == "FUEL LV.1  HULL LV.1")
+    assert(upgradedLoadout.forecast == "NO-HIT 960  SLOTS 10")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()

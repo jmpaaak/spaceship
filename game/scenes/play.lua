@@ -80,11 +80,14 @@ end
 
 function M:loadoutLines()
     local run = self.expedition
+    local forecastAltitude, forecastSlots = expedition.launchForecast(run)
     return {
         ship = string.format("SHIP %s", string.upper(run.selectedShipId)),
         stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
         upgrades = string.format("FUEL LV.%d  HULL LV.%d",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
+        forecast = string.format("NO-HIT %d  SLOTS %d",
+            math.floor(forecastAltitude), forecastSlots),
     }
 end
 
@@ -390,15 +393,17 @@ function M:draw()
     if self.expedition.phase == "launch" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, 218, viewport.width - 24, 62)
+        love.graphics.rectangle("fill", 12, 204, viewport.width - 24, 78)
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf("LAUNCH LOADOUT", 16, 222, viewport.width - 32, "center")
+        love.graphics.printf("LAUNCH LOADOUT", 16, 208, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(loadout.ship, 16, 236, viewport.width - 32, "center")
+        love.graphics.printf(loadout.ship, 16, 222, viewport.width - 32, "center")
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(loadout.stats, 16, 248, viewport.width - 32, "center")
+        love.graphics.printf(loadout.stats, 16, 234, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, 16, 262, viewport.width - 32, "center")
+        love.graphics.printf(loadout.upgrades, 16, 246, viewport.width - 32, "center")
+        love.graphics.setColor(0.45, 1, 0.6)
+        love.graphics.printf(loadout.forecast, 16, 260, viewport.width - 32, "center")
     elseif self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
         love.graphics.rectangle("fill", 12, 122, viewport.width - 24, 168)

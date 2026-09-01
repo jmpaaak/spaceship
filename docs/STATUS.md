@@ -74,16 +74,19 @@
 - LAUNCH LOADOUT 패널에 선택 우주선과 강화가 반영된 실제 다음 출발 능력치 `MAX FUEL N  HULL N`을 표시한다.
 - engine-hosted loadout 테스트가 STARTER 기본 능력치, 강화된 SCOUT 능력치와 파괴 후 초기화된 능력치를 검증한다.
 - 실제 LÖVE runtime capture `build/spaceship-runtime-preview.png`에서 `MAX FUEL 100  HULL 3`을 포함한 4줄 launch loadout, `TAP TO LAUNCH`, `DEV PLACEHOLDER`가 겹침이나 잘림 없이 `540×960` 세로 화면 안에 표시되는 것을 확인했다.
+- LAUNCH LOADOUT에 현재 최대 연료·연료 소모율·상승 속도로 계산한 무충돌 예상 고도와 그 귀환 거리의 슬롯 기회를 `NO-HIT N  SLOTS N`으로 표시한다.
+- engine-hosted loadout 테스트가 기본 STARTER의 `NO-HIT 600  SLOTS 6`과 연료 강화 SCOUT의 `NO-HIT 960  SLOTS 10` 계산·표시를 검증한다.
+- 실제 LÖVE runtime capture `build/spaceship-runtime-preview.png`는 `540×960`이며 5줄 launch loadout의 `NO-HIT 600  SLOTS 6`, `TAP TO LAUNCH`, `DEV PLACEHOLDER`가 줄바꿈·겹침·잘림 없이 표시된다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- LAUNCH LOADOUT 패널에 현재 최대 연료 기준의 무충돌 예상 상승 고도와 귀환 슬롯 기회를 표시하고 engine-hosted 계산·표시 테스트를 추가한다.
+- EARTH SHOP의 현재 선택 우주선 능력치 아래에도 무충돌 예상 상승 고도와 슬롯 기회를 표시하고, 연료 강화·SCOUT 선택 직후 갱신되는 engine-hosted 테스트를 추가한다.
 
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)
-- 세로 실제 런타임 캡처 `540×960`에서 실제 최대 연료·내구도를 포함한 launch loadout, `TAP TO LAUNCH`, `DEV PLACEHOLDER` 표시 확인
+- 세로 실제 런타임 캡처 `540×960`에서 실제 최대 연료·내구도와 `NO-HIT 600  SLOTS 6`을 포함한 launch loadout, `TAP TO LAUNCH`, `DEV PLACEHOLDER` 표시 확인
 - 개인 최고 높이 영구 저장 engine-hosted 자동 테스트 통과
 - 출발·정산 HUD의 개인 최고 높이 복구 표시 engine-hosted 자동 테스트 통과
