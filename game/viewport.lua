@@ -14,4 +14,14 @@ function M.toGame(screenX, screenY, windowWidth, windowHeight, fractional)
     return gameX, gameY, gameX >= 0 and gameX <= M.width and gameY >= 0 and gameY <= M.height
 end
 
+-- Converts an internal-canvas pixel length (e.g. a UI row height) into the
+-- physical touch-target size a player's finger actually meets on a given
+-- device, in device-independent points. Points, not raw device pixels, are
+-- the unit accessibility guidelines (iOS/Android ~44pt minimum) are stated
+-- in, so callers must divide out the device pixel ratio.
+function M.canvasPixelsToPoints(canvasPixels, windowWidth, windowHeight, devicePixelRatio, fractional)
+    local scale = M.fit(windowWidth, windowHeight, fractional)
+    return canvasPixels * scale / devicePixelRatio
+end
+
 return M

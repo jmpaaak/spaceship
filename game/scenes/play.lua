@@ -16,6 +16,21 @@ local returnControls = {
     rightMinX = 125,
 }
 
+-- Settlement (EARTH SHOP) touch rows, top-to-bottom. Each row's height is a
+-- real finger touch target on the device, not just a text layout band.
+-- Evenly split across the 150-320 canvas range (170px / 4 = 42.5px each) so
+-- every row clears the 34px minimum flagged in docs/STATUS.md instead of the
+-- previous 29px/33px fuel/hull rows; full 44pt accessibility parity on the
+-- smallest supported window (integer scale 1) needs a larger panel redesign
+-- tracked separately. See game/self_test.lua for the device-scale check.
+local settlementTouchRows = {
+    { key = "fuel", top = 150, bottom = 192 },
+    { key = "hull", top = 192, bottom = 234 },
+    { key = "ship", top = 234, bottom = 277 },
+    { key = "relaunch", top = 277, bottom = 320 },
+}
+M.settlementTouchRows = settlementTouchRows
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
@@ -437,14 +452,19 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "settlement" then
-        if y >= 150 and y < 179 then
-            self:keypressed("f")
-        elseif y >= 179 and y < 212 then
-            self:keypressed("h")
-        elseif y >= 212 and y < 256 then
-            self:keypressed("v")
-        elseif y >= 256 and y <= 320 then
-            self:keypressed("space")
+        for _, row in ipairs(settlementTouchRows) do
+            if y >= row.top and y < row.bottom then
+                if row.key == "fuel" then
+                    self:keypressed("f")
+                elseif row.key == "hull" then
+                    self:keypressed("h")
+                elseif row.key == "ship" then
+                    self:keypressed("v")
+                elseif row.key == "relaunch" then
+                    self:keypressed("space")
+                end
+                break
+            end
         end
         return
     end

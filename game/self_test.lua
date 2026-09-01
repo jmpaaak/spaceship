@@ -715,6 +715,24 @@ function M.run()
     local shopLoadoutOdds = oddsLoadoutScene:shopLoadoutLines()
     assert(shopLoadoutOdds.odds == "C50 P40 S10  AVG $18.58")
 
+    for _, row in ipairs(PlayScene.settlementTouchRows) do
+        assert(row.bottom - row.top >= 34,
+            "settlement touch row " .. row.key .. " is under the 34px minimum")
+    end
+    local rowTouchScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    rowTouchScene.expedition.phase = "settlement"
+    rowTouchScene.expedition.money = rowTouchScene.expedition.fuelUpgradeCost
+        + rowTouchScene.expedition.durabilityUpgradeCost + rowTouchScene.expedition.scoutShipCost
+    for _, row in ipairs(PlayScene.settlementTouchRows) do
+        rowTouchScene:touchpressed(row.key, 90, row.top + math.floor((row.bottom - row.top) / 2))
+    end
+    assert(rowTouchScene.expedition.fuelUpgradeLevel == 1)
+    assert(rowTouchScene.expedition.durabilityUpgradeLevel == 1)
+    assert(rowTouchScene.expedition.ownedShips.scout and rowTouchScene.expedition.selectedShipId == "scout")
+    assert(rowTouchScene.expedition.phase == "ascending")
+
     print("SPACESHIP_UNIT_OK")
 end
 
