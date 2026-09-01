@@ -120,7 +120,9 @@ function M.run()
     end
     assert(damageFloatingText)
     assert(damageFloatingText.text == "-2")
-    assert(damageFloatingText.x == riskScene.ship.x)
+    -- Offset from ship.x (see play.lua's collision handling) so the damage
+    -- text never renders stacked on top of a same-frame sample text.
+    assert(damageFloatingText.x == riskScene.ship.x + 60)
     assert(damageFloatingText.y == riskScene.ship.y)
 
     assert(PlayScene.clampLabelX(90, 92, 180) == 44)
@@ -1203,6 +1205,44 @@ function M.run()
     assert(fuelBonusSummaryScene:summaryFuelBonusLine() == "NEXT LAUNCH FUEL +15",
         "banked fuel bonus must be summarized as NEXT LAUNCH FUEL +N: "
             .. tostring(fuelBonusSummaryScene:summaryFuelBonusLine()))
+
+    -- Real LOVE runtime capture (GAME_CAPTURE_PHASE=ascending-damage-text,
+    -- 1440x2560) showed the green "+$N" sample floating text and the red
+    -- "-N" damage floating text spawning at the exact same screen point
+    -- when a ship overlaps a planet closely enough to trigger both the
+    -- sample-collection and the collision thresholds on the same update:
+    -- both used planet.x/y or ship.x/y directly with no separation, so the
+    -- two texts rendered stacked on top of each other and were unreadable
+    -- ("+$?5" mangled by an overlapping red glyph). Verify the two texts
+    -- created in the same frame are horizontally separated by at least the
+    -- width of the 60px-wide centered text box so neither can overlap the
+    -- other, regardless of how close the ship and planet positions are.
+    local overlapScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    overlapScene.expedition.phase = "ascending"
+    overlapScene.expedition.altitude = 500
+    overlapScene.expedition.durability = 3
+    overlapScene.ship.x = 0
+    overlapScene.ship.y = -500
+    local overlapNearby = world.nearbyPlanets
+    world.nearbyPlanets = function()
+        return { { id = "overlap-test", x = 0, y = -500, radius = 7 } }
+    end
+    overlapScene:update(0)
+    world.nearbyPlanets = overlapNearby
+    assert(#overlapScene.floatingTexts == 2,
+        "same-frame sample+collision must create both floating texts")
+    local overlapSample, overlapDamage
+    for _, ft in ipairs(overlapScene.floatingTexts) do
+        if ft.kind == "sample" then overlapSample = ft end
+        if ft.kind == "damage" then overlapDamage = ft end
+    end
+    assert(overlapSample and overlapDamage)
+    assert(math.abs(overlapSample.x - overlapDamage.x) >= 60,
+        "sample and damage floating texts spawned in the same frame must be"
+            .. " horizontally separated by at least the 60px text box width ("
+            .. tostring(overlapSample.x) .. " vs " .. tostring(overlapDamage.x) .. ")")
 
     print("SPACESHIP_UNIT_OK")
 end

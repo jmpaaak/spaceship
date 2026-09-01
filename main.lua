@@ -170,7 +170,7 @@ function love.load()
         scene.ship.x = 0
         local world = require("game.world")
         world.nearbyPlanets = function()
-            return { { id = "damage-text-test", x = 0, y = -500, radius = 7 } }
+            return { { id = "damage-text-test", x = 0, y = -500, radius = 7, hue = 0.1 } }
         end
         world.collisionDamage = function() return 2 end
     elseif capturePhase == "returning-fuelbonus" then

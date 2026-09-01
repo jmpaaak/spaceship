@@ -318,3 +318,13 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-sample-tiers`, `1440×2560`)로 세 등급 행성 접근 경고(`SAMPLE $10`/`RISK -1`)가 정상 표시되는 기존 레이아웃을 재확인했다. `GAME_CAPTURE_PHASE=ascending-damage-text`라는 새 개발 전용 진입 경로를 추가해 우주선-행성 즉시 충돌로 빨간 `-N` 데미지 텍스트만 단독으로 캡처하려 시도했으나, 이번 사이클 후반부에 macOS 디스플레이가 절전 모드로 전환되어(`Display Asleep: Yes`, `screencapture`가 완전한 검은 화면만 반환) 실제 화면 픽셀을 vision으로 확인하지 못했다. **따라서 빨간 데미지 텍스트의 실제 렌더링 색상·위치는 이번 사이클에서 실기기 캡처로 검증되지 않았다** — engine-hosted 좌표/텍스트/kind 검증과 `make verify`만 통과했다. 다음 사이클에서 디스플레이가 깨어있는 상태로 `GAME_CAPTURE_PHASE=ascending-damage-text GAME_CAPTURE=1 GAME_SCALE=8 love .` 재캡처가 필요하다.
 - 남은 다음 슬라이스 후보: (1) `ascending-damage-text` 캡처를 디스플레이 활성 상태에서 재시도해 실기기 확인 완료, (2) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (3) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (4) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 상승 중 표본/충돌 플로팅 텍스트 겹침 결함 수정 (완료)
+
+- 지난 사이클이 디스플레이 절전으로 검증하지 못한 `GAME_CAPTURE_PHASE=ascending-damage-text` 실제 LÖVE runtime capture(`1440×2560`, 디스플레이 활성 상태 확인 후 재시도)를 이번 사이클에서 처음 완료해 vision으로 확인한 결과, 표본 획득과 행성 충돌이 같은 프레임에 함께 발생하는 경우(우주선이 행성과 충분히 가까워 두 임계값을 동시에 충족) 초록 `+$N` 표본 텍스트와 빨간 `-N` 데미지 텍스트가 정확히 같은 화면 좌표(`planet.x/y` == `ship.x/y`인 근접 상황)에 겹쳐 그려져 `+$?5`처럼 서로의 글자가 뒤섞여 읽을 수 없는 실제 렌더링 결함을 발견했다.
+- engine-hosted 테스트를 먼저 추가해 RED를 확인했다: 같은 프레임에 표본+충돌이 함께 발생하는 시나리오에서 두 플로팅 텍스트의 x좌표 차이가 60px(텍스트 박스 폭) 미만임을 검증하는 단언이 `0 vs 0`으로 즉시 실패했다.
+- `game/scenes/play.lua`의 충돌 처리에서 데미지 플로팅 텍스트 생성 좌표를 `self.ship.x`에서 `self.ship.x + 60`으로 옮겨 표본 텍스트(행성 좌표 기준)와 항상 60px 이상 떨어지도록 고쳤다. 기존 위험 경고 테스트(`riskScene`)의 데미지 텍스트 좌표 단언도 `+ 60` 오프셋에 맞춰 갱신했다.
+- engine-hosted 테스트가 같은 프레임에 표본+충돌이 함께 발생할 때 두 플로팅 텍스트 모두 생성되고(`#floatingTexts == 2`) x좌표 차이가 60px 이상인지 검증한다. `make test` GREEN.
+- 재캡처한 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-damage-text`, `1440×2560`)로 초록 `+$35`와 빨간 `-2`가 서로 겹치지 않고 각각 읽을 수 있게 표시되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-ascending-damage-text-fixed.png`, 로컬 산출물로 커밋 제외). 지난 사이클에서 미확인 상태로 남았던 이 캡처를 이번 사이클에서 완료했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+- 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+

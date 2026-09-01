@@ -485,9 +485,17 @@ function M:update(dt)
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
                 self.collided[planet.id] = true
                 local damage = world.collisionDamage(planet)
+                -- Real LOVE runtime capture showed this "-N" damage text
+                -- rendering stacked directly on top of the green "+$N"
+                -- sample text when both fire on the same update (ship and
+                -- planet positions coincide closely enough to cross both
+                -- thresholds at once). Offset the damage text horizontally
+                -- from the ship position so the two 60px-wide centered text
+                -- boxes never overlap regardless of how close ship/planet
+                -- are.
                 table.insert(self.floatingTexts, {
                     text = string.format("-%d", damage),
-                    x = self.ship.x,
+                    x = self.ship.x + 60,
                     y = self.ship.y,
                     timer = 1.0,
                     kind = "damage",
