@@ -51,6 +51,29 @@ function love.keypressed(key)
     if scenes then sceneStack.keypressed(scenes, key) end
 end
 
+local function touchToGame(x, y)
+    local width, height = love.graphics.getDimensions()
+    return viewport.toGame(x, y, width, height, false)
+end
+
+function love.touchpressed(id, x, y)
+    if not scenes then return end
+    local gameX, gameY, inside = touchToGame(x, y)
+    if inside then sceneStack.touchpressed(scenes, id, gameX, gameY) end
+end
+
+function love.touchmoved(id, x, y)
+    if not scenes then return end
+    local gameX, gameY = touchToGame(x, y)
+    sceneStack.touchmoved(scenes, id, gameX, gameY)
+end
+
+function love.touchreleased(id, x, y)
+    if not scenes then return end
+    local gameX, gameY = touchToGame(x, y)
+    sceneStack.touchreleased(scenes, id, gameX, gameY)
+end
+
 local function persistBestAltitude()
     if scenes and scenes.current and scenes.current.persistBestAltitude then
         scenes.current:persistBestAltitude()

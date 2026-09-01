@@ -24,15 +24,18 @@
 - engine-hosted 저장 테스트가 실제 LÖVE filesystem에서 최초 기본값, 저장 후 새 store/scene 복구, 낮은 기록의 덮어쓰기 방지와 파괴 뒤 기록 보존을 검증한다.
 - 정산 상점에서 `H`/오른쪽 입력으로 `$75`를 지불해 최대 내구도를 `+1` 강화할 수 있고, 다음 출발부터 증가한 내구도가 적용된다.
 - engine-hosted 상점 테스트가 내구도 강화의 phase/비용 제한, 상점 입력, 강화 내구도 재출발과 파괴 시 내구도 강화 초기화를 검증한다.
+- LÖVE touch 좌표를 `180×320` 내부 canvas 좌표로 변환해 scene에 전달하며, 터치로 출발·귀환 슬롯·연료/내구도 구매·재출발·파괴 후 재시작이 가능하다.
+- 상승 중 화면 왼쪽/오른쪽을 누르고 있는 동안 해당 방향으로 조종하고, 손가락 이동과 해제도 추적한다. 화면 하단에 phase별 터치 안내를 표시한다.
+- engine-hosted 터치 입력 테스트가 터치 출발, hold 조종과 release 정지, 슬롯 실행, 두 상점 구매와 재출발을 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- engine-hosted 입력 테스트를 먼저 추가하고 실제 휴대폰에서 출발·좌우 조종·슬롯·상점·재출발이 가능하도록 세로 화면 touch 입력을 연결한다.
+- engine-hosted 구매/파괴 테스트를 먼저 추가하고, 정산 상점에 기본 우주선과 다른 능력치를 가진 새 우주선 1종의 구매·선택을 구현하며 파괴 시 구매 우주선과 선택 상태를 초기화한다.
 
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)
-- 세로 실제 런타임 캡처 `540×960` 확인
+- 세로 실제 런타임 캡처 `540×960`에서 `TAP TO LAUNCH`와 `DEV PLACEHOLDER` 표시 확인
 - 개인 최고 높이 영구 저장 engine-hosted 자동 테스트 통과

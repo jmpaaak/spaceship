@@ -24,4 +24,16 @@ function M.keypressed(stack, key)
     if stack.current.keypressed then stack.current:keypressed(key) end
 end
 
+function M.touchpressed(stack, id, x, y)
+    if stack.current.touchpressed then stack.current:touchpressed(id, x, y) end
+end
+
+function M.touchmoved(stack, id, x, y)
+    if stack.current.touchmoved then stack.current:touchmoved(id, x, y) end
+end
+
+function M.touchreleased(stack, id, x, y)
+    if stack.current.touchreleased then stack.current:touchreleased(id, x, y) end
+end
+
 return M

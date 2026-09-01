@@ -96,6 +96,30 @@ function M.run()
     assert(shopScene.expedition.durabilityUpgradeLevel == 1 and shopScene.expedition.maxDurability == 4)
     assert(shopScene.message == "HULL UPGRADED  MAX 4")
 
+    local touchScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    touchScene:touchpressed("launch", 90, 280)
+    assert(touchScene.expedition.phase == "ascending")
+    touchScene:touchpressed("steer-left", 20, 160)
+    touchScene:update(1)
+    assert(touchScene.ship.x == -55)
+    touchScene:touchreleased("steer-left")
+    touchScene:update(1)
+    assert(touchScene.ship.x == -55)
+    touchScene.expedition.phase = "returning"
+    touchScene.expedition.slotOpportunities = 1
+    touchScene:touchpressed("slot", 90, 160)
+    assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 0)
+    touchScene.expedition.phase = "settlement"
+    touchScene.expedition.money = touchScene.expedition.fuelUpgradeCost + touchScene.expedition.durabilityUpgradeCost
+    touchScene:touchpressed("fuel", 90, 226)
+    touchScene:touchpressed("hull", 90, 244)
+    assert(touchScene.expedition.fuelUpgradeLevel == 1)
+    assert(touchScene.expedition.durabilityUpgradeLevel == 1)
+    touchScene:touchpressed("relaunch", 90, 264)
+    assert(touchScene.expedition.phase == "ascending")
+
     local destroyedRun = expedition.new({
         fuel = 10,
         durability = 2,

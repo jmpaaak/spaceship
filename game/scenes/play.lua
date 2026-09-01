@@ -23,7 +23,8 @@ function M.new(options)
         discovered = {},
         collided = {},
         discoveredCount = 0,
-        message = "PRESS SPACE TO LAUNCH",
+        touches = {},
+        message = "TAP TO LAUNCH",
     }, M)
 end
 
@@ -34,6 +35,13 @@ end
 function M:update(dt)
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
+    for _, touch in pairs(self.touches) do
+        if touch.x < viewport.width / 2 then
+            left = true
+        else
+            right = true
+        end
+    end
     local previousPhase = self.expedition.phase
     if self.expedition.phase == "ascending" then
         self.ship.x = self.ship.x + ((right and 1 or 0) - (left and 1 or 0)) * 55 * dt
@@ -71,6 +79,7 @@ function M:update(dt)
             end
         end
     end
+    if self.expedition.phase ~= "ascending" then self.touches = {} end
 end
 
 function M:keypressed(key)
@@ -108,6 +117,37 @@ function M:keypressed(key)
             end
         end
     end
+end
+
+function M:touchpressed(id, x, y)
+    if self.expedition.phase == "ascending" then
+        self.touches[id] = { x = x, y = y }
+        return
+    end
+    if self.expedition.phase == "settlement" then
+        if y >= 214 and y < 236 then
+            self:keypressed("f")
+        elseif y >= 236 and y < 256 then
+            self:keypressed("h")
+        elseif y >= 256 and y <= 280 then
+            self:keypressed("space")
+        end
+        return
+    end
+    if self.expedition.phase == "launch" or self.expedition.phase == "returning" or self.expedition.phase == "destroyed" then
+        self:keypressed("space")
+    end
+end
+
+function M:touchmoved(id, x, y)
+    if self.touches[id] then
+        self.touches[id].x = x
+        self.touches[id].y = y
+    end
+end
+
+function M:touchreleased(id)
+    self.touches[id] = nil
 end
 
 function M:draw()
@@ -165,16 +205,28 @@ function M:draw()
         love.graphics.rectangle("fill", 12, 198, viewport.width - 24, 78)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf("EARTH SHOP", 16, 204, viewport.width - 32, "center")
-        love.graphics.printf(string.format("F: FUEL LV.%d +%d  $%d", self.expedition.fuelUpgradeLevel, self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 222, viewport.width - 32, "center")
-        love.graphics.printf(string.format("H: HULL LV.%d +%d  $%d", self.expedition.durabilityUpgradeLevel, self.expedition.durabilityUpgradeAmount, self.expedition.durabilityUpgradeCost), 16, 240, viewport.width - 32, "center")
-        love.graphics.printf("SPACE: RELAUNCH", 16, 258, viewport.width - 32, "center")
+        love.graphics.printf(string.format("TAP/F: FUEL LV.%d +%d  $%d", self.expedition.fuelUpgradeLevel, self.expedition.fuelUpgradeAmount, self.expedition.fuelUpgradeCost), 16, 222, viewport.width - 32, "center")
+        love.graphics.printf(string.format("TAP/H: HULL LV.%d +%d  $%d", self.expedition.durabilityUpgradeLevel, self.expedition.durabilityUpgradeAmount, self.expedition.durabilityUpgradeCost), 16, 240, viewport.width - 32, "center")
+        love.graphics.printf("TAP: RELAUNCH", 16, 258, viewport.width - 32, "center")
     elseif self.expedition.phase == "destroyed" then
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
         love.graphics.rectangle("fill", 12, 214, viewport.width - 24, 62)
         love.graphics.setColor(1, 0.55, 0.45)
         love.graphics.printf("SHIP DESTROYED", 16, 222, viewport.width - 32, "center")
         love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), 16, 240, viewport.width - 32, "center")
-        love.graphics.printf("SPACE: START OVER", 16, 258, viewport.width - 32, "center")
+        love.graphics.printf("TAP: START OVER", 16, 258, viewport.width - 32, "center")
+    elseif self.expedition.phase == "ascending" then
+        love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
+        love.graphics.rectangle("fill", 5, 254, 76, 24)
+        love.graphics.rectangle("fill", 99, 254, 76, 24)
+        love.graphics.setColor(0.85, 0.95, 1)
+        love.graphics.printf("HOLD LEFT", 5, 262, 76, "center")
+        love.graphics.printf("HOLD RIGHT", 99, 262, 76, "center")
+    elseif self.expedition.phase == "returning" then
+        love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+        love.graphics.rectangle("fill", 28, 254, 124, 24)
+        love.graphics.setColor(0.85, 0.95, 1)
+        love.graphics.printf("TAP: SLOT SPIN", 28, 262, 124, "center")
     end
     love.graphics.setColor(0.85, 0.9, 1)
     love.graphics.printf(self.message, 4, viewport.height - 30, viewport.width - 8, "center")
