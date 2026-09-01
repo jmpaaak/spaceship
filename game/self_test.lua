@@ -71,6 +71,31 @@ function M.run()
     shopRun.maxAltitude = 120
     assert(expedition.launch(shopRun) and shopRun.phase == "ascending")
     assert(shopRun.fuel == 15 and shopRun.altitude == 0 and shopRun.maxAltitude == 0 and shopRun.lastSettlement == 0)
+
+    local destroyedRun = expedition.new({
+        fuel = 10,
+        durability = 2,
+        fuelBurnRate = 1,
+        climbSpeed = 80,
+        fuelUpgradeAmount = 5,
+        fuelUpgradeCost = 50,
+        money = 90,
+    })
+    destroyedRun.phase = "settlement"
+    assert(expedition.buyFuelUpgrade(destroyedRun))
+    assert(expedition.launch(destroyedRun))
+    expedition.update(destroyedRun, 1)
+    assert(expedition.collectSample(destroyedRun, 70))
+    assert(not expedition.damage(destroyedRun, 1))
+    assert(destroyedRun.durability == 1 and destroyedRun.phase == "ascending")
+    assert(expedition.damage(destroyedRun, 1))
+    assert(destroyedRun.phase == "destroyed" and destroyedRun.durability == 0)
+    assert(destroyedRun.money == 0 and destroyedRun.sampleCount == 0 and destroyedRun.pendingSampleValue == 0)
+    assert(destroyedRun.fuelUpgradeLevel == 0 and destroyedRun.maxFuel == destroyedRun.baseFuel)
+    assert(destroyedRun.bestAltitude == 80)
+    assert(expedition.launch(destroyedRun) and destroyedRun.phase == "ascending")
+    assert(destroyedRun.altitude == 0 and destroyedRun.durability == destroyedRun.maxDurability)
+    assert(destroyedRun.bestAltitude == 80)
     print("SPACESHIP_UNIT_OK")
 end
 

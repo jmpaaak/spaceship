@@ -16,16 +16,36 @@ local function settle(run)
     run.phase = "settlement"
 end
 
+local function destroy(run)
+    run.phase = "destroyed"
+    run.fuel = 0
+    run.durability = 0
+    run.sampleCount = 0
+    run.pendingSampleValue = 0
+    run.pendingSlotReward = 0
+    run.slotOpportunities = 0
+    run.slotSpins = 0
+    run.returnDistance = 0
+    run.money = 0
+    run.lastSettlement = 0
+    run.fuelUpgradeLevel = 0
+    run.maxFuel = run.baseFuel
+end
+
 function M.new(options)
     options = options or {}
     local baseFuel = options.fuel or 100
+    local baseDurability = options.durability or 3
     return {
         phase = "launch",
         altitude = 0,
         maxAltitude = 0,
+        bestAltitude = options.bestAltitude or 0,
         fuel = baseFuel,
         baseFuel = baseFuel,
         maxFuel = baseFuel,
+        durability = baseDurability,
+        maxDurability = baseDurability,
         fuelUpgradeAmount = options.fuelUpgradeAmount or 20,
         fuelUpgradeCost = options.fuelUpgradeCost or 50,
         fuelUpgradeLevel = 0,
@@ -46,11 +66,12 @@ function M.new(options)
 end
 
 function M.launch(run)
-    if run.phase ~= "launch" and run.phase ~= "settlement" then return false end
-    if run.phase == "settlement" then
+    if run.phase ~= "launch" and run.phase ~= "settlement" and run.phase ~= "destroyed" then return false end
+    if run.phase ~= "launch" then
         run.altitude = 0
         run.maxAltitude = 0
         run.fuel = run.maxFuel
+        run.durability = run.maxDurability
         run.returnDistance = 0
         run.slotOpportunities = 0
         run.slotSpins = 0
@@ -86,6 +107,18 @@ function M.collectSample(run, value)
     return true
 end
 
+function M.damage(run, amount)
+    if (run.phase ~= "ascending" and run.phase ~= "returning") or type(amount) ~= "number" or amount <= 0 then
+        return false
+    end
+    run.durability = math.max(0, run.durability - amount)
+    if run.durability == 0 then
+        destroy(run)
+        return true
+    end
+    return false
+end
+
 function M.update(run, dt)
     if dt <= 0 then return end
 
@@ -105,6 +138,7 @@ function M.update(run, dt)
 
     run.altitude = run.altitude + run.climbSpeed * ascentTime
     run.maxAltitude = math.max(run.maxAltitude, run.altitude)
+    run.bestAltitude = math.max(run.bestAltitude, run.altitude)
 
     if run.fuel <= 0 then
         run.phase = "returning"

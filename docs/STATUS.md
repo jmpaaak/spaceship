@@ -14,17 +14,21 @@
 - 정산 상점에서 `F`/아래 입력으로 `$50`을 지불해 연료 탱크를 `+20` 강화할 수 있으며, 돈이 부족하거나 정산 phase가 아니면 구매되지 않는다.
 - 정산 뒤 Space/Enter/위 입력으로 재출발하면 고도·원정 최고 고도·슬롯·표본·발견 행성을 초기화하고 강화된 최대 연료를 채워 `ascending`으로 돌아간다.
 - engine-hosted 테스트가 연료 강화 구매의 phase/비용 제한과 강화 연료 재출발을 검증한다.
+- 상승 중 행성의 표본 탐사 범위보다 가까운 충돌 범위에 진입하면 행성당 한 번 내구도 1을 잃고, HUD에 현재 내구도를 표시한다.
+- 내구도 0은 `destroyed`로 전이해 정산 없이 돈·미정산 표본·슬롯 보상·연료 강화를 초기화하고 해당 세션의 개인 최고 높이만 보존한다.
+- 파괴 화면에서 Space/Enter/위 입력으로 기본 연료·내구도의 새 원정을 시작할 수 있다.
+- engine-hosted 파괴 테스트가 피해 누적, 전체 메타 초기화, 최고 높이 보존과 파괴 후 재시작을 검증한다.
 - 실제 LÖVE runtime capture `build/spaceship-runtime-preview.png`는 `540×960`이며 지구·우주선, LAUNCH HUD, 출발 안내와 `DEV PLACEHOLDER` 표기가 세로 화면 안에 보인다.
-- 행성 충돌 내구도와 파괴 시 전체 메타 초기화는 아직 미구현이다.
+- 개인 최고 높이는 현재 실행 중에는 보존되지만 앱 재시작 뒤 불러오는 영구 저장은 아직 미구현이다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- engine-hosted 파괴 테스트를 먼저 추가하고 행성 충돌로 내구도가 0이 되면 돈·미정산 표본·연료 강화 상태를 초기화하되 개인 최고 높이만 보존하게 한다.
+- engine-hosted 저장 테스트를 먼저 추가하고 LÖVE filesystem에 개인 최고 높이만 저장·복구해 앱 재시작과 메타 초기화 뒤에도 보존되게 한다.
 
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:23`)
 - 세로 실제 런타임 캡처 `540×960` 확인
-- 파괴 실패와 개인 최고 높이 저장 자동 테스트는 후속 slice
+- 개인 최고 높이 영구 저장 자동 테스트는 후속 slice
