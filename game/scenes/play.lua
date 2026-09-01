@@ -244,8 +244,8 @@ function M:keypressed(key)
         if not self.expedition.ownedShips.scout then
             if expedition.buyShip(self.expedition, "scout") then
                 expedition.selectShip(self.expedition, "scout")
-                self.message = string.format("SCOUT PURCHASED AND SELECTED  BALANCE $%d",
-                    self.expedition.money)
+                self.message = string.format("SCOUT PURCHASED AND SELECTED  %s  BALANCE $%d",
+                    launchForecastLine(self.expedition), self.expedition.money)
             else
                 self.message = purchaseShortfallMessage(self.expedition.money,
                     self.expedition.scoutShipCost, "SCOUT")
