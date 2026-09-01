@@ -36,11 +36,25 @@ M.returnControls = returnControls
 -- The settlement panel's summary-card font/spacing was shrunk to free the
 -- extra 10px of vertical room this needed. See game/self_test.lua for the
 -- device-scale check.
+-- Added the SAMPLE YIELD upgrade as a fifth touch target alongside
+-- fuel/hull/ship/relaunch. A straight 5-way vertical split of the same
+-- 140-320 canvas range would only give 36px/row -- under the 44pt
+-- accessibility minimum this table was previously fixed to meet (see
+-- game/self_test.lua's canvasPixelsToPoints check). Instead YIELD and SHIP
+-- share one 44px-tall row, split left/right at x=90 (each half is 90
+-- canvas px wide, far past the 44pt accessibility minimum on the width
+-- axis too), keeping all four rows at the full 44 canvas px band height.
 local settlementTouchRows = {
-    { key = "fuel", top = 140, bottom = 185 },
-    { key = "hull", top = 185, bottom = 230 },
-    { key = "ship", top = 230, bottom = 275 },
-    { key = "relaunch", top = 275, bottom = 320 },
+    { key = "fuel", top = 144, bottom = 188 },
+    { key = "hull", top = 188, bottom = 232 },
+    {
+        top = 232, bottom = 276,
+        columns = {
+            { key = "yield", left = 0, right = 90 },
+            { key = "ship", left = 90, right = 180 },
+        },
+    },
+    { key = "relaunch", top = 276, bottom = 320 },
 }
 M.settlementTouchRows = settlementTouchRows
 
@@ -245,6 +259,7 @@ function M:shopLoadoutLines()
     end
     local fuelStatus, fuelAffordable = purchaseStatus(run.money, run.fuelUpgradeCost)
     local hullStatus, hullAffordable = purchaseStatus(run.money, run.durabilityUpgradeCost)
+    local yieldStatus, yieldAffordable = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
     return {
         ship = string.format("NEXT %s", string.upper(run.selectedShipId)),
         stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
@@ -272,6 +287,12 @@ function M:shopLoadoutLines()
         hullPreviewForecast = launchForecastLine(run),
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
+        yieldAction = string.format("T/Y YIELD LV.%d>%d $%d",
+            run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, run.sampleYieldUpgradeCost),
+        yieldPreview = string.format("YIELD x%.2f",
+            1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount),
+        yieldStatus = yieldStatus,
+        yieldAffordable = yieldAffordable,
         odds = self:slotOddsLine(),
     }
 end
@@ -513,13 +534,24 @@ function M:touchpressed(id, x, y)
     if self.expedition.phase == "settlement" then
         for _, row in ipairs(settlementTouchRows) do
             if y >= row.top and y < row.bottom then
-                if row.key == "fuel" then
+                local key = row.key
+                if row.columns then
+                    for _, column in ipairs(row.columns) do
+                        if x >= column.left and x < column.right then
+                            key = column.key
+                            break
+                        end
+                    end
+                end
+                if key == "fuel" then
                     self:keypressed("f")
-                elseif row.key == "hull" then
+                elseif key == "hull" then
                     self:keypressed("h")
-                elseif row.key == "ship" then
+                elseif key == "yield" then
+                    self:keypressed("y")
+                elseif key == "ship" then
                     self:keypressed("v")
-                elseif row.key == "relaunch" then
+                elseif key == "relaunch" then
                     self:keypressed("space")
                 end
                 break
@@ -703,7 +735,7 @@ function M:draw()
         local actionX, actionW = 16, 102
         local statusX, statusW = 120, 48
         local fullX, fullW = 16, viewport.width - 32
-        local row = 154
+        local row = 140
         local rowStep = 10
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.fuelAction, actionX, row, actionW, "left")
@@ -725,6 +757,15 @@ function M:draw()
         row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(nextLaunch.hullPreviewForecast, fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(nextLaunch.yieldAction, actionX, row, actionW, "left")
+        love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
+            nextLaunch.yieldAffordable and 1 or 0.4, nextLaunch.yieldAffordable and 0.55 or 0.35)
+        love.graphics.printf(nextLaunch.yieldStatus, statusX, row, statusW, "right")
+        row = row + rowStep
+        love.graphics.setColor(0.4, 0.85, 1)
+        love.graphics.printf(nextLaunch.yieldPreview, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.scoutTradeoff, fullX, row, fullW, "center")

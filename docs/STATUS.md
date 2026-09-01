@@ -208,9 +208,15 @@
 - engine-hosted 테스트가 `buySampleYieldUpgrade`의 phase/비용 제한, 구매 후 `sampleYieldMultiplier == 1.25`, 강화 적용 상태에서 `collectSample`이 실제로 배수 적용된 지급액(`awarded`)을 반환·누적하는지, 파괴 시 레벨 초기화와 배수 복귀(`1`)를, `PlayScene:keypressed("y")`의 구매 성공/실패 메시지 두 경우를 검증한다.
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
 
+- EARTH SHOP `SAMPLE YIELD` 강화에 터치 타겟과 상점 패널 표시를 추가해 연료·내구도·SCOUT 강화와 동일한 터치 우선 UX로 맞췄다. `game/scenes/play.lua`의 `PlayScene:shopLoadoutLines()`가 `yieldAction`(`"T/Y YIELD LV.n>n+1 $60"`), `yieldPreview`(`"YIELD x1.25"` 형식), `yieldStatus`/`yieldAffordable`(구매 후 잔액 또는 부족액)를 새로 반환하며, `settlement` draw 분기가 HULL 미리보기 다음에 두 줄(action/status, preview)을 추가로 그린다.
+- `PlayScene.settlementTouchRows`를 4행에서 재구성했다. 44pt 접근성 최소값(정수 배율 1, 1x 기기 픽셀 비율)을 유지하면서 다섯 번째 동작을 넣기 위해 YIELD와 SHIP을 하나의 44px 높이 행 안에서 좌우(x=0~90 / x=90~180)로 분할하는 `columns` 하위 표를 추가했다(각 컬럼 폭도 90 canvas px로 44pt 폭 기준을 크게 초과). `touchpressed`가 `row.columns`가 있으면 x좌표로 하위 컬럼을 찾아 해당 키를 실행하도록 갱신됐다.
+- engine-hosted 테스트가 `shopLoadoutLines()`의 `yieldAction`/`yieldPreview`/`yieldStatus`/`yieldAffordable`을 기본·강화 1단계·잔액 부족/충분 케이스에서 검증하고, `settlementTouchRows`의 모든 행(및 `columns` 하위 항목)이 34px/44pt 최소값을 충족하는지, 각 행(컬럼 포함) 중앙 터치가 연료·내구도·표본 수익·SCOUT 구매·재출발을 실제로 일으키는지 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1080×1920`)로 새 `T/Y YIELD LV.0>1 $60  LEFT $95`, `YIELD x1.25` 줄이 기존 12줄과 겹치거나 화면을 벗어나지 않고 `TAP: RELAUNCH`까지 패널 안에 표시되는 것을 vision으로 확인했다 (`build/spaceship-runtime-preview-settlement-newbest-yieldtouch.png`, 로컬 산출물로 커밋 제외). 요약 카드부터 `TAP: RELAUNCH`/`DEV PLACEHOLDER`까지 전체 21줄이 겹침·잘림 없이 세로 순서대로 표시됨을 확인했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
 ## 다음 한 가지
 
-- EARTH SHOP `SAMPLE YIELD` 강화는 키보드(`Y`)로만 구매 가능하다. 다음 슬라이스는 이 강화의 터치 타겟과 상점 패널 표시(현재 레벨/배수, 구매 후 미리보기, `settlementTouchRows`를 5행으로 재분할해 44pt 접근성 유지)를 추가해 기존 연료·내구도·SCOUT 강화와 동일한 터치 우선 UX로 맞추는 것이다. 이후 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export 가용성 확인)로 전환을 검토한다.
+- EARTH SHOP의 YIELD/SHIP 터치 행이 하나의 44px 밴드를 좌우로 나눠 공유하는 방식은 접근성 최소값은 만족하지만, 그려지는 텍스트 줄(y=190~200 YIELD, y=240~270대 SHIP 관련 여러 줄)과 터치 밴드 경계가 완전히 1:1로 정렬되지는 않는 기존 패턴(연료/내구도 행도 동일하게 느슨한 정렬이었음)을 그대로 유지했다. 다음 슬라이스에서는 이 5행 레이아웃을 텍스트 줄과 더 타이트하게 정렬하거나, 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export 가용성 확인)로 전환하는 것을 검토한다.
 
 
 ## 완료 조건

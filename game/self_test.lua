@@ -551,18 +551,24 @@ function M.run()
     assert(starterNextLaunch.hullPreviewForecast == "NO-HIT 600  SLOTS 6")
     assert(starterNextLaunch.hullStatus == "SHORT $75" and not starterNextLaunch.hullAffordable)
     assert(starterNextLaunch.shipStatus == "SHORT $125" and not starterNextLaunch.shipAffordable)
+    assert(starterNextLaunch.yieldAction == "T/Y YIELD LV.0>1 $60")
+    assert(starterNextLaunch.yieldPreview == "YIELD x1.25")
+    assert(starterNextLaunch.yieldStatus == "SHORT $60" and not starterNextLaunch.yieldAffordable)
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
     local fuelReadyNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(fuelReadyNextLaunch.fuelStatus == "LEFT $0" and fuelReadyNextLaunch.fuelAffordable)
     assert(fuelReadyNextLaunch.hullStatus == "SHORT $25" and not fuelReadyNextLaunch.hullAffordable)
     assert(fuelReadyNextLaunch.shipStatus == "SHORT $75" and not fuelReadyNextLaunch.shipAffordable)
+    assert(fuelReadyNextLaunch.yieldStatus == "SHORT $10" and not fuelReadyNextLaunch.yieldAffordable)
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(balancePreviewNextLaunch.fuelStatus == "LEFT $150" and balancePreviewNextLaunch.fuelAffordable)
     assert(balancePreviewNextLaunch.hullStatus == "LEFT $125" and balancePreviewNextLaunch.hullAffordable)
     assert(balancePreviewNextLaunch.shipStatus == "LEFT $75" and balancePreviewNextLaunch.shipAffordable)
+    assert(balancePreviewNextLaunch.yieldStatus == "LEFT $140" and balancePreviewNextLaunch.yieldAffordable)
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
         + nextLaunchScene.expedition.durabilityUpgradeCost + nextLaunchScene.expedition.scoutShipCost
+        + nextLaunchScene.expedition.sampleYieldUpgradeCost
     nextLaunchScene:keypressed("f")
     local fueledNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(fueledNextLaunch.stats == "MAX FUEL 120  HULL 3")
@@ -581,6 +587,10 @@ function M.run()
     assert(reinforcedNextLaunch.fuelAction == "T/F FUEL LV.1>2 $50")
     assert(reinforcedNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
     assert(reinforcedNextLaunch.shipPreview == "SCOUT MAX FUEL 160  HULL 3")
+    nextLaunchScene:keypressed("y")
+    local yieldedNextLaunch = nextLaunchScene:shopLoadoutLines()
+    assert(yieldedNextLaunch.yieldAction == "T/Y YIELD LV.1>2 $60")
+    assert(yieldedNextLaunch.yieldPreview == "YIELD x1.50")
     nextLaunchScene:keypressed("v")
     local scoutNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(scoutNextLaunch.ship == "NEXT SCOUT")
@@ -746,7 +756,7 @@ function M.run()
 
     for _, row in ipairs(PlayScene.settlementTouchRows) do
         assert(row.bottom - row.top >= 34,
-            "settlement touch row " .. row.key .. " is under the 34px minimum")
+            "settlement touch row " .. (row.key or "columns") .. " is under the 34px minimum")
     end
     -- The smallest supported window (integer scale 1, e.g. 180x320) at a 1x
     -- device pixel ratio is the worst case for touch-target accessibility.
@@ -756,8 +766,16 @@ function M.run()
     for _, row in ipairs(PlayScene.settlementTouchRows) do
         local heightPoints = viewport.canvasPixelsToPoints(row.bottom - row.top, 180, 320, 1, false)
         assert(heightPoints >= 44,
-            "settlement touch row " .. row.key .. " is under the 44pt accessibility minimum at scale 1 ("
-                .. heightPoints .. "pt)")
+            "settlement touch row " .. (row.key or "columns")
+                .. " is under the 44pt accessibility minimum at scale 1 (" .. heightPoints .. "pt)")
+        if row.columns then
+            for _, column in ipairs(row.columns) do
+                local widthPoints = viewport.canvasPixelsToPoints(column.right - column.left, 180, 320, 1, false)
+                assert(widthPoints >= 44,
+                    "settlement touch column " .. column.key
+                        .. " is under the 44pt accessibility minimum width at scale 1 (" .. widthPoints .. "pt)")
+            end
+        end
     end
     local rowTouchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -765,11 +783,21 @@ function M.run()
     rowTouchScene.expedition.phase = "settlement"
     rowTouchScene.expedition.money = rowTouchScene.expedition.fuelUpgradeCost
         + rowTouchScene.expedition.durabilityUpgradeCost + rowTouchScene.expedition.scoutShipCost
+        + rowTouchScene.expedition.sampleYieldUpgradeCost
     for _, row in ipairs(PlayScene.settlementTouchRows) do
-        rowTouchScene:touchpressed(row.key, 90, row.top + math.floor((row.bottom - row.top) / 2))
+        if row.columns then
+            for _, column in ipairs(row.columns) do
+                rowTouchScene:touchpressed(column.key,
+                    column.left + math.floor((column.right - column.left) / 2),
+                    row.top + math.floor((row.bottom - row.top) / 2))
+            end
+        else
+            rowTouchScene:touchpressed(row.key, 90, row.top + math.floor((row.bottom - row.top) / 2))
+        end
     end
     assert(rowTouchScene.expedition.fuelUpgradeLevel == 1)
     assert(rowTouchScene.expedition.durabilityUpgradeLevel == 1)
+    assert(rowTouchScene.expedition.sampleYieldUpgradeLevel == 1)
     assert(rowTouchScene.expedition.ownedShips.scout and rowTouchScene.expedition.selectedShipId == "scout")
     assert(rowTouchScene.expedition.phase == "ascending")
 
