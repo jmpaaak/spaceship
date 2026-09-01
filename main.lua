@@ -69,6 +69,27 @@ function love.load()
         end
         world.collisionDamage = function() return 3 end
         world.sampleValue = function() return 999 end
+    elseif capturePhase == "ascending-sample-tiers" then
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 900
+        scene.ship.y = -900
+        scene.ship.x = 0
+        local world = require("game.world")
+        world.nearbyPlanets = function()
+            return {
+                { id = "tier-common", x = -50, y = -950, radius = 9, hue = 0.1 },
+                { id = "tier-rare", x = 0, y = -1000, radius = 9, hue = 0.5 },
+                { id = "tier-epic", x = 55, y = -1050, radius = 9, hue = 0.8 },
+            }
+        end
+        world.collisionDamage = function() return 1 end
+        world.sampleValue = function() return 10 end
+        world.sampleTier = function(planet)
+            if planet.id == "tier-common" then return "common" end
+            if planet.id == "tier-rare" then return "rare" end
+            return "epic"
+        end
     end
 end
 

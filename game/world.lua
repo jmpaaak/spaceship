@@ -50,6 +50,13 @@ function M.collisionDamage(planet)
     return 1 + math.floor(height / 500)
 end
 
+function M.sampleTier(planet)
+    local height = math.max(0, -planet.y)
+    if height >= 800 then return "epic" end
+    if height >= 300 then return "rare" end
+    return "common"
+end
+
 function M.stars(sectorX, sectorY)
     local stars = {}
     for i = 1, 18 do

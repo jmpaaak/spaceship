@@ -33,6 +33,22 @@ function M.run()
     assert(world.collisionDamage({ y = -500 }) == 2)
     assert(world.collisionDamage({ y = -1500 }) == 4)
 
+    assert(world.sampleTier({ y = -50 }) == "common")
+    assert(world.sampleTier({ y = -299 }) == "common")
+    assert(world.sampleTier({ y = -300 }) == "rare")
+    assert(world.sampleTier({ y = -799 }) == "rare")
+    assert(world.sampleTier({ y = -800 }) == "epic")
+    assert(world.sampleTier({ y = -5000 }) == "epic")
+
+    local commonR, commonG, commonB = PlayScene.sampleTierColor("common")
+    local rareR, rareG, rareB = PlayScene.sampleTierColor("rare")
+    local epicR, epicG, epicB = PlayScene.sampleTierColor("epic")
+    assert(commonR and commonG and commonB)
+    assert(rareR and rareG and rareB)
+    assert(epicR and epicG and epicB)
+    assert(commonR ~= rareR or commonG ~= rareG or commonB ~= rareB)
+    assert(rareR ~= epicR or rareG ~= epicG or rareB ~= epicB)
+
     local riskScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })

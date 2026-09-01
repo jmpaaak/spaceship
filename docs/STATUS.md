@@ -143,9 +143,15 @@
 - engine-hosted 테스트가 `PlayScene.clampLabelX`의 중앙 정렬 좌표, 우측 경계 clamp(`178`쪽), 좌측 경계 clamp(`2`쪽)와 좁은 텍스트의 정상 중앙 좌표 4가지 경우를 검증한다.
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-wide-warning` 개발 전용 진입 경로로 화면 오른쪽 가장자리 근처 행성 배치)로 `SAMPLE $999`, `LETHAL -3` 라벨이 `1440×2560` 세로 화면 오른쪽 가장자리 안쪽에 잘리지 않고 표시되는 것을 확인했다 (`build/spaceship-runtime-preview-ascending-wide-warning.png`).
 
+- 표본 종류별 시각 구분을 위해 `game/world.lua`에 `world.sampleTier(planet)`을 추가했다. 행성 고도(`-planet.y`) 기준 `0~299`는 `common`, `300~799`는 `rare`, `800` 이상은 `epic` 3단계로 분류하며 `world.sampleValue`와 같은 고도 축을 공유해 가치·희귀도가 같은 방향으로 증가한다.
+- `game/scenes/play.lua`에 `PlayScene.sampleTierColor(tier)`를 추가해 `common`은 회백색, `rare`는 청록색, `epic`은 금색 링 색을 반환한다. 상승 중 아직 표본을 획득하지 않은(`self.discovered[planet.id]`가 false인) 행성에는 채우기 색 위에 등급 색 외곽 링을 추가로 그려 기존 흰 테두리 링과 별개로 접근 전에도 행성 등급을 시각적으로 구분할 수 있게 했다. 표본을 이미 획득한 행성에는 등급 링을 그리지 않는다.
+- engine-hosted 테스트가 `world.sampleTier`의 세 구간 경계값(299/300, 799/800)과 `PlayScene.sampleTierColor`의 세 등급이 서로 다른 색을 반환하는지 검증한다.
+- `main.lua`에 `GAME_CAPTURE_PHASE=ascending-sample-tiers` 개발 전용 진입 경로를 추가해 세 등급(`common`/`rare`/`epic`)의 모의 행성을 동시에 배치했다. 실제 LÖVE runtime capture(`1080×1920`)로 `common` 흰색 링, `rare` 청록색 링, `epic` 금색 링이 서로 다른 색으로 렌더링되는 것을 확인했다 (`build/spaceship-runtime-preview-ascending-sample-tiers.png`).
+
 ## 다음 한 가지
 
-- 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 12줄 안팎의 텍스트가 이제 패널 안에 들어가지만, 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다. 다음 슬라이스는 핵심 루프 상태머신 자체의 다음 미구현 조각(예: 슬롯 심볼별 명확한 확률/기대값 밸런싱, 또는 표본 종류별 시각 구분)으로 이동한다.
+- 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 12줄 안팎의 텍스트가 이제 패널 안에 들어가지만, 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다.
+- 표본 등급별 링 색을 실제 LÖVE runtime capture로 확인했다. 다음 슬라이스는 핵심 루프 상태머신의 다음 미구현 조각(예: 슬롯 심볼별 명확한 확률/기대값 밸런싱)으로 이동한다.
 
 ## 완료 조건
 

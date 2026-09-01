@@ -22,6 +22,18 @@ local function planetColor(hue)
     return 0.65, 0.45, 0.95
 end
 
+local sampleTierColors = {
+    common = { 0.75, 0.8, 0.85 },
+    rare = { 0.35, 0.75, 1 },
+    epic = { 0.95, 0.7, 0.15 },
+}
+
+local function sampleTierColor(tier)
+    local color = sampleTierColors[tier] or sampleTierColors.common
+    return color[1], color[2], color[3]
+end
+M.sampleTierColor = sampleTierColor
+
 local warningLabelMargin = 2
 
 local function clampLabelX(centerX, textWidth, viewportWidth, margin)
@@ -471,6 +483,10 @@ function M:draw()
         if x > -24 and x < viewport.width + 24 and y > -24 and y < viewport.height + 24 then
             love.graphics.setColor(planetColor(planet.hue))
             love.graphics.circle("fill", x, y, planet.radius)
+            if not self.discovered[planet.id] then
+                love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
+                love.graphics.circle("line", x, y, planet.radius + 3)
+            end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)
             local risk = self:approachWarning(planet, y, shipScreenY)
