@@ -208,6 +208,21 @@ function M.run()
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
     assert(shopScene.message == "SCOUT PURCHASED AND SELECTED")
 
+    local shortfallScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    shortfallScene.expedition.phase = "settlement"
+    shortfallScene.expedition.money = 20
+    shortfallScene:keypressed("f")
+    assert(shortfallScene.expedition.fuelUpgradeLevel == 0)
+    assert(shortfallScene.message == "NEED $30 MORE FOR FUEL UPGRADE")
+    shortfallScene:keypressed("h")
+    assert(shortfallScene.expedition.durabilityUpgradeLevel == 0)
+    assert(shortfallScene.message == "NEED $55 MORE FOR HULL UPGRADE")
+    shortfallScene:touchpressed("ship", 90, 244)
+    assert(not shortfallScene.expedition.ownedShips.scout)
+    assert(shortfallScene.message == "NEED $105 MORE FOR SCOUT")
+
     local touchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })

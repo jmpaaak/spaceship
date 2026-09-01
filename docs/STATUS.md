@@ -63,12 +63,14 @@
 - engine-hosted 상점 표시 테스트가 잔액 0과 연료 가격과 정확히 같은 잔액에서 세 항목의 `READY`/`SHORT` 상태를 비교하고 SCOUT 구매 후 `OWNED` 전환을 검증한다.
 - EARTH SHOP의 구매 불가 행은 `SHORT $N`으로 현재 잔액에서 실제 부족한 금액을 표시하며, 잔액 변화에 따라 연료·내구도·SCOUT 부족액이 즉시 다시 계산된다.
 - engine-hosted 상점 표시 테스트가 잔액 `$0`과 `$50`에서 세 구매 항목의 정확한 부족액 및 연료 항목의 `READY` 전환을 검증한다.
+- EARTH SHOP에서 연료·내구도·SCOUT 구매에 실패하면 정가가 아니라 현재 잔액 기준의 실제 부족액을 `NEED $N MORE` 메시지로 안내한다.
+- engine-hosted 입력 메시지 테스트가 잔액 `$20`에서 키보드 연료·내구도 구매와 터치 SCOUT 구매의 정확한 부족액 및 구매 미발생을 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- EARTH SHOP에서 구매에 실패했을 때 정가 대신 현재 잔액 기준 실제 부족 금액을 안내하고 engine-hosted 입력 메시지 테스트를 추가한다.
+- EARTH SHOP에서 구매 성공 메시지에 지출 후 남은 잔액을 함께 표시하고 engine-hosted 키보드·터치 입력 메시지 테스트를 추가한다.
 
 ## 완료 조건
 

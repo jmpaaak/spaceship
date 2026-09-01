@@ -92,6 +92,10 @@ local function purchaseStatus(money, cost)
     return string.format("SHORT $%d", cost - money), false
 end
 
+local function purchaseShortfallMessage(money, cost, item)
+    return string.format("NEED $%d MORE FOR %s", cost - money, item)
+end
+
 function M:shopLoadoutLines()
     local run = self.expedition
     local shipAction
@@ -197,7 +201,8 @@ function M:keypressed(key)
         if expedition.buyFuelUpgrade(self.expedition) then
             self.message = string.format("FUEL TANK UPGRADED  MAX %d", self.expedition.maxFuel)
         else
-            self.message = string.format("NEED $%d FOR FUEL UPGRADE", self.expedition.fuelUpgradeCost)
+            self.message = purchaseShortfallMessage(self.expedition.money,
+                self.expedition.fuelUpgradeCost, "FUEL UPGRADE")
         end
         return
     end
@@ -205,7 +210,8 @@ function M:keypressed(key)
         if expedition.buyDurabilityUpgrade(self.expedition) then
             self.message = string.format("HULL UPGRADED  MAX %d", self.expedition.maxDurability)
         else
-            self.message = string.format("NEED $%d FOR HULL UPGRADE", self.expedition.durabilityUpgradeCost)
+            self.message = purchaseShortfallMessage(self.expedition.money,
+                self.expedition.durabilityUpgradeCost, "HULL UPGRADE")
         end
         return
     end
@@ -215,7 +221,8 @@ function M:keypressed(key)
                 expedition.selectShip(self.expedition, "scout")
                 self.message = "SCOUT PURCHASED AND SELECTED"
             else
-                self.message = string.format("NEED $%d FOR SCOUT", self.expedition.scoutShipCost)
+                self.message = purchaseShortfallMessage(self.expedition.money,
+                    self.expedition.scoutShipCost, "SCOUT")
             end
         else
             local shipId = self.expedition.selectedShipId == "scout" and "starter" or "scout"
