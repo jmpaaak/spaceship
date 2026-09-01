@@ -368,10 +368,12 @@ function M.run()
     assert(reselectedNextLaunch.stats == "MAX FUEL 120  HULL 4")
     assert(reselectedNextLaunch.fuelPreviewForecast == "NO-HIT 840  SLOTS 9")
     assert(reselectedNextLaunch.shipAction == "SELECT SCOUT")
-    assert(nextLaunchScene.message == "STARTER SELECTED  NO-HIT 720  SLOTS 8")
+    assert(nextLaunchScene.message
+        == "STARTER SELECTED  MAX FUEL 120  HULL 4  NO-HIT 720  SLOTS 8")
     nextLaunchScene:touchpressed("ship", 90, 244)
     assert(nextLaunchScene.expedition.selectedShipId == "scout")
-    assert(nextLaunchScene.message == "SCOUT SELECTED  NO-HIT 960  SLOTS 10")
+    assert(nextLaunchScene.message
+        == "SCOUT SELECTED  MAX FUEL 160  HULL 3  NO-HIT 960  SLOTS 10")
     assert(nextLaunchScene:shopLoadoutLines().shipAction == "SELECT STARTER")
 
     local destroyedRun = expedition.new({

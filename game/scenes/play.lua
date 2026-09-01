@@ -253,8 +253,9 @@ function M:keypressed(key)
         else
             local shipId = self.expedition.selectedShipId == "scout" and "starter" or "scout"
             expedition.selectShip(self.expedition, shipId)
-            self.message = string.format("%s SELECTED  %s",
-                string.upper(shipId), launchForecastLine(self.expedition))
+            self.message = string.format("%s SELECTED  MAX FUEL %d  HULL %d  %s",
+                string.upper(shipId), self.expedition.maxFuel, self.expedition.maxDurability,
+                launchForecastLine(self.expedition))
         end
         return
     end
