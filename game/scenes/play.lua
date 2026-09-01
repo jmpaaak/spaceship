@@ -402,13 +402,13 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "settlement" then
-        if y >= 160 and y < 184 then
+        if y >= 172 and y < 196 then
             self:keypressed("f")
-        elseif y >= 184 and y < 218 then
+        elseif y >= 196 and y < 230 then
             self:keypressed("h")
-        elseif y >= 218 and y < 252 then
+        elseif y >= 230 and y < 264 then
             self:keypressed("v")
-        elseif y >= 252 and y <= 306 then
+        elseif y >= 264 and y <= 318 then
             self:keypressed("space")
         end
         return
@@ -540,56 +540,58 @@ function M:draw()
         love.graphics.printf(loadout.forecast, 16, 260, viewport.width - 32, "center")
     elseif self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
-        love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 238)
+        love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf("EARTH SHOP", 16, 74, viewport.width - 32, "center")
         love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
-        love.graphics.rectangle("fill", 18, 90, viewport.width - 36, 42)
+        love.graphics.rectangle("fill", 18, 90, viewport.width - 36, 54)
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(string.format("SETTLEMENT TOTAL $%d", self.expedition.lastSettlement), 22, 94, viewport.width - 44, "center")
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(string.format("SAMPLES (%d) $%d", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 108, 100, "left")
         love.graphics.printf(string.format("SPINS (%d) $%d", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 122, 108, 36, "right")
+        love.graphics.setColor(0.6, 0.8, 1)
+        love.graphics.printf(string.format("PEAK ALT %d", math.floor(self.expedition.lastAltitude or 0)), 22, 121, viewport.width - 44, "center")
         local nextLaunch = self:shopLoadoutLines()
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.fuelAction, 16, 154, 88, "left")
-        love.graphics.printf(nextLaunch.hullAction, 16, 176, 88, "left")
+        love.graphics.printf(nextLaunch.fuelAction, 16, 166, 88, "left")
+        love.graphics.printf(nextLaunch.hullAction, 16, 188, 88, "left")
         love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
             nextLaunch.fuelAffordable and 1 or 0.4, nextLaunch.fuelAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.fuelStatus, 104, 154, 60, "right")
+        love.graphics.printf(nextLaunch.fuelStatus, 104, 166, 60, "right")
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.fuelPreviewForecast, 16, 165, viewport.width - 32, "left")
+        love.graphics.printf(nextLaunch.fuelPreviewForecast, 16, 177, viewport.width - 32, "left")
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
             nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.hullStatus, 104, 176, 60, "right")
+        love.graphics.printf(nextLaunch.hullStatus, 104, 188, 60, "right")
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.hullPreview, 16, 187, viewport.width - 32, "left")
+        love.graphics.printf(nextLaunch.hullPreview, 16, 199, viewport.width - 32, "left")
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.hullPreviewForecast, 16, 198, viewport.width - 32, "left")
+        love.graphics.printf(nextLaunch.hullPreviewForecast, 16, 210, viewport.width - 32, "left")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.scoutTradeoff, 16, 142, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.scoutTradeoff, 16, 154, viewport.width - 32, "center")
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.shipPreview, 16, 210, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.shipPreview, 16, 222, viewport.width - 32, "center")
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.shipPreviewForecast, 16, 221, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.shipPreviewForecast, 16, 233, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf("T/V " .. nextLaunch.shipAction, 16, 232, 88, "left")
+        love.graphics.printf("T/V " .. nextLaunch.shipAction, 16, 244, 88, "left")
         love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
             nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.shipStatus, 104, 232, 60, "right")
+        love.graphics.printf(nextLaunch.shipStatus, 104, 244, 60, "right")
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(nextLaunch.ship, 16, 244, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.ship, 16, 256, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.stats, 16, 255, viewport.width - 32, "center")
-        love.graphics.printf(nextLaunch.upgrades, 16, 266, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.stats, 16, 267, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.upgrades, 16, 278, viewport.width - 32, "center")
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.forecast, 16, 277, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.forecast, 16, 289, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf("TAP: RELAUNCH", 16, 292, viewport.width - 32, "center")
+        love.graphics.printf("TAP: RELAUNCH", 16, 304, viewport.width - 32, "center")
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-        love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 108)
+        love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 122)
         love.graphics.setColor(1, 0.55, 0.45)
         love.graphics.printf("SHIP DESTROYED", 16, 178, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
@@ -603,13 +605,16 @@ function M:draw()
         love.graphics.printf(string.format("SPINS (%d) $%d",
             self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0),
             16, 213, viewport.width - 32, "center")
+        love.graphics.setColor(0.6, 0.8, 1)
+        love.graphics.printf(string.format("PEAK ALT %d", math.floor(self.expedition.lastLostAltitude or 0)),
+            16, 224, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), 16, 226, viewport.width - 32, "center")
+        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), 16, 236, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf("NEXT " .. loadout.ship, 16, 240, viewport.width - 32, "center")
+        love.graphics.printf("NEXT " .. loadout.ship, 16, 250, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, 16, 252, viewport.width - 32, "center")
-        love.graphics.printf("TAP: START OVER", 16, 266, viewport.width - 32, "center")
+        love.graphics.printf(loadout.upgrades, 16, 262, viewport.width - 32, "center")
+        love.graphics.printf("TAP: START OVER", 16, 276, viewport.width - 32, "center")
     elseif self.expedition.phase == "ascending" then
         local steering = self:steeringButtonState()
         if steering.leftActive then

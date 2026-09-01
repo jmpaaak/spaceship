@@ -125,9 +125,12 @@
 - engine-hosted 파괴 테스트가 상승·귀환 양쪽 경로의 파괴에서 잃은 표본 수·가치·슬롯 스핀 횟수·보상 저장과 재출발 뒤 초기화를 검증한다.
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=destroyed` 개발 전용 진입 경로로 파괴 상태 재현)로 `SHIP DESTROYED`, `LOST TOTAL $155`, `SAMPLES (2) $80`, `SPINS (1) $75`, `META RESET BEST 0`, `NEXT SHIP STARTER`, `FUEL LV.0  HULL LV.0`, `TAP: START OVER`가 겹침·잘림 없이 `1080×1920` 세로 화면 안에 표시되는 것을 확인했다.
 
+- EARTH SHOP 요약 카드와 SHIP DESTROYED 요약 카드가 해당 원정의 최고 도달 고도를 `PEAK ALT N`으로 함께 표시한다. 정산은 `expedition.lastAltitude`, 파괴는 `expedition.lastLostAltitude`에 최고 상승 고도(`maxAltitude`)를 저장하며 재출발 시 두 값 모두 0으로 초기화된다. 추가 줄에 맞춰 두 카드의 배경 박스 높이와 아래쪽 상점/재출발 터치 영역 좌표를 확장·이동했다.
+- engine-hosted 정산 테스트가 정산·귀환 유지·재출발 각 시점의 `lastAltitude` 값을, 파괴 테스트가 `lastLostAltitude` 저장과 재출발 뒤 초기화를 검증한다.
+
 ## 다음 한 가지
 
-- 정산/파괴 요약 카드에 원정별 최고 도달 고도도 함께 표시해 잃은 표본/슬롯 가치와 도달 고도를 한 화면에서 비교할 수 있게 한다.
+- 정산/파괴 요약 카드에 이번 원정에서 처음 발견한 새 개인 최고 높이 갱신 여부를 `NEW BEST!` 배지로 강조해, 표본·슬롯·고도 요약과 함께 한 화면에서 확인할 수 있게 한다.
 
 ## 완료 조건
 

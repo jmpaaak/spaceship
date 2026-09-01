@@ -54,6 +54,7 @@ local function settle(run)
     run.lastSettlement = payout
     run.lastSampleCount = run.sampleCount
     run.lastSlotSpinsCount = run.slotSpins
+    run.lastAltitude = run.maxAltitude
     run.pendingSampleValue = 0
     run.pendingSlotReward = 0
     run.sampleCount = 0
@@ -69,6 +70,7 @@ local function destroy(run)
     run.lastLostSampleValue = run.pendingSampleValue
     run.lastLostSlotSpinsCount = run.slotSpins
     run.lastLostSlotValue = run.pendingSlotReward
+    run.lastLostAltitude = run.maxAltitude
     run.sampleCount = 0
     run.pendingSampleValue = 0
     run.pendingSlotReward = 0
@@ -135,10 +137,12 @@ function M.new(options)
         lastSlotSettlement = 0,
         lastSampleCount = 0,
         lastSlotSpinsCount = 0,
+        lastAltitude = 0,
         lastLostSampleCount = 0,
         lastLostSampleValue = 0,
         lastLostSlotSpinsCount = 0,
         lastLostSlotValue = 0,
+        lastLostAltitude = 0,
     }
 end
 
@@ -162,10 +166,12 @@ function M.launch(run)
         run.lastSlotSettlement = 0
         run.lastSampleCount = 0
         run.lastSlotSpinsCount = 0
+        run.lastAltitude = 0
         run.lastLostSampleCount = 0
         run.lastLostSampleValue = 0
         run.lastLostSlotSpinsCount = 0
         run.lastLostSlotValue = 0
+        run.lastLostAltitude = 0
     end
     run.phase = "ascending"
     return true
