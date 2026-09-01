@@ -156,9 +156,11 @@ function M.run()
     assert(run.money == 85 and run.lastSettlement == 85)
     assert(run.lastSampleSettlement == 75 and run.lastSlotSettlement == 10)
     assert(run.sampleCount == 0 and run.pendingSampleValue == 0 and run.pendingSlotReward == 0)
+    assert(run.lastSampleCount == 1 and run.lastSlotSpinsCount == 2)
     expedition.update(run, 1)
     assert(run.money == 85 and run.lastSettlement == 85)
     assert(run.lastSampleSettlement == 75 and run.lastSlotSettlement == 10)
+    assert(expedition.launch(run) and run.lastSampleCount == 0 and run.lastSlotSpinsCount == 0)
 
     local slotRolls = { 3, 3, 3, 1, 1, 2, 3, 3, 3 }
     local nextSlotRoll = 0

@@ -52,6 +52,8 @@ local function settle(run)
     local payout = run.lastSampleSettlement + run.lastSlotSettlement
     run.money = run.money + payout
     run.lastSettlement = payout
+    run.lastSampleCount = run.sampleCount
+    run.lastSlotSpinsCount = run.slotSpins
     run.pendingSampleValue = 0
     run.pendingSlotReward = 0
     run.sampleCount = 0
@@ -75,6 +77,8 @@ local function destroy(run)
     run.lastSettlement = 0
     run.lastSampleSettlement = 0
     run.lastSlotSettlement = 0
+    run.lastSampleCount = 0
+    run.lastSlotSpinsCount = 0
     run.fuelUpgradeLevel = 0
     run.durabilityUpgradeLevel = 0
     run.ownedShips = { starter = true }
@@ -125,6 +129,8 @@ function M.new(options)
         lastSettlement = 0,
         lastSampleSettlement = 0,
         lastSlotSettlement = 0,
+        lastSampleCount = 0,
+        lastSlotSpinsCount = 0,
     }
 end
 
@@ -146,6 +152,8 @@ function M.launch(run)
         run.lastSettlement = 0
         run.lastSampleSettlement = 0
         run.lastSlotSettlement = 0
+        run.lastSampleCount = 0
+        run.lastSlotSpinsCount = 0
     end
     run.phase = "ascending"
     return true
