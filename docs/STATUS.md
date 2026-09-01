@@ -265,6 +265,13 @@
 - 이 결함을 같은 사이클 안에서 좌우 컬럼별 텍스트 폭 분할로 고치려던 중 폰트 폭 측정용 headless LÖVE 프로브(`/tmp/fontcheck2.lua`)가 응답 없이 멈춰(타임아웃) 남은 예산 안에 근본 수정을 완료할 수 없었다. 미완성 변경을 남기지 않기 위해 `git checkout -- game/scenes/play.lua`로 마지막 커밋(`682d811`) 상태로 되돌렸다. `make test`가 되돌린 상태에서 GREEN임을 재확인했다.
 - 다음 사이클에서: HULL/STEERING·YIELD/SHIP처럼 좌우 컬럼을 공유하는 행은 `actionX/actionW`를 컬럼별로 반씩 나누고(예: 좌측 컬럼 `x=16,w=74`, 우측 컬럼 `x=90,w=74`) 실제 폰트 폭이 컬럼 폭을 넘지 않는지 확인한 뒤에만 y좌표를 밴드 top에 정렬해야 한다. 헤드리스 폰트 폭 프로브는 `main.lua`/`self_test.lua`와 같은 디렉터리에서 `love .`로 실행해야 한다(별도 `/tmp` 디렉터리 실행은 `conf.lua`/`main.lua`가 없어 멈추거나 실패할 수 있음을 이번 사이클에서 확인).
 
+## EARTH SHOP `SHORT $N` 상태 분기 실기기 캡처 확인 (완료)
+
+- 지난 사이클의 "남은 다음 슬라이스 후보 (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인"을 처리했다. `main.lua`에 `GAME_CAPTURE_PHASE=settlement-shortfunds` 개발 전용 진입 경로를 추가해 `run.money = 0`으로 정산 phase에 진입시켜 연료·내구도·조종·표본 수익·SCOUT 다섯 구매 행 전부를 `purchaseStatus`의 `SHORT $N` 분기로 강제했다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-shortfunds`, `1440×2560`)로 다섯 행(`SHORT $50`/`SHORT $75`/`SHORT $65`/`SHORT $60`, SCOUT의 `SHORT $125`—측정된 최악 케이스 52px과 동일)이 모두 `shopStatusColumnW`(52px) 안에서 줄바꿈 없이 한 줄로 렌더링되고 위·아래 행과 겹치지 않는 것을 vision으로 확인했다 (`build/spaceship-runtime-preview-settlement-shortfunds.png`, 로컬 산출물로 커밋 제외). 이전 사이클(`EARTH SHOP 액션/상태 컬럼 폭 결함 수정`)에서는 잔액이 충분해 `LEFT $N` 분기만 실제 캡처로 확인했고 `SHORT $N`은 측정 폭(52px)만으로 간접 검증했었는데, 이번 캡처로 실제 렌더링까지 직접 확인해 그 간극을 메웠다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`). 코드 변경은 `main.lua`의 개발 전용 캡처 진입 경로 추가뿐이며 기존 엔진 로직·테스트는 변경하지 않았다.
+- 남은 다음 슬라이스 후보: (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리(지난 두 사이클에서 시도했으나 폰트 프로브 타임아웃으로 되돌림, `GAME_FONTPROBE` 진입 경로로 향후 재시도 가능), (2) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인 — 이번 사이클에서도 공식 AetherAI 로그인/API 접근 자격 증명이 없어 human-gated 상태로 유지했다.
+
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)

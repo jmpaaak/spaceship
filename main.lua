@@ -117,6 +117,23 @@ function love.load()
         scene.expedition.slotOpportunities = 3
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
+    elseif capturePhase == "settlement-shortfunds" then
+        -- Real-runtime capture for the "남은 다음 슬라이스 후보 (1)" item in
+        -- docs/STATUS.md: verify the SHORT $N status branch (as opposed to
+        -- the already-captured LEFT $N affordable branch) renders inside
+        -- the measured shopStatusColumnW without overlap. money=0 forces
+        -- every purchase row (fuel/hull/steering/yield/scout) into SHORT $N.
+        local run = scenes.current.expedition
+        require("game.expedition").launch(run)
+        run.phase = "settlement"
+        run.money = 0
+        run.lastSettlement = 0
+        run.lastSampleCount = 0
+        run.lastSampleSettlement = 0
+        run.lastSlotSpinsCount = 0
+        run.lastSlotSettlement = 0
+        run.lastAltitude = 0
+        run.lastNewBest = false
     end
 end
 
