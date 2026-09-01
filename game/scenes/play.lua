@@ -36,10 +36,13 @@ function M:collisionRisk(planet)
     if self.expedition.phase ~= "ascending" then return nil end
     local damage = world.collisionDamage(planet)
     local lethal = damage >= self.expedition.durability
+    local sampleValue = world.sampleValue(planet)
     return {
         damage = damage,
         lethal = lethal,
         label = string.format(lethal and "LETHAL -%d" or "RISK -%d", damage),
+        sampleValue = sampleValue,
+        sampleLabel = string.format("SAMPLE $%d", sampleValue),
     }
 end
 
@@ -217,13 +220,16 @@ function M:draw()
             if y >= 40 and y < shipScreenY then
                 local risk = self:collisionRisk(planet)
                 if risk then
+                    local previewX = math.max(2, math.min(viewport.width - 66, x - 33))
+                    local previewY = math.max(36, y - planet.radius - 24)
+                    love.graphics.setColor(0.45, 0.95, 1)
+                    love.graphics.printf(risk.sampleLabel, previewX, previewY, 66, "center")
                     if risk.lethal then
                         love.graphics.setColor(1, 0.3, 0.25)
                     else
                         love.graphics.setColor(1, 0.8, 0.25)
                     end
-                    local riskX = math.max(2, math.min(viewport.width - 52, x - 26))
-                    love.graphics.printf(risk.label, riskX, math.max(36, y - planet.radius - 13), 52, "center")
+                    love.graphics.printf(risk.label, previewX, previewY + 11, 66, "center")
                 end
             end
         end

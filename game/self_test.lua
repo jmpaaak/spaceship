@@ -41,8 +41,10 @@ function M.run()
     riskScene.expedition.durability = 3
     local warning = riskScene:collisionRisk({ y = -500 })
     assert(warning.damage == 2 and not warning.lethal and warning.label == "RISK -2")
+    assert(warning.sampleValue == 35 and warning.sampleLabel == "SAMPLE $35")
     local lethalWarning = riskScene:collisionRisk({ y = -1000 })
     assert(lethalWarning.damage == 3 and lethalWarning.lethal and lethalWarning.label == "LETHAL -3")
+    assert(lethalWarning.sampleValue == 60 and lethalWarning.sampleLabel == "SAMPLE $60")
     riskScene.expedition.phase = "returning"
     assert(riskScene:collisionRisk({ y = -500 }) == nil)
     riskScene.expedition.phase = "ascending"
