@@ -402,13 +402,13 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "settlement" then
-        if y >= 172 and y < 196 then
+        if y >= 150 and y < 179 then
             self:keypressed("f")
-        elseif y >= 196 and y < 230 then
+        elseif y >= 179 and y < 212 then
             self:keypressed("h")
-        elseif y >= 230 and y < 264 then
+        elseif y >= 212 and y < 256 then
             self:keypressed("v")
-        elseif y >= 264 and y <= 318 then
+        elseif y >= 256 and y <= 320 then
             self:keypressed("space")
         end
         return
@@ -557,41 +557,64 @@ function M:draw()
             love.graphics.printf("NEW BEST!", 22, 138, viewport.width - 44, "center")
         end
         local nextLaunch = self:shopLoadoutLines()
+        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        local previousFont = love.graphics.getFont()
+        love.graphics.setFont(self.smallFont)
+        local actionX, actionW = 16, 102
+        local statusX, statusW = 120, 48
+        local fullX, fullW = 16, viewport.width - 32
+        local row = 158
+        local rowStep = 11
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.fuelAction, 16, 166, 88, "left")
-        love.graphics.printf(nextLaunch.hullAction, 16, 188, 88, "left")
+        love.graphics.printf(nextLaunch.fuelAction, actionX, row, actionW, "left")
         love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
             nextLaunch.fuelAffordable and 1 or 0.4, nextLaunch.fuelAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.fuelStatus, 104, 166, 60, "right")
+        love.graphics.printf(nextLaunch.fuelStatus, statusX, row, statusW, "right")
+        row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.fuelPreviewForecast, 16, 177, viewport.width - 32, "left")
+        love.graphics.printf(nextLaunch.fuelPreviewForecast, fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(nextLaunch.hullAction, actionX, row, actionW, "left")
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
             nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.hullStatus, 104, 188, 60, "right")
+        love.graphics.printf(nextLaunch.hullStatus, statusX, row, statusW, "right")
+        row = row + rowStep
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.hullPreview, 16, 199, viewport.width - 32, "left")
+        love.graphics.printf(nextLaunch.hullPreview, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.hullPreviewForecast, 16, 210, viewport.width - 32, "left")
+        love.graphics.printf(nextLaunch.hullPreviewForecast, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.scoutTradeoff, 16, 154, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.scoutTradeoff, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.shipPreview, 16, 222, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.shipPreview, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.shipPreviewForecast, 16, 233, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.shipPreviewForecast, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf("T/V " .. nextLaunch.shipAction, 16, 244, 88, "left")
+        love.graphics.printf("T/V " .. nextLaunch.shipAction, actionX, row, actionW, "left")
         love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
             nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.shipStatus, 104, 244, 60, "right")
+        love.graphics.printf(nextLaunch.shipStatus, statusX, row, statusW, "right")
+        row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(nextLaunch.ship, 16, 256, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.stats, 16, 267, viewport.width - 32, "center")
-        love.graphics.printf(nextLaunch.upgrades, 16, 278, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.forecast, 16, 289, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.forecast, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf("TAP: RELAUNCH", 16, 304, viewport.width - 32, "center")
+        love.graphics.printf("TAP: RELAUNCH", fullX, row, fullW, "center")
+        love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)

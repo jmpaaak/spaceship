@@ -134,9 +134,13 @@
 - 안전 귀환 `NEW BEST!` 배지를 실제 캡처하려고 `main.lua`에 `GAME_CAPTURE_PHASE=settlement-newbest` 개발 전용 진입 경로를 추가해 확인하는 과정에서, EARTH SHOP 요약 카드가 실제 폰트 폭 기준으로 `SETTLEMENT TOTAL $N`이 136px 폭 박스에서 줄바꿈되고 `SPINS (n) $N`이 36px 폭 오른쪽 정렬 박스에 잘려 다음 줄과 겹치는 실제 렌더링 결함을 발견했다. 카드 문구를 `TOTAL $N`으로 줄이고 SAMPLES·SPINS·PEAK ALT·NEW BEST! 네 줄을 전체 폭 중앙 정렬로 세로 스택해 겹침을 제거했으며, 박스 높이를 54→62로 확장했다.
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1080×1920`)로 `EARTH SHOP` 요약 카드의 `TOTAL $155`, `SAMPLES (2) $80`, `SPINS (1) $75`, `PEAK ALT 400`, 노란 `NEW BEST!`가 겹침 없이 표시되는 것을 확인했다 (`build/spaceship-runtime-preview-settlement-newbest.png`). 단, 같은 캡처에서 EARTH SHOP 패널의 요약 카드 아래 연료/내구도/SCOUT 구매 행들과 `NO-HIT`/`SLOTS` 예측 줄들이 서로 겹쳐 읽을 수 없는 기존 레이아웃 결함이 별도로 확인됐다(이번 슬라이스 범위 밖, 다음 슬라이스로 이관).
 
+- EARTH SHOP 요약 카드 아래 연료·내구도·SCOUT 구매 행과 `NO-HIT`/`SLOTS` 예측 텍스트가 서로 겹치던 레이아웃 결함을 고쳤다. 실제 LÖVE 폰트 프로브(`/tmp/fontcheck`)로 기본 폰트(높이 14px)에서 `T/F FUEL LV.0>1 $50 LEFT $105`(203px), `SCOUT MAX FUEL 140 HULL 3`(186px) 등 상점 문자열이 기존 88px 고정폭 컬럼을 크게 초과해 자동 줄바꿈되고 다음 줄과 겹치는 것을 측정으로 확인했다. `game/scenes/play.lua`의 `settlement` 분기 안에서만 씬에 캐시된 `love.graphics.newFont(8)`(높이 10px)로 전환하고, 행동/상태 2열 프린트는 102px/48px 컬럼으로, 나머지 미리보기·요약 문자열은 전체 폭 중앙 정렬로 재배치했으며 각 줄 간격을 11px로 재계산해(y=158부터 시작) `TAP: RELAUNCH`까지 12줄이 패널(y 70~320) 안에 줄바꿈·겹침 없이 들어가도록 했다. 상점 폰트는 draw 종료 시 이전 폰트로 복원한다.
+- `PlayScene:touchpressed`의 정산 phase 터치 y 임계값(`FUEL`/`HULL`/`SCOUT`/`RELAUNCH`)을 새 행 좌표(150-179 / 179-212 / 212-256 / 256-320)에 맞춰 갱신했다. 기존 engine-hosted 터치 테스트(`y=174/208/244/300`)가 모두 새 임계값 범위 안에 들어가 별도 좌표 변경 없이 통과한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 `EARTH SHOP` 요약 카드 아래 `T/F FUEL LV.0>1 $50 LEFT $105`, `NO-HIT 720 SLOTS 8`, `T/H HULL LV.0>1 $75 LEFT $80`, `MAX FUEL 100 HULL 4`, `NO-HIT 600 SLOTS 6`, `SCOUT +40 FUEL / -1 HULL`, `SCOUT MAX FUEL 140 HULL 2`, `NO-HIT 840 SLOTS 9`, `T/V BUY SCOUT $125 LEFT $30`, `NEXT STARTER`, `MAX FUEL 100 HULL 3`, `FUEL LV.0 HULL LV.0`, `NO-HIT 600 SLOTS 6`, `TAP: RELAUNCH`가 서로 겹치거나 잘리지 않고 세로 화면 안에 표시되는 것을 확인했다 (`build/spaceship-runtime-preview-settlement-newbest-current.png`, `build/spaceship-runtime-preview-settlement-newbest.png`).
+
 ## 다음 한 가지
 
-- EARTH SHOP 요약 카드 아래 연료·내구도·SCOUT 구매 행과 `NO-HIT`/`SLOTS` 예측 텍스트가 실제 폰트 폭 기준으로 서로 겹쳐 읽을 수 없는 레이아웃 결함을 실제 폭 측정 후 좌표를 다시 설계해 고치고, 실제 LÖVE runtime capture로 겹침 없는 렌더링을 재확인한다.
+- 파괴 화면(`SHIP DESTROYED`)도 같은 부류의 좁은 고정폭 컬럼(`NEXT <SHIP>`, `FUEL LV.n HULL LV.n` 등)을 쓰는지 실제 폰트 폭으로 재확인하고, 필요하면 EARTH SHOP과 동일한 작은 폰트/전체폭 중앙 정렬 패턴을 적용한다. 또한 상승/귀환 중 표시되는 `RISK -N`/`SAMPLE $N` 접근 경고 라벨의 66px 고정폭도 실제 폰트 폭 기준으로 잘리는지 측정해 확인한다.
 
 ## 완료 조건
 
