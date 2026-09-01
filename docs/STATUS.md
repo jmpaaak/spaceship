@@ -19,16 +19,18 @@
 - 파괴 화면에서 Space/Enter/위 입력으로 기본 연료·내구도의 새 원정을 시작할 수 있다.
 - engine-hosted 파괴 테스트가 피해 누적, 전체 메타 초기화, 최고 높이 보존과 파괴 후 재시작을 검증한다.
 - 실제 LÖVE runtime capture `build/spaceship-runtime-preview.png`는 `540×960`이며 지구·우주선, LAUNCH HUD, 출발 안내와 `DEV PLACEHOLDER` 표기가 세로 화면 안에 보인다.
-- 개인 최고 높이는 현재 실행 중에는 보존되지만 앱 재시작 뒤 불러오는 영구 저장은 아직 미구현이다.
+- 개인 최고 높이는 LÖVE filesystem의 `best-altitude.txt`에 저장하고 새 `PlayScene` 생성 시 복구한다.
+- 연료 소진 귀환 전환, 내구도 파괴, 앱 focus 상실과 정상 종료 시 더 높은 기록만 저장하며 메타 초기화는 저장된 최고 높이를 지우지 않는다.
+- engine-hosted 저장 테스트가 실제 LÖVE filesystem에서 최초 기본값, 저장 후 새 store/scene 복구, 낮은 기록의 덮어쓰기 방지와 파괴 뒤 기록 보존을 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- engine-hosted 저장 테스트를 먼저 추가하고 LÖVE filesystem에 개인 최고 높이만 저장·복구해 앱 재시작과 메타 초기화 뒤에도 보존되게 한다.
+- engine-hosted 상점 테스트를 먼저 추가하고 정산 상점에 내구도 최대치 `+1` 강화를 추가해 재출발 이점을 2종으로 늘리며, 파괴 시 이 강화도 초기화되게 한다.
 
 ## 완료 조건
 
-- `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:23`)
+- `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)
 - 세로 실제 런타임 캡처 `540×960` 확인
-- 개인 최고 높이 영구 저장 자동 테스트는 후속 slice
+- 개인 최고 높이 영구 저장 engine-hosted 자동 테스트 통과

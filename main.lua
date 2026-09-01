@@ -50,3 +50,17 @@ function love.keypressed(key)
     if key == "escape" then love.event.quit() end
     if scenes then sceneStack.keypressed(scenes, key) end
 end
+
+local function persistBestAltitude()
+    if scenes and scenes.current and scenes.current.persistBestAltitude then
+        scenes.current:persistBestAltitude()
+    end
+end
+
+function love.focus(focused)
+    if not focused then persistBestAltitude() end
+end
+
+function love.quit()
+    persistBestAltitude()
+end

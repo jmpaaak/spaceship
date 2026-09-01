@@ -1,5 +1,6 @@
 local shipModule = require("game.ship")
 local expedition = require("game.expedition")
+local bestAltitudeStore = require("game.best_altitude_store")
 local viewport = require("game.viewport")
 local world = require("game.world")
 local M = {}
@@ -11,16 +12,23 @@ local function planetColor(hue)
     return 0.65, 0.45, 0.95
 end
 
-function M.new()
+function M.new(options)
+    options = options or {}
     local ship = shipModule.new()
+    local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
     return setmetatable({
         ship = ship,
-        expedition = expedition.new(),
+        expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
+        bestAltitudeStore = altitudeStore,
         discovered = {},
         collided = {},
         discoveredCount = 0,
         message = "PRESS SPACE TO LAUNCH",
     }, M)
+end
+
+function M:persistBestAltitude()
+    return self.bestAltitudeStore:save(self.expedition.bestAltitude)
 end
 
 function M:update(dt)
@@ -36,6 +44,7 @@ function M:update(dt)
         self.ship.fuel = self.expedition.fuel
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
+        self:persistBestAltitude()
         self.message = string.format("RETURNING  %d SLOT CHANCES", self.expedition.slotOpportunities)
     elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
         self.message = string.format("SETTLED +$%d  BALANCE $%d", self.expedition.lastSettlement, self.expedition.money)
@@ -54,6 +63,7 @@ function M:update(dt)
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
                 self.collided[planet.id] = true
                 if expedition.damage(self.expedition, 1) then
+                    self:persistBestAltitude()
                     self.message = string.format("SHIP DESTROYED  BEST %d  META RESET", math.floor(self.expedition.bestAltitude))
                     break
                 end

@@ -2,6 +2,8 @@ local viewport = require("game.viewport")
 local shipModule = require("game.ship")
 local world = require("game.world")
 local expedition = require("game.expedition")
+local bestAltitudeStore = require("game.best_altitude_store")
+local PlayScene = require("game.scenes.play")
 local M = {}
 
 function M.run()
@@ -96,6 +98,45 @@ function M.run()
     assert(expedition.launch(destroyedRun) and destroyedRun.phase == "ascending")
     assert(destroyedRun.altitude == 0 and destroyedRun.durability == destroyedRun.maxDurability)
     assert(destroyedRun.bestAltitude == 80)
+
+    local testSave = "self-test-best-altitude.txt"
+    love.filesystem.remove(testSave)
+    local altitudeStore = bestAltitudeStore.new(testSave)
+    assert(altitudeStore:load() == 0)
+    assert(altitudeStore:save(125.5))
+    local restartedStore = bestAltitudeStore.new(testSave)
+    assert(restartedStore:load() == 125.5)
+    assert(not restartedStore:save(80))
+    assert(bestAltitudeStore.new(testSave):load() == 125.5)
+
+    local persistedRun = expedition.new({ bestAltitude = restartedStore:load(), money = 100 })
+    persistedRun.phase = "ascending"
+    persistedRun.durability = 1
+    assert(expedition.damage(persistedRun, 1))
+    assert(persistedRun.money == 0 and persistedRun.bestAltitude == 125.5)
+    assert(bestAltitudeStore.new(testSave):load() == 125.5)
+    assert(love.filesystem.remove(testSave))
+
+    local savedBest = 40
+    local fakeStore = {
+        load = function() return savedBest end,
+        save = function(_, altitude)
+            if altitude <= savedBest then return false end
+            savedBest = altitude
+            return true
+        end,
+    }
+    local persistedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
+    assert(persistedScene.expedition.bestAltitude == 40)
+    persistedScene.expedition.fuel = 1
+    persistedScene.expedition.maxFuel = 1
+    persistedScene.expedition.fuelBurnRate = 1
+    persistedScene.expedition.climbSpeed = 60
+    assert(expedition.launch(persistedScene.expedition))
+    persistedScene:update(1)
+    assert(persistedScene.expedition.phase == "returning" and savedBest == 60)
+    local restartedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
+    assert(restartedScene.expedition.bestAltitude == 60)
     print("SPACESHIP_UNIT_OK")
 end
 
