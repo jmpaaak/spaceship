@@ -478,12 +478,20 @@ function M:update(dt)
                     x = planet.x,
                     y = planet.y,
                     timer = 1.0,
+                    kind = "sample",
                 })
                 self.message = string.format("SAMPLE +$%d  %s", awarded, planet.id)
             end
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
                 self.collided[planet.id] = true
                 local damage = world.collisionDamage(planet)
+                table.insert(self.floatingTexts, {
+                    text = string.format("-%d", damage),
+                    x = self.ship.x,
+                    y = self.ship.y,
+                    timer = 1.0,
+                    kind = "damage",
+                })
                 if expedition.damage(self.expedition, damage) then
                     self:persistBestAltitude()
                     self.message = string.format("SHIP DESTROYED  BEST %d  META RESET", math.floor(self.expedition.bestAltitude))
@@ -721,7 +729,11 @@ function M:draw()
         local fx, fy = math.floor(ft.x - cameraX), math.floor(ft.y - cameraY)
         if fx >= -30 and fx <= viewport.width + 30 and fy >= -20 and fy <= viewport.height + 20 then
             local alpha = math.max(0, math.min(1, ft.timer))
-            love.graphics.setColor(0.45, 1, 0.6, alpha)
+            if ft.kind == "damage" then
+                love.graphics.setColor(1, 0.35, 0.3, alpha)
+            else
+                love.graphics.setColor(0.45, 1, 0.6, alpha)
+            end
             love.graphics.printf(ft.text, fx - 30, fy - 10, 60, "center")
         end
     end

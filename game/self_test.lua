@@ -109,10 +109,19 @@ function M.run()
     world.nearbyPlanets = function()
         return { { id = "risk-test", x = 0, y = -500, radius = 7 } }
     end
+    assert(#riskScene.floatingTexts == 0)
     riskScene:update(0)
     world.nearbyPlanets = nearbyPlanets
     assert(riskScene.expedition.durability == 1)
     assert(riskScene.message == "COLLISION -2  HULL 1/3")
+    local damageFloatingText
+    for _, ft in ipairs(riskScene.floatingTexts) do
+        if ft.kind == "damage" then damageFloatingText = ft end
+    end
+    assert(damageFloatingText)
+    assert(damageFloatingText.text == "-2")
+    assert(damageFloatingText.x == riskScene.ship.x)
+    assert(damageFloatingText.y == riskScene.ship.y)
 
     assert(PlayScene.clampLabelX(90, 92, 180) == 44)
     assert(PlayScene.clampLabelX(178, 92, 180) == 86)
@@ -784,6 +793,7 @@ function M.run()
     floatingTextScene.expedition.phase = "ascending"
     floatingTextScene.expedition.altitude = 500
     floatingTextScene.ship.y = -500
+    floatingTextScene.collided["floating-text-sample"] = true
     local floatingTextNearby = world.nearbyPlanets
     world.nearbyPlanets = function()
         return { { id = "floating-text-sample", x = 0, y = -500, radius = 7 } }

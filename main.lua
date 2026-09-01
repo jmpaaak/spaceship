@@ -158,6 +158,21 @@ function love.load()
         run.lastSlotSettlement = 0
         run.lastAltitude = 0
         run.lastNewBest = false
+    elseif capturePhase == "ascending-damage-text" then
+        -- Real-runtime capture for the new red "-N" damage floating text
+        -- (mirrors the existing green "+$N" sample floating text). Places
+        -- the ship directly on top of a planet so the very first update
+        -- triggers a real collision and spawns the floating damage text.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 500
+        scene.ship.y = -500
+        scene.ship.x = 0
+        local world = require("game.world")
+        world.nearbyPlanets = function()
+            return { { id = "damage-text-test", x = 0, y = -500, radius = 7 } }
+        end
+        world.collisionDamage = function() return 2 end
     elseif capturePhase == "returning-fuelbonus" then
         -- Real-runtime capture for the new next-expedition fuel-bonus slot
         -- reward (docs/GAME_DESIGN.md 귀환 슬롯: 다음 원정 연료 보너스).
