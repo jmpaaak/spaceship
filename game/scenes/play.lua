@@ -375,6 +375,7 @@ function M:beginSlotSpin()
         reward = self.expedition.lastSlotReward,
         repair = self.expedition.lastSlotRepair,
         fuelBonus = self.expedition.lastSlotFuelBonus,
+        sampleBonus = self.expedition.lastSlotSampleBonus,
         opportunitiesAfter = self.expedition.slotOpportunities,
     }
     self.message = "SLOT SPINNING..."
@@ -435,6 +436,12 @@ function M:update(dt)
                     table.concat(self.slotSpin.symbols, " "),
                     self.slotSpin.reward,
                     self.slotSpin.fuelBonus,
+                    self.slotSpin.opportunitiesAfter)
+            elseif self.slotSpin.sampleBonus and self.slotSpin.sampleBonus > 0 then
+                self.message = string.format("%s +$%d SAMPLE +$%d  %d LEFT",
+                    table.concat(self.slotSpin.symbols, " "),
+                    self.slotSpin.reward,
+                    self.slotSpin.sampleBonus,
                     self.slotSpin.opportunitiesAfter)
             else
                 self.message = string.format("%s +$%d  %d LEFT",
@@ -1034,6 +1041,10 @@ function M:draw()
                 love.graphics.printf(string.format("WIN +$%d  FUEL +%d",
                     self.expedition.lastSlotReward,
                     self.expedition.lastSlotFuelBonus), 20, 231, 140, "center")
+            elseif self.expedition.lastSlotSampleBonus and self.expedition.lastSlotSampleBonus > 0 then
+                love.graphics.printf(string.format("WIN +$%d  SAMPLE +$%d",
+                    self.expedition.lastSlotReward,
+                    self.expedition.lastSlotSampleBonus), 20, 231, 140, "center")
             else
                 love.graphics.printf(string.format("WIN +$%d  PENDING $%d",
                     self.expedition.lastSlotReward,

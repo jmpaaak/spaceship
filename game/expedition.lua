@@ -99,6 +99,29 @@ local function slotFuelBonus(symbols)
 end
 M.slotFuelBonus = slotFuelBonus
 
+-- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "표본 보너스" (sample
+-- bonus) as one of the four slot reward kinds, alongside money multiples,
+-- repair vouchers and the fuel bonus above. It was the only one of the four
+-- still unimplemented. A COMET-COMET-COMET triple (50% per reel, 12.5%
+-- overall -- the most common triple, since COMET is the common filler
+-- symbol) grants a flat bonus added directly to the current expedition's
+-- unbanked sample value. Unlike the fuel bonus (which cannot help the
+-- already fuel-empty current expedition and must be banked for next
+-- launch), a sample bonus can still help this expedition: it stacks into
+-- run.pendingSampleValue immediately, same as a collected sample, and is
+-- confirmed at settlement or forfeited at destruction like any other
+-- pending sample value.
+local slotSampleBonusAmount = 25
+M.slotSampleBonusAmount = slotSampleBonusAmount
+
+local function slotSampleBonus(symbols)
+    if symbols[1] == "COMET" and symbols[2] == "COMET" and symbols[3] == "COMET" then
+        return slotSampleBonusAmount
+    end
+    return 0
+end
+M.slotSampleBonus = slotSampleBonus
+
 local function refreshShipStats(run)
     local fuelBonus = 0
     local durabilityBonus = 0
@@ -161,6 +184,7 @@ local function destroy(run)
     run.lastSlotReward = 0
     run.lastSlotRepair = 0
     run.lastSlotFuelBonus = 0
+    run.lastSlotSampleBonus = 0
     run.pendingFuelBonus = 0
     run.bankedFuelBonus = 0
     run.returnDistance = 0
@@ -227,6 +251,7 @@ function M.new(options)
         lastSlotReward = 0,
         lastSlotRepair = 0,
         lastSlotFuelBonus = 0,
+        lastSlotSampleBonus = 0,
         pendingFuelBonus = 0,
         bankedFuelBonus = 0,
         sampleCount = 0,
@@ -265,6 +290,7 @@ function M.launch(run)
         run.lastSlotReward = 0
         run.lastSlotRepair = 0
         run.lastSlotFuelBonus = 0
+        run.lastSlotSampleBonus = 0
         run.pendingFuelBonus = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
@@ -367,6 +393,9 @@ function M.useSlot(run)
     local fuelBonus = slotFuelBonus(symbols)
     run.lastSlotFuelBonus = fuelBonus
     run.pendingFuelBonus = (run.pendingFuelBonus or 0) + fuelBonus
+    local sampleBonus = slotSampleBonus(symbols)
+    run.lastSlotSampleBonus = sampleBonus
+    run.pendingSampleValue = run.pendingSampleValue + sampleBonus
     return true
 end
 

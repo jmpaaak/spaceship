@@ -190,6 +190,23 @@ function love.load()
         scene.expedition.pendingFuelBonus = 15
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
+    elseif capturePhase == "returning-samplebonus" then
+        -- Real-runtime capture for the new sample-value slot reward
+        -- (docs/GAME_DESIGN.md 귀환 슬롯: 표본 보너스). Forces a completed
+        -- COMET-COMET-COMET spin result so the WIN +$N SAMPLE +$N message
+        -- renders in the slot result box.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.phase = "returning"
+        scene.expedition.altitude = 500
+        scene.expedition.returnDistance = 500
+        scene.expedition.slotOpportunities = 2
+        scene.expedition.lastSlotSymbols = { "COMET", "COMET", "COMET" }
+        scene.expedition.lastSlotReward = 40
+        scene.expedition.lastSlotSampleBonus = 25
+        scene.expedition.pendingSampleValue = 25
+        local world = require("game.world")
+        world.nearbyPlanets = function() return {} end
     end
 end
 

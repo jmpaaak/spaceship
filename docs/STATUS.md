@@ -328,3 +328,14 @@
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
 - 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 귀환 슬롯 "표본 보너스" 보상 추가 (완료)
+
+- 이전 사이클이 미완성 상태(엔진 로직·테스트·캡처 진입 경로는 작성됐지만 커밋되지 않은 워킹트리 변경)로 남긴 슬라이스를 이번 사이클에서 이어받아 완료했다. `docs/GAME_DESIGN.md`가 언급한 귀환 슬롯 보상 4종(돈 배수, 표본 보너스, 수리권, 다음 원정 연료 보너스) 중 마지막으로 미구현이던 표본 보너스를 추가했다. `game/expedition.lua`에 `slotSampleBonusAmount`(기본 25)와 `slotSampleBonus(symbols)`를 추가해 `COMET-COMET-COMET` 트리플(릴당 50%, 전체 12.5% — 네 조합 중 가장 흔한 트리플)에서 표본 가치 보너스를 지급한다. 연료 보너스와 달리 표본 보너스는 이미 귀환 중인 현재 원정에도 도움이 되므로 뱅크 없이 즉시 `run.pendingSampleValue`에 누적되고, 다른 표본 가치와 동일하게 안전 정산 시 `lastSampleSettlement`로 확정되거나 파괴 시 `lastLostSampleValue`로 몰수된다.
+- `game/scenes/play.lua`의 슬롯 스핀 완료 메시지와 귀환 phase draw의 슬롯 결과 패널이 `lastSlotSampleBonus > 0`일 때 `WIN +$N SAMPLE +$N` 형식으로 추가 표시한다(돈/수리/연료 보너스와 같은 우선순위 분기 패턴).
+- 재출발과 파괴 시 다른 슬롯 영수증 필드와 동일하게 `lastSlotSampleBonus`도 0으로 초기화된다.
+- engine-hosted 테스트가 COMET 트리플의 표본 보너스 지급·`pendingSampleValue` 즉시 누적, 안전 정산 시 `lastSampleSettlement`로 확정, 파괴 시 `lastLostSampleValue`로 몰수와 영수증 필드 초기화, 실제 `PlayScene` 슬롯 완료 메시지(`"COMET COMET COMET +$40 SAMPLE +$25  0 LEFT"`)를 검증한다. `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN.
+- `main.lua`에 `GAME_CAPTURE_PHASE=returning-samplebonus` 개발 전용 진입 경로를 추가했다. 실제 LÖVE runtime capture(`1440×2560`)로 귀환 슬롯 결과 패널에 `COMET COMET COMET`과 `WIN +$40  SAMPLE +$25`가 겹침·잘림 없이 두 줄로 표시되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-returning-samplebonus.png`, 로컬 산출물로 커밋 제외).
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:24`).
+- 이로써 `docs/GAME_DESIGN.md` 귀환 슬롯 보상 4종(돈, 표본 보너스, 수리권, 연료 보너스) 전부 구현·검증 완료됐다.
+- 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) 최우선 pending feedback인 발라트로 스타일 카드형 비주얼 강화(`game/scenes/play.lua`의 Lua 렌더링 레이어에 외곽 글로우/그라디언트/등급별 파티클/충돌·획득 pop-shake 이펙트 추가, `world.sampleTier`별 차등화), (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+

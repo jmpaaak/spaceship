@@ -1244,6 +1244,75 @@ function M.run()
             .. " horizontally separated by at least the 60px text box width ("
             .. tostring(overlapSample.x) .. " vs " .. tostring(overlapDamage.x) .. ")")
 
+    -- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "표본 보너스"
+    -- (sample bonus) as one of the four slot reward kinds, alongside money
+    -- multiples, repair vouchers and the fuel bonus above. It was the only
+    -- one of the four still unimplemented. A COMET-COMET-COMET triple (50%
+    -- per reel, 12.5% overall -- the most common triple, since COMET is the
+    -- common filler symbol) grants a flat sample-value bonus. Unlike the
+    -- fuel bonus, this stacks directly into the current expedition's
+    -- pendingSampleValue immediately (it does not need to wait for the next
+    -- launch, since sample value can still help the expedition that is
+    -- already returning).
+    local sampleBonusRun = expedition.new({
+        slotRandom = function() return 1 end, -- COMET (cumulative 1..5)
+    })
+    sampleBonusRun.phase = "returning"
+    sampleBonusRun.slotOpportunities = 1
+    assert(expedition.useSlot(sampleBonusRun))
+    assert(table.concat(sampleBonusRun.lastSlotSymbols, "-") == "COMET-COMET-COMET")
+    assert(sampleBonusRun.lastSlotReward == 40 and sampleBonusRun.pendingSlotReward == 40)
+    assert(sampleBonusRun.lastSlotSampleBonus == 25, "COMET triple must grant a 25 sample bonus")
+    assert(sampleBonusRun.pendingSampleValue == 25,
+        "sample bonus must accumulate into pendingSampleValue immediately")
+
+    -- Non-jackpot, non-COMET-triple combos grant no sample bonus.
+    assert(noRepairRun.lastSlotSampleBonus == 0)
+
+    -- Safe settlement confirms the accumulated sample bonus as part of the
+    -- normal sample settlement, same as any other pending sample value.
+    sampleBonusRun.altitude = 1
+    expedition.update(sampleBonusRun, 1) -- drives altitude to 0 and calls settle()
+    assert(sampleBonusRun.phase == "settlement")
+    assert(sampleBonusRun.lastSampleSettlement == 25,
+        "safe settlement must confirm the slot sample bonus as sample settlement")
+
+    -- Destruction forfeits the pending sample bonus like any other pending
+    -- sample value.
+    local destroyedSampleBonusRun = expedition.new({
+        slotRandom = function() return 1 end,
+    })
+    destroyedSampleBonusRun.phase = "returning"
+    destroyedSampleBonusRun.slotOpportunities = 1
+    assert(expedition.useSlot(destroyedSampleBonusRun))
+    assert(destroyedSampleBonusRun.pendingSampleValue == 25)
+    assert(expedition.damage(destroyedSampleBonusRun, destroyedSampleBonusRun.durability))
+    assert(destroyedSampleBonusRun.phase == "destroyed")
+    assert(destroyedSampleBonusRun.lastLostSampleValue == 25,
+        "destruction must report the forfeited sample bonus as lost sample value")
+    assert(destroyedSampleBonusRun.lastSlotSampleBonus == 0,
+        "destruction must clear the last-spin sample bonus receipt")
+
+    -- The returning-phase slot result message should surface the sample
+    -- bonus alongside money/repair/fuel.
+    local sampleBonusMessageRolls = { 1, 1, 1 }
+    local nextSampleBonusMessageRoll = 0
+    local sampleBonusMessageScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    sampleBonusMessageScene.expedition.slotRandom = function()
+        nextSampleBonusMessageRoll = nextSampleBonusMessageRoll + 1
+        return sampleBonusMessageRolls[nextSampleBonusMessageRoll]
+    end
+    sampleBonusMessageScene.expedition.phase = "returning"
+    sampleBonusMessageScene.expedition.altitude = 500
+    sampleBonusMessageScene.expedition.slotOpportunities = 1
+    sampleBonusMessageScene:keypressed("up")
+    sampleBonusMessageScene:update(sampleBonusMessageScene.slotSpin.duration + 0.01)
+    assert(sampleBonusMessageScene.message == "COMET COMET COMET +$40 SAMPLE +$25  0 LEFT",
+        "slot spin completion message must include the sample bonus: "
+            .. tostring(sampleBonusMessageScene.message))
+
     print("SPACESHIP_UNIT_OK")
 end
 
