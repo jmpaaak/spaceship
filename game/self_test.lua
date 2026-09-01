@@ -266,6 +266,25 @@ function M.run()
     assert(expedition.launch(hullShopRun) and hullShopRun.phase == "ascending")
     assert(hullShopRun.durability == 3)
 
+    local yieldRun = expedition.new({
+        sampleYieldUpgradeCost = 60,
+        sampleYieldUpgradeAmount = 0.25,
+        money = 45,
+    })
+    assert(not expedition.buySampleYieldUpgrade(yieldRun))
+    yieldRun.phase = "settlement"
+    assert(not expedition.buySampleYieldUpgrade(yieldRun))
+    yieldRun.money = 60
+    assert(expedition.buySampleYieldUpgrade(yieldRun))
+    assert(yieldRun.money == 0 and yieldRun.sampleYieldUpgradeLevel == 1)
+    assert(expedition.sampleYieldMultiplier(yieldRun) == 1.25)
+    assert(expedition.launch(yieldRun) and yieldRun.phase == "ascending")
+    local ok, awarded = expedition.collectSample(yieldRun, 20)
+    assert(ok and awarded == 25 and yieldRun.pendingSampleValue == 25 and yieldRun.sampleCount == 1)
+    assert(expedition.damage(yieldRun, yieldRun.durability))
+    assert(yieldRun.phase == "destroyed" and yieldRun.sampleYieldUpgradeLevel == 0)
+    assert(expedition.sampleYieldMultiplier(yieldRun) == 1)
+
     local shipShopRun = expedition.new({
         fuel = 10,
         durability = 3,
@@ -307,6 +326,16 @@ function M.run()
     assert(shopScene.expedition.money == 10)
     assert(shopScene.message
         == "HULL UPGRADED  LV.1  MAX FUEL 120  HULL 4  NO-HIT 720  SLOTS 8  BALANCE $10")
+    shopScene.expedition.money = shopScene.expedition.sampleYieldUpgradeCost + 15
+    shopScene:keypressed("y")
+    assert(shopScene.expedition.sampleYieldUpgradeLevel == 1)
+    assert(shopScene.expedition.money == 15)
+    assert(shopScene.message == "SAMPLE YIELD UPGRADED  LV.1  x1.25  BALANCE $15")
+    shopScene.expedition.money = 0
+    shopScene:keypressed("y")
+    assert(shopScene.expedition.sampleYieldUpgradeLevel == 1)
+    assert(shopScene.message == string.format("NEED $%d MORE FOR SAMPLE YIELD UPGRADE",
+        shopScene.expedition.sampleYieldUpgradeCost))
     shopScene.expedition.money = shopScene.expedition.scoutShipCost + 20
     shopScene:touchpressed("ship", 90, 244)
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")

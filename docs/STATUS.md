@@ -203,9 +203,15 @@
 - 이로써 상승·귀환·EARTH SHOP·SHIP DESTROYED·LAUNCH 5개 phase의 주요 터치 상호작용이 모두 이름 있는 상수와 engine-hosted 테스트로 명시적으로 검증됐다.
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
 
+- `게임 디자인 문서(docs/GAME_DESIGN.md)`가 요구한 "연료·내구도·조종·표본 수익 강화" 중 아직 구현되지 않았던 세 번째 축인 표본 수익(`SAMPLE YIELD`) 강화를 EARTH SHOP에 추가했다. `game/expedition.lua`에 `sampleYieldUpgradeLevel`(기본 0)·`sampleYieldUpgradeAmount`(기본 `0.25`)·`sampleYieldUpgradeCost`(기본 `$60`) 필드와 `M.sampleYieldMultiplier(run)`(`1 + level * amount`)·`M.buySampleYieldUpgrade(run)`(phase/비용 검증 후 레벨 증가)를 추가했다. `M.collectSample(run, value)`는 이제 강화 배수를 적용한 실제 지급액을 반올림해 반환값 `awarded`로 노출하며(`ok, awarded = collectSample(...)`), `pendingSampleValue`·`sampleCount` 누적과 상승 중 플로팅 텍스트·메시지(`game/scenes/play.lua`)도 배수가 적용된 실제 지급액을 표시한다. 파괴(`destroy`) 시 다른 강화와 동일하게 `sampleYieldUpgradeLevel`을 0으로 초기화한다.
+- EARTH SHOP에서 `Y` 키로 표본 수익 강화를 구매할 수 있으며(터치 UI는 이번 슬라이스 범위 밖, 다음 슬라이스로 이관), 성공 시 `SAMPLE YIELD UPGRADED  LV.n  x배수  BALANCE $n`을, 실패 시 기존 두 강화와 같은 형식의 `NEED $N MORE FOR SAMPLE YIELD UPGRADE`를 표시한다.
+- engine-hosted 테스트가 `buySampleYieldUpgrade`의 phase/비용 제한, 구매 후 `sampleYieldMultiplier == 1.25`, 강화 적용 상태에서 `collectSample`이 실제로 배수 적용된 지급액(`awarded`)을 반환·누적하는지, 파괴 시 레벨 초기화와 배수 복귀(`1`)를, `PlayScene:keypressed("y")`의 구매 성공/실패 메시지 두 경우를 검증한다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
 ## 다음 한 가지
 
-- 5개 phase(LAUNCH/상승/귀환/EARTH SHOP/SHIP DESTROYED)의 주요 터치 상호작용이 모두 이름 있는 상수와 engine-hosted 테스트로 명시적으로 검증됐다. 다음 슬라이스는 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export 가용성 확인)로 전환하거나, 남은 게임플레이 밸런싱/저장/UI 표면(예: 슬롯 릴 결과 박스, 로드아웃 패널의 비-액션 정보 밀도)을 다음 대상으로 검토하는 것이다.
+- EARTH SHOP `SAMPLE YIELD` 강화는 키보드(`Y`)로만 구매 가능하다. 다음 슬라이스는 이 강화의 터치 타겟과 상점 패널 표시(현재 레벨/배수, 구매 후 미리보기, `settlementTouchRows`를 5행으로 재분할해 44pt 접근성 유지)를 추가해 기존 연료·내구도·SCOUT 강화와 동일한 터치 우선 UX로 맞추는 것이다. 이후 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export 가용성 확인)로 전환을 검토한다.
+
 
 ## 완료 조건
 

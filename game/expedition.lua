@@ -135,6 +135,7 @@ local function destroy(run)
     run.lastSlotSpinsCount = 0
     run.fuelUpgradeLevel = 0
     run.durabilityUpgradeLevel = 0
+    run.sampleYieldUpgradeLevel = 0
     run.ownedShips = { starter = true }
     run.selectedShipId = "starter"
     refreshShipStats(run)
@@ -164,6 +165,9 @@ function M.new(options)
         durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
         durabilityUpgradeCost = options.durabilityUpgradeCost or 75,
         durabilityUpgradeLevel = 0,
+        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.25,
+        sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 60,
+        sampleYieldUpgradeLevel = 0,
         scoutShipCost = options.scoutShipCost or 125,
         scoutFuelBonus = options.scoutFuelBonus or 40,
         scoutDurabilityBonus = options.scoutDurabilityBonus or -1,
@@ -247,6 +251,20 @@ function M.buyDurabilityUpgrade(run)
     return true
 end
 
+-- Sample yield is the third meta upgrade requested alongside fuel/hull: it
+-- scales the money value of every collected sample (not just fuel/durability
+-- capacity), giving players a third strategic upgrade axis at EARTH SHOP.
+function M.sampleYieldMultiplier(run)
+    return 1 + run.sampleYieldUpgradeLevel * run.sampleYieldUpgradeAmount
+end
+
+function M.buySampleYieldUpgrade(run)
+    if run.phase ~= "settlement" or run.money < run.sampleYieldUpgradeCost then return false end
+    run.money = run.money - run.sampleYieldUpgradeCost
+    run.sampleYieldUpgradeLevel = run.sampleYieldUpgradeLevel + 1
+    return true
+end
+
 function M.buyShip(run, shipId)
     if run.phase ~= "settlement" or shipId ~= "scout" or run.ownedShips.scout
         or run.money < run.scoutShipCost then
@@ -280,9 +298,10 @@ end
 
 function M.collectSample(run, value)
     if run.phase ~= "ascending" or type(value) ~= "number" or value <= 0 then return false end
+    local awarded = math.floor(value * M.sampleYieldMultiplier(run) + 0.5)
     run.sampleCount = run.sampleCount + 1
-    run.pendingSampleValue = run.pendingSampleValue + value
-    return true
+    run.pendingSampleValue = run.pendingSampleValue + awarded
+    return true, awarded
 end
 
 function M.damage(run, amount)

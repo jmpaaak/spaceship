@@ -389,14 +389,15 @@ function M:update(dt)
                 self.discovered[planet.id] = true
                 self.discoveredCount = self.discoveredCount + 1
                 local value = world.sampleValue(planet)
-                expedition.collectSample(self.expedition, value)
+                local _, awarded = expedition.collectSample(self.expedition, value)
+                awarded = awarded or value
                 table.insert(self.floatingTexts, {
-                    text = string.format("+$%d", value),
+                    text = string.format("+$%d", awarded),
                     x = planet.x,
                     y = planet.y,
                     timer = 1.0,
                 })
-                self.message = string.format("SAMPLE +$%d  %s", value, planet.id)
+                self.message = string.format("SAMPLE +$%d  %s", awarded, planet.id)
             end
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
                 self.collided[planet.id] = true
@@ -437,6 +438,19 @@ function M:keypressed(key)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.durabilityUpgradeCost, "HULL UPGRADE")
+        end
+        return
+    end
+    if self.expedition.phase == "settlement" and key == "y" then
+        if expedition.buySampleYieldUpgrade(self.expedition) then
+            self.message = string.format(
+                "SAMPLE YIELD UPGRADED  LV.%d  x%.2f  BALANCE $%d",
+                self.expedition.sampleYieldUpgradeLevel,
+                expedition.sampleYieldMultiplier(self.expedition),
+                self.expedition.money)
+        else
+            self.message = purchaseShortfallMessage(self.expedition.money,
+                self.expedition.sampleYieldUpgradeCost, "SAMPLE YIELD UPGRADE")
         end
         return
     end
