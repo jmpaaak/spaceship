@@ -77,12 +77,14 @@
 - LAUNCH LOADOUT에 현재 최대 연료·연료 소모율·상승 속도로 계산한 무충돌 예상 고도와 그 귀환 거리의 슬롯 기회를 `NO-HIT N  SLOTS N`으로 표시한다.
 - engine-hosted loadout 테스트가 기본 STARTER의 `NO-HIT 600  SLOTS 6`과 연료 강화 SCOUT의 `NO-HIT 960  SLOTS 10` 계산·표시를 검증한다.
 - 실제 LÖVE runtime capture `build/spaceship-runtime-preview.png`는 `540×960`이며 5줄 launch loadout의 `NO-HIT 600  SLOTS 6`, `TAP TO LAUNCH`, `DEV PLACEHOLDER`가 줄바꿈·겹침·잘림 없이 표시된다.
+- EARTH SHOP의 현재 선택 우주선 능력치 아래에 무충돌 예상 상승 고도와 슬롯 기회를 `NO-HIT N  SLOTS N`으로 표시한다.
+- engine-hosted 상점 loadout 테스트가 기본 STARTER의 `NO-HIT 600  SLOTS 6`, 연료 강화 직후의 `NO-HIT 720  SLOTS 8`, SCOUT 선택 직후의 `NO-HIT 960  SLOTS 10` 갱신을 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- EARTH SHOP의 현재 선택 우주선 능력치 아래에도 무충돌 예상 상승 고도와 슬롯 기회를 표시하고, 연료 강화·SCOUT 선택 직후 갱신되는 engine-hosted 테스트를 추가한다.
+- EARTH SHOP의 SCOUT 구매·선택 미리보기에도 대상 우주선의 무충돌 예상 상승 고도와 슬롯 기회를 표시하고, 강화 직후 갱신되는 engine-hosted 테스트를 추가한다.
 
 ## 완료 조건
 
