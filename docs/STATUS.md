@@ -154,11 +154,15 @@
 - 귀환 슬롯 확률/기대값을 엔진 로직에만 머물지 않고 실제 화면에 노출했다. `game/scenes/play.lua`에 `PlayScene:slotOddsLine()`을 추가해 `expedition.slotSymbolProbability`와 `expedition.slotExpectedValue()`를 조회한 `"ODDS C50% P40% S10%  AVG $18.58"` 문자열을 반환하며, `returning` phase draw에서 씬 캐시 `love.graphics.newFont(8)` 작은 폰트로 조종/슬롯 버튼 행 바로 위(y=197, 전체 폭 중앙 정렬)에 표시한다.
 - engine-hosted 테스트가 `PlayScene:slotOddsLine()`의 정확한 확률·기대값 문자열(`"ODDS C50% P40% S10%  AVG $18.58"`, LÖVE 부동소수점 합산 기준 반올림)을 검증한다.
 - `main.lua`에 `GAME_CAPTURE_PHASE=returning-odds` 개발 전용 진입 경로를 추가했다. 실제 LÖVE runtime capture(`1080×1920`)로 귀환 HUD(`EARTH IN 500`, `RETURN 0%  12s LEFT`)와 `ODDS C50% P40% S10%  AVG $18.58`가 `LEFT`/`SPIN 3`/`RIGHT` 버튼과 겹치지 않고 화면 안에 두 줄로 줄바꿈되어 표시되는 것을 vision 확인했다(`build/spaceship-runtime-preview-returning-odds.png`, 로컬 산출물로 커밋 제외).
+- 슬롯 확률/기대값을 `LAUNCH LOADOUT`(줄임말 `"C50 P40 S10  AVG $18.58"`, 씬 캐시 작은 폰트)과 EARTH SHOP `NEXT <SHIP>` 미리보기 블록 마지막 줄에도 노출했다. `PlayScene:loadoutLines()`와 `PlayScene:shopLoadoutLines()`가 각각 `odds` 필드로 `slotOddsLine()` 결과를 반환하며 draw에서 기존 항목들 아래(launch: y=274 작은 폰트, settlement: forecast 다음 행)에 그린다.
+- engine-hosted 테스트가 `loadoutLines().odds`·`shopLoadoutLines().odds` 둘 다 `"C50 P40 S10  AVG $18.58"`을 반환하는지 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1080×1920`)로 EARTH SHOP 패널에 새 `odds` 줄을 추가한 뒤 vision으로 확인한 결과, 기존에 이미 존재하던 레이아웃 결함(14줄 텍스트가 `rowStep=11`·`row=158` 시작으로 패널 하단(y=320)과 `DEV PLACEHOLDER` 푸터(y=307)를 넘어 `TAP: RELAUNCH`가 푸터 텍스트와 겹침)을 재확인했다. `game/scenes/play.lua`의 settlement 분기에서 `row=158→154`, `rowStep=11→10`으로 좁혀 마지막 줄(`TAP: RELAUNCH`, 14번째 행)이 y≈284에서 그려지도록 해 푸터(y=307)와 겹치지 않게 했다. 기존 `touchpressed` y 임계값(150-179/179-212/212-256/256-320)은 새 행 좌표(fuel≈154, hull≈184, ship≈234, relaunch≈284) 범위 안에 그대로 들어가 별도 조정 없이 통과한다.
+- engine-hosted 정산/상점/터치 테스트(`make test`)가 좁힌 행 간격에서도 모두 GREEN이다. 이 결함은 오늘 이전 커밋(`b8aff33`)에서부터 존재했으며 이번 슬라이스에서 처음 근본 수정됐다.
 
 ## 다음 한 가지
 
-- 귀환 슬롯 확률/기대값 표시(`ODDS C50% P40% S10%  AVG $18.58`)가 상승 중에는 보이지 않는다. 다음 슬라이스는 이 정보를 출발/상점 loadout에도 요약 노출하거나, 핵심 루프 상태머신의 다른 미구현 조각(예: 조종 강화 상점 항목)으로 이동한다.
-- 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 12줄 안팎의 텍스트가 이제 패널 안에 들어가지만, 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다.
+- 좁힌 EARTH SHOP 행 간격(`row=154`, `rowStep=10`)을 실제 LÖVE runtime capture로 재캡처해 `TAP: RELAUNCH`가 `DEV PLACEHOLDER`와 실제로 겹치지 않는지 vision으로 최종 확인하는 캡처 작업이 남아 있다(이번 사이클은 배경 LÖVE 캡처 프로세스가 반복적으로 여러 분 동안 응답하지 않아 좌표 계산 근거로만 수정하고 재캡처를 완료하지 못했다).
+- 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다.
 
 ## 완료 조건
 

@@ -142,6 +142,7 @@ function M:loadoutLines()
         upgrades = string.format("FUEL LV.%d  HULL LV.%d",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
+        odds = self:slotOddsLine(),
     }
 end
 
@@ -211,12 +212,13 @@ function M:shopLoadoutLines()
         hullPreviewForecast = launchForecastLine(run),
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
+        odds = self:slotOddsLine(),
     }
 end
 
 function M:slotOddsLine()
     local ev = expedition.slotExpectedValue()
-    return string.format("ODDS C%d%% P%d%% S%d%%  AVG $%.2f",
+    return string.format("C%d P%d S%d  AVG $%.2f",
         math.floor(expedition.slotSymbolProbability("COMET") * 100 + 0.5),
         math.floor(expedition.slotSymbolProbability("PLANET") * 100 + 0.5),
         math.floor(expedition.slotSymbolProbability("STAR") * 100 + 0.5),
@@ -566,7 +568,7 @@ function M:draw()
     if self.expedition.phase == "launch" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, 204, viewport.width - 24, 78)
+        love.graphics.rectangle("fill", 12, 204, viewport.width - 24, 90)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf("LAUNCH LOADOUT", 16, 208, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
@@ -577,6 +579,12 @@ function M:draw()
         love.graphics.printf(loadout.upgrades, 16, 246, viewport.width - 32, "center")
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(loadout.forecast, 16, 260, viewport.width - 32, "center")
+        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        local previousLaunchFont = love.graphics.getFont()
+        love.graphics.setFont(self.smallFont)
+        love.graphics.setColor(0.6, 0.8, 1)
+        love.graphics.printf(loadout.odds, 16, 274, viewport.width - 32, "center")
+        love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
         love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
@@ -602,8 +610,8 @@ function M:draw()
         local actionX, actionW = 16, 102
         local statusX, statusW = 120, 48
         local fullX, fullW = 16, viewport.width - 32
-        local row = 158
-        local rowStep = 11
+        local row = 154
+        local rowStep = 10
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.fuelAction, actionX, row, actionW, "left")
         love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
@@ -650,6 +658,9 @@ function M:draw()
         row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(nextLaunch.forecast, fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.setColor(0.6, 0.8, 1)
+        love.graphics.printf(nextLaunch.odds, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf("TAP: RELAUNCH", fullX, row, fullW, "center")

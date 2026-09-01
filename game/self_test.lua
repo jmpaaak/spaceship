@@ -702,7 +702,16 @@ function M.run()
     local slotOddsScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
-    assert(slotOddsScene:slotOddsLine() == "ODDS C50% P40% S10%  AVG $18.58")
+    assert(slotOddsScene:slotOddsLine() == "C50 P40 S10  AVG $18.58")
+
+    local oddsLoadoutScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    local launchLoadoutOdds = oddsLoadoutScene:loadoutLines()
+    assert(launchLoadoutOdds.odds == "C50 P40 S10  AVG $18.58")
+    oddsLoadoutScene.expedition.phase = "settlement"
+    local shopLoadoutOdds = oddsLoadoutScene:shopLoadoutLines()
+    assert(shopLoadoutOdds.odds == "C50 P40 S10  AVG $18.58")
 
     print("SPACESHIP_UNIT_OK")
 end
