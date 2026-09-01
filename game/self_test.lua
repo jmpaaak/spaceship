@@ -214,7 +214,7 @@ function M.run()
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
     assert(shopScene.expedition.money == 20)
     assert(shopScene.message
-        == "SCOUT PURCHASED AND SELECTED  NO-HIT 960  SLOTS 10  BALANCE $20")
+        == "SCOUT PURCHASED AND SELECTED  MAX FUEL 160  HULL 3  NO-HIT 960  SLOTS 10  BALANCE $20")
 
     local scoutFuelMessageScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
