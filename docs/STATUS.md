@@ -93,12 +93,14 @@
 - engine-hosted 상점 표시 테스트가 기본 STARTER의 `MAX FUEL 100  HULL 4`, `NO-HIT 600  SLOTS 6`, 연료 강화 STARTER의 `MAX FUEL 120  HULL 4`, `NO-HIT 720  SLOTS 8`, 강화된 SCOUT의 `MAX FUEL 160  HULL 4`, `NO-HIT 960  SLOTS 10` 미리보기를 검증한다.
 - EARTH SHOP의 연료·내구도 구매 행은 `FUEL LV.0>1`·`HULL LV.0>1` 형식으로 현재 강화 레벨과 구매 후 레벨을 표시하며, 반복 구매 뒤에는 각각 `LV.1>2`로 즉시 갱신된다.
 - engine-hosted 상점 표시 테스트가 기본 레벨, 연료만 구매한 상태, 두 강화를 구매한 상태와 SCOUT 선택 상태에서 두 구매 행의 현재·구매 후 레벨을 검증한다.
+- 연료·내구도 강화 구매 성공 메시지는 적용된 강화 레벨을 `LV.n`으로 표시해 상점 행의 갱신된 레벨과 바로 대조할 수 있다.
+- engine-hosted 입력 테스트가 STARTER와 SCOUT의 1단계 강화 메시지 및 반복 구매 뒤 연료·내구도 2단계 메시지를 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- 연료·내구도 강화 구매 성공 메시지에 적용된 강화 레벨을 표시해 상점 행의 새 레벨과 구매 결과를 바로 대조할 수 있게 하고 engine-hosted 입력 테스트를 추가한다.
+- EARTH SHOP의 `NEXT <SHIP>` 능력치 블록에 현재 연료·내구도 강화 레벨을 함께 표시해 구매 성공 메시지와 다음 출발 loadout을 한눈에 대조하고 engine-hosted 상점 표시 테스트를 추가한다.
 
 ## 완료 조건
 

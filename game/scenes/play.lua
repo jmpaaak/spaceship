@@ -226,8 +226,9 @@ end
 function M:keypressed(key)
     if self.expedition.phase == "settlement" and (key == "f" or key == "down" or key == "s") then
         if expedition.buyFuelUpgrade(self.expedition) then
-            self.message = string.format("FUEL TANK UPGRADED  MAX %d  %s  BALANCE $%d",
-                self.expedition.maxFuel, launchForecastLine(self.expedition), self.expedition.money)
+            self.message = string.format("FUEL TANK UPGRADED  LV.%d  MAX %d  %s  BALANCE $%d",
+                self.expedition.fuelUpgradeLevel, self.expedition.maxFuel,
+                launchForecastLine(self.expedition), self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.fuelUpgradeCost, "FUEL UPGRADE")
@@ -236,8 +237,10 @@ function M:keypressed(key)
     end
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
         if expedition.buyDurabilityUpgrade(self.expedition) then
-            self.message = string.format("HULL UPGRADED  MAX FUEL %d  HULL %d  %s  BALANCE $%d",
-                self.expedition.maxFuel, self.expedition.maxDurability,
+            self.message = string.format(
+                "HULL UPGRADED  LV.%d  MAX FUEL %d  HULL %d  %s  BALANCE $%d",
+                self.expedition.durabilityUpgradeLevel, self.expedition.maxFuel,
+                self.expedition.maxDurability,
                 launchForecastLine(self.expedition), self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
