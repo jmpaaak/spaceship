@@ -49,12 +49,14 @@
 - 실제 LÖVE runtime capture `build/spaceship-runtime-preview.png`에서 `LAUNCH LOADOUT`, `SHIP STARTER`, `FUEL LV.0  HULL LV.0`이 `540×960` 세로 화면 안에 표시되는 것을 확인했다.
 - EARTH SHOP에 현재 선택된 우주선 기준의 다음 출발 능력치를 `NEXT <SHIP>`과 `MAX FUEL N  HULL N`으로 항상 표시한다. 연료·내구도 구매, SCOUT 구매·선택, STARTER 재선택 직후 값이 즉시 바뀐다.
 - engine-hosted 상점 loadout 테스트가 기본 능력치, 두 강화 구매, SCOUT 선택과 STARTER 재선택에 따른 다음 출발 최대 연료·내구도 갱신을 검증한다.
+- EARTH SHOP에 SCOUT의 교환 조건 `SCOUT +40 FUEL / -1 HULL`을 구매 전후 항상 표시해 현재 `NEXT <SHIP>` 및 실제 최대 능력치와 동시에 비교할 수 있다.
+- engine-hosted 상점 표시 테스트가 SCOUT 구매 전과 구매·선택 후 모두 교환 조건과 현재 선택 우주선 능력치를 함께 반환하는지 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- EARTH SHOP에서 SCOUT 구매 전 `+40 FUEL / -1 HULL` 교환 조건과 구매 뒤 현재 선택 우주선을 동시에 비교할 수 있게 표시하고 engine-hosted 표시 테스트를 추가한다.
+- 보유한 우주선의 전환 버튼을 현재 우주선 이름이 아니라 실제 다음 동작인 `SELECT STARTER`/`SELECT SCOUT`로 표시하고 engine-hosted 입력·표시 테스트를 추가한다.
 
 ## 완료 조건
 

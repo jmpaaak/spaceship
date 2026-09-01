@@ -78,6 +78,8 @@ function M:shopLoadoutLines()
     return {
         ship = string.format("NEXT %s", string.upper(run.selectedShipId)),
         stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
+        scoutTradeoff = string.format("SCOUT %+d FUEL / %+d HULL",
+            run.scoutFuelBonus, run.scoutDurabilityBonus),
     }
 end
 
@@ -310,7 +312,7 @@ function M:draw()
         love.graphics.printf(loadout.upgrades, 16, 258, viewport.width - 32, "center")
     elseif self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, 122, viewport.width - 24, 156)
+        love.graphics.rectangle("fill", 12, 122, viewport.width - 24, 168)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf("EARTH SHOP", 16, 126, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
@@ -327,12 +329,14 @@ function M:draw()
             shipText = string.format("TAP/V: BUY SCOUT $%d", self.expedition.scoutShipCost)
         end
         local nextLaunch = self:shopLoadoutLines()
-        love.graphics.printf(shipText, 16, 226, viewport.width - 32, "center")
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(nextLaunch.ship, 16, 240, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.stats, 16, 252, viewport.width - 32, "center")
-        love.graphics.printf("TAP: RELAUNCH", 16, 266, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.scoutTradeoff, 16, 224, viewport.width - 32, "center")
+        love.graphics.printf(shipText, 16, 238, viewport.width - 32, "center")
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.printf(nextLaunch.ship, 16, 252, viewport.width - 32, "center")
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(nextLaunch.stats, 16, 264, viewport.width - 32, "center")
+        love.graphics.printf("TAP: RELAUNCH", 16, 276, viewport.width - 32, "center")
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
