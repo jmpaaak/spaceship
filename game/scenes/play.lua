@@ -199,7 +199,8 @@ end
 function M:keypressed(key)
     if self.expedition.phase == "settlement" and (key == "f" or key == "down" or key == "s") then
         if expedition.buyFuelUpgrade(self.expedition) then
-            self.message = string.format("FUEL TANK UPGRADED  MAX %d", self.expedition.maxFuel)
+            self.message = string.format("FUEL TANK UPGRADED  MAX %d  BALANCE $%d",
+                self.expedition.maxFuel, self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.fuelUpgradeCost, "FUEL UPGRADE")
@@ -208,7 +209,8 @@ function M:keypressed(key)
     end
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
         if expedition.buyDurabilityUpgrade(self.expedition) then
-            self.message = string.format("HULL UPGRADED  MAX %d", self.expedition.maxDurability)
+            self.message = string.format("HULL UPGRADED  MAX %d  BALANCE $%d",
+                self.expedition.maxDurability, self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.durabilityUpgradeCost, "HULL UPGRADE")
@@ -219,7 +221,8 @@ function M:keypressed(key)
         if not self.expedition.ownedShips.scout then
             if expedition.buyShip(self.expedition, "scout") then
                 expedition.selectShip(self.expedition, "scout")
-                self.message = "SCOUT PURCHASED AND SELECTED"
+                self.message = string.format("SCOUT PURCHASED AND SELECTED  BALANCE $%d",
+                    self.expedition.money)
             else
                 self.message = purchaseShortfallMessage(self.expedition.money,
                     self.expedition.scoutShipCost, "SCOUT")
