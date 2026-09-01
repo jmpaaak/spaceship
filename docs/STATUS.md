@@ -259,6 +259,12 @@
 - 실제 LÖVE runtime capture(기본 `launch` phase 진입, `1440×2560`, `GAME_CAPTURE=1 GAME_SCALE=8`)로 `LAUNCH LOADOUT` 패널의 `SHIP STARTER`, `MAX FUEL 100  HULL 3`, `FUEL LV.0  HULL LV.0`, `NO-HIT 600  SLOTS 6`, `STEER SPEED 55`, `C50 P40 S10  AVG $18.58`가 서로 겹치지 않고 `TAP TO LAUNCH`/`DEV PLACEHOLDER`와도 겹치지 않는 것을 vision으로 확인했다 (로컬 캡처, `build/` 는 커밋 제외).
 - 남은 다음 슬라이스 후보: (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (2) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인 — 이번 사이클에서는 공식 AetherAI 로그인/API 접근 자격 증명이 없어 human-gated 상태로 유지했다.
 
+## 이번 사이클 시도 및 되돌림 기록
+
+- "다음 한 가지"의 (1)번 후보(YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬 정리)를 시도했다. `settlementTouchRows`의 각 밴드 top을 텍스트 시작 y로 재사용하도록 `game/scenes/play.lua`의 settlement draw 분기를 재작성했으나, HULL/STEERING과 YIELD/SHIP처럼 하나의 44px 밴드를 좌우 컬럼으로 공유하는 두 항목의 텍스트를 여전히 전체 폭(`fullX, fullW`) 중앙 정렬로 그려 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)에서 `T/H HULL...`과 `T/G STEER...`, `T/Y YIELD...`와 `T/V BUY SCOUT...` 등 글자가 서로 겹쳐 읽을 수 없는 실제 렌더링 결함을 vision으로 발견했다. engine-hosted 테스트(`make test`)는 좌표 값만 검증하고 실제 폰트 렌더 겹침은 검증하지 못해 GREEN이었지만 실기기 캡처에서 결함이 확인됐다.
+- 이 결함을 같은 사이클 안에서 좌우 컬럼별 텍스트 폭 분할로 고치려던 중 폰트 폭 측정용 headless LÖVE 프로브(`/tmp/fontcheck2.lua`)가 응답 없이 멈춰(타임아웃) 남은 예산 안에 근본 수정을 완료할 수 없었다. 미완성 변경을 남기지 않기 위해 `git checkout -- game/scenes/play.lua`로 마지막 커밋(`682d811`) 상태로 되돌렸다. `make test`가 되돌린 상태에서 GREEN임을 재확인했다.
+- 다음 사이클에서: HULL/STEERING·YIELD/SHIP처럼 좌우 컬럼을 공유하는 행은 `actionX/actionW`를 컬럼별로 반씩 나누고(예: 좌측 컬럼 `x=16,w=74`, 우측 컬럼 `x=90,w=74`) 실제 폰트 폭이 컬럼 폭을 넘지 않는지 확인한 뒤에만 y좌표를 밴드 top에 정렬해야 한다. 헤드리스 폰트 폭 프로브는 `main.lua`/`self_test.lua`와 같은 디렉터리에서 `love .`로 실행해야 한다(별도 `/tmp` 디렉터리 실행은 `conf.lua`/`main.lua`가 없어 멈추거나 실패할 수 있음을 이번 사이클에서 확인).
+
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)
