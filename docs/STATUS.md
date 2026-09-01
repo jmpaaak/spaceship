@@ -67,12 +67,14 @@
 - engine-hosted 입력 메시지 테스트가 잔액 `$20`에서 키보드 연료·내구도 구매와 터치 SCOUT 구매의 정확한 부족액 및 구매 미발생을 검증한다.
 - EARTH SHOP에서 연료·내구도·SCOUT 구매에 성공하면 메시지에 지출 후 실제 잔액을 `BALANCE $N`으로 함께 표시한다.
 - engine-hosted 입력 메시지 테스트가 키보드 연료·내구도 구매와 터치 SCOUT 구매의 차감된 잔액 및 성공 메시지를 검증한다.
+- EARTH SHOP의 연료·내구도 구매 행은 현재 선택 우주선과 강화 상태를 기준으로 구매 후 적용될 다음 출발 능력치를 `MAX N`으로 미리 표시한다.
+- engine-hosted 상점 표시 테스트가 STARTER 기본 상태와 연료·내구도 강화 후 선택한 SCOUT 상태에서 구매 후 최대 연료·내구도 미리보기를 검증한다.
 - 현재 그래픽은 전부 개발용 Lua placeholder이며 최종 AetherAI 에셋이 아니다.
 - 공식 AetherAI 로그인/export가 없으므로 최종 미술은 human-gated pending이다. 코드·상태머신·저장·충돌·슬롯·상점 개발은 계속한다.
 
 ## 다음 한 가지
 
-- EARTH SHOP의 연료·내구도 구매 행에 구매 후 적용될 다음 출발 최대 연료·내구도 수치를 미리 표시하고 engine-hosted 표시 테스트를 추가한다.
+- EARTH SHOP의 SCOUT 구매 행에 선택 시 적용될 다음 출발 최대 연료·내구도 수치를 직접 표시하고 engine-hosted 표시 테스트를 추가한다.
 
 ## 완료 조건
 
