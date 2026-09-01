@@ -227,6 +227,7 @@ function M:loadoutLines()
         upgrades = string.format("FUEL LV.%d  HULL LV.%d",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
+        steering = string.format("STEER SPEED %d", expedition.steeringSpeed(run)),
         odds = self:slotOddsLine(),
     }
 end
@@ -728,13 +729,15 @@ function M:draw()
         love.graphics.printf(loadout.stats, 16, 234, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(loadout.upgrades, 16, 246, viewport.width - 32, "center")
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(loadout.forecast, 16, 260, viewport.width - 32, "center")
         self.smallFont = self.smallFont or love.graphics.newFont(8)
         local previousLaunchFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
+        love.graphics.setColor(0.45, 1, 0.6)
+        love.graphics.printf(loadout.forecast, 16, 258, viewport.width - 32, "center")
+        love.graphics.setColor(0.6, 1, 0.85)
+        love.graphics.printf(loadout.steering, 16, 268, viewport.width - 32, "center")
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(loadout.odds, 16, 274, viewport.width - 32, "center")
+        love.graphics.printf(loadout.odds, 16, 278, viewport.width - 32, "center")
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
         -- The summary card is drawn with the same scene-cached small font as

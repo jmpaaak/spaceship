@@ -577,24 +577,29 @@ function M.run()
     assert(starterLoadout.stats == "MAX FUEL 100  HULL 3")
     assert(starterLoadout.upgrades == "FUEL LV.0  HULL LV.0")
     assert(starterLoadout.forecast == "NO-HIT 600  SLOTS 6")
+    assert(starterLoadout.steering == "STEER SPEED 55")
     loadoutScene.expedition.phase = "settlement"
     loadoutScene.expedition.money = loadoutScene.expedition.fuelUpgradeCost
         + loadoutScene.expedition.durabilityUpgradeCost + loadoutScene.expedition.scoutShipCost
+        + loadoutScene.expedition.steeringUpgradeCost
     assert(expedition.buyFuelUpgrade(loadoutScene.expedition))
     assert(expedition.buyDurabilityUpgrade(loadoutScene.expedition))
     assert(expedition.buyShip(loadoutScene.expedition, "scout"))
     assert(expedition.selectShip(loadoutScene.expedition, "scout"))
+    assert(expedition.buySteeringUpgrade(loadoutScene.expedition))
     local upgradedLoadout = loadoutScene:loadoutLines()
     assert(upgradedLoadout.ship == "SHIP SCOUT")
     assert(upgradedLoadout.stats == "MAX FUEL 160  HULL 3")
     assert(upgradedLoadout.upgrades == "FUEL LV.1  HULL LV.1")
     assert(upgradedLoadout.forecast == "NO-HIT 960  SLOTS 10")
+    assert(upgradedLoadout.steering == "STEER SPEED 70")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()
     assert(resetLoadout.ship == "SHIP STARTER")
     assert(resetLoadout.stats == "MAX FUEL 100  HULL 3")
     assert(resetLoadout.upgrades == "FUEL LV.0  HULL LV.0")
+    assert(resetLoadout.steering == "STEER SPEED 55")
 
     local nextLaunchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },

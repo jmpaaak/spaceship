@@ -242,6 +242,23 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 EARTH SHOP 패널에 `T/G STEER LV.0>1 $65  LEFT $90`, `STEER SPEED 70`가 `T/H HULL...`/`MAX FUEL...`/`NO-HIT...` 행과 `T/Y YIELD...` 행 사이에 겹침·잘림 없이 표시되고 `TAP: RELAUNCH`까지 패널 전체가 정상 표시되는 것을 vision으로 확인했다 (로컬 캡처, 커밋 제외).
 - 남은 다음 슬라이스 후보: (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (2) `LAUNCH LOADOUT` 패널에도 STEERING 표시 추가(현재는 EARTH SHOP에만 존재), (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## STEERING 터치 UI·상점 패널 표시 (완료)
+
+- 위 "다음 한 가지"가 지목한 STEERING 강화의 터치 UI와 EARTH SHOP 패널 표시를 추가해 연료·내구도·표본 수익과 동일한 터치 우선 UX로 맞췄다. `PlayScene.settlementTouchRows`의 기존 HULL 단독 행(188~232)을 HULL/STEERING 좌우 컬럼(각각 x=0~90 / x=90~180)으로 분할해 다섯 번째 동작을 넣었다. 각 컬럼 폭 90 canvas px는 44pt 접근성 최소 폭을 크게 초과하며, 44px 세로 밴드 높이는 그대로 유지되어 44pt 최소값을 계속 충족한다. `touchpressed`가 `key == "steering"`일 때 `keypressed("g")`를 호출하도록 분기를 추가했다.
+- `PlayScene:shopLoadoutLines()`가 `steeringAction`(`"T/G STEER LV.n>n+1 $65"`), `steeringPreview`(`"STEER SPEED n"`), `steeringStatus`/`steeringAffordable`(구매 후 잔액 또는 부족액, 연료·내구도·표본 수익과 같은 `purchaseStatus` 헬퍼 사용)를 새로 반환한다. `settlement` draw 분기가 HULL 미리보기 다음, YIELD 이전에 STEERING 액션/상태 줄과 속도 미리보기 줄을 추가로 그리며, 다섯 줄이 늘어난 것을 수용하도록 `rowStep`을 10px에서 9px로 좁혔다.
+- engine-hosted 테스트가 `shopLoadoutLines()`의 `steeringAction`/`steeringPreview`/`steeringStatus`/`steeringAffordable`을 기본 상태(부족)와 충분한 잔액 상태에서 검증하고, 새 HULL/STEERING 컬럼 분할에서 두 열의 중앙 터치가 각각 내구도·조종 강화를 실제로 발생시키는지, 전체 다섯 행/컬럼(연료·내구도·조종·표본 수익·우주선) 터치가 재출발 전 모두 정상 작동하는지 검증한다. 기존 `touchpressed("hull", 90, 208)` 호출은 새 좌우 분할에서 x=90이 STEERING 컬럼과 겹쳐 x=45로 좁혀 HULL 컬럼을 명확히 가리키도록 갱신했다(`fuel`/`ship`/`relaunch` 호출은 이미 컬럼이 없거나 x=90이 올바른 컬럼을 가리켜 변경 불필요).
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 EARTH SHOP 패널에 `T/G STEER LV.0>1 $65  LEFT $90`, `STEER SPEED 70`가 `T/H HULL...`/`MAX FUEL...`/`NO-HIT...` 행과 `T/Y YIELD...` 행 사이에 겹침·잘림 없이 표시되고 `TAP: RELAUNCH`까지 패널 전체가 정상 표시되는 것을 vision으로 확인했다 (로컬 캡처, 커밋 제외).
+- 남은 다음 슬라이스 후보: (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (2) `LAUNCH LOADOUT` 패널에도 STEERING 표시 추가(현재는 EARTH SHOP에만 존재), (3) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+
+## LAUNCH LOADOUT에 STEERING 표시 추가 (완료)
+
+- 위 "남은 다음 슬라이스 후보"의 (2)번인 `LAUNCH LOADOUT` 패널에도 STEERING을 표시했다(이전까지는 EARTH SHOP에만 존재). `PlayScene:loadoutLines()`가 `steering = "STEER SPEED %d"`(`expedition.steeringSpeed(run)` 조회) 필드를 새로 반환한다. `launch` phase draw 분기가 `forecast`/`steering`/`odds` 세 줄을 모두 씬 캐시 `love.graphics.newFont(8)` 작은 폰트로 통일해(기존에는 `forecast`만 기본 14px 폰트였다) `NO-HIT 600 SLOTS 6`, `STEER SPEED 55`, `C50 P40 S10 AVG $18.58` 세 줄을 y=258/268/278에 9~10px 간격으로 배치했다. 패널(y 204~294) 안에 세 줄이 모두 들어가며 `TAP TO LAUNCH`(`viewport.height - 30 = 290`)·`DEV PLACEHOLDER`와 겹치지 않는다.
+- engine-hosted 테스트(`game/self_test.lua`)가 기본 STARTER의 `loadoutLines().steering == "STEER SPEED 55"`와, 연료·내구도·SCOUT 구매 및 STEERING 강화 1단계 구매 후 `"STEER SPEED 70"`, 파괴(내구도 0) 뒤 초기화된 `"STEER SPEED 55"` 세 값을 검증한다(RED 확인 후 구현: 최초 실행에서 `starterLoadout.steering`이 nil이라 line 580 assertion으로 즉시 실패하는 것을 확인했다).
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+- 실제 LÖVE runtime capture(기본 `launch` phase 진입, `1440×2560`, `GAME_CAPTURE=1 GAME_SCALE=8`)로 `LAUNCH LOADOUT` 패널의 `SHIP STARTER`, `MAX FUEL 100  HULL 3`, `FUEL LV.0  HULL LV.0`, `NO-HIT 600  SLOTS 6`, `STEER SPEED 55`, `C50 P40 S10  AVG $18.58`가 서로 겹치지 않고 `TAP TO LAUNCH`/`DEV PLACEHOLDER`와도 겹치지 않는 것을 vision으로 확인했다 (로컬 캡처, `build/` 는 커밋 제외).
+- 남은 다음 슬라이스 후보: (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (2) 최우선 pending feedback인 AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인 — 이번 사이클에서는 공식 AetherAI 로그인/API 접근 자격 증명이 없어 human-gated 상태로 유지했다.
+
 ## 완료 조건
 
 - `make verify LOVE=/Users/jm/.local/bin/love` 통과 (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:24`)
