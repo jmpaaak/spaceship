@@ -198,9 +198,14 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-wide-warning`, `1440×2560`)로 넓어진 `HOLD LEFT`/`HOLD RIGHT` 버튼이 명확히 분리된 박스로 렌더링되고 `TAP TO LAUNCH`/`DEV PLACEHOLDER`와 겹치지 않는 것을 vision으로 확인했다 (`build/spaceship-runtime-preview-ascending-controlfix.png`, 로컬 산출물로 커밋 제외).
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
 
+- LAUNCH phase의 `TAP TO LAUNCH` 터치 상호작용을 명시적으로 이름 붙이고 검증했다. `touchpressed`는 이전부터 이 phase에서 좌표 제한 없이 전체 180×320 캔버스 어디를 눌러도 출발을 받아들였지만(기능적으로는 이미 44pt를 크게 초과), `destroyedTouchArea`와 달리 이 사실을 나타내는 이름 있는 상수나 명시적 코너-터치 회귀 테스트가 없었다. `game/scenes/play.lua`에 `PlayScene.launchTouchArea`(`destroyedTouchArea`와 동일한 전체 캔버스 `{top=0, bottom=320, left=0, right=180}`)를 추가했다.
+- engine-hosted 테스트가 `launchTouchArea`의 34px/44pt 최소값 충족과 네 모서리·중앙 5개 좌표에서 실제로 `launch` phase 터치가 출발(`phase == "ascending"`)을 일으키는지 검증한다.
+- 이로써 상승·귀환·EARTH SHOP·SHIP DESTROYED·LAUNCH 5개 phase의 주요 터치 상호작용이 모두 이름 있는 상수와 engine-hosted 테스트로 명시적으로 검증됐다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:24`).
+
 ## 다음 한 가지
 
-- 상승·귀환·EARTH SHOP·SHIP DESTROYED 4개 phase의 주요 터치 타겟이 모두 44pt 접근성 최소값을 충족하도록 검증·확장했다. 다음 슬라이스는 남은 UI 표면(예: 슬롯 릴 결과 박스, 발사 로드아웃 패널 등 비-액션 표시 요소는 제외)에서 아직 검증하지 않은 터치 상호작용이 있는지 전체를 다시 스캔하거나, 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export)로 전환하는 것이다.
+- 5개 phase(LAUNCH/상승/귀환/EARTH SHOP/SHIP DESTROYED)의 주요 터치 상호작용이 모두 이름 있는 상수와 engine-hosted 테스트로 명시적으로 검증됐다. 다음 슬라이스는 최우선 pending feedback인 AetherAI-only 최종 에셋 확보(공식 로그인/export 가용성 확인)로 전환하거나, 남은 게임플레이 밸런싱/저장/UI 표면(예: 슬롯 릴 결과 박스, 로드아웃 패널의 비-액션 정보 밀도)을 다음 대상으로 검토하는 것이다.
 
 ## 완료 조건
 

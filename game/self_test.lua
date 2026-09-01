@@ -807,6 +807,39 @@ function M.run()
             "destroyed tap at (" .. point.x .. "," .. point.y .. ") did not restart the run")
     end
 
+    -- LAUNCH phase's TAP TO LAUNCH action already accepts any tap on the
+    -- internal canvas regardless of x/y (unconditional touchpressed branch),
+    -- so the functional touch target has always spanned the full 180x320
+    -- canvas -- but unlike destroyedTouchArea, this was never given a named
+    -- constant or an explicit corner-touch regression test. Documented and
+    -- tested here to close out the remaining unverified touch surface noted
+    -- in docs/STATUS.md's next-slice note.
+    local launchArea = PlayScene.launchTouchArea
+    assert(launchArea.bottom - launchArea.top >= 34,
+        "launch touch area height is under the 34px minimum")
+    assert(launchArea.right - launchArea.left >= 34,
+        "launch touch area width is under the 34px minimum")
+    local launchAreaPoints = viewport.canvasPixelsToPoints(
+        launchArea.bottom - launchArea.top, 180, 320, 1, false)
+    assert(launchAreaPoints >= 44,
+        "launch touch area is under the 44pt accessibility minimum at scale 1 (" .. launchAreaPoints .. "pt)")
+    local launchCorners = {
+        { x = launchArea.left, y = launchArea.top },
+        { x = launchArea.right - 1, y = launchArea.top },
+        { x = launchArea.left, y = launchArea.bottom - 1 },
+        { x = launchArea.right - 1, y = launchArea.bottom - 1 },
+        { x = math.floor((launchArea.left + launchArea.right) / 2),
+          y = math.floor((launchArea.top + launchArea.bottom) / 2) },
+    }
+    for _, point in ipairs(launchCorners) do
+        local launchTouchScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        launchTouchScene:touchpressed("launch-tap", point.x, point.y)
+        assert(launchTouchScene.expedition.phase == "ascending",
+            "launch tap at (" .. point.x .. "," .. point.y .. ") did not start the run")
+    end
+
     -- Ascending-phase HOLD LEFT/HOLD RIGHT button box was drawn 24px tall
     -- (only ~24pt at the smallest supported window), under the same 44pt
     -- accessibility minimum returnControls/settlementTouchRows were fixed

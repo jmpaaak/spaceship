@@ -66,6 +66,16 @@ M.destroyedTouchArea = destroyedTouchArea
 local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
 M.ascendControls = ascendControls
 
+-- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
+-- already accepts any tap on the internal canvas regardless of x/y (see the
+-- "launch" branch below), so the functional touch target has always spanned
+-- the full 180x320 canvas -- far beyond the 44pt accessibility minimum.
+-- Named and exposed to close out the last remaining touch surface that was
+-- accepted unconditionally but never given an explicit constant or
+-- corner-touch regression test, matching destroyedTouchArea's pattern.
+local launchTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
+M.launchTouchArea = launchTouchArea
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
