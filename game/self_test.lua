@@ -305,9 +305,14 @@ function M.run()
     assert(starterNextLaunch.shipStatus == "SHORT $125" and not starterNextLaunch.shipAffordable)
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
     local fuelReadyNextLaunch = nextLaunchScene:shopLoadoutLines()
-    assert(fuelReadyNextLaunch.fuelStatus == "READY" and fuelReadyNextLaunch.fuelAffordable)
+    assert(fuelReadyNextLaunch.fuelStatus == "LEFT $0" and fuelReadyNextLaunch.fuelAffordable)
     assert(fuelReadyNextLaunch.hullStatus == "SHORT $25" and not fuelReadyNextLaunch.hullAffordable)
     assert(fuelReadyNextLaunch.shipStatus == "SHORT $75" and not fuelReadyNextLaunch.shipAffordable)
+    nextLaunchScene.expedition.money = 200
+    local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
+    assert(balancePreviewNextLaunch.fuelStatus == "LEFT $150" and balancePreviewNextLaunch.fuelAffordable)
+    assert(balancePreviewNextLaunch.hullStatus == "LEFT $125" and balancePreviewNextLaunch.hullAffordable)
+    assert(balancePreviewNextLaunch.shipStatus == "LEFT $75" and balancePreviewNextLaunch.shipAffordable)
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
         + nextLaunchScene.expedition.durabilityUpgradeCost + nextLaunchScene.expedition.scoutShipCost
     nextLaunchScene:keypressed("f")

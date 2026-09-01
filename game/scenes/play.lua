@@ -88,7 +88,7 @@ function M:loadoutLines()
 end
 
 local function purchaseStatus(money, cost)
-    if money >= cost then return "READY", true end
+    if money >= cost then return string.format("LEFT $%d", money - cost), true end
     return string.format("SHORT $%d", cost - money), false
 end
 
