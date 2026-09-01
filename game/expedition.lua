@@ -38,9 +38,10 @@ local function slotCount(distance, slotDistance)
     return math.ceil(distance / slotDistance)
 end
 
-function M.launchForecast(run)
-    if run.maxFuel <= 0 or run.fuelBurnRate <= 0 or run.climbSpeed <= 0 then return 0, 0 end
-    local altitude = run.maxFuel / run.fuelBurnRate * run.climbSpeed
+function M.launchForecast(run, maxFuel)
+    local forecastFuel = maxFuel or run.maxFuel
+    if forecastFuel <= 0 or run.fuelBurnRate <= 0 or run.climbSpeed <= 0 then return 0, 0 end
+    local altitude = forecastFuel / run.fuelBurnRate * run.climbSpeed
     return altitude, slotCount(altitude, run.slotDistance)
 end
 

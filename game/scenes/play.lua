@@ -78,8 +78,8 @@ function M:hudLines()
     }
 end
 
-local function launchForecastLine(run)
-    local forecastAltitude, forecastSlots = expedition.launchForecast(run)
+local function launchForecastLine(run, maxFuel)
+    local forecastAltitude, forecastSlots = expedition.launchForecast(run, maxFuel)
     return string.format("NO-HIT %d  SLOTS %d", math.floor(forecastAltitude), forecastSlots)
 end
 
@@ -144,6 +144,7 @@ function M:shopLoadoutLines()
         shipAffordable = shipAffordable,
         shipPreview = string.format("%s MAX FUEL %d  HULL %d",
             string.upper(previewShipId), previewFuel, previewDurability),
+        shipPreviewForecast = launchForecastLine(run, previewFuel),
         fuelAction = string.format("T/F FUEL MAX %d $%d",
             run.maxFuel + run.fuelUpgradeAmount, run.fuelUpgradeCost),
         fuelStatus = fuelStatus,
@@ -290,7 +291,7 @@ function M:touchpressed(id, x, y)
             self:keypressed("h")
         elseif y >= 224 and y < 250 then
             self:keypressed("v")
-        elseif y >= 250 and y <= 280 then
+        elseif y >= 250 and y <= 306 then
             self:keypressed("space")
         end
         return
@@ -410,7 +411,7 @@ function M:draw()
         love.graphics.printf(loadout.forecast, 16, 260, viewport.width - 32, "center")
     elseif self.expedition.phase == "settlement" then
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, 116, viewport.width - 24, 184)
+        love.graphics.rectangle("fill", 12, 116, viewport.width - 24, 192)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf("EARTH SHOP", 16, 120, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
@@ -431,20 +432,22 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.scoutTradeoff, 16, 174, viewport.width - 32, "center")
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.shipPreview, 16, 220, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.shipPreview, 16, 218, viewport.width - 32, "center")
+        love.graphics.setColor(0.45, 1, 0.6)
+        love.graphics.printf(nextLaunch.shipPreviewForecast, 16, 230, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf("T/V " .. nextLaunch.shipAction, 16, 234, 88, "left")
+        love.graphics.printf("T/V " .. nextLaunch.shipAction, 16, 242, 88, "left")
         love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
             nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.shipStatus, 104, 234, 60, "right")
+        love.graphics.printf(nextLaunch.shipStatus, 104, 242, 60, "right")
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(nextLaunch.ship, 16, 248, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.ship, 16, 256, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.stats, 16, 260, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.stats, 16, 268, viewport.width - 32, "center")
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.forecast, 16, 272, viewport.width - 32, "center")
+        love.graphics.printf(nextLaunch.forecast, 16, 280, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf("TAP: RELAUNCH", 16, 286, viewport.width - 32, "center")
+        love.graphics.printf("TAP: RELAUNCH", 16, 294, viewport.width - 32, "center")
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
