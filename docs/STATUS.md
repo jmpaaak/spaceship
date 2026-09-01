@@ -171,10 +171,12 @@
 - engine-hosted 테스트(`make test`)가 회귀 없이 GREEN이다(그래픽 헤드리스 비활성화로 텍스트 폭 자체는 직접 단위 테스트할 수 없는 기존 제약은 `ascending` HOLD RIGHT 수정 때와 동일).
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=returning-odds`, `1440×2560`)로 `LEFT`/`SPIN 3`/`RIGHT` 세 버튼이 각 박스 안에서 한 줄로 렌더링되고 서로 또는 위쪽 `ODDS` 줄과 겹치지 않는 것을 vision으로 확인했다 (`build/spaceship-runtime-preview-returning-odds-buttonfix.png`, 로컬 산출물로 커밋 제외). `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과.
 
+- `launch`·`returning`·`destroyed` phase의 6자 축약 HUD 상태 줄(`LAUNCH`/`RETURN`/`DESTRO`)을 실제 LÖVE 폰트 프로브(`/tmp/fontcheck_status`)로 측정한 결과, 기본 폰트(높이 14px)에서 가장 넓은 `F100 H3/3 LAUNCH S00`도 146px로 뷰포트 180px 폭 안에 24px 이상 여유가 있음을 확인했다. 실제 LÖVE runtime capture(`1440×2560`, 각각 기본 진입/`GAME_CAPTURE_PHASE=returning-odds`/`GAME_CAPTURE_PHASE=destroyed`)로 세 phase 모두 상태 줄이 잘리거나 다른 텍스트와 겹치지 않는 것을 vision으로 확인했다 (`build/spaceship-runtime-preview-launch-status-check.png`, `build/spaceship-runtime-preview-returning-status-check.png`, `build/spaceship-runtime-preview-destroyed-status-check.png`, 로컬 산출물로 커밋 제외). 이전 슬라이스에서 이미 검증한 `settlement`·`ascending`과 합쳐 5개 phase 상태 줄 전체가 실기기 캡처로 검증 완료됐다.
+- 같은 `destroyed` 캡처에서 `SHIP DESTROYED` 요약 카드 전체(제목, `LOST TOTAL`, `SAMPLES`, `SPINS`, `PEAK ALT`, `META RESET BEST`, `NEXT SHIP`, `FUEL/HULL LV.`, `TAP: START OVER`)가 겹침·잘림 없이 표시되는 것도 함께 재확인했다.
+
 ## 다음 한 가지
 
 - 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다.
-- `returning`·`destroyed`·`launch` phase의 HUD 상태 줄도 새 6자 축약(`RETURN`/`DESTRO`/`LAUNCH`)이 실제 폭 기준으로 잘리지 않는지 실기기 캡처로 각각 재확인이 필요하다(이번 슬라이스는 `settlement`·`ascending` 두 phase만 실제 캡처로 검증했다. `ascending`은 상태 줄 자체는 문제없었으나 하단 조종 버튼 라벨 겹침 결함을 별도로 발견·수정했다).
 
 ## 완료 조건
 
