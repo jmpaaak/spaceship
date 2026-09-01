@@ -73,6 +73,47 @@ function M.run()
     assert(riskScene.expedition.durability == 1)
     assert(riskScene.message == "COLLISION -2  HULL 1/3")
 
+    local returnCollisionScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 750 end, save = function() return false end },
+    })
+    returnCollisionScene.expedition.phase = "settlement"
+    returnCollisionScene.expedition.money = returnCollisionScene.expedition.fuelUpgradeCost
+        + returnCollisionScene.expedition.durabilityUpgradeCost
+        + returnCollisionScene.expedition.scoutShipCost + 25
+    assert(expedition.buyFuelUpgrade(returnCollisionScene.expedition))
+    assert(expedition.buyDurabilityUpgrade(returnCollisionScene.expedition))
+    assert(expedition.buyShip(returnCollisionScene.expedition, "scout"))
+    assert(expedition.selectShip(returnCollisionScene.expedition, "scout"))
+    assert(expedition.launch(returnCollisionScene.expedition))
+    returnCollisionScene.expedition.phase = "returning"
+    returnCollisionScene.expedition.altitude = 500
+    returnCollisionScene.expedition.returnDistance = 500
+    returnCollisionScene.expedition.durability = 2
+    returnCollisionScene.expedition.sampleCount = 2
+    returnCollisionScene.expedition.pendingSampleValue = 80
+    returnCollisionScene.expedition.slotOpportunities = 3
+    returnCollisionScene.expedition.slotSpins = 1
+    returnCollisionScene.expedition.pendingSlotReward = 75
+    returnCollisionScene.expedition.lastSlotSymbols = { "STAR", "STAR", "STAR" }
+    returnCollisionScene.expedition.lastSlotReward = 75
+    returnCollisionScene.ship.y = -500
+    nearbyPlanets = world.nearbyPlanets
+    world.nearbyPlanets = function()
+        return { { id = "return-collision", x = 0, y = -500, radius = 7 } }
+    end
+    returnCollisionScene:update(0)
+    world.nearbyPlanets = nearbyPlanets
+    local wipedReturn = returnCollisionScene.expedition
+    assert(wipedReturn.phase == "destroyed" and wipedReturn.durability == 0)
+    assert(wipedReturn.money == 0 and wipedReturn.sampleCount == 0
+        and wipedReturn.pendingSampleValue == 0 and wipedReturn.pendingSlotReward == 0)
+    assert(wipedReturn.slotOpportunities == 0 and wipedReturn.slotSpins == 0
+        and wipedReturn.lastSlotSymbols == nil and wipedReturn.lastSlotReward == 0)
+    assert(wipedReturn.fuelUpgradeLevel == 0 and wipedReturn.durabilityUpgradeLevel == 0)
+    assert(wipedReturn.selectedShipId == "starter" and not wipedReturn.ownedShips.scout)
+    assert(wipedReturn.bestAltitude == 750)
+    assert(returnCollisionScene.message == "SHIP DESTROYED  BEST 750  META RESET")
+
     local basicSlotRolls = { 1, 2, 3, 2, 3, 1 }
     local nextBasicSlotRoll = 0
     local run = expedition.new({

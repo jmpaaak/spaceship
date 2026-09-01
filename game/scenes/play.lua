@@ -199,11 +199,13 @@ function M:update(dt)
     elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
         self.message = string.format("SETTLED +$%d  BALANCE $%d", self.expedition.lastSettlement, self.expedition.money)
     end
-    if self.expedition.phase == "ascending" then
+    if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
             local distanceSquared = dx * dx + dy * dy
-            if distanceSquared <= (planet.radius + 14) ^ 2 and not self.discovered[planet.id] then
+            if self.expedition.phase == "ascending"
+                and distanceSquared <= (planet.radius + 14) ^ 2
+                and not self.discovered[planet.id] then
                 self.discovered[planet.id] = true
                 self.discoveredCount = self.discoveredCount + 1
                 local value = world.sampleValue(planet)
