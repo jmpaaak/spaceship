@@ -48,15 +48,21 @@ function M.run()
     riskScene.expedition.phase = "returning"
     assert(riskScene:collisionRisk({ y = -500 }) == nil)
     riskScene.expedition.altitude = 725
+    riskScene.expedition.returnDistance = 1000
+    riskScene.expedition.returnSpeed = 45
     riskScene.expedition.sampleCount = 3
     riskScene.expedition.pendingSampleValue = 95
     local returningHud = riskScene:hudLines()
     assert(returningHud.samples == "SAMPLES 03  AT RISK $95")
     assert(returningHud.earth == "EARTH IN 725")
+    assert(returningHud.returnProgress == "RETURN 28%  17s LEFT")
+    riskScene.expedition.altitude = 250
+    assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
     assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")
     assert(ascendingHud.earth == nil)
+    assert(ascendingHud.returnProgress == nil)
     riskScene.expedition.altitude = 500
     local nearbyPlanets = world.nearbyPlanets
     world.nearbyPlanets = function()

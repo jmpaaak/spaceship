@@ -51,10 +51,18 @@ function M:hudLines()
     local samples
     local best
     local earth
+    local returnProgress
     if run.phase == "ascending" or run.phase == "returning" then
         samples = string.format("SAMPLES %02d  AT RISK $%d", run.sampleCount, run.pendingSampleValue)
         if run.phase == "returning" then
             earth = string.format("EARTH IN %d", math.ceil(run.altitude))
+            local progress = 1
+            if run.returnDistance > 0 then
+                progress = math.max(0, math.min(1, 1 - run.altitude / run.returnDistance))
+            end
+            local secondsLeft = run.returnSpeed > 0 and math.ceil(run.altitude / run.returnSpeed) or 0
+            returnProgress = string.format("RETURN %d%%  %ds LEFT",
+                math.floor(progress * 100 + 0.5), secondsLeft)
         end
     elseif run.phase == "launch" or run.phase == "settlement" then
         best = string.format("PERSONAL BEST %04d", math.floor(run.bestAltitude))
@@ -64,6 +72,7 @@ function M:hudLines()
         samples = samples,
         best = best,
         earth = earth,
+        returnProgress = returnProgress,
         status = string.format("F%03d H%d/%d %-9s S%02d", math.floor(run.fuel), run.durability,
             run.maxDurability, string.upper(run.phase), run.slotOpportunities),
     }
@@ -308,7 +317,7 @@ function M:draw()
     love.graphics.pop()
 
     local hud = self:hudLines()
-    local hudHeight = hud.earth and 58 or ((hud.samples or hud.best) and 46 or 34)
+    local hudHeight = hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34)
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
     love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
     love.graphics.setColor(0.7, 0.9, 1)
@@ -321,6 +330,7 @@ function M:draw()
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
             love.graphics.print(hud.earth, 5, 43)
+            love.graphics.print(hud.returnProgress, 5, 55)
         end
     elseif hud.best then
         love.graphics.print(hud.status, 5, 18)
