@@ -151,10 +151,14 @@
 - 귀환 슬롯의 세 심볼(`COMET`/`PLANET`/`STAR`)이 기존에 균등 확률로 뽑히던 것을 명확한 확률/기대값 밸런싱으로 교체했다. `game/expedition.lua`에 `slotWeights`(`COMET 5`, `PLANET 4`, `STAR 1`, 총 가중치 10)를 추가해 `COMET 50%`·`PLANET 40%`·`STAR 10%`의 확률로 뽑히게 했고, `M.slotSymbolProbability(symbol)`·`M.weightedSlotSymbol(roll)`·`M.slotExpectedValue()`를 노출해 심볼별 확률과 스핀당 기대 보상(가중치 브루트포스로 계산한 정확값)을 다른 코드나 향후 UI가 조회할 수 있게 했다. 스핀 로직(`spinSlot`)은 `run.slotRandom(#slotSymbols)`(균등 1~3) 대신 `run.slotRandom(slotTotalWeight)`(1~10)로 굴려 가중치 심볼을 뽑는다.
 - engine-hosted 테스트가 `slotTotalWeight == 10`, 세 심볼의 정확한 확률(`0.5`/`0.4`/`0.1`), `weightedSlotSymbol`의 경계값 매핑(`1~5→COMET`, `6~9→PLANET`, `10→STAR`)과 `slotExpectedValue()`의 확률 합 `1`·스핀당 기대 보상 `18.585`를 검증한다. 기존 귀환/파괴/터치 시나리오 테스트의 주입 `slotRandom` 값도 새 1~10 스케일과 심볼 매핑에 맞춰 갱신해(`STAR`=10, `PLANET`=6, `COMET`=1) 계속 같은 시나리오(스타 트리플, COMET-COMET-PLANET 등)를 재현하도록 했다.
 
+- 귀환 슬롯 확률/기대값을 엔진 로직에만 머물지 않고 실제 화면에 노출했다. `game/scenes/play.lua`에 `PlayScene:slotOddsLine()`을 추가해 `expedition.slotSymbolProbability`와 `expedition.slotExpectedValue()`를 조회한 `"ODDS C50% P40% S10%  AVG $18.58"` 문자열을 반환하며, `returning` phase draw에서 씬 캐시 `love.graphics.newFont(8)` 작은 폰트로 조종/슬롯 버튼 행 바로 위(y=197, 전체 폭 중앙 정렬)에 표시한다.
+- engine-hosted 테스트가 `PlayScene:slotOddsLine()`의 정확한 확률·기대값 문자열(`"ODDS C50% P40% S10%  AVG $18.58"`, LÖVE 부동소수점 합산 기준 반올림)을 검증한다.
+- `main.lua`에 `GAME_CAPTURE_PHASE=returning-odds` 개발 전용 진입 경로를 추가했다. 실제 LÖVE runtime capture(`1080×1920`)로 귀환 HUD(`EARTH IN 500`, `RETURN 0%  12s LEFT`)와 `ODDS C50% P40% S10%  AVG $18.58`가 `LEFT`/`SPIN 3`/`RIGHT` 버튼과 겹치지 않고 화면 안에 두 줄로 줄바꿈되어 표시되는 것을 vision 확인했다(`build/spaceship-runtime-preview-returning-odds.png`, 로컬 산출물로 커밋 제외).
+
 ## 다음 한 가지
 
+- 귀환 슬롯 확률/기대값 표시(`ODDS C50% P40% S10%  AVG $18.58`)가 상승 중에는 보이지 않는다. 다음 슬라이스는 이 정보를 출발/상점 loadout에도 요약 노출하거나, 핵심 루프 상태머신의 다른 미구현 조각(예: 조종 강화 상점 항목)으로 이동한다.
 - 상점(EARTH SHOP)과 SHIP DESTROYED 두 화면 모두 12줄 안팎의 텍스트가 이제 패널 안에 들어가지만, 세로 화면에서 실제 손가락 터치 타겟 크기(각 행 34px 미만)가 접근성 기준(iOS/Android 최소 44px 권장)에 못 미치는지 실기기 기준으로 검토가 필요하다.
-- 슬롯 심볼별 확률/기대값(`COMET 50%`/`PLANET 40%`/`STAR 10%`, 스핀당 기대 보상 `$18.585`)을 엔진 로직에 확정했다. 다음 슬라이스는 귀환 슬롯 UI에 심볼 확률 또는 기대 배당을 화면에 노출하거나, 핵심 루프 상태머신의 다른 미구현 조각(예: 조종 강화 상점 항목)으로 이동한다.
 
 ## 완료 조건
 

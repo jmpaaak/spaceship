@@ -214,6 +214,15 @@ function M:shopLoadoutLines()
     }
 end
 
+function M:slotOddsLine()
+    local ev = expedition.slotExpectedValue()
+    return string.format("ODDS C%d%% P%d%% S%d%%  AVG $%.2f",
+        math.floor(expedition.slotSymbolProbability("COMET") * 100 + 0.5),
+        math.floor(expedition.slotSymbolProbability("PLANET") * 100 + 0.5),
+        math.floor(expedition.slotSymbolProbability("STAR") * 100 + 0.5),
+        ev)
+end
+
 function M:slotButtonState()
     local chances = self.expedition.slotOpportunities
     if self.slotSpin then
@@ -713,6 +722,12 @@ function M:draw()
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
         love.graphics.printf("HOLD RIGHT", 99, 262, 76, "center")
     elseif self.expedition.phase == "returning" then
+        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        local previousOddsFont = love.graphics.getFont()
+        love.graphics.setFont(self.smallFont)
+        love.graphics.setColor(0.6, 0.8, 1)
+        love.graphics.printf(self:slotOddsLine(), 12, 197, viewport.width - 24, "center")
+        love.graphics.setFont(previousOddsFont)
         if self.slotSpin then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
             love.graphics.rectangle("fill", 18, 210, 144, 36)

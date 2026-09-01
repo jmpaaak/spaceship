@@ -90,6 +90,15 @@ function love.load()
             if planet.id == "tier-rare" then return "rare" end
             return "epic"
         end
+    elseif capturePhase == "returning-odds" then
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.phase = "returning"
+        scene.expedition.altitude = 500
+        scene.expedition.returnDistance = 500
+        scene.expedition.slotOpportunities = 3
+        local world = require("game.world")
+        world.nearbyPlanets = function() return {} end
     end
 end
 

@@ -699,6 +699,11 @@ function M.run()
     assert(ev > 0 and ev < 25)
     assert(math.abs(ev - 18.585) < 0.01)
 
+    local slotOddsScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    assert(slotOddsScene:slotOddsLine() == "ODDS C50% P40% S10%  AVG $18.58")
+
     print("SPACESHIP_UNIT_OK")
 end
 
