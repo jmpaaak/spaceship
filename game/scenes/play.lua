@@ -6,6 +6,16 @@ local world = require("game.world")
 local M = {}
 M.__index = M
 
+local steeringSpeed = 55
+local returnControls = {
+    top = 254,
+    bottom = 278,
+    leftMaxX = 55,
+    slotMinX = 60,
+    slotMaxX = 120,
+    rightMinX = 125,
+}
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
@@ -178,11 +188,12 @@ end
 function M:slotButtonState()
     local chances = self.expedition.slotOpportunities
     if self.expedition.phase ~= "returning" or chances <= 0 then
-        return { enabled = false, label = "NO SLOT CHANCES" }
+        return { enabled = false, label = "NO SLOT CHANCES", compactLabel = "NO SLOTS" }
     end
     return {
         enabled = true,
         label = string.format("TAP: SLOT SPIN  %d LEFT", chances),
+        compactLabel = string.format("SPIN %d", chances),
     }
 end
 
@@ -197,8 +208,9 @@ function M:update(dt)
         end
     end
     local previousPhase = self.expedition.phase
-    if self.expedition.phase == "ascending" then
-        self.ship.x = self.ship.x + ((right and 1 or 0) - (left and 1 or 0)) * 55 * dt
+    if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
+        self.ship.x = self.ship.x
+            + ((right and 1 or 0) - (left and 1 or 0)) * steeringSpeed * dt
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         expedition.update(self.expedition, dt)
@@ -236,7 +248,9 @@ function M:update(dt)
             end
         end
     end
-    if self.expedition.phase ~= "ascending" then self.touches = {} end
+    if self.expedition.phase ~= "ascending" and self.expedition.phase ~= "returning" then
+        self.touches = {}
+    end
 end
 
 function M:keypressed(key)
@@ -313,6 +327,15 @@ function M:touchpressed(id, x, y)
         self.touches[id] = { x = x, y = y }
         return
     end
+    if self.expedition.phase == "returning" then
+        local inControlRow = y >= returnControls.top and y <= returnControls.bottom
+        if inControlRow and x >= returnControls.slotMinX and x <= returnControls.slotMaxX then
+            self:keypressed("space")
+        elseif inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
+            self.touches[id] = { x = x, y = y }
+        end
+        return
+    end
     if self.expedition.phase == "settlement" then
         if y >= 160 and y < 184 then
             self:keypressed("f")
@@ -325,7 +348,7 @@ function M:touchpressed(id, x, y)
         end
         return
     end
-    if self.expedition.phase == "launch" or self.expedition.phase == "returning" or self.expedition.phase == "destroyed" then
+    if self.expedition.phase == "launch" or self.expedition.phase == "destroyed" then
         self:keypressed("space")
     end
 end
@@ -519,18 +542,24 @@ function M:draw()
                 self.expedition.pendingSlotReward), 20, 231, 140, "center")
         end
         local slotButton = self:slotButtonState()
+        love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+        love.graphics.rectangle("fill", 5, returnControls.top, 50, 24)
+        love.graphics.rectangle("fill", 125, returnControls.top, 50, 24)
         if slotButton.enabled then
             love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
         else
             love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
         end
-        love.graphics.rectangle("fill", 28, 254, 124, 24)
+        love.graphics.rectangle("fill", 60, returnControls.top, 60, 24)
+        love.graphics.setColor(0.85, 0.95, 1)
+        love.graphics.printf("LEFT", 5, 262, 50, "center")
+        love.graphics.printf("RIGHT", 125, 262, 50, "center")
         if slotButton.enabled then
             love.graphics.setColor(0.85, 0.95, 1)
         else
             love.graphics.setColor(0.55, 0.58, 0.65)
         end
-        love.graphics.printf(slotButton.label, 28, 262, 124, "center")
+        love.graphics.printf(slotButton.compactLabel, 60, 262, 60, "center")
     end
     love.graphics.setColor(0.85, 0.9, 1)
     local messageY = self.expedition.phase == "settlement" and 50 or viewport.height - 30

@@ -340,19 +340,60 @@ function M.run()
     touchScene:update(1)
     assert(touchScene.ship.x == -55)
     touchScene.expedition.phase = "returning"
-    touchScene.expedition.slotOpportunities = 1
+    touchScene.expedition.altitude = 500
+    touchScene.expedition.returnDistance = 500
+    touchScene.expedition.returnSpeed = 0
+    touchScene.expedition.slotOpportunities = 2
     touchScene.expedition.slotRandom = function() return 3 end
-    touchScene:touchpressed("slot", 90, 160)
-    assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 0)
+    local returnStartX = touchScene.ship.x
+    nearbyPlanets = world.nearbyPlanets
+    world.nearbyPlanets = function() return {} end
+    touchScene:touchpressed("return-left", 20, 266)
+    assert(touchScene.expedition.slotSpins == 0 and touchScene.expedition.slotOpportunities == 2)
+    touchScene:update(1)
+    assert(touchScene.ship.x == returnStartX - 55)
+    touchScene:touchreleased("return-left")
+    touchScene:update(1)
+    assert(touchScene.ship.x == returnStartX - 55)
+    touchScene:touchpressed("slot", 90, 266)
+    assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 1)
+    local returnSteeredX = touchScene.ship.x
+    touchScene:update(1)
+    assert(touchScene.ship.x == returnSteeredX)
+    touchScene:touchpressed("return-right", 160, 266)
+    assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 1)
+    touchScene:update(1)
+    assert(touchScene.ship.x == returnSteeredX + 55)
+    touchScene:touchreleased("return-right")
+    world.nearbyPlanets = nearbyPlanets
+
+    local returnAvoidanceScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    returnAvoidanceScene.expedition.phase = "returning"
+    returnAvoidanceScene.expedition.altitude = 500
+    returnAvoidanceScene.expedition.returnDistance = 500
+    returnAvoidanceScene.ship.y = -500
+    local avoidablePlanet = { id = "return-avoid", x = 0, y = -455, radius = 7 }
+    nearbyPlanets = world.nearbyPlanets
+    world.nearbyPlanets = function() return { avoidablePlanet } end
+    returnAvoidanceScene:touchpressed("avoid-left", 20, 266)
+    returnAvoidanceScene:update(1)
+    world.nearbyPlanets = nearbyPlanets
+    assert(returnAvoidanceScene.ship.x == -55)
+    assert(returnAvoidanceScene.expedition.durability == 3)
+    assert(not returnAvoidanceScene.collided[avoidablePlanet.id])
+
     assert(table.concat(touchScene.expedition.lastSlotSymbols, " ") == "STAR STAR STAR")
-    assert(touchScene.message == "STAR STAR STAR +$75  0 LEFT")
+    assert(touchScene.message == "STAR STAR STAR +$75  1 LEFT")
+    local readySlotButton = touchScene:slotButtonState()
+    assert(readySlotButton.enabled and readySlotButton.label == "TAP: SLOT SPIN  1 LEFT")
+    touchScene:touchpressed("last-slot", 90, 266)
+    assert(touchScene.expedition.slotSpins == 2 and touchScene.expedition.slotOpportunities == 0)
     local emptySlotButton = touchScene:slotButtonState()
     assert(not emptySlotButton.enabled and emptySlotButton.label == "NO SLOT CHANCES")
     touchScene:touchpressed("empty-slot", 90, 266)
-    assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 0)
-    touchScene.expedition.slotOpportunities = 2
-    local readySlotButton = touchScene:slotButtonState()
-    assert(readySlotButton.enabled and readySlotButton.label == "TAP: SLOT SPIN  2 LEFT")
+    assert(touchScene.expedition.slotSpins == 2 and touchScene.expedition.slotOpportunities == 0)
     touchScene.expedition.phase = "settlement"
     touchScene.expedition.money = touchScene.expedition.fuelUpgradeCost
         + touchScene.expedition.durabilityUpgradeCost + touchScene.expedition.scoutShipCost
