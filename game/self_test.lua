@@ -554,6 +554,39 @@ local function testHullShieldIcon()
     end
 end
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+-- third slice): the CASH readout gets a small coin icon paired with it.
+-- Pure-geometry regression test mirroring testHullShieldIcon: even-length
+-- flat polygon list, at least a triangle, spans above and below cy, and
+-- horizontally symmetric around cx (a coin drawn as a simple diamond/octagon
+-- silhouette rather than a circle so it can be regression-tested exactly
+-- like the other icons without love.graphics.circle's implicit segment
+-- count).
+local function testCashCoinIcon()
+    local PlayScene = require("game.scenes.play")
+    local points = PlayScene.coinIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "coin silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "coin must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "coin outline must be horizontally symmetric around cx")
+    end
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -915,15 +948,22 @@ function M.run()
     assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")
     -- "고도(ALT)" -> "거리(DIST)" relabel (docs/feedback/INBOX.md item 2,
     -- 2026-09-03): the user misread the ALT/CASH line + adjacent fuel
-    -- status line as "fuel gates altitude". hud_primary must no longer say
+    -- status line as "fuel gates altitude". hud_distance must no longer say
     -- ALT, and drawing the status line must leave an explicit gap
     -- (PlayScene.hudPrimaryStatusGap) below the samples line so the fuel
     -- gauge visually separates from the distance-from-Earth readout.
-    assert(ascendingHud.primary:match("^DIST %d") ~= nil,
-        "hud_primary must read DIST, not ALT, so fuel is not misread as an altitude gate: "
-        .. tostring(ascendingHud.primary))
-    assert(not ascendingHud.primary:find("ALT"),
-        "hud_primary must not contain the old ALT label: " .. tostring(ascendingHud.primary))
+    -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+    -- third slice): the CASH readout gets a small coin icon paired with it,
+    -- mirroring the shield icon added for hull durability. hudLines() must
+    -- expose the DIST and CASH segments separately (instead of one combined
+    -- "primary" string) so draw() can insert the coin icon between them.
+    assert(ascendingHud.distance:match("^DIST %d") ~= nil,
+        "hudLines().distance must read DIST: " .. tostring(ascendingHud.distance))
+    assert(not ascendingHud.distance:find("ALT"),
+        "hudLines().distance must not contain the old ALT label: "
+        .. tostring(ascendingHud.distance))
+    assert(ascendingHud.cash:match("^CASH %$%d") ~= nil,
+        "hudLines().cash must read CASH $N: " .. tostring(ascendingHud.cash))
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
     assert(PlayScene.hudHeight("ascending", ascendingHud, 0)
@@ -2304,6 +2344,7 @@ function M.run()
     testBackgroundStars()
     testLaunchRocketIcon()
     testHullShieldIcon()
+    testCashCoinIcon()
 
     print("SPACESHIP_UNIT_OK")
 end

@@ -230,3 +230,18 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
 - `docs/feedback/INBOX.md`의 3번 항목에 이번 슬라이스 완료 표시 및 구현 요약을 추가(3번 항목 자체는 남은 아이콘화 대상이 자금($)·속도 두 가지이므로 "처리 대기"에 유지).
 - 다음 사이클 다음 슬라이스: 3번 항목의 남은 부분(자금 아이콘화, 속도/스피드미터 아이콘화) 중 하나, 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환 — 데이터 구조 설계부터 슬라이스 필요)으로 진행.
+
+## HUD 상단 CASH 표기에 동전 아이콘 추가 — 아이콘 기반 HUD 간소화 세 번째 슬라이스 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 세 번째 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작.
+
+- 이전 사이클까지 "탭하여 발사" 버튼(로켓)과 선체 내구도(방패)에 아이콘을 추가했으나, 자금($) 표기는 여전히 텍스트만이었다. 상단 HUD의 `hud_primary`(`"DIST %04d  CASH $%d"`)는 두 값을 하나의 문자열로 결합해 그렸기 때문에 CASH 값 앞에만 아이콘을 삽입할 수 없었다.
+- `game/i18n.lua`에서 en/ko 두 로케일 모두 `hud_primary`를 `hud_distance`("DIST %04d"/"거리 %04d")와 `hud_cash`("CASH $%d"/"자금 $%d") 두 개의 독립된 키로 분리했다.
+- `game/scenes/play.lua`의 `M:hudLines()`가 `distance`/`cash` 두 필드를 각각 반환하도록 변경(기존 `primary` 필드는 제거).
+- `game/scenes/play.lua`에 순수 함수 `M.coinIconPoints(cx, cy, size)`(원이 아닌 8각형 실루엣의 flat 폴리곤 점 목록, `shieldIconPoints`/`rocketIconPoints`와 동일 패턴 — `love.graphics.circle`은 세그먼트 수가 암묵적이라 헤드리스 회귀 테스트로 정확히 고정할 수 없어 원 대신 다각형을 사용)와 `M.cashIconSize = 8`/`M.cashIconGap = 4`를 추가했다.
+- `M:draw()`가 DIST 텍스트를 그린 뒤, 현재 활성 폰트(`love.graphics.getFont()`)로 측정한 DIST 텍스트 폭만큼 오른쪽에 동전 아이콘(금색)을 그리고, CASH 텍스트를 그 아이콘 폭+간격만큼 더 오른쪽에 그리도록 변경했다(launch 페이즈의 8px 소형 폰트와 다른 페이즈의 기본 14px 폰트 양쪽 모두 폭 측정이 자동으로 맞춰진다).
+- `game/self_test.lua`에 `testCashCoinIcon()`(신규, `testHullShieldIcon`과 동일 패턴 — 폴리곤 형태·중심 상하 걸침·수평 대칭 검증)을 추가하고, 기존 `ascendingHud.primary` 회귀 단언을 `ascendingHud.distance`/`ascendingHud.cash` 두 필드에 대한 검증(DIST로 시작, ALT 미포함, CASH $N 형식)으로 갱신했다(RED 확인 후 GREEN).
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=ascending-wide-warning`, 1080×1920, ko 로케일)를 vision으로 확인해 "거리 1000"과 "자금 $0" 사이에 작은 금색 동전 아이콘이 겹침·잘림 없이 렌더링됨을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- 3번 항목의 아이콘 기반 HUD 간소화 대상 4가지(탭 발사=로켓, 선체 내구도=방패, 자금=동전, 속도) 중 3가지가 완료되었다. 남은 것은 속도(조종속도/엔진속도)의 스피드미터 아이콘화뿐이다.
+- 다음 사이클 다음 슬라이스: 3번 항목의 마지막 남은 부분(속도/스피드미터 아이콘화 — LAUNCH LOADOUT의 `steer_speed_line`에 아이콘 추가), 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.

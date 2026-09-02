@@ -241,6 +241,34 @@ end
 M.hullIconSize = 8
 M.hullIconGap = 4
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+-- third slice): a small coin icon paired with the CASH readout, mirroring
+-- shieldIconPoints/rocketIconPoints. Drawn as a flat octagon silhouette
+-- (rather than love.graphics.circle, whose segment count is implicit and
+-- not something a headless test can pin down exactly) so its geometry can
+-- be regression tested the same way as the other icons: even-length flat
+-- {x,y,...} list, horizontally symmetric around cx, spans above and below
+-- cy.
+function M.coinIconPoints(cx, cy, size)
+    local r = size * 0.5
+    local rDiag = r * 0.7071
+    return {
+        cx, cy - r,
+        cx + rDiag, cy - rDiag,
+        cx + r, cy,
+        cx + rDiag, cy + rDiag,
+        cx, cy + r,
+        cx - rDiag, cy + rDiag,
+        cx - r, cy,
+        cx - rDiag, cy - rDiag,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the coin icon's right
+-- edge and the CASH text's left edge, mirroring M.hullIconSize/hullIconGap.
+M.cashIconSize = 8
+M.cashIconGap = 4
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -651,7 +679,8 @@ function M:hudLines()
         best = i18n.t("hud_personal_best", math.floor(run.bestAltitude))
     end
     return {
-        primary = i18n.t("hud_primary", math.floor(run.altitude), run.money),
+        distance = i18n.t("hud_distance", math.floor(run.altitude)),
+        cash = i18n.t("hud_cash", run.money),
         samples = samples,
         best = best,
         earth = earth,
@@ -1727,7 +1756,23 @@ function M:draw()
         hudY = hudY + 10
         love.graphics.setColor(0.7, 0.9, 1)
     end
-    love.graphics.print(hud.primary, 5, hudY)
+    love.graphics.print(hud.distance, 5, hudY)
+    -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+    -- third slice): pair the CASH readout with a small coin icon, mirroring
+    -- the shield icon paired with the hull status line below. The coin sits
+    -- right after the DIST text (measured via the currently active HUD
+    -- font, so this works for both the 14px default and the launch phase's
+    -- 8px small font) with the CASH text shifted right of the coin's
+    -- footprint so nothing overlaps.
+    local distanceWidth = love.graphics.getFont():getWidth(hud.distance)
+    local cashIconCenterX = 5 + distanceWidth + 8 + M.cashIconSize / 2
+    local cashIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
+    love.graphics.setColor(1, 0.85, 0.3)
+    love.graphics.polygon("fill",
+        M.coinIconPoints(cashIconCenterX, cashIconCenterY, M.cashIconSize))
+    love.graphics.setColor(0.7, 0.9, 1)
+    love.graphics.print(hud.cash,
+        5 + distanceWidth + 8 + M.cashIconSize + M.cashIconGap, hudY)
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- second slice): pair the hull-durability status text with a small
     -- shield icon drawn just to its left, then shift the text right by
