@@ -104,3 +104,16 @@
 - 다음 사이클 다음 슬라이스: 3번 항목의 남은 부분 — LAUNCH LOADOUT의 `stats_line`("MAX FUEL %d  HULL %d")과 EARTH SHOP의 연료 업그레이드 관련 문구를 아이콘 기반(로켓/방패/동전/스피드미터)으로 재구성. 그 다음은 4번(불필요한 텍스트 제거 검토)으로 진행.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
+
+## LAUNCH LOADOUT/EARTH SHOP에서 오해를 주는 "MAX FUEL" 잔여 표기 제거 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 두 번째 슬라이스를 처리했다. preflight READY, `git status --short` clean으로 시작.
+
+- 상단 HUD 상태 줄의 `F%03d` 표기는 이전 사이클에서 이미 제거되었으나, LAUNCH LOADOUT 카드(`stats_line` = `"MAX FUEL %d  HULL %d"`)와 EARTH SHOP의 함선 미리보기(`ship_preview_line`/`ship_preview_compact`), 그리고 연료·선체 업그레이드/구매 결과 메시지(`hull_upgraded_message`, `scout_purchased_message`, `ship_selected_message`)에는 여전히 `MAX FUEL %d`가 노출되어, 실제로는 no-op인 연료 상한이 여전히 의미 있는 스탯인 것처럼 보였다.
+- `game/i18n.lua`의 en/ko 두 로케일 모두에서 `stats_line`을 `"MAX FUEL %d  HULL %d"`/`"최대연료 %d  선체 %d"` → `"HULL %d"`/`"선체 %d"`로, `ship_preview_line`을 `"%s MAX FUEL %d  HULL %d"`/`"%s 최대연료 %d  선체 %d"` → `"%s HULL %d"`/`"%s 선체 %d"`로, `ship_preview_compact`를 `"%s F%d H%d"` → `"%s H%d"`로 축소했다. `hull_upgraded_message`/`scout_purchased_message`/`ship_selected_message`에서도 `MAX FUEL %d`/`최대연료 %d` 인자와 포맷 조각을 제거했다(연료 업그레이드 자체를 위한 `fuel_upgraded_message`는 여전히 연료 액션의 결과이므로 유지).
+- `game/scenes/play.lua`의 `M:loadoutLines()`/`M:shopLoadoutLines()`/`hull_upgraded_message`/`scout_purchased_message`/`ship_selected_message` 호출부에서 `run.maxFuel`/`self.expedition.maxFuel` 인자를 제거해 새 포맷 시그니처와 맞췄다.
+- `game/self_test.lua`의 관련 하드코딩된 문구 회귀 테스트(`loadoutLines().stats`, `shopLoadoutLines().stats/shipPreview/hullPreview`, `hull_upgraded_message`/`scout_purchased_message`/`ship_selected_message` 결과)를 전부 새 포맷에 맞춰 갱신(RED 확인 후 GREEN).
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`, 1080×1920)를 vision으로 확인해 LAUNCH LOADOUT 카드가 "최대연료 100  선체 3" 대신 "선체 3"만 표시함을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- 3번 항목은 이번 사이클로 "연료 무제한 반영" 부분(HUD 상태 줄 + LOADOUT/SHOP 텍스트 모두)이 완료되었다. 남은 부분은 "아이콘 기반 HUD 간소화"(탭 발사/선체 내구도/자금/속도를 로켓·방패·동전·스피드미터 아이콘으로 재구성)로, 이번 사이클에서는 착수하지 않았다.
+- 다음 사이클 다음 슬라이스: 3번 항목의 남은 아이콘 기반 재구성, 또는 4번(불필요한 텍스트 제거 검토 — `S%02d`, "STARTER", "발사 장비" 타이틀, "무피격 N" 라벨, "평균 $" 등)으로 진행.

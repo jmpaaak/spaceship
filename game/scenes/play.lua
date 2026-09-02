@@ -586,7 +586,7 @@ function M:loadoutLines()
     local run = self.expedition
     return {
         ship = i18n.t("loadout_ship", string.upper(run.selectedShipId)),
-        stats = i18n.t("stats_line", run.maxFuel, run.maxDurability),
+        stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
@@ -666,7 +666,7 @@ function M:shopLoadoutLines()
     local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
     return {
         ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
-        stats = i18n.t("stats_line", run.maxFuel, run.maxDurability),
+        stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
@@ -676,9 +676,9 @@ function M:shopLoadoutLines()
         shipStatus = shipStatus,
         shipAffordable = shipAffordable,
         shipPreview = i18n.t("ship_preview_line",
-            string.upper(previewShipId), previewFuel, previewDurability),
+            string.upper(previewShipId), previewDurability),
         shipPreviewCompact = i18n.t("ship_preview_compact",
-            string.upper(previewShipId), previewFuel, previewDurability),
+            string.upper(previewShipId), previewDurability),
         shipPreviewForecast = launchForecastLine(run, previewFuel),
         fuelAction = i18n.t("fuel_action_line",
             run.fuelUpgradeLevel, run.fuelUpgradeLevel + 1, run.fuelUpgradeCost),
@@ -692,7 +692,7 @@ function M:shopLoadoutLines()
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
         hullPreview = i18n.t("stats_line",
-            run.maxFuel, run.maxDurability + run.durabilityUpgradeAmount),
+            run.maxDurability + run.durabilityUpgradeAmount),
         hullPreviewCompact = i18n.t("hull_preview_compact",
             run.maxDurability + run.durabilityUpgradeAmount),
         hullPreviewForecast = launchForecastLine(run),
@@ -1151,7 +1151,7 @@ function M:keypressed(key)
         if expedition.buyDurabilityUpgrade(self.expedition) then
             self.message = i18n.t(
                 "hull_upgraded_message",
-                self.expedition.durabilityUpgradeLevel, self.expedition.maxFuel,
+                self.expedition.durabilityUpgradeLevel,
                 self.expedition.maxDurability,
                 launchForecastLine(self.expedition), self.expedition.money)
         else
@@ -1192,7 +1192,7 @@ function M:keypressed(key)
                 expedition.selectShip(self.expedition, "scout")
                 self.message = i18n.t(
                     "scout_purchased_message",
-                    self.expedition.maxFuel, self.expedition.maxDurability,
+                    self.expedition.maxDurability,
                     launchForecastLine(self.expedition), self.expedition.money)
             else
                 self.message = purchaseShortfallMessage(self.expedition.money,
@@ -1202,7 +1202,7 @@ function M:keypressed(key)
             local shipId = self.expedition.selectedShipId == "scout" and "starter" or "scout"
             expedition.selectShip(self.expedition, shipId)
             self.message = i18n.t("ship_selected_message",
-                string.upper(shipId), self.expedition.maxFuel, self.expedition.maxDurability,
+                string.upper(shipId), self.expedition.maxDurability,
                 launchForecastLine(self.expedition))
         end
         return
