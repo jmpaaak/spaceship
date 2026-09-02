@@ -522,6 +522,38 @@ local function testLaunchRocketIcon()
         "first vertex must be the centered nose tip at the icon's topmost y")
 end
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+-- second slice): the hull-durability status segment gets a small shield
+-- icon paired with it. Pure-geometry regression test mirroring
+-- testLaunchRocketIcon: even-length flat polygon list, horizontally
+-- symmetric around cx, spans above and below cy.
+local function testHullShieldIcon()
+    local PlayScene = require("game.scenes.play")
+    local points = PlayScene.shieldIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "shield silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "shield must span above and below its center")
+    -- Horizontally symmetric: for every point at x, there is a matching
+    -- point at (2*cx - x) with the same y among the vertex list.
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "shield outline must be horizontally symmetric around cx")
+    end
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -2271,6 +2303,7 @@ function M.run()
     testDebris()
     testBackgroundStars()
     testLaunchRocketIcon()
+    testHullShieldIcon()
 
     print("SPACESHIP_UNIT_OK")
 end

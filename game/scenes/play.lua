@@ -213,6 +213,34 @@ end
 M.launchIconSize = 14
 M.launchIconGap = 12
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+-- second slice): pair the hull-durability readout (the "H%d/%d" segment of
+-- hud.status) with a small shield silhouette so durability reads as an
+-- icon+number at a glance instead of a bare letter prefix. Pure function
+-- (no love.graphics calls) so self_test can verify the geometry headless:
+-- a pentagon-ish shield outline (flat top, pointed bottom) that is
+-- horizontally symmetric around cx and spans above and below cy.
+function M.shieldIconPoints(cx, cy, size)
+    local halfWidth = size * 0.45
+    local topY = cy - size * 0.5
+    local midY = cy
+    local pointY = cy + size * 0.5
+    return {
+        cx - halfWidth, topY,
+        cx + halfWidth, topY,
+        cx + halfWidth, midY,
+        cx, pointY,
+        cx - halfWidth, midY,
+    }
+end
+
+-- Diameter of the shield icon and the horizontal gap between the icon's
+-- right edge and the status text's left edge, both in internal-canvas
+-- pixels. The status text draw x shifts right by this much whenever the
+-- icon is drawn so the icon never overlaps the "H%d/%d ..." text.
+M.hullIconSize = 8
+M.hullIconGap = 4
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1700,6 +1728,19 @@ function M:draw()
         love.graphics.setColor(0.7, 0.9, 1)
     end
     love.graphics.print(hud.primary, 5, hudY)
+    -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+    -- second slice): pair the hull-durability status text with a small
+    -- shield icon drawn just to its left, then shift the text right by
+    -- the icon's footprint so it never overlaps the shield.
+    local function drawStatusWithShield(y)
+        local iconCenterX = 5 + M.hullIconSize / 2
+        local iconCenterY = y + M.hullIconSize / 2
+        love.graphics.setColor(0.6, 0.85, 1)
+        love.graphics.polygon("fill",
+            M.shieldIconPoints(iconCenterX, iconCenterY, M.hullIconSize))
+        love.graphics.setColor(0.7, 0.9, 1)
+        love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, y)
+    end
     if hud.samples then
         -- Extra vertical gap (M.hudPrimaryStatusGap) below the samples line
         -- pushes the fuel/hull/slot status line away from the DIST/CASH
@@ -1707,19 +1748,18 @@ function M:draw()
         -- than "fuel gauge gates distance" (docs/feedback/INBOX.md item 2).
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.print(hud.samples, 5, 16 + galaxyShift)
-        love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.print(hud.status, 5, 30 + M.hudPrimaryStatusGap + galaxyShift)
+        drawStatusWithShield(30 + M.hudPrimaryStatusGap + galaxyShift)
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
             love.graphics.print(hud.earth, 5, 43 + M.hudPrimaryStatusGap + galaxyShift)
             love.graphics.print(hud.returnProgress, 5, 55 + M.hudPrimaryStatusGap + galaxyShift)
         end
     elseif hud.best then
-        love.graphics.print(hud.status, 5, (isLaunchHud and 13 or 18) + galaxyShift)
+        drawStatusWithShield((isLaunchHud and 13 or 18) + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.print(hud.best, 5, (isLaunchHud and 22 or 30) + galaxyShift)
     else
-        love.graphics.print(hud.status, 5, 18 + galaxyShift)
+        drawStatusWithShield(18 + galaxyShift)
     end
     if isLaunchHud then
         love.graphics.setFont(previousHudFont)

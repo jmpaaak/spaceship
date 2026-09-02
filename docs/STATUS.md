@@ -217,3 +217,16 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
 - `docs/feedback/INBOX.md`의 4번 항목("불필요한 텍스트 제거 검토")에 남아있던 세부 항목 5개(S00 제거, 무피격→도달예상, 평균→기대값, 개발 임시본 축소)가 모두 완료되었다. 남은 것은 4번 항목의 상위 슬라이스인 "STARTER" 함선명 제거와 "발사 장비" 패널 타이틀 검토, 그리고 3번 항목의 아이콘 기반 HUD 재구성.
 - 다음 사이클 다음 슬라이스: 4번 항목의 남은 두 세부(함선 이름 "STARTER" 제거, "발사 장비" 패널 타이틀 검토) 중 하나를 처리하거나, 3번 항목의 아이콘 기반 HUD 재구성으로 진행.
+
+## HUD 상태 줄 선체 내구도(H%d/%d)에 방패 아이콘 추가 — 아이콘 기반 HUD 간소화 두 번째 슬라이스 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 두 번째 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작.
+
+- 이전 사이클이 "탭하여 발사" 버튼에 로켓 아이콘을 추가했으나(item 3 첫 슬라이스), 선체 내구도(`hud_status`의 `H%d/%d` 세그먼트)·자금($)·속도 세 정보는 여전히 아이콘 없이 텍스트만으로 표시되고 있었다. 이번 슬라이스에서 선체 내구도에 방패 아이콘을 추가했다.
+- `game/scenes/play.lua`에 순수 함수 `M.shieldIconPoints(cx, cy, size)`(윗변 평평·아래로 뾰족한 오각형 실루엣의 flat 폴리곤 점 목록, `rocketIconPoints`와 같은 패턴)와 `M.hullIconSize = 8`(px)/`M.hullIconGap = 4`(px)를 추가했다.
+- `M:draw()`의 상태 줄 렌더가 갈라지는 세 분기(samples 있음/best 있음/기본)가 모두 공유하는 신규 로컬 헬퍼 `drawStatusWithShield(y)`를 추가해, 상태 텍스트 왼쪽에 이 방패를 하늘색(0.6,0.85,1)으로 그린 뒤 텍스트 draw x좌표를 아이콘 폭+간격(12px)만큼 오른쪽으로 밀어 겹치지 않게 했다. launch 페이즈의 8px 소형 폰트, 다른 페이즈의 기본 14px 폰트 모두에서 동작한다.
+- `game/self_test.lua`에 `testHullShieldIcon()`(신규)을 추가했다 — 폴리곤이 짝수 개 점, 3개 이상 정점, 중심 위아래로 걸쳐 있음, cx 기준 수평 대칭임을 회귀 검증한다(순수 함수라 headless 검증만으로 RED/GREEN 확인, 기존 `testLaunchRocketIcon`과 동일 패턴).
+- 실제 LÖVE 런타임 캡처 두 건을 vision으로 확인: `GAME_CAPTURE_PHASE=ascending-wide-warning`(1080x1920, 기본 14px 폰트)에서 방패 아이콘이 "H3/3 상승 S00" 텍스트 왼쪽에 겹침 없이 렌더링됨을 확인했고, `GAME_CAPTURE_PHASE=launch`(1080x1920, 8px 소형 폰트)에서도 "H3/3 발사" 왼쪽에 방패가 잘림 없이 정상 렌더링됨을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 3번 항목에 이번 슬라이스 완료 표시 및 구현 요약을 추가(3번 항목 자체는 남은 아이콘화 대상이 자금($)·속도 두 가지이므로 "처리 대기"에 유지).
+- 다음 사이클 다음 슬라이스: 3번 항목의 남은 부분(자금 아이콘화, 속도/스피드미터 아이콘화) 중 하나, 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환 — 데이터 구조 설계부터 슬라이스 필요)으로 진행.
