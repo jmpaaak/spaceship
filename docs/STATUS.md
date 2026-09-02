@@ -1,4 +1,17 @@
 # STATUS
+## 연료 소진 잔재 UI/문구 제거 슬라이스: LAUNCH LOADOUT의 "FUEL LV.%d" 잔여 표기 제거 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 11(c)(코드 전반의 죽은 연료 소모 로직/문구 정리)의 다음 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.
+
+- LAUNCH LOADOUT 카드/EARTH SHOP NEXT LAUNCH 프리뷰의 `upgrades_line`(`game/i18n.lua`)이 항목 11b(연료탱크 업그레이드 구매 UI 제거) 이후에도 여전히 `"FUEL LV.%d  HULL LV.%d"`(en)/`"연료 LV.%d  선체 LV.%d"`(ko) 포맷으로 연료 레벨 세그먼트를 표시하고 있었다. 연료 업그레이드 구매 UI가 EARTH SHOP에서 완전히 제거된 지금(`game/scenes/play.lua`의 `M:shopLoadoutLines()`가 더 이상 `fuelAction` 등을 반환하지 않음) 이 값은 플레이어가 도달할 수 있는 어떤 액션으로도 0에서 절대 올라가지 않는 영구적으로 죽은 표기이며(엔진 레벨 `expedition.buyFuelUpgrade`는 오직 기존 회귀 테스트 픽스처가 직접 호출하는 용도로만 남아있음), "연료 레벨이 존재하고 올릴 수 있다"는 오해를 계속 줄 수 있었다.
+- `game/i18n.lua`의 `upgrades_line`을 en `"HULL LV.%d"`, ko `"선체 LV.%d"`로 단순화해 연료 세그먼트를 완전히 제거했다(포맷 인자 1개로 축소).
+- `game/scenes/play.lua`의 `M:loadoutLines()`(런치 화면)와 `M:shopLoadoutLines()`(EARTH SHOP NEXT LAUNCH 프리뷰) 두 호출부 모두 `i18n.t("upgrades_line", run.durabilityUpgradeLevel)`로 갱신(기존에 넘기던 `run.fuelUpgradeLevel` 인자 제거).
+- `game/self_test.lua`의 8개 회귀 단언(`starterLoadout.upgrades`, `upgradedLoadout.upgrades`, `resetLoadout.upgrades`, `starterNextLaunch.upgrades`, `fueledNextLaunch.upgrades`, `reinforcedNextLaunch.upgrades`, `scoutNextLaunch.upgrades`, `reselectedNextLaunch.upgrades`)를 새 단일-인자 포맷(`"HULL LV.%d"`)에 맞춰 갱신했다.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`, `GAME_SCALE=4` → 1440×2560, ko 로케일)를 vision으로 확인해 LAUNCH LOADOUT 카드가 "선체 3" 다음 줄에 "선체 LV.0"만 표시하고 "연료 LV" 문구가 전혀 보이지 않음을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 11번 항목에 이번 슬라이스 완료를 기록했다. 항목 11(c) 남은 작업: `run.fuel`/`run.maxFuel`/`fuelBurnRate`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount`/`buyFuelUpgrade`/`bankedFuelBonus`/`pendingFuelBonus`/`scoutFuelBonus` 등 `game/expedition.lua`의 필드/함수 자체는 여전히 존재하며 슬롯머신 연료 보너스(`fuel_bonus_line`, `NEXT LAUNCH FUEL +%d`)와 SCOUT 함선 트레이드오프(`SCOUT GAINS +40 FUEL`)라는 두 곳에서 여전히 실제로 사용/노출되는 활성 게임플레이 요소이므로(슬롯 보너스는 다음 발사 시 `maxFuel`에 더해지고, `launchForecast`가 그 `maxFuel`로 REACH/SLOTS를 계산해 실제 게임 수치에 영향을 줌), 이들을 "죽은 필드"로 일괄 제거하는 것은 항목 11(a)(REACH/SLOTS 예보의 연료-종속 프레이밍 재정의)와 게임 밸런스(연료 보너스가 상승 거리/슬롯 기회에 실질적 영향을 주는 유일한 경로)를 함께 재설계해야 하는 더 큰 작업이다.
+- 다음 사이클 다음 슬라이스: 항목 11(a)(`launchForecastLine`/`M.launchForecast`가 여전히 "이 연료로 도달 가능한 거리"라는 연료-종속 프레이밍을 함수/변수명에 내포 — REACH/SLOTS 예보를 연료와 무관한 개념으로 재정의할지, 아니면 연료가 실제로 상승 거리를 결정하는 활성 메커니즘(슬롯 보너스/SCOUT 트레이드오프 경유)이라는 점을 받아들이고 라벨만 유지할지 설계 결정 필요), 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환 — 이후 7~15번 항목들의 기반이 되는 큰 작업)으로 진행.
+
 ## 연료 소진 잔재 UI/로직 제거 첫 슬라이스: game/ship.lua의 죽은 fuel>0 게이트 제거 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 11번(연료 소진 관련 잔재 UI/문구 전면 제거)의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.

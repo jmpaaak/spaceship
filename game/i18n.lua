@@ -32,7 +32,14 @@ locales.en = {
     forecast_line = "REACH %d  SLOTS %d",
     loadout_ship = "SHIP %s",
     stats_line = "HULL %d",
-    upgrades_line = "FUEL LV.%d  HULL LV.%d",
+    -- docs/feedback/INBOX.md item 11(c): the fuel-upgrade UI purchase row
+    -- was removed from EARTH SHOP (item 11b) because fuel no longer
+    -- constrains flight, but this line still displayed a "FUEL LV.%d"
+    -- segment that could never advance past 0 through any reachable
+    -- player action (engine-level expedition.buyFuelUpgrade stays only
+    -- for older regression fixtures), permanently misleading. Now shows
+    -- only the still-purchasable hull upgrade level.
+    upgrades_line = "HULL LV.%d",
     steer_speed_line = "STEER SPEED %d",
     fuel_bonus_line = "NEXT LAUNCH FUEL +%d",
     purchase_left = "LEFT $%d",
@@ -148,7 +155,7 @@ locales.ko = {
     forecast_line = "도달예상 %d  슬롯 %d",
     loadout_ship = "함선 %s",
     stats_line = "선체 %d",
-    upgrades_line = "연료 LV.%d  선체 LV.%d",
+    upgrades_line = "선체 LV.%d",
     steer_speed_line = "조종속도 %d",
     fuel_bonus_line = "다음발사 연료 +%d",
     purchase_left = "잔액 $%d",

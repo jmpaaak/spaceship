@@ -743,8 +743,7 @@ function M:loadoutLines()
         -- it is the single default STARTER hull).
         shipLabel = string.upper(run.selectedShipId),
         stats = i18n.t("stats_line", run.maxDurability),
-        upgrades = i18n.t("upgrades_line",
-            run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
+        upgrades = i18n.t("upgrades_line", run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
         odds = self:slotOddsLine(),
@@ -820,8 +819,7 @@ function M:shopLoadoutLines()
     return {
         ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
         stats = i18n.t("stats_line", run.maxDurability),
-        upgrades = i18n.t("upgrades_line",
-            run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
+        upgrades = i18n.t("upgrades_line", run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
         scoutTradeoff = self.scoutTradeoffLines(run),
         shipAction = shipAction,
