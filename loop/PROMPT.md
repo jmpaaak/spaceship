@@ -10,13 +10,13 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## Required workflow
 
-1. Read only the pending feedback, game design, and current status needed for this cycle.
+1. Read only the pending feedback, game design, and current status needed for this cycle. Do not read `docs/STATUS.md` in full — latest `##` section plus next slice only. Do not read `docs/STATUS_HISTORY.md` unless tracking a specific past bug.
 2. Run `git status --short` before editing. Preserve and finish prior-cycle work; do not overwrite it.
 3. If preflight reports FAIL, reproduce and fix that exact failure first.
 4. Otherwise choose one small user-visible or state-machine slice from the top pending requirement.
 5. Use test-driven development: add a failing engine-hosted test, observe RED, implement, then run focused GREEN tests.
 6. Run `make verify LOVE=/Users/jm/.local/bin/love` before a checkpoint commit.
-7. Update `docs/STATUS.md` with verified facts and the exact next slice. Commit owned changes with a specific message. Push only after tests pass and the worktree is clean.
+7. Update `docs/STATUS.md` with verified facts for this cycle only (do not rewrite old history) and the exact next slice. Commit owned changes with a specific message. Push only after tests pass and the worktree is clean.
 
 ## Non-negotiable game rules
 

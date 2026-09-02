@@ -24,6 +24,38 @@ def pending_feedback(root: Path) -> list[str]:
     return [line for line in section.splitlines() if line.strip().startswith("-")]
 
 
+MAX_PENDING_PROMPT_ITEMS = 4
+MAX_PENDING_PROMPT_CHARS = 220
+
+
+def compact_pending_feedback(pending: list[str]) -> list[str]:
+    """Keep only short titles in the cycle prompt; the agent reads INBOX.md."""
+    titles: list[str] = []
+    for line in pending:
+        stripped = line.strip()
+        if not stripped.startswith("-"):
+            continue
+        cut = stripped
+        for marker in (":**", ":"):
+            index = stripped.find(marker)
+            if 0 < index <= MAX_PENDING_PROMPT_CHARS:
+                cut = stripped[: index + (1 if marker == ":" else 3)]
+                break
+        else:
+            cut = stripped[:MAX_PENDING_PROMPT_CHARS].rstrip()
+        titles.append(cut)
+    if not titles:
+        return pending
+    header = [
+        "PENDING_FEEDBACK titles only. Read docs/feedback/INBOX.md 처리 대기 for the full text of the one item this cycle will finish.",
+    ]
+    shown = titles[:MAX_PENDING_PROMPT_ITEMS]
+    omitted = len(titles) - len(shown)
+    if omitted:
+        shown.append(f"- ({omitted} more pending items omitted from this cycle prompt)")
+    return header + shown
+
+
 def check(label: str, command: list[str], root: Path, env: dict[str, str], timeout: int) -> tuple[bool, str]:
     try:
         result = subprocess.run(
@@ -63,7 +95,7 @@ def main() -> int:
     if pending:
         print("PREFLIGHT_RESULT=READY")
         print("PENDING_FEEDBACK:")
-        print("\n".join(pending))
+        print("\n".join(compact_pending_feedback(pending)))
         return READY
     print("PREFLIGHT_RESULT=IDLE")
     return IDLE
