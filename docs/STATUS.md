@@ -361,3 +361,13 @@
 - 이로써 사용자가 요청한 발라트로 스타일 항목(외곽 글로우/림 라이트, 부드러운 그림자, 채도 높은 그라디언트, 등급별 반짝임·파티클, 임팩트 시 스케일 펀치·흔들림) 전부가 렌더링 레이어에 구현·검증됐다.
 - 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 표본 등급 비례 스크린쉐이크 (완료)
+
+- `docs/feedback/INBOX.md`의 발라트로 핵심 게임성 이식 목록(2026-09-02 후속 확정 사항) 3번 "스코어 비례 스크린쉐이크"를 처리했다. 기존 충돌 흔들림(`shipShake`)은 고정 강도(`(self.shipShake / shipShakeDuration) * 3`)였는데, 표본 등급(`common`/`rare`/`epic`)에 비례해 강도가 스케일링되도록 고쳤다.
+- `game/scenes/play.lua`에 `sampleTierShakeMultipliers`(`common 1.0`·`rare 1.6`·`epic 2.4`)와 `PlayScene.sampleTierShakeMultiplier(tier)`를 추가했다. `M.new`가 신규 필드 `shipShakeMagnitude`를 `common` 배율로 초기화하고, 충돌 처리(`update`)가 `world.sampleTier(planet)`으로 충돌한 행성의 등급을 조회해 `self.shipShakeMagnitude`를 해당 배율로 갱신한다. `draw`의 흔들림 오프셋 계산이 `shakeStrength = (self.shipShake / shipShakeDuration) * 3 * self.shipShakeMagnitude`로 배율을 곱해 등급이 높을수록 흔들림 반경이 커진다.
+- engine-hosted 테스트(RED 확인: `PlayScene.sampleTierShakeMultiplier`가 nil이라 `game/self_test.lua:164`에서 즉시 실패하는 것을 확인한 뒤 구현)가 세 등급 배율이 `common(1.0) < rare(1.6) < epic(2.4)` 순으로 증가하는지, 고도 500(rare) 충돌 시 `shipShakeMagnitude`가 rare 배율로, 고도 0(common) 충돌 시 common 배율로 설정되는지 검증한다.
+- `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:25`).
+- 흔들림은 매 프레임 무작위 오프셋(`math.random() * 2 - 1`)이라 정적 스크린샷으로는 배율 차이를 시각적으로 증명할 수 없다(이전 사이클의 반짝임 애니메이션과 동일한 제약: "정적 스냅샷이며, 시간 경과에 따른 애니메이션 자체는 engine-hosted 시간 누적 테스트로 검증"). 실기기 캡처 대신 등급별 정확한 배율 설정을 engine-hosted 테스트로 직접 검증했다.
+- 남은 다음 슬라이스 후보: (1) `docs/feedback/INBOX.md` 발라트로 이식 목록 중 남은 항목(점진적 시너지/빌드업 STREAK 배율, 숫자 롤업 피드백, 선택 안의 트레이드오프 통일, 불확실성 속의 기대감 접근 글로우 가속), (2) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (3) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+
+

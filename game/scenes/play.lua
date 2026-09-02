@@ -170,6 +170,23 @@ local shipShakeDuration = 0.25
 M.shipPunchDuration = shipPunchDuration
 M.shipShakeDuration = shipShakeDuration
 
+-- Score-proportional screen shake (docs/feedback/INBOX.md 2026-09-02 후속
+-- 확정 사항 #3): the collision shake used to be a fixed magnitude
+-- regardless of what was hit. Scale the shake strength by the tier of the
+-- planet collided with (world.sampleTier) so a bigger/rarer planet "hits
+-- harder" and the player feels the difference through shake alone, the
+-- same way particle density/glow already differ by tier.
+local sampleTierShakeMultipliers = {
+    common = 1.0,
+    rare = 1.6,
+    epic = 2.4,
+}
+
+local function sampleTierShakeMultiplier(tier)
+    return sampleTierShakeMultipliers[tier] or sampleTierShakeMultipliers.common
+end
+M.sampleTierShakeMultiplier = sampleTierShakeMultiplier
+
 local warningLabelMargin = 2
 
 local function clampLabelX(centerX, textWidth, viewportWidth, margin)
@@ -245,6 +262,7 @@ function M.new(options)
         time = 0,
         shipPunch = 0,
         shipShake = 0,
+        shipShakeMagnitude = sampleTierShakeMultiplier("common"),
         slotSpin = nil,
         touches = {},
         message = "TAP TO LAUNCH",
@@ -688,6 +706,7 @@ function M:update(dt)
                     kind = "damage",
                 })
                 self.shipShake = shipShakeDuration
+                self.shipShakeMagnitude = sampleTierShakeMultiplier(world.sampleTier(planet))
                 if expedition.damage(self.expedition, damage) then
                     self:persistBestAltitude()
                     self.message = string.format("SHIP DESTROYED  BEST %d  META RESET", math.floor(self.expedition.bestAltitude))
@@ -983,7 +1002,7 @@ function M:draw()
     love.graphics.push()
     local shakeX, shakeY = 0, 0
     if self.shipShake > 0 then
-        local shakeStrength = (self.shipShake / shipShakeDuration) * 3
+        local shakeStrength = (self.shipShake / shipShakeDuration) * 3 * self.shipShakeMagnitude
         shakeX = (math.random() * 2 - 1) * shakeStrength
         shakeY = (math.random() * 2 - 1) * shakeStrength
     end
