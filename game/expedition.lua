@@ -364,6 +364,20 @@ function M.buySteeringUpgrade(run)
     return true
 end
 
+-- Ship trade-offs expressed as explicit GAINS/LOSSES rows, matching the
+-- planet-style-editor tool's numeric format (label + signed value) so the
+-- same shape can later describe per-planet-style risk/reward without a
+-- separate ad-hoc string format for each source.
+function M.shipTradeoff(run, shipId)
+    if shipId == "scout" then
+        return {
+            gains = { { label = "FUEL", value = string.format("%+d", run.scoutFuelBonus) } },
+            losses = { { label = "HULL", value = string.format("%+d", run.scoutDurabilityBonus) } },
+        }
+    end
+    return { gains = {}, losses = {} }
+end
+
 function M.buyShip(run, shipId)
     if run.phase ~= "settlement" or shipId ~= "scout" or run.ownedShips.scout
         or run.money < run.scoutShipCost then

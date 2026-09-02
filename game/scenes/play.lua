@@ -478,6 +478,24 @@ local function purchaseShortfallMessage(money, cost, item)
     return string.format("NEED $%d MORE FOR %s", cost - money, item)
 end
 
+-- Formats the SCOUT ship trade-off using the same explicit
+-- "GAINS <label> <value>" / "LOSSES <label> <value>" numeric format the
+-- planet-style-editor tool uses for its GAINS/LOSSES rows, so future
+-- per-planet-style risk/reward can reuse the same on-screen convention.
+-- Returned as two short lines (rather than one combined line) because the
+-- combined string measures 176px at the shop's small font, wider than the
+-- 148px full-width shop column (measured via GAME_FONTPROBE=1) and would
+-- wrap and overlap the next row.
+function M.scoutTradeoffLines(run)
+    local tradeoff = expedition.shipTradeoff(run, "scout")
+    local gain = tradeoff.gains[1]
+    local loss = tradeoff.losses[1]
+    return {
+        string.format("SCOUT GAINS %s %s", gain.value, gain.label),
+        string.format("LOSSES %s %s", loss.value, loss.label),
+    }
+end
+
 function M:shopLoadoutLines()
     local run = self.expedition
     local shipAction
@@ -516,8 +534,7 @@ function M:shopLoadoutLines()
         upgrades = string.format("FUEL LV.%d  HULL LV.%d",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
-        scoutTradeoff = string.format("SCOUT %+d FUEL / %+d HULL",
-            run.scoutFuelBonus, run.scoutDurabilityBonus),
+        scoutTradeoff = self.scoutTradeoffLines(run),
         shipAction = shipAction,
         shipStatus = shipStatus,
         shipAffordable = shipAffordable,
@@ -1187,7 +1204,13 @@ function M:draw()
         local statusX, statusW = shopStatusColumnX, shopStatusColumnW
         local fullX, fullW = 16, viewport.width - 32
         local row = 140
-        local rowStep = 9
+        -- Was 9px until the SCOUT trade-off gained a second line (GAINS/
+        -- LOSSES split, see M.scoutTradeoffLines), pushing the 20-row total
+        -- past the y=307 DEV PLACEHOLDER footer (measured via a real LÖVE
+        -- capture: TAP: RELAUNCH landed at y=311, overlapping the footer).
+        -- Tightened to 8px so the last row (TAP: RELAUNCH) lands at
+        -- y=140+19*8=292, comfortably above the footer again.
+        local rowStep = 8
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.fuelAction, actionX, row, actionW, "left")
         love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
@@ -1228,7 +1251,9 @@ function M:draw()
         love.graphics.printf(nextLaunch.yieldPreview, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.scoutTradeoff, fullX, row, fullW, "center")
+        love.graphics.printf(nextLaunch.scoutTradeoff[1], fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.printf(nextLaunch.shipPreview, fullX, row, fullW, "center")

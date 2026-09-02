@@ -401,3 +401,14 @@
 - `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록(1~6번) 중 5번(선택 안의 트레이드오프 통일)만 남았다.
 - 남은 다음 슬라이스 후보: (1) `docs/feedback/INBOX.md` 발라트로 이식 목록 5번(선택 안의 트레이드오프를 `planet-style-editor`의 GAINS/LOSSES 수치 포맷과 통일), (2) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (3) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## SCOUT 트레이드오프를 GAINS/LOSSES 포맷으로 통일 (완료, 이전 사이클 미완성 인계)
+
+- 이전 사이클(cycle 7)이 `game/expedition.lua`/`game/scenes/play.lua`/`game/self_test.lua`에 검증된 GREEN 변경을 워킹트리에 남긴 채 `docs/STATUS.md` 갱신과 커밋을 완료하지 못하고 종료했다. 이번 사이클이 preflight `git diff` 검사를 통과한 그 변경을 이어받아 완료했다. `docs/feedback/INBOX.md` 발라트로 이식 목록 5번(선택 안의 트레이드오프)을 처리한다: 기존 SCOUT 배의 `SCOUT +40 FUEL / -1 HULL` 단일 문자열을 `planet-style-editor` 도구의 GAINS/LOSSES 수치 행 포맷과 통일했다.
+- `game/expedition.lua`에 `M.shipTradeoff(run, shipId)`를 추가해 `{gains = {{label="FUEL", value="+40"}}, losses = {{label="HULL", value="-1"}}}` 형태로 반환한다(`planet-style-editor/src/planets.js`의 `style.gains`/`style.losses`와 같은 라벨+부호 값 모양). `game/scenes/play.lua`에 `M.scoutTradeoffLines(run)`을 추가해 `"SCOUT GAINS +40 FUEL"`/`"LOSSES -1 HULL"` 두 줄로 표시한다. 결합 단일 줄(176px, `GAME_FONTPROBE=1`로 실측)이 148px 상점 전체 폭 컬럼(폰트 크기 7에서도 154px)을 초과해 두 줄 분리가 필요했다. `shopLoadoutLines().scoutTradeoff`가 기존 문자열 대신 이 2원소 테이블을 반환한다.
+- engine-hosted 테스트가 STARTER/SCOUT 두 next-launch 시나리오에서 `scoutTradeoff[1] == "SCOUT GAINS +40 FUEL"`, `scoutTradeoff[2] == "LOSSES -1 HULL"`을 검증한다.
+- 이번 사이클에서 추가 검증한 결함: SCOUT 트레이드오프가 2줄로 늘어나며 EARTH SHOP 패널 총 줄 수가 19→20줄로 늘었는데, 기존 `rowStep=9`를 그대로 유지한 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)에서 `TAP: RELAUNCH`가 `DEV PLACEHOLDER` 푸터(y=307)와 겹치는 실제 렌더링 결함을 vision으로 발견했다(`build/spaceship-runtime-preview-tradeoff-check.png`, 로컬 산출물로 커밋 제외). `game/scenes/play.lua`의 `rowStep`을 `9`→`8`로 좁혀 마지막 줄이 `y=140+19*8=292`에 오도록 고쳤다.
+- 수정 후 재캡처한 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-newbest`, `1440×2560`)로 `SCOUT GAINS +40 FUEL`/`LOSSES -1 HULL` 두 줄을 포함한 20줄 전체가 겹침·잘림 없이 표시되고 `TAP: RELAUNCH`가 `DEV PLACEHOLDER` 위에 정상 배치되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-tradeoff-fixed.png`, 로컬 산출물로 커밋 제외).
+- `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:25`).
+- `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록(1~6번) 전체가 이제 완료됐다.
+- 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+
