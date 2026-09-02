@@ -268,3 +268,15 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
 - 3번 항목의 아이콘 기반 HUD 간소화 대상 4가지(탭 발사=로켓, 선체 내구도=방패, 자금=동전, 속도) 중 3가지가 완료되었다. 남은 것은 속도(조종속도/엔진속도)의 스피드미터 아이콘화뿐이다.
 - 다음 사이클 다음 슬라이스: 3번 항목의 마지막 남은 부분(속도/스피드미터 아이콘화 — LAUNCH LOADOUT의 `steer_speed_line`에 아이콘 추가), 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
+## EARTH SHOP에서 연료탱크 업그레이드 구매 항목 제거 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 11(b)(연료 소진 관련 잔재 UI/문구 전면 제거)의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean)였으나, 세션 시작 `git status --short`에 이전 사이클이 남긴 미커밋 변경(`game/scenes/play.lua`, `game/self_test.lua` — 연료탱크 업그레이드 구매 UI 제거 작업)이 있어 그대로 이어받아 완료했다.
+
+- 연료가 더 이상 상승을 제약하지 않는데도(`game/expedition.lua` 주석 "Fuel is no longer a flight constraint"), EARTH SHOP이 여전히 `T/F FUEL LV.n>n+1 $50` 구매 행과 키보드 단축키(`f`)·터치 타깃(`fuel` 행)을 제공해 "연료를 사면 더 안전/멀리 간다"는 오해를 계속 주고 있었다.
+- `game/scenes/play.lua`: `M:shopLoadoutLines()`가 `fuelAction`/`fuelPreviewForecast`/`fuelStatus`/`fuelAffordable` 필드를 더 이상 반환하지 않도록 변경(연료 상한 미리보기 계산(`previewFuel`)도 함께 제거). `M:keypressed`의 `f`/`down`/`s` 연료 구매 분기를 제거. `M:touchpressed`의 `fuel` 터치 키 분기를 제거. `M.settlementTouchRows`에서 연료 구매 행(top=144, bottom=188)을 제거하고, HULL/STEERING 두 컬럼 행을 y=180에서 시작하도록 재배치(연료 행이 차지하던 44px 밴드가 사라져 나머지 행들이 위로 당겨짐). `M:draw()`의 EARTH SHOP 렌더에서 연료 액션/프리뷰 두 줄(및 그 `rowStep` 소비)을 제거하고 HULL/STEERING 렌더 시작 y를 180으로 통일.
+- `game/self_test.lua`: 신규 `testFuelUpgradeHiddenFromShop()`이 `shopLoadoutLines()`의 네 연료 필드가 모두 `nil`임, `settlementTouchRows`에 `fuel` 키를 가진 행/컬럼이 없음, `keypressed("f")`가 레벨/잔액을 바꾸지 않음을 회귀 검증한다(RED 확인 후 GREEN). 기존에 `scene:keypressed("f")`로 연료를 구매하던 다수의 회귀 테스트(구매 성공 메시지 검증 포함)를 엔진 레벨 `expedition.buyFuelUpgrade(run)` 직접 호출로 갱신하고, 삭제된 UI 표면에 의존하던 단언(`fuelAction`/`fuelPreviewForecast`/`fuelStatus`/`FUEL TANK UPGRADED` 메시지, `NEED $30 MORE FOR FUEL UPGRADE` 숏폴 메시지, `touchpressed("fuel", ...)`)을 `nil`/미변경 검증으로 교체했다. 엔진 레벨 `expedition.buyFuelUpgrade`/`fuelUpgradeLevel`/`maxFuel` 자체는 항목 11(c)의 "죽은 필드 정리" 슬라이스로 남겨두어 이번 슬라이스에서는 UI 표면만 제거했다.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=settlement-shortfunds`, 1080×1920, ko 로케일)를 vision으로 확인해 EARTH SHOP 카드가 H(선체)/G(조종속도)/Y(산출)/V(구매) 네 행만 보여주고 연료 구매 행/문구가 전혀 렌더링되지 않음을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md` 항목 11에 이번 슬라이스 완료 표시 및 구현 요약을 추가.
+- 다음 사이클 다음 슬라이스: 항목 11의 남은 부분(a: `launchForecastLine`/`M.launchForecast`의 연료-종속 프레이밍 자체 재정의, c: `run.fuel`/`fuelBurnRate`/`burnManeuverFuel`/`buyFuelUpgrade`/`fuelUpgradeLevel` 등 죽은 필드 전반 정리) 중 하나, 또는 3번 항목의 마지막 남은 부분(속도/스피드미터 아이콘화), 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.

@@ -77,21 +77,14 @@ M.returnControls = returnControls
 -- The settlement panel's summary-card font/spacing was shrunk to free the
 -- extra 10px of vertical room this needed. See game/self_test.lua for the
 -- device-scale check.
--- Added the SAMPLE YIELD upgrade as a fifth touch target alongside
--- fuel/hull/ship/relaunch. A straight 5-way vertical split of the same
--- 140-320 canvas range would only give 36px/row -- under the 44pt
--- accessibility minimum this table was previously fixed to meet (see
--- game/self_test.lua's canvasPixelsToPoints check). Instead YIELD and SHIP
--- share one 44px-tall row, split left/right at x=90 (each half is 90
--- canvas px wide, far past the 44pt accessibility minimum on the width
--- axis too), keeping all four rows at the full 44 canvas px band height.
--- STEERING is the fourth GAME_DESIGN.md meta upgrade axis (see
--- game/self_test.lua's steeringRun scenario); it reuses the same
--- column-split pattern by sharing the HULL row (left=HULL, right=STEERING)
--- instead of adding a fifth 36px-tall row that would fall back under the
--- 44pt accessibility minimum.
+-- docs/feedback/INBOX.md item 11(b): the fuel-tank upgrade purchase was
+-- removed from EARTH SHOP because fuel no longer constrains flight, so
+-- buying more tank capacity implied a safety that does not exist. The
+-- remaining four actions (HULL, STEERING, YIELD, SHIP) plus RELAUNCH
+-- still occupy four 44px bands. HULL/STEERING share one row and
+-- YIELD/SHIP share the next, matching the previous split-column pattern
+-- so no fifth 36px-tall row is needed.
 local settlementTouchRows = {
-    { key = "fuel", top = 144, bottom = 188 },
     {
         top = 188, bottom = 232,
         columns = {
@@ -816,14 +809,11 @@ function M:shopLoadoutLines()
         shipStatus = i18n.t("owned_label")
         previewShipId = "scout"
     end
-    local previewFuel = run.baseFuel + run.fuelUpgradeLevel * run.fuelUpgradeAmount
     local previewDurability = run.baseDurability
         + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
     if previewShipId == "scout" then
-        previewFuel = previewFuel + run.scoutFuelBonus
         previewDurability = previewDurability + run.scoutDurabilityBonus
     end
-    local fuelStatus, fuelAffordable = purchaseStatus(run.money, run.fuelUpgradeCost)
     local hullStatus, hullAffordable = purchaseStatus(run.money, run.durabilityUpgradeCost)
     local yieldStatus, yieldAffordable = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
     local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
@@ -842,12 +832,7 @@ function M:shopLoadoutLines()
             string.upper(previewShipId), previewDurability),
         shipPreviewCompact = i18n.t("ship_preview_compact",
             string.upper(previewShipId), previewDurability),
-        shipPreviewForecast = launchForecastLine(run, previewFuel),
-        fuelAction = i18n.t("fuel_action_line",
-            run.fuelUpgradeLevel, run.fuelUpgradeLevel + 1, run.fuelUpgradeCost),
-        fuelPreviewForecast = launchForecastLine(run, run.maxFuel + run.fuelUpgradeAmount),
-        fuelStatus = fuelStatus,
-        fuelAffordable = fuelAffordable,
+        shipPreviewForecast = launchForecastLine(run),
         hullAction = i18n.t("hull_action_line",
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
@@ -1299,17 +1284,6 @@ function M:update(dt)
 end
 
 function M:keypressed(key)
-    if self.expedition.phase == "settlement" and (key == "f" or key == "down" or key == "s") then
-        if expedition.buyFuelUpgrade(self.expedition) then
-            self.message = i18n.t("fuel_upgraded_message",
-                self.expedition.fuelUpgradeLevel, self.expedition.maxFuel,
-                launchForecastLine(self.expedition), self.expedition.money)
-        else
-            self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.fuelUpgradeCost, i18n.t("item_fuel_upgrade"))
-        end
-        return
-    end
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
         if expedition.buyDurabilityUpgrade(self.expedition) then
             self.message = i18n.t(
@@ -1418,9 +1392,7 @@ function M:touchpressed(id, x, y)
                         end
                     end
                 end
-                if key == "fuel" then
-                    self:keypressed("f")
-                elseif key == "hull" then
+                if key == "hull" then
                     self:keypressed("h")
                 elseif key == "steering" then
                     self:keypressed("g")
@@ -1961,30 +1933,13 @@ function M:draw()
             love.graphics.printf(summaryExtraLine, 22, 127, viewport.width - 44, "center")
         end
         local nextLaunch = self:shopLoadoutLines()
-        local actionX, actionW = shopActionColumnX, shopActionColumnW
-        local statusX, statusW = shopStatusColumnX, shopStatusColumnW
         local fullX, fullW = 16, viewport.width - 32
-        local row = 140
-        -- Was 9px until the SCOUT trade-off gained a second line (GAINS/
-        -- LOSSES split, see M.scoutTradeoffLines), pushing the 20-row total
-        -- past the y=307 DEV PLACEHOLDER footer (measured via a real LÖVE
-        -- capture: TAP: RELAUNCH landed at y=311, overlapping the footer).
-        -- Tightened to 8px so the last row (TAP: RELAUNCH) lands at
-        -- y=140+19*8=292, comfortably above the footer again.
+        -- HULL and STEERING occupy the first remaining shop band after the
+        -- fuel-tank purchase row was removed (docs/feedback/INBOX.md item
+        -- 11(b)). Keep the previously-verified y=180 start so the compact
+        -- HULL/STEERING columns stay inside their 44px touch band.
+        local row = 180
         local rowStep = 8
-        row = 156
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.fuelAction, actionX, row, actionW, "left")
-        love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
-            nextLaunch.fuelAffordable and 1 or 0.4, nextLaunch.fuelAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.fuelStatus, statusX, row, statusW, "right")
-        row = row + rowStep
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.fuelPreviewForecast, fullX, row, fullW, "center")
-        row = row + rowStep
-        -- HULL and STEERING
-        row = 180
-        rowStep = 8
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")

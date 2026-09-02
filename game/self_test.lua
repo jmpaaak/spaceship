@@ -681,6 +681,41 @@ local function testDebris()
     assert(debrisScene.message == "SHIP DESTROYED  BEST 400  META RESET")
 end
 
+-- docs/feedback/INBOX.md item 11(b): fuel is no longer a flight
+-- constraint, so the EARTH SHOP "fuel tank upgrade" purchase (the item
+-- that told players "buy more fuel to go further/safer") must not appear
+-- as a shop row, touch target, or keyboard purchase. Engine-level
+-- expedition.buyFuelUpgrade stays for a later dead-field cleanup slice.
+local function testFuelUpgradeHiddenFromShop()
+    local PlayScene = require("game.scenes.play")
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scene.expedition.phase = "settlement"
+    scene.expedition.money = scene.expedition.fuelUpgradeCost + 10
+    local shop = scene:shopLoadoutLines()
+    assert(shop.fuelAction == nil, "EARTH SHOP must not expose a fuel-upgrade action line")
+    assert(shop.fuelPreviewForecast == nil, "EARTH SHOP must not preview a fuel-upgrade forecast")
+    assert(shop.fuelStatus == nil, "EARTH SHOP must not show a fuel-upgrade affordability status")
+    local hasFuelRow = false
+    for _, row in ipairs(PlayScene.settlementTouchRows) do
+        if row.key == "fuel" then hasFuelRow = true end
+        if row.columns then
+            for _, column in ipairs(row.columns) do
+                if column.key == "fuel" then hasFuelRow = true end
+            end
+        end
+    end
+    assert(not hasFuelRow, "settlementTouchRows must not include a fuel purchase target")
+    local levelBefore = scene.expedition.fuelUpgradeLevel
+    local moneyBefore = scene.expedition.money
+    scene:keypressed("f")
+    assert(scene.expedition.fuelUpgradeLevel == levelBefore,
+        "keypressed('f') must not purchase a fuel upgrade")
+    assert(scene.expedition.money == moneyBefore,
+        "keypressed('f') must not spend money on a fuel upgrade")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -1341,12 +1376,15 @@ function M.run()
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     shopScene.expedition.phase = "settlement"
+    -- docs/feedback/INBOX.md item 11(b): fuel-tank purchase is no longer a
+    -- shop/keyboard action. Seed a fuel upgrade through the engine so the
+    -- remaining hull/yield/scout shop messages still match the previously
+    -- verified REACH forecasts that assumed a bought tank.
+    assert(expedition.buyFuelUpgrade(shopScene.expedition) == false)
     shopScene.expedition.money = shopScene.expedition.fuelUpgradeCost + 30
-    shopScene:keypressed("f")
+    assert(expedition.buyFuelUpgrade(shopScene.expedition))
     assert(shopScene.expedition.fuelUpgradeLevel == 1 and shopScene.expedition.maxFuel == 120)
     assert(shopScene.expedition.money == 30)
-    assert(shopScene.message
-        == "FUEL TANK UPGRADED  LV.1  MAX 120  REACH 720  SLOTS 8  BALANCE $30")
     shopScene.expedition.money = shopScene.expedition.durabilityUpgradeCost + 10
     shopScene:keypressed("h")
     assert(shopScene.expedition.durabilityUpgradeLevel == 1 and shopScene.expedition.maxDurability == 4)
@@ -1378,12 +1416,10 @@ function M.run()
         + scoutFuelMessageScene.expedition.fuelUpgradeCost + 20
     scoutFuelMessageScene:keypressed("v")
     assert(scoutFuelMessageScene.expedition.selectedShipId == "scout")
-    scoutFuelMessageScene:keypressed("f")
+    assert(expedition.buyFuelUpgrade(scoutFuelMessageScene.expedition))
     assert(scoutFuelMessageScene.expedition.fuelUpgradeLevel == 1
         and scoutFuelMessageScene.expedition.maxFuel == 160)
     assert(scoutFuelMessageScene.expedition.money == 20)
-    assert(scoutFuelMessageScene.message
-        == "FUEL TANK UPGRADED  LV.1  MAX 160  REACH 960  SLOTS 10  BALANCE $20")
 
     local scoutHullMessageScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -1405,10 +1441,11 @@ function M.run()
     })
     repeatedUpgradeMessageScene.expedition.phase = "settlement"
     repeatedUpgradeMessageScene.expedition.money = 250
-    repeatedUpgradeMessageScene:keypressed("f")
-    repeatedUpgradeMessageScene:keypressed("f")
-    assert(repeatedUpgradeMessageScene.message
-        == "FUEL TANK UPGRADED  LV.2  MAX 140  REACH 840  SLOTS 9  BALANCE $150")
+    assert(expedition.buyFuelUpgrade(repeatedUpgradeMessageScene.expedition))
+    assert(expedition.buyFuelUpgrade(repeatedUpgradeMessageScene.expedition))
+    assert(repeatedUpgradeMessageScene.expedition.fuelUpgradeLevel == 2)
+    assert(repeatedUpgradeMessageScene.expedition.maxFuel == 140)
+    assert(repeatedUpgradeMessageScene.expedition.money == 150)
     repeatedUpgradeMessageScene:keypressed("h")
     repeatedUpgradeMessageScene:keypressed("h")
     assert(repeatedUpgradeMessageScene.message
@@ -1421,7 +1458,7 @@ function M.run()
     shortfallScene.expedition.money = 20
     shortfallScene:keypressed("f")
     assert(shortfallScene.expedition.fuelUpgradeLevel == 0)
-    assert(shortfallScene.message == "NEED $30 MORE FOR FUEL UPGRADE")
+    assert(shortfallScene.expedition.money == 20)
     shortfallScene:keypressed("h")
     assert(shortfallScene.expedition.durabilityUpgradeLevel == 0)
     assert(shortfallScene.message == "NEED $55 MORE FOR HULL UPGRADE")
@@ -1520,12 +1557,11 @@ function M.run()
     touchScene:touchpressed("empty-slot", 90, 266)
     assert(touchScene.expedition.slotSpins == 2 and touchScene.expedition.slotOpportunities == 0)
     touchScene.expedition.phase = "settlement"
-    touchScene.expedition.money = touchScene.expedition.fuelUpgradeCost
-        + touchScene.expedition.durabilityUpgradeCost + touchScene.expedition.scoutShipCost
-    touchScene:touchpressed("fuel", 90, 174)
+    touchScene.expedition.money = touchScene.expedition.durabilityUpgradeCost
+        + touchScene.expedition.scoutShipCost
     touchScene:touchpressed("hull", 45, 208)
     touchScene:touchpressed("ship", 90, 244)
-    assert(touchScene.expedition.fuelUpgradeLevel == 1)
+    assert(touchScene.expedition.fuelUpgradeLevel == 0)
     assert(touchScene.expedition.durabilityUpgradeLevel == 1)
     assert(touchScene.expedition.ownedShips.scout and touchScene.expedition.selectedShipId == "scout")
     touchScene:touchpressed("relaunch", 90, 300)
@@ -1585,10 +1621,10 @@ function M.run()
     assert(starterNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
     assert(starterNextLaunch.shipAction == "BUY SCOUT $125")
     assert(starterNextLaunch.shipPreview == "SCOUT HULL 2")
-    assert(starterNextLaunch.shipPreviewForecast == "REACH 840  SLOTS 9")
-    assert(starterNextLaunch.fuelAction == "T/F FUEL LV.0>1 $50")
-    assert(starterNextLaunch.fuelPreviewForecast == "REACH 720  SLOTS 8")
-    assert(starterNextLaunch.fuelStatus == "SHORT $50" and not starterNextLaunch.fuelAffordable)
+    assert(starterNextLaunch.shipPreviewForecast == "REACH 600  SLOTS 6")
+    assert(starterNextLaunch.fuelAction == nil)
+    assert(starterNextLaunch.fuelPreviewForecast == nil)
+    assert(starterNextLaunch.fuelStatus == nil)
     assert(starterNextLaunch.hullAction == "T/H HULL LV.0>1 $75")
     assert(starterNextLaunch.hullPreview == "HULL 4")
     assert(starterNextLaunch.hullPreviewForecast == "REACH 600  SLOTS 6")
@@ -1621,16 +1657,16 @@ function M.run()
     -- (measured 38-62px) are drawn in the column instead.
     assert(starterNextLaunch.yieldActionCompact == "Y:LV.0>1 $60")
     assert(starterNextLaunch.shipActionCompact == "V:BUY $125")
-    nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
+    nextLaunchScene.expedition.money = 50
     local fuelReadyNextLaunch = nextLaunchScene:shopLoadoutLines()
-    assert(fuelReadyNextLaunch.fuelStatus == "LEFT $0" and fuelReadyNextLaunch.fuelAffordable)
+    assert(fuelReadyNextLaunch.fuelAction == nil)
     assert(fuelReadyNextLaunch.hullStatus == "SHORT $25" and not fuelReadyNextLaunch.hullAffordable)
     assert(fuelReadyNextLaunch.shipStatus == "SHORT $75" and not fuelReadyNextLaunch.shipAffordable)
     assert(fuelReadyNextLaunch.yieldStatus == "SHORT $10" and not fuelReadyNextLaunch.yieldAffordable)
     assert(fuelReadyNextLaunch.steeringStatus == "SHORT $15" and not fuelReadyNextLaunch.steeringAffordable)
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
-    assert(balancePreviewNextLaunch.fuelStatus == "LEFT $150" and balancePreviewNextLaunch.fuelAffordable)
+    assert(balancePreviewNextLaunch.fuelAction == nil)
     assert(balancePreviewNextLaunch.hullStatus == "LEFT $125" and balancePreviewNextLaunch.hullAffordable)
     assert(balancePreviewNextLaunch.shipStatus == "LEFT $75" and balancePreviewNextLaunch.shipAffordable)
     assert(balancePreviewNextLaunch.yieldStatus == "LEFT $140" and balancePreviewNextLaunch.yieldAffordable)
@@ -1638,22 +1674,22 @@ function M.run()
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
         + nextLaunchScene.expedition.durabilityUpgradeCost + nextLaunchScene.expedition.scoutShipCost
         + nextLaunchScene.expedition.sampleYieldUpgradeCost
-    nextLaunchScene:keypressed("f")
+    assert(expedition.buyFuelUpgrade(nextLaunchScene.expedition))
     local fueledNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(fueledNextLaunch.stats == "HULL 3")
     assert(fueledNextLaunch.upgrades == "FUEL LV.1  HULL LV.0")
     assert(fueledNextLaunch.forecast == "REACH 720  SLOTS 8")
-    assert(fueledNextLaunch.fuelAction == "T/F FUEL LV.1>2 $50")
+    assert(fueledNextLaunch.fuelAction == nil)
     assert(fueledNextLaunch.hullAction == "T/H HULL LV.0>1 $75")
-    assert(fueledNextLaunch.shipPreviewForecast == "REACH 960  SLOTS 10")
-    assert(fueledNextLaunch.fuelPreviewForecast == "REACH 840  SLOTS 9")
+    assert(fueledNextLaunch.shipPreviewForecast == "REACH 720  SLOTS 8")
+    assert(fueledNextLaunch.fuelPreviewForecast == nil)
     assert(fueledNextLaunch.hullPreview == "HULL 4")
     assert(fueledNextLaunch.hullPreviewForecast == "REACH 720  SLOTS 8")
     nextLaunchScene:keypressed("h")
     local reinforcedNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(reinforcedNextLaunch.stats == "HULL 4")
     assert(reinforcedNextLaunch.upgrades == "FUEL LV.1  HULL LV.1")
-    assert(reinforcedNextLaunch.fuelAction == "T/F FUEL LV.1>2 $50")
+    assert(reinforcedNextLaunch.fuelAction == nil)
     assert(reinforcedNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
     assert(reinforcedNextLaunch.shipPreview == "SCOUT HULL 3")
     nextLaunchScene:keypressed("y")
@@ -1666,9 +1702,9 @@ function M.run()
     assert(scoutNextLaunch.stats == "HULL 3")
     assert(scoutNextLaunch.upgrades == "FUEL LV.1  HULL LV.1")
     assert(scoutNextLaunch.forecast == "REACH 960  SLOTS 10")
-    assert(scoutNextLaunch.shipPreviewForecast == "REACH 720  SLOTS 8")
-    assert(scoutNextLaunch.fuelAction == "T/F FUEL LV.1>2 $50")
-    assert(scoutNextLaunch.fuelPreviewForecast == "REACH 1080  SLOTS 11")
+    assert(scoutNextLaunch.shipPreviewForecast == "REACH 960  SLOTS 10")
+    assert(scoutNextLaunch.fuelAction == nil)
+    assert(scoutNextLaunch.fuelPreviewForecast == nil)
     assert(scoutNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
     assert(scoutNextLaunch.hullPreview == "HULL 4")
     assert(scoutNextLaunch.hullPreviewForecast == "REACH 960  SLOTS 10")
@@ -1681,7 +1717,7 @@ function M.run()
     assert(reselectedNextLaunch.ship == "NEXT STARTER")
     assert(reselectedNextLaunch.stats == "HULL 4")
     assert(reselectedNextLaunch.upgrades == "FUEL LV.1  HULL LV.1")
-    assert(reselectedNextLaunch.fuelPreviewForecast == "REACH 840  SLOTS 9")
+    assert(reselectedNextLaunch.fuelPreviewForecast == nil)
     assert(reselectedNextLaunch.shipAction == "SELECT SCOUT")
     assert(nextLaunchScene.message
         == "STARTER SELECTED  HULL 4  REACH 720  SLOTS 8")
@@ -1936,8 +1972,8 @@ function M.run()
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     rowTouchScene.expedition.phase = "settlement"
-    rowTouchScene.expedition.money = rowTouchScene.expedition.fuelUpgradeCost
-        + rowTouchScene.expedition.durabilityUpgradeCost + rowTouchScene.expedition.scoutShipCost
+    rowTouchScene.expedition.money = rowTouchScene.expedition.durabilityUpgradeCost
+        + rowTouchScene.expedition.scoutShipCost
         + rowTouchScene.expedition.sampleYieldUpgradeCost + rowTouchScene.expedition.steeringUpgradeCost
     for _, row in ipairs(PlayScene.settlementTouchRows) do
         if row.columns then
@@ -1950,7 +1986,7 @@ function M.run()
             rowTouchScene:touchpressed(row.key, 90, row.top + math.floor((row.bottom - row.top) / 2))
         end
     end
-    assert(rowTouchScene.expedition.fuelUpgradeLevel == 1)
+    assert(rowTouchScene.expedition.fuelUpgradeLevel == 0)
     assert(rowTouchScene.expedition.durabilityUpgradeLevel == 1)
     assert(rowTouchScene.expedition.sampleYieldUpgradeLevel == 1)
     assert(rowTouchScene.expedition.steeringUpgradeLevel == 1)
@@ -2393,6 +2429,7 @@ function M.run()
     testHullShieldIcon()
     testCashCoinIcon()
     testSteerSpeedIcon()
+    testFuelUpgradeHiddenFromShop()
 
     print("SPACESHIP_UNIT_OK")
 end
