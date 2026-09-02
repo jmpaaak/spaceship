@@ -422,3 +422,18 @@
 - `docs/feedback/INBOX.md`의 항목 12 하위에 처리 상황을 append했다.
 - 여전히 미착수: 실제 상점/체크포인트 UI에서 `M.rollGearOffer`를 호출해 플레이어에게 카드를 제시하는 화면(레인 스코프상 `play.lua` 담당), 항목14 (C) chainTrigger/rerollBonus의 run 소비, 항목14 (E) detectionRadius/autoCollect의 run 배선(예: minimap.lua 스캔 반경에 실제 연결).
 - 다음 사이클 다음 슬라이스: 항목14 (E) detectionRadius를 `minimap.lua`의 `viewRadius`/`checkpointSearchCellRadius`에 연결(이 역시 순수 함수는 이미 `gear.effectiveDetectionRadius`로 존재), 또는 (C) chainTrigger/rerollBonus를 상점 리롤/체인 트리거 소비 로직에 배선.
+
+## [gear 레인] 항목14(B) streakMultiplier 마지막 잔여 배선 — 전 카테고리(A~G) run 소비자 완성 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 14의 (B) `streakMultiplier`(문서상 유일하게 "스키마에 등록만 되고 실제 run 소비자가 없는" 상태로 남아있던 효과 타입)를 배선했다. 이 레인(`spaceship-gear` 브랜치)은 항목13→9→10→12→14가 이미 1차 완료된 상태에서, `docs/GEAR_SCHEMA.md`의 "Effect schema categories A~F" 섹션이 명시적으로 남겨둔 마지막 gap을 처리했다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- `game/gear.lua`의 신규 `M.effectiveStreakBonusPerStep(baseBonusPerStep, parts)` — 순수 변환 함수, 카드의 `streakMultiplier` 값을 "스텝당 퍼센트 포인트 가산"으로 해석해 기본 스텝율에 더한다(예: value=10 → 스텝당 +10%p).
+- `game/expedition.lua`의 신규 `M.streakBonusPerStep(run)` — 기존 항목14(C)/(E)에서 만든 `combinedGearList(run)` 헬퍼(hull+engine 합산, 카테고리 무관)를 재사용해 `gear.effectiveStreakBonusPerStep`을 실제 run의 장착 목록에 적용한다. `M.streakMultiplier(streakCount, run)`이 선택적 `run` 인자를 받아 하드코딩된 0.2 상수 대신 `M.streakBonusPerStep(run)`을 사용하도록 변경했다(무인자 호출은 기존 0.2 기본값으로 정상 폴백해 하위 호환 유지). `M.collectSample(run, value, hueKey)`이 `run`을 전달해 실제 원정 중 장착 부품이 표본 채집 스트릭 배율에 실제로 반영되도록 배선했다.
+- `game/data/hull_parts.json`에 이 효과 타입을 처음 사용하는 카드 `hull_combo_matrix`(rare, streakMultiplier +10, tags economy/control)를 신규 추가했다.
+- `game/self_test.lua`의 신규 `testGearStreakMultiplierWiring()`이 다음을 회귀 검증한다: 미장착 run의 스텝율/streakMultiplier(3)가 배선 전 기저값(0.2/1.4)과 정확히 일치, `run` 인자 없이 호출해도 정상 동작(하위 호환), `hull_combo_matrix` 장착 시 스텝율이 0.3으로 상승하고 streakMultiplier(3)이 1.6으로 상승, ENGINE 슬롯 장착도 동일하게 반영(카테고리 무관 설계), `collectSample`의 3연속 동일 계열 채집 호출이 실제로 성장하는 배율(1.0→1.3→1.6)을 반환함(RED 확인 후 GREEN — 구현 전 `attempt to call field 'streakBonusPerStep' (a nil value)` 에러로 실패).
+- `docs/GEAR_SCHEMA.md`에 "Item 14(B) streakMultiplier run wiring" 섹션을 신규 추가해 계약을 문서화했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/data/hull_parts.json`/`game/expedition.lua`/`game/gear.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 14 하위에 처리 상황을 append했다.
+- **이제 항목14의 (A)~(G) 전체 효과 타입이 최소 1개 실제 run-level 소비자를 갖는다** — 항목13→9→10→12→14 레인 스코프의 순수 함수/데이터/기본 run 배선 레이어가 사실상 완료된 상태다.
+- 다음 사이클 다음 슬라이스: 항목9(c)(슬롯 수 유지하되 카드 획득/교체가 잦아지는 루프 설계) 또는 항목10(c)/항목7(획득 경로 3원화 — 상점 행성 구매/체크포인트 확정 드롭/지구 상점 범용 구매) 중 우선순위에 따라 선택. 두 항목 모두 `game/world.lua`의 상점 행성 결정론적 좌표 생성이나 `play.lua`의 실제 장착/구매 UI가 필요해 이 레인의 "최소 로더 호출" 예외 범위를 넘어설 가능성이 높다 — 다음 사이클에서는 순수 함수/데이터 계층에서 준비 가능한 부분(예: 상점 행성 좌표 생성 함수 자체, 또는 여전히 미착수인 chainTrigger/rerollBonus/detectionRadius/autoCollect의 실제 게임플레이 소비 로직 설계)부터 검토가 필요하다.

@@ -344,6 +344,20 @@ function M.totalEffect(parts, effectType)
     return total
 end
 
+-- Item 14(B) streakMultiplier consumer wiring (docs/GEAR_SCHEMA.md's
+-- "streakMultiplier is defined in the schema... but its consumer... lives
+-- in gameplay code" gap): a card's streakMultiplier value is percentage
+-- POINTS added to the per-consecutive-collection streak bonus rate (e.g.
+-- value = 10 means "+10 percentage points per streak step", turning a
+-- base 20%-per-step streak into 30%-per-step). Purely additive across all
+-- equipped parts, same shape as every other category (A)/(B) total; the
+-- actual streak-count bookkeeping (which hue family, how many in a row)
+-- remains game/expedition.lua's job, this only converts the equipped
+-- gear's raw effect value into a per-step growth rate.
+function M.effectiveStreakBonusPerStep(baseBonusPerStep, parts)
+    return baseBonusPerStep + M.totalEffect(parts, "streakMultiplier") / 100
+end
+
 -- (C) chainTrigger: "특정 조건마다 다른 장착 카드 효과 재발동" — the raw
 -- effect value is a count of extra re-triggers; fractional totals round
 -- down (a card list can't grant half a re-trigger) and can never go

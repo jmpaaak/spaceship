@@ -508,3 +508,47 @@ flying) — all out of this lane's scope (`play.lua`/`world.lua`/
 slice, every category (A)~(F) conversion function named in item 14 now has
 at least one run-level wrapper wired in `game/expedition.lua`.
 
+### Item 14(B) streakMultiplier run wiring (follow-up slice)
+
+`streakMultiplier` was the one (B) category effect type still unwired at
+the end of the previous slice — `docs/GEAR_SCHEMA.md`'s own "Effect schema
+categories A~F" section explicitly named it as deferred ("its consumer...
+lives in gameplay code... does not yet convert it into a run-state
+multiplier"). This slice closes that gap:
+
+- `game/gear.lua`'s new `M.effectiveStreakBonusPerStep(baseBonusPerStep,
+  parts)` is a pure conversion: a card's `streakMultiplier` raw value is
+  interpreted as percentage POINTS added to the base per-consecutive-
+  collection growth rate (`value = 10` means "+10 percentage points per
+  streak step"), summed additively across every equipped part (category
+  (A)/(B) totals are always additive-first, matching every other
+  category's design).
+- `game/expedition.lua`'s new `M.streakBonusPerStep(run)` combines this
+  with `combinedGearList(run)` (the same hull+engine category-agnostic
+  helper item 14 (C)/(E) already established — a streak-boosting card
+  isn't restricted to one slot type in the schema). `M.streakMultiplier`
+  now takes an optional second `run` argument and uses
+  `M.streakBonusPerStep(run)` instead of the previous hardcoded `0.2`
+  constant (calling with no `run` argument still falls back to the base
+  `0.2` rate, so any other call site continues to work unmodified).
+  `M.collectSample(run, value, hueKey)` passes `run` through so an
+  in-flight expedition's actual equipped gear affects the awarded streak
+  bonus.
+- A new bundled hull card `hull_combo_matrix` (rare, `streakMultiplier`
+  +10, tags `economy`/`control`) exercises this in tests/gameplay — the
+  first bundled card of this effect type.
+
+`game/self_test.lua`'s `testGearStreakMultiplierWiring` regression-checks:
+an unequipped run's per-step rate and `streakMultiplier(3)` match the
+pre-wiring baseline (`0.2`/`1.4`) exactly, `streakMultiplier` still works
+when called with no `run` argument at all, an equipped `hull_combo_matrix`
+raises the per-step rate to `0.3` and `streakMultiplier(3)` to `1.6`, an
+ENGINE-slot equip of the same card also raises the rate (category-agnostic
+combined-list design), and `collectSample`'s three consecutive
+same-hue-family calls on a boosted run return the correctly growing
+multiplier end-to-end (`1.0 → 1.3 → 1.6`).
+
+With this slice, **every** category (A)~(F) effect type named in item 14
+now has at least one real run-state consumer, not just a validated-and-
+ignored schema entry.
+

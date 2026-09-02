@@ -323,6 +323,18 @@
       "effects": [
         { "type": "shopDiscount", "value": 20 }
       ]
+    },
+    {
+      "id": "hull_combo_matrix",
+      "name": "Combo Matrix",
+      "nameKo": "콤보 매트릭스",
+      "icon": "▦",
+      "rarity": "rare",
+      "tags": ["economy", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "streakMultiplier", "value": 10 }
+      ]
     }
   ]
 }

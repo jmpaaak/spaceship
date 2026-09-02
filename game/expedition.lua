@@ -536,10 +536,35 @@ end
 -- collecting consecutive same-hue-family samples, mirroring a card game's
 -- combo scaling. streakCount 0 or 1 is the base x1.0 rate; each additional
 -- consecutive same-family sample adds +0.2 (x1.2, x1.4, x1.6, ...).
-local streakBonusPerStep = 0.2
-function M.streakMultiplier(streakCount)
+local baseStreakBonusPerStep = 0.2
+
+-- Shared by every category-agnostic (C)/(E)/(B) gear-effect wrapper below:
+-- both run.equippedGear (hull) and run.equippedEngineParts (engine) count
+-- toward these totals even though item 10 keeps the two SLOT lists
+-- independent -- effect types like streakMultiplier/chainTrigger/
+-- rerollBonus/detectionRadius/autoCollect aren't restricted to one
+-- category in the schema, so a card on either slot should contribute.
+local function combinedGearList(run)
+    local parts = {}
+    for _, part in ipairs(run.equippedGear or {}) do parts[#parts + 1] = part end
+    for _, part in ipairs(run.equippedEngineParts or {}) do parts[#parts + 1] = part end
+    return parts
+end
+
+-- Item 14(B) streakMultiplier wiring: equipped hull/engine parts carrying
+-- a streakMultiplier effect raise the per-step growth rate above the base
+-- 0.2 (gear.effectiveStreakBonusPerStep is the pure percentage-point
+-- conversion; run.equippedGear/run.equippedEngineParts are category-
+-- agnostic here, matching item 14 (C)/(E)'s combinedGearList design since
+-- a streak-boosting card could plausibly live on either slot type).
+function M.streakBonusPerStep(run)
+    if not run then return baseStreakBonusPerStep end
+    return gearModule.effectiveStreakBonusPerStep(baseStreakBonusPerStep, combinedGearList(run))
+end
+
+function M.streakMultiplier(streakCount, run)
     if not streakCount or streakCount <= 1 then return 1 end
-    return 1 + (streakCount - 1) * streakBonusPerStep
+    return 1 + (streakCount - 1) * M.streakBonusPerStep(run)
 end
 
 -- hueKey is the optional hue-family key from world.hueFamily/specimenKind
@@ -555,7 +580,7 @@ function M.collectSample(run, value, hueKey)
         run.sampleStreakCount = 1
     end
     run.sampleStreakFamily = hueKey
-    local streakMultiplier = M.streakMultiplier(run.sampleStreakCount)
+    local streakMultiplier = M.streakMultiplier(run.sampleStreakCount, run)
     local awarded = math.floor(value * M.sampleYieldMultiplier(run) * streakMultiplier + 0.5)
     run.sampleCount = run.sampleCount + 1
     run.pendingSampleValue = run.pendingSampleValue + awarded
@@ -614,13 +639,6 @@ end
 -- run.equippedGear and run.equippedEngineParts count toward the totals,
 -- matching item 10's design that hull/engine are independent SLOTS but
 -- not independent stat pools for every effect type.
-local function combinedGearList(run)
-    local parts = {}
-    for _, part in ipairs(run.equippedGear or {}) do parts[#parts + 1] = part end
-    for _, part in ipairs(run.equippedEngineParts or {}) do parts[#parts + 1] = part end
-    return parts
-end
-
 function M.chainTriggerCount(run)
     return gearModule.chainTriggerCount(combinedGearList(run))
 end
