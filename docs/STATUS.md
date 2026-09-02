@@ -42,6 +42,18 @@
 - 코드 변경 없음(문서 정리만). `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
 - 다음 사이클 다음 슬라이스: (1) AetherAI 로그인 자격 증명이 제공되면 공식 에셋 export 진행(human-gated 유지), (2) 세로 상승형 핵심 루프/발라트로 스타일/런치 화면 지구 탐험물 전시 3개 항목은 코드·실기기 검증까지 완료되어 사용자 최종 확인만 남음, (3) 새 feedback이 등록되면 그것을 우선 처리한다.
 
+## 은하계 체크포인트 마커 + 오프차트 화살표 + 은하별 배경 틴트 (완료, 2026-09-02)
+
+`docs/feedback/INBOX.md` "처리 대기" 최우선 항목 1을 완료했다(이전 사이클이 이미 구현해둔 uncommitted diff를 이번 사이클에서 실제 LÖVE 런타임 캡처로 검증하고 커밋함).
+
+- `game/world.lua`: `M.galaxyBackgroundColor(galaxy)` 순수 함수 추가 — 홈 태양계는 기존 남색(`homeBackgroundColor`) 유지, 그 외 은하는 `gx, gy` 해시 기반 보라/청록/붉은 3색 계열 중 하나로 결정적 틴트 부여. `game/scenes/play.lua`의 `draw()`가 `world.galaxyContaining`으로 현재 은하를 찾아 `love.graphics.clear`에 반영.
+- `game/minimap.lua`: `M.nearestCheckpointDirection(shipX, shipY)` 순수 함수 추가 — `checkpointSearchCellRadius`(`galaxyCellRadius`+4) 범위에서 가장 가까운 비-milkyway 은하의 방향/거리를 반환. `M.view()`가 `checkpointBeyond/Dx/Dy/Distance/Id`를 노출.
+- `game/scenes/play.lua`의 `drawMinimap()`: `hub=true`(체크포인트) 은하는 기존보다 큰 점 + 시간에 따라 pulse하는 반짝이는 링으로 그려 일반 은하 점과 구분. 미니맵 밖에 있는 가장 가까운 체크포인트는 기존 지구-복귀 화살표(주황)와 겹치지 않는 자홍색 화살표로 표시. 기존에 사용자가 긍정한 "현재 위치 은하 = 고리 표기" 방식은 그대로 보존.
+- `game/self_test.lua`의 `testMinimap`: `nearestCheckpointDirection`의 단위벡터/거리/빈 결과 케이스, `checkpointBeyond` 노출, `galaxyBackgroundColor`의 홈 은하 고정값·비홈 은하 결정성·차별성 회귀 테스트 추가.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-checkpoint-tint`, 1080×1920, `main.lua`에 기존재하던 캡처 하네스 사용)를 vision으로 확인: 미니맵의 두 은하 점 모두 반짝이는 노란 링(체크포인트 마커)이 태양 마커·지구(청록 점)와 뚜렷이 구분되어 보임, 배경 클리어 픽셀이 `(16, 5, 6)`으로 붉은(ember) 계열 틴트가 적용됨(홈 남색이 아님)을 확인.
+- `make test` GREEN(`make verify` 대상 LÖVE 헤드리스 유닛+스모크, asset manifest 유닛 전부 OK).
+- 남은 다음 슬라이스: `docs/feedback/INBOX.md`의 "UI/HUD 대대적 정리 6개 항목" 중 1번(배경 별 밀도 증가) 또는 2~3번(고도→거리 라벨링, 연료 무제한 HUD 정리)부터 착수.
+
 ## 연료 제약 제거 + 운석/쓰레기 + 미니맵 은하 고리 (완료, 2026-09-02)
 
 연료는 더 이상 비행을 끊지 않는다. 실패 조건은 행성 충돌과 같은 운석·쓰레기 충돌이며, 미니맵은 태양 중심 고리와 은하명을 보여 준다.

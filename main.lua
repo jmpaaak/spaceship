@@ -322,6 +322,33 @@ function love.load()
         scene.ship.y = -400
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
+    elseif capturePhase == "ascending-checkpoint-tint" then
+        -- Real-runtime capture for docs/feedback/INBOX.md item 1: a
+        -- checkpoint galaxy marker/arrow + galaxy background tint. Places
+        -- the ship inside a non-home galaxy (found by scanning cells) so
+        -- the HUD galaxy name changes, the background tint shifts away
+        -- from the solar-system navy, and (since the ship is now far from
+        -- Earth/home) the minimap should show at least the checkpoint
+        -- galaxy's own special hub marker on the chart.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 400
+        local world = require("game.world")
+        local found
+        for gy = -3, 3 do
+            for gx = -3, 3 do
+                if not (gx == 0 and gy == 0) then
+                    local galaxy = world.galaxy(gx, gy)
+                    if galaxy then found = galaxy break end
+                end
+            end
+            if found then break end
+        end
+        if found then
+            scene.ship.x = found.x
+            scene.ship.y = found.y
+        end
+        world.nearbyPlanets = function() return {} end
     elseif capturePhase == "full-loop-relaunch" then
         -- Real-runtime capture for the top pending feedback item (세로
         -- 상승형 로그라이트 핵심 루프): drives the actual scene through a

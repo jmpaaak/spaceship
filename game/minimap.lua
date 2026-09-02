@@ -29,6 +29,17 @@ M.chartRadius = world.galaxyCellSize * 5
 -- How many galaxy-grid cells around the player to plot.
 M.galaxyCellRadius = 2
 
+-- Wider search window used only to find the nearest off-chart checkpoint
+-- for the direction arrow (docs/feedback/INBOX.md item 1). Every
+-- non-milkyway galaxy already has a guaranteed hub/checkpoint planet at
+-- its center (world.hubPlanet), so "nearest checkpoint" is simply the
+-- nearest non-home galaxy. This window is wider than galaxyCellRadius so
+-- the arrow can still find a target even when it is diagonally outside
+-- the plotted-dot window (a real gap: a galaxy inside galaxyCellRadius's
+-- square scan can still be farther than viewRadius on the diagonal, so it
+-- is silently skipped by the dot-drawing "inside" check today).
+M.checkpointSearchCellRadius = M.galaxyCellRadius + 4
+
 -- Projects world point (wx, wy) into minimap space relative to origin
 -- (ox, oy). Returns mx, my (canvas offsets from the chart center, already
 -- clamped onto the rim when the point sits outside viewRadius), inside
@@ -44,6 +55,32 @@ function M.project(wx, wy, ox, oy)
     local inside = scaled <= M.mapRadius
     local mag = inside and scaled or M.mapRadius
     return dx / dist * mag, dy / dist * mag, inside, dist
+end
+
+-- Pure function: nearest non-home-galaxy checkpoint's direction and
+-- distance from world point (shipX, shipY). Every non-milkyway galaxy
+-- guarantees a hub/checkpoint planet at its center (world.hubPlanet), so
+-- this is simply the nearest other galaxy within checkpointSearchCellRadius
+-- cells. Returns unit-vector dx, dy (0, 0 if none found), the world
+-- distance (nil if none found), and the galaxy id (nil if none found).
+function M.nearestCheckpointDirection(shipX, shipY)
+    local nearest, nearestDist
+    for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.checkpointSearchCellRadius)) do
+        if galaxy.id ~= "milkyway" then
+            local dx, dy = galaxy.x - shipX, galaxy.y - shipY
+            local dist = math.sqrt(dx * dx + dy * dy)
+            if not nearestDist or dist < nearestDist then
+                nearest, nearestDist = galaxy, dist
+            end
+        end
+    end
+    if not nearest then
+        return 0, 0, nil, nil
+    end
+    if nearestDist < 1e-9 then
+        return 0, 0, 0, nearest.id
+    end
+    return (nearest.x - shipX) / nearestDist, (nearest.y - shipY) / nearestDist, nearestDist, nearest.id
 end
 
 -- Snapshot of everything PlayScene needs to draw the chart for a ship at
@@ -95,6 +132,12 @@ function M.view(shipX, shipY)
         end
     end
     local containing = world.galaxyContaining(shipX, shipY)
+    -- Off-chart checkpoint direction arrow (item 1): only surfaced when the
+    -- nearest checkpoint galaxy's center falls outside viewRadius, i.e. its
+    -- dot would not already be plotted on the chart.
+    local checkpointDx, checkpointDy, checkpointDist, checkpointId =
+        M.nearestCheckpointDirection(shipX, shipY)
+    local checkpointBeyond = checkpointDist ~= nil and checkpointDist > M.viewRadius
     return {
         player = { x = 0, y = 0 },
         earth = { x = earthX, y = earthY, inside = earthInside },
@@ -106,6 +149,11 @@ function M.view(shipX, shipY)
         distanceBeyond = beyond and (distEarth - M.chartRadius) or 0,
         returnDx = returnDx,
         returnDy = returnDy,
+        checkpointBeyond = checkpointBeyond,
+        checkpointDx = checkpointDx,
+        checkpointDy = checkpointDy,
+        checkpointDistance = checkpointDist,
+        checkpointId = checkpointId,
     }
 end
 

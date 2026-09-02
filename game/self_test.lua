@@ -407,6 +407,60 @@ local function testMinimap()
     nameScene.ship.x, nameScene.ship.y = 0, 0
     assert(nameScene:hudLines().galaxy == "SOLAR SYSTEM",
         "entering the home galaxy must label SOLAR SYSTEM at top-left")
+
+    -- Checkpoint marker + off-chart arrow (docs/feedback/INBOX.md item 1):
+    -- every non-milkyway galaxy is flagged hub=true for the special marker,
+    -- and minimap.nearestCheckpointDirection is a pure function that finds
+    -- the closest one and points toward it.
+    local world = require("game.world")
+    local foundGalaxy
+    for _, galaxy in ipairs(world.nearbyGalaxies(0, 0, minimap.checkpointSearchCellRadius)) do
+        if galaxy.id ~= "milkyway" then
+            foundGalaxy = galaxy
+            break
+        end
+    end
+    assert(foundGalaxy, "expected at least one non-home galaxy near the origin for this test")
+    local cdx, cdy, cdist, cid = minimap.nearestCheckpointDirection(0, 0)
+    assert(cid ~= nil and cid ~= "milkyway",
+        "nearestCheckpointDirection must resolve to a real non-home galaxy id")
+    assert(cdist ~= nil and cdist >= 0)
+    if cdist > 0 then
+        assert(math.abs(cdx * cdx + cdy * cdy - 1) < 1e-6, "checkpoint direction must be a unit vector")
+    end
+
+    -- No checkpoints reachable: direction defaults to (0, 0) and beyond is false.
+    local savedNearbyGalaxies = world.nearbyGalaxies
+    world.nearbyGalaxies = function() return {} end
+    local emptyDx, emptyDy, emptyDist, emptyId = minimap.nearestCheckpointDirection(0, 0)
+    assert(emptyDx == 0 and emptyDy == 0 and emptyDist == nil and emptyId == nil)
+    local emptyView = minimap.view(0, 0)
+    assert(not emptyView.checkpointBeyond)
+    world.nearbyGalaxies = savedNearbyGalaxies
+
+    -- A checkpoint far outside viewRadius must surface checkpointBeyond so
+    -- PlayScene draws the off-chart arrow toward it.
+    local farCheckpointX = foundGalaxy.x
+    local farCheckpointY = foundGalaxy.y
+    local awayX = farCheckpointX + minimap.viewRadius * 5
+    local awayY = farCheckpointY
+    local awayView = minimap.view(awayX, awayY)
+    if awayView.checkpointDistance and awayView.checkpointDistance > minimap.viewRadius then
+        assert(awayView.checkpointBeyond)
+        assert(awayView.checkpointDx ~= nil)
+    end
+
+    -- Galaxy-specific background tint (item 1 part 4): the home solar
+    -- system keeps its established navy color, and a different galaxy
+    -- must produce a visibly different, deterministic tint.
+    local homeR, homeG, homeB = world.galaxyBackgroundColor(world.galaxy(0, 0))
+    assert(homeR == world.homeBackgroundColor[1])
+    local otherR, otherG, otherB = world.galaxyBackgroundColor(foundGalaxy)
+    assert(otherR ~= homeR or otherG ~= homeG or otherB ~= homeB,
+        "a non-home galaxy must have a different background tint than the solar system")
+    local otherR2, otherG2, otherB2 = world.galaxyBackgroundColor(foundGalaxy)
+    assert(otherR == otherR2 and otherG == otherG2 and otherB == otherB2,
+        "galaxy background tint must be deterministic")
 end
 
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path

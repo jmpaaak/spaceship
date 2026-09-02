@@ -63,6 +63,34 @@ function M.galaxy(gx, gy)
     }
 end
 
+-- Deterministic per-galaxy background tint (docs/feedback/INBOX.md item 1
+-- part 4, "은하계별 배경색 변화"): the home solar system keeps the
+-- established dark navy/blue clear color, and every other galaxy gets a
+-- small deterministic hue shift (violet/teal/red family) derived from its
+-- grid cell so crossing into a different galaxy visibly changes mood.
+-- Pure data function -- PlayScene.draw() just calls love.graphics.clear
+-- with the returned r, g, b.
+local homeBackgroundColor = { 0.015, 0.02, 0.055 }
+M.homeBackgroundColor = homeBackgroundColor
+
+function M.galaxyBackgroundColor(galaxy)
+    if not galaxy or galaxy.id == "milkyway" then
+        return homeBackgroundColor[1], homeBackgroundColor[2], homeBackgroundColor[3]
+    end
+    local hue = hash(galaxy.gx, galaxy.gy, 560)
+    -- Three base tint families cycling by hue bucket, each nudged by a
+    -- little per-galaxy jitter so neighboring galaxies in the same family
+    -- still read as distinct from each other.
+    local families = {
+        { 0.05, 0.015, 0.06 }, -- violet
+        { 0.01, 0.045, 0.05 }, -- teal
+        { 0.06, 0.015, 0.02 }, -- ember red
+    }
+    local family = families[1 + math.floor(hue * 3) % 3]
+    local jitter = (hash(galaxy.gx, galaxy.gy, 561) - 0.5) * 0.02
+    return family[1] + jitter, family[2] + jitter, family[3] + jitter
+end
+
 -- The "center planet" of a galaxy (docs/GAME_DESIGN.md 이동 방식 개선
 -- 항목 2, "각 은하계의 중심 행성들"). The home galaxy's center is Earth
 -- itself (drawn separately in PlayScene), so milkyway has no extra hub

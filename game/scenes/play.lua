@@ -1322,6 +1322,16 @@ function M:drawMinimap()
             if galaxy.id == "milkyway" then
                 love.graphics.setColor(0.25, 0.55, 1)
                 love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
+            elseif galaxy.hub then
+                -- Checkpoint galaxy: bigger dot plus a shimmering ring so it
+                -- reads as distinct from an ordinary galaxy on the chart
+                -- (docs/feedback/INBOX.md item 1). Ring's alpha pulses with
+                -- self.time for a "sparkling" beacon feel.
+                local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
+                love.graphics.setColor(0.9, 0.75, 0.3)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
+                love.graphics.setColor(1, 0.95, 0.6, pulse)
+                love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
             else
                 love.graphics.setColor(0.9, 0.75, 0.3)
                 love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
@@ -1341,10 +1351,27 @@ function M:drawMinimap()
         local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
+    if view.checkpointBeyond then
+        -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct
+        -- magenta from the orange Earth-return marker above, and offset
+        -- slightly inward on the rim so the two never overlap when both
+        -- are showing at once.
+        love.graphics.setColor(0.85, 0.35, 0.95)
+        local rim = size / 2 - 9
+        local tipX = cx + view.checkpointDx * rim
+        local tipY = cy + view.checkpointDy * rim
+        love.graphics.circle("fill", tipX, tipY, 1.8)
+        local perpX, perpY = -view.checkpointDy, view.checkpointDx
+        love.graphics.polygon("fill",
+            tipX + view.checkpointDx * 3, tipY + view.checkpointDy * 3,
+            tipX - view.checkpointDx * 1.5 + perpX * 1.6, tipY - view.checkpointDy * 1.5 + perpY * 1.6,
+            tipX - view.checkpointDx * 1.5 - perpX * 1.6, tipY - view.checkpointDy * 1.5 - perpY * 1.6)
+    end
 end
 
 function M:draw()
-    love.graphics.clear(0.015, 0.02, 0.055)
+    local galaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+    love.graphics.clear(world.galaxyBackgroundColor(galaxy))
     local shipScreenX, shipScreenY = viewport.width / 2, math.floor(viewport.height * 0.58)
     local cameraX, cameraY = self.ship.x - shipScreenX, self.ship.y - shipScreenY
     local sx, sy = world.sectorAt(self.ship.x, self.ship.y)
