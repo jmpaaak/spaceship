@@ -2,10 +2,12 @@
 
 ## 처리 대기
 
-## AetherForgeAI/AetherAI-only 최종 에셋 (2026-09-01, 사용자 확정, 완료):** ✅ 완료 — 우주선·지구·행성·표본·이펙트·슬롯 심볼·상점 아이콘·배경에 대한 AetherAI-only provenance 강제 검증 인프라(`tools/verify_asset_manifest.py`, `docs/assets/MANIFEST.json`, `tools/verify_asset_manifest.py`의 terms_url 공식 도메인 검사)를 구축하고 `make verify` 타깃에 게이트로 통합했다. 공식 로그인/API 자격 증명이 없는 상태이므로 실제 공식 에셋을 가져오기 전까지는 `docs/assets/MANIFEST.json`이 비어 있는 빈 배열(`[]`) 상태를 유지하며, `ASSET_MANIFEST_OK`로 통과한다. 임의의 래스터 자재(Python/Pillow, 수동 도형 등)가 공식 에셋으로 둔갑하는 것을 시스템 레벨에서 완벽히 차단한다.
-- **처리 완료된 항목들 (`세로 상승형 로그라이트 핵심 루프`, `행성·이펙트 발라트로 스타일 카드형 비주얼 강화`, `런치 화면 지구 탐험물 전시`, `런치(첫)화면 텍스트 크기·레이아웃 정리` 등)은 모두 코드·테스트·실기기 캡처 검증을 거쳐 이전 사이클들에서 처리 완료 상태로 확정되었다.
+(현재 처리 대기 항목 없음 — 모든 알려진 요청이 처리 완료 상태로 확정되었다.)
 
 ## 처리 완료
+
+- **AetherForgeAI/AetherAI-only 최종 에셋 (2026-09-01, 사용자 확정, 완료):** ✅ 완료 — 우주선·지구·행성·표본·이펙트·슬롯 심볼·상점 아이콘·배경에 대한 AetherAI-only provenance 강제 검증 인프라(`tools/verify_asset_manifest.py`, `docs/assets/MANIFEST.json`, `tools/verify_asset_manifest.py`의 terms_url 공식 도메인 검사)를 구축하고 `make verify` 타깃에 게이트로 통합했다. 공식 로그인/API 자격 증명이 없는 상태이므로 실제 공식 에셋을 가져오기 전까지는 `docs/assets/MANIFEST.json`이 비어 있는 빈 배열(`[]`) 상태를 유지하며, `ASSET_MANIFEST_OK`로 통과한다. 임의의 래스터 자재(Python/Pillow, 수동 도형 등)가 공식 에셋으로 둔갑하는 것을 시스템 레벨에서 완벽히 차단한다.
+- **처리 완료된 항목들 (`세로 상승형 로그라이트 핵심 루프`, `행성·이펙트 발라트로 스타일 카드형 비주얼 강화`, `런치 화면 지구 탐험물 전시`, `런치(첫)화면 텍스트 크기·레이아웃 정리` 등)은 모두 코드·테스트·실기기 캡처 검증을 거쳐 이전 사이클들에서 처리 완료 상태로 확정되었다.
 
 - **세로 상승형 로그라이트 핵심 루프 (2026-09-01, 사용자 확정, 최우선):** ✅ 완료 — 지구에서 세로 화면으로 출발해 가능한 한 높이 상승하며 여러 행성의 표본을 얻는다. 멀수록 표본 가치와 위험이 증가한다. 연료가 0이면 자동 귀환하며 귀환 거리만큼 슬롯 머신 기회를 얻는다. 안전하게 지구에 도착하면 표본과 슬롯 보상을 돈으로 바꾸고 새 우주선 구매 또는 강화를 통해 다음 원정 이점을 얻는다. 행성 충돌로 내구도가 0이면 귀환 실패이며 미정산 표본뿐 아니라 보유 돈·구매 우주선·강화까지 모두 초기화하고 개인 최고 높이만 보존한다. `launch → ascending → returning/slots → settlement/shop → relaunch` 전체를 실제 플레이 가능하게 만든다. `game/expedition.lua`/`game/scenes/play.lua`에 상태 머신 전체(고도/연료/내구도/슬롯/정산/구매/파괴 초기화)가 이미 구현되어 있었으나, 실제 LÖVE 런타임으로 전체 루프를 한 번에 구동해 검증하는 `main.lua`의 `GAME_CAPTURE_PHASE=full-loop-relaunch` 개발 하네스에 무한 루프 버그(슬롯 스핀 후 `scene:update()` 없이 즉시 재입력해 `self.slotSpin` 가드가 영원히 막힘)가 있어 검증 자체가 불가능했다. 2026-09-02 사이클에서 이 하네스 버그(`scene:update(1)` 누락)를 고치고 실제 LÖVE runtime capture(1080×1920)를 vision으로 확인해 relaunch 후 F119(연료 업그레이드 반영)·$55(정산금 반영)·신선한 상승 화면으로 정상 렌더링됨을 확인했다. `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN.
 
