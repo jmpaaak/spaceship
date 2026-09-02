@@ -187,6 +187,15 @@ M.hudPrimaryStatusGap = 6
 -- LÖVE runtime capture, GAME_CAPTURE_PHASE=returning-odds).
 M.hudOddsLineHeight = 10
 
+-- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
+-- footer text is a permanent dev-only disclaimer (kept until real AetherAI
+-- assets land), not gameplay information, so it should read as a quiet
+-- watermark instead of competing with the message line above it. Smaller
+-- font + lower alpha than the default text keeps it legible but visually
+-- de-emphasized.
+M.devPlaceholderFontSize = 7
+M.devPlaceholderAlpha = 0.4
+
 -- Shared HUD background-box height so the minimap placement (drawMinimap)
 -- and the actual text draw (draw) never disagree about how tall the top
 -- HUD band is.
@@ -1989,8 +1998,12 @@ function M:draw()
         love.graphics.setColor(1, 0.85, 0.3, alpha)
         love.graphics.printf(self.newSpecimenBanner, 12, 64, viewport.width - 24, "center")
     end
-    love.graphics.setColor(1, 0.65, 0.2, 0.85)
-    love.graphics.printf(i18n.t("dev_placeholder"), 4, viewport.height - 13, viewport.width - 8, "center")
+    self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
+    local previousFooterFont = love.graphics.getFont()
+    love.graphics.setFont(self.tinyFont)
+    love.graphics.setColor(1, 0.65, 0.2, M.devPlaceholderAlpha)
+    love.graphics.printf(i18n.t("dev_placeholder"), 4, viewport.height - 11, viewport.width - 8, "center")
+    love.graphics.setFont(previousFooterFont)
 end
 
 return M

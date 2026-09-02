@@ -821,6 +821,16 @@ function M.run()
     assert(PlayScene.hudHeight("returning", returningHud, 0)
         == 70 + PlayScene.hudPrimaryStatusGap + PlayScene.hudOddsLineHeight,
         "returning HUD band height must grow by hudOddsLineHeight to fit the slot-odds line above the minimap")
+
+    -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
+    -- footer is a permanent dev-only disclaimer, not gameplay info, so it
+    -- must render smaller and dimmer than ordinary HUD text instead of
+    -- competing with the message line above it (real LÖVE runtime capture
+    -- previously showed it at full 14px default font and 0.85 alpha).
+    assert(PlayScene.devPlaceholderFontSize and PlayScene.devPlaceholderFontSize < 14,
+        "devPlaceholderFontSize must exist and be smaller than the default HUD font size")
+    assert(PlayScene.devPlaceholderAlpha and PlayScene.devPlaceholderAlpha < 0.85,
+        "devPlaceholderAlpha must exist and be dimmer than the previous 0.85 opacity")
     riskScene.expedition.altitude = 250
     assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
     riskScene.expedition.phase = "settlement"

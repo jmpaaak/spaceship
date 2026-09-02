@@ -166,3 +166,15 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
 - `docs/feedback/INBOX.md`의 4번 항목에 이번 슬라이스 진행 상황(발사 단계 `S%02d` 제거 완료, 남은 항목: "STARTER" 함선명/"발사 장비" 타이틀/"무피격 N" 라벨/"평균 $" 표기/"개발 임시본" 축소)을 기록했다.
 - 다음 사이클 다음 슬라이스: 4번 항목의 남은 부분(함선 이름 "STARTER" 제거, "발사 장비" 패널 타이틀 검토, "무피격 N" → 아이콘/명확한 라벨, "평균 $" 정리, "개발 임시본" 축소) 중 하나를 이어서 처리하거나, 3번 항목의 아이콘 기반 HUD 재구성으로 진행.
+
+## "개발 임시본"(DEV PLACEHOLDER) 푸터 텍스트 축소 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 마지막 남은 세부 항목("개발 임시본" 축소)을 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작.
+
+- 화면 최하단의 "DEV PLACEHOLDER"/"개발 임시본" 푸터가 기본 14px 폰트·0.85 알파로 그려져 바로 위 "탭하여 발사"/게임 메시지 줄과 시각적으로 경쟁하고 있었다. 이 텍스트는 최종 에셋 적용 전까지 유지가 필요한 영구 개발자용 고지일 뿐 게임플레이 정보가 아니므로, 조용한 워터마크처럼 보이도록 작게·흐리게 조정했다.
+- `game/scenes/play.lua`에 신규 `M.devPlaceholderFontSize = 7`(px)과 `M.devPlaceholderAlpha = 0.4`를 추가하고, `draw()`의 푸터 렌더가 기본 폰트/0.85 알파 대신 이 값들을 사용하도록 변경했다(`self.tinyFont`를 재사용해 폰트 캐시를 공유).
+- `game/self_test.lua`에 `PlayScene.devPlaceholderFontSize`가 기본 HUD 폰트(14px)보다 작고 `PlayScene.devPlaceholderAlpha`가 이전 0.85보다 낮음을 검증하는 회귀 테스트를 추가했다.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`, 1440×2560, ko 로케일)를 vision으로 확인해 "개발 임시본" 텍스트가 "탭하여 발사" 줄보다 눈에 띄게 작고 흐리게 렌더링됨을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 4번 항목("불필요한 텍스트 제거 검토")에 남아있던 세부 항목 5개(S00 제거, 무피격→도달예상, 평균→기대값, 개발 임시본 축소)가 모두 완료되었다. 남은 것은 4번 항목의 상위 슬라이스인 "STARTER" 함선명 제거와 "발사 장비" 패널 타이틀 검토, 그리고 3번 항목의 아이콘 기반 HUD 재구성.
+- 다음 사이클 다음 슬라이스: 4번 항목의 남은 두 세부(함선 이름 "STARTER" 제거, "발사 장비" 패널 타이틀 검토) 중 하나를 처리하거나, 3번 항목의 아이콘 기반 HUD 재구성으로 진행.
