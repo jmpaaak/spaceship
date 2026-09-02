@@ -177,6 +177,8 @@ local function destroy(run)
     run.lastLostNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.sampleCount = 0
     run.pendingSampleValue = 0
+    run.sampleStreakCount = 0
+    run.sampleStreakFamily = nil
     run.pendingSlotReward = 0
     run.slotOpportunities = 0
     run.slotSpins = 0
@@ -256,6 +258,8 @@ function M.new(options)
         bankedFuelBonus = 0,
         sampleCount = 0,
         pendingSampleValue = 0,
+        sampleStreakCount = 0,
+        sampleStreakFamily = nil,
         pendingSlotReward = 0,
         money = options.money or 0,
         lastSettlement = 0,
@@ -294,6 +298,8 @@ function M.launch(run)
         run.pendingFuelBonus = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
+        run.sampleStreakCount = 0
+        run.sampleStreakFamily = nil
         run.pendingSlotReward = 0
         run.lastSettlement = 0
         run.lastSampleSettlement = 0
@@ -399,12 +405,35 @@ function M.useSlot(run)
     return true
 end
 
-function M.collectSample(run, value)
+-- docs/feedback/INBOX.md's Balatro core-mechanics porting plan item 1
+-- ("점진적 시너지/빌드업") requests a multiplicative STREAK bonus for
+-- collecting consecutive same-hue-family samples, mirroring a card game's
+-- combo scaling. streakCount 0 or 1 is the base x1.0 rate; each additional
+-- consecutive same-family sample adds +0.2 (x1.2, x1.4, x1.6, ...).
+local streakBonusPerStep = 0.2
+function M.streakMultiplier(streakCount)
+    if not streakCount or streakCount <= 1 then return 1 end
+    return 1 + (streakCount - 1) * streakBonusPerStep
+end
+
+-- hueKey is the optional hue-family key from world.hueFamily/specimenKind
+-- (e.g. "azure"/"ember"/"void"). When provided, consecutive calls with the
+-- same hueKey build a streak that multiplies the awarded value on top of
+-- the SAMPLE YIELD upgrade; a different hueKey (or no hueKey) resets the
+-- streak back to the base rate for that call.
+function M.collectSample(run, value, hueKey)
     if run.phase ~= "ascending" or type(value) ~= "number" or value <= 0 then return false end
-    local awarded = math.floor(value * M.sampleYieldMultiplier(run) + 0.5)
+    if hueKey ~= nil and hueKey == run.sampleStreakFamily then
+        run.sampleStreakCount = run.sampleStreakCount + 1
+    else
+        run.sampleStreakCount = 1
+    end
+    run.sampleStreakFamily = hueKey
+    local streakMultiplier = M.streakMultiplier(run.sampleStreakCount)
+    local awarded = math.floor(value * M.sampleYieldMultiplier(run) * streakMultiplier + 0.5)
     run.sampleCount = run.sampleCount + 1
     run.pendingSampleValue = run.pendingSampleValue + awarded
-    return true, awarded
+    return true, awarded, streakMultiplier
 end
 
 function M.damage(run, amount)

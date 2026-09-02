@@ -182,6 +182,25 @@ function love.load()
         run.lastSlotSettlement = 0
         run.lastAltitude = 0
         run.lastNewBest = false
+    elseif capturePhase == "ascending-streak" then
+        -- Real-runtime capture for the new hue-family STREAK sample bonus
+        -- (docs/feedback/INBOX.md Balatro core-mechanics porting plan item
+        -- 1). Pre-seeds a same-hue-family streak of 2 so the very next
+        -- collected sample lands at streak 3 (x1.4) and the message shows
+        -- the STREAK multiplier.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 500
+        scene.expedition.sampleStreakCount = 2
+        scene.expedition.sampleStreakFamily = "azure"
+        scene.ship.y = -500
+        scene.ship.x = 0
+        local world = require("game.world")
+        world.nearbyPlanets = function()
+            return { { id = "streak-test", x = 0, y = -500, radius = 7, hue = 0.1 } }
+        end
+        world.collisionDamage = function() return 0 end
+        world.sampleValue = function() return 100 end
     elseif capturePhase == "ascending-damage-text" then
         -- Real-runtime capture for the new red "-N" damage floating text
         -- (mirrors the existing green "+$N" sample floating text). Places

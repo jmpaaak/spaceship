@@ -370,4 +370,14 @@
 - 흔들림은 매 프레임 무작위 오프셋(`math.random() * 2 - 1`)이라 정적 스크린샷으로는 배율 차이를 시각적으로 증명할 수 없다(이전 사이클의 반짝임 애니메이션과 동일한 제약: "정적 스냅샷이며, 시간 경과에 따른 애니메이션 자체는 engine-hosted 시간 누적 테스트로 검증"). 실기기 캡처 대신 등급별 정확한 배율 설정을 engine-hosted 테스트로 직접 검증했다.
 - 남은 다음 슬라이스 후보: (1) `docs/feedback/INBOX.md` 발라트로 이식 목록 중 남은 항목(점진적 시너지/빌드업 STREAK 배율, 숫자 롤업 피드백, 선택 안의 트레이드오프 통일, 불확실성 속의 기대감 접근 글로우 가속), (2) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (3) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 표본 등급 연속 채집 STREAK 배율 (완료)
+
+- `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록 1번 "점진적 시너지/빌드업"을 처리했다. 같은 hue family(azure/ember/void) 표본을 연속으로 채집하면 곱연산 STREAK 배율이 붙는다.
+- `game/expedition.lua`에 `M.streakMultiplier(streakCount)`(`streakCount <= 1`은 `x1.0`, 이후 매 연속 채집마다 `+0.2`: `x1.0/x1.2/x1.4/x1.6...`)를 추가했다. `M.collectSample(run, value, hueKey)`가 선택적 세 번째 인자 `hueKey`(`world.hueFamily(planet.hue).key`)를 받아 이전 채집과 같은 `hueKey`면 `run.sampleStreakCount`를 증가시키고, 다르거나 `nil`이면 1로 리셋한다. 지급액은 `value * sampleYieldMultiplier(run) * streakMultiplier`로 계산되며 세 번째 반환값으로 실제 적용된 배율을 노출한다.
+- `run.sampleStreakCount`·`run.sampleStreakFamily` 신규 필드를 `M.new`에서 초기화하고, 재출발(`M.launch`)과 파괴(`destroy`) 모두 다른 원정 상태와 동일하게 0/`nil`로 리셋한다.
+- `game/scenes/play.lua`의 표본 획득 처리가 행성의 `world.hueFamily(planet.hue).key`를 `collectSample`에 전달하고, 반환된 배율이 `1`보다 크면 메시지를 `SAMPLE +$N  STREAK x1.4  {planet.id}` 형식으로 표시한다(배율 `1`이면 기존 `SAMPLE +$N  {planet.id}` 형식 유지). 플로팅 `+$N` 텍스트는 항상 실제 지급액(`awarded`, 배율 반영)을 표시한다.
+- engine-hosted 테스트(RED 확인: `expedition.streakMultiplier`가 nil이라 `game/self_test.lua:458`에서 즉시 실패하는 것을 확인한 뒤 구현)가 `streakMultiplier(0/1/2/3)`의 정확한 배율과, 연속 3회 같은 `hueKey`(`azure`) 채집이 `x1.0→x1.2→x1.4`로 지급액(`100→120→140`)이 증가하는지, 다른 `hueKey`(`ember`)로 전환 시 배율이 `x1.0`으로 리셋되는지, 파괴 시 `sampleStreakCount`/`sampleStreakFamily` 초기화와 재출발 뒤에도 초기화 상태 유지를 검증한다.
+- `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:25`).
+- `main.lua`에 `GAME_CAPTURE_PHASE=ascending-streak` 개발 전용 진입 경로를 추가해(같은 hue family 스트릭 2를 미리 시딩한 뒤 세 번째 채집이 실제로 발생하도록 구성) 실제 LÖVE runtime capture(`1440×2560`)로 플로팅 텍스트가 `+$140`(원본 표본 가치 `100` x streak `1.4`)로 렌더링되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-ascending-streak.png`, 로컬 산출물로 커밋 제외). 같은 캡처에서 표본 획득과 동시에 충돌(같은 프레임, `radius+5` 이내)이 함께 발생해 바닥 메시지가 이후의 `COLLISION -0  HULL 3/3`으로 덮어써지는 것도 확인했는데, 이는 이번 슬라이스와 무관한 기존 메시지 우선순위 동작(같은 프레임에 여러 이벤트가 발생하면 나중 이벤트의 메시지가 이긴다)이며 플로팅 텍스트(`+$140`)가 실제 STREAK 배율 검증의 핵심 증거다.
+- 남은 다음 슬라이스 후보: (1) `docs/feedback/INBOX.md` 발라트로 이식 목록 중 남은 항목(숫자 롤업 피드백, 선택 안의 트레이드오프 통일, 불확실성 속의 기대감 접근 글로우 가속), (2) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (3) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 

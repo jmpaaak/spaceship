@@ -669,7 +669,8 @@ function M:update(dt)
                 self.discovered[planet.id] = true
                 self.discoveredCount = self.discoveredCount + 1
                 local value = world.sampleValue(planet)
-                local _, awarded = expedition.collectSample(self.expedition, value)
+                local hueKey = world.hueFamily(planet.hue or 0).key
+                local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
                 awarded = awarded or value
                 table.insert(self.floatingTexts, {
                     text = string.format("+$%d", awarded),
@@ -679,7 +680,11 @@ function M:update(dt)
                     kind = "sample",
                 })
                 self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
-                self.message = string.format("SAMPLE +$%d  %s", awarded, planet.id)
+                if streakMultiplier and streakMultiplier > 1 then
+                    self.message = string.format("SAMPLE +$%d  STREAK x%.1f  %s", awarded, streakMultiplier, planet.id)
+                else
+                    self.message = string.format("SAMPLE +$%d  %s", awarded, planet.id)
+                end
                 local specimenId, specimenLabel = world.specimenKind(planet)
                 if self.collectionStore:record(specimenId) then
                     self.collectedSpecimens[specimenId] = true
