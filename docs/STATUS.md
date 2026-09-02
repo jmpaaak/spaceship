@@ -424,3 +424,16 @@
 - `main.lua`에 `GAME_CAPTURE_PHASE=ascending-joystick-diagonal` 개발 전용 진입 경로를 추가해 대각선 드래그를 1초간 시뮬레이션한 실제 LÖVE runtime capture를 시도했다. 카메라가 항상 우주선을 화면 중앙 고정 좌표(`shipScreenX/Y`)에 그리고 월드만 스크롤하는 기존 렌더링 구조상, 정적 스크린샷 한 장으로는 대각선 이동 자체를 시각적으로 증명할 수 없다(이전 사이클들의 트윙클/스크린쉐이크 애니메이션과 동일한 제약). 실제 이동 검증은 `testJoystick()`의 `ship.x`/`verticalOffset` 수치 단언이 담당한다.
 - 남은 다음 슬라이스 후보 (사용자 승인된 순서): (1) 슬라이스 2 — 지구 중심 은하계(태양계) 기반 원형 대우주 구조로 `game/world.lua`의 섹터 해시를 은하계 단위로 재구성(경제는 반경 거리 기반으로 전환), (2) 슬라이스 3 — 미니맵(은하계 중심 행성·내 위치·경계 이탈 거리/방향 표시), (3) 기존에 남아있던 UI 정렬/AetherAI 에셋 항목들.
 
+## 조종 방식 개선 슬라이스 2·3: 은하계 우주 + 미니맵 (완료)
+
+슬라이스 1(조이스틱)에 이어, 지구를 원점으로 한 은하계 기반 대우주와 미니맵을 넣었다. 우주에 하드 경계는 없다.
+
+- `game/world.lua`: 은하 셀 그리드(`galaxyCellSize = 4608`). 셀 (0,0)은 항상 지구 중심의 MILKY WAY. 다른 셀은 ~28%만 은하가 있어 빈 심우주와 은하가 섞인다. `planets()`는 은하 반경 안에서만 행성을 생성한다. 표본 가치/충돌/티어는 수직 고도(`-planet.y`) 대신 지구로부터의 반경 거리(`world.distanceFromEarth`)를 쓴다. 기존 y-only 시나리오는 수치가 같다.
+- 각 비-홈 은하의 중심에는 방문 가능한 hub 행성(`world.hubPlanet`)이 있고, `nearbyPlanets`가 근처에 있으면 포함한다. 홈 은하 중심은 지구 자체라 extra hub가 없다.
+- `game/minimap.lua`: 플레이어 중심 원형 차트. 근처 은하 중심과 지구·내 위치를 투영한다. `chartRadius` 밖으로 나가도 월드 벽은 없고, `beyond`/`distanceBeyond`/`returnDx,Dy`만 계산한다. 지구 마커는 차트 림에 clamp.
+- `PlayScene:drawMinimap()`이 상승/발사/귀환 중 화면 오른쪽 위에 차트를 그린다. 차트 밖이면 `OUT N`과 지구 방향 점.
+- engine-hosted `testGalaxyStructure()` / `testMinimap()`가 결정성, 빈 심우주, hub 행성, 반경 경제, 차트 안/밖 투영을 검증한다.
+- `docs/GAME_DESIGN.md`를 지구 중심 원형 우주·조이스틱·미니맵에 맞게 갱신했다.
+
+- 남은 다음 슬라이스 후보: (1) 자동 상승 라인을 완전 자유 2D 항해로 교체(연료를 이동 거리에 직접 연동), (2) 낮은 잔액 `SHORT $N` 캡처, (3) AetherAI-only 최종 에셋.
+

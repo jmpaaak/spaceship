@@ -297,6 +297,20 @@ function love.load()
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
         scene:update(1)
+    elseif capturePhase == "ascending-minimap-beyond" then
+        -- Real-runtime capture for the galaxy minimap's beyond-chart
+        -- readout (docs/GAME_DESIGN.md 이동 방식 개선 항목 3): the ship is
+        -- placed past chartRadius so the top-right chart must show the
+        -- rim-clamped Earth marker, a return chevron, and an OUT N label.
+        -- There is still no world wall -- only the chart changes.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 400
+        local minimap = require("game.minimap")
+        scene.ship.x = minimap.chartRadius + 5000
+        scene.ship.y = -400
+        local world = require("game.world")
+        world.nearbyPlanets = function() return {} end
     elseif capturePhase == "launch-with-specimens" then
         -- Real-runtime capture for the launch-screen specimen log strip
         -- (docs/feedback 2026-09-02 request: show off exploration finds

@@ -5,6 +5,7 @@ local collectionStore = require("game.collection_store")
 local viewport = require("game.viewport")
 local world = require("game.world")
 local joystick = require("game.joystick")
+local minimap = require("game.minimap")
 local M = {}
 M.__index = M
 
@@ -1004,6 +1005,50 @@ function M:touchreleased(id)
     self.touches[id] = nil
 end
 
+-- Circular galaxy chart (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3).
+-- Drawn top-right so it sits on the HUD bar without covering the
+-- left-aligned ALT/CASH text. Settlement/destroyed overlays already
+-- cover the playfield, so the chart is hidden there.
+function M:drawMinimap()
+    if self.expedition.phase == "settlement" or self.expedition.phase == "destroyed" then
+        return
+    end
+    local hud = self:hudLines()
+    local hudHeight = hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34)
+    local view = minimap.view(self.ship.x, self.ship.y)
+    local size = minimap.size
+    local cx = viewport.width - size / 2 - 3
+    local cy = hudHeight + size / 2 + 2
+    love.graphics.setColor(0.02, 0.04, 0.1, 1)
+    love.graphics.circle("fill", cx, cy, size / 2)
+    love.graphics.setColor(0.35, 0.55, 0.8, 1)
+    love.graphics.circle("line", cx, cy, size / 2)
+    for _, galaxy in ipairs(view.galaxies) do
+        if galaxy.inside then
+            if galaxy.id == "milkyway" then
+                love.graphics.setColor(0.25, 0.55, 1)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
+            else
+                love.graphics.setColor(0.9, 0.75, 0.3)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
+            end
+        end
+    end
+    love.graphics.setColor(0.3, 0.85, 1)
+    love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, 2)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, 1.7)
+    love.graphics.setColor(1, 1, 1, 0.9)
+    love.graphics.circle("line", cx + view.player.x, cy + view.player.y, 2.4)
+    if view.beyond then
+        love.graphics.setColor(1, 0.55, 0.3)
+        local rim = size / 2 - 5
+        love.graphics.circle("fill", cx + view.returnDx * rim, cy + view.returnDy * rim, 2.2)
+        local label = string.format("OUT %d", math.floor(view.distanceBeyond + 0.5))
+        love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
+    end
+end
+
 function M:draw()
     love.graphics.clear(0.015, 0.02, 0.055)
     local shipScreenX, shipScreenY = viewport.width / 2, math.floor(viewport.height * 0.58)
@@ -1169,6 +1214,7 @@ function M:draw()
     else
         love.graphics.print(hud.status, 5, 18)
     end
+    self:drawMinimap()
     if self.expedition.phase == "launch" then
         -- Specimen log strip sits in the empty space between the HUD and
         -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so

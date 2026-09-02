@@ -76,6 +76,169 @@ local function testJoystick()
     assert(tapHoldScene.verticalOffset == 0, "an undragged touch must not move verticalOffset")
 end
 
+-- Galaxy structure + radial-distance economy (docs/GAME_DESIGN.md 이동
+-- 방식 개선 항목 2, "은하계(태양계 포함) 들이 존재"; item 1's economy
+-- follow-up, "연료소모가 거리 기반"). Split into its own top-level function
+-- for the same reason as testJoystick (M.run() is near Lua's 200-local
+-- limit).
+local function testGalaxyStructure()
+    local world = require("game.world")
+
+    -- Cell (0,0) always contains the home galaxy (Milky Way) centered on
+    -- Earth (0,0) so existing near-origin gameplay is unaffected.
+    local home = world.galaxy(0, 0)
+    assert(home and home.id == "milkyway" and home.x == 0 and home.y == 0 and home.radius > 0)
+
+    -- Deterministic: the same cell must always return the same galaxy (or
+    -- consistently nil), mirroring world.planets' existing determinism
+    -- guarantee.
+    local farA = world.galaxy(41, -17)
+    local farB = world.galaxy(41, -17)
+    if farA then
+        assert(farB and farA.id == farB.id and farA.x == farB.x and farA.y == farB.y and farA.radius == farB.radius)
+    else
+        assert(farB == nil)
+    end
+
+    -- The universe must not be uniformly dense with galaxies: scanning a
+    -- wide swath of cells must turn up both existing and nil (empty deep
+    -- space) cells, matching the user's explicit "정확히 은하계들이 존재하며"
+    -- (galaxies exist as discrete pockets, not everywhere) request.
+    local foundGalaxy, foundEmpty = false, false
+    for gx = -20, 20 do
+        for gy = -20, 20 do
+            if not (gx == 0 and gy == 0) then
+                if world.galaxy(gx, gy) then foundGalaxy = true else foundEmpty = true end
+            end
+        end
+    end
+    assert(foundGalaxy, "scanning a wide grid must find at least one non-origin galaxy")
+    assert(foundEmpty, "scanning a wide grid must find at least one empty deep-space cell")
+
+    -- galaxyContaining must find the home galaxy for points inside its
+    -- radius, and return nil for a point far out in known-empty deep
+    -- space between galaxies.
+    assert(world.galaxyContaining(0, 0).id == "milkyway")
+    assert(world.galaxyContaining(100, -100).id == "milkyway")
+
+    -- planets() must return no planets for a sector whose center falls
+    -- outside every galaxy (deep space), even if the sector-hash alone
+    -- would otherwise have placed a planet there.
+    local farSectorX, farSectorY = 5000, 5000
+    if not world.galaxyContaining(
+        farSectorX * world.sectorSize + world.sectorSize / 2,
+        farSectorY * world.sectorSize + world.sectorSize / 2) then
+        local emptyPlanets = world.planets(farSectorX, farSectorY)
+        assert(#emptyPlanets == 0, "a sector outside every galaxy must generate zero planets")
+    end
+
+    -- nearbyGalaxies must include the home galaxy when scanning around
+    -- the origin.
+    local nearby = world.nearbyGalaxies(0, 0, 1)
+    local sawHome = false
+    for _, galaxy in ipairs(nearby) do
+        if galaxy.id == "milkyway" then sawHome = true end
+    end
+    assert(sawHome, "nearbyGalaxies around the origin must include the home galaxy")
+
+    -- Radial-distance economy: world.distanceFromEarth must match the old
+    -- vertical-only height formula (math.max(0, -planet.y)) for any planet
+    -- with x omitted/0, so every pre-existing engine-hosted scenario
+    -- (which only ever set planet.y) keeps producing identical
+    -- sampleValue/collisionDamage/sampleTier results.
+    assert(world.distanceFromEarth({ y = -500 }) == 500)
+    assert(world.distanceFromEarth({ x = 0, y = -500 }) == 500)
+    -- A planet reached by drifting sideways (x nonzero, y = 0) must be
+    -- treated identically to one reached by climbing straight up the same
+    -- distance -- the whole point of the omnidirectional-movement economy
+    -- change.
+    assert(world.sampleValue({ x = 500, y = 0 }) == world.sampleValue({ x = 0, y = -500 }),
+        "sampleValue must depend on radial distance from Earth, not just vertical height")
+    assert(world.collisionDamage({ x = -500, y = 0 }) == world.collisionDamage({ x = 0, y = -500 }))
+    assert(world.sampleTier({ x = 300, y = 400 }) == "rare", "a diagonal 500-distance planet must land in the same tier as a 500-height one")
+
+    -- Home galaxy has no extra hub planet (Earth is the center). Every
+    -- other existing galaxy has a visitable center planet at its origin.
+    assert(world.hubPlanet(home) == nil, "milkyway hub is Earth, not an extra planet")
+    local foreignGalaxy
+    for gx = -20, 20 do
+        for gy = -20, 20 do
+            if not (gx == 0 and gy == 0) then
+                local candidate = world.galaxy(gx, gy)
+                if candidate then
+                    foreignGalaxy = candidate
+                    break
+                end
+            end
+        end
+        if foreignGalaxy then break end
+    end
+    assert(foreignGalaxy, "need at least one non-home galaxy to check hub planets")
+    local hub = world.hubPlanet(foreignGalaxy)
+    assert(hub and hub.hub and hub.x == foreignGalaxy.x and hub.y == foreignGalaxy.y)
+    assert(hub.id == "hub:" .. foreignGalaxy.id)
+    local hubsNearby = world.nearbyPlanets(foreignGalaxy.x, foreignGalaxy.y, 1)
+    local sawHub = false
+    for _, planet in ipairs(hubsNearby) do
+        if planet.id == hub.id then sawHub = true end
+    end
+    assert(sawHub, "nearbyPlanets at a galaxy center must include that galaxy's hub planet")
+end
+
+-- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
+-- (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3). Own top-level function
+-- for the same 200-local limit as testJoystick.
+local function testMinimap()
+    local minimap = require("game.minimap")
+    local world = require("game.world")
+
+    -- At Earth the player and Earth markers coincide at the chart origin,
+    -- and the home galaxy is plotted.
+    local originView = minimap.view(0, 0)
+    assert(originView.player.x == 0 and originView.player.y == 0)
+    assert(originView.earth.x == 0 and originView.earth.y == 0 and originView.earth.inside)
+    assert(not originView.beyond)
+    assert(originView.distanceBeyond == 0)
+    local sawHome = false
+    for _, galaxy in ipairs(originView.galaxies) do
+        if galaxy.id == "milkyway" then
+            sawHome = true
+            assert(galaxy.x == 0 and galaxy.y == 0 and galaxy.inside)
+        end
+    end
+    assert(sawHome, "minimap around Earth must plot the home galaxy")
+
+    -- A ship due east of Earth must see Earth to its west on the chart
+    -- (negative x) and still be inside the reference circle.
+    local near = world.galaxyCellSize
+    local nearView = minimap.view(near, 0)
+    assert(not nearView.beyond)
+    assert(nearView.earth.x < 0)
+    assert(math.abs(nearView.earth.y) < 1e-6)
+
+    -- Past chartRadius there is still no world wall: the readout only
+    -- reports how far past the reference circle the ship is, and the
+    -- unit vector pointing back toward Earth.
+    local overshoot = 1234
+    local farX = minimap.chartRadius + overshoot
+    local farView = minimap.view(farX, 0)
+    assert(farView.beyond)
+    assert(math.abs(farView.distanceBeyond - overshoot) < 1e-6)
+    assert(farView.returnDx < 0 and math.abs(farView.returnDy) < 1e-6)
+    -- Earth is farther than viewRadius, so its marker clamps to the rim.
+    local earthDist = math.sqrt(farView.earth.x ^ 2 + farView.earth.y ^ 2)
+    assert(math.abs(earthDist - minimap.mapRadius) < 1e-6,
+        "Earth must clamp to the minimap rim when the ship is beyond viewRadius")
+
+    -- Projecting a point inside viewRadius must not clamp; a point well
+    -- outside must land exactly on the rim.
+    local mx, my, inside = minimap.project(0, 0, 0, 0)
+    assert(mx == 0 and my == 0 and inside)
+    mx, my, inside = minimap.project(minimap.viewRadius * 3, 0, 0, 0)
+    assert(not inside)
+    assert(math.abs(mx - minimap.mapRadius) < 1e-6 and math.abs(my) < 1e-6)
+end
+
 function M.run()
     assert(viewport.width == 180 and viewport.height == 320)
     local scale, x, y = viewport.fit(720, 1280, false)
@@ -1646,6 +1809,8 @@ function M.run()
     -- Omnidirectional joystick movement (docs/GAME_DESIGN.md 이동 방식 개선
     -- 항목 1, "조이스틱을 통해 전방향으로 이동 가능함").
     testJoystick()
+    testGalaxyStructure()
+    testMinimap()
 
     print("SPACESHIP_UNIT_OK")
 end
