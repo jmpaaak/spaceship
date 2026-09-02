@@ -184,6 +184,22 @@ function M.buyEarthGear(run, gearId)
     return false
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 7-a: a galaxy's 상점 행성 sells that
+-- same galaxy's unique gear part for money -- a paid alternative to the
+-- guaranteed-but-unpaid checkpoint drop (7-b) for players who reach the
+-- shop planet before (or instead of) the hub checkpoint. Priced above the
+-- generic catalog since it grants a galaxy-exclusive part.
+local shopGearCost = 150
+M.shopGearCost = shopGearCost
+
+function M.buyShopGear(run, galaxyId)
+    if not run or not galaxyId then return false, nil end
+    local gearId = M.galaxyGearId(galaxyId)
+    local bought = M.buyGear(run, gearId, shopGearCost)
+    if not bought then return false, nil end
+    return true, gearId
+end
+
 local function refreshShipStats(run)
     local fuelBonus = 0
     local durabilityBonus = 0

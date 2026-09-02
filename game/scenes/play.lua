@@ -551,6 +551,8 @@ function M.new(options)
         touches = {},
         verticalOffset = 0,
         rcsCooldown = 0,
+        dockedShopPlanetId = nil,
+        dockedShopGalaxyId = nil,
         message = i18n.t("launch_tap_to_launch"),
     }, M)
 end
@@ -1180,10 +1182,21 @@ function M:update(dt)
         self.message = i18n.t("settled_message", self.expedition.lastSettlement, self.expedition.money)
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
+        -- docs/feedback/INBOX.md 처리대기 항목 7-a: re-derive shop-planet
+        -- docking fresh each update from actual proximity rather than only
+        -- clearing it when the same planet reappears in the (radius-1)
+        -- nearbyPlanets scan -- once the ship travels far enough the shop
+        -- planet's sector may drop out of that scan entirely, which must
+        -- still count as "no longer docked".
+        local dockedShopStillNear = false
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
             local distanceSquared = dx * dx + dy * dy
+            -- docs/feedback/INBOX.md 처리대기 항목 8: only ordinary planets
+            -- (not the galaxy's checkpoint hub or shop landmark) award
+            -- samples -- hub/shop docking is handled separately below.
             if self.expedition.phase == "ascending"
+                and not planet.hub and not planet.shop
                 and distanceSquared <= (planet.radius + 14) ^ 2
                 and not self.discovered[planet.id] then
                 self.discovered[planet.id] = true
@@ -1214,7 +1227,42 @@ function M:update(dt)
                     self.newSpecimenBannerTimer = 2.0
                 end
             end
-            if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
+            -- docs/feedback/INBOX.md 처리대기 항목 7-b/8: docking at a
+            -- galaxy's checkpoint hub planet unconditionally grants that
+            -- galaxy's unique gear part exactly once, and (in the
+            -- ascending phase) immediately settles any pending sample
+            -- value into money without ending the expedition.
+            if planet.hub and distanceSquared <= (planet.radius + 14) ^ 2 then
+                if not self.discovered[planet.id] then
+                    self.discovered[planet.id] = true
+                    local granted, gearId = expedition.exploreCheckpoint(self.expedition, planet.galaxyId)
+                    if granted then
+                        self.message = i18n.t("checkpoint_gear_message", gearId)
+                    end
+                    if self.expedition.phase == "ascending" then
+                        local settled, amount = expedition.checkpointSettle(self.expedition)
+                        if settled and amount > 0 then
+                            self.message = i18n.t("checkpoint_settled_message", amount, self.expedition.money)
+                        end
+                    end
+                end
+            end
+            -- docs/feedback/INBOX.md 처리대기 항목 7-a: a galaxy's shop
+            -- planet is a purchase landmark, not an auto-grant -- track
+            -- proximity here so keypressed() can offer a buy action while
+            -- docked, mirroring the existing settlement-screen upgrade
+            -- purchase keys.
+            if planet.shop and distanceSquared <= (planet.radius + 14) ^ 2 then
+                self.dockedShopPlanetId = planet.id
+                self.dockedShopGalaxyId = planet.galaxyId
+                dockedShopStillNear = true
+            end
+            -- docs/feedback/INBOX.md 처리대기 항목 7-b/7-a: checkpoint hub
+            -- and shop landmark planets are docking points, not hazards --
+            -- a ship parked on top of one to explore/buy must never take
+            -- collision damage the way an ordinary planet would.
+            if not planet.hub and not planet.shop
+                and distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
                 self.collided[planet.id] = true
                 local damage = world.collisionDamage(planet)
                 -- Real LOVE runtime capture showed this "-N" damage text
@@ -1241,6 +1289,10 @@ function M:update(dt)
                 end
                 self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
             end
+        end
+        if not dockedShopStillNear then
+            self.dockedShopPlanetId = nil
+            self.dockedShopGalaxyId = nil
         end
         for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
             local dx, dy = junk.x - self.ship.x, junk.y - self.ship.y
@@ -1270,6 +1322,23 @@ function M:update(dt)
 end
 
 function M:keypressed(key)
+    -- docs/feedback/INBOX.md 처리대기 항목 7-a: while docked at a galaxy's
+    -- 상점 행성 (mid-expedition, ascending or returning), "b" buys that
+    -- galaxy's unique gear part for money -- a paid alternative to the
+    -- free checkpoint drop (7-b) for players who reach the shop before the
+    -- hub. Placed first since this action is available outside the
+    -- settlement-only purchase keys below.
+    if (self.expedition.phase == "ascending" or self.expedition.phase == "returning")
+        and self.dockedShopPlanetId and key == "b" then
+        local bought, gearId = expedition.buyShopGear(self.expedition, self.dockedShopGalaxyId)
+        if bought then
+            self.message = i18n.t("gear_bought_message", gearId, self.expedition.money)
+        else
+            self.message = purchaseShortfallMessage(self.expedition.money,
+                expedition.shopGearCost, i18n.t("item_shop_gear"))
+        end
+        return
+    end
     if self.expedition.phase == "settlement" and (key == "f" or key == "down" or key == "s") then
         if expedition.buyFuelUpgrade(self.expedition) then
             self.message = i18n.t("fuel_upgraded_message",
@@ -1356,6 +1425,8 @@ function M:keypressed(key)
                     self.collided = {}
                     self.discoveredCount = 0
                     self.floatingTexts = {}
+                    self.dockedShopPlanetId = nil
+                    self.dockedShopGalaxyId = nil
                 end
                 self.message = i18n.t("ascending_message")
             end

@@ -1,4 +1,18 @@
 # STATUS
+## econ 레인 — 항목7/8 UI 도킹 연결 + 치명적 충돌 판정 버그 수정 (완료, 2026-09-03)
+
+`loop/PROMPT.md` econ 레인 스코프(항목7→8→11→15)에 따라 진행. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했다. `git status --short`로 확인한 결과 이전 사이클이 항목 7/8의 UI 연결부(`game/scenes/play.lua`의 hub/shop 랜드마크 도킹 감지, `game/i18n.lua`의 메시지 문구, `game/self_test.lua`의 `testCheckpointAndShopDocking`)를 이미 uncommitted diff로 작성해 두었으나 테스트에 아직 연결(run 목록에 호출 추가)되지 않은 상태였다. 이 diff를 이어받아 완성했다(prior-cycle work 보존, 덮어쓰지 않음).
+
+- **RED로 실제 버그 2건 발견:** `testCheckpointAndShopDocking()`을 `game/self_test.lua`의 `run()` 목록에 연결해 처음 실행하자 실패했다. 원인 조사 결과:
+  1. **치명적 버그** — `game/scenes/play.lua`의 `M:update()`에서 hub/shop 체크포인트 랜드마크가 일반 행성과 동일한 충돌 판정 반경(`planet.radius + 5`)에 걸려 있었다. 배(ship)를 체크포인트 정확한 좌표에 놓고 도킹을 감지하려는 첫 update에서, 도킹 로직보다 충돌 로직이 함께 실행되어 즉시 피해를 입고(`destroy()`) 전멸 처리가 발동, 정산/장비 지급이 전혀 이루어지지 않았다.
+  2. **경계 조건 버그** — hub 재도킹 시 `checkpointSettle` 호출이 `discovered[]` 최초-방문 가드 바깥에 있어, 재도킹마다 정산이 다시 실행될 여지가 있었다(테스트로 확인 시 실패).
+- **수정:** (1) hub/shop 랜드마크(`planet.hub`/`planet.shop`)는 충돌 피해 판정에서 완전히 제외 — 체크포인트/상점 행성은 도킹 지점이지 위험 행성이 아니다. (2) `checkpointSettle` 호출을 `discovered[]` 최초-방문 가드 블록 안으로 이동해 1회성을 보장.
+- `game/self_test.lua`의 `testCheckpointAndShopDocking()`(신규, 이전 사이클 작성분을 실행 목록에 연결)이 실제 `PlayScene:update()`/`keypressed()` 경로로 hub 도킹 시 장비 지급+표본 정산+phase 유지, 재도킹 시 중복 정산 없음, shop 도킹은 자동지급 없이 근접만 기록, `"b"` 키로 유료 구매(`buyShopGear`), 상점에서 멀어지면 도킹 플래그 해제를 회귀 검증한다.
+- **실제 LÖVE 런타임 캡처로 검증:** `main.lua`에 신규 `GAME_CAPTURE_PHASE=checkpoint-dock` 개발 하네스를 추가해(비-홈 은하의 hub 좌표에 배를 놓고 `pendingSampleValue=45`를 세팅한 뒤 실제 `scene:update(0)` 호출) `GAME_CAPTURE=1 GAME_CAPTURE_PHASE=checkpoint-dock` 캡처(1080×1920)를 vision으로 확인했다 — "체크포인트 정산 +$45  잔액 $45" 메시지와 "자금 $45" HUD가 정상 렌더링되고 충돌/피해 텍스트는 전혀 나타나지 않았다(버그 수정이 실제 런타임에서도 유효함을 확인).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 7/8 하위에 진행상황을 append했다. 이로써 항목 7(a/b/c)과 항목 8은 엔진+UI 연결까지 완료.
+- 다음 사이클 다음 슬라이스: 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거) 착수.
+
 ## econ 레인 — 항목7(장비 획득 경로 3원화) + 항목8(체크포인트 정산) 엔진 슬라이스 (완료, 2026-09-03)
 
 `loop/PROMPT.md`의 econ 레인 스코프에 따라 처리대기 항목7→8→11→15 순서 중 첫 두 항목의 엔진(비-UI) 슬라이스를 착수했다. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했고 `git status --short`에 이 레인이 이어받을 미커밋 diff는 없었다(다른 레인의 `loop/PROMPT.md`/스캐폴딩 파일만 있었음, 손대지 않음).

@@ -377,7 +377,7 @@ local function testGearAndCheckpointSettlement()
     assert(not expedition.buyGear(buyRun, "shop:test-gear", 60), "cannot buy the same gear id twice")
     assert(not expedition.buyGear(buyRun, "too-expensive", 1000), "cannot buy gear without enough money")
 
-    -- Item 7-c: EARTH SHOP only sells the generic catalog -- a
+    -- Item 8: EARTH SHOP only sells the generic catalog -- a
     -- galaxy-unique gear id (from exploreCheckpoint) must never be
     -- purchasable there.
     assert(#expedition.genericGearCatalog >= 1)
@@ -387,6 +387,19 @@ local function testGearAndCheckpointSettlement()
     assert(earthRun.ownedGear[firstGeneric.id])
     assert(not expedition.buyEarthGear(earthRun, expedition.galaxyGearId(galaxyId)),
         "EARTH SHOP must reject a galaxy-unique gear id")
+
+    -- Item 7-a: a galaxy's 상점 행성 sells that galaxy's own unique gear
+    -- part for money -- a paid alternative to the free checkpoint drop.
+    local shopBuyRun = expedition.new({ money = expedition.shopGearCost })
+    local shopBought, shopGearId = expedition.buyShopGear(shopBuyRun, galaxyId)
+    assert(shopBought and shopGearId == expedition.galaxyGearId(galaxyId))
+    assert(shopBuyRun.ownedGear[shopGearId], "buying at the shop planet must grant the galaxy-unique gear")
+    assert(shopBuyRun.money == 0)
+    local shopBoughtAgain = expedition.buyShopGear(shopBuyRun, galaxyId)
+    assert(not shopBoughtAgain, "cannot buy the same galaxy's shop gear twice")
+    local poorShopRun = expedition.new({ money = 1 })
+    assert(not expedition.buyShopGear(poorShopRun, "galaxy:other"),
+        "buying shop gear without enough money must fail")
 
     -- Item 8: an ordinary planet sample must not become money on its
     -- own -- only checkpointSettle/Earth settle convert it.
@@ -428,6 +441,81 @@ local function testGearAndCheckpointSettlement()
     assert(wipeRun.phase == "destroyed")
     assert(next(wipeRun.ownedGear) == nil, "destruction must wipe owned gear")
     assert(next(wipeRun.exploredCheckpoints) == nil, "destruction must wipe explored checkpoints")
+end
+
+-- docs/feedback/INBOX.md 처리대기 항목 7/8 UI 연결부: PlayScene.update must
+-- actually dock at a galaxy's hub/shop landmarks discovered via
+-- world.nearbyPlanets -- exploring the hub grants gear + settles pending
+-- samples, and proximity to the shop planet unlocks the "b" buy-gear key.
+-- Own top-level function for the same 200-local limit as testJoystick.
+local function testCheckpointAndShopDocking()
+    local world = require("game.world")
+    local expedition = require("game.expedition")
+
+    -- Find a non-home galaxy so hubPlanet/shopPlanet are non-nil.
+    local galaxy
+    for gx = -20, 20 do
+        for gy = -20, 20 do
+            if not (gx == 0 and gy == 0) then
+                local candidate = world.galaxy(gx, gy)
+                if candidate then galaxy = candidate; break end
+            end
+        end
+        if galaxy then break end
+    end
+    assert(galaxy, "need at least one non-home galaxy for docking test")
+    local hub = world.hubPlanet(galaxy)
+    local shop = world.shopPlanet(galaxy)
+
+    -- Docking at the checkpoint hub while ascending grants the galaxy's
+    -- unique gear and settles any pending sample value into money without
+    -- ending the expedition.
+    local hubScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    hubScene.expedition.phase = "ascending"
+    hubScene.expedition.pendingSampleValue = 30
+    hubScene.ship.x, hubScene.ship.y = hub.x, hub.y
+    hubScene:update(0)
+    local expectedGearId = expedition.galaxyGearId(galaxy.id)
+    assert(hubScene.expedition.ownedGear[expectedGearId],
+        "docking at the hub checkpoint must grant the galaxy's unique gear")
+    assert(hubScene.expedition.money == 30,
+        "docking at the hub checkpoint while ascending must settle pending sample value")
+    assert(hubScene.expedition.pendingSampleValue == 0)
+    assert(hubScene.expedition.phase == "ascending",
+        "checkpoint docking must not end the expedition")
+
+    -- Re-visiting the same hub in the same run must not re-grant gear or
+    -- re-settle (idempotent -- discovered[] guards it once per run).
+    hubScene.expedition.pendingSampleValue = 10
+    hubScene:update(0)
+    assert(hubScene.expedition.money == 30, "re-docking at the same hub must not double-settle")
+
+    -- Docking at a galaxy's shop planet does not auto-grant gear, but does
+    -- track proximity so keypressed("b") can offer a paid purchase.
+    local shopScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    shopScene.expedition.phase = "ascending"
+    shopScene.expedition.money = expedition.shopGearCost
+    shopScene.ship.x, shopScene.ship.y = shop.x, shop.y
+    shopScene:update(0)
+    assert(shopScene.dockedShopPlanetId == shop.id,
+        "proximity to the shop planet must record it as docked")
+    assert(not shopScene.expedition.ownedGear[expedition.galaxyGearId(galaxy.id)],
+        "arriving at the shop planet must not auto-grant gear (payment required)")
+    shopScene:keypressed("b")
+    assert(shopScene.expedition.ownedGear[expedition.galaxyGearId(galaxy.id)],
+        "pressing b while docked at the shop planet must buy the galaxy's unique gear")
+    assert(shopScene.expedition.money == 0)
+
+    -- Moving away from the shop planet clears the docked flag so the buy
+    -- key no longer applies.
+    shopScene.ship.x, shopScene.ship.y = shop.x + 5000, shop.y + 5000
+    shopScene:update(0)
+    assert(shopScene.dockedShopPlanetId == nil,
+        "leaving the shop planet's vicinity must clear the docked flag")
 end
 
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
@@ -2437,6 +2525,7 @@ function M.run()
     testManeuverFuel()
     testGalaxyStructure()
     testGearAndCheckpointSettlement()
+    testCheckpointAndShopDocking()
     testMinimap()
     testDebris()
     testBackgroundStars()

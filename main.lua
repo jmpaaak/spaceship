@@ -381,6 +381,37 @@ function love.load()
         scene:update(1000) -- finish the return -> settlement
         expeditionModule.buyFuelUpgrade(scene.expedition) -- shop upgrade with settled money
         scene:keypressed("space") -- relaunch
+    elseif capturePhase == "checkpoint-dock" then
+        -- Real-runtime capture for docs/feedback/INBOX.md 처리대기 항목
+        -- 7-b/8: places the ship directly on a non-home galaxy's
+        -- checkpoint hub planet with pending sample value queued up, so
+        -- the very first update() docks, grants the galaxy-unique gear,
+        -- and settles the pending sample value into money -- all while
+        -- the expedition stays in the ascending phase (no slot machine,
+        -- no expedition-ending settlement).
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.pendingSampleValue = 45
+        local world = require("game.world")
+        local found
+        for gy = -3, 3 do
+            for gx = -3, 3 do
+                if not (gx == 0 and gy == 0) then
+                    local galaxy = world.galaxy(gx, gy)
+                    if galaxy then
+                        local hub = world.hubPlanet(galaxy)
+                        if hub then found = hub break end
+                    end
+                end
+            end
+            if found then break end
+        end
+        if found then
+            scene.ship.x = found.x
+            scene.ship.y = found.y
+            scene.expedition.altitude = 400
+        end
+        scene:update(0)
     elseif capturePhase == "launch-with-specimens" then
         -- Real-runtime capture for the launch-screen specimen log strip
         -- (docs/feedback 2026-09-02 request: show off exploration finds
