@@ -199,6 +199,25 @@ local function clampLabelX(centerX, textWidth, viewportWidth, margin)
 end
 M.clampLabelX = clampLabelX
 
+-- Numeric roll-up feedback (docs/feedback/INBOX.md 2026-09-02 후속 확정
+-- 사항 #2): rather than a sample's "+$N" floating text popping in at its
+-- final value instantly, it now counts up from $0 to the awarded amount
+-- over this duration, like a slot-machine reel/chip counter settling on
+-- its result, before holding steady for the rest of its lifetime.
+local sampleRollupDuration = 0.3
+M.sampleRollupDuration = sampleRollupDuration
+
+-- Computes the "in progress" displayed roll-up value for a sample floating
+-- text: 0 at elapsed<=0, linearly interpolated up to the full awarded
+-- amount at elapsed>=duration (rounded to the nearest whole dollar so the
+-- counter reads as discrete ticking digits, not fractional cents).
+local function rollupAmount(awarded, elapsed, duration)
+    if duration <= 0 then return awarded end
+    local progress = math.max(0, math.min(1, elapsed / duration))
+    return math.floor(awarded * progress + 0.5)
+end
+M.rollupAmount = rollupAmount
+
 local slotReelStagger = 0.15
 local slotSpinDuration = slotReelStagger * 3
 
@@ -588,6 +607,10 @@ function M:update(dt)
         local ft = self.floatingTexts[i]
         ft.timer = ft.timer - dt
         ft.y = ft.y - 20 * dt
+        if ft.kind == "sample" and ft.awarded and ft.rollupElapsed < sampleRollupDuration then
+            ft.rollupElapsed = math.min(sampleRollupDuration, ft.rollupElapsed + dt)
+            ft.text = string.format("+$%d", rollupAmount(ft.awarded, ft.rollupElapsed, sampleRollupDuration))
+        end
         if ft.timer <= 0 then
             table.remove(self.floatingTexts, i)
         end
@@ -673,11 +696,13 @@ function M:update(dt)
                 local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
                 awarded = awarded or value
                 table.insert(self.floatingTexts, {
-                    text = string.format("+$%d", awarded),
+                    text = string.format("+$%d", rollupAmount(awarded, 0, sampleRollupDuration)),
                     x = planet.x,
                     y = planet.y,
                     timer = 1.0,
                     kind = "sample",
+                    awarded = awarded,
+                    rollupElapsed = 0,
                 })
                 self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
                 if streakMultiplier and streakMultiplier > 1 then

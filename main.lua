@@ -201,6 +201,32 @@ function love.load()
         end
         world.collisionDamage = function() return 0 end
         world.sampleValue = function() return 100 end
+    elseif capturePhase == "ascending-sample-rollup" then
+        -- Real-runtime capture for the new "+$N" numeric roll-up feedback
+        -- (docs/feedback/INBOX.md 2026-09-02 후속 확정 사항 #2). Manually
+        -- constructs a sample floating text mid-way through its 0.3s
+        -- roll-up animation (instead of relying on real frame timing,
+        -- which would land the very first update() at ~1/60s and only
+        -- show a near-zero value) so the capture reliably shows a
+        -- partial, still-counting-up value like a slot-machine reel
+        -- settling on its result.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 500
+        scene.ship.y = -500
+        scene.ship.x = 0
+        local playScene = require("game.scenes.play")
+        table.insert(scene.floatingTexts, {
+            text = string.format("+$%d", playScene.rollupAmount(140, 0.15, playScene.sampleRollupDuration)),
+            x = scene.ship.x,
+            y = scene.ship.y,
+            timer = 1.0,
+            kind = "sample",
+            awarded = 140,
+            rollupElapsed = 0.15,
+        })
+        local world = require("game.world")
+        world.nearbyPlanets = function() return {} end
     elseif capturePhase == "ascending-damage-text" then
         -- Real-runtime capture for the new red "-N" damage floating text
         -- (mirrors the existing green "+$N" sample floating text). Places
