@@ -810,6 +810,17 @@ function M.run()
     assert(returningHud.samples == "SAMPLES 03  AT RISK $95")
     assert(returningHud.earth == "EARTH IN 725")
     assert(returningHud.returnProgress == "RETURN 28%  17s LEFT")
+    -- docs/feedback/INBOX.md UI/HUD item 5: the small slot-odds line drawn
+    -- above the minimap during the returning phase needs its own reserved
+    -- vertical space in the HUD box (PlayScene.hudOddsLineHeight); without
+    -- it, that line visually collided with the RETURN %%/s-left text right
+    -- above it (confirmed via a real LÖVE runtime capture,
+    -- GAME_CAPTURE_PHASE=returning-odds).
+    assert(PlayScene.hudOddsLineHeight and PlayScene.hudOddsLineHeight > 0,
+        "PlayScene.hudOddsLineHeight must exist and reserve room for the slot-odds line")
+    assert(PlayScene.hudHeight("returning", returningHud, 0)
+        == 70 + PlayScene.hudPrimaryStatusGap + PlayScene.hudOddsLineHeight,
+        "returning HUD band height must grow by hudOddsLineHeight to fit the slot-odds line above the minimap")
     riskScene.expedition.altitude = 250
     assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
     riskScene.expedition.phase = "settlement"

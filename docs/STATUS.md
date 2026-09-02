@@ -103,6 +103,19 @@
 - `docs/feedback/INBOX.md`의 3번 항목에 이번 슬라이스 진행 상황(HUD 상태 줄 연료 표기 제거 완료, 아이콘 기반 재구성/LOADOUT `MAX FUEL` 텍스트 정리는 다음 슬라이스)을 기록했다.
 - 다음 사이클 다음 슬라이스: 3번 항목의 남은 부분 — LAUNCH LOADOUT의 `stats_line`("MAX FUEL %d  HULL %d")과 EARTH SHOP의 연료 업그레이드 관련 문구를 아이콘 기반(로켓/방패/동전/스피드미터)으로 재구성. 그 다음은 4번(불필요한 텍스트 제거 검토)으로 진행.
 
+## 슬롯 오즈 라인을 미니맵 위로 이동 + 귀환 진행률 텍스트와의 겹침 수정 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 5번(C50/P40/S10 슬롯 확률 표기를 미니맵 위 작은 텍스트로 이동)을 완료했다. preflight READY(`make test` PASS, `git diff` clean), 이번 사이클 시작 시 `git status --short`에 이전 사이클이 남긴 미커밋 변경(`game/scenes/play.lua`, 슬롯 오즈 라인을 `drawMinimap()`으로 옮기는 작업)이 있어 그대로 이어받아 완료했다.
+
+- 이전 사이클이 `slot_odds_line`(`"C%d P%d S%d 평균 $%.2f"`)을 귀환 화면의 큰 별도 줄(y=197, center)에서 `game/scenes/play.lua`의 `drawMinimap()` 안, 미니맵 차트 바로 위의 작은 8px 우측정렬 텍스트로 옮겨두었다.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=returning-odds`, 1080×1920)로 재검증한 결과, 옮겨진 오즈 줄이 바로 위에 그려지는 "귀환 0%  12초"(`hud_return_progress`) 텍스트와 겹쳐서 렌더링되는 잔여 결함을 발견했다. `M.hudHeight(phase, hud, galaxyShift)`의 `returning` 분기(`70 + hudPrimaryStatusGap + galaxyShift`)가 오즈 줄을 위한 추가 세로 공간을 예약하지 않았기 때문이다.
+- `game/scenes/play.lua`에 신규 `PlayScene.hudOddsLineHeight = 10`(px)을 추가하고, `M.hudHeight`의 `returning` 분기 공식을 `70 + hudPrimaryStatusGap + hudOddsLineHeight + galaxyShift`로 수정했다. 이 함수는 `drawMinimap()`(미니맵 배치)과 `draw()`(실제 텍스트 렌더) 양쪽이 공유하므로 두 곳이 다시 어긋나지 않는다.
+- `game/self_test.lua`에 `PlayScene.hudOddsLineHeight`가 존재/양수임과, `PlayScene.hudHeight("returning", returningHud, 0)`이 새 공식과 일치함을 검증하는 회귀 테스트를 추가했다(수정 전 RED `"returning HUD band height must grow by hudOddsLineHeight..."` 확인 후 GREEN 전환 확인).
+- 수정 후 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=returning-odds`)를 vision으로 재확인: "귀환 0%  12초" 줄과 "C50 P40 S10  평균 $18.58" 오즈 줄이 겹치지 않고 세로로 깔끔하게 분리되어 미니맵 원형 차트 바로 위에 작게 표시됨을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 "UI/HUD 대대적 정리 6개 항목" 하위 5번 항목에 완료 표시 및 구현 요약을 추가(상위 항목 자체는 6개 중 5개만 처리되었으므로 "처리 대기"에 유지).
+- 다음 사이클 다음 슬라이스: 같은 상위 항목의 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환 — 규모가 크므로 데이터 구조 설계부터 슬라이스 필요) 또는 3~4번의 남은 부분(아이콘 기반 HUD 재구성, "STARTER"/"발사 장비"/"무피격 N"/"개발 임시본" 정리)으로 진행.
+
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
 
 ## LAUNCH LOADOUT/EARTH SHOP에서 오해를 주는 "MAX FUEL" 잔여 표기 제거 (완료, 2026-09-03)

@@ -180,6 +180,13 @@ M.launchLoadoutRowStep = 10
 -- during ascending/returning so the two numbers read as visually unrelated.
 M.hudPrimaryStatusGap = 6
 
+-- docs/feedback/INBOX.md UI/HUD item 5: the small C%/P%/S%/AVG$ slot-odds
+-- line drawn above the minimap during the returning phase needs its own
+-- reserved vertical space in the HUD box; without it the line collided
+-- with the RETURN %%/s-left text right above it (confirmed via a real
+-- LÖVE runtime capture, GAME_CAPTURE_PHASE=returning-odds).
+M.hudOddsLineHeight = 10
+
 -- Shared HUD background-box height so the minimap placement (drawMinimap)
 -- and the actual text draw (draw) never disagree about how tall the top
 -- HUD band is.
@@ -188,7 +195,7 @@ function M.hudHeight(phase, hud, galaxyShift)
         return M.launchHudHeight + galaxyShift
     end
     if hud.returnProgress then
-        return 70 + M.hudPrimaryStatusGap + galaxyShift
+        return 70 + M.hudPrimaryStatusGap + M.hudOddsLineHeight + galaxyShift
     end
     if hud.samples then
         return 46 + M.hudPrimaryStatusGap + galaxyShift
@@ -1386,6 +1393,24 @@ function M:drawMinimap()
         local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
+    if self.expedition.phase == "returning" then
+        -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
+        -- readout used to be a full-width standalone line during the
+        -- returning phase, competing for attention with the DIST/CASH/fuel
+        -- HUD text. It is small supplementary context (expected slot value),
+        -- not primary flight info, so it is now drawn as a small right-
+        -- aligned line directly above the minimap chart instead.
+        self.smallFont = self.smallFont or fonts.get(8)
+        local previousOddsFont = love.graphics.getFont()
+        love.graphics.setFont(self.smallFont)
+        love.graphics.setColor(0.6, 0.8, 1)
+        -- Full canvas width (rather than the narrow size+4 minimap column)
+        -- so the localized Korean odds string (wider than its English
+        -- equivalent at this small font) stays on one line instead of
+        -- wrapping down into the minimap circle below it.
+        love.graphics.printf(self:slotOddsLine(), 4, hudHeight - 9, viewport.width - 8, "right")
+        love.graphics.setFont(previousOddsFont)
+    end
     if view.checkpointBeyond then
         -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct
         -- magenta from the orange Earth-return marker above, and offset
@@ -1889,8 +1914,9 @@ function M:draw()
         self.smallFont = self.smallFont or fonts.get(8)
         local previousOddsFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
-        love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(self:slotOddsLine(), 12, 197, viewport.width - 24, "center")
+        -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
+        -- line is now drawn above the minimap chart in drawMinimap() instead
+        -- of as a full-width standalone line here.
         -- The slot result panel's symbol/WIN lines previously used the
         -- default font (measured 160px for "PLANET  PLANET  PLANET" and
         -- 155px for "WIN +$40  PENDING $40" via GAME_FONTPROBE) inside a
