@@ -1924,6 +1924,17 @@ function M.run()
         "launch loadout box top (" .. PlayScene.launchLoadoutBoxTop ..
         ") does not fully cover the Earth disc's top edge (" .. earthTopY .. ")")
 
+    -- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
+    -- panel title itself was flagged for removal -- the card's contents
+    -- (hull/upgrades/forecast/steering/odds) are self-explanatory once
+    -- rendered inside an obviously bordered box directly below the Earth
+    -- disc, so a redundant caption line just eats vertical space without
+    -- adding information. M.showLaunchLoadoutTitle gates the title printf
+    -- in draw(); this regression pins it to false so the caption line and
+    -- its row-step gap stay removed.
+    assert(PlayScene.showLaunchLoadoutTitle == false,
+        "launch loadout panel title should stay hidden (docs/feedback item 4)")
+
     -- Ascending no longer draws HOLD LEFT/HOLD RIGHT boxes; the full
     -- canvas is still a tap-hold fallback (left half / right half).
     local ascendControls = PlayScene.ascendControls

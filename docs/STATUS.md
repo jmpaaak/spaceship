@@ -1,4 +1,16 @@
 # STATUS
+## "발사 장비"(LAUNCH LOADOUT) 패널 타이틀 제거 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 마지막 남은 슬라이스("발사 장비" 패널 타이틀 자체 검토)를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short`는 clean이었으므로 새 슬라이스를 착수했다.
+
+- `game/scenes/play.lua`에 신규 `M.showLaunchLoadoutTitle = false` 플래그를 추가했다. LAUNCH LOADOUT 카드의 내용물(선체/업그레이드/예보/조종속도/오즈 수치)이 뚜렷하게 테두리 쳐진 박스 안에 표본 도감 스트립 바로 아래 위치해 캡션 없이도 문맥상 자명하다고 판단해, 캡션 텍스트를 완전히 삭제하지 않고 플래그로 게이트해 향후 사이클이 실기기 피드백에 따라 손쉽게 되돌릴 수 있게 했다.
+- `M:draw()`의 LAUNCH LOADOUT 카드 렌더 구간이 `M.showLaunchLoadoutTitle`이 참일 때만 `i18n.t("launch_loadout_title")` printf와 그에 따른 `rowStep` 세로 간격 소비를 수행하도록 분기했다(거짓이면 선체 줄이 카드 상단 바로 아래에서 시작).
+- `game/self_test.lua`에 `PlayScene.showLaunchLoadoutTitle == false` 회귀 테스트를 추가했다(RED 확인 후 GREEN).
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`, 1080×1920, ko 로케일, `build/spaceship-runtime-preview-title-removed.png`)를 vision으로 확인해, 카드가 "발사 장비" 캡션 없이 표본 도감 스트립 바로 아래에서 곧바로 "선체 3"으로 시작하고 빈 줄도 남지 않음을 확인했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 4번 항목을 "사실상 전량 완료"로 갱신했다(하위 5개 세부 텍스트 정리 항목 모두 완료).
+- 다음 사이클 다음 슬라이스: 3번 항목(연료 무제한 아이콘 기반 HUD 간소화, "탭하여 발사"/선체 내구도/자금/속도를 아이콘+짧은 수치로 재구성) 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
 ## 무의미한 "SHIP STARTER" 함선명 라인을 STARTER만 소유 중일 때는 숨김 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 남은 슬라이스 중 하나("STARTER" 함선명 제거)를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short`에는 전 사이클이 남긴 미커밋 diff(`game/scenes/play.lua`, `game/self_test.lua`)가 있었으므로 그 작업을 이어받아 완성하고 검증했다(새로 시작하지 않음).

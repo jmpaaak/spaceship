@@ -170,6 +170,16 @@ M.launchHudHeight = 32
 M.launchLoadoutBoxTop = 202
 M.launchLoadoutRowStep = 10
 
+-- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
+-- panel caption itself was flagged for removal during the "remove
+-- unnecessary text" review -- the card's own contents (hull/upgrades/
+-- forecast/steering/odds numbers) are self-explanatory once shown inside
+-- an obviously bordered box directly under the Earth disc, so the extra
+-- caption line was pure redundant text eating a row of vertical space.
+-- Kept as a named flag (rather than deleting the printf outright) so a
+-- future cycle can re-enable it cheaply if real-device feedback disagrees.
+M.showLaunchLoadoutTitle = false
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1709,9 +1719,11 @@ function M:draw()
         love.graphics.setFont(self.smallFont)
         local row = M.launchLoadoutBoxTop + 4
         local rowStep = M.launchLoadoutRowStep
-        love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf(i18n.t("launch_loadout_title"), 16, row, viewport.width - 32, "center")
-        row = row + rowStep
+        if M.showLaunchLoadoutTitle then
+            love.graphics.setColor(0.7, 0.9, 1)
+            love.graphics.printf(i18n.t("launch_loadout_title"), 16, row, viewport.width - 32, "center")
+            row = row + rowStep
+        end
         if loadout.ship then
             love.graphics.setColor(1, 0.8, 0.3)
             love.graphics.printf(loadout.ship, 16, row, viewport.width - 32, "center")
