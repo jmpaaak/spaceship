@@ -593,6 +593,46 @@ end
 -- testHullShieldIcon/testCashCoinIcon: even-length flat polygon list, at
 -- least a triangle, spans above and below cy, and horizontally symmetric
 -- around cx.
+-- docs/feedback/INBOX.md UI/HUD item 6 ("표본 9종 도감 정리 + 슬롯 6개를 함선
+-- 장비 카드 UI로 전환"): the 6-return-slot concept is being reinterpreted as
+-- 6 named gear cards. First engine-only slice: game/gear.lua's catalog
+-- must have exactly 6 entries (mirroring expedition.slotCount's ceiling of
+-- 6), and M.equipped(run) must map the existing durability/sampleYield/
+-- steering upgrade levels onto the three cards that already have a
+-- purchasable upgradeField, reporting nothing for the three cards that are
+-- not yet purchasable (lucky_dice/streak_amplifier/precision_gyro).
+local function testGearCatalog()
+    local gear = require("game.gear")
+    assert(#gear.catalog == 6, "gear catalog must have exactly 6 cards (mirrors the 6 return slots)")
+    assert(gear.cardCount == 6)
+
+    local freshRun = expedition.new()
+    local noneEquipped = gear.equipped(freshRun)
+    assert(#noneEquipped == 0, "a fresh run with all upgrade levels at 0 has no equipped gear yet")
+
+    freshRun.durabilityUpgradeLevel = 2
+    freshRun.sampleYieldUpgradeLevel = 1
+    local equipped = gear.equipped(freshRun)
+    assert(#equipped == 2, "only cards whose mapped upgrade level is above 0 should be reported as equipped")
+    local byId = {}
+    for _, entry in ipairs(equipped) do byId[entry.id] = entry end
+    assert(byId.reinforced_plating and byId.reinforced_plating.level == 2)
+    assert(byId.collection_magnet and byId.collection_magnet.level == 1)
+    assert(byId.overdrive_core == nil, "steering level is still 0, overdrive core must not be equipped")
+
+    freshRun.steeringUpgradeLevel = 3
+    local allThreeEquipped = gear.equipped(freshRun)
+    assert(#allThreeEquipped == 3)
+    local idsFound = {}
+    for _, entry in ipairs(allThreeEquipped) do idsFound[entry.id] = true end
+    assert(idsFound.overdrive_core and idsFound.reinforced_plating and idsFound.collection_magnet)
+
+    -- The three not-yet-purchasable cards must never appear as equipped,
+    -- no matter what upgrade levels are set, since they have no
+    -- upgradeField mapping.
+    assert(not idsFound.lucky_dice and not idsFound.streak_amplifier and not idsFound.precision_gyro)
+end
+
 local function testSteerSpeedIcon()
     local PlayScene = require("game.scenes.play")
     local points = PlayScene.speedIconPoints(20, 20, 8)
@@ -2453,6 +2493,7 @@ function M.run()
     testSteerSpeedIcon()
     testFuelUpgradeHiddenFromShop()
     testFuelUpgradeMessagingRemoved()
+    testGearCatalog()
 
     print("SPACESHIP_UNIT_OK")
 end

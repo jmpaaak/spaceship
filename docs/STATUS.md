@@ -314,3 +314,16 @@
 - `git diff --check` 재실행으로 EOF 경고가 사라졌음을 확인(출력 없음 = clean).
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`). 이 슬라이스는 공백/EOF 정규화와 기존 작업의 커밋일 뿐 신규 게임 로직 변경이 없어 런타임 캡처는 필요하지 않았다.
 - 다음 사이클 다음 슬라이스: 위 297번째 줄(이전 사이클 기록)에서 이미 식별된 항목 11의 남은 부분(a: `launchForecastLine` 재정의, c: 활성 연료 필드 재설계) 중 하나, 또는 3번 항목(속도/스피드미터 아이콘화 재검토), 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
+## 항목 6 첫 슬라이스 — 슬롯 6개를 함선 장비 카드 6종으로 재해석하는 game/gear.lua 카탈로그 추가 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 6번(표본 도감 정리 검토 + 슬롯 6개를 개성 있는 함선 장비 카드 UI로 전환)의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.
+
+- 귀환 시 `slotOpportunities` 최대치인 "슬롯 6개"가 추상적인 확률 슬롯으로만 표시되고 있어, 사용자가 요청한 "발라트로 조커 카드처럼 이름·아이콘·능력이 있는 6종 함선 장비" 재해석을 위한 데이터 카탈로그부터 착수했다(UI/렌더 변경은 이번 슬라이스 범위 밖).
+- 신규 `game/gear.lua`에 `M.catalog`(정확히 6개 항목, `M.cardCount == 6`)를 추가했다. 사용자 세션 초안의 6종(오버드라이브 코어/강화 장갑판/채집 자석/행운의 주사위/스트릭 증폭기/정밀 자이로)을 모두 담되, 앞의 세 개(오버드라이브 코어=steeringUpgradeLevel, 강화 장갑판=durabilityUpgradeLevel, 채집 자석=sampleYieldUpgradeLevel)는 이미 존재하는 EARTH SHOP 업그레이드 레벨에 `upgradeField`로 매핑했다. 뒤의 세 개(행운의 주사위/스트릭 증폭기/정밀 자이로)는 대응하는 단일 수치 업그레이드가 아직 없어(슬롯 오즈·스트릭 배율·조종 반응성은 지금도 다른 메커니즘이 따로 존재) `upgradeField = nil`로 남겨 "아직 구매 불가"임을 정직하게 표현했다.
+- `M.equipped(run)` 순수 함수가 `upgradeField`를 가진 카드 중 해당 레벨이 0보다 큰 것만 `.level` 필드를 추가한 얕은 사본으로 반환한다. `upgradeField`가 `nil`인 세 카드는 run 상태와 무관하게 항상 결과에서 제외된다.
+- `game/self_test.lua`에 `testGearCatalog()`(신규)을 추가했다 — 카탈로그 크기 6, 레벨 0에서는 미장착, `durabilityUpgradeLevel`/`sampleYieldUpgradeLevel`을 각각 세팅했을 때 해당 카드만 정확한 `.level`로 장착 보고, `steeringUpgradeLevel`까지 세팅하면 3종 모두 장착, 그리고 행운의 주사위/스트릭 증폭기/정밀 자이로는 어떤 레벨 조합에서도 절대 장착되지 않음을 회귀 검증한다(RED 확인: `game.gear` 모듈이 없어 `require` 실패로 재현 → GREEN 전환).
+- 이번 슬라이스는 데이터/엔진 전용이다(신규 UI 렌더/HUD/EARTH SHOP 화면 변경 없음). 화면에 보이는 변화가 없으므로 실제 LÖVE 런타임 캡처는 이번 슬라이스에서 필요하지 않았다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:44`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md` 6번 항목에 이번 슬라이스 완료 표시 및 구현 요약, 남은 작업(카드 아이콘 UI 노출, 표본 도감 스트립 제거 재검토, 나머지 3종 카드 구매 경로 설계)을 기록했다.
+- 다음 사이클 다음 슬라이스: 6번 항목의 남은 부분(HUD 하단 또는 EARTH SHOP에 `gear.equipped(run)` 아이콘 상시 노출 UI 추가, 표본 도감 스트립 제거 여부 재검토, 행운의 주사위/스트릭 증폭기/정밀 자이로의 실제 구매/장착 경로 설계) 중 하나, 또는 11번 항목의 남은 부분(a: `launchForecastLine` 연료-종속 프레이밍 재정의, c: 활성 연료 필드 재설계) 중 하나로 진행.
