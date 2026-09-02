@@ -276,6 +276,27 @@ function love.load()
         scene.expedition.pendingSampleValue = 25
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
+    elseif capturePhase == "ascending-joystick-diagonal" then
+        -- Real-runtime capture for the new omnidirectional joystick
+        -- movement (docs/GAME_DESIGN.md 이동 방식 개선 항목 1). Simulates a
+        -- diagonal drag touch held for a full second so the resulting
+        -- frame visibly shows the ship having moved both horizontally
+        -- (self.ship.x) and vertically off the automatic altitude line
+        -- (self.verticalOffset), which the old binary LEFT/RIGHT-only
+        -- input could never produce.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 500
+        scene.ship.y = -500
+        scene.ship.x = 0
+        local joystick = require("game.joystick")
+        scene.touches["dev-joystick"] = {
+            originX = 90, originY = 200,
+            x = 90 + joystick.maxRadius, y = 200 + joystick.maxRadius,
+        }
+        local world = require("game.world")
+        world.nearbyPlanets = function() return {} end
+        scene:update(1)
     elseif capturePhase == "launch-with-specimens" then
         -- Real-runtime capture for the launch-screen specimen log strip
         -- (docs/feedback 2026-09-02 request: show off exploration finds

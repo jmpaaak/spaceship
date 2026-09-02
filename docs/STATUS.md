@@ -412,3 +412,15 @@
 - `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록(1~6번) 전체가 이제 완료됐다.
 - 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 조종 방식 개선 슬라이스 1: 조이스틱 전방향 이동 (완료)
+
+사용자가 조종/우주 구조 개편을 요청했다: (1) 조이스틱을 통한 전방향 이동, (2) 지구 중심 은하계(태양계) 기반 원형 대우주 + 미니맵, (3) 우주 경계 없음, 미니맵에 이탈 거리/방향만 표시. 합의된 계획: 연료/귀환 경제는 지구로부터의 반경 거리를 기존 ALT 역할로 대체, 은하계는 기존 "섹터"를 대체(은하계 안에서만 행성 생성), 3가지를 슬라이스로 나눠 순서대로 진행. 이번 사이클은 슬라이스 1(조이스틱)만 처리한다.
+
+- `game/joystick.lua`를 새로 추가했다. LÖVE API에 의존하지 않는 순수 벡터 계산 `M.vector(originX, originY, currentX, currentY)`가 드래그 거리 6px(`M.deadzone`) 미만이면 `(0,0,0)`(방향 없음)을, 데드존~40px(`M.maxRadius`) 사이는 선형 보간된 크기(`0~1`)의 정규화 방향 벡터를 반환한다. 터치/마우스/향후 게임패드 스틱 등 어떤 입력 표면에도 재사용 가능하다.
+- `game/scenes/play.lua`의 `PlayScene:touchpressed`가 상승·귀환 phase의 조종 터치에 `originX`/`originY`(눌린 시점 좌표)를 함께 저장한다. 새 `PlayScene:joystickVector()`가 활성 터치 중 데드존을 넘은 드래그가 있으면 그 방향/크기를 반환하고, 없으면(단순 탭-홀드 포함) `(0,0,0)`을 반환해 기존 좌/우 이진 조종으로 완전히 폴백한다 — 기존 `LEFT`/`RIGHT` 탭-홀드 터치 UX와 engine-hosted 회귀 테스트는 전혀 변경되지 않는다.
+- `PlayScene:update`가 조이스틱 크기가 0보다 크면 `expedition.steeringSpeed(run)`을 기준으로 `ship.x`(수평)와 새 `self.verticalOffset`(수직, 자동 상승/귀환 라인 위에 얹는 오프셋)을 동시에 이동시켜 실제 전방향 이동을 만든다. `self.verticalOffset`은 `PlayScene.verticalOffsetLimit`(90px)로 clamp되어 자동 고도/연료 경제(다음 슬라이스에서 반경 거리로 전환 예정) 자체는 건드리지 않으면서 상하좌우 회피·수집 기동만 가능하게 한다. `ship.y`는 이제 `-altitude + verticalOffset`로 계산된다. 재출발(relaunch) 시 `verticalOffset`도 0으로 초기화된다.
+- engine-hosted 테스트(`testJoystick()`, `game/self_test.lua`)가 `joystick.vector`의 데드존/최대반경/중간값 보간을 검증하고, 대각선 드래그가 `ship.x`와 `verticalOffset`을 동일한 크기로 동시에 이동시키는지, `verticalOffsetLimit` clamp가 작동하는지, 드래그 없는 단순 탭-홀드가 기존 이진 좌/우 조종 그대로 동작하는지(`verticalOffset` 불변 포함)를 검증한다.
+- `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:26`).
+- `main.lua`에 `GAME_CAPTURE_PHASE=ascending-joystick-diagonal` 개발 전용 진입 경로를 추가해 대각선 드래그를 1초간 시뮬레이션한 실제 LÖVE runtime capture를 시도했다. 카메라가 항상 우주선을 화면 중앙 고정 좌표(`shipScreenX/Y`)에 그리고 월드만 스크롤하는 기존 렌더링 구조상, 정적 스크린샷 한 장으로는 대각선 이동 자체를 시각적으로 증명할 수 없다(이전 사이클들의 트윙클/스크린쉐이크 애니메이션과 동일한 제약). 실제 이동 검증은 `testJoystick()`의 `ship.x`/`verticalOffset` 수치 단언이 담당한다.
+- 남은 다음 슬라이스 후보 (사용자 승인된 순서): (1) 슬라이스 2 — 지구 중심 은하계(태양계) 기반 원형 대우주 구조로 `game/world.lua`의 섹터 해시를 은하계 단위로 재구성(경제는 반경 거리 기반으로 전환), (2) 슬라이스 3 — 미니맵(은하계 중심 행성·내 위치·경계 이탈 거리/방향 표시), (3) 기존에 남아있던 UI 정렬/AetherAI 에셋 항목들.
+

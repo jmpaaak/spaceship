@@ -7,6 +7,75 @@ local collectionStore = require("game.collection_store")
 local PlayScene = require("game.scenes.play")
 local M = {}
 
+-- Omnidirectional joystick movement (docs/GAME_DESIGN.md 이동 방식 개선 항목
+-- 1, "조이스틱을 통해 전방향으로 이동 가능함"), split into its own top-level
+-- function (instead of inline in M.run()) because M.run() had already
+-- accumulated close to Lua's 200-local-variables-per-function limit; a
+-- few more locals inline pushed it over ("function at line 10 has more
+-- than 200 local variables") even inside a scoping do...end block, since
+-- Lua counts peak simultaneously-live locals within one function body.
+local function testJoystick()
+    local joystick = require("game.joystick")
+    local jdx, jdy, jmag = joystick.vector(0, 0, 0, 2)
+    assert(jdx == 0 and jdy == 0 and jmag == 0, "drag inside the deadzone must report zero magnitude")
+    jdx, jdy, jmag = joystick.vector(0, 0, 0, joystick.maxRadius)
+    assert(math.abs(jdx - 0) < 1e-9 and math.abs(jdy - 1) < 1e-9 and math.abs(jmag - 1) < 1e-9,
+        "a full-radius straight-down drag must report unit vector (0,1) at magnitude 1")
+    jdx, jdy, jmag = joystick.vector(0, 0, joystick.maxRadius * 2, 0)
+    assert(math.abs(jdx - 1) < 1e-9 and math.abs(jdy - 0) < 1e-9 and jmag == 1,
+        "a drag beyond maxRadius must clamp magnitude at 1, not exceed it")
+    local halfRadius = (joystick.deadzone + joystick.maxRadius) / 2
+    jdx, jdy, jmag = joystick.vector(0, 0, 0, halfRadius)
+    assert(jmag > 0 and jmag < 1, "a drag between deadzone and maxRadius must interpolate strictly between 0 and 1")
+
+    -- A dragged touch (originX/originY set away from the current x/y) must
+    -- move the ship diagonally: horizontal speed on ship.x same as before,
+    -- plus a new vertical maneuvering offset (self.verticalOffset) applied
+    -- on top of the automatic altitude line, scaled by the same
+    -- expedition.steeringSpeed(run) used for left/right so STEERING upgrades
+    -- also improve joystick responsiveness.
+    local joystickMoveScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    joystickMoveScene.expedition.phase = "ascending"
+    assert(joystickMoveScene.verticalOffset == 0)
+    -- Drag straight down-right from origin (90,10) to (90+maxRadius,10+maxRadius)
+    -- normalizes to roughly (0.707, 0.707) at full magnitude.
+    joystickMoveScene.touches["stick"] = {
+        originX = 90, originY = 10,
+        x = 90 + joystick.maxRadius, y = 10 + joystick.maxRadius,
+    }
+    local shipXBefore, verticalBefore = joystickMoveScene.ship.x, joystickMoveScene.verticalOffset
+    joystickMoveScene:update(1)
+    assert(joystickMoveScene.ship.x > shipXBefore, "joystick drag with a positive x component must move ship.x right")
+    assert(joystickMoveScene.verticalOffset > verticalBefore,
+        "joystick drag with a positive y component must increase verticalOffset")
+    assert(math.abs(joystickMoveScene.ship.x - shipXBefore) - math.abs(joystickMoveScene.verticalOffset - verticalBefore)
+        < 1e-6, "a 45-degree drag must move x and verticalOffset by equal magnitudes")
+
+    -- verticalOffset must clamp so joystick-driven vertical maneuvering
+    -- can't push the ship arbitrarily far from the automatic altitude line.
+    joystickMoveScene.verticalOffset = PlayScene.verticalOffsetLimit - 1
+    joystickMoveScene:update(1)
+    assert(joystickMoveScene.verticalOffset == PlayScene.verticalOffsetLimit,
+        "verticalOffset must clamp at PlayScene.verticalOffsetLimit")
+
+    -- A plain tap-and-hold touch (no drag away from its origin) must keep
+    -- using the legacy binary left/right steering exactly as before, so
+    -- existing touch UX (returnControls/ascendControls bands) is unchanged.
+    local expedition = require("game.expedition")
+    local tapHoldScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    tapHoldScene.expedition.phase = "ascending"
+    tapHoldScene.touches["hold"] = { x = 20, y = 160, originX = 20, originY = 160 }
+    local tapShipXBefore = tapHoldScene.ship.x
+    tapHoldScene:update(1)
+    assert(tapHoldScene.ship.x == tapShipXBefore - expedition.steeringSpeed(tapHoldScene.expedition),
+        "an undragged tap-and-hold touch must still steer via the legacy binary left/right path")
+    assert(tapHoldScene.verticalOffset == 0, "an undragged touch must not move verticalOffset")
+end
+
 function M.run()
     assert(viewport.width == 180 and viewport.height == 320)
     local scale, x, y = viewport.fit(720, 1280, false)
@@ -1573,6 +1642,10 @@ function M.run()
     assert(sampleBonusMessageScene.message == "COMET COMET COMET +$40 SAMPLE +$25  0 LEFT",
         "slot spin completion message must include the sample bonus: "
             .. tostring(sampleBonusMessageScene.message))
+
+    -- Omnidirectional joystick movement (docs/GAME_DESIGN.md 이동 방식 개선
+    -- 항목 1, "조이스틱을 통해 전방향으로 이동 가능함").
+    testJoystick()
 
     print("SPACESHIP_UNIT_OK")
 end

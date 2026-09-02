@@ -4,8 +4,22 @@ local bestAltitudeStore = require("game.best_altitude_store")
 local collectionStore = require("game.collection_store")
 local viewport = require("game.viewport")
 local world = require("game.world")
+local joystick = require("game.joystick")
 local M = {}
 M.__index = M
+
+-- Omnidirectional movement, slice 1 (docs/GAME_DESIGN.md 이동 방식 개선 항목
+-- 1, "조이스틱을 통해 전방향으로 이동 가능함"): the ship's horizontal
+-- steering (self.ship.x) already used the full expedition.steeringSpeed
+-- axis. This adds a vertical maneuvering axis (self.verticalOffset) driven
+-- by the same joystick's Y component, layered on top of the still-
+-- automatic altitude/fuel economy (game/expedition.lua) so a player can
+-- dodge/collect in any direction around the auto-advancing flight line
+-- without changing the fuel/distance economy itself. Slice 2 (은하계 기반
+-- 우주 구조, per user's agreed plan) will replace the automatic altitude
+-- line with real free-roam position entirely.
+local verticalOffsetLimit = 90
+M.verticalOffsetLimit = verticalOffsetLimit
 
 -- Returning-phase LEFT/RIGHT/SPIN touch band. Was a 24px-tall row
 -- (254-278), which only clears ~24pt at the smallest supported window
@@ -307,6 +321,7 @@ function M.new(options)
         shipShakeMagnitude = sampleTierShakeMultiplier("common"),
         slotSpin = nil,
         touches = {},
+        verticalOffset = 0,
         message = "TAP TO LAUNCH",
     }, M)
 end
@@ -639,6 +654,35 @@ function M:steeringButtonState()
     return { leftActive = left, rightActive = right }
 end
 
+-- Omnidirectional joystick vector (docs/GAME_DESIGN.md 이동 방식 개선 항목 1):
+-- reads the drag distance of any active touch from its press origin
+-- (game/joystick.lua) so the ship can move in any direction, not just
+-- along the left/right axis. Touches that haven't been dragged past the
+-- deadzone (including every touch created directly in tests without an
+-- origin, and simple taps that never moved) report magnitude 0, so
+-- callers should fall back to the legacy binary left/right steering in
+-- that case -- this keeps existing tap-and-hold controls working exactly
+-- as before while adding full-direction control once a player actually
+-- drags.
+function M:joystickVector()
+    for _, touch in pairs(self.touches) do
+        if touch.originX then
+            local dx, dy, magnitude = joystick.vector(touch.originX, touch.originY, touch.x, touch.y)
+            if magnitude > 0 then
+                return dx, dy, magnitude
+            end
+        end
+    end
+    return 0, 0, 0
+end
+
+local function clampVerticalOffset(value)
+    if value > verticalOffsetLimit then return verticalOffsetLimit end
+    if value < -verticalOffsetLimit then return -verticalOffsetLimit end
+    return value
+end
+M.clampVerticalOffset = clampVerticalOffset
+
 function M:update(dt)
     self.time = self.time + dt
     local steering = self:steeringButtonState()
@@ -707,13 +751,21 @@ function M:update(dt)
         end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
-        self.ship.x = self.ship.x
-            + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
-            * expedition.steeringSpeed(self.expedition) * dt
+        local joyDx, joyDy, joyMagnitude = self:joystickVector()
+        if joyMagnitude > 0 then
+            local speed = expedition.steeringSpeed(self.expedition)
+            self.ship.x = self.ship.x + joyDx * speed * joyMagnitude * dt
+            self.verticalOffset = clampVerticalOffset(
+                self.verticalOffset + joyDy * speed * joyMagnitude * dt)
+        else
+            self.ship.x = self.ship.x
+                + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
+                * expedition.steeringSpeed(self.expedition) * dt
+        end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         expedition.update(self.expedition, dt)
-        self.ship.y = -self.expedition.altitude
+        self.ship.y = -self.expedition.altitude + self.verticalOffset
         self.ship.fuel = self.expedition.fuel
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
@@ -873,6 +925,7 @@ function M:keypressed(key)
                     self.ship.x = 0
                     self.ship.y = 0
                     self.ship.fuel = self.expedition.fuel
+                    self.verticalOffset = 0
                     self.discovered = {}
                     self.collided = {}
                     self.discoveredCount = 0
@@ -886,7 +939,7 @@ end
 
 function M:touchpressed(id, x, y)
     if self.expedition.phase == "ascending" then
-        self.touches[id] = { x = x, y = y }
+        self.touches[id] = { x = x, y = y, originX = x, originY = y }
         return
     end
     if self.expedition.phase == "returning" then
@@ -894,7 +947,7 @@ function M:touchpressed(id, x, y)
         if inControlRow and x >= returnControls.slotMinX and x <= returnControls.slotMaxX then
             self:keypressed("space")
         elseif inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
-            self.touches[id] = { x = x, y = y }
+            self.touches[id] = { x = x, y = y, originX = x, originY = y }
         end
         return
     end
