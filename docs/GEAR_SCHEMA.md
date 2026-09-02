@@ -381,3 +381,40 @@ drops/collision detection/detection radius/auto-collect/shop pricing) —
 that remains deferred to a follow-up slice within this lane's
 `loop/PROMPT.md` scope (minimal-loader-call exception only), same posture
 as every other gear engine documented above.
+
+### (D) insurance + (F) shopDiscount run wiring (follow-up slice)
+
+`game/expedition.lua` now consumes two of the category (C)~(F) conversion
+functions above within the "최소한의 로더 호출" exception already used for
+items 9/10(b):
+
+- **(D) insurance** — `M.damage(run, amount)` checks
+  `gear.hasInsurance(run.equippedGear)` when a hit would otherwise reduce
+  durability to 0. If the run hasn't already spent its one-time save this
+  expedition (`run.insuranceUsed`, reset on `M.launch`/fresh `M.new`), the
+  hit is absorbed (durability restored to 1, `run.insuranceUsed = true`,
+  the full meta-wipe `destroy(run)` is skipped) instead of triggering
+  destruction. A second lethal hit in the same expedition (insurance
+  already spent) destroys normally, matching item 14's "1회 한정" framing.
+  A new bundled hull card `hull_emergency_beacon` (uncommon, `insurance`
+  +1, tags `defense`/`control`) exercises this in tests/gameplay.
+- **(F) shopDiscount** — new `M.shopPrice(run, basePrice)` combines
+  `run.equippedGear` and `run.equippedEngineParts` into one list and calls
+  `gear.effectiveShopPrice(basePrice, parts)`. All five settlement-phase
+  purchase functions (`M.buyFuelUpgrade`, `M.buyDurabilityUpgrade`,
+  `M.buySampleYieldUpgrade`, `M.buySteeringUpgrade`, `M.buyShip`) now check
+  affordability against and charge this discounted price instead of the
+  raw `*Cost`/`scoutShipCost` field, so an equipped shopDiscount card
+  actually reduces money spent at EARTH SHOP. A new bundled hull card
+  `hull_trade_license` (uncommon, `shopDiscount` +20, tag `economy`)
+  exercises this in tests/gameplay.
+
+`game/self_test.lua`'s `testGearSurvivalAndEconomyWiring` regression-checks
+both: an insured run survives one lethal hit with money/ships/gear intact
+then destroys normally on a second lethal hit; an uninsured run destroys on
+the first hit (baseline unchanged); a discounted purchase charges exactly
+80% of the base cost while an undiscounted run still pays full price.
+
+Still deferred: (C) `luck`/`chainTrigger`/`rerollBonus` and (E)
+`detectionRadius`/`autoCollect` run wiring, plus item 12's actual drop RNG
+call sites (shop/checkpoint code, out of this lane's current scope).

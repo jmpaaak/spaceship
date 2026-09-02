@@ -248,6 +248,7 @@ local function destroy(run)
     run.gearLoadout = enginePartsModule.newLoadout()
     run.equippedGear = run.gearLoadout.hull
     run.equippedEngineParts = run.gearLoadout.engine
+    run.insuranceUsed = false
 end
 
 function M.new(options)
@@ -327,6 +328,9 @@ function M.new(options)
         gearLoadout = nil,
         equippedGear = nil,
         equippedEngineParts = nil,
+        -- Item 14(D) insurance: whether this run's one-time "파괴 시 1회
+        -- 한정 정산 없이 생존" save has already been consumed by M.damage.
+        insuranceUsed = false,
     }
     run.gearLoadout = enginePartsModule.newLoadout()
     run.equippedGear = run.gearLoadout.hull
@@ -371,6 +375,7 @@ function M.launch(run)
         run.fuel = run.maxFuel + (run.bankedFuelBonus or 0)
         run.bankedFuelBonus = 0
         run.durability = run.maxDurability
+        run.insuranceUsed = false
         run.returnDistance = 0
         run.slotOpportunities = 0
         run.slotSpins = 0
@@ -401,17 +406,32 @@ function M.launch(run)
     return true
 end
 
+-- Item 14(F) shopDiscount wiring: equipped hull/engine parts' shopDiscount
+-- effects (already a pure percentage-discount conversion via
+-- gear.effectiveShopPrice) reduce a base shop price. Exposed as its own
+-- function (not just inlined into each buy* below) so UI/tests can display
+-- the discounted price before a purchase, same pattern as
+-- M.effectiveClimbSpeed/M.steeringSpeed above.
+function M.shopPrice(run, basePrice)
+    local parts = {}
+    for _, part in ipairs(run.equippedGear or {}) do parts[#parts + 1] = part end
+    for _, part in ipairs(run.equippedEngineParts or {}) do parts[#parts + 1] = part end
+    return gearModule.effectiveShopPrice(basePrice, parts)
+end
+
 function M.buyFuelUpgrade(run)
-    if run.phase ~= "settlement" or run.money < run.fuelUpgradeCost then return false end
-    run.money = run.money - run.fuelUpgradeCost
+    local price = M.shopPrice(run, run.fuelUpgradeCost)
+    if run.phase ~= "settlement" or run.money < price then return false end
+    run.money = run.money - price
     run.fuelUpgradeLevel = run.fuelUpgradeLevel + 1
     refreshShipStats(run)
     return true
 end
 
 function M.buyDurabilityUpgrade(run)
-    if run.phase ~= "settlement" or run.money < run.durabilityUpgradeCost then return false end
-    run.money = run.money - run.durabilityUpgradeCost
+    local price = M.shopPrice(run, run.durabilityUpgradeCost)
+    if run.phase ~= "settlement" or run.money < price then return false end
+    run.money = run.money - price
     run.durabilityUpgradeLevel = run.durabilityUpgradeLevel + 1
     refreshShipStats(run)
     return true
@@ -425,8 +445,9 @@ function M.sampleYieldMultiplier(run)
 end
 
 function M.buySampleYieldUpgrade(run)
-    if run.phase ~= "settlement" or run.money < run.sampleYieldUpgradeCost then return false end
-    run.money = run.money - run.sampleYieldUpgradeCost
+    local price = M.shopPrice(run, run.sampleYieldUpgradeCost)
+    if run.phase ~= "settlement" or run.money < price then return false end
+    run.money = run.money - price
     run.sampleYieldUpgradeLevel = run.sampleYieldUpgradeLevel + 1
     return true
 end
@@ -447,8 +468,9 @@ function M.steeringSpeed(run)
 end
 
 function M.buySteeringUpgrade(run)
-    if run.phase ~= "settlement" or run.money < run.steeringUpgradeCost then return false end
-    run.money = run.money - run.steeringUpgradeCost
+    local price = M.shopPrice(run, run.steeringUpgradeCost)
+    if run.phase ~= "settlement" or run.money < price then return false end
+    run.money = run.money - price
     run.steeringUpgradeLevel = run.steeringUpgradeLevel + 1
     return true
 end
@@ -468,11 +490,12 @@ function M.shipTradeoff(run, shipId)
 end
 
 function M.buyShip(run, shipId)
-    if run.phase ~= "settlement" or shipId ~= "scout" or run.ownedShips.scout
-        or run.money < run.scoutShipCost then
+    if run.phase ~= "settlement" or shipId ~= "scout" or run.ownedShips.scout then
         return false
     end
-    run.money = run.money - run.scoutShipCost
+    local price = M.shopPrice(run, run.scoutShipCost)
+    if run.money < price then return false end
+    run.money = run.money - price
     run.ownedShips.scout = true
     return true
 end
@@ -545,6 +568,18 @@ function M.damage(run, amount)
     end
     run.durability = math.max(0, run.durability - amount)
     if run.durability == 0 then
+        -- Item 14(D) insurance wiring: "파괴 시 1회 한정 정산 없이 생존" —
+        -- an equipped part with a positive `insurance` total (already a
+        -- pure boolean gate via gear.hasInsurance) consumes ONE save per
+        -- run instead of triggering the full meta wipe. run.insuranceUsed
+        -- tracks whether this run's single save has already been spent, so
+        -- a second lethal hit destroys normally even with insurance gear
+        -- still equipped.
+        if not run.insuranceUsed and gearModule.hasInsurance(run.equippedGear or {}) then
+            run.insuranceUsed = true
+            run.durability = 1
+            return false
+        end
         destroy(run)
         return true
     end

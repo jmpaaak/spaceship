@@ -299,6 +299,30 @@
       "effects": [
         { "type": "speed", "value": 4 }
       ]
+    },
+    {
+      "id": "hull_emergency_beacon",
+      "name": "Emergency Beacon",
+      "nameKo": "비상 구조 비콘",
+      "icon": "✚",
+      "rarity": "uncommon",
+      "tags": ["defense", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "insurance", "value": 1 }
+      ]
+    },
+    {
+      "id": "hull_trade_license",
+      "name": "Trade License",
+      "nameKo": "교역 허가증",
+      "icon": "▥",
+      "rarity": "uncommon",
+      "tags": ["economy"],
+      "editions": [],
+      "effects": [
+        { "type": "shopDiscount", "value": 20 }
+      ]
     }
   ]
 }

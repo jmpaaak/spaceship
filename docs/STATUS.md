@@ -1,4 +1,20 @@
 # STATUS
+## [spaceship-gear 레인] 항목14 후속 — (D) insurance + (F) shopDiscount 실제 run 배선 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 14의 (D)(F) 카테고리(`insurance`/`shopDiscount`)를 실제 `run` 상태에 배선했다. 항목13→9→10→12→14가 이미 1차로 모두 완료된 상태에서, 항목14 잔여 슬라이스(C~F 카테고리의 실제 run 배선) 중 (D)/(F)를 이번 사이클에서 처리했다. `loop/PROMPT.md`가 명시적으로 허용한 "gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출" 예외 범위에서 `game/expedition.lua`만 수정했다(`play.lua`/`i18n.lua`/`world.lua`는 건드리지 않음). preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- TDD로 `game/self_test.lua`에 `testGearSurvivalAndEconomyWiring()`을 먼저 추가했다(RED 확인: "an equipped insurance part must prevent destruction on the first lethal hit" 단언 실패 — insurance/shopDiscount가 아직 run에 배선되지 않은 상태이므로 첫 치명타에 바로 파괴됨).
+- **(D) insurance** — `game/expedition.lua`의 `M.damage(run, amount)`가 치명타로 내구도가 0이 될 때 `gear.hasInsurance(run.equippedGear)`를 확인한다. 이번 원정에서 아직 보험을 소진하지 않았다면(신규 `run.insuranceUsed`, `M.new`에서 `false`로 시작하고 `M.launch`의 재발사 분기에서도 리셋), 내구도를 1로 복구하고 전체 메타 초기화(`destroy(run)`)를 건너뛴 채 `false`(파괴 아님)를 반환한다. 같은 원정 내 두 번째 치명타는 `run.insuranceUsed == true`이므로 정상적으로 `destroy(run)`을 트리거한다 — 항목14의 "1회 한정" 요구를 정확히 구현.
+- **(F) shopDiscount** — 신규 `M.shopPrice(run, basePrice)`가 `run.equippedGear`와 `run.equippedEngineParts`를 하나의 리스트로 합쳐 `gear.effectiveShopPrice(basePrice, parts)`를 호출한다. 기존 5개 상점 구매 함수(`M.buyFuelUpgrade`/`M.buyDurabilityUpgrade`/`M.buySampleYieldUpgrade`/`M.buySteeringUpgrade`/`M.buyShip`)를 모두 갱신해 원가(`*Cost`/`scoutShipCost`) 대신 `M.shopPrice`가 계산한 할인가를 기준으로 구매 가능 여부를 판단하고 그 금액만 차감하도록 했다.
+- `game/data/hull_parts.json`을 24종에서 26종으로 확장했다: 신규 `hull_emergency_beacon`(uncommon, `insurance` +1, 태그 defense/control), `hull_trade_license`(uncommon, `shopDiscount` +20, 태그 economy) — 두 카드 모두 테스트/실제 게임 데이터로 함께 검증된다.
+- `game/self_test.lua`의 `testGearSurvivalAndEconomyWiring()`이 다음을 회귀 검증한다: 보험 카드 장착 시 첫 치명타를 생존(돈/장착 장비/페이즈 그대로 유지, `destroy()` 미실행)하고 두 번째 치명타에는 정상 파괴(돈 0으로 초기화)됨, 보험 미장착 런은 첫 치명타에 정상 파괴(회귀 안전성 확인), 할인 카드 장착 시 `M.shopPrice`가 정확히 20% 할인가를 반환하고 실제 구매가 그 할인가로 성립함(50원 소지 중 40원 지불, 잔액 10), 할인 카드 미장착 런은 정가(50원) 전액 지불. 수정 전 RED 확인 후 구현, GREEN 전환 확인.
+- `docs/GEAR_SCHEMA.md`에 "(D) insurance + (F) shopDiscount run wiring (follow-up slice)" 섹션을 추가해 계약을 문서화했다.
+- `unzip -l build/game.love`로 갱신된 `game/data/hull_parts.json`과 `game/expedition.lua`가 `.love` 번들에 정상 포함됨을 확인했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/data/hull_parts.json`/`game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md`/`docs/STATUS.md`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 14 하위에 처리 상황을 두 번째 슬라이스로 append했다.
+- 여전히 미착수: (C) `luck`/`chainTrigger`/`rerollBonus`와 (E) `detectionRadius`/`autoCollect`의 run 배선, 항목12의 실제 드롭 RNG 호출 지점(상점/체크포인트 획득 시 `gear.rollRarity`/`gear.rollEdition` 실제 연결). 다음 사이클 다음 슬라이스: 위 미착수 항목 중 하나를 선택해 진행하거나, 항목9(c)의 슬롯 교체 루프 설계/항목10(c) 엔진 부품 획득 경로 설계로 전환.
+
 ## [spaceship-gear 레인] 항목10(b) 후속 — 엔진 부품 (G) 효과 실제 run 배선(연료효율/조종반응성/부스트) (완료, 2026-09-03)
 
 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료되었으나, `docs/STATUS.md`/`docs/GEAR_SCHEMA.md`가 남긴 "다음 슬라이스" 후보 중 항목10(b)의 (G) 추진 특화 효과(fuelEfficiency/steeringResponsiveness/boostCharge)가 순수 함수(`game/gear.lua`)로만 존재하고 실제 `run` 상태에는 아직 배선되지 않은 상태였다. 이번 사이클은 `loop/PROMPT.md`가 명시적으로 허용한 "gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출" 예외 범위 안에서 이 갭을 닫았다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
