@@ -849,6 +849,7 @@ function M:update(dt)
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
+        local startX, startOffset = self.ship.x, self.verticalOffset
         if joyMagnitude > 0 then
             local speed = expedition.steeringSpeed(self.expedition)
             self.ship.x = self.ship.x + joyDx * speed * joyMagnitude * dt
@@ -864,6 +865,10 @@ function M:update(dt)
                     + ((steering.downActive and 1 or 0) - (steering.upActive and 1 or 0))
                     * speed * dt)
         end
+        local extraDx = self.ship.x - startX
+        local extraDy = self.verticalOffset - startOffset
+        local extraDistance = math.sqrt(extraDx * extraDx + extraDy * extraDy)
+        expedition.burnManeuverFuel(self.expedition, extraDistance)
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         expedition.update(self.expedition, dt)

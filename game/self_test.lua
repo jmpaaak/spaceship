@@ -96,6 +96,45 @@ local function testJoystick()
     assert(mouseScene:joystickKnob() == nil, "releasing the mouse must hide the stick knob")
 end
 
+-- First step of replacing the automatic climb line with free 2D travel
+-- (docs/STATUS.md next-slice, docs/GAME_DESIGN.md "연료소모가 거리 기반"):
+-- extra pixels from joystick / left-right steering cost extra fuel at the
+-- same px-to-fuel rate as auto-climb (fuelBurnRate / climbSpeed). Idle
+-- ascent still burns only the automatic climb fuel.
+local function testManeuverFuel()
+    local expedition = require("game.expedition")
+    local run = expedition.new()
+    local extra = expedition.maneuverFuel(run, 55)
+    assert(math.abs(extra - 55 / run.climbSpeed * run.fuelBurnRate) < 1e-9,
+        "maneuverFuel must convert extra pixels at the climb economy rate")
+    assert(expedition.maneuverFuel(run, 0) == 0)
+    assert(expedition.maneuverFuel(run, -10) == 0)
+
+    local idleScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    idleScene.expedition.phase = "ascending"
+    local idleFuelBefore = idleScene.expedition.fuel
+    idleScene:update(1)
+    local idleBurned = idleFuelBefore - idleScene.expedition.fuel
+    assert(math.abs(idleBurned - idleScene.expedition.fuelBurnRate) < 1e-9,
+        "idle ascent must burn only the automatic climb fuel")
+
+    local steerScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    steerScene.expedition.phase = "ascending"
+    steerScene.touches["hold"] = { x = 20, y = 160, originX = 20, originY = 160 }
+    local steerFuelBefore = steerScene.expedition.fuel
+    steerScene:update(1)
+    local steerBurned = steerFuelBefore - steerScene.expedition.fuel
+    local expectedExtra = expedition.maneuverFuel(
+        steerScene.expedition, expedition.steeringSpeed(steerScene.expedition))
+    assert(math.abs(steerBurned - (idleBurned + expectedExtra)) < 1e-6,
+        "left/right maneuvering must burn extra fuel proportional to extra distance, got "
+            .. tostring(steerBurned) .. " expected " .. tostring(idleBurned + expectedExtra))
+end
+
 -- Galaxy structure + radial-distance economy (docs/GAME_DESIGN.md 이동
 -- 방식 개선 항목 2, "은하계(태양계 포함) 들이 존재"; item 1's economy
 -- follow-up, "연료소모가 거리 기반"). Split into its own top-level function
@@ -1851,6 +1890,7 @@ function M.run()
     -- Omnidirectional joystick movement (docs/GAME_DESIGN.md 이동 방식 개선
     -- 항목 1, "조이스틱을 통해 전방향으로 이동 가능함").
     testJoystick()
+    testManeuverFuel()
     testGalaxyStructure()
     testMinimap()
 

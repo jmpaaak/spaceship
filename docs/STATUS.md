@@ -72,9 +72,21 @@
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
 
-## 다국어(i18n) — 데모 기본 한글 (완료)
+## 다국어(i18n) — HUD/상점/슬롯 잔여 문자열 + 데모 기본 한글 (완료)
 
-- `game/i18n.lua`에 `en`/`ko` 로케일 테이블과 `i18n.t`/`setLocale`/`phaseAbbrev`를 추가했다. HUD·상점·슬롯·버튼·요약 카드 등 사용자 노출 문자열을 `game/scenes/play.lua`에서 조회하도록 바꿨다.
-- `game/fonts.lua`가 번들 한글 폰트 `assets/fonts/AppleGothic.ttf`를 크기별로 캐시한다. `PlayScene`의 기본/작은/tiny 폰트를 이 헬퍼로 교체해 Hangul 글리프가 렌더링된다.
-- 실제 실행(`love .`, 비헤드리스)은 `main.lua`에서 `setLocale("ko")`로 한글 데모가 나온다. `game/self_test.lua`는 맨 앞과 `M.run()`에서 `en`을 고정해 기존 영어 단언을 유지한다.
-- 엔진 로직·수치 포맷 지정자는 로케일 간에 동일하다.
+이전 사이클이 `game/scenes/play.lua`의 남은 인라인 HUD·상점·슬롯·요약 문자열을 `i18n.t`로 옮기고, 데모 기본 로케일을 한글로 고정한 GREEN 변경을 워킹트리에 남긴 채 종료했다. 이번 사이클이 그 변경을 이어받아 커밋한다.
+
+- `game/scenes/play.lua`의 남은 사용자 노출 문자열(HUD, 상점 액션/상태, 슬롯 버튼, 정산/파괴 카드, LEFT/RIGHT, SPINNING, WIN 줄 등)을 `game/i18n.lua`의 `i18n.t` 조회로 바꿨다. `en` 템플릿은 기존 하드코드 영어와 바이트 단위로 같아 `game/self_test.lua` 단언이 로케일 `en`에서 그대로 통과한다.
+- `game/self_test.lua`는 파일 최상단과 `M.run()`에서 `setLocale("en")`을 고정한다. 비헤드리스 `love .`는 `main.lua`에서 `setLocale("ko")`로 한글 데모가 나온다.
+- `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:33`).
+- 남은 다음 슬라이스 후보: (1) 자동 상승 라인을 완전 자유 2D 항해로 교체하는 첫 단계 — 조이스틱/좌우 기동의 추가 이동 거리에 연료를 연동, (2) AetherAI-only 최종 에셋(공식 로그인/export 가용성).
+
+## 기동 추가 거리 연료 연동 (완료)
+
+자동 상승 라인을 완전 자유 2D 항해로 바꾸는 첫 단계: 조이스틱·좌우 기동의 extra 픽셀에만 연료를 추가로 태운다. 공회전 상승은 기존 `fuelBurnRate`만 소모한다.
+
+- `game/expedition.lua`에 `M.maneuverFuel(run, extraDistance)`와 `M.burnManeuverFuel(run, extraDistance)`를 추가했다. extra 픽셀은 자동 상승과 같은 비율(`fuelBurnRate / climbSpeed`)로 연료가 된다. 상승 phase에서만 태우고, extra가 연료를 0으로 만들면 기존과 같이 `returning`으로 전환한다. 귀환 중 회피 기동은 연료를 쓰지 않는다(이미 연료 0).
+- `PlayScene:update`가 조이스틱/좌우 이동 전후 `ship.x`와 `verticalOffset` 차이를 extra 거리로 계산해 `burnManeuverFuel`에 넘긴 뒤 기존 `expedition.update`를 호출한다. 기동 없는 탭-홀드가 아닌 idle 프레임은 extra 0이라 기존 연료 경제가 그대로다.
+- engine-hosted `testManeuverFuel()`가 (1) 55px extra가 `55 / climbSpeed * fuelBurnRate`인지, (2) idle 1초 상승이 `fuelBurnRate`만 태우는지, (3) 좌 홀드 1초가 idle + steeringSpeed extra를 태우는지 검증한다.
+- `make test` GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:33`).
+- 남은 다음 슬라이스 후보: (1) 자동 상승 라인 자체를 없애고 실제 이동 거리에만 연료를 연동(완전 자유 2D), (2) AetherAI-only 최종 에셋(공식 로그인/export 가용성).

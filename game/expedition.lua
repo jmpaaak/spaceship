@@ -146,6 +146,29 @@ function M.launchForecast(run, maxFuel)
     return altitude, slotCount(altitude, run.slotDistance)
 end
 
+-- Extra pixels from joystick / left-right steering cost extra fuel at the
+-- same px-to-fuel rate as automatic climb (fuelBurnRate / climbSpeed).
+-- First slice of free 2D travel: idle climb still burns the automatic
+-- rate; only extra maneuver distance adds fuel. Returning does not burn.
+function M.maneuverFuel(run, extraDistance)
+    if not run or not extraDistance or extraDistance <= 0 then return 0 end
+    if not run.climbSpeed or run.climbSpeed <= 0 then return 0 end
+    return extraDistance / run.climbSpeed * (run.fuelBurnRate or 0)
+end
+
+function M.burnManeuverFuel(run, extraDistance)
+    if not run or run.phase ~= "ascending" then return 0 end
+    local extra = M.maneuverFuel(run, extraDistance)
+    if extra <= 0 then return 0 end
+    run.fuel = math.max(0, run.fuel - extra)
+    if run.fuel <= 0 then
+        run.phase = "returning"
+        run.returnDistance = run.maxAltitude
+        run.slotOpportunities = slotCount(run.returnDistance, run.slotDistance)
+    end
+    return extra
+end
+
 local function settle(run)
     run.lastSampleSettlement = run.pendingSampleValue
     run.lastSlotSettlement = run.pendingSlotReward
