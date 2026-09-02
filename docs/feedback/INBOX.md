@@ -16,4 +16,6 @@
 
 - **런치 화면 지구 탐험물 전시 (2026-09-02, 사용자 요청, 완료):** ✅ 완료 — 런치 화면 HUD와 LAUNCH LOADOUT 카드 사이의 빈 공간(지구·별 배경 위)에 9종 표본 발견 도감 스트립(`SPECIMENS n/9`, 등급별 색상 칩 + 미발견 항목은 outline만)을 추가했다. `game/world.lua`의 `specimenCatalog`/`specimenKind`(3 hue family x 3 tier), `game/collection_store.lua`(파괴돼도 리셋되지 않는 영구 저장, best_altitude_store.lua와 동일한 파일 라운드트립 패턴), `game/scenes/play.lua`의 `drawSpecimenStrip`/`specimenProgress`로 구현. 표본 최초 발견 시 2초짜리 "NEW SPECIMEN: {label}" 배너도 함께 표시된다. 실제 LÖVE 런타임 캡처(1440x2560, GAME_CAPTURE_PHASE=launch-with-specimens)로 HUD/LAUNCH LOADOUT/TAP TO LAUNCH와 겹치지 않는 것을 vision으로 확인했다(최초 배치는 TAP TO LAUNCH와 겹쳐 184px 위치로 재조정함).
 
+- **런치(첫)화면 텍스트 크기·레이아웃 정리 (2026-09-02, 사용자 확정, 최우선):** 사용자가 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`)를 확인하고 첫 화면(런치 화면) UI가 정리가 필요하다고 지적했다. 현재 HUD 텍스트가 화면 상단을 과도하게 차지하고, LAUNCH LOADOUT 패널 텍스트가 원형 버튼/아이콘과 겹치거나 화면·오브젝트 크기 대비 지나치게 크다. 다음 사이클부터: (1) 런치 화면의 폰트 크기를 180×320 내부 캔버스 및 각 UI 요소(버튼, 카드, 아이콘) 크기에 비례하도록 축소, (2) 텍스트와 원형 버튼/스펙시먼 스트립 등 다른 요소가 겹치지 않도록 세로 간격(rowStep 등) 재조정, (3) HUD가 화면의 일부만 차지하도록 상단 여백 최소화. 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=launch`, 헤드리스 아님/실제 렌더)로 수정 전후를 비교해 겹침·크기 문제가 해소됐는지 vision으로 확인한 뒤 완료 처리한다.
+
 ## 처리 완료
