@@ -1,5 +1,13 @@
 local M = {}
 
+-- Minimal exception carved out by loop/PROMPT.md: this lane may not touch
+-- play.lua/world.lua/i18n.lua, but IS explicitly allowed a "최소한의 로더
+-- 호출" to wire game/gear.lua (item 9/13) and game/engine_parts.lua (item
+-- 10) into actual run state. requiring these here (rather than in play.lua)
+-- keeps that wiring inside this lane's owned files.
+local gearModule = require("game.gear")
+local enginePartsModule = require("game.engine_parts")
+
 local slotSymbols = { "COMET", "PLANET", "STAR" }
 M.slotSymbols = slotSymbols
 
@@ -224,13 +232,19 @@ local function destroy(run)
     run.ownedShips = { starter = true }
     run.selectedShipId = "starter"
     refreshShipStats(run)
+    -- Docs/GAME_DESIGN.md's full meta wipe on destruction ("구매한 함선,
+    -- 업그레이드... 모두 초기화") extends to equipped gear (item 10): both
+    -- slot lists and the underlying loadout reset to empty.
+    run.gearLoadout = enginePartsModule.newLoadout()
+    run.equippedGear = run.gearLoadout.hull
+    run.equippedEngineParts = run.gearLoadout.engine
 end
 
 function M.new(options)
     options = options or {}
     local baseFuel = options.fuel or 100
     local baseDurability = options.durability or 3
-    return {
+    local run = {
         phase = "launch",
         altitude = 0,
         maxAltitude = 0,
@@ -264,6 +278,7 @@ function M.new(options)
         selectedShipId = "starter",
         fuelBurnRate = options.fuelBurnRate or 5,
         climbSpeed = options.climbSpeed or 30,
+        baseClimbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
         slotDistance = options.slotDistance or 100,
         returnDistance = 0,
@@ -294,8 +309,46 @@ function M.new(options)
         lastLostSlotSpinsCount = 0,
         lastLostSlotValue = 0,
         lastLostAltitude = 0,
+        -- Items 9/10/13: independent hull/engine equip-slot lists (item
+        -- 10's "run.equippedGear"/"run.equippedEngineParts" wiring),
+        -- backed by engine_parts.lua's slot-separation bookkeeping. These
+        -- alias the loadout's own arrays (not copies) so equipGear/
+        -- unequipGear's in-place mutations stay visible through either name.
+        gearLoadout = nil,
+        equippedGear = nil,
+        equippedEngineParts = nil,
     }
+    run.gearLoadout = enginePartsModule.newLoadout()
+    run.equippedGear = run.gearLoadout.hull
+    run.equippedEngineParts = run.gearLoadout.engine
+    return run
 end
+
+-- Equips a hull/engine card (from gear.loadHullParts/loadEngineParts) into
+-- run's independent loadout, keeping the convenience run.equippedGear /
+-- run.equippedEngineParts arrays (item 10's named lists) in sync with the
+-- underlying engine_parts.lua loadout. Returns true, nil on success or
+-- false, error-message on failure (full slot / duplicate id), matching
+-- engine_parts.equip's own contract.
+function M.equipGear(run, category, part)
+    local ok, err = enginePartsModule.equip(run.gearLoadout, category, part)
+    if not ok then return false, err end
+    if category == "hull" then
+        run.equippedGear = run.gearLoadout.hull
+    else
+        run.equippedEngineParts = run.gearLoadout.engine
+    end
+    return true
+end
+
+-- Unequips by id from the given category; keeps run.equippedGear /
+-- run.equippedEngineParts pointed at the (mutated in place) underlying
+-- list, same as equipGear above.
+function M.unequipGear(run, category, id)
+    return enginePartsModule.unequip(run.gearLoadout, category, id)
+end
+
+
 
 function M.launch(run)
     if run.phase ~= "launch" and run.phase ~= "settlement" and run.phase ~= "destroyed" then return false end
@@ -483,6 +536,15 @@ function M.damage(run, amount)
     return false
 end
 
+-- Item 9's core payoff, now actually wired into gameplay: equipped hull
+-- gear's climbSpeed effects (already synergy-multiplied by
+-- gear.equippedTotals, see game/gear.lua) stack ON TOP of the run's own
+-- climbSpeed (upgrades etc.), rather than replacing it.
+function M.effectiveClimbSpeed(run)
+    local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
+    return run.climbSpeed + (gearTotals.climbSpeed or 0)
+end
+
 function M.update(run, dt)
     if dt <= 0 then return end
 
@@ -494,7 +556,7 @@ function M.update(run, dt)
 
     if run.phase ~= "ascending" then return end
 
-    run.altitude = run.altitude + run.climbSpeed * dt
+    run.altitude = run.altitude + M.effectiveClimbSpeed(run) * dt
     run.maxAltitude = math.max(run.maxAltitude, run.altitude)
     run.bestAltitude = math.max(run.bestAltitude, run.altitude)
 end

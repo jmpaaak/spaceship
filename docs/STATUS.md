@@ -347,4 +347,19 @@
 - `docs/feedback/INBOX.md`의 항목 10 하위에 처리 상황을 두 번째 슬라이스로 append했다.
 - (c) 획득 경로 3원화(상점 행성 구매/체크포인트 확정 드롭/지구 상점 범용 구매)는 여전히 미착수 — `game/world.lua`/`game/expedition.lua` 실배선은 레인 스코프상 최소 로더 호출 예외 범위에서 향후 슬라이스로 검토 필요.
 - 아직 게임 배선(run.equippedGear/run.equippedEngineParts, 실제 장착 UI, (G) 함수들의 run 상태 소비)에는 연결하지 않았다 — 레인 스코프상 `play.lua`/`expedition.lua`는 원칙적으로 다른 레인 담당이라 순수 데이터/함수 계층만 완성했다.
-- 다음 사이클 다음 슬라이스: 항목 10(c)(획득 경로 3원화) 또는 항목 9(c)(슬롯 교체 루프 설계)/항목 12(실제 드롭 RNG 배선) 중 사용자 우선순위에 따라 선택.
+
+## [gear 레인] 게임 배선 — run.equippedGear/run.equippedEngineParts + climbSpeed 시너지 실적용 (완료, 2026-09-03)
+
+`loop/PROMPT.md`가 명시적으로 허용한 "gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출" 예외 범위에서, 항목 9의 핵심 payoff(부품 시너지가 실제로 고도 상승 속도에 반영됨)를 지금까지 순수 함수로만 존재하던 상태에서 실제 `run` 상태로 처음 배선했다. `game/scenes/play.lua`/`world.lua`/`i18n.lua`는 건드리지 않았다 — 변경 파일은 `game/expedition.lua`(로더 require + 배선)와 `game/self_test.lua`(회귀 테스트)뿐이다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- `game/expedition.lua`가 최상단에서 `game.gear`/`game.engine_parts`를 require한다(레인 스코프 예외로 명시된 최소 로더 호출).
+- `M.new(run)`이 이제 `run.gearLoadout`(`engine_parts.newLoadout()`, `{ hull = {}, engine = {} }`)과, 그 내부 배열을 그대로 가리키는 편의 필드 `run.equippedGear`/`run.equippedEngineParts`(항목 10이 이름까지 지정했던 필드)를 갖는다.
+- 신규 `M.equipGear(run, category, part)`/`M.unequipGear(run, category, id)` — `engine_parts.equip`/`unequip`을 얇게 감싸 `run.equippedGear`/`run.equippedEngineParts`가 항상 `run.gearLoadout`의 실제 리스트를 가리키도록 동기화한다(캡슐화된 slot API를 그대로 재사용하므로 hull/engine 상호 비침범 보장이 자동으로 유지됨).
+- 신규 `M.effectiveClimbSpeed(run)` — `gear.equippedTotals(run.equippedGear)`(항목 9의 태그 시너지 배율이 이미 적용된 climbSpeed 총합)를 `run.climbSpeed`(업그레이드 등 기존 값)에 가산한다. `M.update(run, dt)`의 ascending 분기가 `run.climbSpeed` 대신 이 함수를 사용하도록 변경해, 장착된 선체 부품의 climbSpeed 효과(및 시너지 배율)가 실제 상승 속도에 반영된다.
+- 파괴 시 전체 메타 초기화(`destroy(run)`)가 `run.gearLoadout`을 새로 초기화하고 `equippedGear`/`equippedEngineParts`를 빈 배열로 재바인딩하도록 확장했다 — `docs/GAME_DESIGN.md`의 "내구도 0 시 구매한 함선/업그레이드 모두 초기화" 요구를 장착 부품에도 동일하게 적용(개인 최고 고도만 보존).
+- `game/self_test.lua`의 신규 `testGearRunWiring()`이 다음을 회귀 검증한다: 신규 run이 빈 hull/engine 리스트로 시작함, 실제 번들 카드(`hull_ember_core`, climbSpeed +5)를 장착하면 1초 상승 후 고도가 base climbSpeed(60)보다 커짐(장비 배선이 실제 게임플레이에 영향을 줌), engine 장착이 hull 리스트에 전혀 영향 없음(항목10 슬롯 독립성이 run 레벨에서도 유지), unequip이 다른 카테고리에 영향 없음, 내구도 0 파괴 시 두 리스트 모두 빈 배열로 초기화됨. 수정 전 RED(`run.equippedGear`가 nil이라 "a fresh run must start with an empty hull gear list" 단언 실패) 확인 후 구현, GREEN 전환 확인.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua` 두 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- 여전히 미착수: 실제 장착 UI(플레이어가 화면에서 카드를 고르는 화면)는 `play.lua` 영역이라 다른 레인 담당. (E)/(F)/(D) 카테고리(detectionRadius/shopDiscount/insurance/collisionRadius 등)의 run 상태 소비, 항목 12의 실제 드롭 RNG 배선, 항목 9(c)의 슬롯 교체 루프 설계는 다음 슬라이스로 남는다.
+- 다음 사이클 다음 슬라이스: (a) engine parts의 (G) 효과(fuelEfficiency/steeringResponsiveness/boostCharge)도 동일한 최소 로더 호출 방식으로 run에 배선(예: `M.effectiveFuelBurnRate`/`M.effectiveSteeringRate`를 실제 조종/연비 계산에 연결), 또는 (b) 항목 12(등급/에디션)의 실제 드롭 RNG 배선(체크포인트/상점 획득 시 `gear.rollRarity`/`gear.rollEdition` 호출), 둘 중 사용자 우선순위에 따라 선택.
+
