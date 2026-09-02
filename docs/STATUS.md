@@ -5,6 +5,23 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`). 이 슬라이스는 공백/EOF 정규화와 기존 작업의 커밋일 뿐 신규 게임 로직 변경이 없어 런타임 캡처는 필요하지 않았다.
 - 다음 사이클 다음 슬라이스: 위 297번째 줄(이전 사이클 기록)에서 이미 식별된 항목 11의 남은 부분(a: `launchForecastLine` 재정의, c: 활성 연료 필드 재설계) 중 하나, 또는 3번 항목(속도/스피드미터 아이콘화 재검토), 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
 
+## 항목 15(b)/(c) — EARTH SHOP 전용 슬롯머신 엔진(은하계별 변동 오즈) 신규 추가 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md`의 econ 레인 스코프 순서(항목7→8→11→15) 중 항목 15의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.
+
+- 항목 11이 이 레인 스코프 순서상 이미 완결로 보여(이전 사이클 기록 확인), 다음 순번인 항목 15로 넘어갔다.
+- `game/expedition.lua`에 EARTH SHOP 전용 슬롯머신 엔진을 신규 추가했다:
+  - `M.exploreCheckpoint(run, galaxyId)`가 이제 재방문 시에도 항상 `run.lastCheckpointGalaxyId`를 갱신한다(기존의 1회성 기어 지급/체크포인트 정산 가드와는 별개 필드).
+  - `M.galaxySlotProfile(galaxyId)` — `nil`/`"milkyway"`는 기존 in-flight 표준 오즈와 동일한 `M.homeSlotProfile`(`COMET=5,PLANET=4,STAR=1`)을 반환하고, 그 외 은하는 신규 `M.stringHash`(문자열 id용 결정적 LCG 해시, `game/world.lua`의 숫자 해시와 동일한 방식을 이식)로 `M.safeSlotProfile`(`COMET=6,PLANET=3,STAR=1`, 표준보다 약간 안전)과 `M.riskySlotProfile`(`COMET=2,PLANET=3,STAR=5`, STAR 비중 확대 — 브리핑의 "화성/외곽 은하 슬롯은 고배당/위험부담형" 예시에 대응) 중 하나에 결정적으로 배정된다.
+  - `M.weightedSlotSymbol(roll, weights)`를 선택적 `weights` 인자를 받도록 확장(기본값은 기존 in-flight `slotWeights`)해 EARTH SHOP 오즈도 동일한 가중 추첨 로직을 재사용하도록 했다(회귀 위험 최소화 — 기존 in-flight 호출부는 인자 없이 그대로 동작).
+  - `M.earthShopSlotExpectedValue(galaxyId)`가 기존 `M.slotExpectedValue`와 동일한 완전 열거(brute-force) 방식으로 특정 은하 오즈 테이블의 기대값을 계산한다(테스트/향후 UI 표시용).
+  - `M.spinEarthShopSlot(run)`(신규 공개 진입점) — settlement 페이즈에서만 동작(비행 중 페이즈는 거부), 고정 요금(`M.earthShopSlotCost = 20`)을 `run.money`에서 선차감한 뒤 `run.lastCheckpointGalaxyId`의 오즈 테이블로 3릴을 돌려 보상을 즉시 `run.money`에 반영한다(귀환 슬롯의 "파괴되면 미확정" 잠정 보상 모델과 달리, 지구에 이미 안전 도착한 이후의 순수 오락 요소이므로 즉시 확정). 결과는 `run.lastEarthShopSlotSymbols`/`lastEarthShopSlotReward`/`lastEarthShopSlotGalaxyId`에 기록된다.
+- `game/self_test.lua`의 신규 `testEarthShopSlotMachine()`이 다음을 회귀 검증한다: 홈/미탐사 상태는 표준 오즈, 임의의 여러 은하 id가 결정적으로 두 변동 테이블 모두에 분산됨, 위험 테이블의 기대값이 안전 테이블보다 항상 높음, 체크포인트 재탐사 시에도 최근 은하 id가 갱신됨, `M.spinEarthShopSlot`이 settlement 페이즈만 허용하고 요금 부족 시 거부하며 정확한 요금 차감 후 보상을 반영함(RED 확인: `expedition.galaxySlotProfile`/`spinEarthShopSlot` 등이 없어 `attempt to call a nil value` → GREEN 전환).
+- `game/scenes/play.lua`는 이 레인 스코프 규칙(구조적 죽은코드/불가피한 최소 변경만, 텍스트/HUD는 메인 레인)에 따라 건드리지 않았다 — 새 엔진 API는 아직 UI에 연결되지 않은 순수 엔진 슬라이스다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`). 신규 게임 로직이나 화면 변화는 없는 순수 엔진 추가이므로 실제 LÖVE 런타임 캡처는 이번 슬라이스에서 필요하지 않았다.
+- `docs/feedback/INBOX.md` 처리대기 항목 15 하위에 이번 슬라이스 진행 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 이 레인 스코프 순서상 항목 15의 남은 부분 — (a) `beginReturn`/returning 페이즈/in-flight `slotSpin`·`useSlot`의 완전 폐지와 체크포인트/지구 도달 시 즉시 정산으로의 구조 전환(`game/scenes/play.lua`의 returning 페이즈 UI/터치/키 입력 전반을 광범위하게 재작성해야 하는 큰 작업, 메인 레인과의 조율 필요), (b)의 UI 노출(EARTH SHOP 화면에 `M.spinEarthShopSlot`을 실제로 그리고 누를 수 있게 하는 `game/scenes/play.lua` 연결).
+
 ## 항목 6 첫 슬라이스 — 슬롯 6개를 함선 장비 카드 6종으로 재해석하는 game/gear.lua 카탈로그 추가 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 6번(표본 도감 정리 검토 + 슬롯 6개를 개성 있는 함선 장비 카드 UI로 전환)의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.

@@ -449,6 +449,97 @@ local function testGearAndCheckpointSettlement()
     assert(next(wipeRun.exploredCheckpoints) == nil, "destruction must wipe explored checkpoints")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 15(b)/(c): the EARTH SHOP now hosts
+-- its own paid slot-machine minigame (M.spinEarthShopSlot), separate from
+-- the in-flight returning-phase slot machine, whose odds vary by which
+-- galaxy's checkpoint was most recently explored this expedition
+-- (M.galaxySlotProfile / run.lastCheckpointGalaxyId).
+local function testEarthShopSlotMachine()
+    local expedition = require("game.expedition")
+
+    -- No checkpoint explored yet, or the home galaxy explicitly, both use
+    -- the standard (in-flight) odds table.
+    assert(expedition.galaxySlotProfile(nil) == expedition.homeSlotProfile)
+    assert(expedition.galaxySlotProfile("milkyway") == expedition.homeSlotProfile)
+
+    -- Exploring a galaxy checkpoint records it as the most recent for the
+    -- EARTH SHOP slot machine's odds lookup.
+    local run = expedition.new()
+    run.phase = "ascending"
+    local galaxyId = "galaxy:9:9"
+    expedition.exploreCheckpoint(run, galaxyId)
+    assert(run.lastCheckpointGalaxyId == galaxyId)
+    -- Re-exploring the same checkpoint (a no-op for the gear grant) still
+    -- keeps the most-recent-galaxy bookkeeping current.
+    expedition.exploreCheckpoint(run, galaxyId)
+    assert(run.lastCheckpointGalaxyId == galaxyId)
+
+    -- galaxySlotProfile is deterministic (same id -> same table every call)
+    -- and always one of the three known tables.
+    local profileA = expedition.galaxySlotProfile(galaxyId)
+    local profileB = expedition.galaxySlotProfile(galaxyId)
+    assert(profileA == profileB, "galaxySlotProfile must be deterministic for the same galaxy id")
+    assert(profileA == expedition.safeSlotProfile or profileA == expedition.riskySlotProfile,
+        "a non-home galaxy must use one of the two variant tables, never the home table")
+
+    -- Find at least one galaxy id hashing into each variant bucket so both
+    -- tables are exercised (not just whichever one galaxyId happens to hit).
+    local sawSafe, sawRisky = false, false
+    for i = 1, 200 do
+        local candidateId = "galaxy:" .. i .. ":test"
+        local profile = expedition.galaxySlotProfile(candidateId)
+        if profile == expedition.safeSlotProfile then sawSafe = true end
+        if profile == expedition.riskySlotProfile then sawRisky = true end
+    end
+    assert(sawSafe and sawRisky, "galaxySlotProfile must produce both variant tables across many galaxy ids")
+
+    -- The risky/high-payout table must have a strictly higher expected
+    -- value than the safe table (matching "고배당/위험부담형" from the brief).
+    local safeEv = expedition.earthShopSlotExpectedValue("__force_safe__")
+    local riskyEv = expedition.earthShopSlotExpectedValue("__force_risky__")
+    -- Not guaranteed which bucket these two ids land in, so instead compare
+    -- the known tables' EVs directly via the home/safe/risky profiles.
+    local function evOf(profile)
+        local totalWeight = 0
+        for symbol, weight in pairs(profile) do totalWeight = totalWeight + weight end
+        local total = 0
+        for _, a in ipairs(expedition.slotSymbols) do
+            for _, b in ipairs(expedition.slotSymbols) do
+                for _, c in ipairs(expedition.slotSymbols) do
+                    local p = (profile[a] / totalWeight) * (profile[b] / totalWeight) * (profile[c] / totalWeight)
+                    total = total + p * expedition.slotReward({ a, b, c })
+                end
+            end
+        end
+        return total
+    end
+    assert(evOf(expedition.riskySlotProfile) > evOf(expedition.safeSlotProfile),
+        "the risky galaxy odds table must pay out more on average than the safe table")
+    assert(safeEv > 0 and riskyEv > 0)
+
+    -- M.spinEarthShopSlot only works in the settlement phase, costs a flat
+    -- fee, and uses whichever galaxy's odds table was last explored.
+    local shopRun = expedition.new({ money = 100 })
+    shopRun.lastCheckpointGalaxyId = galaxyId
+    assert(not expedition.spinEarthShopSlot(shopRun), "EARTH SHOP slot must require the settlement phase")
+    shopRun.phase = "settlement"
+    local rolls = { 5, 5, 5 }
+    local nextRoll = 0
+    shopRun.slotRandom = function()
+        nextRoll = nextRoll + 1
+        return rolls[nextRoll]
+    end
+    local spun, symbols, reward = expedition.spinEarthShopSlot(shopRun)
+    assert(spun and symbols and reward >= 0)
+    assert(shopRun.money == 100 - expedition.earthShopSlotCost + reward)
+    assert(shopRun.lastEarthShopSlotGalaxyId == galaxyId)
+
+    -- Cannot spin without enough money for the flat fee.
+    local poorRun = expedition.new({ money = expedition.earthShopSlotCost - 1 })
+    poorRun.phase = "settlement"
+    assert(not expedition.spinEarthShopSlot(poorRun), "EARTH SHOP slot must require enough money for the fee")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 7/8 UI 연결부: PlayScene.update must
 -- actually dock at a galaxy's hub/shop landmarks discovered via
 -- world.nearbyPlanets -- exploring the hub grants gear + settles pending
@@ -2642,6 +2733,7 @@ function M.run()
     testManeuverFuel()
     testGalaxyStructure()
     testGearAndCheckpointSettlement()
+    testEarthShopSlotMachine()
     testCheckpointAndShopDocking()
     testMinimap()
     testDebris()

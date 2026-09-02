@@ -30,10 +30,14 @@ local function slotReward(symbols)
 end
 M.slotReward = slotReward
 
-local function weightedSlotSymbol(roll)
+-- weights defaults to the standard in-flight table above but accepts an
+-- override so a different paytable (e.g. a per-galaxy EARTH SHOP variant,
+-- see M.earthShopSlot below) can reuse the same weighted-pick logic.
+local function weightedSlotSymbol(roll, weights)
+    weights = weights or slotWeights
     local cumulative = 0
     for _, symbol in ipairs(slotSymbols) do
-        cumulative = cumulative + slotWeights[symbol]
+        cumulative = cumulative + (weights[symbol] or 0)
         if roll <= cumulative then return symbol end
     end
     return slotSymbols[#slotSymbols]
@@ -151,6 +155,13 @@ end
 function M.exploreCheckpoint(run, galaxyId)
     if not run or not galaxyId then return false, nil end
     run.exploredCheckpoints = run.exploredCheckpoints or {}
+    -- docs/feedback/INBOX.md 처리대기 항목 15(c): every checkpoint dock
+    -- (even a re-dock of an already-explored galaxy, unlike the
+    -- gear-drop/settle side effects below which are strictly one-time)
+    -- records the most recently visited galaxy so the EARTH SHOP slot
+    -- machine's odds table (M.galaxySlotProfile) reflects the last
+    -- checkpoint reached this expedition, not just the first.
+    run.lastCheckpointGalaxyId = galaxyId
     if run.exploredCheckpoints[galaxyId] then return false, nil end
     run.exploredCheckpoints[galaxyId] = true
     local gearId = M.galaxyGearId(galaxyId)
@@ -198,6 +209,101 @@ function M.buyShopGear(run, galaxyId)
     local bought = M.buyGear(run, gearId, shopGearCost)
     if not bought then return false, nil end
     return true, gearId
+end
+
+-- docs/feedback/INBOX.md 처리대기 항목 15 -- deterministic per-string hash
+-- (mirrors game/world.lua's numeric hash() shape but accepts a string id
+-- directly, since a galaxy's stable id -- "milkyway" or "galaxy:gx:gy" --
+-- is what M.exploreCheckpoint already threads through the engine; this
+-- module intentionally does not require game/world.lua to stay a leaf
+-- module with no scene/world dependencies).
+local function stringHash(s)
+    local n = 0
+    for i = 1, #s do
+        n = (n * 31 + string.byte(s, i)) % 2147483647
+    end
+    n = (n * 48271 + 12345) % 2147483647
+    return n / 2147483647
+end
+M.stringHash = stringHash
+
+-- docs/feedback/INBOX.md 처리대기 항목 15(c) -- EARTH SHOP slot machine odds
+-- vary by which galaxy's checkpoint the player most recently explored this
+-- expedition (run.lastCheckpointGalaxyId, set by M.exploreCheckpoint below).
+-- No checkpoint explored yet (nil) or the home solar system galaxy both use
+-- the standard table (same weights the in-flight slot machine has always
+-- used). Any other galaxy is deterministically bucketed into one of two
+-- variant tables by a hash of its id: roughly half of non-home galaxies
+-- keep a slightly-safer-than-standard table, and the rest (skewed toward
+-- outer/rarer galaxies purely by hash luck, matching the brief's "화성/
+-- 외곽 은하 슬롯은 고배당/위험부담형" example) get a high-payout, STAR-
+-- heavy, COMET-light table with a much higher jackpot rate.
+local homeSlotProfile = { COMET = 5, PLANET = 4, STAR = 1 }
+local safeSlotProfile = { COMET = 6, PLANET = 3, STAR = 1 }
+local riskySlotProfile = { COMET = 2, PLANET = 3, STAR = 5 }
+M.homeSlotProfile = homeSlotProfile
+M.safeSlotProfile = safeSlotProfile
+M.riskySlotProfile = riskySlotProfile
+
+function M.galaxySlotProfile(galaxyId)
+    if not galaxyId or galaxyId == "milkyway" then return homeSlotProfile end
+    if stringHash(galaxyId) < 0.6 then return safeSlotProfile end
+    return riskySlotProfile
+end
+
+-- Exact expected payout of a single EARTH SHOP slot spin for a given
+-- galaxy's odds table, computed the same brute-force way as the in-flight
+-- M.slotExpectedValue above (used for balance tests and future UI display).
+function M.earthShopSlotExpectedValue(galaxyId)
+    local profile = M.galaxySlotProfile(galaxyId)
+    local totalWeight = 0
+    for _, symbol in ipairs(slotSymbols) do
+        totalWeight = totalWeight + (profile[symbol] or 0)
+    end
+    local function probability(symbol) return (profile[symbol] or 0) / totalWeight end
+    local total = 0
+    for _, a in ipairs(slotSymbols) do
+        for _, b in ipairs(slotSymbols) do
+            for _, c in ipairs(slotSymbols) do
+                total = total + probability(a) * probability(b) * probability(c)
+                    * slotReward({ a, b, c })
+            end
+        end
+    end
+    return total
+end
+
+-- docs/feedback/INBOX.md 처리대기 항목 15(b) -- the slot machine itself is
+-- relocated from the in-flight returning phase to a EARTH SHOP-only paid
+-- minigame: only playable in the settlement phase, costs a flat fee taken
+-- from run.money up front (not tied to slotOpportunities/returnDistance at
+-- all, unlike the in-flight version), and pays out (or doesn't) using the
+-- odds table for whichever galaxy's checkpoint (M.galaxySlotProfile) was
+-- most recently explored this expedition -- so a player who reached a
+-- risky outer-galaxy checkpoint before returning gets a shot at the
+-- higher-payout table back home.
+local earthShopSlotCost = 20
+M.earthShopSlotCost = earthShopSlotCost
+
+function M.spinEarthShopSlot(run)
+    if not run or run.phase ~= "settlement" then return false, nil, 0 end
+    if run.money < earthShopSlotCost then return false, nil, 0 end
+    run.money = run.money - earthShopSlotCost
+    local profile = M.galaxySlotProfile(run.lastCheckpointGalaxyId)
+    local totalWeight = 0
+    for _, symbol in ipairs(slotSymbols) do
+        totalWeight = totalWeight + (profile[symbol] or 0)
+    end
+    local symbols = {}
+    for reel = 1, 3 do
+        symbols[reel] = weightedSlotSymbol(run.slotRandom(totalWeight), profile)
+    end
+    local reward = slotReward(symbols)
+    run.money = run.money + reward
+    run.lastEarthShopSlotSymbols = symbols
+    run.lastEarthShopSlotReward = reward
+    run.lastEarthShopSlotGalaxyId = run.lastCheckpointGalaxyId
+    return true, symbols, reward
 end
 
 local function refreshShipStats(run)
@@ -329,6 +435,7 @@ local function destroy(run)
     -- locked out by a wiped-away gear ownership record.
     run.ownedGear = {}
     run.exploredCheckpoints = {}
+    run.lastCheckpointGalaxyId = nil
     refreshShipStats(run)
 end
 
@@ -399,6 +506,7 @@ function M.new(options)
         ownedGear = {},
         exploredCheckpoints = {},
         lastCheckpointSettlement = 0,
+        lastCheckpointGalaxyId = nil,
     }
 end
 
