@@ -66,8 +66,7 @@ function love.load()
     if capturePhase == "destroyed" then
         local run = scenes.current.expedition
         run.phase = "settlement"
-        run.money = run.fuelUpgradeCost + run.durabilityUpgradeCost + 25
-        require("game.expedition").buyFuelUpgrade(run)
+        run.money = run.durabilityUpgradeCost + 25
         require("game.expedition").buyDurabilityUpgrade(run)
         require("game.expedition").launch(run)
         run.maxAltitude = 400
@@ -379,7 +378,7 @@ function love.load()
             -- spins forever (infinite loop / hang).
         end
         scene:update(1000) -- finish the return -> settlement
-        expeditionModule.buyFuelUpgrade(scene.expedition) -- shop upgrade with settled money
+        expeditionModule.buyDurabilityUpgrade(scene.expedition) -- shop upgrade with settled money
         scene:keypressed("space") -- relaunch
     elseif capturePhase == "checkpoint-dock" then
         -- Real-runtime capture for docs/feedback/INBOX.md 처리대기 항목

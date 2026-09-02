@@ -207,7 +207,12 @@ local function refreshShipStats(run)
         fuelBonus = run.scoutFuelBonus
         durabilityBonus = run.scoutDurabilityBonus
     end
-    run.maxFuel = run.baseFuel + fuelBonus + run.fuelUpgradeLevel * run.fuelUpgradeAmount
+    -- docs/feedback/INBOX.md 처리대기 항목 11(b): the purchasable "fuel tank
+    -- upgrade" (fuelUpgradeLevel/fuelUpgradeCost/fuelUpgradeAmount) has been
+    -- removed below -- maxFuel now varies only with the selected ship's
+    -- base/bonus fuel, never with a shop purchase, since fuel does not
+    -- constrain flight and a store item implying otherwise is misleading.
+    run.maxFuel = run.baseFuel + fuelBonus
     run.maxDurability = run.baseDurability + durabilityBonus
         + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
 end
@@ -311,7 +316,6 @@ local function destroy(run)
     run.lastSlotSettlement = 0
     run.lastSampleCount = 0
     run.lastSlotSpinsCount = 0
-    run.fuelUpgradeLevel = 0
     run.durabilityUpgradeLevel = 0
     run.sampleYieldUpgradeLevel = 0
     run.steeringUpgradeLevel = 0
@@ -345,9 +349,6 @@ function M.new(options)
         durability = baseDurability,
         baseDurability = baseDurability,
         maxDurability = baseDurability,
-        fuelUpgradeAmount = options.fuelUpgradeAmount or 20,
-        fuelUpgradeCost = options.fuelUpgradeCost or 50,
-        fuelUpgradeLevel = 0,
         durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
         durabilityUpgradeCost = options.durabilityUpgradeCost or 75,
         durabilityUpgradeLevel = 0,
@@ -449,14 +450,11 @@ function M.launch(run)
     return true
 end
 
-function M.buyFuelUpgrade(run)
-    if run.phase ~= "settlement" or run.money < run.fuelUpgradeCost then return false end
-    run.money = run.money - run.fuelUpgradeCost
-    run.fuelUpgradeLevel = run.fuelUpgradeLevel + 1
-    refreshShipStats(run)
-    return true
-end
-
+-- docs/feedback/INBOX.md 처리대기 항목 11(b): the fuel-tank shop upgrade
+-- (buyFuelUpgrade) has been removed entirely -- fuel no longer constrains
+-- flight, so a purchasable "more fuel" item only misled players into
+-- thinking it mattered. maxFuel is now fixed by the selected ship alone
+-- (see refreshShipStats above).
 function M.buyDurabilityUpgrade(run)
     if run.phase ~= "settlement" or run.money < run.durabilityUpgradeCost then return false end
     run.money = run.money - run.durabilityUpgradeCost
