@@ -117,3 +117,16 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
 - 3번 항목은 이번 사이클로 "연료 무제한 반영" 부분(HUD 상태 줄 + LOADOUT/SHOP 텍스트 모두)이 완료되었다. 남은 부분은 "아이콘 기반 HUD 간소화"(탭 발사/선체 내구도/자금/속도를 로켓·방패·동전·스피드미터 아이콘으로 재구성)로, 이번 사이클에서는 착수하지 않았다.
 - 다음 사이클 다음 슬라이스: 3번 항목의 남은 아이콘 기반 재구성, 또는 4번(불필요한 텍스트 제거 검토 — `S%02d`, "STARTER", "발사 장비" 타이틀, "무피격 N" 라벨, "평균 $" 등)으로 진행.
+
+## HUD 상태 줄에서 발사 단계의 불필요한 슬롯 표기(S00) 제거 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작.
+
+- 발사(launch) 단계에서는 아직 귀환 여정이 시작되지 않아 `run.slotOpportunities`가 항상 0이므로, HUD 상태 줄(`hud_status` = `"H%d/%d %-6s S%02d"`)이 "H3/3 발사S00"처럼 항상 의미 없는 슬롯 예보를 표시하고 있었다.
+- `game/i18n.lua`에 en/ko 두 로케일 모두 신규 `hud_status_no_slots = "H%d/%d %-6s"`(슬롯 세그먼트 없는 버전)를 추가했다. 기존 `hud_status`는 그대로 유지(다른 모든 페이즈는 슬롯 표기가 유의미하므로).
+- `game/scenes/play.lua`의 `M:hudLines()`가 `run.phase == "launch"`일 때만 `hud_status_no_slots`를 사용하고, 그 외 페이즈(ascending/returning/settlement/destroyed)는 기존 `hud_status`(슬롯 포함)를 그대로 사용하도록 분기했다.
+- `game/self_test.lua`에 발사 단계에서 상태 줄이 `"H3/3 LAUNCH"`(슬롯 세그먼트 없음)로 표시되고, SETTLE 등 다른 페이즈는 여전히 `"H3/3 SETTLE S00"`처럼 `S%02d`를 유지함을 검증하는 회귀 테스트를 추가했다(수정 전 RED `"H3/3 LAUNCH S00" ~= "H3/3 LAUNCH"` 확인 후 GREEN 전환 확인).
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`, 1080×1920)를 vision으로 확인해 "H3/3 발사" 줄에 더 이상 "S00"이 보이지 않음을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 4번 항목에 이번 슬라이스 진행 상황(발사 단계 `S%02d` 제거 완료, 남은 항목: "STARTER" 함선명/"발사 장비" 타이틀/"무피격 N" 라벨/"평균 $" 표기/"개발 임시본" 축소)을 기록했다.
+- 다음 사이클 다음 슬라이스: 4번 항목의 남은 부분(함선 이름 "STARTER" 제거, "발사 장비" 패널 타이틀 검토, "무피격 N" → 아이콘/명확한 라벨, "평균 $" 정리, "개발 임시본" 축소) 중 하나를 이어서 처리하거나, 3번 항목의 아이콘 기반 HUD 재구성으로 진행.

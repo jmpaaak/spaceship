@@ -820,6 +820,17 @@ function M.run()
     assert(riskScene:hudLines().status == "H3/3 SETTLE S00")
     assert(not riskScene:hudLines().status:find("F%d"),
         "hud status must not show a misleading fuel-cap readout")
+    -- docs/feedback/INBOX.md UI/HUD item 4: during the launch phase the
+    -- slot forecast (S%02d) is always 0 because no return trip has
+    -- happened yet, so "LAUNCH S00" reads as confusing dead weight. Drop
+    -- the slot segment for the launch phase only; every other phase
+    -- (including SETTLE, asserted above) keeps showing it.
+    riskScene.expedition.phase = "launch"
+    assert(riskScene:hudLines().status == "H3/3 LAUNCH",
+        "launch-phase status must omit the always-zero slot forecast: "
+        .. tostring(riskScene:hudLines().status))
+    assert(not riskScene:hudLines().status:find("S%d%d"),
+        "launch-phase status must not show a slot count segment")
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
     assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")

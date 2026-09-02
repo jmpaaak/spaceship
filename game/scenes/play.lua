@@ -569,8 +569,15 @@ function M:hudLines()
         best = best,
         earth = earth,
         returnProgress = returnProgress,
-        status = i18n.t("hud_status", run.durability,
-            run.maxDurability, i18n.phaseAbbrev(run.phase), run.slotOpportunities),
+        -- docs/feedback/INBOX.md UI/HUD item 4: the launch phase's slot
+        -- forecast (S%02d) is always 0 because no return trip has
+        -- happened yet ("LAUNCH S00" read as confusing dead weight), so
+        -- drop that segment for launch only; every other phase keeps it.
+        status = run.phase == "launch"
+            and i18n.t("hud_status_no_slots", run.durability,
+                run.maxDurability, i18n.phaseAbbrev(run.phase))
+            or i18n.t("hud_status", run.durability,
+                run.maxDurability, i18n.phaseAbbrev(run.phase), run.slotOpportunities),
         galaxy = (run.phase == "ascending" or run.phase == "returning" or run.phase == "launch")
             and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name
             or nil,
