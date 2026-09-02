@@ -6,6 +6,14 @@
 
 - **AetherForgeAI/AetherAI-only 최종 에셋 (2026-09-01, 사용자 확정, 최우선):** 우주선·지구·행성·표본·이펙트·슬롯 심볼·상점 아이콘·배경을 포함한 모든 최종 시각 에셋은 공식 AetherAI UI/API에서 생성·다운로드한 결과만 사용한다. Python/Pillow·Lua 도형·다른 이미지 생성기는 최종 미술 source로 금지한다. 로그인/공식 export 전 Lua 도형은 gameplay용 `DEV PLACEHOLDER`로만 유지하고 미술 완료로 보고하지 않는다. crawling·scraping·bot·macro를 사용하지 않으며 공식 generation/asset ID, URL, terms, prompt/settings, 원본 hash와 runtime QA를 기록한다.
 
-- **행성·이펙트 발라트로 스타일 카드형 비주얼 강화 (2026-09-02, 사용자 요청, 우선):** 사용자가 현재 행성이 "너무 밋밋하다"고 지적하며 발라트로류 카드 게임 특유의 스타일리쉬한 연출(강한 외곽 글로우/림 라이트, 부드러운 그림자, 채도 높은 그라디언트, 등급별 반짝임·파티클, 임팩트 시 스케일 펀치·흔들림)을 요청했다. 최종 텍스처는 여전히 AetherAI-only 정책을 따르되, `game/scenes/play.lua`의 Lua 도형 렌더링 레이어(외곽 글로우 링, 그라디언트 채우기, 등급별 파티클/반짝임, 표본 획득·충돌 시 pop/shake 이펙트)는 `game-effect-studio`가 만든 impact/particles/lighting 레시피를 참고해 즉시 개선 가능하며 이는 최종 텍스처 교체가 아니라 렌더링 연출이므로 AetherAI-only 제약과 무관하게 이번 사이클부터 진행한다. `world.sampleTier`(common/rare/epic)별로 색·글로우 강도·파티클 밀도를 차등화한다.
+- **행성·이펙트 발라트로 스타일 카드형 비주얼 강화 (2026-09-02, 사용자 요청, 우선):** 사용자가 현재 행성이 "너무 밋밋하다"고 지적하며 발라트로류 카드 게임 특유의 스타일리쉬한 연출(강한 외곽 글로우/림 라이트, 부드러운 그림자, 채도 높은 그라디언트, 등급별 반짝임·파티클, 임팩트 시 스케일 펀치·흔들림)을 요청했다. 최종 텍스처는 여전히 AetherAI-only 정책을 따르되, `game/scenes/play.lua`의 Lua 도형 렌더링 레이어(외곽 글로우 링, 그라디언트 채우기, 등급별 파티클/반짝임, 표본 획득·충돌 시 pop/shake 이펙트)는 `game-effect-studio`가 만든 impact/particles/lighting 레시피를 참고해 즉시 개선 가능하며 이는 최종 텍스처 교체가 아니라 렌더링 연출이므로 AetherAI-only 제약과 무관하게 이번 사이클부터 진행한다. `world.sampleTier`(common/rare/epic)별로 색·글로우 강도·파티클 밀도를 차등화한다. **2026-09-02 후속 확정 사항 (사용자 재요청, 최우선):** `planet-style-editor` 웹 도구(신규)가 발라트로 카드풍 프리셋 6종(글로우/그라디언트/파티클/임팩트 파라미터 + gains/losses 수치)을 제공한다. 다음 사이클부터 아래 발라트로 핵심 게임성 요소를 순차 이식한다 (표면 텍스처가 아닌 절차적 셰이더/파티클/수치 로직이므로 AetherAI-only와 무관, 즉시 착수 가능):
+  1. **점진적 시너지/빌드업:** 같은 hue family(azure/ember/void) 표본을 연속 채집하면 곱연산 STREAK 배율(x1.2, x1.4, x1.6...)이 붙는 콤보 시스템을 `expedition.sampleYieldMultiplier`에 결합한다.
+  2. **숫자 롤업 피드백:** 표본 획득 시 "+$N"이 즉시 표시되지 않고 슬롯머신 릴처럼 숫자가 짧게 굴러 올라가는 연출을 추가해 발라트로 칩 카운터 느낌을 낸다.
+  3. **스코어 비례 스크린쉐이크:** 현재 충돌 흔들림(shipShake)은 고정 강도다 — 표본 등급(common/rare/epic)에 비례해 흔들림 강도도 스케일링해 "이번 건 컸다"는 느낌을 흔들림만으로 전달한다.
+  4. **컬렉션/도감:** ✅ 완료 (2026-09-02) — 9종 표본 발견 도감 스트립(`SPECIMENS n/9`)을 런치 화면에 추가함. `world.specimenCatalog`/`collection_store.lua` 참고. 영구 보존, 파괴돼도 리셋되지 않는다.
+  5. **선택 안의 트레이드오프:** 기존 SCOUT 배 +연료/-내구도 트레이드오프를 `planet-style-editor`의 GAINS/LOSSES 수치 포맷과 통일해, 향후 "행성 스타일별 위험/보상"을 실제 게임 확률·보상에도 반영할 수 있게 준비한다.
+  6. **불확실성 속의 기대감:** 슬롯머신 릴 애니메이션(기존)을 유지하되, 표본 발견 시에도 짧은 "다가가는 긴장" 연출(접근 중 글로우 반짝임 가속)을 추가한다.
+
+- **런치 화면 지구 탐험물 전시 (2026-09-02, 사용자 요청, 완료):** ✅ 완료 — 런치 화면 HUD와 LAUNCH LOADOUT 카드 사이의 빈 공간(지구·별 배경 위)에 9종 표본 발견 도감 스트립(`SPECIMENS n/9`, 등급별 색상 칩 + 미발견 항목은 outline만)을 추가했다. `game/world.lua`의 `specimenCatalog`/`specimenKind`(3 hue family x 3 tier), `game/collection_store.lua`(파괴돼도 리셋되지 않는 영구 저장, best_altitude_store.lua와 동일한 파일 라운드트립 패턴), `game/scenes/play.lua`의 `drawSpecimenStrip`/`specimenProgress`로 구현. 표본 최초 발견 시 2초짜리 "NEW SPECIMEN: {label}" 배너도 함께 표시된다. 실제 LÖVE 런타임 캡처(1440x2560, GAME_CAPTURE_PHASE=launch-with-specimens)로 HUD/LAUNCH LOADOUT/TAP TO LAUNCH와 겹치지 않는 것을 vision으로 확인했다(최초 배치는 TAP TO LAUNCH와 겹쳐 184px 위치로 재조정함).
 
 ## 처리 완료
