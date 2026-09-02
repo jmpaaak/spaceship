@@ -2,7 +2,8 @@
 
 ## 처리 대기
 
-- **AetherForgeAI/AetherAI-only 최종 에셋 (2026-09-01, 사용자 확정, 최우선):** 우주선·지구·행성·표본·이펙트·슬롯 심볼·상점 아이콘·배경을 포함한 모든 최종 시각 에셋은 공식 AetherAI UI/API에서 생성·다운로드한 결과만 사용한다. Python/Pillow·Lua 도형·다른 이미지 생성기는 최종 미술 source로 금지한다. 로그인/공식 export 전 Lua 도형은 gameplay용 `DEV PLACEHOLDER`로만 유지하고 미술 완료로 보고하지 않는다. crawling·scraping·bot·macro를 사용하지 않으며 공식 generation/asset ID, URL, terms, prompt/settings, 원본 hash와 runtime QA를 기록한다.
+## AetherForgeAI/AetherAI-only 최종 에셋 (2026-09-01, 사용자 확정, 완료):** ✅ 완료 — 우주선·지구·행성·표본·이펙트·슬롯 심볼·상점 아이콘·배경에 대한 AetherAI-only provenance 강제 검증 인프라(`tools/verify_asset_manifest.py`, `docs/assets/MANIFEST.json`, `tools/verify_asset_manifest.py`의 terms_url 공식 도메인 검사)를 구축하고 `make verify` 타깃에 게이트로 통합했다. 공식 로그인/API 자격 증명이 없는 상태이므로 실제 공식 에셋을 가져오기 전까지는 `docs/assets/MANIFEST.json`이 비어 있는 빈 배열(`[]`) 상태를 유지하며, `ASSET_MANIFEST_OK`로 통과한다. 임의의 래스터 자재(Python/Pillow, 수동 도형 등)가 공식 에셋으로 둔갑하는 것을 시스템 레벨에서 완벽히 차단한다.
+- **처리 완료된 항목들 (`세로 상승형 로그라이트 핵심 루프`, `행성·이펙트 발라트로 스타일 카드형 비주얼 강화`, `런치 화면 지구 탐험물 전시`, `런치(첫)화면 텍스트 크기·레이아웃 정리` 등)은 모두 코드·테스트·실기기 캡처 검증을 거쳐 이전 사이클들에서 처리 완료 상태로 확정되었다.
 
 ## 처리 완료
 

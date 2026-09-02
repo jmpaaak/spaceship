@@ -24,14 +24,23 @@ M.__index = M
 local verticalOffsetLimit = 90
 M.verticalOffsetLimit = verticalOffsetLimit
 
--- Visual bank (radians added to the ship's -pi/2 nose-up rest pose)
--- at full left/right stick. Small enough to read as a lean, not a flip.
-local steerTiltMax = 0.5
-M.steerTiltMax = steerTiltMax
+-- Keyboard yaw rate (rad/s). No angular clamp — holding left/right
+-- spins the ship continuously. Stick heading uses atan2 of the drag
+-- vector, also unclamped, so the nose can point any direction.
+local steerTurnRate = 2.8
+M.steerTurnRate = steerTurnRate
 
-function M.bankFromSteer(dx, magnitude)
-    return (dx or 0) * (magnitude or 1) * steerTiltMax
+function M.headingFromStick(dx, dy)
+    return math.atan2(dy or 0, dx or 0)
 end
+
+local function shortestAngleDelta(from, to)
+    local d = to - from
+    while d > math.pi do d = d - 2 * math.pi end
+    while d < -math.pi do d = d + 2 * math.pi end
+    return d
+end
+M.shortestAngleDelta = shortestAngleDelta
 
 -- Returning-phase LEFT/RIGHT/SPIN touch band. Was a 24px-tall row
 -- (254-278), which only clears ~24pt at the smallest supported window
@@ -907,22 +916,18 @@ function M:update(dt)
         local extraDy = self.verticalOffset - startOffset
         local extraDistance = math.sqrt(extraDx * extraDx + extraDy * extraDy)
         expedition.burnManeuverFuel(self.expedition, extraDistance)
-        local bank = 0
         local steeringHoriz = (steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0)
         if joyMagnitude > 0 then
-            bank = M.bankFromSteer(joyDx, joyMagnitude)
-        else
-            bank = M.bankFromSteer(steeringHoriz, 1)
-        end
-        self.steerBank = bank
-        -- Only apply a new bank while there is lateral input. Releasing
-        -- the stick/keys (or a purely vertical drag) keeps the current
-        -- heading instead of springing back to nose-up.
-        if math.abs(bank) > 1e-6 then
-            local restAngle = -math.pi / 2
-            local targetAngle = restAngle + bank
+            local targetAngle = M.headingFromStick(joyDx, joyDy)
+            local delta = shortestAngleDelta(self.ship.angle, targetAngle)
             local turnRate = math.min(1, 14 * dt)
-            self.ship.angle = self.ship.angle + (targetAngle - self.ship.angle) * turnRate
+            self.ship.angle = self.ship.angle + delta * turnRate
+            self.steerBank = joyDx * joyMagnitude
+        elseif steeringHoriz ~= 0 then
+            self.ship.angle = self.ship.angle + steeringHoriz * steerTurnRate * dt
+            self.steerBank = steeringHoriz
+        else
+            self.steerBank = 0
         end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then

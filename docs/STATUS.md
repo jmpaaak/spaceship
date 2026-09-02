@@ -1,5 +1,14 @@
 # STATUS
-## AetherAI-only manifest 검증기에 terms_url 공식 도메인 검사 추가 (2026-09-02)
+## AetherAI-only 에셋 provenance 강제 검증 게이트 완료 (2026-09-02)
+
+`git status --short` clean, preflight PASS 상태로 시작. 처리 대기 최우선 항목이었던 "AetherForgeAI/AetherAI-only 최종 에셋" 요건을 시스템 검증 인프라 관점에서 완전히 완결짓고 `docs/feedback/INBOX.md`를 처리 완료 상태로 동기화했다.
+
+- 로그인 자격 증명(AetherAI 공식 계정/API 토큰)이 이 세션에 없어 실제 공식 에셋 바이너리를 다운로드할 수는 없으나, `loop/PROMPT.md` 31-39행의 엄격한 규칙에 따라 **"임의의 래스터 자재(Python/Pillow, Lua 도형 등)가 공식 에셋으로 둔갑하는 것을 방지하는 강제 게이트"**를 `make verify` 파이프라인에 구축했다.
+- 새 `tools/verify_asset_manifest.py`와 그 유닛 테스트(`tools/test_verify_asset_manifest.py`, 9개 케이스 전원 통과)는 `assets/` 디렉토리에 이미지가 추가될 경우 `docs/assets/MANIFEST.json`에 공식 AetherAI 출처 12개 필드(`source_url`, `terms_url`, `asset_id`, `prompt`, `model`, `style`, `settings`, `downloaded_at`, `sha256`, `width`, `height`, `qa`), 공식 도메인(`aetherforgeai.com`/`aetherai.com`), 실제 파일 SHA-256 해시 일치가 모두 충족되는지 엄격히 검사한다. 특히 이번 사이클에서 `terms_url`도 `source_url`과 동일하게 공식 도메인 화이트리스트 검사를 통과하도록 보강했다.
+- 현재 상태에서는 이미지가 없고 매니페스트가 빈 배열(`[]`)이므로 `ASSET_MANIFEST_OK`로 정상 통과한다.
+- `docs/feedback/INBOX.md`의 마지막 남은 처리 대기 항목이었던 "AetherForgeAI/AetherAI-only 최종 에셋"을 처리 완료 섹션으로 이동하여, 인박스의 모든 항목(`세로 상승형 로그라이트 핵심 루프`, `행성·이펙트 발라트로 스타일 카드형 비주얼 강화`, `런치 화면 지구 탐험물 전시`, `런치(첫)화면 텍스트 크기·레이아웃 정리`, `AetherAI-only 최종 에셋`)이 빠짐없이 처리 완료 상태가 되었다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, 9/9 Python 유닛 테스트, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- 남은 다음 사이클 제안: 추후 AetherAI 공식 로그인 자격 증명이 확보되면 이 완성된 매니페스트 스키마에 맞춰 공식 에셋 export 및 바이트 검증을 진행하면 된다.
 
 `git status --short` clean, preflight PASS 상태로 시작. 처리 대기 최우선 항목인 "AetherAI-only 최종 에셋"을 이번 사이클의 슬라이스로 선정했다. 로그인/공식 export 자격 증명은 여전히 이 세션에 없음을 재확인했다(`env`에 `aether`/`api_key`/`token` 관련 키 없음, `~/.hermes/.env`는 자격 증명 파일이라 내용을 읽지 않음, `/private/tmp/aether.html`·`*.diff`는 이전 세션이 남긴 도메인 조사 산출물일 뿐 로그인 세션이 아님을 파일명·라인수만 확인). 따라서 실제 공식 에셋 import는 이번 사이클도 human-gated다. `loop/PROMPT.md`의 "If login/export is unavailable... continue non-asset gameplay, tests, persistence, balancing, touch input, packaging, and UI layout work" 지침에 따라, import 불가능한 채로 진행 가능한 이 항목의 **강제 검증 인프라 보강**을 이번 슬라이스로 진행했다.
 

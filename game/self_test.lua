@@ -99,12 +99,13 @@ local function testJoystick()
         "drawn stick disc must be smaller than the input maxRadius")
     assert(joystick.visualFillAlpha < 0.2 and joystick.visualLineAlpha < 0.4,
         "drawn stick must be translucent, not a solid overlay")
-    assert(PlayScene.bankFromSteer(1, 1) == PlayScene.steerTiltMax)
-    assert(PlayScene.bankFromSteer(-1, 1) == -PlayScene.steerTiltMax)
-    assert(PlayScene.bankFromSteer(1, 0.5) == PlayScene.steerTiltMax * 0.5)
+    assert(math.abs(PlayScene.headingFromStick(1, 0)) < 1e-9, "stick right must be heading 0")
+    assert(math.abs(PlayScene.headingFromStick(0, -1) + math.pi / 2) < 1e-9,
+        "stick up must be heading -pi/2")
+    assert(math.abs(PlayScene.shortestAngleDelta(0, 0.1) - 0.1) < 1e-9)
 
-    -- Rightward stick must bank the ship clockwise of the nose-up rest
-    -- pose (-pi/2) and emit an RCS puff on that same side.
+    -- Rightward stick must point the nose fully right (heading 0), not a
+    -- capped lean off nose-up, and emit an RCS puff on that same side.
     local tiltScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
@@ -115,8 +116,10 @@ local function testJoystick()
     }
     local restAngle = tiltScene.ship.angle
     tiltScene:update(1)
-    assert(tiltScene.ship.angle > restAngle,
-        "a rightward stick must tilt the ship clockwise of nose-up")
+    assert(math.abs(tiltScene.ship.angle) < 0.05,
+        "a full-right stick must be allowed to reach heading 0, not a capped bank")
+    assert(math.abs(tiltScene.ship.angle - restAngle) > 0.5,
+        "unclamped heading must be able to travel more than the old 0.5 rad lean")
     assert(#tiltScene.particles > 0, "tilting left/right must spawn a side RCS puff")
     assert(tiltScene.particles[1].x > tiltScene.ship.x,
         "a right tilt's RCS puff must emit from the ship's right side")
