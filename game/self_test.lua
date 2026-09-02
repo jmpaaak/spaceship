@@ -835,6 +835,27 @@ function M.run()
     assert(starterNextLaunch.steeringAction == "T/G STEER LV.0>1 $65")
     assert(starterNextLaunch.steeringPreview == "STEER SPEED 70")
     assert(starterNextLaunch.steeringStatus == "SHORT $65" and not starterNextLaunch.steeringAffordable)
+    -- Compact column labels for the HULL/STEERING shared touch row (see
+    -- settlementTouchRows: HULL occupies the left half, STEERING the right
+    -- half of one 90px-wide column). The existing hullAction/steeringAction
+    -- strings ("T/H HULL LV.0>1 $75", 91-96px measured) are too wide to sit
+    -- side-by-side in a single 90 canvas px column, so these shorter
+    -- "H:"/"G:" prefixed variants (measured 58-63px via GAME_FONTPROBE) are
+    -- drawn in the column instead, without changing the existing full
+    -- strings other callers may still rely on.
+    assert(starterNextLaunch.hullActionCompact == "H:LV.0>1 $75")
+    assert(starterNextLaunch.steeringActionCompact == "G:LV.0>1 $65")
+    assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
+    assert(starterNextLaunch.steeringPreviewCompact == "SPD 70")
+    -- Same compact treatment for the YIELD/SHIP shared touch row (see
+    -- settlementTouchRows: YIELD occupies the left half, SHIP the right
+    -- half). yieldAction ("T/Y YIELD LV.0>1 $60", 92-97px) and shipAction
+    -- ("BUY SCOUT $125"/"SELECT STARTER"/"SELECT SCOUT", 63-72px) are both
+    -- too wide for a 90px column once a "T/V "/"T/Y " prefix and a
+    -- side-by-side status line are added, so compact "Y:"/"V:" variants
+    -- (measured 38-62px) are drawn in the column instead.
+    assert(starterNextLaunch.yieldActionCompact == "Y:LV.0>1 $60")
+    assert(starterNextLaunch.shipActionCompact == "V:BUY $125")
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.fuelUpgradeCost
     local fuelReadyNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(fuelReadyNextLaunch.fuelStatus == "LEFT $0" and fuelReadyNextLaunch.fuelAffordable)

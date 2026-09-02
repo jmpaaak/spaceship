@@ -40,6 +40,15 @@ function love.load()
             "LV.0>1 $75", "LV.0>1 $65", "LV.0>1 $60",
             "LEFT $999", "SHORT $999", "SELECT",
             "STARTER", "SCOUT", "BUY $125",
+            "H:LV.0>1 $75", "H:LV.9>10 $75", "G:LV.0>1 $65", "G:LV.9>10 $65",
+            "Y:LV.0>1 $60", "Y:LV.9>10 $60", "V:BUY $125", "V:STARTER", "V:SCOUT",
+            "HULL 4", "HULL 10", "SPD 70", "SPD 190", "YIELD x1.25", "YIELD x3.25",
+            "LEFT $999", "SHORT $999",
+            "SELECT STARTER", "SELECT SCOUT", "BUY SCOUT $125",
+            "H:LV.0>1 $75 LEFT $105", "H:LV.9>10 $75 SHORT $75",
+            "G:LV.0>1 $65 LEFT $105", "G:LV.9>10 $65 SHORT $65",
+            "Y:LV.0>1 $60 LEFT $105", "Y:LV.9>10 $60 SHORT $60",
+            "V:BUY $125 LEFT $105", "V:STARTER OWNED", "V:SCOUT OWNED",
         }
         for _, s in ipairs(samples) do
             print(string.format("FONTPROBE|%s|%d", s, font:getWidth(s)))

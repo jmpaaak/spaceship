@@ -264,6 +264,32 @@ M.shopActionColumnW = shopActionColumnW
 M.shopStatusColumnX = shopStatusColumnX
 M.shopStatusColumnW = shopStatusColumnW
 
+-- Split-column layout for the two settlementTouchRows entries that share a
+-- single 44px band between two keys (HULL/STEERING, then YIELD/SHIP; see
+-- settlementTouchRows' `columns` sub-tables, left=0..90, right=90..180 in
+-- full canvas coordinates). Two prior cycles tried moving the *existing*
+-- full-width action/status printf calls to sit flush inside these bands and
+-- both were reverted after a real LÖVE capture showed the two items'
+-- full-width centered text overlapping (see docs/STATUS.md "이번 사이클
+-- 시도 및 되돌림 기록"). This cycle takes a narrower, additive fix instead
+-- of repositioning the existing verified rows: only the compact
+-- hullActionCompact/steeringActionCompact/yieldActionCompact/
+-- shipActionCompact action strings (measured 38-63px via GAME_FONTPROBE,
+-- see shopLoadoutLines) and their purchaseStatus() results (measured
+-- <=52px, same as shopStatusColumnW) are drawn confined to each item's own
+-- half of the shared row, so a row's left half always shows the key whose
+-- touch column is settlementTouchRows[n].columns[1] (left=0,right=90) and
+-- the right half always shows columns[2] (left=90,right=180). The existing
+-- full-width preview/forecast lines below each shared row are left
+-- untouched (they are advisory text, not the tap target itself, and were
+-- already verified not to overlap).
+local shopColumnLeftX, shopColumnLeftW = 16, 68
+local shopColumnRightX, shopColumnRightW = 88, 68
+M.shopColumnLeftX = shopColumnLeftX
+M.shopColumnLeftW = shopColumnLeftW
+M.shopColumnRightX = shopColumnRightX
+M.shopColumnRightW = shopColumnRightW
+
 -- EARTH SHOP touch-row background shading. Two prior cycles tried to move
 -- the shop's text lines to sit flush inside each settlementTouchRows band
 -- and both attempts were reverted after a real LÖVE capture showed shared
@@ -499,20 +525,24 @@ end
 function M:shopLoadoutLines()
     local run = self.expedition
     local shipAction
+    local shipActionCompact
     local shipAffordable
     local shipStatus
     local previewShipId
     if not run.ownedShips.scout then
         shipAction = string.format("BUY SCOUT $%d", run.scoutShipCost)
+        shipActionCompact = string.format("V:BUY $%d", run.scoutShipCost)
         shipStatus, shipAffordable = purchaseStatus(run.money, run.scoutShipCost)
         previewShipId = "scout"
     elseif run.selectedShipId == "scout" then
         shipAction = "SELECT STARTER"
+        shipActionCompact = "V:STARTER"
         shipAffordable = true
         shipStatus = "OWNED"
         previewShipId = "starter"
     else
         shipAction = "SELECT SCOUT"
+        shipActionCompact = "V:SCOUT"
         shipAffordable = true
         shipStatus = "OWNED"
         previewShipId = "scout"
@@ -536,6 +566,7 @@ function M:shopLoadoutLines()
         forecast = launchForecastLine(run),
         scoutTradeoff = self.scoutTradeoffLines(run),
         shipAction = shipAction,
+        shipActionCompact = shipActionCompact,
         shipStatus = shipStatus,
         shipAffordable = shipAffordable,
         shipPreview = string.format("%s MAX FUEL %d  HULL %d",
@@ -549,12 +580,19 @@ function M:shopLoadoutLines()
         hullAction = string.format("T/H HULL LV.%d>%d $%d",
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
+        hullActionCompact = string.format("H:LV.%d>%d $%d",
+            run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
+            run.durabilityUpgradeCost),
         hullPreview = string.format("MAX FUEL %d  HULL %d",
             run.maxFuel, run.maxDurability + run.durabilityUpgradeAmount),
+        hullPreviewCompact = string.format("HULL %d",
+            run.maxDurability + run.durabilityUpgradeAmount),
         hullPreviewForecast = launchForecastLine(run),
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
         yieldAction = string.format("T/Y YIELD LV.%d>%d $%d",
+            run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, run.sampleYieldUpgradeCost),
+        yieldActionCompact = string.format("Y:LV.%d>%d $%d",
             run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, run.sampleYieldUpgradeCost),
         yieldPreview = string.format("YIELD x%.2f",
             1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount),
@@ -562,7 +600,11 @@ function M:shopLoadoutLines()
         yieldAffordable = yieldAffordable,
         steeringAction = string.format("T/G STEER LV.%d>%d $%d",
             run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
+        steeringActionCompact = string.format("G:LV.%d>%d $%d",
+            run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
         steeringPreview = string.format("STEER SPEED %d",
+            run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
+        steeringPreviewCompact = string.format("SPD %d",
             run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
         steeringStatus = steeringStatus,
         steeringAffordable = steeringAffordable,
