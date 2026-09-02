@@ -147,10 +147,20 @@ local function slotCount(distance, slotDistance)
     return math.ceil(distance / slotDistance)
 end
 
+-- Item 10(b)/14(G) wiring: engine-part fuelEfficiency effects (already a
+-- pure conversion in gear.effectiveFuelBurnRate) reduce the burn rate used
+-- for this forecast, same "최소한의 로더 호출" exception used for the
+-- climbSpeed synergy wiring above. No equipped engine parts (or none with
+-- fuelEfficiency) leaves run.fuelBurnRate unchanged.
+function M.effectiveFuelBurnRate(run)
+    return gearModule.effectiveFuelBurnRate(run.fuelBurnRate, run.equippedEngineParts or {})
+end
+
 function M.launchForecast(run, maxFuel)
     local forecastFuel = maxFuel or run.maxFuel
-    if forecastFuel <= 0 or run.fuelBurnRate <= 0 or run.climbSpeed <= 0 then return 0, 0 end
-    local altitude = forecastFuel / run.fuelBurnRate * run.climbSpeed
+    local burnRate = M.effectiveFuelBurnRate(run)
+    if forecastFuel <= 0 or burnRate <= 0 or run.climbSpeed <= 0 then return 0, 0 end
+    local altitude = forecastFuel / burnRate * run.climbSpeed
     return altitude, slotCount(altitude, run.slotDistance)
 end
 
@@ -427,8 +437,13 @@ end
 -- steering speed applied while ascending/returning (game/scenes/play.lua),
 -- giving players a way to spend money on better planet-collision avoidance
 -- rather than capacity or money yield.
+-- Item 10(b)/14(G) wiring: engine-part steeringResponsiveness effects
+-- multiply the upgrade-derived base steering speed (gear.effectiveSteeringRate
+-- is a pure percentage-increase conversion; no equipped engine parts with
+-- steeringResponsiveness leaves this identical to the pre-wiring formula).
 function M.steeringSpeed(run)
-    return run.baseSteeringSpeed + run.steeringUpgradeLevel * run.steeringUpgradeAmount
+    local baseRate = run.baseSteeringSpeed + run.steeringUpgradeLevel * run.steeringUpgradeAmount
+    return gearModule.effectiveSteeringRate(baseRate, run.equippedEngineParts or {})
 end
 
 function M.buySteeringUpgrade(run)
@@ -543,6 +558,15 @@ end
 function M.effectiveClimbSpeed(run)
     local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
     return run.climbSpeed + (gearTotals.climbSpeed or 0)
+end
+
+-- Item 10(b)/14(G) wiring: how many one-shot emergency boost charges the
+-- currently equipped engine parts grant this run (gear.boostChargeCount is
+-- a pure discrete-count conversion). Actual consumption/UI for spending a
+-- charge belongs to play.lua (out of this lane's scope) -- this just
+-- exposes the count so that future wiring has a single source of truth.
+function M.boostChargeCount(run)
+    return gearModule.boostChargeCount(run.equippedEngineParts or {})
 end
 
 function M.update(run, dt)

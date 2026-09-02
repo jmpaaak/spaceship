@@ -1154,6 +1154,62 @@ local function testGearRunWiring()
         "the durability-0 meta wipe must clear equipped hull and engine parts")
 end
 
+-- Item 10(b) follow-up: the propulsion-specialization (G) effect types
+-- (fuelEfficiency/steeringResponsiveness/boostCharge) were only pure
+-- gear.lua conversion functions until now -- never actually consumed by a
+-- run. This wires them the same "최소한의 로더 호출" way item 9's climbSpeed
+-- synergy and item 10's slot separation were already wired above.
+local function testGearPropulsionRunWiring()
+    local expedition = require("game.expedition")
+    local enginePool = gear.loadEngineParts()
+
+    -- fuelEfficiency: equipping engine_cryo_fuel_cell (fuelEfficiency +25)
+    -- must reduce the effective burn rate used by launchForecast, so the
+    -- same fuel tank forecasts a HIGHER altitude than with no engine parts.
+    local fuelRun = expedition.new({ fuelBurnRate = 5, climbSpeed = 30 })
+    local baselineAltitude = expedition.launchForecast(fuelRun)
+    local cryoCard = gear.findById(enginePool, "engine_cryo_fuel_cell")
+    assert(cryoCard, "fixture engine card 'engine_cryo_fuel_cell' must exist in the bundled pool")
+    assert(expedition.equipGear(fuelRun, "engine", cryoCard))
+    local boostedAltitude = expedition.launchForecast(fuelRun)
+    assert(boostedAltitude > baselineAltitude,
+        "equipped fuelEfficiency engine part must raise the launch forecast altitude: "
+            .. tostring(baselineAltitude) .. " -> " .. tostring(boostedAltitude))
+    assert(math.abs(expedition.effectiveFuelBurnRate(fuelRun) - fuelRun.fuelBurnRate * 0.75) < 1e-9,
+        "effectiveFuelBurnRate must apply the equipped fuelEfficiency percentage")
+
+    -- steeringResponsiveness: equipping engine_vector_nozzle
+    -- (steeringResponsiveness +15) must raise expedition.steeringSpeed
+    -- beyond the base/upgrade-only formula.
+    local steerRun = expedition.new({ steeringSpeed = 55 })
+    local baseSteering = expedition.steeringSpeed(steerRun)
+    local vectorCard = gear.findById(enginePool, "engine_vector_nozzle")
+    assert(vectorCard, "fixture engine card 'engine_vector_nozzle' must exist in the bundled pool")
+    assert(expedition.equipGear(steerRun, "engine", vectorCard))
+    local boostedSteering = expedition.steeringSpeed(steerRun)
+    assert(boostedSteering > baseSteering,
+        "equipped steeringResponsiveness engine part must raise steeringSpeed: "
+            .. tostring(baseSteering) .. " -> " .. tostring(boostedSteering))
+    assert(math.abs(boostedSteering - baseSteering * 1.15) < 1e-9,
+        "steeringSpeed must apply the equipped steeringResponsiveness percentage")
+
+    -- boostCharge: a fresh run with no engine parts must report zero
+    -- charges; equipping engine_emergency_boost_pod (boostCharge +2) must
+    -- expose that count via expedition.boostChargeCount.
+    local boostRun = expedition.new()
+    assert(expedition.boostChargeCount(boostRun) == 0,
+        "a fresh run with no engine parts must have zero boost charges")
+    local boostCard = gear.findById(enginePool, "engine_emergency_boost_pod")
+    assert(boostCard, "fixture engine card 'engine_emergency_boost_pod' must exist in the bundled pool")
+    assert(expedition.equipGear(boostRun, "engine", boostCard))
+    assert(expedition.boostChargeCount(boostRun) == 2,
+        "equipping engine_emergency_boost_pod must grant 2 boost charges")
+
+    -- Sanity: none of these engine-part effects leak into the independent
+    -- hull gear list (item 10's slot-independence guarantee still holds).
+    assert(#boostRun.equippedGear == 0, "engine part effects must not touch the hull gear list")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -2856,6 +2912,7 @@ function M.run()
     testGearEffectSchemaExpansion()
     testEnginePropulsionSpecialization()
     testGearRunWiring()
+    testGearPropulsionRunWiring()
 
     print("SPACESHIP_UNIT_OK")
 end

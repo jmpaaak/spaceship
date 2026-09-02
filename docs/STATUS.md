@@ -1,4 +1,19 @@
 # STATUS
+## [spaceship-gear 레인] 항목10(b) 후속 — 엔진 부품 (G) 효과 실제 run 배선(연료효율/조종반응성/부스트) (완료, 2026-09-03)
+
+레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료되었으나, `docs/STATUS.md`/`docs/GEAR_SCHEMA.md`가 남긴 "다음 슬라이스" 후보 중 항목10(b)의 (G) 추진 특화 효과(fuelEfficiency/steeringResponsiveness/boostCharge)가 순수 함수(`game/gear.lua`)로만 존재하고 실제 `run` 상태에는 아직 배선되지 않은 상태였다. 이번 사이클은 `loop/PROMPT.md`가 명시적으로 허용한 "gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출" 예외 범위 안에서 이 갭을 닫았다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
+
+- `game/expedition.lua`는 이미 `game.gear`/`game.engine_parts`를 최상단에서 require하고 있었다(항목9 climbSpeed 시너지 배선 때 추가됨) — 이번 사이클은 그 기존 require를 재사용해 새 함수 3개만 추가했으며 `game/scenes/play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다(변경 파일은 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md`뿐).
+- 신규 `M.effectiveFuelBurnRate(run)` — `gear.effectiveFuelBurnRate(run.fuelBurnRate, run.equippedEngineParts)`를 얇게 감싼다. `M.launchForecast(run, maxFuel)`이 기존 `run.fuelBurnRate` 원값 대신 이 함수를 사용하도록 변경해, 연료 효율 엔진 부품(예: `engine_cryo_fuel_cell`, fuelEfficiency +25)을 장착하면 발사 전 예상 고도(forecast)가 실제로 상승한다.
+- `M.steeringSpeed(run)`을 확장해 기존 base+업그레이드 공식 위에 `gear.effectiveSteeringRate(baseRate, run.equippedEngineParts)`를 곱연산으로 적용했다. `game/scenes/play.lua`의 조이스틱/탭 조종 코드가 이미 `expedition.steeringSpeed(run)`을 호출하고 있으므로, play.lua를 전혀 수정하지 않고도 조종 반응성 엔진 부품(예: `engine_vector_nozzle`, steeringResponsiveness +15)이 실제 조종 속도에 반영된다.
+- 신규 `M.boostChargeCount(run)` — 장착된 엔진 부품의 boostCharge 효과 총합(정수, 음수 방지)을 노출한다. 실제 "부스트 사용" UI/소비 로직은 `play.lua` 영역이라 이번 사이클 범위 밖으로 명시하고, 향후 소비 로직이 참조할 단일 소스만 마련했다.
+- `game/self_test.lua`에 `testGearPropulsionRunWiring()`(신규)을 추가해 3가지 모두 회귀 검증한다: `engine_cryo_fuel_cell` 장착 시 `launchForecast` 고도가 상승하고 `effectiveFuelBurnRate`가 정확히 -25%를 반영함, `engine_vector_nozzle` 장착 시 `steeringSpeed`가 정확히 +15%, 엔진 미장착 시 `boostChargeCount`가 0이고 `engine_emergency_boost_pod`(boostCharge +2) 장착 시 정확히 2, 이 모든 엔진 부품 효과가 독립된 선체(hull) 장비 목록에는 전혀 영향을 주지 않음(항목10 슬롯 독립성 재확인).
+- `docs/GEAR_SCHEMA.md`의 "Propulsion specialization effect category (item 10b)" 섹션을 갱신해 이 세 함수의 실제 배선 계약과 테스트 커버리지를 문서화했다.
+- `make test`(`GAME_HEADLESS=1 GAME_UNIT=1`), `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md` 처리대기 섹션의 항목10 하위에 이 진행상황을 세 번째 슬라이스로 append했다.
+- 여전히 미착수: 항목10(c) 획득 경로 3원화(상점 행성 구매/체크포인트 확정 드롭/지구 상점 범용 구매), boostCharge의 실제 소비 UI(`play.lua`), 항목14 (C)~(F)/(D)/(E)/(F) 카테고리의 run 상태 소비(충돌 판정/미니맵 스캔 반경/상점 가격 등), 항목12의 실제 드롭 RNG 배선.
+- 다음 사이클 다음 슬라이스: 위 미착수 항목 중 사용자/통합 우선순위에 따라 하나를 선택해 진행. 후보 우선순위: (a) 항목12의 실제 드롭 RNG 배선(체크포인트/상점 획득 시 `gear.rollRarity`/`gear.rollEdition` 실제 연결), (b) 항목10(c) 엔진 부품 획득 경로 설계, (c) 항목14 (D)/(E)/(F) 카테고리(insurance/collisionRadius/detectionRadius/autoCollect/shopDiscount)의 run 배선.
+
 ## [spaceship-gear 레인] 항목14: 효과 스키마 A~F 확장 + 웹 에디터 폼 동기화 (완료, 2026-09-03)
 
 `loop/PROMPT.md`의 gear 레인 순서(항목13 -> 항목9 -> 항목10 -> 항목12 -> 항목14)에 따라 항목12(등급/에디션 파밍) 완료 후 항목14(효과 스키마 A~F 확장)를 착수했다 — 이 레인이 지정받은 5개 항목의 마지막이다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean)로 시작했고, `git status --short`는 clean이라 이전 사이클 미완료 작업은 없었다.

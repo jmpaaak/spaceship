@@ -214,11 +214,36 @@ a `"G: propulsion (engine parts)"` group so the web editor's effect-type
 dropdown and `game/self_test.lua`'s existing editor-sync check both cover
 the new types automatically.
 
-As with (C)~(F), (G)'s conversion functions are not yet wired into actual
-`run` state (`game/expedition.lua`'s fuel-burn rate / steering input /
-boost-charge consumption) — that remains deferred to a follow-up slice
-within this lane's `loop/PROMPT.md` scope (minimal-loader-call exception
-only).
+As with (C)~(F), (G)'s conversion functions were not initially wired into
+actual `run` state. This lane's follow-up slice closed that gap within the
+"최소한의 로더 호출" exception (`game/expedition.lua` already requires
+`game.gear`/`game.engine_parts` for item 9's climbSpeed synergy):
+
+- `M.effectiveFuelBurnRate(run)` applies equipped engine parts'
+  `fuelEfficiency` to `run.fuelBurnRate`; `M.launchForecast(run, maxFuel)`
+  now uses this effective rate instead of the raw `run.fuelBurnRate`, so
+  fuel-efficiency cards visibly raise the forecast altitude shown before
+  launch.
+- `M.steeringSpeed(run)` now applies equipped engine parts'
+  `steeringResponsiveness` on top of the existing base/upgrade formula, so
+  `game/scenes/play.lua`'s joystick/tap-steering code (which already calls
+  `expedition.steeringSpeed(run)`) automatically benefits without any
+  play.lua change.
+- `M.boostChargeCount(run)` exposes the equipped engine parts' total
+  `boostCharge` count for a run. Actual consumption/UI for spending a
+  charge (e.g. a tap-to-boost button) remains out of this lane's scope
+  (`play.lua`) and is deferred to a future slice; this only establishes the
+  single source of truth a future consumer will read from.
+
+`game/self_test.lua`'s `testGearPropulsionRunWiring` regression-checks all
+three: an equipped `engine_cryo_fuel_cell` (fuelEfficiency +25) raises
+`launchForecast`'s altitude and matches the expected 25% burn-rate
+reduction exactly; an equipped `engine_vector_nozzle`
+(steeringResponsiveness +15) raises `steeringSpeed` by exactly 15%; a fresh
+run reports zero boost charges and an equipped `engine_emergency_boost_pod`
+(boostCharge +2) reports exactly 2. It also re-confirms none of these
+engine-part effects leak into the independent hull gear list (item 10's
+slot-independence guarantee).
 
 ## Rarity + edition farming system (item 12)
 
