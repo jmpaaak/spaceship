@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "parts": [
+    {
+      "id": "hull_scrap_plate",
+      "name": "Scrap Plate",
+      "nameKo": "고철 장갑판",
+      "icon": "▭",
+      "rarity": "common",
+      "tags": ["defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 1 }
+      ]
+    },
+    {
+      "id": "hull_ion_fin",
+      "name": "Ion Fin",
+      "nameKo": "이온 핀",
+      "icon": "◭",
+      "rarity": "common",
+      "tags": ["speed"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 5 }
+      ]
+    },
+    {
+      "id": "hull_cargo_pod",
+      "name": "Cargo Pod",
+      "nameKo": "화물 포드",
+      "icon": "▤",
+      "rarity": "common",
+      "tags": ["economy"],
+      "editions": [],
+      "effects": [
+        { "type": "sampleSellValue", "value": 3 }
+      ]
+    },
+    {
+      "id": "hull_reserve_tank",
+      "name": "Reserve Tank",
+      "nameKo": "예비 탱크",
+      "icon": "◑",
+      "rarity": "uncommon",
+      "tags": ["economy"],
+      "editions": [],
+      "effects": [
+        { "type": "money", "value": 10 }
+      ]
+    },
+    {
+      "id": "hull_climb_booster",
+      "name": "Climb Booster",
+      "nameKo": "상승 부스터",
+      "icon": "▲",
+      "rarity": "uncommon",
+      "tags": ["speed", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 4 },
+        { "type": "speed", "value": 2 }
+      ]
+    },
+    {
+      "id": "hull_reactive_hull",
+      "name": "Reactive Hull",
+      "nameKo": "반응 장갑",
+      "icon": "◈",
+      "rarity": "rare",
+      "tags": ["defense", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 2 },
+        { "type": "sampleSellValue", "value": 5 }
+      ]
+    }
+  ]
+}

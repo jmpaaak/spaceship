@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "parts": [
+    {
+      "id": "engine_basic_thruster",
+      "name": "Basic Thruster",
+      "nameKo": "기본 추진기",
+      "icon": "▽",
+      "rarity": "common",
+      "tags": ["speed"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 3 }
+      ]
+    },
+    {
+      "id": "engine_afterburner",
+      "name": "Afterburner",
+      "nameKo": "애프터버너",
+      "icon": "▼",
+      "rarity": "uncommon",
+      "tags": ["speed", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 6 }
+      ]
+    },
+    {
+      "id": "engine_vector_nozzle",
+      "name": "Vector Nozzle",
+      "nameKo": "벡터 노즐",
+      "icon": "◁",
+      "rarity": "common",
+      "tags": ["control"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 4 }
+      ]
+    },
+    {
+      "id": "engine_fusion_core",
+      "name": "Fusion Core",
+      "nameKo": "핵융합 코어",
+      "icon": "◉",
+      "rarity": "rare",
+      "tags": ["altitude", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 8 },
+        { "type": "money", "value": 5 }
+      ]
+    }
+  ]
+}

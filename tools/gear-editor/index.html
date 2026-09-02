@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gear Editor — Spaceship</title>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+<header>
+  <h1>Gear Editor</h1>
+  <p class="subtitle">Hull/engine part card pool editor — game/data/*.json (docs/feedback/INBOX.md item 13)</p>
+</header>
+
+<section class="toolbar">
+  <div class="toolbar-group">
+    <label class="file-btn">
+      Open hull_parts.json
+      <input type="file" id="openHullInput" accept=".json" hidden>
+    </label>
+    <label class="file-btn">
+      Open engine_parts.json
+      <input type="file" id="openEngineInput" accept=".json" hidden>
+    </label>
+    <button id="openFsaBtn" title="Chrome/Edge only: pick a file and enable direct save-to-disk">Open + enable direct save</button>
+  </div>
+  <div class="toolbar-group">
+    <button id="saveFsaBtn" disabled>Save to disk</button>
+    <button id="downloadBtn" disabled>Download JSON</button>
+    <button id="newCardBtn" disabled>+ New Card</button>
+  </div>
+</section>
+
+<section id="statusBar" class="status"></section>
+
+<main>
+  <section id="grid" class="card-grid"></section>
+
+  <aside id="formPanel" class="form-panel hidden">
+    <h2 id="formTitle">Edit Card</h2>
+    <form id="cardForm">
+      <label>ID (unique, no spaces)
+        <input type="text" id="fieldId" required>
+      </label>
+      <label>Name (en)
+        <input type="text" id="fieldName" required>
+      </label>
+      <label>Name (ko)
+        <input type="text" id="fieldNameKo">
+      </label>
+      <label>Icon (emoji or 1-2 char symbol)
+        <input type="text" id="fieldIcon" required>
+      </label>
+      <label>Rarity
+        <select id="fieldRarity">
+          <option value="common">common</option>
+          <option value="uncommon">uncommon</option>
+          <option value="rare">rare</option>
+          <option value="legendary">legendary</option>
+        </select>
+        <span id="rarityPreview" class="rarity-swatch"></span>
+      </label>
+      <label>Tags (comma separated)
+        <input type="text" id="fieldTags" placeholder="speed, altitude">
+      </label>
+      <label>Editions (comma separated)
+        <input type="text" id="fieldEditions" placeholder="radioactive, crystalline">
+      </label>
+
+      <fieldset>
+        <legend>Effects</legend>
+        <div id="effectsList"></div>
+        <button type="button" id="addEffectBtn">+ Add Effect</button>
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="submit" id="saveCardBtn">Save Card</button>
+        <button type="button" id="deleteCardBtn" class="danger">Delete Card</button>
+        <button type="button" id="cancelBtn">Cancel</button>
+      </div>
+      <div id="formError" class="form-error"></div>
+    </form>
+  </aside>
+</main>
+
+<script src="editor.js"></script>
+</body>
+</html>

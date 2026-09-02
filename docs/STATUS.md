@@ -245,3 +245,19 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
 - 3번 항목의 아이콘 기반 HUD 간소화 대상 4가지(탭 발사=로켓, 선체 내구도=방패, 자금=동전, 속도) 중 3가지가 완료되었다. 남은 것은 속도(조종속도/엔진속도)의 스피드미터 아이콘화뿐이다.
 - 다음 사이클 다음 슬라이스: 3번 항목의 마지막 남은 부분(속도/스피드미터 아이콘화 — LAUNCH LOADOUT의 `steer_speed_line`에 아이콘 추가), 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
+## [gear 레인] 부품 데이터 JSON 외부화 + tools/gear-editor/ 웹 에디터 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 13(선체/엔진 부품 데이터를 별도 config로 외부화 + 전용 웹 에디터 제공)을 처리했다. 이 레인(`spaceship-gear` 브랜치)은 `loop/PROMPT.md`의 레인 스코프에 따라 항목 13→9→10→12→14 순서로 진행하며, `game/scenes/play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 원칙적으로 건드리지 않는다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- `game/json.lua`(신규) — 외부 의존성 없는 최소 JSON 디코더(객체/배열/문자열/숫자/불리언/null 지원, 인코더 없음). LÖVE에 JSON 모듈이 기본 내장되어 있지 않아 직접 작성했다.
+- `game/gear.lua`(신규) — `love.filesystem`로 `game/data/hull_parts.json`/`game/data/engine_parts.json`을 읽어 스키마를 방어적으로 검증(중복 id, 범위 밖 effect 수치 [-100,100], 미지의 effect type/rarity, 빈 문자열 필드, 빈 effects 배열을 모두 명시적 에러로 거부)한 뒤 정규화된 Lua 카드 풀 테이블을 반환하는 얇은 로더. `M.loadHullParts`/`M.loadEngineParts`/`M.loadPool`/`M.findById`/`M.parsePool` 제공. 아직 게임 로직(장비 장착/효과 적용)에는 배선하지 않음 — 다음 항목 9에서 진행.
+- `game/data/hull_parts.json`(신규, 선체 부품 6종), `game/data/engine_parts.json`(신규, 엔진 부품 4종) — 초기 콘텐츠. 항목 9·10 사이클에서 20~30종 규모로 확장 예정.
+- `docs/GEAR_SCHEMA.md`(신규) — 카드/문서 JSON 스키마와 검증 규칙을 문서화.
+- `tools/gear-editor/`(신규, 정적 HTML+CSS+JS, 빌드/서버 불필요) — 등급별 색상 테두리 카드 그리드 뷰 + 카드별 폼(id/이름 en·ko/아이콘/등급(색상 미리보기)/태그/에디션/effect 반복 목록)으로 추가·수정·삭제. 저장 전 `game/gear.lua`와 동일한 규칙으로 클라이언트 검증하며, JSON 다운로드 또는(Chrome/Edge의 File System Access API 지원 시) 원본 파일에 직접 저장(`showOpenFilePicker`/`createWritable`) 가능. `tools/gear-editor/README.md`에 사용법 문서화.
+- `game/self_test.lua`에 `testGearJsonLoader()`를 추가해 JSON 디코더 스모크 테스트, 번들된 실제 데이터 파일 2종의 정상 로드/검증, `gear.findById`, 그리고 누락 파일/손상 JSON/중복 id/범위 밖 값/미지 effect 타입/미지 rarity/빈 effects/누락 id 등 7가지 방어적 실패 경로를 모두 회귀 검증(RED 확인 후 GREEN).
+- `unzip -l build/game.love`로 `game/gear.lua`/`game/json.lua`/`game/data/*.json`이 `.love` 번들에 정상 포함됨을 확인했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:54`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 13 하위에 처리 상황을 append했다(항목 자체는 완료로 표시).
+- 다음 사이클 다음 슬라이스: 항목 9(핵심 게임성 방향 — 발라트로 규모의 부품 다양성 + 조합/시너지 중심 고도 상승). `game/gear.lua`를 이용해 선체 부품 카드 풀을 20~30종으로 확장하고, 부품 조합이 고도 상승 속도/효율에 배가 효과를 내는 시너지 계산 엔진을 설계한다.
+
