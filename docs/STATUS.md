@@ -1,4 +1,14 @@
 # STATUS
+## 데스크톱 마우스 조이스틱 + settlement 메시지 i18n 이관 인계 완료 (이전 사이클 미완성 인계)
+
+- 이전 사이클이 `game/scenes/play.lua`/`game/self_test.lua`/`main.lua`에 검증된 GREEN 변경을 워킹트리에 남긴 채 커밋을 완료하지 못하고 종료했다(preflight `git diff` 검사 PASS로 인계됨). 이번 사이클이 그 변경을 이어받아 커밋했다.
+- `main.lua`에 `love.mousepressed/mousemoved/mousereleased`를 추가해 데스크톱 `love .` 플레이 시 마우스 드래그가 `"mouse"` touch id로 `PlayScene`의 조이스틱 경로를 그대로 탄다(모바일 터치와 중복 처리되지 않도록 `istouch`는 무시). 좌표는 `clampToCanvas`로 180x320 캔버스 안으로 clamp해 고dpi 레터박스 반올림으로 드래그가 캔버스 밖으로 튕겨 유실되지 않게 했다.
+- `game/scenes/play.lua`에 `M:joystickKnob()`(활성 조이스틱 중심/노브 좌표 반환)과 `M:drawJoystickStick()`(상승/귀환 phase에 반투명 스틱 UI 렌더)를 추가했고, `M:pollDesktopMouse()`로 `love.mousepressed` 이벤트를 놓친 경우를 매 프레임 폴백 보정한다(`GAME_UNIT=1`에서는 스킵해 주입된 테스트 터치가 지워지지 않게 함). `steeringButtonState()`에 키보드 상/하(`up`/`down`, `w`/`s`)를 추가해 수직 `verticalOffset`도 키보드로 조종 가능해졌다.
+- 기존 `string.format` 인라인 메시지 다수(슬롯 결과, 귀환/정산/충돌/파괴/업그레이드/구매/선택 메시지, 신규표본 배너, 플로팅 텍스트)를 `game/i18n.lua`의 `i18n.t(key, ...)` 호출로 교체해 로케일 분기 없이도 문자열이 `locales.en`/`locales.ko` 양쪽에서 일관되게 나오도록 정리했다(`assets/fonts/AppleGothic.ttf` 번들 폰트를 쓰는 `game/fonts.lua`와 함께, 한글 로케일 지원 인프라 완결).
+- engine-hosted 테스트(`testJoystick()`)가 데스크톱 마우스 press→drag→release 시나리오에서 `joystickKnob()`이 드래그 전 nil, 드래그 후 노브 좌표 반환, `update(1)` 후 `ship.x` 증가, release 후 다시 nil이 되는 것을 검증한다.
+- `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:33`).
+- 남은 다음 슬라이스 후보: (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리(직전 완료 사이클로 이미 처리된 항목 여부 재확인 필요), (2) 낮은 잔액 `SHORT $N` 실기기 재검증, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+
 ## SCOUT 트레이드오프를 GAINS/LOSSES 포맷으로 통일 (완료, 이전 사이클 미완성 인계)
 
 - 이전 사이클(cycle 7)이 `game/expedition.lua`/`game/scenes/play.lua`/`game/self_test.lua`에 검증된 GREEN 변경을 워킹트리에 남긴 채 `docs/STATUS.md` 갱신과 커밋을 완료하지 못하고 종료했다. 이번 사이클이 preflight `git diff` 검사를 통과한 그 변경을 이어받아 완료했다. `docs/feedback/INBOX.md` 발라트로 이식 목록 5번(선택 안의 트레이드오프)을 처리한다: 기존 SCOUT 배의 `SCOUT +40 FUEL / -1 HULL` 단일 문자열을 `planet-style-editor` 도구의 GAINS/LOSSES 수치 행 포맷과 통일했다.

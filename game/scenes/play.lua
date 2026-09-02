@@ -332,7 +332,7 @@ function M.new(options)
     local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
     local specimenStore = options.collectionStore or collectionStore.new()
     if love.graphics then
-        love.graphics.setFont(love.graphics.newFont(14))
+        love.graphics.setFont(fonts.get(14))
     end
     return setmetatable({
         ship = ship,
@@ -400,7 +400,7 @@ function M:drawSpecimenStrip(y)
     local gap = 3
     local totalWidth = #catalog * box + (#catalog - 1) * gap
     local startX = math.floor((viewport.width - totalWidth) / 2)
-    self.tinyFont = self.tinyFont or love.graphics.newFont(7)
+    self.tinyFont = self.tinyFont or fonts.get(7)
     local previousFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)
     local found = self:specimenProgress()
@@ -1033,7 +1033,7 @@ function M:keypressed(key)
                     self.discoveredCount = 0
                     self.floatingTexts = {}
                 end
-                self.message = "ASCENDING  DRAG TO STEER"
+                self.message = i18n.t("ascending_message")
             end
         end
     end
@@ -1158,7 +1158,7 @@ function M:drawMinimap()
         love.graphics.setColor(1, 0.55, 0.3)
         local rim = size / 2 - 5
         love.graphics.circle("fill", cx + view.returnDx * rim, cy + view.returnDy * rim, 2.2)
-        local label = string.format("OUT %d", math.floor(view.distanceBeyond + 0.5))
+        local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
 end
@@ -1339,14 +1339,14 @@ function M:draw()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
         love.graphics.rectangle("fill", 12, 204, viewport.width - 24, 90)
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf("LAUNCH LOADOUT", 16, 208, viewport.width - 32, "center")
+        love.graphics.printf(i18n.t("launch_loadout_title"), 16, 208, viewport.width - 32, "center")
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(loadout.ship, 16, 222, viewport.width - 32, "center")
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.printf(loadout.stats, 16, 234, viewport.width - 32, "center")
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(loadout.upgrades, 16, 246, viewport.width - 32, "center")
-        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousLaunchFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(0.45, 1, 0.6)
@@ -1364,7 +1364,7 @@ function M:draw()
         -- row to the 44pt real-device accessibility minimum (see
         -- game/self_test.lua) at the smallest supported window (integer
         -- scale 1), not just the previous 34px minimum.
-        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousFont = love.graphics.getFont()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
         love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
@@ -1378,7 +1378,7 @@ function M:draw()
             love.graphics.rectangle("fill", 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top)
         end
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf("EARTH SHOP", 16, 74, viewport.width - 32, "center")
+        love.graphics.printf(i18n.t("earth_shop_title"), 16, 74, viewport.width - 32, "center")
         local fuelBonusLine = self:summaryFuelBonusLine()
         -- The previously-verified capture (build/spaceship-runtime-preview-
         -- settlement-newbest-*.png) fit exactly one extra summary line
@@ -1505,13 +1505,13 @@ function M:draw()
         love.graphics.printf(nextLaunch.odds, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf("TAP: RELAUNCH", fullX, row, fullW, "center")
+        love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
         love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 134)
-        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         local fullX, fullW = 16, viewport.width - 32
@@ -1569,7 +1569,7 @@ function M:draw()
             love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
         end
         love.graphics.rectangle("fill", 99, ascendControls.top, 76, ascendBandHeight)
-        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousSteeringFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         local ascendLabelY = ascendControls.top + math.floor((ascendBandHeight - 10) / 2)
@@ -1582,7 +1582,7 @@ function M:draw()
         love.graphics.setFont(previousSteeringFont)
         self:drawJoystickStick()
     elseif self.expedition.phase == "returning" then
-        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousOddsFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(0.6, 0.8, 1)
@@ -1650,7 +1650,7 @@ function M:draw()
             love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
         end
         love.graphics.rectangle("fill", 60, returnControls.top, 60, returnBandHeight)
-        self.smallFont = self.smallFont or love.graphics.newFont(8)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousReturnButtonFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
