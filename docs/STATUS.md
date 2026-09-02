@@ -1,4 +1,15 @@
 # STATUS
+## "평균 $"/"AVG $" 슬롯 기대값 라벨을 "기대값 $"/"EV $"로 교체 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 다음 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작.
+
+- `slot_odds_line`(en `"C%d P%d S%d  AVG $%.2f"`, ko `"C%d P%d S%d  평균 $%.2f"`)의 마지막 세그먼트 라벨이 슬롯머신 기대값(expected value)을 뜻하는데, "AVG"/"평균"은 통계적으로 부정확하지 않지만 INBOX 4번 항목이 명시적으로 정리 대상으로 지목했다. `game/i18n.lua`의 en/ko 두 로케일 모두 `"AVG $%.2f"` → `"EV $%.2f"`, `"평균 $%.2f"` → `"기대값 $%.2f"`로 교체했다(포맷 인자 개수/순서는 그대로라 `game/scenes/play.lua`의 `slotOddsLine()`/`loadoutLines()`/`shopLoadoutLines()` 호출부는 변경 불필요).
+- `game/self_test.lua`의 하드코딩된 `"C50 P40 S10  AVG $18.58"` 회귀 테스트 3곳(`slotOddsLine()`, launch loadout `odds`, shop loadout `odds`)을 전부 `"C50 P40 S10  EV $18.58"`로 갱신했다(수정 전 RED `assertion failed! game/self_test.lua:1704` 확인 후 GREEN 전환 확인).
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=returning-odds`, 1440×2560, ko 로케일)를 vision으로 확인해 미니맵 위 "C50 P40 S10 기대값 $18.58" 줄이 바로 위 "귀환 0% 12초" 줄과 겹치지 않고 정상 렌더링됨을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 4번 항목에 이번 슬라이스 진행 상황("평균 $"/"AVG $" → "기대값 $"/"EV $" 교체 완료)을 기록했다. 남은 항목: "STARTER" 함선명 제거, "발사 장비" 패널 타이틀 검토, "개발 임시본" 축소.
+- 다음 사이클 다음 슬라이스: 4번 항목의 남은 부분(함선 이름 "STARTER" 제거, "발사 장비" 패널 타이틀 검토, "개발 임시본" 축소) 중 하나를 이어서 처리하거나, 3번 항목의 아이콘 기반 HUD 재구성, 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
 ## "무피격 N" 예보 라벨을 명확한 "REACH/도달예상"으로 교체 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 다음 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작.

@@ -1701,16 +1701,16 @@ function M.run()
     local slotOddsScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
-    assert(slotOddsScene:slotOddsLine() == "C50 P40 S10  AVG $18.58")
+    assert(slotOddsScene:slotOddsLine() == "C50 P40 S10  EV $18.58")
 
     local oddsLoadoutScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     local launchLoadoutOdds = oddsLoadoutScene:loadoutLines()
-    assert(launchLoadoutOdds.odds == "C50 P40 S10  AVG $18.58")
+    assert(launchLoadoutOdds.odds == "C50 P40 S10  EV $18.58")
     oddsLoadoutScene.expedition.phase = "settlement"
     local shopLoadoutOdds = oddsLoadoutScene:shopLoadoutLines()
-    assert(shopLoadoutOdds.odds == "C50 P40 S10  AVG $18.58")
+    assert(shopLoadoutOdds.odds == "C50 P40 S10  EV $18.58")
 
     for _, row in ipairs(PlayScene.settlementTouchRows) do
         assert(row.bottom - row.top >= 34,

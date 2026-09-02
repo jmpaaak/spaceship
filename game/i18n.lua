@@ -59,7 +59,11 @@ locales.en = {
     steering_action_line = "T/G STEER LV.%d>%d $%d",
     steering_action_compact = "G:LV.%d>%d $%d",
     steering_preview_compact = "SPD %d",
-    slot_odds_line = "C%d P%d S%d  AVG $%.2f",
+    -- docs/feedback/INBOX.md UI/HUD item 4: "AVG $" (formerly Korean "평균
+    -- $") read as an ambiguous label for the slot machine's expected-value
+    -- payout. "EV $" (Expected Value) is the precise statistical term this
+    -- number represents and matches common gambling/game UI convention.
+    slot_odds_line = "C%d P%d S%d  EV $%.2f",
     slot_spinning_label = "SLOT SPINNING...",
     no_slot_chances_label = "NO SLOT CHANCES",
     no_slots_compact = "NO SLOTS",
@@ -170,7 +174,7 @@ locales.ko = {
     steering_action_line = "T/G 조종 LV.%d>%d $%d",
     steering_action_compact = "G:LV.%d>%d $%d",
     steering_preview_compact = "속도 %d",
-    slot_odds_line = "C%d P%d S%d  평균 $%.2f",
+    slot_odds_line = "C%d P%d S%d  기대값 $%.2f",
     slot_spinning_label = "슬롯 회전중...",
     no_slot_chances_label = "슬롯 기회 없음",
     no_slots_compact = "슬롯없음",
