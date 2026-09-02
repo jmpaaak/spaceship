@@ -118,6 +118,34 @@ M.ascendControls = ascendControls
 local launchTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
 M.launchTouchArea = launchTouchArea
 
+-- Launch-screen text size/layout cleanup (docs/feedback 2026-09-02, user
+-- confirmed, top priority). A real LÖVE runtime capture
+-- (GAME_CAPTURE_PHASE=launch) showed two real rendering defects: (1) the
+-- top HUD used the default 14px font across three lines (46px tall, ~14%
+-- of the 320px canvas, oversized relative to the 48px minimap chart and
+-- 8px specimen-strip squares below it); (2) the LAUNCH LOADOUT card's
+-- title/ship/stats/upgrades lines also used the default 14px font inside
+-- a 90px-tall box (204-294) that stopped short of the Earth disc drawn
+-- behind it (radius 58 centered near y=260 for a ship at the world
+-- origin, extending to y=318), leaving a sliver of blue Earth visible
+-- directly behind the TAP TO LAUNCH message and DEV PLACEHOLDER footer --
+-- the "text overlapping a circular element" the user reported.
+--
+-- Fix: shrink the launch-phase HUD to the small 8px scene font at a
+-- tighter 32px band (down from 46px), and switch every LOADOUT line to
+-- the same small font inside a background box extended all the way to
+-- the canvas bottom (viewport.height) so the Earth disc can no longer
+-- show through below the box.
+M.launchHudHeight = 32
+-- Regression fix (2026-09-02, same feedback item, follow-up capture): the
+-- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
+-- at the world origin, radius 58) tops out at y=202, two pixels above the
+-- box's previous 204px top -- a real LÖVE runtime capture showed a faint
+-- blue crescent peeking out just above the LAUNCH LOADOUT card. Raised the
+-- box top to 202 so it fully covers the disc's topmost extent.
+M.launchLoadoutBoxTop = 202
+M.launchLoadoutRowStep = 10
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
@@ -1133,7 +1161,8 @@ function M:drawMinimap()
         return
     end
     local hud = self:hudLines()
-    local hudHeight = hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34)
+    local hudHeight = self.expedition.phase == "launch" and M.launchHudHeight
+        or (hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34))
     local view = minimap.view(self.ship.x, self.ship.y)
     local size = minimap.size
     local cx = viewport.width - size / 2 - 3
@@ -1311,9 +1340,17 @@ function M:draw()
     love.graphics.pop()
 
     local hud = self:hudLines()
-    local hudHeight = hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34)
+    local isLaunchHud = self.expedition.phase == "launch"
+    local hudHeight = isLaunchHud and M.launchHudHeight
+        or (hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34))
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
     love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
+    local previousHudFont
+    if isLaunchHud then
+        self.smallFont = self.smallFont or fonts.get(8)
+        previousHudFont = love.graphics.getFont()
+        love.graphics.setFont(self.smallFont)
+    end
     love.graphics.setColor(0.7, 0.9, 1)
     love.graphics.print(hud.primary, 5, 4)
     if hud.samples then
@@ -1327,11 +1364,14 @@ function M:draw()
             love.graphics.print(hud.returnProgress, 5, 55)
         end
     elseif hud.best then
-        love.graphics.print(hud.status, 5, 18)
+        love.graphics.print(hud.status, 5, isLaunchHud and 13 or 18)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.best, 5, 30)
+        love.graphics.print(hud.best, 5, isLaunchHud and 22 or 30)
     else
         love.graphics.print(hud.status, 5, 18)
+    end
+    if isLaunchHud then
+        love.graphics.setFont(previousHudFont)
     end
     self:drawMinimap()
     if self.expedition.phase == "launch" then
@@ -1341,25 +1381,46 @@ function M:draw()
         -- message below the panel.
         self:drawSpecimenStrip(184)
         local loadout = self:loadoutLines()
+        -- The card box now extends all the way to the canvas bottom
+        -- (viewport.height) instead of stopping at y=294: a real LÖVE
+        -- runtime capture showed the Earth disc drawn behind the scene
+        -- (radius 58, extending to y=318 for a ship at the world origin)
+        -- peeking out below the old box, directly behind the TAP TO
+        -- LAUNCH message and DEV PLACEHOLDER footer text.
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, 204, viewport.width - 24, 90)
-        love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf(i18n.t("launch_loadout_title"), 16, 208, viewport.width - 32, "center")
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(loadout.ship, 16, 222, viewport.width - 32, "center")
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(loadout.stats, 16, 234, viewport.width - 32, "center")
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, 16, 246, viewport.width - 32, "center")
+        love.graphics.rectangle("fill", 12, M.launchLoadoutBoxTop, viewport.width - 24,
+            viewport.height - M.launchLoadoutBoxTop)
+        -- Every LOADOUT line now uses the small 8px scene-cached font
+        -- (previously the default 14px font) so the text sizes relative
+        -- to the small circular minimap chart/specimen-strip squares
+        -- above it, with a tightened row step so six lines fit in the
+        -- freed vertical space without overlapping each other or the
+        -- TAP TO LAUNCH message drawn separately below.
         self.smallFont = self.smallFont or fonts.get(8)
         local previousLaunchFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
+        local row = M.launchLoadoutBoxTop + 4
+        local rowStep = M.launchLoadoutRowStep
+        love.graphics.setColor(0.7, 0.9, 1)
+        love.graphics.printf(i18n.t("launch_loadout_title"), 16, row, viewport.width - 32, "center")
+        row = row + rowStep
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.printf(loadout.ship, 16, row, viewport.width - 32, "center")
+        row = row + rowStep
+        love.graphics.setColor(0.4, 0.85, 1)
+        love.graphics.printf(loadout.stats, 16, row, viewport.width - 32, "center")
+        row = row + rowStep
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(loadout.upgrades, 16, row, viewport.width - 32, "center")
+        row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(loadout.forecast, 16, 258, viewport.width - 32, "center")
+        love.graphics.printf(loadout.forecast, 16, row, viewport.width - 32, "center")
+        row = row + rowStep
         love.graphics.setColor(0.6, 1, 0.85)
-        love.graphics.printf(loadout.steering, 16, 268, viewport.width - 32, "center")
+        love.graphics.printf(loadout.steering, 16, row, viewport.width - 32, "center")
+        row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(loadout.odds, 16, 278, viewport.width - 32, "center")
+        love.graphics.printf(loadout.odds, 16, row, viewport.width - 32, "center")
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
         -- The summary card is drawn with the same scene-cached small font as

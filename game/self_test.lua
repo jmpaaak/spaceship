@@ -1575,6 +1575,22 @@ function M.run()
             "launch tap at (" .. point.x .. "," .. point.y .. ") did not start the run")
     end
 
+    -- Regression: a real LÖVE runtime capture after the launch-screen
+    -- text/layout cleanup still showed a faint blue crescent peeking out
+    -- above the LAUNCH LOADOUT card's opaque box -- the top edge of the
+    -- Earth disc drawn behind the scene (center y=75-cameraY, radius 58)
+    -- pokes above the box's top edge by a couple of pixels. Assert the
+    -- box's top y is at or above the Earth disc's topmost extent for a
+    -- ship parked at the world origin (the launch-phase ship position),
+    -- so the disc can never render above the box again.
+    local shipScreenY = math.floor(320 * 0.58)
+    local cameraY = 0 - shipScreenY
+    local earthY = math.floor(75 - cameraY)
+    local earthTopY = earthY - 58
+    assert(PlayScene.launchLoadoutBoxTop <= earthTopY,
+        "launch loadout box top (" .. PlayScene.launchLoadoutBoxTop ..
+        ") does not fully cover the Earth disc's top edge (" .. earthTopY .. ")")
+
     -- Ascending-phase HOLD LEFT/HOLD RIGHT button box was drawn 24px tall
     -- (only ~24pt at the smallest supported window), under the same 44pt
     -- accessibility minimum returnControls/settlementTouchRows were fixed
