@@ -78,4 +78,16 @@
 - `docs/feedback/INBOX.md`의 "UI/HUD 대대적 정리 6개 항목" 하위 1번 항목에 완료 표시 및 구현 요약을 추가(상위 항목 자체는 6개 중 1개만 처리되었으므로 "처리 대기"에 유지).
 - 다음 사이클 다음 슬라이스: 같은 상위 항목의 2번(고도→"지구로부터 거리" 라벨 명확화) 또는 3번(연료 무제한 HUD 아이콘화)부터 순서대로 진행.
 
+## "고도" → "거리" HUD 라벨 명확화 + 연료 게이지와 시각적 분리 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 2번(고도→"지구로부터 거리" 명확화)을 완료했다. preflight READY, `git status --short` clean으로 시작.
+
+- `game/i18n.lua`의 `hud_primary` 문자열을 `"ALT %04d  CASH $%d"` → `"DIST %04d  CASH $%d"`(en), `"고도 %04d  자금 $%d"` → `"거리 %04d  자금 $%d"`(ko)로 변경. 실제 비행 로직은 이미 연료와 무관하게 `run.altitude`를 자동 증가시키므로(변경 없음), 문제는 오직 "고도(ALT)"라는 라벨이 인접한 연료 게이지와 혼동을 유발한다는 표현 문제였다.
+- `game/scenes/play.lua`: 새 `M.hudPrimaryStatusGap = 6`(px)과 공용 `M.hudHeight(phase, hud, galaxyShift)` 헬퍼를 추가해, ascending/returning 페이즈에서 DIST/CASH 줄과 그 아래 연료/선체/슬롯 상태 줄(`hud_status`) 사이에 추가 수직 간격을 넣었다. 미니맵 배치(`drawMinimap`)와 실제 텍스트 렌더(`draw`)가 같은 `M.hudHeight` 함수를 공유하도록 리팩터링해 두 곳이 다시 어긋나지 않게 했다.
+- `game/self_test.lua`: `hud_primary`가 더 이상 "ALT"를 포함하지 않고 "DIST"로 시작함을 검증하고, `PlayScene.hudPrimaryStatusGap`이 존재/양수임과 `PlayScene.hudHeight("ascending", ascendingHud, 0) == 46 + hudPrimaryStatusGap`을 검증하는 회귀 테스트를 추가(RED 확인 후 GREEN).
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-wide-warning`, 1080×1920)를 vision으로 확인해 HUD 상단이 "거리 1000  자금 $0" / "표본 00  위험 $0" 두 줄과, 시각적으로 분리된 간격 아래 "F100 H3/3 상승 S00" 줄로 정상 렌더링됨을 확인했다(캡처 파일은 빌드 아티팩트이므로 커밋하지 않고 검증 후 삭제).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 "UI/HUD 대대적 정리 6개 항목" 하위 2번 항목에 완료 표시 및 구현 요약을 추가(상위 항목 자체는 6개 중 2개만 처리되었으므로 "처리 대기"에 유지).
+- 다음 사이클 다음 슬라이스: 같은 상위 항목의 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)부터 순서대로 진행.
+
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

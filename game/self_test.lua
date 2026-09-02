@@ -817,6 +817,22 @@ function M.run()
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
     assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")
+    -- "고도(ALT)" -> "거리(DIST)" relabel (docs/feedback/INBOX.md item 2,
+    -- 2026-09-03): the user misread the ALT/CASH line + adjacent fuel
+    -- status line as "fuel gates altitude". hud_primary must no longer say
+    -- ALT, and drawing the status line must leave an explicit gap
+    -- (PlayScene.hudPrimaryStatusGap) below the samples line so the fuel
+    -- gauge visually separates from the distance-from-Earth readout.
+    assert(ascendingHud.primary:match("^DIST %d") ~= nil,
+        "hud_primary must read DIST, not ALT, so fuel is not misread as an altitude gate: "
+        .. tostring(ascendingHud.primary))
+    assert(not ascendingHud.primary:find("ALT"),
+        "hud_primary must not contain the old ALT label: " .. tostring(ascendingHud.primary))
+    assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
+        "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
+    assert(PlayScene.hudHeight("ascending", ascendingHud, 0)
+        == 46 + PlayScene.hudPrimaryStatusGap,
+        "ascending HUD band height must grow by hudPrimaryStatusGap to fit the added gap")
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
     riskScene.expedition.altitude = 500

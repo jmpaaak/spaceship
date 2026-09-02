@@ -170,6 +170,35 @@ M.launchHudHeight = 32
 M.launchLoadoutBoxTop = 202
 M.launchLoadoutRowStep = 10
 
+-- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
+-- the user misread the DIST/CASH line as "altitude requires fuel to
+-- increase" because the fuel/status line sat immediately below it. Fuel is
+-- not a flight constraint (game/expedition.lua M.update ticks altitude by
+-- climbSpeed unconditionally; see "Fuel is no longer a flight constraint").
+-- hud_primary is relabeled ALT->DIST ("고도"->"거리") below, and this extra
+-- gap is inserted between the DIST/CASH line and the fuel/status line
+-- during ascending/returning so the two numbers read as visually unrelated.
+M.hudPrimaryStatusGap = 6
+
+-- Shared HUD background-box height so the minimap placement (drawMinimap)
+-- and the actual text draw (draw) never disagree about how tall the top
+-- HUD band is.
+function M.hudHeight(phase, hud, galaxyShift)
+    if phase == "launch" then
+        return M.launchHudHeight + galaxyShift
+    end
+    if hud.returnProgress then
+        return 70 + M.hudPrimaryStatusGap + galaxyShift
+    end
+    if hud.samples then
+        return 46 + M.hudPrimaryStatusGap + galaxyShift
+    end
+    if hud.best then
+        return 46 + galaxyShift
+    end
+    return 34 + galaxyShift
+end
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
@@ -1290,8 +1319,7 @@ function M:drawMinimap()
     end
     local hud = self:hudLines()
     local galaxyShift = hud.galaxy and 10 or 0
-    local hudHeight = (self.expedition.phase == "launch" and M.launchHudHeight
-        or (hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34))) + galaxyShift
+    local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
     local view = minimap.view(self.ship.x, self.ship.y)
     local size = minimap.size
     local cx = viewport.width - size / 2 - 3
@@ -1559,8 +1587,7 @@ function M:draw()
     local hud = self:hudLines()
     local isLaunchHud = self.expedition.phase == "launch"
     local galaxyShift = hud.galaxy and 10 or 0
-    local hudHeight = (isLaunchHud and M.launchHudHeight
-        or (hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34))) + galaxyShift
+    local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
     love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
     local previousHudFont
@@ -1579,14 +1606,18 @@ function M:draw()
     end
     love.graphics.print(hud.primary, 5, hudY)
     if hud.samples then
+        -- Extra vertical gap (M.hudPrimaryStatusGap) below the samples line
+        -- pushes the fuel/hull/slot status line away from the DIST/CASH
+        -- line so the two rows read as visually unrelated numbers rather
+        -- than "fuel gauge gates distance" (docs/feedback/INBOX.md item 2).
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.print(hud.samples, 5, 16 + galaxyShift)
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.print(hud.status, 5, 30 + galaxyShift)
+        love.graphics.print(hud.status, 5, 30 + M.hudPrimaryStatusGap + galaxyShift)
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.print(hud.earth, 5, 43 + galaxyShift)
-            love.graphics.print(hud.returnProgress, 5, 55 + galaxyShift)
+            love.graphics.print(hud.earth, 5, 43 + M.hudPrimaryStatusGap + galaxyShift)
+            love.graphics.print(hud.returnProgress, 5, 55 + M.hudPrimaryStatusGap + galaxyShift)
         end
     elseif hud.best then
         love.graphics.print(hud.status, 5, (isLaunchHud and 13 or 18) + galaxyShift)
