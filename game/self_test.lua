@@ -94,6 +94,37 @@ local function testJoystick()
     assert(mouseScene.ship.x > mouseXBefore, "a rightward mouse-drag must move the ship")
     mouseScene:touchreleased("mouse")
     assert(mouseScene:joystickKnob() == nil, "releasing the mouse must hide the stick knob")
+
+    assert(joystick.visualRadius < joystick.maxRadius,
+        "drawn stick disc must be smaller than the input maxRadius")
+    assert(joystick.visualFillAlpha < 0.2 and joystick.visualLineAlpha < 0.4,
+        "drawn stick must be translucent, not a solid overlay")
+    assert(PlayScene.bankFromSteer(1, 1) == PlayScene.steerTiltMax)
+    assert(PlayScene.bankFromSteer(-1, 1) == -PlayScene.steerTiltMax)
+    assert(PlayScene.bankFromSteer(1, 0.5) == PlayScene.steerTiltMax * 0.5)
+
+    -- Rightward stick must bank the ship clockwise of the nose-up rest
+    -- pose (-pi/2) and emit an RCS puff on that same side.
+    local tiltScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    tiltScene.expedition.phase = "ascending"
+    tiltScene.touches["stick"] = {
+        originX = 90, originY = 160,
+        x = 90 + joystick.maxRadius, y = 160,
+    }
+    local restAngle = tiltScene.ship.angle
+    tiltScene:update(1)
+    assert(tiltScene.ship.angle > restAngle,
+        "a rightward stick must tilt the ship clockwise of nose-up")
+    assert(#tiltScene.particles > 0, "tilting left/right must spawn a side RCS puff")
+    assert(tiltScene.particles[1].x > tiltScene.ship.x,
+        "a right tilt's RCS puff must emit from the ship's right side")
+    local heldAngle = tiltScene.ship.angle
+    tiltScene.touches["stick"] = nil
+    tiltScene:update(1)
+    assert(tiltScene.ship.angle == heldAngle,
+        "releasing the stick must keep the current heading, not spring back to nose-up")
 end
 
 -- First step of replacing the automatic climb line with free 2D travel
@@ -1591,20 +1622,9 @@ function M.run()
         "launch loadout box top (" .. PlayScene.launchLoadoutBoxTop ..
         ") does not fully cover the Earth disc's top edge (" .. earthTopY .. ")")
 
-    -- Ascending-phase HOLD LEFT/HOLD RIGHT button box was drawn 24px tall
-    -- (only ~24pt at the smallest supported window), under the same 44pt
-    -- accessibility minimum returnControls/settlementTouchRows were fixed
-    -- to meet. touchpressed for this phase already accepts any tap on the
-    -- full canvas regardless of y (functionally already >=44pt), so this
-    -- test verifies the *visual* button box constant directly.
+    -- Ascending no longer draws HOLD LEFT/HOLD RIGHT boxes; the full
+    -- canvas is still a tap-hold fallback (left half / right half).
     local ascendControls = PlayScene.ascendControls
-    assert(ascendControls.bottom - ascendControls.top >= 34,
-        "ascending control band is under the 34px minimum")
-    local ascendBandPoints = viewport.canvasPixelsToPoints(
-        ascendControls.bottom - ascendControls.top, 180, 320, 1, false)
-    assert(ascendBandPoints >= 44,
-        "ascending control band is under the 44pt accessibility minimum at scale 1 (" .. ascendBandPoints .. "pt)")
-
     local ascendEdgeScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
@@ -1612,12 +1632,12 @@ function M.run()
     ascendEdgeScene:touchpressed("ascend-edge-left", 20, ascendControls.top)
     local ascendEdgeLeftSteering = ascendEdgeScene:steeringButtonState()
     assert(ascendEdgeLeftSteering.leftActive and not ascendEdgeLeftSteering.rightActive,
-        "ascending band top edge did not register left steering")
+        "ascending tap on the left half must still register left steering")
     ascendEdgeScene:touchreleased("ascend-edge-left")
     ascendEdgeScene:touchpressed("ascend-edge-right", 160, ascendControls.bottom - 1)
     local ascendEdgeRightSteering = ascendEdgeScene:steeringButtonState()
     assert(not ascendEdgeRightSteering.leftActive and ascendEdgeRightSteering.rightActive,
-        "ascending band bottom edge did not register right steering")
+        "ascending tap on the right half must still register right steering")
     ascendEdgeScene:touchreleased("ascend-edge-right")
 
     -- docs/GAME_DESIGN.md's 귀환 슬롯 section lists repair vouchers

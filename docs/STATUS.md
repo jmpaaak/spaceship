@@ -1,4 +1,17 @@
 # STATUS
+## 상승 화면 조이스틱 UI 축소 + 우주선 뱅킹/RCS 이펙트 완성 및 커밋 (인계 완료, 2026-09-02)
+
+`git status --short`가 `M game/joystick.lua`/`M game/scenes/play.lua`(인계된 미커밋 GREEN 변경, preflight `git diff` 검사 PASS) 상태로 시작했다. preflight READY, 처리 대기 최우선 1개 항목(AetherAI-only)은 여전히 로그인 자격 증명이 없어 human-gated이므로, `loop/PROMPT.md` 2행 "Preserve and finish prior-cycle work; do not overwrite it"에 따라 인계된 미완성 변경을 이어받아 완료하는 것을 이번 사이클의 슬라이스로 선정했다.
+
+- 인계된 변경은 `docs/GAME_DESIGN.md` 이동 방식 개선 요청에 대한 후속 다듬기다: 기존 조이스틱 원판(`joystick.maxRadius`=40px, 불투명도 0.35/0.9)이 180x320 캔버스에서 지나치게 크고 불투명한 오버레이로 보였던 문제를 고쳤다. `game/joystick.lua`에 `M.visualRadius`(14px)/`M.visualKnobRadius`(3px)/`M.visualFillAlpha`(0.12)/`M.visualLineAlpha`(0.28)/`M.visualKnobAlpha`(0.4)를 추가해 입력 반응 반경(`maxRadius`, 조작감 유지)과 그려지는 원판 크기(작고 반투명, 시각적 잡음 감소)를 분리했다. `M:joystickKnob()`/`M:drawJoystickStick()`이 새 `visualRadius`를 사용하도록 갱신했다.
+- `game/scenes/play.lua`에 `M.bankFromSteer(dx, magnitude)`(스틱 기울기를 `-pi/2` 정지 자세 기준 최대 `±steerTiltMax`(0.5 라디안) 뱅크 각도로 변환)와 `self.ship.angle`을 목표 뱅크 각도로 매 프레임 부드럽게(`turnRate = min(1, 14*dt)`) 보간하는 로직을 `M:update`에 추가해, 조이스틱/키보드 좌우 조작 시 우주선이 실제로 기울어져 보이도록 했다(이전에는 위치만 이동하고 자세는 항상 고정 nose-up이었다). 기울임이 임계값(0.12 라디안)을 넘고 `rcsCooldown`이 0일 때 기운 방향 반대편에 짧은(0.22초) 청백색 RCS 파티클을 주기적으로(0.045초 쿨다운) 방출해 방향 전환의 물리적 근거를 시각화했다.
+- 기존 상승/귀환 화면의 반투명 LEFT/RIGHT 사각 버튼 오버레이(steering band 배경색 채우기 + HOLD LEFT/HOLD RIGHT, button_left/button_right 텍스트)를 draw 경로에서 제거했다. 이 버튼들은 조이스틱이 이미 전방향 조작을 대체한 뒤에도 화면에 남아있던 레거시 이진 좌우 입력의 잔재 UI였다(입력 로직인 `steeringButtonState()`/`steeringHoriz`는 키보드 좌우 폴백으로 여전히 사용되므로 유지, 그려지는 오버레이만 제거).
+- engine-hosted 테스트(`game/self_test.lua` 85-124행)가 이미 인계돼 있던 것을 그대로 실행해 확인: 마우스 드래그 스틱이 데스크톱에서 정상 동작(release 후 knob nil로 사라짐), `joystick.visualRadius < joystick.maxRadius` 및 두 알파값이 모두 낮은 투명도임을 단언, `bankFromSteer(1,1)==steerTiltMax`/`bankFromSteer(-1,1)==-steerTiltMax`/`bankFromSteer(1,0.5)==steerTiltMax*0.5`, 오른쪽 스틱이 `ship.angle`을 뱅크 방향(시계 방향, nose-up 대비 증가)으로 기울이고 그 오른쪽에서 RCS 퍼프 파티클을 방출함을 검증한다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-joystick-diagonal`, 1080x1920, 기존에 이미 있던 대각선 드래그 개발 캡처 경로 재사용)를 vision으로 확인했다: 우주선이 정지 자세(수직) 대비 확실히 기울어진 자세로 렌더링되고, 화면 하단부에 예전의 크고 불투명한 원판 대신 작고 옅은 파란 원형 스틱 UI가 배치됨을 확인했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, 8/8 Python 유닛 테스트, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`는 이번 슬라이스가 인계 완료 항목이라 별도 변경 없음(처리 대기 1개 항목 AetherAI-only는 여전히 human-gated로 남아 있음).
+- 남은 다음 슬라이스 후보: (1) AetherAI 로그인 자격 증명이 제공되면 이 매니페스트 스키마에 맞춰 실제 공식 에셋 export를 진행, (2) 새 feedback이 등록되면 그것을 우선 처리한다.
+
 ## AetherAI-only 최종 에셋: provenance manifest 검증 도구 추가 (make verify 게이트, 2026-09-02)
 
 `git status --short` clean, preflight PASS 상태로 시작. 처리 대기 최우선 항목인 "AetherAI-only 최종 에셋"을 이번 사이클의 슬라이스로 선정했다. 로그인/공식 export 자격 증명은 여전히 이 세션에 없어(`env`/`~/.hermes/.env`에 `aether` 키 없음, `/private/tmp/aether.html`은 이전 세션이 확인한 공식 도메인(`aetherforgeai.com`) 정보일 뿐 로그인 세션이 아님을 재확인) 실제 공식 에셋 import는 여전히 human-gated다. `loop/PROMPT.md`의 "If login/export is unavailable... continue non-asset gameplay, tests, persistence, balancing, touch input, packaging, and UI layout work" 지침에 따라, import 불가능한 이번 사이클에도 진행 가능한 비-에셋 작업으로 이 항목의 **강제 검증 인프라**를 추가했다.

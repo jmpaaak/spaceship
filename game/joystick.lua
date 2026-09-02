@@ -19,10 +19,18 @@ local M = {}
 M.deadzone = 6
 
 -- Drag distance (canvas px) at which the joystick reads full magnitude
--- (1.0). Chosen to comfortably fit within the touch bands used by
--- PlayScene.ascendControls/returnControls without the knob visually
--- leaving the control area on the smallest supported window.
+-- (1.0). Input reach stays large so a finger/mouse can steer without
+-- precision; the *drawn* disc is much smaller (visualRadius).
 M.maxRadius = 40
+
+-- On-screen stick size/alpha. The old disc used maxRadius (40px) at
+-- ~0.35/0.9 alpha and read as a huge opaque overlay on the 180x320
+-- canvas. Keep input math on maxRadius; only the draw uses these.
+M.visualRadius = 14
+M.visualKnobRadius = 3
+M.visualFillAlpha = 0.12
+M.visualLineAlpha = 0.28
+M.visualKnobAlpha = 0.4
 
 -- Returns dx, dy, magnitude for a drag from (originX, originY) to
 -- (currentX, currentY). dx/dy are components of a unit vector (or 0,0 if

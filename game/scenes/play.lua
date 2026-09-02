@@ -24,6 +24,15 @@ M.__index = M
 local verticalOffsetLimit = 90
 M.verticalOffsetLimit = verticalOffsetLimit
 
+-- Visual bank (radians added to the ship's -pi/2 nose-up rest pose)
+-- at full left/right stick. Small enough to read as a lean, not a flip.
+local steerTiltMax = 0.5
+M.steerTiltMax = steerTiltMax
+
+function M.bankFromSteer(dx, magnitude)
+    return (dx or 0) * (magnitude or 1) * steerTiltMax
+end
+
 -- Returning-phase LEFT/RIGHT/SPIN touch band. Was a 24px-tall row
 -- (254-278), which only clears ~24pt at the smallest supported window
 -- (integer scale 1, 1x device pixel ratio) -- well under the iOS/Android
@@ -382,6 +391,7 @@ function M.new(options)
         slotSpin = nil,
         touches = {},
         verticalOffset = 0,
+        rcsCooldown = 0,
         message = i18n.t("launch_tap_to_launch"),
     }, M)
 end
@@ -761,7 +771,7 @@ function M:joystickKnob()
         if touch.originX then
             local dx, dy, magnitude = joystick.vector(touch.originX, touch.originY, touch.x, touch.y)
             if magnitude > 0 then
-                local reach = magnitude * joystick.maxRadius
+                local reach = magnitude * joystick.visualRadius
                 return touch.originX, touch.originY, touch.originX + dx * reach, touch.originY + dy * reach, magnitude
             end
         end
@@ -897,11 +907,45 @@ function M:update(dt)
         local extraDy = self.verticalOffset - startOffset
         local extraDistance = math.sqrt(extraDx * extraDx + extraDy * extraDy)
         expedition.burnManeuverFuel(self.expedition, extraDistance)
+        local bank = 0
+        local steeringHoriz = (steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0)
+        if joyMagnitude > 0 then
+            bank = M.bankFromSteer(joyDx, joyMagnitude)
+        else
+            bank = M.bankFromSteer(steeringHoriz, 1)
+        end
+        self.steerBank = bank
+        -- Only apply a new bank while there is lateral input. Releasing
+        -- the stick/keys (or a purely vertical drag) keeps the current
+        -- heading instead of springing back to nose-up.
+        if math.abs(bank) > 1e-6 then
+            local restAngle = -math.pi / 2
+            local targetAngle = restAngle + bank
+            local turnRate = math.min(1, 14 * dt)
+            self.ship.angle = self.ship.angle + (targetAngle - self.ship.angle) * turnRate
+        end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         expedition.update(self.expedition, dt)
         self.ship.y = -self.expedition.altitude + self.verticalOffset
         self.ship.fuel = self.expedition.fuel
+        self.rcsCooldown = math.max(0, (self.rcsCooldown or 0) - dt)
+        local bank = self.steerBank or 0
+        if math.abs(bank) > 0.12 and self.rcsCooldown == 0 then
+            self.rcsCooldown = 0.045
+            local side = bank > 0 and 1 or -1
+            self.particles[#self.particles + 1] = {
+                x = self.ship.x + side * 6,
+                y = self.ship.y + 3,
+                vx = side * (16 + math.random() * 10),
+                vy = 6 + math.random() * 10,
+                timer = 0.22,
+                maxTimer = 0.22,
+                r = 0.7,
+                g = 0.88,
+                b = 1,
+            }
+        end
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
         self:persistBestAltitude()
@@ -1142,14 +1186,14 @@ end
 function M:drawJoystickStick()
     local ox, oy, kx, ky = self:joystickKnob()
     if not ox then return end
-    love.graphics.setColor(0.2, 0.45, 0.75, 0.35)
-    love.graphics.circle("fill", ox, oy, joystick.maxRadius)
-    love.graphics.setColor(0.55, 0.8, 1, 0.9)
-    love.graphics.circle("line", ox, oy, joystick.maxRadius)
-    love.graphics.setColor(0.9, 0.95, 1, 0.95)
-    love.graphics.circle("fill", kx, ky, 7)
-    love.graphics.setColor(0.3, 0.7, 1)
-    love.graphics.circle("line", kx, ky, 7)
+    local radius = joystick.visualRadius
+    local knob = joystick.visualKnobRadius
+    love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha)
+    love.graphics.circle("fill", ox, oy, radius)
+    love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha)
+    love.graphics.circle("line", ox, oy, radius)
+    love.graphics.setColor(0.9, 0.95, 1, joystick.visualKnobAlpha)
+    love.graphics.circle("fill", kx, ky, knob)
 end
 
 -- Circular galaxy chart (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3).
@@ -1621,31 +1665,6 @@ function M:draw()
         love.graphics.printf(i18n.t("tap_start_over"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
-        local steering = self:steeringButtonState()
-        if steering.leftActive then
-            love.graphics.setColor(0.35, 0.9, 1, 0.8)
-        else
-            love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
-        end
-        local ascendBandHeight = ascendControls.bottom - ascendControls.top
-        love.graphics.rectangle("fill", 5, ascendControls.top, 76, ascendBandHeight)
-        if steering.rightActive then
-            love.graphics.setColor(0.35, 0.9, 1, 0.8)
-        else
-            love.graphics.setColor(0.25, 0.55, 0.8, 0.45)
-        end
-        love.graphics.rectangle("fill", 99, ascendControls.top, 76, ascendBandHeight)
-        self.smallFont = self.smallFont or fonts.get(8)
-        local previousSteeringFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        local ascendLabelY = ascendControls.top + math.floor((ascendBandHeight - 10) / 2)
-        love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
-            steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
-        love.graphics.printf(i18n.t("hold_left"), 5, ascendLabelY, 76, "center")
-        love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
-            steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
-        love.graphics.printf(i18n.t("hold_right"), 99, ascendLabelY, 76, "center")
-        love.graphics.setFont(previousSteeringFont)
         self:drawJoystickStick()
     elseif self.expedition.phase == "returning" then
         self.smallFont = self.smallFont or fonts.get(8)
@@ -1695,21 +1714,8 @@ function M:draw()
         end
         love.graphics.setFont(previousOddsFont)
         local slotButton = self:slotButtonState()
-        local steering = self:steeringButtonState()
         local returnBandHeight = returnControls.bottom - returnControls.top
         local returnLabelY = returnControls.top + math.floor((returnBandHeight - 10) / 2)
-        if steering.leftActive then
-            love.graphics.setColor(0.35, 0.9, 1, 0.95)
-        else
-            love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
-        end
-        love.graphics.rectangle("fill", 5, returnControls.top, 50, returnBandHeight)
-        if steering.rightActive then
-            love.graphics.setColor(0.35, 0.9, 1, 0.95)
-        else
-            love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
-        end
-        love.graphics.rectangle("fill", 125, returnControls.top, 50, returnBandHeight)
         if slotButton.enabled then
             love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
         else
@@ -1719,12 +1725,6 @@ function M:draw()
         self.smallFont = self.smallFont or fonts.get(8)
         local previousReturnButtonFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
-        love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
-            steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
-        love.graphics.printf(i18n.t("button_left"), 5, returnLabelY, 50, "center")
-        love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
-            steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
-        love.graphics.printf(i18n.t("button_right"), 125, returnLabelY, 50, "center")
         if slotButton.enabled then
             love.graphics.setColor(0.85, 0.95, 1)
         else
