@@ -1,4 +1,20 @@
 # STATUS
+## [spaceship-gear 레인] 항목9(c) — 슬롯 교체/판매 경제 루프 `M.sellGear` (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 9의 마지막 명시적 잔여였던 (c)("슬롯 수(현재 6개)를 장비 장착 한도로 유지하되... 카드 획득... 과 교체가 잦아지는 루프를 설계한다")를 구현했다. 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료된 상태였고, `docs/GEAR_SCHEMA.md`가 반복해서 "(c) 슬롯 수/교체 루프 설계는 미착수"로 남긴 항목을 이번 사이클에서 닫았다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
+
+- TDD로 `game/self_test.lua`에 `testGearSlotSwapEconomyWiring()`을 먼저 추가했다(RED 확인: `attempt to call field 'sellValue' (a nil value)` — `game/gear.lua`에 판매가 계산 함수가 아직 없었음).
+- `game/gear.lua`에 `M.raritySellValue`(common 4/uncommon 9/rare 18/legendary 40, 상점 구매가보다 충분히 낮게 설계해 판매→재구매가 손실이 있는 실질적 트레이드오프가 되도록 함)와 `M.editionSellBonus = 6`(항목12 에디션 카드에 판매가 프리미엄 부여)을 추가하고, 순수 함수 `M.sellValue(part)`가 등급+에디션 유무로 판매(환급)가를 계산한다(미지/누락 등급은 에러 대신 common 취급).
+- `game/expedition.lua`의 신규 `M.sellGear(run, category, id)`가 해당 카테고리 슬롯에서 카드를 찾아 `gear.sellValue`로 금액을 계산한 뒤 `engine_parts.unequip`으로 제거하고 `run.money`에 원자적으로 credit한다(부분 적용 없음), 다른 상점 액션(`buyFuelUpgrade` 등)과 동일하게 `run.phase == "settlement"`로 제한해 비행 중 남용을 막는다.
+- `loop/PROMPT.md`가 명시적으로 허용한 "gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출" 예외 범위에서 `game/expedition.lua`만 수정했다(`play.lua`/`i18n.lua`/`world.lua`는 건드리지 않음).
+- `game/self_test.lua`의 `testGearSlotSwapEconomyWiring()`이 다음을 회귀 검증한다: `gear.sellValue`의 등급/에디션 스케일링(누락 등급의 common 폴백 포함), 비행 중(settlement 아닌 phase) 판매 거부(금액/슬롯 리스트 불변), 정산 단계 판매 성공(정확한 금액 credit + 슬롯 제거), 엔진 슬롯 판매가 선체 슬롯 리스트에 비침범(그 역도 마찬가지, 항목10 슬롯 독립성 재확인), 미장착/존재하지 않는 id 판매 실패(금액 불변).
+- `docs/GEAR_SCHEMA.md`에 "Item 9(c): slot-swap economy loop" 섹션을 신규 추가했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/gear.lua`/`game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md`/`docs/STATUS.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 9 하위에 처리 상황을 append했다.
+- **이로써 항목9의 (a)(b)(c)(d)가 모두 최소 구현을 갖췄다** — 레인 스코프상 실제 상점 UI의 "판매" 버튼 노출(카드별 sell 액션 시각화)은 `play.lua` 담당이라 범위 밖으로 명시.
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성 등 순수 함수/데이터 계층에서 준비 가능한 부분) 또는 이 레인이 완료한 항목13→9→10→12→14 순서 밖의 잔여 작업 검토. 두 항목 모두 `game/world.lua`의 상점 행성 결정론적 좌표 생성이나 `play.lua`의 실제 장착/구매/판매 UI가 필요해 이 레인의 "최소 로더 호출" 예외 범위를 넘어설 가능성이 높다.
+
 ## [spaceship-gear 레인] 항목14 (C)/(E) 후속 — chainTrigger/rerollBonus/detectionRadius/autoCollect 실제 run 배선 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` 항목 14의 나머지 (C)/(E) 카테고리(`chainTrigger`/`rerollBonus`/`detectionRadius`/`autoCollect`)를 실제 `run` 상태에 배선했다. 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료된 상태였고, `docs/STATUS.md`/`docs/GEAR_SCHEMA.md`가 반복해서 "여전히 미착수"로 남긴 목록 중 마지막 잔여였던 이 (C)/(E) run 배선을 이번 사이클에서 닫았다(이전에는 (D) insurance/(F) shopDiscount, (G) 추진 효과, 항목12 드롭 RNG만 배선되어 있었다). preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).

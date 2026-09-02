@@ -1493,6 +1493,77 @@ local function testGearStreakMultiplierWiring()
     assert(math.abs(mult3 - 1.6) < 1e-9, "third same-family collect must use the boosted rate: got " .. tostring(mult3))
 end
 
+-- Item 9(c): "카드 획득... 과 교체가 잦아지는 루프를 설계한다." With a fixed
+-- 6/3-slot loadout, M.sellGear is the swap-loop's release valve -- it frees
+-- an equipped slot and refunds money in one atomic action, scaled by
+-- gear.raritySellValue/editionSellBonus, restricted to the
+-- settlement/shop phase so it can't be abused mid-flight.
+local function testGearSlotSwapEconomyWiring()
+    local expedition = require("game.expedition")
+
+    -- gear.sellValue: rarity scales the refund, and an edition adds a flat
+    -- premium on top of the base rarity value.
+    assert(gear.sellValue({ rarity = "common" }) == 4)
+    assert(gear.sellValue({ rarity = "uncommon" }) == 9)
+    assert(gear.sellValue({ rarity = "rare" }) == 18)
+    assert(gear.sellValue({ rarity = "legendary" }) == 40)
+    assert(gear.sellValue({ rarity = "legendary", edition = "irradiated" }) == 46,
+        "an edition-carrying legendary card must sell for base(40) + editionSellBonus(6)")
+    -- Unknown/missing rarity falls back to the common tier instead of
+    -- erroring (defensive, not schema validation).
+    assert(gear.sellValue({}) == 4)
+
+    -- Selling is only allowed during settlement -- attempting mid-flight
+    -- must fail without moving money or touching the slot list.
+    local flightRun = expedition.new({ money = 50 })
+    local commonCard = {
+        id = "hull_scrap_plate", name = "Scrap Plate", nameKo = "고철 장갑판", icon = "▭",
+        rarity = "common", tags = { "defense" }, editions = {},
+        effects = { { type = "hullDurability", value = 1 } },
+    }
+    assert(expedition.equipGear(flightRun, "hull", commonCard))
+    flightRun.phase = "ascending"
+    local flightOk, flightErr = expedition.sellGear(flightRun, "hull", "hull_scrap_plate")
+    assert(not flightOk, "selling gear must be rejected outside the settlement phase")
+    assert(flightErr and #flightErr > 0)
+    assert(flightRun.money == 50, "a rejected sell must not change money")
+    assert(#flightRun.equippedGear == 1, "a rejected sell must not remove the equipped card")
+
+    -- During settlement, selling an equipped hull card must remove it AND
+    -- credit exactly its sell value.
+    local shopRun = expedition.new({ money = 20 })
+    assert(expedition.equipGear(shopRun, "hull", commonCard))
+    shopRun.phase = "settlement"
+    local ok, value = expedition.sellGear(shopRun, "hull", "hull_scrap_plate")
+    assert(ok, "selling an equipped hull card during settlement must succeed")
+    assert(value == 4, "returned sell value must match gear.sellValue: got " .. tostring(value))
+    assert(shopRun.money == 24, "money must increase by exactly the sell value: got " .. tostring(shopRun.money))
+    assert(#shopRun.equippedGear == 0, "the sold card must be removed from the hull slot list")
+
+    -- Selling an engine-slot card must not touch the hull list, matching
+    -- item 10's slot-independence guarantee.
+    local engineShopRun = expedition.new({ money = 0 })
+    local rareEngineCard = {
+        id = "engine_test_thruster", name = "Test Thruster", nameKo = "테스트 추진기", icon = "◬",
+        rarity = "rare", tags = { "speed" }, editions = {},
+        effects = { { type = "speed", value = 5 } },
+    }
+    assert(expedition.equipGear(engineShopRun, "hull", commonCard))
+    assert(expedition.equipGear(engineShopRun, "engine", rareEngineCard))
+    engineShopRun.phase = "settlement"
+    local engineOk, engineValue = expedition.sellGear(engineShopRun, "engine", "engine_test_thruster")
+    assert(engineOk and engineValue == 18)
+    assert(#engineShopRun.equippedEngineParts == 0, "the sold engine card must be removed from the engine slot list")
+    assert(#engineShopRun.equippedGear == 1, "selling an engine card must not affect the hull slot list")
+
+    -- Selling an unequipped/unknown id must fail cleanly (no money change).
+    local missRun = expedition.new({ money = 7 })
+    missRun.phase = "settlement"
+    local missOk, missErr = expedition.sellGear(missRun, "hull", "hull_does_not_exist")
+    assert(not missOk and missErr)
+    assert(missRun.money == 7)
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -3200,6 +3271,7 @@ function M.run()
     testGearOfferRolling()
     testGearRunEffectWiring()
     testGearStreakMultiplierWiring()
+    testGearSlotSwapEconomyWiring()
 
     print("SPACESHIP_UNIT_OK")
 end

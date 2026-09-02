@@ -362,7 +362,39 @@ function M.unequipGear(run, category, id)
     return enginePartsModule.unequip(run.gearLoadout, category, id)
 end
 
-
+-- Item 9(c): "카드 획득... 과 교체가 잦아지는 루프". With a fixed 6/3-slot
+-- loadout cap (game/engine_parts.lua), the only way to try a different
+-- combination once slots are full is to free one up -- M.sellGear removes
+-- an equipped card from its slot AND refunds money for it in one atomic
+-- action (gear.sellValue's rarity/edition-scaled refund), restricted to
+-- the settlement/shop phase like every other money-moving action in this
+-- module (M.buyFuelUpgrade etc.) so it can't be spammed mid-flight for a
+-- free money glitch. Returns true, nil on success or false, error-message
+-- on failure (wrong phase, unknown id) -- never partially applies (no
+-- money change without a successful unequip, and vice versa).
+function M.sellGear(run, category, id)
+    if run.phase ~= "settlement" then
+        return false, "sellGear: only allowed during the settlement/shop phase"
+    end
+    local list = category == "hull" and run.equippedGear or run.equippedEngineParts
+    local part
+    for _, candidate in ipairs(list or {}) do
+        if candidate.id == id then
+            part = candidate
+            break
+        end
+    end
+    if not part then
+        return false, string.format("sellGear: '%s' is not equipped in %s", tostring(id), tostring(category))
+    end
+    local value = gearModule.sellValue(part)
+    local removed = enginePartsModule.unequip(run.gearLoadout, category, id)
+    if not removed then
+        return false, "sellGear: unequip failed unexpectedly"
+    end
+    run.money = run.money + value
+    return true, value
+end
 
 function M.launch(run)
     if run.phase ~= "launch" and run.phase ~= "settlement" and run.phase ~= "destroyed" then return false end

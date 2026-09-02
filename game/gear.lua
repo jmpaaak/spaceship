@@ -588,4 +588,50 @@ function M.boostChargeCount(parts)
     return math.max(0, math.floor(M.totalEffect(parts, "boostCharge")))
 end
 
+-- ---------------------------------------------------------------------
+-- Item 9(c): "슬롯 수(현재 6개)를 장비 장착 한도로 유지하되, 사용자가 매
+-- 사이클 다른 조합을 실험하고 싶어지도록 카드 획득(상점 구매/체크포인트
+-- 확정 드롭)과 교체가 잦아지는 루프를 설계한다." With a fixed 6-slot hull
+-- cap (and a fixed 3-slot engine cap, item 10), the loop that keeps
+-- players cycling combinations is SELLING an equipped/owned card back for
+-- money -- freeing a slot and funding the next M.rollGearOffer pull. A
+-- rarity-scaled sell value (rarer cards refund more, matching Balatro's
+-- "joker sell price scales with rarity") makes selling a real economic
+-- decision instead of a throwaway action, and edition-carrying cards sell
+-- for a small premium (item 12's farming payoff extends to the swap loop
+-- too, not just raw power). Pure function: no run/state mutation, so the
+-- actual money-transfer + slot-removal wiring lives in expedition.lua
+-- (M.sellGear), same split as every other gear.lua/expedition.lua pair
+-- above.
+-- ---------------------------------------------------------------------
+
+-- Base sell value per rarity tier -- deliberately well below typical shop
+-- purchase prices so selling-to-rebuy is a real (lossy) trade-off, not a
+-- free money-printing loop.
+M.raritySellValue = {
+    common = 4,
+    uncommon = 9,
+    rare = 18,
+    legendary = 40,
+}
+
+-- Flat bonus added to the base rarity sell value when the part carries any
+-- edition (item 12) -- an edition-marked card is strictly rarer to have
+-- rolled, so it fetches a small premium on the open market even for
+-- players who'd rather cash it in than use it.
+M.editionSellBonus = 6
+
+-- Computes the sell (refund) value for a single part. Falls back to the
+-- common tier's value for any part with a missing/unknown rarity rather
+-- than erroring -- this is a money calculation, not schema validation
+-- (validatePart above already guarantees every loaded part has a known
+-- rarity; this stays defensive for hand-built test fixtures/future callers).
+function M.sellValue(part)
+    local base = M.raritySellValue[part.rarity] or M.raritySellValue.common
+    if part.edition then
+        base = base + M.editionSellBonus
+    end
+    return base
+end
+
 return M

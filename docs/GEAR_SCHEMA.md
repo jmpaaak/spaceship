@@ -552,3 +552,50 @@ With this slice, **every** category (A)~(F) effect type named in item 14
 now has at least one real run-state consumer, not just a validated-and-
 ignored schema entry.
 
+## Item 9(c): slot-swap economy loop — `M.sellGear`
+
+Item 9's (c) sub-goal ("슬롯 수(현재 6개)를 장비 장착 한도로 유지하되,
+사용자가 매 사이클 다른 조합을 실험하고 싶어지도록 카드 획득... 과
+교체가 잦아지는 루프를 설계한다") had been the one explicitly-named,
+still-unaddressed part of item 9 after every other item13→9→10→12→14 slice
+completed. With hull/engine slot counts fixed at 6/3 (`game/engine_parts.lua`),
+the only way to try a new combination once full is to free a slot — this
+slice adds that release valve as a real economic decision, not a free
+swap:
+
+- `game/gear.lua`'s new `M.raritySellValue` table (`common=4`,
+  `uncommon=9`, `rare=18`, `legendary=40`) and `M.editionSellBonus = 6`
+  define a pure `M.sellValue(part)` conversion — refund scales with
+  rarity (Balatro's "joker sell price scales with rarity"), and any
+  edition (item 12) adds a flat premium on top. Both constants are
+  deliberately well below typical shop purchase prices so
+  sell-to-rebuy is a lossy trade-off, not a money-printing loop. A
+  part with a missing/unknown `rarity` falls back to the `common` value
+  defensively rather than erroring (this is a money calculation, not
+  schema validation — `validatePart` already guarantees every *loaded*
+  part has a known rarity).
+- `game/expedition.lua`'s new `M.sellGear(run, category, id)` is the
+  run-level wiring: it looks up the equipped part by id in the given
+  category's slot list, computes its sell value via `gear.sellValue`,
+  removes it via `engine_parts.unequip`, and credits `run.money` — all
+  atomically (no partial money-without-removal or removal-without-money
+  state). Restricted to `run.phase == "settlement"`, matching every other
+  money-moving action in this module (`M.buyFuelUpgrade` etc.) so it
+  can't be spammed mid-flight. Returns `true, value` on success or
+  `false, error-message` on failure (wrong phase, unknown/unequipped id).
+
+`game/self_test.lua`'s new `testGearSlotSwapEconomyWiring` regression-checks:
+`gear.sellValue`'s rarity/edition scaling (including the common-tier
+fallback for a missing rarity), that selling outside the settlement phase
+is rejected without moving money or the slot list, that a successful sell
+during settlement removes the exact card and credits the exact rarity-scaled
+value, that selling an ENGINE-slot card leaves the HULL slot list untouched
+(and vice versa, item 10's slot-independence guarantee extended to this new
+action), and that selling an unequipped/unknown id fails cleanly with no
+money change.
+
+Still deferred (out of this lane's scope per `loop/PROMPT.md` — requires
+`game/scenes/play.lua` UI): an actual EARTH SHOP screen surfacing
+`M.sellGear` as a tappable "sell" action per equipped card, and any visual
+sell-value display on the card grid.
+
