@@ -1,5 +1,20 @@
 # STATUS
-## [spaceship-gear 레인] 항목14 후속 — (D) insurance + (F) shopDiscount 실제 run 배선 (완료, 2026-09-03)
+## [spaceship-gear 레인] 항목14 (C)/(E) 후속 — chainTrigger/rerollBonus/detectionRadius/autoCollect 실제 run 배선 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 14의 나머지 (C)/(E) 카테고리(`chainTrigger`/`rerollBonus`/`detectionRadius`/`autoCollect`)를 실제 `run` 상태에 배선했다. 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료된 상태였고, `docs/STATUS.md`/`docs/GEAR_SCHEMA.md`가 반복해서 "여전히 미착수"로 남긴 목록 중 마지막 잔여였던 이 (C)/(E) run 배선을 이번 사이클에서 닫았다(이전에는 (D) insurance/(F) shopDiscount, (G) 추진 효과, 항목12 드롭 RNG만 배선되어 있었다). preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
+
+- TDD로 `game/self_test.lua`에 `testGearRunEffectWiring()`을 먼저 추가했다(RED 확인: `attempt to call field 'chainTriggerCount' (a nil value)` — `game/expedition.lua`에 이 네 함수의 run 래퍼가 아직 없었음).
+- `game/expedition.lua`에 신규 private 헬퍼 `combinedGearList(run)`(`run.equippedGear`+`run.equippedEngineParts`를 하나의 리스트로 합침)와 이를 사용하는 4개 공개 함수를 추가했다: `M.chainTriggerCount(run)`, `M.rerollCount(run)`, `M.detectionRadius(run, baseRadius)`, `M.autoCollectEnabled(run)`. `M.effectiveClimbSpeed`(hull 전용)나 `M.boostChargeCount`(engine 전용)와 달리, (C)/(E) 효과 타입은 스키마상 카테고리 무관(hull/engine 어느 카드든 가질 수 있음)이므로 두 슬롯 모두 합산 대상으로 설계했다 — 항목10의 \"슬롯 수 독립\"은 유지하되 이 특정 효과들의 \"스탯 풀\"은 슬롯 카테고리를 가리지 않는다.
+- `loop/PROMPT.md`가 명시적으로 허용한 \"gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출\" 예외 범위에서 `game/expedition.lua`만 수정했다(`play.lua`/`i18n.lua`/`world.lua`는 건드리지 않음).
+- `game/self_test.lua`의 `testGearRunEffectWiring()`이 다음을 회귀 검증한다: 미장착 run은 네 값 모두 문서화된 기본값(0/0/기저 반경 그대로/false)으로 해석됨, 네 효과 타입을 모두 가진 hull 카드 1장 장착 시 `chainTriggerCount`가 1.9→1로 내림, `rerollCount`가 2.4→2로 내림, `detectionRadius(run, 20)`이 정확히 30(+50%), `autoCollectEnabled`가 true, ENGINE 슬롯 카드에 `chainTrigger` 효과를 얹어도 동일하게 총합에 반영됨(카테고리 무관 설계 확인).
+- `docs/GEAR_SCHEMA.md`에 \"Item 14 (C)/(E) run wiring — chainTrigger/rerollBonus/detectionRadius/autoCollect (follow-up slice)\" 섹션을 신규 추가하고, 이전 두 섹션의 \"Still deferred\" 문구를 갱신해 더 이상 미착수가 아님을 명시했다. 이로써 항목14의 (A)~(F) 전체 카테고리가 최소 1개 run 래퍼를 갖게 되었다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md`/`docs/STATUS.md`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 14 하위에 처리 상황을 append했다.
+- 여전히 미착수: 이 네 함수의 실제 게임플레이 소비 지점(`chainTriggerCount`의 재발동 이벤트, `rerollCount`의 상점 UI 무료 리롤 버튼, `detectionRadius`를 `minimap.lua`의 `viewRadius`/`checkpointSearchCellRadius`에 연결, `autoCollectEnabled`를 실제 표본 자동 흡수 로직에 연결) — 이들은 `play.lua`/`world.lua`/`minimap.lua` 영역이라 다른 레인 담당. 항목9(c)의 슬롯 교체 루프 설계, 항목10(c) 엔진 부품 획득 경로 3원화, 실제 상점/체크포인트 UI가 `M.rollGearOffer`를 호출하는 화면 자체도 여전히 미착수.
+- 다음 사이클 다음 슬라이스: 레인이 지정받은 5개 항목(13/9/10/12/14)의 순수 데이터/run-배선 계층이 이제 전 카테고리에 걸쳐 1차 완료되었으므로, 사용자/통합 우선순위에 따라 (a) `play.lua` 담당 레인과 조율해 실제 장착/상점 UI를 최소 로더 호출 예외로 배선하거나, (b) 항목9(c)/10(c)의 설계 문서화 슬라이스로 전환하는 것을 권장.
+
+
 
 `docs/feedback/INBOX.md` 항목 14의 (D)(F) 카테고리(`insurance`/`shopDiscount`)를 실제 `run` 상태에 배선했다. 항목13→9→10→12→14가 이미 1차로 모두 완료된 상태에서, 항목14 잔여 슬라이스(C~F 카테고리의 실제 run 배선) 중 (D)/(F)를 이번 사이클에서 처리했다. `loop/PROMPT.md`가 명시적으로 허용한 "gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출" 예외 범위에서 `game/expedition.lua`만 수정했다(`play.lua`/`i18n.lua`/`world.lua`는 건드리지 않음). preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
 

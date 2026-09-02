@@ -415,10 +415,11 @@ then destroys normally on a second lethal hit; an uninsured run destroys on
 the first hit (baseline unchanged); a discounted purchase charges exactly
 80% of the base cost while an undiscounted run still pays full price.
 
-Still deferred: (C) `chainTrigger`/`rerollBonus` and (E)
-`detectionRadius`/`autoCollect` run wiring, plus the actual shop/checkpoint
-UI call sites that decide when to offer a roll (out of this lane's current
-scope).
+Still deferred (at the time of this slice): (C) `chainTrigger`/`rerollBonus`
+and (E) `detectionRadius`/`autoCollect` run wiring, plus the actual
+shop/checkpoint UI call sites that decide when to offer a roll (out of
+this lane's current scope) — see "Item 14 (C)/(E) run wiring" below for
+the (C)/(E) follow-up.
 
 ### Item 12 drop RNG run wiring — `M.rollGearOffer` (follow-up slice)
 
@@ -460,6 +461,50 @@ returning some card.
 
 Still deferred: the actual shop/checkpoint UI screen that calls
 `M.rollGearOffer` with real dice and presents the offer to the player
-(`play.lua`, out of this lane's scope), (C) `chainTrigger`/`rerollBonus`
-and (E) `detectionRadius`/`autoCollect` run wiring.
+(`play.lua`, out of this lane's scope) — see "Item 14 (C)/(E) run wiring"
+below for the (C)/(E) follow-up (now closed).
+
+### Item 14 (C)/(E) run wiring — chainTrigger/rerollBonus/detectionRadius/autoCollect (follow-up slice)
+
+`game/expedition.lua` closes the last remaining gap named above: the (C)
+and (E) conversion functions now have run-facing wrappers, using the same
+"최소한의 로더 호출" exception as every other gear wiring slice in this
+lane.
+
+- New private helper `combinedGearList(run)` concatenates
+  `run.equippedGear` and `run.equippedEngineParts` into one list. Unlike
+  `M.effectiveClimbSpeed` (hull-only, item 9 synergy) or
+  `M.boostChargeCount` (engine-only, item 10b), (C)/(E) effect types are
+  gear-category-agnostic in the schema (any card, hull or engine, can
+  legally carry `chainTrigger`/`rerollBonus`/`detectionRadius`/
+  `autoCollect`), so both equip slots count toward these totals even
+  though item 10 keeps hull/engine capacity/slot-count independent.
+- `M.chainTriggerCount(run)` / `M.rerollCount(run)` thinly wrap
+  `gear.chainTriggerCount`/`gear.rerollCount` over `combinedGearList(run)`.
+- `M.detectionRadius(run, baseRadius)` wraps
+  `gear.effectiveDetectionRadius(baseRadius, combinedGearList(run))` —
+  callers (e.g. a future `minimap.lua` integration for
+  `M.viewRadius`/`M.checkpointSearchCellRadius`) can pass either constant
+  as `baseRadius` once that UI wiring happens; this slice only guarantees
+  the run-level conversion path exists and is tested.
+- `M.autoCollectEnabled(run)` wraps `gear.autoCollectEnabled` the same way.
+
+`game/self_test.lua`'s `testGearRunEffectWiring` regression-checks: an
+unequipped run resolves all four to their zero/false/base-unchanged
+defaults; a single hull card carrying all four effect types at once
+resolves `chainTriggerCount == 1` (floored from 1.9), `rerollCount == 2`
+(floored from 2.4), `detectionRadius(run, 20) == 30` (+50%), and
+`autoCollectEnabled(run) == true`; a `chainTrigger` effect on an
+ENGINE-slot card (not hull) also counts toward the total, confirming the
+category-agnostic combined-list design.
+
+Still deferred: the actual gameplay consumption sites for each (e.g. a
+real "re-trigger a random equipped part's effect" mechanic for
+`chainTriggerCount`, a free-reroll UI affordance for `rerollCount`,
+`minimap.lua`/`play.lua` wiring `detectionRadius` into the actual scan
+radius, and an auto-pickup code path honoring `autoCollectEnabled` while
+flying) — all out of this lane's scope (`play.lua`/`world.lua`/
+`minimap.lua` belong to other lanes per `loop/PROMPT.md`). With this
+slice, every category (A)~(F) conversion function named in item 14 now has
+at least one run-level wrapper wired in `game/expedition.lua`.
 

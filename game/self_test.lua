@@ -1367,6 +1367,72 @@ local function testGearOfferRolling()
     assert(fallbackOffer, "rollGearOffer must fall back to an available card when the resolved rarity is empty")
 end
 
+-- Item 14 (C) chainTrigger/rerollBonus + (E) detectionRadius/autoCollect run
+-- wiring: gear.chainTriggerCount/rerollCount/effectiveDetectionRadius/
+-- autoCollectEnabled have existed as pure gear.lua conversion functions
+-- since item 14's first slice, but until now no run-facing wrapper in
+-- game/expedition.lua actually combined them with an equipped-gear list
+-- (the same "최소한의 로더 호출" wiring pattern already used for climbSpeed
+-- synergy/propulsion/insurance/shopDiscount/drop-RNG above). This closes
+-- the last remaining gap named in docs/STATUS.md's "여전히 미착수" list.
+local function testGearRunEffectWiring()
+    local expedition = require("game.expedition")
+
+    -- No gear equipped: all four must resolve to their documented
+    -- zero/false/baseline defaults (regression safety, same shape as the
+    -- insurance/boostCharge "no gear" baselines above).
+    local bareRun = expedition.new()
+    assert(expedition.chainTriggerCount(bareRun) == 0,
+        "an unequipped run must have zero chain-trigger re-activations")
+    assert(expedition.rerollCount(bareRun) == 0,
+        "an unequipped run must have zero free rerolls")
+    assert(math.abs(expedition.detectionRadius(bareRun, 20) - 20) < 1e-9,
+        "an unequipped run's detection radius must equal the unmodified base radius")
+    assert(expedition.autoCollectEnabled(bareRun) == false,
+        "an unequipped run must not have auto-collect enabled")
+
+    -- Equip one hull card carrying all four (C)/(E) effect types at once
+    -- and confirm the run-level wrappers combine gearModule's pure
+    -- conversions with the actual equipped list (hull + engine slots are
+    -- independent per item 10, so this also proves engine-only equips
+    -- don't leak into hull totals or vice versa).
+    local run = expedition.new()
+    local comboCard = {
+        id = "combo-fixture", name = "Combo", nameKo = "Combo", icon = "*",
+        rarity = "common", tags = {}, editions = {},
+        effects = {
+            { type = "chainTrigger", value = 1.9 },
+            { type = "rerollBonus", value = 2.4 },
+            { type = "detectionRadius", value = 50 },
+            { type = "autoCollect", value = 1 },
+        },
+    }
+    assert(expedition.equipGear(run, "hull", comboCard))
+    assert(expedition.chainTriggerCount(run) == 1,
+        "chainTrigger total must floor to a whole re-trigger count through the run wrapper")
+    assert(expedition.rerollCount(run) == 2,
+        "rerollBonus total must floor to a whole free-reroll count through the run wrapper")
+    assert(math.abs(expedition.detectionRadius(run, 20) - 30) < 1e-9,
+        "detectionRadius +50%% of base 20 must resolve to 30 through the run wrapper")
+    assert(expedition.autoCollectEnabled(run) == true,
+        "a positive autoCollect effect must enable auto-collect through the run wrapper")
+
+    -- Engine-slot equips must feed the same wrappers too (item 10: hull and
+    -- engine are independent slot lists, but both should count toward these
+    -- run-wide totals, matching how boostChargeCount/effectiveFuelBurnRate
+    -- already read only from equippedEngineParts and climbSpeed synergy
+    -- only from equippedGear -- here (C)/(E) are gear-category-agnostic).
+    local engineRun = expedition.new()
+    local engineComboCard = {
+        id = "engine-combo-fixture", name = "EngineCombo", nameKo = "EngineCombo", icon = "*",
+        rarity = "common", tags = {}, editions = {},
+        effects = { { type = "chainTrigger", value = 1 } },
+    }
+    assert(expedition.equipGear(engineRun, "engine", engineComboCard))
+    assert(expedition.chainTriggerCount(engineRun) == 1,
+        "chainTrigger effects on an engine-slot part must also count toward the run-wide total")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -3072,6 +3138,7 @@ function M.run()
     testGearPropulsionRunWiring()
     testGearSurvivalAndEconomyWiring()
     testGearOfferRolling()
+    testGearRunEffectWiring()
 
     print("SPACESHIP_UNIT_OK")
 end

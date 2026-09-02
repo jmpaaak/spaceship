@@ -604,6 +604,39 @@ function M.boostChargeCount(run)
     return gearModule.boostChargeCount(run.equippedEngineParts or {})
 end
 
+-- Item 14 (C)/(E) run wiring: gear.chainTriggerCount/rerollCount/
+-- effectiveDetectionRadius/autoCollectEnabled have existed as pure
+-- gear.lua conversion functions since item 14's first slice, but until
+-- now no run-facing wrapper combined them with an actual equipped-gear
+-- list (same "최소한의 로더 호출" exception used throughout this file).
+-- These are category-agnostic (unlike climbSpeed synergy, which only
+-- reads hull, or boostChargeCount, which only reads engine): both
+-- run.equippedGear and run.equippedEngineParts count toward the totals,
+-- matching item 10's design that hull/engine are independent SLOTS but
+-- not independent stat pools for every effect type.
+local function combinedGearList(run)
+    local parts = {}
+    for _, part in ipairs(run.equippedGear or {}) do parts[#parts + 1] = part end
+    for _, part in ipairs(run.equippedEngineParts or {}) do parts[#parts + 1] = part end
+    return parts
+end
+
+function M.chainTriggerCount(run)
+    return gearModule.chainTriggerCount(combinedGearList(run))
+end
+
+function M.rerollCount(run)
+    return gearModule.rerollCount(combinedGearList(run))
+end
+
+function M.detectionRadius(run, baseRadius)
+    return gearModule.effectiveDetectionRadius(baseRadius, combinedGearList(run))
+end
+
+function M.autoCollectEnabled(run)
+    return gearModule.autoCollectEnabled(combinedGearList(run))
+end
+
 -- Item 12's drop RNG (gear.rollRarity / gear.rollEdition), wired into an
 -- actual run for the first time. Given a candidate `pool` (from
 -- gear.loadHullParts/loadEngineParts) and explicit `rolls` (shop/checkpoint
