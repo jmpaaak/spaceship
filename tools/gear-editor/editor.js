@@ -20,6 +20,7 @@ const EFFECT_TYPE_GROUPS = {
   "D: survival/risk": ["insurance", "collisionRadius"],
   "E: scouting/info": ["detectionRadius", "autoCollect"],
   "F: economy": ["shopDiscount"],
+  "G: propulsion (engine parts)": ["fuelEfficiency", "steeringResponsiveness", "boostCharge"],
 };
 const KNOWN_EFFECT_TYPES = Object.values(EFFECT_TYPE_GROUPS).flat();
 const KNOWN_RARITIES = ["common", "uncommon", "rare", "legendary"];

@@ -1032,6 +1032,70 @@ local function testGearEffectSchemaExpansion()
     end
 end
 
+-- docs/feedback/INBOX.md item 10(b): "엔진 부품은... 추진/기동 계열에
+-- 특화된 효과(상승 가속, 연료 효율, 조종 반응성, 긴급 부스트/1회성 소모
+-- 아이템 등)에 집중해 선체 부품(내구도/채집/시너지 등 범용)과 역할이
+-- 겹치지 않도록 차별화한다." Verifies the new (G) propulsion-specialization
+-- effect category exists, its conversion functions behave correctly, the
+-- bundled engine_parts.json pool actually uses these types (making the
+-- engine pool mechanically distinct from the hull pool), and the bundled
+-- hull_parts.json pool does NOT use them (keeping hull's role generic per
+-- the "역할이 겹치지 않도록" requirement).
+local function testEnginePropulsionSpecialization()
+    -- (G) effect types must be known and categorized.
+    for _, t in ipairs({ "fuelEfficiency", "steeringResponsiveness", "boostCharge" }) do
+        assert(gear.knownEffectTypes[t], "effect type '" .. t .. "' must be known (item 10b)")
+        assert(gear.effectCategories[t] == "G",
+            "effect type '" .. t .. "' must be categorized as (G) propulsion")
+    end
+
+    -- (G) fuelEfficiency: percentage reduction of a base burn rate, clamped
+    -- at zero.
+    local effPart = { id = "fe", tags = {}, effects = { { type = "fuelEfficiency", value = 20 } } }
+    assert(math.abs(gear.effectiveFuelBurnRate(10, { effPart }) - 8) < 1e-9,
+        "fuelEfficiency -20%% of base burn rate 10 must be 8")
+    local hugeEffPart = { id = "fe2", tags = {}, effects = { { type = "fuelEfficiency", value = 500 } } }
+    assert(gear.effectiveFuelBurnRate(10, { hugeEffPart }) == 0,
+        "fuelEfficiency must clamp burn rate at zero, never negative")
+
+    -- (G) steeringResponsiveness: percentage growth of a base turn rate.
+    local steerPart = { id = "sr", tags = {}, effects = { { type = "steeringResponsiveness", value = 15 } } }
+    assert(math.abs(gear.effectiveSteeringRate(100, { steerPart }) - 115) < 1e-9,
+        "steeringResponsiveness +15%% of base turn rate 100 must be 115")
+
+    -- (G) boostCharge: discrete non-negative charge count.
+    local boostPart = { id = "bc", tags = {}, effects = { { type = "boostCharge", value = 2.7 } } }
+    assert(gear.boostChargeCount({ boostPart }) == 2, "boostCharge total must floor to a whole charge count")
+    assert(gear.boostChargeCount({}) == 0, "no boostCharge effects must yield zero charges")
+
+    -- The bundled engine_parts.json pool must actually use at least one of
+    -- the three (G) types on at least one card each, so the propulsion
+    -- specialization is real content, not just dead schema.
+    local enginePool = gear.loadEngineParts()
+    local sawFuelEff, sawSteering, sawBoost = false, false, false
+    for _, part in ipairs(enginePool) do
+        for _, effect in ipairs(part.effects) do
+            if effect.type == "fuelEfficiency" then sawFuelEff = true end
+            if effect.type == "steeringResponsiveness" then sawSteering = true end
+            if effect.type == "boostCharge" then sawBoost = true end
+        end
+    end
+    assert(sawFuelEff, "engine_parts.json must include at least one fuelEfficiency card")
+    assert(sawSteering, "engine_parts.json must include at least one steeringResponsiveness card")
+    assert(sawBoost, "engine_parts.json must include at least one boostCharge card")
+
+    -- The bundled hull_parts.json pool must stay free of the (G) types —
+    -- item 10(b)'s "역할이 겹치지 않도록 차별화" requirement, kept as a
+    -- concrete regression rather than just a doc claim.
+    local hullPool = gear.loadHullParts()
+    for _, part in ipairs(hullPool) do
+        for _, effect in ipairs(part.effects) do
+            assert(gear.effectCategories[effect.type] ~= "G",
+                "hull_parts.json card '" .. part.id .. "' must not use a (G) propulsion-specialization effect type")
+        end
+    end
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -2732,6 +2796,7 @@ function M.run()
     testEnginePartsSlotSeparation()
     testGearRarityAndEditionSystem()
     testGearEffectSchemaExpansion()
+    testEnginePropulsionSpecialization()
 
     print("SPACESHIP_UNIT_OK")
 end

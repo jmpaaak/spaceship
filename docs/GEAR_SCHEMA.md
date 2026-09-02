@@ -86,6 +86,8 @@ validator/dropdown stays exactly in sync with the Lua loader's rules — see
 - **(D) survival/risk-mitigation** — `insurance`, `collisionRadius`.
 - **(E) scouting/information** — `detectionRadius`, `autoCollect`.
 - **(F) economy** — `shopDiscount`.
+- **(G) propulsion specialization (engine parts)** — `fuelEfficiency`,
+  `steeringResponsiveness`, `boostCharge` (item 10b).
 
 ## Validation rules (enforced identically by `game/gear.lua` and the editor)
 
@@ -176,6 +178,47 @@ This module still does not wire into `run.equippedGear`/
 `game/self_test.lua`'s `testEnginePartsSlotSeparation` verifies the pool
 size/tags, independent fill/empty behavior in both directions, and the two
 rejection paths (capacity, duplicate id).
+
+### Propulsion specialization effect category (item 10b)
+
+Item 10(b) required engine parts to focus on "추진/기동 계열에 특화된
+효과(상승 가속, 연료 효율, 조종 반응성, 긴급 부스트/1회성 소모 아이템
+등)" so they read as mechanically distinct from the hull pool's generic
+durability/collection/synergy focus. `game/gear.lua`'s `M.knownEffectTypes`
+now includes a new **(G) propulsion** category — `fuelEfficiency`,
+`steeringResponsiveness`, `boostCharge` — with matching pure conversion
+functions:
+
+- `M.effectiveFuelBurnRate(baseRate, parts)` — percentage reduction of a
+  base fuel/maneuver-cost burn rate, clamped at zero.
+- `M.effectiveSteeringRate(baseRate, parts)` — percentage growth of a base
+  turn/steering rate ("조종 반응성/급회전 판정 향상").
+- `M.boostChargeCount(parts)` — a discrete non-negative charge count for
+  "긴급 부스트/1회성 소모 아이템", same shape as `chainTriggerCount`/
+  `rerollCount`.
+
+`game/data/engine_parts.json` now has 14 cards (up from 12), several of
+which carry `fuelEfficiency`/`steeringResponsiveness`/`boostCharge` effects
+(`engine_ion_drive`, `engine_vector_nozzle`, `engine_gyro_stabilizer`,
+plus two new cards `engine_emergency_boost_pod` and `engine_cryo_fuel_cell`)
+alongside their existing speed/climbSpeed/money effects, so the engine pool
+is now mechanically distinct from `game/data/hull_parts.json`, which
+`game/self_test.lua`'s `testEnginePropulsionSpecialization` regression-
+checks stays entirely free of the (G) category (no hull card uses
+`fuelEfficiency`/`steeringResponsiveness`/`boostCharge`). This class of
+effect is schema-agnostic like every other category (nothing in the loader
+enforces "only engine pools may use (G) types" — the regression instead
+asserts the *bundled* pools' actual content), matching the existing (A)~(F)
+category pattern. `tools/gear-editor/editor.js`'s `EFFECT_TYPE_GROUPS` gained
+a `"G: propulsion (engine parts)"` group so the web editor's effect-type
+dropdown and `game/self_test.lua`'s existing editor-sync check both cover
+the new types automatically.
+
+As with (C)~(F), (G)'s conversion functions are not yet wired into actual
+`run` state (`game/expedition.lua`'s fuel-burn rate / steering input /
+boost-charge consumption) — that remains deferred to a follow-up slice
+within this lane's `loop/PROMPT.md` scope (minimal-loader-call exception
+only).
 
 ## Rarity + edition farming system (item 12)
 

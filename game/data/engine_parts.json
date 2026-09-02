@@ -34,7 +34,8 @@
       "tags": ["control"],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 4 }
+        { "type": "speed", "value": 4 },
+        { "type": "steeringResponsiveness", "value": 15 }
       ]
     },
     {
@@ -60,7 +61,8 @@
       "editions": [],
       "effects": [
         { "type": "climbSpeed", "value": 4 },
-        { "type": "money", "value": 2 }
+        { "type": "money", "value": 2 },
+        { "type": "fuelEfficiency", "value": 20 }
       ]
     },
     {
@@ -72,7 +74,8 @@
       "tags": ["control"],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 2 }
+        { "type": "speed", "value": 2 },
+        { "type": "steeringResponsiveness", "value": 10 }
       ]
     },
     {
@@ -149,6 +152,32 @@
         { "type": "climbSpeed", "value": 12 },
         { "type": "speed", "value": 6 },
         { "type": "money", "value": 4 }
+      ]
+    },
+    {
+      "id": "engine_emergency_boost_pod",
+      "name": "Emergency Boost Pod",
+      "nameKo": "비상 부스트 포드",
+      "icon": "▲",
+      "rarity": "rare",
+      "tags": ["altitude", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "boostCharge", "value": 2 },
+        { "type": "speed", "value": 2 }
+      ]
+    },
+    {
+      "id": "engine_cryo_fuel_cell",
+      "name": "Cryo Fuel Cell",
+      "nameKo": "냉각 연료 셀",
+      "icon": "▽",
+      "rarity": "uncommon",
+      "tags": ["economy", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "fuelEfficiency", "value": 25 },
+        { "type": "money", "value": 1 }
       ]
     }
   ]

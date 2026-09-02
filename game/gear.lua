@@ -44,6 +44,16 @@ M.knownEffectTypes = {
     autoCollect = true,
     -- (F) economy (item 14).
     shopDiscount = true,
+    -- (G) propulsion specialization (item 10b: "엔진 부품은... 추진/기동
+    -- 계열에 특화된 효과... 집중해 선체 부품과 역할이 겹치지 않도록
+    -- 차별화"). These three are intended for engine_parts.json cards, but
+    -- the loader treats hull/engine pools identically (same schema) so
+    -- nothing prevents a hull card from using them; item 10's self_test
+    -- regression instead asserts the *bundled* hull pool stays free of
+    -- them so the two card pools read as distinctly-flavored in practice.
+    fuelEfficiency = true,
+    steeringResponsiveness = true,
+    boostCharge = true,
 }
 
 -- Item 14: which schema category (A~F) each known effect type belongs to.
@@ -57,6 +67,7 @@ M.effectCategories = {
     insurance = "D", collisionRadius = "D",
     detectionRadius = "E", autoCollect = "E",
     shopDiscount = "F",
+    fuelEfficiency = "G", steeringResponsiveness = "G", boostCharge = "G",
 }
 
 M.knownRarities = {
@@ -521,6 +532,46 @@ end
 function M.editionSynergyBonusAdd(editionId)
     local def = editionId and M.editionEffects[editionId]
     return (def and def.synergyBonusAdd) or 0
+end
+
+-- ---------------------------------------------------------------------
+-- Item 10(b): engine-part propulsion specialization. "엔진 부품은...
+-- 추진/기동 계열에 특화된 효과(상승 가속, 연료 효율, 조종 반응성, 긴급
+-- 부스트/1회성 소모 아이템 등)에 집중해 선체 부품(내구도/채집/시너지 등
+-- 범용)과 역할이 겹치지 않도록 차별화한다." These three new (G) effect
+-- types give engine parts a mechanical identity distinct from the hull
+-- pool's generic stat/synergy focus: fuel efficiency, steering
+-- responsiveness, and a one-shot emergency boost charge. Kept as pure
+-- functions taking a list of equipped parts, same shape as every other
+-- category converter above, so they compose with any future run-state
+-- wiring without duplicating logic.
+-- ---------------------------------------------------------------------
+
+-- (G) fuelEfficiency: percentage reduction applied to a base fuel-burn (or
+-- equivalent maneuver-cost) rate, clamped so a stack of efficiency cards
+-- can approach but never invert into a negative burn rate.
+function M.effectiveFuelBurnRate(baseRate, parts)
+    local pct = M.totalEffect(parts, "fuelEfficiency")
+    local rate = baseRate * (1 - pct / 100)
+    if rate < 0 then rate = 0 end
+    return rate
+end
+
+-- (G) steeringResponsiveness: percentage growth applied to a base turn/
+-- steering rate — "조종 반응성/급회전 판정 향상" (item 6's original steering
+-- gear proposal, generalized into item 14's schema).
+function M.effectiveSteeringRate(baseRate, parts)
+    local pct = M.totalEffect(parts, "steeringResponsiveness")
+    local rate = baseRate * (1 + pct / 100)
+    if rate < 0 then rate = 0 end
+    return rate
+end
+
+-- (G) boostCharge: "긴급 부스트/1회성 소모 아이템" — a discrete charge
+-- count, same non-negative-integer shape as chainTrigger/rerollBonus
+-- above (a card list without boostCharge effects grants zero charges).
+function M.boostChargeCount(parts)
+    return math.max(0, math.floor(M.totalEffect(parts, "boostCharge")))
 end
 
 return M

@@ -332,3 +332,19 @@
 - `docs/feedback/INBOX.md`의 항목 10 하위에 처리 상황을 append했다((a) 완료, (b)(c)는 다음 사이클로 명시).
 - 아직 게임 배선(`run.equippedGear`/`run.equippedEngineParts`, 실제 장착 UI)에는 연결하지 않았다 — 레인 스코프상 `play.lua`/`expedition.lua`는 원칙적으로 다른 레인 담당이라 순수 데이터/슬롯 엔진 계층만 완성했다(향후 로더 호출 최소 예외 범위에서 배선 검토).
 - 다음 사이클 다음 슬라이스: 항목 12(선체/엔진 부품 등급/에디션 파밍 시스템 — rarity별 드롭 가중치, edition 부여 확률 등을 `game/gear.lua`/`game/engine_parts.lua`에 순수 함수로 추가).
+
+## [gear 레인] 엔진 부품 추진 특화 효과 카테고리(G) — 항목 10(b) 완료 (2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 10(b)("엔진 부품은... 추진/기동 계열에 특화된 효과... 집중해 선체 부품과 역할이 겹치지 않도록 차별화")를 처리했다. 항목13→9→10→12→14가 이미 1차 완료된 상태에서, 항목 10의 남은 (b)(c) 중 (b)를 이번 사이클에서 완료했다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- `game/gear.lua`의 `M.knownEffectTypes`에 신규 (G) 추진 특화 카테고리 3종(`fuelEfficiency`, `steeringResponsiveness`, `boostCharge`)을 추가하고 `M.effectCategories`에도 `"G"`로 등록했다.
+- 3종 각각에 대한 순수 변환 함수를 추가했다: `M.effectiveFuelBurnRate(baseRate, parts)`(연료/기동 소모율 % 감소, 0 클램프), `M.effectiveSteeringRate(baseRate, parts)`(조종/회전 반응속도 % 증가), `M.boostChargeCount(parts)`(1회성 긴급 부스트 사용 가능 횟수, 정수 내림, 음수 방지 — `chainTriggerCount`/`rerollCount`와 동일한 이산 카운트 형태).
+- `game/data/engine_parts.json`을 12종에서 14종으로 확장했다: 신규 `engine_emergency_boost_pod`(boostCharge), `engine_cryo_fuel_cell`(fuelEfficiency) 추가, 기존 `engine_ion_drive`(fuelEfficiency)/`engine_vector_nozzle`(steeringResponsiveness)/`engine_gyro_stabilizer`(steeringResponsiveness)에도 (G) 효과를 추가해 엔진 풀이 실제로 3종 모두를 사용하도록 했다. `game/data/hull_parts.json`은 (G) 타입을 전혀 사용하지 않아 "역할이 겹치지 않도록" 요건을 데이터 수준에서도 만족한다.
+- `tools/gear-editor/editor.js`의 `EFFECT_TYPE_GROUPS`에 `"G: propulsion (engine parts)"` 그룹을 추가했다 — `KNOWN_EFFECT_TYPES`가 이 테이블에서 파생되므로 웹 에디터 폼/검증이 자동으로 동기화된다.
+- `docs/GEAR_SCHEMA.md`에 "Propulsion specialization effect category (item 10b)" 섹션과 "Known effect types" 목록에 (G) 항목을 추가해 문서화했다.
+- `game/self_test.lua`의 신규 `testEnginePropulsionSpecialization()`이 다음을 회귀 검증한다: (G) 3종이 `knownEffectTypes`/`effectCategories`에 정상 등록됨, 각 변환 함수의 정상/경계(클램프) 동작, 번들된 `engine_parts.json`이 fuelEfficiency/steeringResponsiveness/boostCharge 3종 모두를 실제로 사용함, 번들된 `hull_parts.json`은 (G) 타입을 전혀 사용하지 않음(역할 분리 회귀). 수정 전 RED(엔진 풀에 신규 타입이 없어 `sawFuelEff`/`sawSteering`/`sawBoost` 단언 실패, hull 카드 검증은 처음부터 GREEN) 확인 후 데이터/함수 반영, GREEN 전환 확인.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 10 하위에 처리 상황을 두 번째 슬라이스로 append했다.
+- (c) 획득 경로 3원화(상점 행성 구매/체크포인트 확정 드롭/지구 상점 범용 구매)는 여전히 미착수 — `game/world.lua`/`game/expedition.lua` 실배선은 레인 스코프상 최소 로더 호출 예외 범위에서 향후 슬라이스로 검토 필요.
+- 아직 게임 배선(run.equippedGear/run.equippedEngineParts, 실제 장착 UI, (G) 함수들의 run 상태 소비)에는 연결하지 않았다 — 레인 스코프상 `play.lua`/`expedition.lua`는 원칙적으로 다른 레인 담당이라 순수 데이터/함수 계층만 완성했다.
+- 다음 사이클 다음 슬라이스: 항목 10(c)(획득 경로 3원화) 또는 항목 9(c)(슬롯 교체 루프 설계)/항목 12(실제 드롭 RNG 배선) 중 사용자 우선순위에 따라 선택.
