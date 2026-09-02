@@ -331,6 +331,103 @@ local function testGalaxyStructure()
         if planet.id == hub.id then sawHub = true end
     end
     assert(sawHub, "nearbyPlanets at a galaxy center must include that galaxy's hub planet")
+
+    -- docs/feedback/INBOX.md 처리대기 항목 7-a -- every non-home galaxy also
+    -- has a deterministic 상점 행성 (shop planet) distinct from its hub
+    -- checkpoint, discoverable via nearbyPlanets like the hub is.
+    assert(world.shopPlanet(home) == nil, "milkyway has no extra shop planet -- EARTH SHOP fills that role")
+    local shop = world.shopPlanet(foreignGalaxy)
+    assert(shop and shop.shop and shop.galaxyId == foreignGalaxy.id)
+    assert(shop.id == "shop:" .. foreignGalaxy.id)
+    assert(shop.x ~= hub.x or shop.y ~= hub.y,
+        "shop planet must sit at a different position than the hub checkpoint")
+    local shopA = world.shopPlanet(foreignGalaxy)
+    assert(shopA.x == shop.x and shopA.y == shop.y, "shop planet position must be deterministic")
+    local shopsNearby = world.nearbyPlanets(shop.x, shop.y, 1)
+    local sawShop = false
+    for _, planet in ipairs(shopsNearby) do
+        if planet.id == shop.id then sawShop = true end
+    end
+    assert(sawShop, "nearbyPlanets near a galaxy's shop planet must include that shop planet")
+end
+
+-- docs/feedback/INBOX.md 처리대기 항목 7 (장비 획득 경로 3원화) + 항목 8
+-- (행성 탐사는 표본만, 정산은 체크포인트/지구에서만). Own top-level
+-- function for the same 200-local limit as testJoystick.
+local function testGearAndCheckpointSettlement()
+    local world = require("game.world")
+    local expedition = require("game.expedition")
+
+    -- Item 7-b: exploring a galaxy's checkpoint hub planet grants a
+    -- guaranteed, non-random unique gear part exactly once.
+    local run = expedition.new()
+    run.phase = "ascending"
+    local galaxyId = "galaxy:9:9"
+    local granted, gearId = expedition.exploreCheckpoint(run, galaxyId)
+    assert(granted and gearId == expedition.galaxyGearId(galaxyId))
+    assert(run.ownedGear[gearId], "exploring a checkpoint must grant its unique gear")
+    -- Re-exploring the same checkpoint must not grant a duplicate/second drop.
+    local grantedAgain, gearIdAgain = expedition.exploreCheckpoint(run, galaxyId)
+    assert(not grantedAgain and gearIdAgain == nil, "re-exploring the same checkpoint must not re-grant gear")
+
+    -- Item 7-a/7-c: buying gear costs money and cannot be bought twice.
+    local buyRun = expedition.new({ money = 100 })
+    assert(expedition.buyGear(buyRun, "shop:test-gear", 60))
+    assert(buyRun.money == 40 and buyRun.ownedGear["shop:test-gear"])
+    assert(not expedition.buyGear(buyRun, "shop:test-gear", 60), "cannot buy the same gear id twice")
+    assert(not expedition.buyGear(buyRun, "too-expensive", 1000), "cannot buy gear without enough money")
+
+    -- Item 7-c: EARTH SHOP only sells the generic catalog -- a
+    -- galaxy-unique gear id (from exploreCheckpoint) must never be
+    -- purchasable there.
+    assert(#expedition.genericGearCatalog >= 1)
+    local earthRun = expedition.new({ money = 1000 })
+    local firstGeneric = expedition.genericGearCatalog[1]
+    assert(expedition.buyEarthGear(earthRun, firstGeneric.id))
+    assert(earthRun.ownedGear[firstGeneric.id])
+    assert(not expedition.buyEarthGear(earthRun, expedition.galaxyGearId(galaxyId)),
+        "EARTH SHOP must reject a galaxy-unique gear id")
+
+    -- Item 8: an ordinary planet sample must not become money on its
+    -- own -- only checkpointSettle/Earth settle convert it.
+    local sampleRun = expedition.new()
+    sampleRun.phase = "ascending"
+    local ok, awarded = expedition.collectSample(sampleRun, 20)
+    assert(ok and awarded > 0)
+    assert(sampleRun.money == 0, "collecting a sample must not directly award money")
+    assert(sampleRun.pendingSampleValue == awarded)
+
+    -- Item 8: docking at a galaxy checkpoint mid-expedition settles the
+    -- pending sample value into money without ending the expedition.
+    local settled, amount = expedition.checkpointSettle(sampleRun)
+    assert(settled and amount == awarded)
+    assert(sampleRun.money == awarded, "checkpoint settlement must bank pending sample value as money")
+    assert(sampleRun.pendingSampleValue == 0)
+    assert(sampleRun.phase == "ascending", "checkpoint settlement must not end the expedition")
+
+    -- Calling checkpointSettle again with nothing pending must be a no-op.
+    local settledAgain, amountAgain = expedition.checkpointSettle(sampleRun)
+    assert(not settledAgain and amountAgain == 0)
+
+    -- Item 8: checkpointSettle must not fire outside the ascending phase
+    -- (mirrors "일반 행성 근접만으로는 정산되지 않는다" -- no settlement
+    -- source other than an explicit checkpoint/Earth trigger).
+    local launchPhaseRun = expedition.new()
+    launchPhaseRun.pendingSampleValue = 50
+    local blockedOk = expedition.checkpointSettle(launchPhaseRun)
+    assert(not blockedOk, "checkpointSettle must require the ascending phase")
+
+    -- Item 9 rule preserved: full meta wipe (destroy) also clears gear
+    -- ownership and explored checkpoints, consistent with ownedShips.
+    local wipeRun = expedition.new()
+    wipeRun.phase = "ascending"
+    wipeRun.durability = 1
+    expedition.exploreCheckpoint(wipeRun, galaxyId)
+    assert(next(wipeRun.ownedGear) ~= nil)
+    expedition.damage(wipeRun, 5)
+    assert(wipeRun.phase == "destroyed")
+    assert(next(wipeRun.ownedGear) == nil, "destruction must wipe owned gear")
+    assert(next(wipeRun.exploredCheckpoints) == nil, "destruction must wipe explored checkpoints")
 end
 
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
@@ -2339,6 +2436,7 @@ function M.run()
     testJoystick()
     testManeuverFuel()
     testGalaxyStructure()
+    testGearAndCheckpointSettlement()
     testMinimap()
     testDebris()
     testBackgroundStars()

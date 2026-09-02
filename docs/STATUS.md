@@ -1,4 +1,15 @@
 # STATUS
+## econ 레인 — 항목7(장비 획득 경로 3원화) + 항목8(체크포인트 정산) 엔진 슬라이스 (완료, 2026-09-03)
+
+`loop/PROMPT.md`의 econ 레인 스코프에 따라 처리대기 항목7→8→11→15 순서 중 첫 두 항목의 엔진(비-UI) 슬라이스를 착수했다. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했고 `git status --short`에 이 레인이 이어받을 미커밋 diff는 없었다(다른 레인의 `loop/PROMPT.md`/스캐폴딩 파일만 있었음, 손대지 않음).
+
+- **항목 7 (장비 획득 경로 3원화):** `game/world.lua`에 `M.shopPlanet(galaxy)`를 추가했다 — hubPlanet(체크포인트, salt 540대역)과 분리된 salt 600대역으로 은하 중심에서 결정적 각도/거리만큼 떨어진 위치에 상점 행성을 하나씩 생성하며, 홈 은하(태양계)는 nil(지구 상점이 그 역할을 대신함). `nearbyPlanets`가 hub와 함께 shop planet도 반환하도록 확장했다. `game/expedition.lua`에 `M.genericGearCatalog`(지구 상점 범용 장비 3종), `M.galaxyGearId(galaxyId)`(은하 고유 장비 id), `M.exploreCheckpoint(run, galaxyId)`(체크포인트 최초 탐사 시 확정 1회 지급, 재탐사는 no-op — 확률이 아님), `M.buyGear(run, gearId, cost)`(중복구매/자금부족 방어 공용 구매), `M.buyEarthGear(run, gearId)`(genericGearCatalog에 없는 은하 고유 id는 거부)를 추가했다. `run.ownedGear`/`run.exploredCheckpoints`를 `M.new()`에 추가하고 전멸(`destroy()`) 시 `ownedShips`와 동일하게 초기화되게 했다(비-negotiable 규칙: 전멸 시 구매/드롭 장비 wipe, 최고기록만 보존).
+- **항목 8 (행성 탐사=표본만, 정산은 체크포인트/지구):** 기존 `M.collectSample`이 이미 `pendingSampleValue`에만 누적하고 money를 직접 늘리지 않음을 확인했다(표본=순수 표본 구조가 이미 성립). 신규 `M.checkpointSettle(run)`을 추가했다 — ascending 페이즈에서만 동작, pending 표본 가치를 즉시 money로 정산하되 지구 복귀(`settle()`)와 달리 원정을 끝내지 않는다(phase 유지, slot reward는 정산 대상 아님). 대기 금액 0이면 no-op, ascending이 아니면 거부.
+- `game/self_test.lua`에 `testGalaxyStructure`를 확장(shop planet 결정성/hub와 분리된 위치/nearbyPlanets 포함 검증)하고 신규 `testGearAndCheckpointSettlement`를 추가해 확정 드롭 1회성, 구매 방어, 지구상점의 은하고유 장비 거부, 체크포인트 정산의 money 이전/phase 유지/재호출 no-op/launch phase 거부, 전멸 시 gear·exploredCheckpoints wipe를 회귀 검증했다(RED 확인 후 GREEN).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목7/8 하위에 진행상황을 append했다. **남은 작업:** 이번 슬라이스는 순수 엔진(`game/world.lua`/`game/expedition.lua`) 함수만 구현했고 `game/scenes/play.lua`의 실제 입력 연결(상점 행성/체크포인트 도킹 UI 진입점, 구조적 최소 변경만 허용됨)은 아직 없다 — 다음 사이클에서 최소 구조 변경으로 연결하거나, 항목 11(연료 UI 잔재 제거)로 진행.
+- 다음 사이클 다음 슬라이스: 항목7/8의 play.lua UI 연결(최소 구조 변경) 또는 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거) 착수.
+
 ## 아이콘 기반 HUD 간소화 첫 슬라이스: TAP TO LAUNCH 위에 로켓 아이콘 추가 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 "남은 작업" 부분(탭하여 발사/선체 내구도/자금/속도를 아이콘+짧은 수치로 재구성)을 첫 슬라이스로 착수했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.

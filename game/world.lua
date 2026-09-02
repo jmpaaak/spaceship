@@ -112,6 +112,34 @@ function M.hubPlanet(galaxy)
     }
 end
 
+-- The galaxy's "상점 행성" (docs/feedback/INBOX.md 처리대기 항목 7-a): a
+-- second deterministic per-galaxy landmark, distinct from the center
+-- checkpoint/hub planet above, where equipment gear can be bought with
+-- money. Uses a disjoint salt range (600s) so its position never
+-- coincides with hubPlanet's (540s), offset away from the galaxy center
+-- by a deterministic angle/radius fraction so the two landmarks read as
+-- clearly separate bodies on the minimap. The home galaxy has no extra
+-- shop planet -- Earth's own EARTH SHOP (item 7-c) already fills that
+-- role for the solar system, mirroring hubPlanet's Earth-is-the-hub
+-- asymmetry.
+function M.shopPlanet(galaxy)
+    if not galaxy or galaxy.id == "milkyway" then
+        return nil
+    end
+    local gx, gy = galaxy.gx, galaxy.gy
+    local angle = hash(gx, gy, 610) * math.pi * 2
+    local offset = galaxy.radius * (0.35 + hash(gx, gy, 620) * 0.4)
+    return {
+        id = "shop:" .. galaxy.id,
+        x = galaxy.x + math.cos(angle) * offset,
+        y = galaxy.y + math.sin(angle) * offset,
+        radius = 12 + math.floor(hash(gx, gy, 630) * 6),
+        hue = hash(gx, gy, 640),
+        shop = true,
+        galaxyId = galaxy.id,
+    }
+end
+
 -- Finds the galaxy (if any) containing world point (x, y). Searches the
 -- point's grid cell and its 8 neighbors since a galaxy's radius can
 -- extend past its own cell's boundary into an adjacent one.
@@ -189,6 +217,13 @@ function M.nearbyPlanets(x, y, radiusInSectors)
             local hsx, hsy = M.sectorAt(hub.x, hub.y)
             if hsx >= minSx and hsx <= maxSx and hsy >= minSy and hsy <= maxSy then
                 result[#result + 1] = hub
+            end
+        end
+        local shop = M.shopPlanet(galaxy)
+        if shop then
+            local ssx, ssy = M.sectorAt(shop.x, shop.y)
+            if ssx >= minSx and ssx <= maxSx and ssy >= minSy and ssy <= maxSy then
+                result[#result + 1] = shop
             end
         end
     end
