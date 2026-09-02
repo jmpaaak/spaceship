@@ -1375,6 +1375,26 @@ function M:draw()
     local shipScreenX, shipScreenY = viewport.width / 2, math.floor(viewport.height * 0.58)
     local cameraX, cameraY = self.ship.x - shipScreenX, self.ship.y - shipScreenY
     local sx, sy = world.sectorAt(self.ship.x, self.ship.y)
+    -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): a dense,
+    -- near-static background star layer drawn behind the streaking-meteor
+    -- foreground layer below. Reduced parallax (0.4x camera motion) makes
+    -- it read as a distant, almost-still Milky Way backdrop rather than
+    -- more meteors, and dim/small points keep it from competing visually
+    -- with the foreground streaks or gameplay elements.
+    local bgCameraX, bgCameraY = cameraX * 0.4, cameraY * 0.4
+    local bsx, bsy = world.sectorAt(bgCameraX, bgCameraY)
+    for oy = -1, 1 do
+        for ox = -1, 1 do
+            for _, star in ipairs(world.backgroundStars(bsx + ox, bsy + oy)) do
+                local x, y = math.floor(star.x - bgCameraX), math.floor(star.y - bgCameraY)
+                if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
+                    local c = 0.12 + star.bright * 0.4
+                    love.graphics.setColor(c, c, math.min(1, c + 0.08))
+                    love.graphics.points(x, y)
+                end
+            end
+        end
+    end
     for oy = -1, 1 do
         for ox = -1, 1 do
             for _, star in ipairs(world.stars(sx + ox, sy + oy)) do

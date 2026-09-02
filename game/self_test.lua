@@ -465,6 +465,37 @@ end
 
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
 -- as a lethal planet collision.
+-- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): the existing
+-- 18-star-per-sector field reads as sparse, meteor-like streaks. Keep that
+-- foreground layer exactly as-is (the user likes the meteor feel) and add a
+-- second, much denser background star field that is deterministic per
+-- sector just like the foreground one, but distinct (different point
+-- count/salts/brightness range) so `play.lua` can draw it with reduced
+-- parallax as a dense, near-static Milky Way backdrop behind the meteors.
+local function testBackgroundStars()
+    local world = require("game.world")
+    local a = world.backgroundStars(3, -2)
+    local b = world.backgroundStars(3, -2)
+    assert(#a == #b, "background star field must be deterministic per sector")
+    for i = 1, #a do
+        assert(a[i].x == b[i].x and a[i].y == b[i].y and a[i].bright == b[i].bright)
+    end
+    assert(#a > #world.stars(3, -2) * 2,
+        "background star layer must be noticeably denser than the foreground meteor layer")
+    for _, star in ipairs(a) do
+        assert(star.bright >= 0 and star.bright <= 1)
+    end
+
+    -- Different sectors and different salts from the foreground layer must
+    -- produce a distinct point set (not just a re-scaled copy of M.stars).
+    local foreground = world.stars(3, -2)
+    local distinct = false
+    for i = 1, math.min(#a, #foreground) do
+        if a[i].x ~= foreground[i].x or a[i].y ~= foreground[i].y then distinct = true end
+    end
+    assert(distinct, "background stars must be an independently seeded point set")
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -2138,6 +2169,7 @@ function M.run()
     testGalaxyStructure()
     testMinimap()
     testDebris()
+    testBackgroundStars()
 
     print("SPACESHIP_UNIT_OK")
 end

@@ -352,4 +352,26 @@ function M.stars(sectorX, sectorY)
     return stars
 end
 
+-- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): the 18
+-- meteor-like stars per sector from M.stars() read as sparse. The user
+-- likes that streaking-meteor foreground layer and wants it kept as-is, so
+-- this adds a second, independently-seeded and much denser field meant to
+-- be drawn behind it with little/no parallax as a near-static Milky Way
+-- backdrop. Uses a disjoint salt range (10000+) so it never coincides with
+-- M.stars' points, and dims/shrinks are handled by the caller (play.lua)
+-- via the `bright` field, kept in the same 0..1 range for consistency.
+M.backgroundStarCount = 120
+
+function M.backgroundStars(sectorX, sectorY)
+    local stars = {}
+    for i = 1, M.backgroundStarCount do
+        stars[i] = {
+            x = sectorX * M.sectorSize + hash(sectorX, sectorY, 10000 + i) * M.sectorSize,
+            y = sectorY * M.sectorSize + hash(sectorX, sectorY, 20000 + i) * M.sectorSize,
+            bright = hash(sectorX, sectorY, 30000 + i) * 0.55,
+        }
+    end
+    return stars
+end
+
 return M

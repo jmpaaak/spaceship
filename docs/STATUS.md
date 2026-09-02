@@ -65,4 +65,17 @@
 - 테스트: `testManeuverFuel`(무연료), `testDebris`, `testMinimap` 고리/SOLAR SYSTEM. `make test` GREEN.
 - 남은 다음 슬라이스: 플레이어가 직접 귀환을 고르는 UI(`beginReturn`은 테스트/캡처만 연결됨). AetherAI 최종 에셋.
 
+# STATUS
+## 배경 별 밀도 증가: 이중 레이어(유성 전경 + 은하수 배경) 추가 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 1번(배경 별 밀도 증가)을 완료했다. preflight READY, `git status --short` clean으로 시작.
+
+- `game/world.lua`: `M.backgroundStars(sectorX, sectorY)` 순수 함수 추가 — 섹터당 120개(`M.backgroundStarCount`), 기존 `M.stars`의 salt 대역(100/200/300)과 겹치지 않는 10000/20000/30000 salt 대역을 사용해 완전히 독립적으로 시드된 결정적 점 집합을 생성한다. 밝기(`bright`)는 0~0.55로 제한해 전경 유성별보다 어둡다.
+- `game/scenes/play.lua`의 `draw()`: 기존 유성별 루프 앞에 배경별 루프를 추가했다. 카메라 이동량의 0.4배만 적용(감소된 parallax)해 거의 정지한 은하수처럼 보이게 하고, 색상도 더 어둡게(0.12+bright*0.4) 렌더링해 전경의 빠르게 지나가는 유성별과 시각적으로 명확히 구분한다. 기존 유성별 레이어는 완전히 그대로 유지(사용자가 마음에 들어한 부분).
+- `game/self_test.lua`의 `testBackgroundStars`(신규): 같은 섹터 좌표에 대한 결정성, 전경 대비 밀도 2배 이상, 전경과 겹치지 않는 독립 시드임을 회귀 검증한다. 수정 전 `world.backgroundStars`가 nil이라 RED(`attempt to call field 'backgroundStars'`) 확인 후 구현, GREEN 전환 확인.
+- 실측 검증: 임시 헤드리스 디버그 카운터(커밋에는 포함하지 않고 검증 후 되돌림)로 동일 뷰포트 위치(고도 900 지점)에서 전경 유성별 21개 대비 배경별 144개가 동시에 표시됨을 확인해 밀도 차이(~7배)가 실제로 체감 가능한 수준임을 검증했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 "UI/HUD 대대적 정리 6개 항목" 하위 1번 항목에 완료 표시 및 구현 요약을 추가(상위 항목 자체는 6개 중 1개만 처리되었으므로 "처리 대기"에 유지).
+- 다음 사이클 다음 슬라이스: 같은 상위 항목의 2번(고도→"지구로부터 거리" 라벨 명확화) 또는 3번(연료 무제한 HUD 아이콘화)부터 순서대로 진행.
+
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
