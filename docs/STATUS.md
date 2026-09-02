@@ -1,4 +1,13 @@
 # STATUS
+## `docs/feedback/INBOX.md` 문서 동기화: 완료된 런치 화면 지구 탐험물 전시 항목을 처리 완료로 이동 (2026-09-02)
+
+`git status --short` clean, preflight PASS 상태로 시작. 처리 대기 4개 항목을 다시 코드 레벨로 전수 재확인했다.
+
+- 3개 항목(핵심 루프, AetherAI-only, 발라트로 스타일)은 이전 여러 사이클의 조사와 동일하게 여전히 코드에 이미 구현/검증되어 있거나(핵심 루프·발라트로 스타일) 자격 증명 부재로 human-gated(AetherAI-only, `env`/쉘 환경변수에 `aether` 관련 키 없음 재확인)임을 확인했다 — 코드 변경 없음, 사용자 최종 검수만 남음.
+- `docs/feedback/INBOX.md`의 "런치 화면 지구 탐험물 전시" 항목은 제목 자체에 `(2026-09-02, 사용자 요청, 완료)`라고 적혀 있고 본문도 `✅ 완료`로 시작하는데도 여전히 "처리 대기" 섹션에 잘못 남아 있던 문서 정합성 결함을 발견했다. 코드(`game/world.lua`의 `specimenCatalog`, `game/collection_store.lua`, `game/scenes/play.lua`의 `drawSpecimenStrip`/`specimenProgress`, `game/self_test.lua` 338/1296행)를 다시 대조해 실제로 완료 상태와 일치함을 재확인한 뒤, 해당 항목 전체를 "처리 대기" → "처리 완료" 섹션으로 이동했다(문서만 수정, 게임 로직/텍스트 변경 없음).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:33`).
+- 남은 다음 슬라이스 후보: (1) AetherAI 로그인 자격 증명이 제공되면 공식 에셋 export 진행, (2) 세로 상승형 핵심 루프/발라트로 스타일 두 항목도 사용자 최종 검수 후 "처리 완료"로 이동할 수 있으면 이동, (3) 새 feedback이 등록되면 그것을 우선 처리한다.
+
 ## 데스크톱 마우스 조이스틱 + settlement 메시지 i18n 이관 인계 완료 (이전 사이클 미완성 인계)
 
 - 이전 사이클이 `game/scenes/play.lua`/`game/self_test.lua`/`main.lua`에 검증된 GREEN 변경을 워킹트리에 남긴 채 커밋을 완료하지 못하고 종료했다(preflight `git diff` 검사 PASS로 인계됨). 이번 사이클이 그 변경을 이어받아 커밋했다.
