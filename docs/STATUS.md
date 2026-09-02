@@ -6,8 +6,9 @@
 - `game/scenes/play.lua`에 `M:joystickKnob()`(활성 조이스틱 중심/노브 좌표 반환)과 `M:drawJoystickStick()`(상승/귀환 phase에 반투명 스틱 UI 렌더)를 추가했고, `M:pollDesktopMouse()`로 `love.mousepressed` 이벤트를 놓친 경우를 매 프레임 폴백 보정한다(`GAME_UNIT=1`에서는 스킵해 주입된 테스트 터치가 지워지지 않게 함). `steeringButtonState()`에 키보드 상/하(`up`/`down`, `w`/`s`)를 추가해 수직 `verticalOffset`도 키보드로 조종 가능해졌다.
 - 기존 `string.format` 인라인 메시지 다수(슬롯 결과, 귀환/정산/충돌/파괴/업그레이드/구매/선택 메시지, 신규표본 배너, 플로팅 텍스트)를 `game/i18n.lua`의 `i18n.t(key, ...)` 호출로 교체해 로케일 분기 없이도 문자열이 `locales.en`/`locales.ko` 양쪽에서 일관되게 나오도록 정리했다(`assets/fonts/AppleGothic.ttf` 번들 폰트를 쓰는 `game/fonts.lua`와 함께, 한글 로케일 지원 인프라 완결).
 - engine-hosted 테스트(`testJoystick()`)가 데스크톱 마우스 press→drag→release 시나리오에서 `joystickKnob()`이 드래그 전 nil, 드래그 후 노브 좌표 반환, `update(1)` 후 `ship.x` 증가, release 후 다시 nil이 되는 것을 검증한다.
+- 남아있던 인라인 문자열(`"SHIP DESTROYED"`, `"HOLD LEFT"`, `"DEV PLACEHOLDER"`)도 각각 `i18n.t("ship_destroyed_title")`/`i18n.t("hold_left")`/`i18n.t("dev_placeholder")`로 교체해 이번 마이그레이션을 매듭지었다(`"HOLD RIGHT"`는 별도 `hold_right` 키가 이미 있으나 아직 인라인 — 다음 사이클 후보로 남김).
 - `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:33`).
-- 남은 다음 슬라이스 후보: (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리(직전 완료 사이클로 이미 처리된 항목 여부 재확인 필요), (2) 낮은 잔액 `SHORT $N` 실기기 재검증, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+- 남은 다음 슬라이스 후보: (1) `"HOLD RIGHT"` 인라인 문자열도 `i18n.t("hold_right")`로 마저 교체, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리(직전 완료 사이클로 이미 처리된 항목 여부 재확인 필요), (3) 낮은 잔액 `SHORT $N` 실기기 재검증, (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
 ## SCOUT 트레이드오프를 GAINS/LOSSES 포맷으로 통일 (완료, 이전 사이클 미완성 인계)
 
