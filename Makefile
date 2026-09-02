@@ -7,6 +7,7 @@ LOVE_PACKAGE ?= $(BUILD_DIR)/game.love
 
 test:
 	GAME_HEADLESS=1 GAME_UNIT=1 $(LOVE) .
+	python3 -m unittest tools.test_verify_asset_manifest -v
 
 smoke:
 	GAME_HEADLESS=1 $(LOVE) .
@@ -22,6 +23,7 @@ love:
 verify: test smoke love
 	GAME_HEADLESS=1 $(LOVE) "$(LOVE_PACKAGE)"
 	python3 tools/verify_bundle.py "$(LOVE_PACKAGE)"
+	python3 tools/verify_asset_manifest.py
 
 clean:
 	rm -rf "$(BUILD_DIR)"

@@ -1,4 +1,16 @@
 # STATUS
+## AetherAI-only 최종 에셋: provenance manifest 검증 도구 추가 (make verify 게이트, 2026-09-02)
+
+`git status --short` clean, preflight PASS 상태로 시작. 처리 대기 최우선 항목인 "AetherAI-only 최종 에셋"을 이번 사이클의 슬라이스로 선정했다. 로그인/공식 export 자격 증명은 여전히 이 세션에 없어(`env`/`~/.hermes/.env`에 `aether` 키 없음, `/private/tmp/aether.html`은 이전 세션이 확인한 공식 도메인(`aetherforgeai.com`) 정보일 뿐 로그인 세션이 아님을 재확인) 실제 공식 에셋 import는 여전히 human-gated다. `loop/PROMPT.md`의 "If login/export is unavailable... continue non-asset gameplay, tests, persistence, balancing, touch input, packaging, and UI layout work" 지침에 따라, import 불가능한 이번 사이클에도 진행 가능한 비-에셋 작업으로 이 항목의 **강제 검증 인프라**를 추가했다.
+
+- 새 `tools/verify_asset_manifest.py`: `assets/` 아래 이미지 파일(`.png/.jpg/.jpeg/.webp/.gif/.bmp/.tga`, 폰트 `.ttf` 등은 제외)이 하나라도 있으면 `docs/assets/MANIFEST.json`에 `loop/PROMPT.md` 37행이 요구하는 12개 필드(`source_url`, `terms_url`, `asset_id`, `prompt`, `model`, `style`, `settings`, `downloaded_at`, `sha256`, `width`, `height`, `qa`)를 전부 갖춘 매칭 항목이 있는지, `source_url`이 공식 `aetherforgeai.com`/`aetherai.com` 도메인인지, 기록된 `sha256`이 실제 파일 해시와 일치하는지(오래되었거나 다른 파일로 바꿔치기된 항목 검출) 검사한다. 위반이 있으면 `ASSET_MANIFEST_FAIL`과 구체적 사유 목록을 출력하고 0이 아닌 코드로 종료한다. 이미지가 하나도 없고 매니페스트가 빈 배열이면(현재 상태, AetherAI import 전) `ASSET_MANIFEST_OK`로 조용히 통과한다 — 즉 지금 당장 에셋을 만들어내라고 강제하지 않으며, Lua 도형/Python 생성 이미지를 "최종 에셋"으로 몰래 들여오는 것만 막는다.
+- 새 `docs/assets/MANIFEST.json`(빈 배열 `[]`)을 추가해 앞으로 공식 AetherAI export를 받을 때 채워 넣을 자리를 만들었다.
+- `Makefile`의 `verify` 타깃에 `python3 tools/verify_asset_manifest.py`를 추가해 `make verify LOVE=...`가 앞으로 항상 이 게이트를 통과해야 한다. `test` 타깃에도 `python3 -m unittest tools.test_verify_asset_manifest -v`를 추가했다(Lua headless 테스트와 별개로 이 Python 도구 자체의 회귀를 잡는다 — 도구 자체는 최종 미술이 아니라 provenance 검증 스크립트이므로 `docs/GAME_DESIGN.md`의 "Python/Pillow는 최종 에셋 source로 금지" 규칙과 무관하다).
+- TDD로 진행: `tools/test_verify_asset_manifest.py`(8개 케이스: 빈 매니페스트+이미지 없음 통과, 폰트 파일 예외, 매니페스트 항목 없는 이미지 거부, 완전한 매칭 항목 통과, 필수 필드 누락 거부, sha256 불일치 거부, 존재하지 않는 파일을 가리키는 항목 거부, 비공식 `source_url` 거부)를 먼저 작성해 `verify_asset_manifest` 모듈이 없어 RED(ImportError)임을 확인한 뒤 `tools/verify_asset_manifest.py`를 구현해 GREEN으로 만들었다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, 8/8 Python 유닛 테스트, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 "AetherAI-only 최종 에셋" 항목은 실제 공식 에셋을 아직 하나도 import하지 못했으므로(자격 증명 부재) "처리 대기"에 그대로 남겨둔다 — 이번 슬라이스는 그 요구사항을 코드로 강제하는 안전장치를 마련한 것이지, 요구사항 자체를 완료한 것이 아니다.
+- 남은 다음 슬라이스 후보: (1) AetherAI 로그인 자격 증명이 제공되면 이 매니페스트 스키마에 맞춰 실제 공식 에셋 export를 진행, (2) 세로 상승형 핵심 루프/발라트로 스타일/런치 화면 표본 전시 3개 항목은 이미 코드·실기기 검증까지 완료되어 사용자 최종 확인만 남음, (3) 새 feedback이 등록되면 그것을 우선 처리한다.
+
 ## 세로 상승형 로그라이트 핵심 루프: full-loop-relaunch 캡처 무한 루프 버그 수정 + 실기기 검증 (2026-09-02)
 
 `git status --short`가 `M main.lua`(인계된 미커밋 GREEN 변경, preflight `git diff` 검사 PASS) 상태로 시작했다. preflight READY, 처리 대기 최우선 2개 항목(핵심 루프, AetherAI-only) 중 인계된 변경이 이미 핵심 루프 항목의 실기기 검증 도구였으므로 이를 완성하는 것을 이번 사이클의 슬라이스로 선정했다.
