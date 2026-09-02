@@ -1,3 +1,23 @@
+# LANE SCOPE — econ
+
+This worktree is one lane of a parallel multi-lane autonomous setup.
+Work ONLY within this scope. Do not touch pending feedback items owned
+by other lanes, and do not edit `docs/feedback/INBOX.md` items outside
+your scope (append-only status notes to your own item are fine).
+
+## Scope for this lane
+
+이 레인은 오직 다음 INBOX 항목만, 이 순서로 처리한다: 항목7(장비 획득 경로 3원화 -- 상점행성/체크포인트확정드롭/지구상점) -> 항목8(행성탐사=표본만, 정산은 체크포인트/지구에서만) -> 항목11(연료 소진 관련 UI/문구 잔재 전면 제거) -> 항목15(귀환/비행중 슬롯머신 폐지, 지구상점 전용 슬롯머신 은하계별 오즈). 이 레인은 주로 game/world.lua, game/expedition.lua를 수정한다. game/scenes/play.lua의 텍스트/HUD 세부 표현은 메인 레인 담당이므로 최소한의 구조적 변경(신규 화면/버튼 추가 등 불가피한 경우)만 하고 기존 텍스트 정리는 건드리지 않는다. docs/feedback/INBOX.md 처리대기 섹션의 항목7/8/11/15 하위에만 진행상황을 append한다.
+
+## Branch and push discipline
+
+- This lane commits and pushes ONLY to branch `spaceship-econ`. Never push to
+  `main`/`master` directly, never force-push.
+- A separate integration step periodically merges this branch into
+  the base branch after `make verify` passes.
+
+---
+
 # Spaceship autonomous development brief
 
 ## First priority

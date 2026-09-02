@@ -141,19 +141,17 @@ local function testJoystick()
         x = 90 + joystick.maxRadius, y = 160,
     }
     local hx, hy = headingThrustScene.ship.x, headingThrustScene.ship.y
-    local headingFuelBefore = headingThrustScene.expedition.fuel
     headingThrustScene:update(1)
     assert(headingThrustScene.ship.x > hx, "nose-right climb must move +x")
     assert(math.abs(headingThrustScene.ship.y - hy) < 1e-6,
         "nose-right climb must not keep forcing the ship straight up")
-    assert(headingThrustScene.expedition.fuel == headingFuelBefore,
-        "thrusting must not burn fuel; fuel is no longer a flight constraint")
+    assert(headingThrustScene.expedition.fuel == nil,
+        "thrusting must not resurrect a dead fuel field; fuel is no longer a flight constraint")
     local coastX = headingThrustScene.ship.x
-    local coastFuel = headingThrustScene.expedition.fuel
     headingThrustScene.touches["stick"] = nil
     headingThrustScene:update(1)
-    assert(headingThrustScene.expedition.fuel == coastFuel,
-        "coasting without stick input must not burn fuel")
+    assert(headingThrustScene.expedition.fuel == nil,
+        "coasting must not resurrect a dead fuel field")
     assert(headingThrustScene.ship.x ~= coastX,
         "coasting must keep moving on stored velocity")
 
@@ -181,19 +179,29 @@ end
 
 -- Fuel is no longer a flight constraint: thrusting, coasting, and
 -- expedition.update must leave fuel untouched and must not auto-return.
+-- docs/feedback/INBOX.md 항목 11(c) 잔여: maneuverFuel/burnManeuverFuel were
+-- dead no-op functions (always returned 0, never touched any state) kept
+-- around only so older call sites would still compile. Now that they have
+-- no call sites left (game/scenes/play.lua's burnManeuverFuel call is
+-- removed alongside this), the dead API is removed entirely rather than
+-- kept as a permanent no-op shim.
 local function testManeuverFuel()
     local expedition = require("game.expedition")
     local run = expedition.new()
-    assert(expedition.maneuverFuel(run, 55) == 0,
-        "maneuverFuel must be 0 once fuel is unconstrained")
-    assert(expedition.maneuverFuel(run, 0) == 0)
-    assert(expedition.burnManeuverFuel(run, 55) == 0)
-    assert(run.fuel == run.maxFuel)
+    assert(expedition.maneuverFuel == nil,
+        "dead no-op maneuverFuel API must be removed, not kept as a shim")
+    assert(expedition.burnManeuverFuel == nil,
+        "dead no-op burnManeuverFuel API must be removed, not kept as a shim")
+    -- docs/feedback/INBOX.md 항목 11(c): run.fuel was a dead state field --
+    -- only ever written (by M.launch/M.destroy), never read by any flight
+    -- decision (altitude ticks by climbSpeed unconditionally). It must not
+    -- exist at all, matching the earlier ship.fuel == nil precedent.
+    assert(run.fuel == nil,
+        "dead run.fuel state field must be removed, not just left unread")
 
     expedition.launch(run)
-    local fuelBefore = run.fuel
     expedition.update(run, 5)
-    assert(run.fuel == fuelBefore, "ascent must not burn fuel")
+    assert(run.fuel == nil, "launch/update must never resurrect a fuel field")
     assert(run.phase == "ascending", "ascent must not auto-return when fuel is unconstrained")
     assert(run.altitude > 0)
 
@@ -206,10 +214,9 @@ local function testManeuverFuel()
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     idleScene.expedition.phase = "ascending"
-    local idleFuelBefore = idleScene.expedition.fuel
     idleScene:update(1)
-    assert(idleScene.expedition.fuel == idleFuelBefore,
-        "coasting without stick/keys must not burn fuel")
+    assert(idleScene.expedition.fuel == nil,
+        "coasting must not resurrect a dead fuel field")
     assert(idleScene.expedition.phase == "ascending")
 
     local steerScene = PlayScene.new({
@@ -217,10 +224,9 @@ local function testManeuverFuel()
     })
     steerScene.expedition.phase = "ascending"
     steerScene.touches["hold"] = { x = 20, y = 160, originX = 20, originY = 160 }
-    local steerFuelBefore = steerScene.expedition.fuel
     steerScene:update(1)
-    assert(steerScene.expedition.fuel == steerFuelBefore,
-        "steering must not burn fuel")
+    assert(steerScene.expedition.fuel == nil,
+        "steering must not resurrect a dead fuel field")
     assert(steerScene.expedition.phase == "ascending")
 end
 
@@ -331,6 +337,191 @@ local function testGalaxyStructure()
         if planet.id == hub.id then sawHub = true end
     end
     assert(sawHub, "nearbyPlanets at a galaxy center must include that galaxy's hub planet")
+
+    -- docs/feedback/INBOX.md 처리대기 항목 7-a -- every non-home galaxy also
+    -- has a deterministic 상점 행성 (shop planet) distinct from its hub
+    -- checkpoint, discoverable via nearbyPlanets like the hub is.
+    assert(world.shopPlanet(home) == nil, "milkyway has no extra shop planet -- EARTH SHOP fills that role")
+    local shop = world.shopPlanet(foreignGalaxy)
+    assert(shop and shop.shop and shop.galaxyId == foreignGalaxy.id)
+    assert(shop.id == "shop:" .. foreignGalaxy.id)
+    assert(shop.x ~= hub.x or shop.y ~= hub.y,
+        "shop planet must sit at a different position than the hub checkpoint")
+    local shopA = world.shopPlanet(foreignGalaxy)
+    assert(shopA.x == shop.x and shopA.y == shop.y, "shop planet position must be deterministic")
+    local shopsNearby = world.nearbyPlanets(shop.x, shop.y, 1)
+    local sawShop = false
+    for _, planet in ipairs(shopsNearby) do
+        if planet.id == shop.id then sawShop = true end
+    end
+    assert(sawShop, "nearbyPlanets near a galaxy's shop planet must include that shop planet")
+end
+
+-- docs/feedback/INBOX.md 처리대기 항목 7 (장비 획득 경로 3원화) + 항목 8
+-- (행성 탐사는 표본만, 정산은 체크포인트/지구에서만). Own top-level
+-- function for the same 200-local limit as testJoystick.
+local function testGearAndCheckpointSettlement()
+    local world = require("game.world")
+    local expedition = require("game.expedition")
+
+    -- Item 7-b: exploring a galaxy's checkpoint hub planet grants a
+    -- guaranteed, non-random unique gear part exactly once.
+    local run = expedition.new()
+    run.phase = "ascending"
+    local galaxyId = "galaxy:9:9"
+    local granted, gearId = expedition.exploreCheckpoint(run, galaxyId)
+    assert(granted and gearId == expedition.galaxyGearId(galaxyId))
+    assert(run.ownedGear[gearId], "exploring a checkpoint must grant its unique gear")
+    -- Re-exploring the same checkpoint must not grant a duplicate/second drop.
+    local grantedAgain, gearIdAgain = expedition.exploreCheckpoint(run, galaxyId)
+    assert(not grantedAgain and gearIdAgain == nil, "re-exploring the same checkpoint must not re-grant gear")
+
+    -- Item 7-a/7-c: buying gear costs money and cannot be bought twice.
+    local buyRun = expedition.new({ money = 100 })
+    assert(expedition.buyGear(buyRun, "shop:test-gear", 60))
+    assert(buyRun.money == 40 and buyRun.ownedGear["shop:test-gear"])
+    assert(not expedition.buyGear(buyRun, "shop:test-gear", 60), "cannot buy the same gear id twice")
+    assert(not expedition.buyGear(buyRun, "too-expensive", 1000), "cannot buy gear without enough money")
+
+    -- Item 8: EARTH SHOP only sells the generic catalog -- a
+    -- galaxy-unique gear id (from exploreCheckpoint) must never be
+    -- purchasable there.
+    assert(#expedition.genericGearCatalog >= 1)
+    local earthRun = expedition.new({ money = 1000 })
+    local firstGeneric = expedition.genericGearCatalog[1]
+    assert(expedition.buyEarthGear(earthRun, firstGeneric.id))
+    assert(earthRun.ownedGear[firstGeneric.id])
+    assert(not expedition.buyEarthGear(earthRun, expedition.galaxyGearId(galaxyId)),
+        "EARTH SHOP must reject a galaxy-unique gear id")
+
+    -- Item 7-a: a galaxy's 상점 행성 sells that galaxy's own unique gear
+    -- part for money -- a paid alternative to the free checkpoint drop.
+    local shopBuyRun = expedition.new({ money = expedition.shopGearCost })
+    local shopBought, shopGearId = expedition.buyShopGear(shopBuyRun, galaxyId)
+    assert(shopBought and shopGearId == expedition.galaxyGearId(galaxyId))
+    assert(shopBuyRun.ownedGear[shopGearId], "buying at the shop planet must grant the galaxy-unique gear")
+    assert(shopBuyRun.money == 0)
+    local shopBoughtAgain = expedition.buyShopGear(shopBuyRun, galaxyId)
+    assert(not shopBoughtAgain, "cannot buy the same galaxy's shop gear twice")
+    local poorShopRun = expedition.new({ money = 1 })
+    assert(not expedition.buyShopGear(poorShopRun, "galaxy:other"),
+        "buying shop gear without enough money must fail")
+
+    -- Item 8: an ordinary planet sample must not become money on its
+    -- own -- only checkpointSettle/Earth settle convert it.
+    local sampleRun = expedition.new()
+    sampleRun.phase = "ascending"
+    local ok, awarded = expedition.collectSample(sampleRun, 20)
+    assert(ok and awarded > 0)
+    assert(sampleRun.money == 0, "collecting a sample must not directly award money")
+    assert(sampleRun.pendingSampleValue == awarded)
+
+    -- Item 8: docking at a galaxy checkpoint mid-expedition settles the
+    -- pending sample value into money without ending the expedition.
+    local settled, amount = expedition.checkpointSettle(sampleRun)
+    assert(settled and amount == awarded)
+    assert(sampleRun.money == awarded, "checkpoint settlement must bank pending sample value as money")
+    assert(sampleRun.pendingSampleValue == 0)
+    assert(sampleRun.phase == "ascending", "checkpoint settlement must not end the expedition")
+
+    -- Calling checkpointSettle again with nothing pending must be a no-op.
+    local settledAgain, amountAgain = expedition.checkpointSettle(sampleRun)
+    assert(not settledAgain and amountAgain == 0)
+
+    -- Item 8: checkpointSettle must not fire outside the ascending phase
+    -- (mirrors "일반 행성 근접만으로는 정산되지 않는다" -- no settlement
+    -- source other than an explicit checkpoint/Earth trigger).
+    local launchPhaseRun = expedition.new()
+    launchPhaseRun.pendingSampleValue = 50
+    local blockedOk = expedition.checkpointSettle(launchPhaseRun)
+    assert(not blockedOk, "checkpointSettle must require the ascending phase")
+
+    -- Item 9 rule preserved: full meta wipe (destroy) also clears gear
+    -- ownership and explored checkpoints, consistent with ownedShips.
+    local wipeRun = expedition.new()
+    wipeRun.phase = "ascending"
+    wipeRun.durability = 1
+    expedition.exploreCheckpoint(wipeRun, galaxyId)
+    assert(next(wipeRun.ownedGear) ~= nil)
+    expedition.damage(wipeRun, 5)
+    assert(wipeRun.phase == "destroyed")
+    assert(next(wipeRun.ownedGear) == nil, "destruction must wipe owned gear")
+    assert(next(wipeRun.exploredCheckpoints) == nil, "destruction must wipe explored checkpoints")
+end
+
+-- docs/feedback/INBOX.md 처리대기 항목 7/8 UI 연결부: PlayScene.update must
+-- actually dock at a galaxy's hub/shop landmarks discovered via
+-- world.nearbyPlanets -- exploring the hub grants gear + settles pending
+-- samples, and proximity to the shop planet unlocks the "b" buy-gear key.
+-- Own top-level function for the same 200-local limit as testJoystick.
+local function testCheckpointAndShopDocking()
+    local world = require("game.world")
+    local expedition = require("game.expedition")
+
+    -- Find a non-home galaxy so hubPlanet/shopPlanet are non-nil.
+    local galaxy
+    for gx = -20, 20 do
+        for gy = -20, 20 do
+            if not (gx == 0 and gy == 0) then
+                local candidate = world.galaxy(gx, gy)
+                if candidate then galaxy = candidate; break end
+            end
+        end
+        if galaxy then break end
+    end
+    assert(galaxy, "need at least one non-home galaxy for docking test")
+    local hub = world.hubPlanet(galaxy)
+    local shop = world.shopPlanet(galaxy)
+
+    -- Docking at the checkpoint hub while ascending grants the galaxy's
+    -- unique gear and settles any pending sample value into money without
+    -- ending the expedition.
+    local hubScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    hubScene.expedition.phase = "ascending"
+    hubScene.expedition.pendingSampleValue = 30
+    hubScene.ship.x, hubScene.ship.y = hub.x, hub.y
+    hubScene:update(0)
+    local expectedGearId = expedition.galaxyGearId(galaxy.id)
+    assert(hubScene.expedition.ownedGear[expectedGearId],
+        "docking at the hub checkpoint must grant the galaxy's unique gear")
+    assert(hubScene.expedition.money == 30,
+        "docking at the hub checkpoint while ascending must settle pending sample value")
+    assert(hubScene.expedition.pendingSampleValue == 0)
+    assert(hubScene.expedition.phase == "ascending",
+        "checkpoint docking must not end the expedition")
+
+    -- Re-visiting the same hub in the same run must not re-grant gear or
+    -- re-settle (idempotent -- discovered[] guards it once per run).
+    hubScene.expedition.pendingSampleValue = 10
+    hubScene:update(0)
+    assert(hubScene.expedition.money == 30, "re-docking at the same hub must not double-settle")
+
+    -- Docking at a galaxy's shop planet does not auto-grant gear, but does
+    -- track proximity so keypressed("b") can offer a paid purchase.
+    local shopScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    shopScene.expedition.phase = "ascending"
+    shopScene.expedition.money = expedition.shopGearCost
+    shopScene.ship.x, shopScene.ship.y = shop.x, shop.y
+    shopScene:update(0)
+    assert(shopScene.dockedShopPlanetId == shop.id,
+        "proximity to the shop planet must record it as docked")
+    assert(not shopScene.expedition.ownedGear[expedition.galaxyGearId(galaxy.id)],
+        "arriving at the shop planet must not auto-grant gear (payment required)")
+    shopScene:keypressed("b")
+    assert(shopScene.expedition.ownedGear[expedition.galaxyGearId(galaxy.id)],
+        "pressing b while docked at the shop planet must buy the galaxy's unique gear")
+    assert(shopScene.expedition.money == 0)
+
+    -- Moving away from the shop planet clears the docked flag so the buy
+    -- key no longer applies.
+    shopScene.ship.x, shopScene.ship.y = shop.x + 5000, shop.y + 5000
+    shopScene:update(0)
+    assert(shopScene.dockedShopPlanetId == nil,
+        "leaving the shop planet's vicinity must clear the docked flag")
 end
 
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
@@ -753,8 +944,20 @@ function M.run()
     assert(gx == 90 and gy == 160 and inside)
 
     local ship = shipModule.new()
+    -- docs/feedback/INBOX.md 처리대기 항목 11(c): game/ship.lua's standalone
+    -- fuel field and "if ship.fuel > 0" thrust gate were a leftover from the
+    -- old fuel-gated-flight design (game/expedition.lua's real flight loop
+    -- has never fuel-gated altitude -- see its "Fuel is no longer a flight
+    -- constraint" comment). ship.new()/ship.update() are only ever exercised
+    -- directly here in tests (game/scenes/play.lua drives its own movement
+    -- and only ever *wrote* a dead ship.fuel mirror, never read it), so this
+    -- module-local fuel simulation was pure unreachable/misleading residue.
+    -- Thrust must now apply unconditionally and the ship table must carry no
+    -- fuel field at all.
     shipModule.update(ship, 1, { thrust = true })
-    assert(ship.y < 0)
+    assert(ship.y < 0, "thrust must move the ship regardless of any fuel state")
+    assert(ship.fuel == nil,
+        "ship must not carry a dead fuel field; flight is fuel-unconstrained")
     local before = ship.angle
     shipModule.update(ship, 1, { right = true })
     assert(ship.angle > before)
@@ -1170,11 +1373,11 @@ function M.run()
     assert(run.phase == "launch" and run.altitude == 0 and run.slotOpportunities == 0)
     assert(expedition.launch(run) and run.phase == "ascending")
     expedition.update(run, 1)
-    assert(run.phase == "ascending" and run.fuel == 2 and run.altitude == 60)
+    assert(run.phase == "ascending" and run.fuel == nil and run.altitude == 60)
     assert(expedition.collectSample(run, 75))
     assert(run.sampleCount == 1 and run.pendingSampleValue == 75 and run.money == 0)
     expedition.update(run, 1)
-    assert(run.phase == "ascending" and run.fuel == 2 and run.altitude == 120)
+    assert(run.phase == "ascending" and run.fuel == nil and run.altitude == 120)
     assert(expedition.beginReturn(run))
     assert(run.phase == "returning" and run.altitude == 120)
     assert(run.maxAltitude == 120 and run.returnDistance == 120 and run.slotOpportunities == 2)
@@ -1255,7 +1458,7 @@ function M.run()
     assert(not expedition.buyFuelUpgrade(shopRun))
     shopRun.maxAltitude = 120
     assert(expedition.launch(shopRun) and shopRun.phase == "ascending")
-    assert(shopRun.fuel == 15 and shopRun.altitude == 0 and shopRun.maxAltitude == 0 and shopRun.lastSettlement == 0)
+    assert(shopRun.fuel == nil and shopRun.altitude == 0 and shopRun.maxAltitude == 0 and shopRun.lastSettlement == 0)
 
     local hullShopRun = expedition.new({
         durability = 2,
@@ -1392,7 +1595,7 @@ function M.run()
     assert(expedition.selectShip(shipShopRun, "scout"))
     assert(shipShopRun.selectedShipId == "scout")
     assert(shipShopRun.maxFuel == 15 and shipShopRun.maxDurability == 2)
-    assert(expedition.launch(shipShopRun) and shipShopRun.fuel == 15 and shipShopRun.durability == 2)
+    assert(expedition.launch(shipShopRun) and shipShopRun.fuel == nil and shipShopRun.durability == 2)
     assert(not expedition.damage(shipShopRun, 1))
     assert(expedition.damage(shipShopRun, 1))
     assert(shipShopRun.phase == "destroyed")
@@ -1855,15 +2058,11 @@ function M.run()
     persistedScene.expedition.phase = "settlement"
     assert(persistedScene:hudLines().best == "PERSONAL BEST 0040")
     persistedScene.expedition.phase = "launch"
-    persistedScene.expedition.fuel = 1
-    persistedScene.expedition.maxFuel = 1
-    persistedScene.expedition.fuelBurnRate = 1
     persistedScene.expedition.climbSpeed = 60
     assert(expedition.launch(persistedScene.expedition))
     persistedScene.expedition.altitude = 60
     persistedScene.expedition.maxAltitude = 60
     persistedScene.expedition.bestAltitude = 60
-    persistedScene.expedition.fuel = 0
     persistedScene.expedition.phase = "returning"
     persistedScene:persistBestAltitude()
     assert(persistedScene.expedition.phase == "returning" and savedBest == 60)
@@ -2275,18 +2474,18 @@ function M.run()
     assert(fuelBonusRun.bankedFuelBonus == 15, "safe settlement must bank the pending fuel bonus")
     assert(fuelBonusRun.pendingFuelBonus == 0, "pending fuel bonus must clear once banked")
 
-    -- The next launch applies the banked fuel bonus on top of maxFuel and
-    -- clears the bank so it cannot be reused on a later launch.
+    -- The next launch clears the banked bonus (no fuel field exists to
+    -- apply it to any more -- see docs/feedback/INBOX.md 항목 11(c)/15).
     assert(expedition.launch(fuelBonusRun))
-    assert(fuelBonusRun.fuel == fuelBonusRun.maxFuel + 15,
-        "next launch must add the banked fuel bonus to starting fuel")
+    assert(fuelBonusRun.fuel == nil,
+        "launch must never resurrect a dead fuel field even with a banked bonus")
     assert(fuelBonusRun.bankedFuelBonus == 0, "banked fuel bonus must be consumed by the launch it funds")
 
     -- A second launch (no new bonus earned) must not carry over a bonus.
     fuelBonusRun.phase = "settlement"
     assert(expedition.launch(fuelBonusRun))
-    assert(fuelBonusRun.fuel == fuelBonusRun.maxFuel,
-        "launches without a freshly banked bonus must start at plain maxFuel")
+    assert(fuelBonusRun.fuel == nil,
+        "launches must never carry a fuel field, banked bonus or not")
 
     -- Destruction forfeits any pending/banked fuel bonus like the other
     -- pending rewards (samples, slot money, repair).
@@ -2450,6 +2649,8 @@ function M.run()
     testJoystick()
     testManeuverFuel()
     testGalaxyStructure()
+    testGearAndCheckpointSettlement()
+    testCheckpointAndShopDocking()
     testMinimap()
     testDebris()
     testBackgroundStars()

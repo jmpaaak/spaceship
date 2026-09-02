@@ -34,6 +34,52 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
 - `docs/feedback/INBOX.md`의 3번 항목을 "처리 대기" 목록 내에서 완료 표시(✅)로 갱신했다 — 아이콘 기반 HUD 간소화 대상 4가지(탭 발사/선체 내구도/자금/속도) 전부 완료.
 - 다음 사이클 다음 슬라이스: "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토, 이미 거의 완료 — "발사 장비" 패널 타이틀 검토만 재확인 필요할 수 있음) 재확인, 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환 — 데이터 구조 설계부터 슬라이스 필요, 이후 7~15번 항목들의 기반이 되는 큰 작업)으로 진행.
+## econ 레인 — 항목11(c) 죽은 `run.fuel` 상태 필드 완전 제거 (완료, 2026-09-03, 네 번째 슬라이스)
+
+`loop/PROMPT.md` econ 레인 스코프(항목7→8→11→15)에 따라 항목 11(c)의 남은 작업을 이어서 진행했다. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했고 `git status --short`는 clean이었다(이어받을 미커밋 diff 없음).
+
+- **문제:** `game/expedition.lua`의 `run.fuel`은 `M.new()`/`M.launch()`/`destroy()`가 값을 쓰기만 할 뿐(`M.update()`의 실제 상승/귀환 로직은 `climbSpeed`/`returnSpeed`만 참조), 어떤 비행 결정에도 읽히지 않는 죽은 상태 필드였다("Fuel is no longer a flight constraint" 주석 및 이전 슬라이스가 이미 확인한 `game/ship.lua`의 동일 패턴(fuel 필드 존재하되 미사용)과 정확히 같은 잔재 형태). `run.maxFuel`/`fuelUpgradeLevel` 등 상점 업그레이드 축(항목 11-b, 별도 남은 작업)과 달리 `run.fuel` 자체는 UI에도 전혀 노출되지 않는 순수 내부 잔재였다.
+- **수정:** `M.new()`에서 `fuel = baseFuel` 초기화를 제거, `M.launch()`의 `run.fuel = run.maxFuel + (run.bankedFuelBonus or 0)` 대입과 `destroy()`의 `run.fuel = 0` 대입을 모두 제거했다. PLANET-트리플 슬롯이 적립하는 `bankedFuelBonus`/`pendingFuelBonus`는 (fuel 필드가 사라졌으므로) 더 이상 적용할 대상이 없어졌지만, 이후 슬라이스에서 상태가 새고 있지 않도록 `bankedFuelBonus`는 launch 시점에 계속 0으로 클리어한다 — 이 보상 종류(항목 15가 지구 상점 슬롯머신으로 재설계할 대상)의 최종 의미 재정의는 항목 15 담당으로 명시했다(코드 주석에 남김).
+- `game/self_test.lua`를 새 상태에 맞춰 갱신 — `testManeuverFuel`이 이제 `run.fuel == nil`(launch/update 전후 모두)을 회귀 검증하고, 조종/코스팅/체류 시나리오(heading-thrust, idle, steer)의 "burn fuel 안 함" 검증도 "fuel 필드가 존재하지 않음"으로 교체했다. 상점/재출항/전멸 관련 기존 어서션(`shopRun.fuel`, `shipShopRun.fuel`, `fuelBonusRun.fuel` 등 6곳)도 모두 `== nil`로 갱신했다. `persistedScene` best-altitude 회귀 테스트에서 존재하지 않는 `fuel`/`fuelBurnRate` 필드에 대한 불필요한 대입도 함께 제거했다(RED로 `assert(run.fuel == nil, ...)` 실패를 먼저 확인한 뒤 구현 → GREEN 전환 확인).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 11 하위에 진행상황을 append했다. `play.lua`는 이 항목 소유 규칙에 따라 손대지 않았다(fuel 필드를 읽는 코드가 애초에 없었으므로 구조 변경 자체가 불필요했음). **남은 작업(항목 11):** (a) `launchForecastLine`/`forecast_line`("REACH %d SLOTS %d")의 `maxFuel` 기반 프레이밍(메인 레인 텍스트 영역과 조율 필요), (b) `run.maxFuel`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount`/`fuelBurnRate` 기반 연료 업그레이드 상점 항목/엔진 로직 자체(다음 슬라이스 대상 — 이번 슬라이스는 죽은 `run.fuel` *상태* 필드만 제거했고, 여전히 살아서 UI에 노출되는 `maxFuel`/업그레이드 시스템은 항목 11-b가 요구하는 별도 재정의 결정(제거 vs 엔진 부품 소모성 자원으로 재정의, 항목 10과 연계)이 필요해 더 큰 범위의 후속 슬라이스로 남긴다).
+- 다음 사이클 다음 슬라이스: 항목 11(b) — `run.maxFuel`/`fuelUpgradeLevel` 계열 연료 업그레이드 시스템의 제거/재정의 설계, 또는 항목 15(귀환/비행중 슬롯머신 폐지 + 지구상점 전용 슬롯머신) 착수.
+
+## econ 레인 — 항목11(c) 죽은 `game/ship.lua` fuel 필드/게이트 제거 (완료, 2026-09-03)
+
+`loop/PROMPT.md` econ 레인 스코프(항목7→8→11→15)에 따라 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거)에 착수했다. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했다. `git status --short`로 확인한 결과 이전 사이클이 이미 이 슬라이스의 diff(`game/ship.lua`, `game/self_test.lua`, `game/scenes/play.lua`)를 uncommitted 상태로 남겨두었고 `make test`/`make verify`가 이미 GREEN이었다 — prior-cycle work를 그대로 이어받아 검증 후 커밋했다(덮어쓰지 않음).
+
+- **문제:** `game/ship.lua`의 `M.new()`가 독립적인 `fuel = 100` 필드를 가지고 `M.update()`가 `if input.thrust and ship.fuel > 0 then`으로 추력을 게이트하고 있었다. 이는 항목 8/이전 사이클에서 이미 확인된 옛 설계("연료 0이면 상승 불가")의 잔재다. 실제 비행 로직(`game/expedition.lua`)은 이미 연료로 상승을 막지 않는다("Fuel is no longer a flight constraint" 주석 참고) — `game/scenes/play.lua`는 `expedition.fuel` 값을 `ship.fuel`에 매 프레임 *쓰기만* 했을 뿐 한 번도 읽지 않았으므로, `ship.lua`의 이 모듈-로컬 fuel 시뮬레이션은 도달 불가능하고 오해를 유발하는 죽은 코드였다(테스트에서 `shipModule.new()`/`shipModule.update()`를 직접 호출할 때만 실제로 게이트가 작동해, 유닛 테스트로만 우연히 살아있었다).
+- **수정:** `game/ship.lua`에서 `fuel` 필드와 추력 게이트를 완전히 제거 — 추력은 이제 무조건 적용되고 ship 테이블은 fuel 필드를 전혀 갖지 않는다. `game/scenes/play.lua`의 세 곳(`update()` 두 위치, `keypressed()`의 relaunch 분기)에서 죽은 `self.ship.fuel = self.expedition.fuel` 미러링 대입을 제거했다(구조적 변경 없음, 값을 읽는 곳이 전혀 없었으므로 순수 삭제).
+- `game/self_test.lua`의 기존 ship 테스트를 갱신 — `assert(ship.y < 0 and ship.fuel < 100)` → `assert(ship.y < 0, ...)` + `assert(ship.fuel == nil, "ship must not carry a dead fuel field; flight is fuel-unconstrained")`로 교체하고, 이 필드가 왜 제거되었는지 설명하는 주석을 추가했다(RED로 옛 assert가 실패함을 확인한 뒤 GREEN 전환 확인).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 11 하위에 진행상황을 append했다. **남은 작업(항목 11):** (a) `game/scenes/play.lua`의 `launchForecastLine`/`forecast_line`("REACH %d SLOTS %d") — 연료(`maxFuel`) 기반 프레이밍이 여전히 남아있음(연료-무관 재정의 또는 제거 필요, `play.lua` 텍스트/HUD 세부는 메인 레인 담당이므로 이 부분은 다음 사이클에서 최소 구조 변경 범위 내에서 신중히 처리하거나 메인 레인과 조율 필요). (b) `run.maxFuel`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount` 기반 연료 업그레이드 상점 항목(engine-side `game/expedition.lua`) 및 관련 문구는 아직 제거되지 않음 — 오늘 슬라이스는 (c)의 `game/ship.lua` 표준-fuel-필드 부분만 완료. (c)의 나머지(`run.fuel`, `fuelBurnRate`, `burnManeuverFuel` 등 `game/expedition.lua` 내 죽은 필드 정리)는 여전히 진행 중.
+- 다음 사이클 다음 슬라이스: 항목 11(b)/(a) — `game/expedition.lua`의 연료 업그레이드 엔진 로직(fuelUpgradeLevel/fuelUpgradeCost/fuelUpgradeAmount) 제거 또는 재정의 설계부터 착수(engine-side라 econ 레인 담당, 다만 상점 UI 텍스트 변경은 메인 레인과 조율).
+
+## econ 레인 — 항목7/8 UI 도킹 연결 + 치명적 충돌 판정 버그 수정 (완료, 2026-09-03)
+
+`loop/PROMPT.md` econ 레인 스코프(항목7→8→11→15)에 따라 진행. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했다. `git status --short`로 확인한 결과 이전 사이클이 항목 7/8의 UI 연결부(`game/scenes/play.lua`의 hub/shop 랜드마크 도킹 감지, `game/i18n.lua`의 메시지 문구, `game/self_test.lua`의 `testCheckpointAndShopDocking`)를 이미 uncommitted diff로 작성해 두었으나 테스트에 아직 연결(run 목록에 호출 추가)되지 않은 상태였다. 이 diff를 이어받아 완성했다(prior-cycle work 보존, 덮어쓰지 않음).
+
+- **RED로 실제 버그 2건 발견:** `testCheckpointAndShopDocking()`을 `game/self_test.lua`의 `run()` 목록에 연결해 처음 실행하자 실패했다. 원인 조사 결과:
+  1. **치명적 버그** — `game/scenes/play.lua`의 `M:update()`에서 hub/shop 체크포인트 랜드마크가 일반 행성과 동일한 충돌 판정 반경(`planet.radius + 5`)에 걸려 있었다. 배(ship)를 체크포인트 정확한 좌표에 놓고 도킹을 감지하려는 첫 update에서, 도킹 로직보다 충돌 로직이 함께 실행되어 즉시 피해를 입고(`destroy()`) 전멸 처리가 발동, 정산/장비 지급이 전혀 이루어지지 않았다.
+  2. **경계 조건 버그** — hub 재도킹 시 `checkpointSettle` 호출이 `discovered[]` 최초-방문 가드 바깥에 있어, 재도킹마다 정산이 다시 실행될 여지가 있었다(테스트로 확인 시 실패).
+- **수정:** (1) hub/shop 랜드마크(`planet.hub`/`planet.shop`)는 충돌 피해 판정에서 완전히 제외 — 체크포인트/상점 행성은 도킹 지점이지 위험 행성이 아니다. (2) `checkpointSettle` 호출을 `discovered[]` 최초-방문 가드 블록 안으로 이동해 1회성을 보장.
+- `game/self_test.lua`의 `testCheckpointAndShopDocking()`(신규, 이전 사이클 작성분을 실행 목록에 연결)이 실제 `PlayScene:update()`/`keypressed()` 경로로 hub 도킹 시 장비 지급+표본 정산+phase 유지, 재도킹 시 중복 정산 없음, shop 도킹은 자동지급 없이 근접만 기록, `"b"` 키로 유료 구매(`buyShopGear`), 상점에서 멀어지면 도킹 플래그 해제를 회귀 검증한다.
+- **실제 LÖVE 런타임 캡처로 검증:** `main.lua`에 신규 `GAME_CAPTURE_PHASE=checkpoint-dock` 개발 하네스를 추가해(비-홈 은하의 hub 좌표에 배를 놓고 `pendingSampleValue=45`를 세팅한 뒤 실제 `scene:update(0)` 호출) `GAME_CAPTURE=1 GAME_CAPTURE_PHASE=checkpoint-dock` 캡처(1080×1920)를 vision으로 확인했다 — "체크포인트 정산 +$45  잔액 $45" 메시지와 "자금 $45" HUD가 정상 렌더링되고 충돌/피해 텍스트는 전혀 나타나지 않았다(버그 수정이 실제 런타임에서도 유효함을 확인).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 7/8 하위에 진행상황을 append했다. 이로써 항목 7(a/b/c)과 항목 8은 엔진+UI 연결까지 완료.
+- 다음 사이클 다음 슬라이스: 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거) 착수.
+
+## econ 레인 — 항목7(장비 획득 경로 3원화) + 항목8(체크포인트 정산) 엔진 슬라이스 (완료, 2026-09-03)
+
+`loop/PROMPT.md`의 econ 레인 스코프에 따라 처리대기 항목7→8→11→15 순서 중 첫 두 항목의 엔진(비-UI) 슬라이스를 착수했다. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했고 `git status --short`에 이 레인이 이어받을 미커밋 diff는 없었다(다른 레인의 `loop/PROMPT.md`/스캐폴딩 파일만 있었음, 손대지 않음).
+
+- **항목 7 (장비 획득 경로 3원화):** `game/world.lua`에 `M.shopPlanet(galaxy)`를 추가했다 — hubPlanet(체크포인트, salt 540대역)과 분리된 salt 600대역으로 은하 중심에서 결정적 각도/거리만큼 떨어진 위치에 상점 행성을 하나씩 생성하며, 홈 은하(태양계)는 nil(지구 상점이 그 역할을 대신함). `nearbyPlanets`가 hub와 함께 shop planet도 반환하도록 확장했다. `game/expedition.lua`에 `M.genericGearCatalog`(지구 상점 범용 장비 3종), `M.galaxyGearId(galaxyId)`(은하 고유 장비 id), `M.exploreCheckpoint(run, galaxyId)`(체크포인트 최초 탐사 시 확정 1회 지급, 재탐사는 no-op — 확률이 아님), `M.buyGear(run, gearId, cost)`(중복구매/자금부족 방어 공용 구매), `M.buyEarthGear(run, gearId)`(genericGearCatalog에 없는 은하 고유 id는 거부)를 추가했다. `run.ownedGear`/`run.exploredCheckpoints`를 `M.new()`에 추가하고 전멸(`destroy()`) 시 `ownedShips`와 동일하게 초기화되게 했다(비-negotiable 규칙: 전멸 시 구매/드롭 장비 wipe, 최고기록만 보존).
+- **항목 8 (행성 탐사=표본만, 정산은 체크포인트/지구):** 기존 `M.collectSample`이 이미 `pendingSampleValue`에만 누적하고 money를 직접 늘리지 않음을 확인했다(표본=순수 표본 구조가 이미 성립). 신규 `M.checkpointSettle(run)`을 추가했다 — ascending 페이즈에서만 동작, pending 표본 가치를 즉시 money로 정산하되 지구 복귀(`settle()`)와 달리 원정을 끝내지 않는다(phase 유지, slot reward는 정산 대상 아님). 대기 금액 0이면 no-op, ascending이 아니면 거부.
+- `game/self_test.lua`에 `testGalaxyStructure`를 확장(shop planet 결정성/hub와 분리된 위치/nearbyPlanets 포함 검증)하고 신규 `testGearAndCheckpointSettlement`를 추가해 확정 드롭 1회성, 구매 방어, 지구상점의 은하고유 장비 거부, 체크포인트 정산의 money 이전/phase 유지/재호출 no-op/launch phase 거부, 전멸 시 gear·exploredCheckpoints wipe를 회귀 검증했다(RED 확인 후 GREEN).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목7/8 하위에 진행상황을 append했다. **남은 작업:** 이번 슬라이스는 순수 엔진(`game/world.lua`/`game/expedition.lua`) 함수만 구현했고 `game/scenes/play.lua`의 실제 입력 연결(상점 행성/체크포인트 도킹 UI 진입점, 구조적 최소 변경만 허용됨)은 아직 없다 — 다음 사이클에서 최소 구조 변경으로 연결하거나, 항목 11(연료 UI 잔재 제거)로 진행.
+- 다음 사이클 다음 슬라이스: 항목7/8의 play.lua UI 연결(최소 구조 변경) 또는 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거) 착수.
 
 ## 아이콘 기반 HUD 간소화 첫 슬라이스: TAP TO LAUNCH 위에 로켓 아이콘 추가 (완료, 2026-09-03)
 
@@ -339,3 +385,13 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`) — preflight가 보고한 정확한 `module 'game.gear' not found` 실패가 재현되지 않고 해소됨을 확인했다.
 - 이번 슬라이스는 preflight 실패 원인 진단·제거만 수행했다(신규 게임 로직/UI 변경 없음, 코드 diff 없음 — `docs/STATUS.md` 갱신만 커밋 대상). 다음 사이클이 6번 항목의 UI 노출(예: 장착된 기어를 HUD에 아이콘으로 보여주는 작업)을 다시 시도하려면, main 레인이 아니라 `spaceship-gear` 레인의 최신 `game/gear.lua`(JSON 데이터 로더 기반, `game.gear.equipped`/`game.gear.cardCount` API가 바뀌었을 수 있음) 구조에 맞춰 새로 설계해야 한다.
 - 다음 사이클 다음 슬라이스: 11번 항목의 남은 부분(a: `launchForecastLine`/`M.launchForecast`의 연료-종속 프레이밍 재정의 — `game/expedition.lua:142`), 또는 3번 항목(속도/스피드미터 아이콘화는 이미 완료 표시가 있으나 재검토 필요할 수 있음), 또는 4번(불필요한 텍스트 제거 검토, 거의 완료). 6번/7번/8번/9번/10번/11(c)/12번/13번/14번 항목은 `spaceship-gear`/`spaceship-econ` 레인이 별도로 진행 중이므로 main 레인은 이 경로들(`game/gear.lua` 등)을 건드리지 않는다.
+## 항목 11(c) — 죽은 연료 조종 함수 `maneuverFuel`/`burnManeuverFuel` 제거 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 처리대기 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거)의 (c) 부분의 세 번째 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작. 이 사이클은 이 레인(econ)의 스코프 순서(항목7→8→11→15) 중 항목 11을 이어서 진행했다.
+
+- `game/expedition.lua`의 `M.maneuverFuel(run, extraDistance)`/`M.burnManeuverFuel(run, extraDistance)`는 "Fuel is no longer a flight constraint"가 된 이후로 항상 `return 0`만 반환하며 어떤 상태도 건드리지 않는 영구 no-op 셸이었다. 유일한 실사용 호출부는 `game/scenes/play.lua`의 조이스틱 추가-거리 계산이 `thrusting`일 때 `expedition.burnManeuverFuel(...)`을 호출(반환값 버려짐)하는 죽은 코드였다.
+- 두 함수를 `game/expedition.lua`에서 완전히 제거하고, `game/scenes/play.lua`에서 그 죽은 호출과 그 계산에만 쓰이던 `extraDx`/`extraDistance`/`startX` 로컬 변수를 함께 제거했다(실제 이동 계산에 쓰이는 `extraDy`/`startOffset`/`thrusting`은 그대로 유지). `game/scenes/play.lua`의 텍스트/HUD 세부 표현은 이 레인 스코프 규칙에 따라 건드리지 않았고, 불가피한 최소 구조적 죽은코드 제거만 수행했다.
+- `game/self_test.lua`의 `testManeuverFuel`을 `expedition.maneuverFuel == nil`/`expedition.burnManeuverFuel == nil`(죽은 API가 셸로도 남아있지 않음을 검증)로 갱신했다(수정 전 옛 단언이 여전히 두 함수 호출을 가정해 RED 확인 후 구현, GREEN 전환 확인).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md` 처리대기 항목 11 하위에 이번 슬라이스 진행 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 항목 11의 남은 부분 — (a) `launchForecastLine`/`forecast_line`의 연료 기반 프레이밍 텍스트 재정의(메인 레인 텍스트 영역과 조율 필요), (b) `game/expedition.lua`의 `run.maxFuel`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount`/`fuelBurnRate`/`run.fuel` 등 연료 업그레이드 엔진 로직/필드 제거 또는 재정의. 이후 이 레인 스코프 순서대로 항목 15(귀환/비행중 슬롯머신 폐지, 지구상점 전용 슬롯머신 은하계별 오즈)로 진행.

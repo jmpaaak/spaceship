@@ -122,6 +122,84 @@ local function slotSampleBonus(symbols)
 end
 M.slotSampleBonus = slotSampleBonus
 
+-- docs/feedback/INBOX.md 처리대기 항목 7 -- gear acquisition is three-way:
+-- (a) buy at a galaxy's deterministic 상점 행성 (world.shopPlanet) with
+-- money, (b) a guaranteed (non-random) one-time drop the first time a
+-- galaxy's center checkpoint (world.hubPlanet) is explored, unique to
+-- that galaxy, or (c) buy a generic (non-galaxy-specific) part at the
+-- EARTH SHOP. Galaxy-unique gear from (b) is intentionally absent from
+-- the generic catalog below so it can never be bought at Earth (item
+-- 7-c: "특정 은하 고유의 희귀 장비는 지구에서 판매하지 않는다").
+M.genericGearCatalog = {
+    { id = "thruster_mk1", name = "THRUSTER MK1", cost = 80 },
+    { id = "hullplate_mk1", name = "HULL PLATE MK1", cost = 100 },
+    { id = "magnet_mk1", name = "COLLECTOR MAGNET MK1", cost = 90 },
+}
+
+-- Deterministic galaxy-unique gear id granted by exploring that galaxy's
+-- checkpoint (hub) planet. One gear per galaxy, derived from the
+-- galaxy's own stable id so it is reproducible and never collides with
+-- the generic catalog's ids above.
+function M.galaxyGearId(galaxyId)
+    return "unique:" .. galaxyId
+end
+
+-- First-time exploration (착륙/근접 상호작용) of a galaxy's checkpoint hub
+-- planet unconditionally grants that galaxy's unique gear part exactly
+-- once -- a guaranteed drop, not a probability roll. Re-exploring the
+-- same galaxy's checkpoint is a no-op (returns false, nil).
+function M.exploreCheckpoint(run, galaxyId)
+    if not run or not galaxyId then return false, nil end
+    run.exploredCheckpoints = run.exploredCheckpoints or {}
+    if run.exploredCheckpoints[galaxyId] then return false, nil end
+    run.exploredCheckpoints[galaxyId] = true
+    local gearId = M.galaxyGearId(galaxyId)
+    run.ownedGear = run.ownedGear or {}
+    run.ownedGear[gearId] = true
+    return true, gearId
+end
+
+-- Buys any gear part (galaxy-unique at a 상점 행성, or generic) for a
+-- given money cost. Shared by both the galaxy shop-planet purchase path
+-- (7-a) and the Earth-shop generic purchase path (7-c) below.
+function M.buyGear(run, gearId, cost)
+    if not run or not gearId or type(cost) ~= "number" then return false end
+    run.ownedGear = run.ownedGear or {}
+    if run.ownedGear[gearId] then return false end
+    if run.money < cost then return false end
+    run.money = run.money - cost
+    run.ownedGear[gearId] = true
+    return true
+end
+
+-- EARTH SHOP purchase restricted to the generic catalog: a galaxy-unique
+-- gear id (from exploreCheckpoint) is never present in genericGearCatalog,
+-- so this rejects it even if the caller mistakenly passes one.
+function M.buyEarthGear(run, gearId)
+    for _, entry in ipairs(M.genericGearCatalog) do
+        if entry.id == gearId then
+            return M.buyGear(run, gearId, entry.cost)
+        end
+    end
+    return false
+end
+
+-- docs/feedback/INBOX.md 처리대기 항목 7-a: a galaxy's 상점 행성 sells that
+-- same galaxy's unique gear part for money -- a paid alternative to the
+-- guaranteed-but-unpaid checkpoint drop (7-b) for players who reach the
+-- shop planet before (or instead of) the hub checkpoint. Priced above the
+-- generic catalog since it grants a galaxy-exclusive part.
+local shopGearCost = 150
+M.shopGearCost = shopGearCost
+
+function M.buyShopGear(run, galaxyId)
+    if not run or not galaxyId then return false, nil end
+    local gearId = M.galaxyGearId(galaxyId)
+    local bought = M.buyGear(run, gearId, shopGearCost)
+    if not bought then return false, nil end
+    return true, gearId
+end
+
 local function refreshShipStats(run)
     local fuelBonus = 0
     local durabilityBonus = 0
@@ -146,16 +224,12 @@ function M.launchForecast(run, maxFuel)
     return altitude, slotCount(altitude, run.slotDistance)
 end
 
--- Fuel is no longer a flight constraint. These stay as no-ops so older
--- call sites (joystick extra-distance burn) compile without draining the
--- tank or forcing a return.
-function M.maneuverFuel(run, extraDistance)
-    return 0
-end
-
-function M.burnManeuverFuel(run, extraDistance)
-    return 0
-end
+-- docs/feedback/INBOX.md 항목 11(c): M.maneuverFuel/M.burnManeuverFuel used
+-- to exist as permanent no-op shims (fuel is no longer a flight constraint,
+-- so they always returned 0 and touched nothing) purely so the joystick
+-- extra-distance call site in game/scenes/play.lua would still compile.
+-- Both the shims and that dead call site are removed now -- fuel has no
+-- remaining consumption path anywhere in the engine.
 
 -- Safe return is now an explicit action (tests / future player input),
 -- not a fuel-empty side effect.
@@ -186,9 +260,29 @@ local function settle(run)
     run.phase = "settlement"
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 8 -- ordinary (non-checkpoint,
+-- non-shop) planet exploration only ever grants samples (collectSample
+-- above), never money directly. Samples only convert to money at a
+-- settlement trigger: Earth return (settle(), altitude == 0, unchanged)
+-- or -- newly added here -- docking at a galaxy's center checkpoint
+-- (world.hubPlanet) mid-expedition. Unlike the Earth settle() above,
+-- this does NOT end the expedition (run stays "ascending" so the player
+-- keeps climbing) and only banks the *sample* value collected so far,
+-- not any pending slot reward (checkpoints are not a slot-machine payout
+-- point). Ordinary planet proximity alone must never call this -- only
+-- an explicit checkpoint dock should.
+function M.checkpointSettle(run)
+    if not run or run.phase ~= "ascending" then return false, 0 end
+    local amount = run.pendingSampleValue
+    if amount <= 0 then return false, 0 end
+    run.money = run.money + amount
+    run.pendingSampleValue = 0
+    run.lastCheckpointSettlement = amount
+    return true, amount
+end
+
 local function destroy(run)
     run.phase = "destroyed"
-    run.fuel = 0
     run.durability = 0
     run.lastLostSampleCount = run.sampleCount
     run.lastLostSampleValue = run.pendingSampleValue
@@ -223,6 +317,14 @@ local function destroy(run)
     run.steeringUpgradeLevel = 0
     run.ownedShips = { starter = true }
     run.selectedShipId = "starter"
+    -- Full meta wipe (non-negotiable game rule: durability 0 wipes
+    -- purchased ship/upgrades, preserving only all-time best height).
+    -- Gear (item 7) is a purchased/dropped upgrade, so it resets like
+    -- ownedShips; checkpoint exploration resets with it so a fresh run
+    -- can re-earn the guaranteed drop rather than being permanently
+    -- locked out by a wiped-away gear ownership record.
+    run.ownedGear = {}
+    run.exploredCheckpoints = {}
     refreshShipStats(run)
 end
 
@@ -238,7 +340,6 @@ function M.new(options)
         launchBestAltitude = options.bestAltitude or 0,
         lastNewBest = false,
         lastLostNewBest = false,
-        fuel = baseFuel,
         baseFuel = baseFuel,
         maxFuel = baseFuel,
         durability = baseDurability,
@@ -294,6 +395,9 @@ function M.new(options)
         lastLostSlotSpinsCount = 0,
         lastLostSlotValue = 0,
         lastLostAltitude = 0,
+        ownedGear = {},
+        exploredCheckpoints = {},
+        lastCheckpointSettlement = 0,
     }
 end
 
@@ -305,7 +409,14 @@ function M.launch(run)
     if run.phase ~= "launch" then
         run.altitude = 0
         run.maxAltitude = 0
-        run.fuel = run.maxFuel + (run.bankedFuelBonus or 0)
+        -- docs/feedback/INBOX.md 항목 11(c): run.fuel was a dead state field
+        -- (never read by any flight decision -- altitude ticks by
+        -- climbSpeed unconditionally) and has been removed entirely. The
+        -- banked PLANET-triple slot bonus (bankedFuelBonus/pendingFuelBonus)
+        -- no longer has a fuel field to apply itself to; it is still
+        -- cleared here so a stale bank cannot leak into a later launch, but
+        -- item 15's Earth-shop-only slot machine redesign is the owner of
+        -- redefining what this reward kind means going forward.
         run.bankedFuelBonus = 0
         run.durability = run.maxDurability
         run.returnDistance = 0
