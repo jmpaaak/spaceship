@@ -412,3 +412,11 @@
 - `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록(1~6번) 전체가 이제 완료됐다.
 - 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## EARTH SHOP `SHORT $N` 재검증 (레이아웃 변경 이후, 완료)
+
+- `SCOUT GAINS/LOSSES` 트레이드오프가 2줄로 분리되며 EARTH SHOP `rowStep`이 9→8로 좁혀진 것(직전 슬라이스)이 이전에 검증된 `GAME_CAPTURE_PHASE=settlement-shortfunds`(`SHORT $N` 5행 분기) 캡처를 무효화했을 가능성이 있어 이번 사이클에서 재검증했다. 코드 변경 없이 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=settlement-shortfunds`, `1440×2560`)를 새 `rowStep=8`·20줄 레이아웃 기준으로 다시 촬영했다.
+- vision으로 `SHORT $50`(FUEL)·`SHORT $75`(HULL)·`SHORT $65`(STEERING)·`SHORT $60`(YIELD)·`SHORT $125`(SCOUT) 다섯 상태 문자열 전부가 한 줄로 줄바꿈 없이 렌더링되고 위·아래 행(`NO-HIT`/`MAX FUEL`/`STEER SPEED`/`YIELD x`/`SCOUT GAINS`/`NEXT STARTER` 등)과 겹치지 않으며, `TAP: RELAUNCH`가 `DEV PLACEHOLDER` 위에 정상 배치되는 것을 확인했다(로컬 캡처, `build/` 는 커밋 제외).
+- `main.lua`의 `GAME_FONTPROBE=1` 진입 경로에 향후 재사용을 위한 컬럼-분할 축약 액션 문자열(`H:LV.n>n+1 $75`, `V:BUY $125` 등) 측정 샘플을 추가했다가, 이번 사이클에서는 실제 레이아웃 변경 없이 되돌렸다(측정값만 확인: 축약 액션 문자열은 47~63px로 90px 컬럼 폭 안에 여유 있게 들어감 — 다음 슬라이스의 (2)번 정렬 정리 시도에 참고).
+- `make test` GREEN, 워킹트리 변경 없음(`git status --short` 결과 없음). 코드 로직 변경이 없어 `make verify`는 이전 커밋(`4ac4019`)의 통과 상태를 그대로 유지한다.
+- 남은 다음 슬라이스 후보: (1) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리(축약 액션 문자열 측정값 확보됨, 컬럼별 좌우 분할 시도 시 실기기 캡처로 겹침 여부 반드시 재확인), (2) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인 — 이번 사이클에도 공식 AetherAI 로그인/API 자격 증명을 찾지 못해(`env`/워크스페이스 전체 검색, 크리덴셜 없음) human-gated 상태를 유지했다.
+
