@@ -121,28 +121,86 @@ local function testJoystick()
     assert(math.abs(tiltScene.ship.angle - restAngle) > 0.5,
         "unclamped heading must be able to travel more than the old 0.5 rad lean")
     assert(#tiltScene.particles > 0, "tilting left/right must spawn a side RCS puff")
-    assert(tiltScene.particles[1].x > tiltScene.ship.x,
-        "a right tilt's RCS puff must emit from the ship's right side")
+    assert(tiltScene.particles[1].x < tiltScene.ship.x,
+        "a right tilt's RCS puff must emit from the ship's left side")
     local heldAngle = tiltScene.ship.angle
     tiltScene.touches["stick"] = nil
     tiltScene:update(1)
     assert(tiltScene.ship.angle == heldAngle,
         "releasing the stick must keep the current heading, not spring back to nose-up")
+
+    -- Main-engine climb must follow the current nose, not always -Y.
+    -- A right stick while already nose-right applies thrust on +x.
+    local headingThrustScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    headingThrustScene.expedition.phase = "ascending"
+    headingThrustScene.ship.angle = 0
+    headingThrustScene.touches["stick"] = {
+        originX = 90, originY = 160,
+        x = 90 + joystick.maxRadius, y = 160,
+    }
+    local hx, hy = headingThrustScene.ship.x, headingThrustScene.ship.y
+    local headingFuelBefore = headingThrustScene.expedition.fuel
+    headingThrustScene:update(1)
+    assert(headingThrustScene.ship.x > hx, "nose-right climb must move +x")
+    assert(math.abs(headingThrustScene.ship.y - hy) < 1e-6,
+        "nose-right climb must not keep forcing the ship straight up")
+    assert(headingThrustScene.expedition.fuel == headingFuelBefore,
+        "thrusting must not burn fuel; fuel is no longer a flight constraint")
+    local coastX = headingThrustScene.ship.x
+    local coastFuel = headingThrustScene.expedition.fuel
+    headingThrustScene.touches["stick"] = nil
+    headingThrustScene:update(1)
+    assert(headingThrustScene.expedition.fuel == coastFuel,
+        "coasting without stick input must not burn fuel")
+    assert(headingThrustScene.ship.x ~= coastX,
+        "coasting must keep moving on stored velocity")
+
+    local puffScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    puffScene.expedition.phase = "ascending"
+    puffScene.touches["stick"] = {
+        originX = 90, originY = 160,
+        x = 90, y = 160 + joystick.maxRadius,
+    }
+    puffScene:update(0.05)
+    assert(#puffScene.particles > 0, "vertical stick must spawn an RCS puff")
+    local verticalPuff
+    for _, p in ipairs(puffScene.particles) do
+        if math.abs(p.y - puffScene.ship.y) >= 5 then verticalPuff = p end
+    end
+    assert(verticalPuff, "downward stick must emit a vertical puff")
+    assert(verticalPuff.y < puffScene.ship.y,
+        "a down stick's RCS puff must emit from above the ship (opposite jet)")
+    assert(math.abs(verticalPuff.maxTimer - PlayScene.rcsPuffDuration) < 1e-9)
+    assert(PlayScene.stickTurnFollow < 5,
+        "hull turn follow must be slow, not the old snap rate of 14")
 end
 
--- First step of replacing the automatic climb line with free 2D travel
--- (docs/STATUS.md next-slice, docs/GAME_DESIGN.md "연료소모가 거리 기반"):
--- extra pixels from joystick / left-right steering cost extra fuel at the
--- same px-to-fuel rate as auto-climb (fuelBurnRate / climbSpeed). Idle
--- ascent still burns only the automatic climb fuel.
+-- Fuel is no longer a flight constraint: thrusting, coasting, and
+-- expedition.update must leave fuel untouched and must not auto-return.
 local function testManeuverFuel()
     local expedition = require("game.expedition")
     local run = expedition.new()
-    local extra = expedition.maneuverFuel(run, 55)
-    assert(math.abs(extra - 55 / run.climbSpeed * run.fuelBurnRate) < 1e-9,
-        "maneuverFuel must convert extra pixels at the climb economy rate")
+    assert(expedition.maneuverFuel(run, 55) == 0,
+        "maneuverFuel must be 0 once fuel is unconstrained")
     assert(expedition.maneuverFuel(run, 0) == 0)
-    assert(expedition.maneuverFuel(run, -10) == 0)
+    assert(expedition.burnManeuverFuel(run, 55) == 0)
+    assert(run.fuel == run.maxFuel)
+
+    expedition.launch(run)
+    local fuelBefore = run.fuel
+    expedition.update(run, 5)
+    assert(run.fuel == fuelBefore, "ascent must not burn fuel")
+    assert(run.phase == "ascending", "ascent must not auto-return when fuel is unconstrained")
+    assert(run.altitude > 0)
+
+    expedition.beginReturn(run)
+    assert(run.phase == "returning")
+    assert(run.returnDistance == run.maxAltitude)
+    assert(run.slotOpportunities >= 1)
 
     local idleScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -150,9 +208,9 @@ local function testManeuverFuel()
     idleScene.expedition.phase = "ascending"
     local idleFuelBefore = idleScene.expedition.fuel
     idleScene:update(1)
-    local idleBurned = idleFuelBefore - idleScene.expedition.fuel
-    assert(math.abs(idleBurned - idleScene.expedition.fuelBurnRate) < 1e-9,
-        "idle ascent must burn only the automatic climb fuel")
+    assert(idleScene.expedition.fuel == idleFuelBefore,
+        "coasting without stick/keys must not burn fuel")
+    assert(idleScene.expedition.phase == "ascending")
 
     local steerScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -161,12 +219,9 @@ local function testManeuverFuel()
     steerScene.touches["hold"] = { x = 20, y = 160, originX = 20, originY = 160 }
     local steerFuelBefore = steerScene.expedition.fuel
     steerScene:update(1)
-    local steerBurned = steerFuelBefore - steerScene.expedition.fuel
-    local expectedExtra = expedition.maneuverFuel(
-        steerScene.expedition, expedition.steeringSpeed(steerScene.expedition))
-    assert(math.abs(steerBurned - (idleBurned + expectedExtra)) < 1e-6,
-        "left/right maneuvering must burn extra fuel proportional to extra distance, got "
-            .. tostring(steerBurned) .. " expected " .. tostring(idleBurned + expectedExtra))
+    assert(steerScene.expedition.fuel == steerFuelBefore,
+        "steering must not burn fuel")
+    assert(steerScene.expedition.phase == "ascending")
 end
 
 -- Galaxy structure + radial-distance economy (docs/GAME_DESIGN.md 이동
@@ -330,6 +385,93 @@ local function testMinimap()
     mx, my, inside = minimap.project(minimap.viewRadius * 3, 0, 0, 0)
     assert(not inside)
     assert(math.abs(mx - minimap.mapRadius) < 1e-6 and math.abs(my) < 1e-6)
+
+    -- Galaxy rings: home view is sun-centered (Earth/sun at origin) and
+    -- includes the solar-system orbit rings plus the galaxy disk.
+    assert(originView.sun and originView.sun.x == 0 and originView.sun.y == 0)
+    assert(originView.galaxyName == "SOLAR SYSTEM")
+    assert(originView.rings and #originView.rings >= 2, "home minimap must draw galaxy/solar rings")
+    local sawDisk, sawOrbit = false, false
+    for _, ring in ipairs(originView.rings) do
+        assert(ring.radius > 0)
+        if ring.kind == "galaxy" and ring.id == "milkyway" then sawDisk = true end
+        if ring.kind == "orbit" then sawOrbit = true end
+    end
+    assert(sawDisk, "home minimap must include the Milky Way / solar disk ring")
+    assert(sawOrbit, "home minimap must include sun-centered solar-system orbit rings")
+
+    local nameScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    nameScene.expedition.phase = "ascending"
+    nameScene.ship.x, nameScene.ship.y = 0, 0
+    assert(nameScene:hudLines().galaxy == "SOLAR SYSTEM",
+        "entering the home galaxy must label SOLAR SYSTEM at top-left")
+end
+
+-- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
+-- as a lethal planet collision.
+local function testDebris()
+    local world = require("game.world")
+    local a = world.debris(3, -2)
+    local b = world.debris(3, -2)
+    assert(#a == #b)
+    for i = 1, #a do
+        assert(a[i].id == b[i].id and a[i].x == b[i].x and a[i].y == b[i].y)
+        assert(a[i].radius == b[i].radius and a[i].kind == b[i].kind)
+        assert(a[i].vx ~= nil and a[i].vy ~= nil)
+    end
+
+    local kinds, sizes = {}, {}
+    for sx = -8, 8 do
+        for sy = -8, 8 do
+            for _, piece in ipairs(world.debris(sx, sy)) do
+                kinds[piece.kind] = true
+                sizes[piece.radius] = true
+                assert(piece.radius >= 2 and piece.radius <= 16)
+                assert(piece.kind == "asteroid" or piece.kind == "can" or piece.kind == "scrap")
+            end
+        end
+    end
+    assert(kinds.asteroid and kinds.can and kinds.scrap,
+        "debris field must mix asteroids with junk (cans/scrap)")
+    local distinctSizes = 0
+    for _ in pairs(sizes) do distinctSizes = distinctSizes + 1 end
+    assert(distinctSizes >= 3, "debris must come in several sizes")
+
+    local drifted = world.debris(3, -2, 2)
+    assert(#drifted == #a)
+    local moved = false
+    for i = 1, #a do
+        if drifted[i].x ~= a[i].x or drifted[i].y ~= a[i].y then moved = true end
+    end
+    assert(moved, "debris must drift over time")
+
+    local nearby = world.nearbyDebris(0, 0, 1)
+    assert(type(nearby) == "table")
+
+    local debrisScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    debrisScene.expedition.phase = "ascending"
+    debrisScene.expedition.money = 80
+    debrisScene.expedition.sampleCount = 2
+    debrisScene.expedition.pendingSampleValue = 40
+    debrisScene.expedition.fuelUpgradeLevel = 1
+    debrisScene.expedition.bestAltitude = 400
+    debrisScene.ship.x, debrisScene.ship.y = 0, -40
+    local nearbyDebris = world.nearbyDebris
+    world.nearbyDebris = function()
+        return { { id = "junk-can", x = 0, y = -40, radius = 3, kind = "can", vx = 0, vy = 0 } }
+    end
+    debrisScene:update(0)
+    world.nearbyDebris = nearbyDebris
+    local wiped = debrisScene.expedition
+    assert(wiped.phase == "destroyed" and wiped.durability == 0)
+    assert(wiped.money == 0 and wiped.sampleCount == 0 and wiped.pendingSampleValue == 0)
+    assert(wiped.fuelUpgradeLevel == 0)
+    assert(wiped.bestAltitude == 400)
+    assert(debrisScene.message == "SHIP DESTROYED  BEST 400  META RESET")
 end
 
 function M.run()
@@ -593,6 +735,7 @@ function M.run()
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
     riskScene.expedition.altitude = 500
+    riskScene.ship.y = -500
     local nearbyPlanets = world.nearbyPlanets
     world.nearbyPlanets = function()
         return { { id = "risk-test", x = 0, y = -500, radius = 7 } }
@@ -680,11 +823,13 @@ function M.run()
     assert(run.phase == "launch" and run.altitude == 0 and run.slotOpportunities == 0)
     assert(expedition.launch(run) and run.phase == "ascending")
     expedition.update(run, 1)
-    assert(run.phase == "ascending" and run.fuel == 1 and run.altitude == 60)
+    assert(run.phase == "ascending" and run.fuel == 2 and run.altitude == 60)
     assert(expedition.collectSample(run, 75))
     assert(run.sampleCount == 1 and run.pendingSampleValue == 75 and run.money == 0)
     expedition.update(run, 1)
-    assert(run.phase == "returning" and run.fuel == 0 and run.altitude == 120)
+    assert(run.phase == "ascending" and run.fuel == 2 and run.altitude == 120)
+    assert(expedition.beginReturn(run))
+    assert(run.phase == "returning" and run.altitude == 120)
     assert(run.maxAltitude == 120 and run.returnDistance == 120 and run.slotOpportunities == 2)
     assert(expedition.useSlot(run) and run.slotOpportunities == 1 and run.slotSpins == 1)
     assert(expedition.useSlot(run) and run.slotOpportunities == 0 and run.slotSpins == 2)
@@ -1016,12 +1161,13 @@ function M.run()
     local releasedAscendSteering = touchScene:steeringButtonState()
     assert(not releasedAscendSteering.leftActive and not releasedAscendSteering.rightActive)
     touchScene:update(1)
-    assert(touchScene.ship.x == -55)
     touchScene:touchpressed("steer-right", 160, 160)
     local rightAscendSteering = touchScene:steeringButtonState()
     assert(not rightAscendSteering.leftActive and rightAscendSteering.rightActive)
+    local xBeforeRight = touchScene.ship.x
     touchScene:update(1)
-    assert(touchScene.ship.x == 0)
+    assert(touchScene.ship.x > xBeforeRight,
+        "holding right must still increase ship.x while main thrust follows heading")
     touchScene:touchreleased("steer-right")
     touchScene.expedition.phase = "returning"
     touchScene.expedition.altitude = 500
@@ -1357,7 +1503,12 @@ function M.run()
     persistedScene.expedition.fuelBurnRate = 1
     persistedScene.expedition.climbSpeed = 60
     assert(expedition.launch(persistedScene.expedition))
-    persistedScene:update(1)
+    persistedScene.expedition.altitude = 60
+    persistedScene.expedition.maxAltitude = 60
+    persistedScene.expedition.bestAltitude = 60
+    persistedScene.expedition.fuel = 0
+    persistedScene.expedition.phase = "returning"
+    persistedScene:persistBestAltitude()
     assert(persistedScene.expedition.phase == "returning" and savedBest == 60)
     local restartedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
     assert(restartedScene.expedition.bestAltitude == 60)
@@ -1932,6 +2083,7 @@ function M.run()
     testManeuverFuel()
     testGalaxyStructure()
     testMinimap()
+    testDebris()
 
     print("SPACESHIP_UNIT_OK")
 end

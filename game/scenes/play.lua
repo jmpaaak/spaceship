@@ -27,8 +27,14 @@ M.verticalOffsetLimit = verticalOffsetLimit
 -- Keyboard yaw rate (rad/s). No angular clamp — holding left/right
 -- spins the ship continuously. Stick heading uses atan2 of the drag
 -- vector, also unclamped, so the nose can point any direction.
-local steerTurnRate = 2.8
+local steerTurnRate = 0.9
 M.steerTurnRate = steerTurnRate
+-- Stick heading follow rate (1/s). Was 14 — nearly snapped to the stick
+-- every frame. Slow enough that the hull turns like it's fighting thrust.
+local stickTurnFollow = 1.8
+M.stickTurnFollow = stickTurnFollow
+local rcsPuffDuration = 1.32
+M.rcsPuffDuration = rcsPuffDuration
 
 function M.headingFromStick(dx, dy)
     return math.atan2(dy or 0, dx or 0)
@@ -536,6 +542,9 @@ function M:hudLines()
         returnProgress = returnProgress,
         status = i18n.t("hud_status", math.floor(run.fuel), run.durability,
             run.maxDurability, i18n.phaseAbbrev(run.phase), run.slotOpportunities),
+        galaxy = (run.phase == "ascending" or run.phase == "returning" or run.phase == "launch")
+            and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name
+            or nil,
     }
 end
 
@@ -897,6 +906,7 @@ function M:update(dt)
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
         local startX, startOffset = self.ship.x, self.verticalOffset
+        local thrustAngle = self.ship.angle
         if joyMagnitude > 0 then
             local speed = expedition.steeringSpeed(self.expedition)
             self.ship.x = self.ship.x + joyDx * speed * joyMagnitude * dt
@@ -915,41 +925,89 @@ function M:update(dt)
         local extraDx = self.ship.x - startX
         local extraDy = self.verticalOffset - startOffset
         local extraDistance = math.sqrt(extraDx * extraDx + extraDy * extraDy)
-        expedition.burnManeuverFuel(self.expedition, extraDistance)
         local steeringHoriz = (steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0)
+        local steeringVert = (steering.downActive and 1 or 0) - (steering.upActive and 1 or 0)
+        local thrusting = joyMagnitude > 0 or steeringHoriz ~= 0 or steeringVert ~= 0
+        if thrusting then
+            expedition.burnManeuverFuel(self.expedition, extraDistance)
+        end
         if joyMagnitude > 0 then
             local targetAngle = M.headingFromStick(joyDx, joyDy)
             local delta = shortestAngleDelta(self.ship.angle, targetAngle)
-            local turnRate = math.min(1, 14 * dt)
+            local turnRate = math.min(1, stickTurnFollow * dt)
             self.ship.angle = self.ship.angle + delta * turnRate
             self.steerBank = joyDx * joyMagnitude
-        elseif steeringHoriz ~= 0 then
+            self.steerLift = joyDy * joyMagnitude
+        elseif steeringHoriz ~= 0 or steeringVert ~= 0 then
             self.ship.angle = self.ship.angle + steeringHoriz * steerTurnRate * dt
             self.steerBank = steeringHoriz
+            self.steerLift = steeringVert
         else
             self.steerBank = 0
+            self.steerLift = 0
         end
-    end
-    if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
-        expedition.update(self.expedition, dt)
-        self.ship.y = -self.expedition.altitude + self.verticalOffset
-        self.ship.fuel = self.expedition.fuel
+        local xBeforeThrust, yBeforeThrust = self.ship.x, self.ship.y
+        if thrusting then
+            local altBefore = self.expedition.altitude
+            expedition.update(self.expedition, dt)
+            self.ship.fuel = self.expedition.fuel
+            if previousPhase == "ascending" then
+                local step = self.expedition.altitude - altBefore
+                if step < 0 then step = 0 end
+                self.ship.x = self.ship.x + math.cos(thrustAngle) * step
+                self.ship.y = self.ship.y + math.sin(thrustAngle) * step + extraDy
+            end
+            if dt > 0 then
+                self.ship.vx = (self.ship.x - xBeforeThrust) / dt
+                self.ship.vy = (self.ship.y - yBeforeThrust) / dt
+            end
+        elseif previousPhase == "ascending" then
+            -- Coast on stored velocity. No stick/keys → no fuel burn.
+            self.ship.x = self.ship.x + (self.ship.vx or 0) * dt
+            self.ship.y = self.ship.y + (self.ship.vy or 0) * dt
+            self.ship.fuel = self.expedition.fuel
+        else
+            expedition.update(self.expedition, dt)
+            self.ship.fuel = self.expedition.fuel
+        end
+        if self.expedition.phase == "returning" then
+            self.ship.y = -self.expedition.altitude + self.verticalOffset
+        end
         self.rcsCooldown = math.max(0, (self.rcsCooldown or 0) - dt)
         local bank = self.steerBank or 0
-        if math.abs(bank) > 0.12 and self.rcsCooldown == 0 then
+        local lift = self.steerLift or 0
+        if thrusting and self.rcsCooldown == 0
+            and (math.abs(bank) > 0.12 or math.abs(lift) > 0.12) then
             self.rcsCooldown = 0.045
-            local side = bank > 0 and 1 or -1
-            self.particles[#self.particles + 1] = {
-                x = self.ship.x + side * 6,
-                y = self.ship.y + 3,
-                vx = side * (16 + math.random() * 10),
-                vy = 6 + math.random() * 10,
-                timer = 0.22,
-                maxTimer = 0.22,
-                r = 0.7,
-                g = 0.88,
-                b = 1,
-            }
+            if math.abs(bank) > 0.12 then
+                local side = bank > 0 and -1 or 1
+                self.particles[#self.particles + 1] = {
+                    x = self.ship.x + side * 6,
+                    y = self.ship.y + 3,
+                    vx = side * (16 + math.random() * 10),
+                    vy = 6 + math.random() * 10,
+                    timer = rcsPuffDuration,
+                    maxTimer = rcsPuffDuration,
+                    r = 0.7,
+                    g = 0.88,
+                    b = 1,
+                }
+            end
+            if math.abs(lift) > 0.12 then
+                -- Opposite vertical jet: stick-down puffs above, stick-up below.
+                local vside = lift > 0 and -1 or 1
+                self.particles[#self.particles + 1] = {
+                    x = self.ship.x + (math.random() * 4 - 2),
+                    y = self.ship.y + vside * 6,
+                    vx = (math.random() * 8 - 4),
+                    vy = vside * (16 + math.random() * 10),
+                    timer = rcsPuffDuration,
+                    maxTimer = rcsPuffDuration,
+                    r = 0.7,
+                    g = 0.88,
+                    b = 1,
+                }
+            end
         end
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
@@ -1019,6 +1077,27 @@ function M:update(dt)
                     break
                 end
                 self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
+            end
+        end
+        for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
+            local dx, dy = junk.x - self.ship.x, junk.y - self.ship.y
+            if dx * dx + dy * dy <= (junk.radius + 5) ^ 2 and not self.collided[junk.id] then
+                self.collided[junk.id] = true
+                local damage = self.expedition.durability
+                table.insert(self.floatingTexts, {
+                    text = i18n.t("floating_damage_text", damage),
+                    x = self.ship.x + 60,
+                    y = self.ship.y,
+                    timer = 1.0,
+                    kind = "damage",
+                })
+                self.shipShake = shipShakeDuration
+                self.shipShakeMagnitude = 1.4
+                if expedition.damage(self.expedition, damage) then
+                    self:persistBestAltitude()
+                    self.message = i18n.t("ship_destroyed_message", math.floor(self.expedition.bestAltitude))
+                    break
+                end
             end
         end
     end
@@ -1210,8 +1289,9 @@ function M:drawMinimap()
         return
     end
     local hud = self:hudLines()
-    local hudHeight = self.expedition.phase == "launch" and M.launchHudHeight
-        or (hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34))
+    local galaxyShift = hud.galaxy and 10 or 0
+    local hudHeight = (self.expedition.phase == "launch" and M.launchHudHeight
+        or (hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34))) + galaxyShift
     local view = minimap.view(self.ship.x, self.ship.y)
     local size = minimap.size
     local cx = viewport.width - size / 2 - 3
@@ -1220,6 +1300,23 @@ function M:drawMinimap()
     love.graphics.circle("fill", cx, cy, size / 2)
     love.graphics.setColor(0.35, 0.55, 0.8, 1)
     love.graphics.circle("line", cx, cy, size / 2)
+    for _, ring in ipairs(view.rings or {}) do
+        if ring.kind == "orbit" then
+            love.graphics.setColor(0.85, 0.7, 0.25, 0.55)
+            love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+        elseif ring.inside ~= false then
+            if ring.id == "milkyway" then
+                love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
+            else
+                love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
+            end
+            love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+        end
+    end
+    if view.sun then
+        love.graphics.setColor(1, 0.85, 0.25)
+        love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, 2.6)
+    end
     for _, galaxy in ipairs(view.galaxies) do
         if galaxy.inside then
             if galaxy.id == "milkyway" then
@@ -1349,6 +1446,30 @@ function M:draw()
             end
         end
     end
+    for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
+        local x, y = math.floor(junk.x - cameraX), math.floor(junk.y - cameraY)
+        if x > -20 and x < viewport.width + 20 and y > -20 and y < viewport.height + 20 then
+            if junk.kind == "can" then
+                love.graphics.setColor(0.72, 0.76, 0.7)
+                love.graphics.rectangle("fill", x - junk.radius, y - junk.radius * 1.4,
+                    junk.radius * 2, junk.radius * 2.8)
+                love.graphics.setColor(0.45, 0.5, 0.42)
+                love.graphics.rectangle("line", x - junk.radius, y - junk.radius * 1.4,
+                    junk.radius * 2, junk.radius * 2.8)
+            elseif junk.kind == "scrap" then
+                love.graphics.setColor(0.55, 0.38, 0.22)
+                love.graphics.polygon("fill",
+                    x, y - junk.radius,
+                    x + junk.radius, y + junk.radius * 0.6,
+                    x - junk.radius, y + junk.radius * 0.6)
+            else
+                love.graphics.setColor(0.45, 0.42, 0.4)
+                love.graphics.circle("fill", x, y, junk.radius)
+                love.graphics.setColor(0.32, 0.3, 0.28)
+                love.graphics.circle("fill", x - junk.radius * 0.3, y - junk.radius * 0.2, junk.radius * 0.45)
+            end
+        end
+    end
     for _, ft in ipairs(self.floatingTexts) do
         local fx, fy = math.floor(ft.x - cameraX), math.floor(ft.y - cameraY)
         if fx >= -30 and fx <= viewport.width + 30 and fy >= -20 and fy <= viewport.height + 20 then
@@ -1390,8 +1511,9 @@ function M:draw()
 
     local hud = self:hudLines()
     local isLaunchHud = self.expedition.phase == "launch"
-    local hudHeight = isLaunchHud and M.launchHudHeight
-        or (hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34))
+    local galaxyShift = hud.galaxy and 10 or 0
+    local hudHeight = (isLaunchHud and M.launchHudHeight
+        or (hud.returnProgress and 70 or ((hud.samples or hud.best) and 46 or 34))) + galaxyShift
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
     love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
     local previousHudFont
@@ -1401,23 +1523,30 @@ function M:draw()
         love.graphics.setFont(self.smallFont)
     end
     love.graphics.setColor(0.7, 0.9, 1)
-    love.graphics.print(hud.primary, 5, 4)
+    local hudY = 4
+    if hud.galaxy then
+        love.graphics.setColor(1, 0.85, 0.4)
+        love.graphics.print(hud.galaxy, 5, hudY)
+        hudY = hudY + 10
+        love.graphics.setColor(0.7, 0.9, 1)
+    end
+    love.graphics.print(hud.primary, 5, hudY)
     if hud.samples then
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.samples, 5, 16)
+        love.graphics.print(hud.samples, 5, 16 + galaxyShift)
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.print(hud.status, 5, 30)
+        love.graphics.print(hud.status, 5, 30 + galaxyShift)
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.print(hud.earth, 5, 43)
-            love.graphics.print(hud.returnProgress, 5, 55)
+            love.graphics.print(hud.earth, 5, 43 + galaxyShift)
+            love.graphics.print(hud.returnProgress, 5, 55 + galaxyShift)
         end
     elseif hud.best then
-        love.graphics.print(hud.status, 5, isLaunchHud and 13 or 18)
+        love.graphics.print(hud.status, 5, (isLaunchHud and 13 or 18) + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.best, 5, isLaunchHud and 22 or 30)
+        love.graphics.print(hud.best, 5, (isLaunchHud and 22 or 30) + galaxyShift)
     else
-        love.graphics.print(hud.status, 5, 18)
+        love.graphics.print(hud.status, 5, 18 + galaxyShift)
     end
     if isLaunchHud then
         love.graphics.setFont(previousHudFont)

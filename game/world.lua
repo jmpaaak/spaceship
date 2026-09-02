@@ -36,7 +36,7 @@ function M.galaxy(gx, gy)
     if gx == 0 and gy == 0 then
         return {
             id = "milkyway",
-            name = "MILKY WAY",
+            name = "SOLAR SYSTEM",
             x = 0,
             y = 0,
             radius = M.galaxyCellSize * 0.9,
@@ -161,6 +161,64 @@ function M.nearbyPlanets(x, y, radiusInSectors)
             local hsx, hsy = M.sectorAt(hub.x, hub.y)
             if hsx >= minSx and hsx <= maxSx and hsy >= minSy and hsy <= maxSy then
                 result[#result + 1] = hub
+            end
+        end
+    end
+    return result
+end
+
+-- Drifting asteroids and junk. Deterministic per sector like planets, then
+-- offset by (vx, vy) * time so pieces actually float. Collision is handled
+-- by PlayScene using the same destroy/reset path as a lethal planet hit.
+function M.debris(sectorX, sectorY, time)
+    time = time or 0
+    local count = 1
+    if hash(sectorX, sectorY, 900) > 0.55 then count = 2 end
+    if hash(sectorX, sectorY, 901) > 0.88 then count = 3 end
+    local pieces = {}
+    for i = 1, count do
+        local kindRoll = hash(sectorX, sectorY, 910 + i)
+        local kind = "asteroid"
+        if kindRoll < 0.18 then
+            kind = "can"
+        elseif kindRoll < 0.36 then
+            kind = "scrap"
+        end
+        local minR, maxR = 5, 14
+        if kind == "can" then
+            minR, maxR = 2, 3
+        elseif kind == "scrap" then
+            minR, maxR = 3, 6
+        end
+        local radius = minR + math.floor(hash(sectorX, sectorY, 920 + i) * (maxR - minR + 1))
+        local vxSign = hash(sectorX, sectorY, 930 + i) < 0.5 and -1 or 1
+        local vySign = hash(sectorX, sectorY, 931 + i) < 0.5 and -1 or 1
+        local vx = vxSign * (6 + hash(sectorX, sectorY, 932 + i) * 10)
+        local vy = vySign * (6 + hash(sectorX, sectorY, 933 + i) * 10)
+        local baseX = sectorX * M.sectorSize + 16
+            + hash(sectorX, sectorY, 950 + i) * (M.sectorSize - 32)
+        local baseY = sectorY * M.sectorSize + 16
+            + hash(sectorX, sectorY, 960 + i) * (M.sectorSize - 32)
+        pieces[#pieces + 1] = {
+            id = string.format("debris:%d:%d:%d", sectorX, sectorY, i),
+            x = baseX + vx * time,
+            y = baseY + vy * time,
+            radius = radius,
+            kind = kind,
+            vx = vx,
+            vy = vy,
+        }
+    end
+    return pieces
+end
+
+function M.nearbyDebris(x, y, radiusInSectors, time)
+    local sx, sy = M.sectorAt(x, y)
+    local result = {}
+    for oy = -radiusInSectors, radiusInSectors do
+        for ox = -radiusInSectors, radiusInSectors do
+            for _, piece in ipairs(M.debris(sx + ox, sy + oy, time)) do
+                result[#result + 1] = piece
             end
         end
     end

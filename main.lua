@@ -343,7 +343,7 @@ function love.load()
         scene.expedition.altitude = 5
         scene:update(0.001) -- collect the sample near-instantly
         world.nearbyPlanets = function() return {} end
-        scene:update(scene.expedition.fuel / scene.expedition.fuelBurnRate + 1) -- burn to fuel-empty -> returning
+        expeditionModule.beginReturn(scene.expedition)
         while scene.expedition.phase == "returning" and scene.expedition.slotOpportunities > 0 do
             scene:keypressed("space") -- spin every offered slot
             scene:update(1) -- let the slot-spin animation resolve before the

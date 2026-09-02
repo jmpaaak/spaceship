@@ -60,6 +60,7 @@ function M.view(shipX, shipY)
     end
     local earthX, earthY, earthInside = M.project(0, 0, shipX, shipY)
     local galaxies = {}
+    local rings = {}
     for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.galaxyCellRadius)) do
         local mx, my, inside = M.project(galaxy.x, galaxy.y, shipX, shipY)
         galaxies[#galaxies + 1] = {
@@ -70,11 +71,37 @@ function M.view(shipX, shipY)
             inside = inside,
             hub = galaxy.id ~= "milkyway",
         }
+        local scaled = galaxy.radius * M.mapRadius / M.viewRadius
+        rings[#rings + 1] = {
+            id = galaxy.id,
+            name = galaxy.name,
+            x = mx,
+            y = my,
+            radius = math.max(2, math.min(scaled, M.mapRadius)),
+            kind = "galaxy",
+            inside = inside,
+        }
     end
+    -- Sun-centered solar-system orbits: readable pixel rings around the
+    -- sun marker (true AU scale is sub-pixel on this chart).
+    if earthInside or math.sqrt(earthX * earthX + earthY * earthY) < M.mapRadius then
+        for _, radius in ipairs({ 4, 7, 11 }) do
+            rings[#rings + 1] = {
+                x = earthX,
+                y = earthY,
+                radius = radius,
+                kind = "orbit",
+            }
+        end
+    end
+    local containing = world.galaxyContaining(shipX, shipY)
     return {
         player = { x = 0, y = 0 },
         earth = { x = earthX, y = earthY, inside = earthInside },
+        sun = { x = earthX, y = earthY, inside = earthInside },
         galaxies = galaxies,
+        rings = rings,
+        galaxyName = containing and containing.name or nil,
         beyond = beyond,
         distanceBeyond = beyond and (distEarth - M.chartRadius) or 0,
         returnDx = returnDx,

@@ -146,27 +146,25 @@ function M.launchForecast(run, maxFuel)
     return altitude, slotCount(altitude, run.slotDistance)
 end
 
--- Extra pixels from joystick / left-right steering cost extra fuel at the
--- same px-to-fuel rate as automatic climb (fuelBurnRate / climbSpeed).
--- First slice of free 2D travel: idle climb still burns the automatic
--- rate; only extra maneuver distance adds fuel. Returning does not burn.
+-- Fuel is no longer a flight constraint. These stay as no-ops so older
+-- call sites (joystick extra-distance burn) compile without draining the
+-- tank or forcing a return.
 function M.maneuverFuel(run, extraDistance)
-    if not run or not extraDistance or extraDistance <= 0 then return 0 end
-    if not run.climbSpeed or run.climbSpeed <= 0 then return 0 end
-    return extraDistance / run.climbSpeed * (run.fuelBurnRate or 0)
+    return 0
 end
 
 function M.burnManeuverFuel(run, extraDistance)
-    if not run or run.phase ~= "ascending" then return 0 end
-    local extra = M.maneuverFuel(run, extraDistance)
-    if extra <= 0 then return 0 end
-    run.fuel = math.max(0, run.fuel - extra)
-    if run.fuel <= 0 then
-        run.phase = "returning"
-        run.returnDistance = run.maxAltitude
-        run.slotOpportunities = slotCount(run.returnDistance, run.slotDistance)
-    end
-    return extra
+    return 0
+end
+
+-- Safe return is now an explicit action (tests / future player input),
+-- not a fuel-empty side effect.
+function M.beginReturn(run)
+    if not run or run.phase ~= "ascending" then return false end
+    run.phase = "returning"
+    run.returnDistance = run.maxAltitude
+    run.slotOpportunities = slotCount(run.returnDistance, run.slotDistance)
+    return true
 end
 
 local function settle(run)
@@ -496,21 +494,9 @@ function M.update(run, dt)
 
     if run.phase ~= "ascending" then return end
 
-    local ascentTime = dt
-    if run.fuelBurnRate > 0 then
-        ascentTime = math.min(dt, run.fuel / run.fuelBurnRate)
-        run.fuel = math.max(0, run.fuel - run.fuelBurnRate * dt)
-    end
-
-    run.altitude = run.altitude + run.climbSpeed * ascentTime
+    run.altitude = run.altitude + run.climbSpeed * dt
     run.maxAltitude = math.max(run.maxAltitude, run.altitude)
     run.bestAltitude = math.max(run.bestAltitude, run.altitude)
-
-    if run.fuel <= 0 then
-        run.phase = "returning"
-        run.returnDistance = run.maxAltitude
-        run.slotOpportunities = slotCount(run.returnDistance, run.slotDistance)
-    end
 end
 
 return M
