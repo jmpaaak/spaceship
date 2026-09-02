@@ -105,3 +105,42 @@ exactly).
 of silently accepting malformed data — see `game/self_test.lua`'s
 `testGearJsonLoader` for the exact behavior on missing files, malformed
 JSON, and each of the above rule violations.
+
+## Tag-based synergy engine (item 9)
+
+`game/gear.lua` also exposes a small set of pure functions implementing
+item 9's core design goal — "부품들의 조합(시너지)이 고도 상승 속도/효율에
+배가 효과를 내는 것" (part combinations should multiply, not just add, the
+altitude/climb-rate payoff), mirroring Balatro's joker-combo philosophy:
+
+- `M.aggregateEffects(parts)` — sums every effect value across a list of
+  equipped parts by effect `type`, with no synergy applied. This is the
+  raw additive baseline.
+- `M.tagSynergyMultiplier(parts)` — for every unordered pair of distinct
+  equipped parts that share at least one tag, adds
+  `M.synergyBonusPerSharedPair` (currently `0.15`) to a multiplier that
+  starts at `1`. Two parts sharing a tag → `x1.15`; three mutually-sharing
+  parts → `x1.45` (3 pairs); parts with no shared tags stay at `x1` (no
+  bonus).
+- `M.equippedTotals(parts)` — combines the two: additive totals are
+  computed first, then the tag-synergy multiplier is applied **only to
+  `climbSpeed`** (the altitude/score-gain stat item 9 calls out as the
+  combo payoff). Every other effect type (`money`, `sampleSellValue`,
+  `speed`, `hullDurability`) stays purely additive this cycle. The
+  returned table also carries `synergyMultiplier` so UI/tests can surface
+  the current combo strength directly.
+
+The bundled `game/data/hull_parts.json` pool now has 24 cards (item 9's
+"최소 20~30종" target), each tagged with at least one synergy tag —
+including a dedicated `azure`/`ember`/`void` tag per hue family (matching
+`world.hueFamilies`) plus cross-cutting `speed`/`altitude`/`defense`/
+`economy`/`control` tags — so a wide variety of 2-3 card tag-overlap combos
+are available to build around. `game/self_test.lua`'s
+`testGearSynergyEngine` verifies the pool size, that every card has a tag,
+and the multiply-vs-add behavior of the engine itself.
+
+`game/gear.lua` does not yet wire this into `run.equippedGear`/gameplay —
+that connection (and the actual equip/unequip UI) is deferred to a
+follow-up slice per `loop/PROMPT.md`'s scope (this lane may only touch
+`game/scenes/play.lua`/`game/expedition.lua` for the minimal loader-call
+exception, not full gameplay wiring).

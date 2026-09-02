@@ -176,4 +176,75 @@ function M.findById(pool, id)
     return nil
 end
 
+-- ---------------------------------------------------------------------
+-- Item 9: tag-based synergy engine. "부품들의 조합(시너지)이 고도 상승
+-- 속도/효율에 배가 효과를 내는 것" — equipping multiple parts that share a
+-- synergy tag must multiply climbSpeed beyond the raw additive sum, the
+-- same design philosophy Balatro uses for joker combos. This stays a pure
+-- function set (no run/state mutation) so it composes cleanly with
+-- game/expedition.lua and is trivially unit-testable in isolation.
+-- ---------------------------------------------------------------------
+
+-- Bonus applied per additional part sharing a tag, e.g. two parts sharing
+-- one tag => +0.15 multiplier (x1.15); three parts sharing a tag (3 pairs
+-- across combinations of 2) stack further. Kept modest and centralized here
+-- so overall game balance can be tuned by adjusting a single constant.
+M.synergyBonusPerSharedPair = 0.15
+
+-- Sums every effect's value across all equipped parts by effect type, with
+-- no synergy applied — the "if parts only added" baseline used both by
+-- tests and as the pre-multiplier accumulator inside equippedTotals.
+function M.aggregateEffects(parts)
+    local totals = {}
+    for _, part in ipairs(parts) do
+        for _, effect in ipairs(part.effects) do
+            totals[effect.type] = (totals[effect.type] or 0) + effect.value
+        end
+    end
+    return totals
+end
+
+-- Computes the climbSpeed synergy multiplier for a set of equipped parts:
+-- for every unordered pair of distinct equipped parts that share at least
+-- one tag, add M.synergyBonusPerSharedPair to the multiplier (starting at
+-- 1.0, i.e. no bonus). A single part, or a set of parts with no tag overlap
+-- at all, returns exactly 1 (no synergy).
+function M.tagSynergyMultiplier(parts)
+    local sharedPairs = 0
+    for i = 1, #parts do
+        for j = i + 1, #parts do
+            local a, b = parts[i], parts[j]
+            local shared = false
+            for _, tagA in ipairs(a.tags or {}) do
+                for _, tagB in ipairs(b.tags or {}) do
+                    if tagA == tagB then
+                        shared = true
+                        break
+                    end
+                end
+                if shared then break end
+            end
+            if shared then sharedPairs = sharedPairs + 1 end
+        end
+    end
+    return 1 + sharedPairs * M.synergyBonusPerSharedPair
+end
+
+-- Combines aggregateEffects and tagSynergyMultiplier into the final totals
+-- a run should apply: additive effect types are summed first (aggregate
+-- totals), then the tag-synergy multiplier is applied ONLY to climbSpeed
+-- (the altitude/score-gain stat item 9 explicitly calls out as the combo
+-- payoff) — other stats (money, sampleSellValue, speed, hullDurability)
+-- stay purely additive this cycle. Also returns the multiplier itself
+-- (as `synergyMultiplier`) so callers/tests/UI can display it directly.
+function M.equippedTotals(parts)
+    local totals = M.aggregateEffects(parts)
+    local multiplier = M.tagSynergyMultiplier(parts)
+    if totals.climbSpeed then
+        totals.climbSpeed = totals.climbSpeed * multiplier
+    end
+    totals.synergyMultiplier = multiplier
+    return totals
+end
+
 return M

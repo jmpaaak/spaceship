@@ -1,5 +1,19 @@
 # STATUS
-## 아이콘 기반 HUD 간소화 첫 슬라이스: TAP TO LAUNCH 위에 로켓 아이콘 추가 (완료, 2026-09-03)
+## [spaceship-gear 레인] 항목9: 선체 부품 풀 24종으로 확장 + 태그 시너지 엔진 1차 구현 (완료, 2026-09-03)
+
+`loop/PROMPT.md`의 gear 레인 순서(항목13 -> 항목9 -> 항목10 -> 항목12 -> 항목14)에 따라 항목13(부품 데이터 외부화 + 웹 에디터) 완료 후 항목9(선체 부품 20~30종 + 시너지 엔진)를 착수했다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean)로 시작했고, `git status --short`에는 이 워크트리 설정 파일(`loop/PROMPT.md`의 레인 스코프 헤더, `loop/com.jm.spaceship.gear-lane.plist`)만 있어 이전 사이클 미완료 작업은 없었다.
+
+- TDD로 `game/self_test.lua`에 `testGearSynergyEngine()`을 먼저 추가했다(RED 확인: `hull part pool must have at least 20 cards ... got 6`).
+- `game/data/hull_parts.json`을 6종에서 24종으로 확장했다. 신규 카드는 모두 최소 1개의 시너지 태그를 갖도록 했고, `world.hueFamilies`(azure/ember/void)에 대응하는 전용 태그를 포함해 `speed`/`altitude`/`defense`/`economy`/`control` 등 기존 태그와 겹치는 조합을 다양하게 만들었다(등급도 common~legendary까지 분포).
+- `game/gear.lua`에 순수 함수 태그 시너지 엔진을 추가했다: `M.aggregateEffects(parts)`(효과 타입별 순수 가산 합), `M.tagSynergyMultiplier(parts)`(태그를 공유하는 장착 부품 쌍마다 `M.synergyBonusPerSharedPair`(0.15)씩 배율 가산, 공유 쌍이 없으면 정확히 1), `M.equippedTotals(parts)`(가산 합산 후 `climbSpeed`에만 시너지 배율을 곱해 적용 — 발라트로처럼 조합이 배가 효과를 내는 항목9의 핵심 요구를 만족시키며, `money`/`sampleSellValue`/`speed`/`hullDurability`는 이번 사이클엔 순가산으로 유지). `synergyMultiplier` 필드도 함께 반환해 향후 UI/테스트가 현재 콤보 강도를 직접 표시할 수 있게 했다.
+- `docs/GEAR_SCHEMA.md`에 "Tag-based synergy engine (item 9)" 섹션을 추가해 세 함수의 계약과 확장된 24종 카드 풀 구성을 문서화했다.
+- `game/self_test.lua`의 `testGearSynergyEngine()`이 GREEN으로 전환됨을 확인했다: 풀 크기(>=20), 모든 카드가 태그를 가짐, 순가산 vs 시너지곱 차이(태그 공유 시 climbSpeed 합보다 커야 함, 태그 불일치 시 배율 정확히 1), `sampleSellValue` 등 다른 타입은 순가산 유지.
+- `make test`(`GAME_HEADLESS=1 GAME_UNIT=1`), `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:54`, `ASSET_MANIFEST_OK`, 자산 매니페스트/번들 검증 포함).
+- **아직 게임 배선(런타임 장착 UI, `run.equippedGear`)에는 연결하지 않았다** — 레인 스코프상 `game/scenes/play.lua`/`game/world.lua`/`game/expedition.lua`는 원칙적으로 다른 레인 담당이며, 이번 슬라이스는 순수 데이터/엔진 계층만 완성했다. 실제 게임 내 장착 UI 배선은 로더 호출 최소 예외 범위에서 다음 사이클이 필요시 진행하거나, play.lua 담당 레인과 조율한다.
+- `docs/feedback/INBOX.md` 처리대기 섹션의 항목9 하위에 이 진행상황을 append했다.
+- 다음 슬라이스: 항목10(엔진 부품 슬롯 분리, `game/engine_parts.lua` 신규 — 선체 슬롯과 독립된 `run.equippedEngineParts` 목록 설계).
+
+
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 "남은 작업" 부분(탭하여 발사/선체 내구도/자금/속도를 아이콘+짧은 수치로 재구성)을 첫 슬라이스로 착수했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.
 

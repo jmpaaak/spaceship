@@ -74,6 +74,231 @@
         { "type": "hullDurability", "value": 2 },
         { "type": "sampleSellValue", "value": 5 }
       ]
+    },
+    {
+      "id": "hull_azure_collector",
+      "name": "Azure Collector",
+      "nameKo": "아주르 수집기",
+      "icon": "◇",
+      "rarity": "common",
+      "tags": ["azure", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "sampleSellValue", "value": 2 }
+      ]
+    },
+    {
+      "id": "hull_ember_vent",
+      "name": "Ember Vent",
+      "nameKo": "엠버 배기구",
+      "icon": "◆",
+      "rarity": "common",
+      "tags": ["ember", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 3 }
+      ]
+    },
+    {
+      "id": "hull_void_lens",
+      "name": "Void Lens",
+      "nameKo": "보이드 렌즈",
+      "icon": "◐",
+      "rarity": "uncommon",
+      "tags": ["void", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "sampleSellValue", "value": 4 }
+      ]
+    },
+    {
+      "id": "hull_gyro_stabilizer",
+      "name": "Gyro Stabilizer",
+      "nameKo": "자이로 안정기",
+      "icon": "◎",
+      "rarity": "common",
+      "tags": ["control", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 3 }
+      ]
+    },
+    {
+      "id": "hull_micro_thruster_array",
+      "name": "Micro Thruster Array",
+      "nameKo": "마이크로 추진기 배열",
+      "icon": "▧",
+      "rarity": "common",
+      "tags": ["altitude", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 2 },
+        { "type": "speed", "value": 1 }
+      ]
+    },
+    {
+      "id": "hull_ablative_coat",
+      "name": "Ablative Coat",
+      "nameKo": "삭마 코팅",
+      "icon": "▨",
+      "rarity": "common",
+      "tags": ["defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 1 }
+      ]
+    },
+    {
+      "id": "hull_solar_sail",
+      "name": "Solar Sail",
+      "nameKo": "태양 돛",
+      "icon": "▽",
+      "rarity": "uncommon",
+      "tags": ["altitude", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 3 },
+        { "type": "money", "value": 3 }
+      ]
+    },
+    {
+      "id": "hull_titan_frame",
+      "name": "Titan Frame",
+      "nameKo": "타이탄 프레임",
+      "icon": "▣",
+      "rarity": "rare",
+      "tags": ["defense", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 3 },
+        { "type": "climbSpeed", "value": 2 }
+      ]
+    },
+    {
+      "id": "hull_prism_hull",
+      "name": "Prism Hull",
+      "nameKo": "프리즘 선체",
+      "icon": "◭",
+      "rarity": "rare",
+      "tags": ["azure", "defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 2 },
+        { "type": "sampleSellValue", "value": 3 }
+      ]
+    },
+    {
+      "id": "hull_ember_core",
+      "name": "Ember Core",
+      "nameKo": "엠버 코어",
+      "icon": "◉",
+      "rarity": "uncommon",
+      "tags": ["ember", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 5 }
+      ]
+    },
+    {
+      "id": "hull_void_shard",
+      "name": "Void Shard",
+      "nameKo": "보이드 파편",
+      "icon": "◒",
+      "rarity": "rare",
+      "tags": ["void", "defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 2 },
+        { "type": "sampleSellValue", "value": 4 }
+      ]
+    },
+    {
+      "id": "hull_ballast_weight",
+      "name": "Ballast Weight",
+      "nameKo": "밸러스트 웨이트",
+      "icon": "▬",
+      "rarity": "common",
+      "tags": ["defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 2 }
+      ]
+    },
+    {
+      "id": "hull_navigation_beacon",
+      "name": "Navigation Beacon",
+      "nameKo": "항법 비컨",
+      "icon": "✦",
+      "rarity": "common",
+      "tags": ["control", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "money", "value": 5 }
+      ]
+    },
+    {
+      "id": "hull_star_compass",
+      "name": "Star Compass",
+      "nameKo": "별자리 나침반",
+      "icon": "✧",
+      "rarity": "uncommon",
+      "tags": ["control", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 3 },
+        { "type": "speed", "value": 2 }
+      ]
+    },
+    {
+      "id": "hull_quantum_alloy",
+      "name": "Quantum Alloy",
+      "nameKo": "양자 합금",
+      "icon": "◍",
+      "rarity": "legendary",
+      "tags": ["defense", "altitude", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 3 },
+        { "type": "climbSpeed", "value": 4 },
+        { "type": "sampleSellValue", "value": 6 }
+      ]
+    },
+    {
+      "id": "hull_azure_prism",
+      "name": "Azure Prism",
+      "nameKo": "아주르 프리즘",
+      "icon": "◇",
+      "rarity": "rare",
+      "tags": ["azure", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 3 },
+        { "type": "sampleSellValue", "value": 2 }
+      ]
+    },
+    {
+      "id": "hull_ember_plating",
+      "name": "Ember Plating",
+      "nameKo": "엠버 플레이팅",
+      "icon": "◆",
+      "rarity": "uncommon",
+      "tags": ["ember", "defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 2 }
+      ]
+    },
+    {
+      "id": "hull_void_capacitor",
+      "name": "Void Capacitor",
+      "nameKo": "보이드 축전기",
+      "icon": "◐",
+      "rarity": "common",
+      "tags": ["void", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 4 }
+      ]
     }
   ]
 }
