@@ -74,6 +74,25 @@ local function testJoystick()
     assert(tapHoldScene.ship.x == tapShipXBefore - expedition.steeringSpeed(tapHoldScene.expedition),
         "an undragged tap-and-hold touch must still steer via the legacy binary left/right path")
     assert(tapHoldScene.verticalOffset == 0, "an undragged touch must not move verticalOffset")
+
+    -- Desktop `love .` routes the mouse through the same touch API with
+    -- id "mouse". Press then drag past the deadzone must produce a
+    -- joystick knob and actually move the ship, otherwise a desktop play
+    -- session looks identical to the old left/right-only controls.
+    local mouseScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    mouseScene.expedition.phase = "ascending"
+    mouseScene:touchpressed("mouse", 90, 160)
+    assert(mouseScene:joystickKnob() == nil, "an undragged mouse press must not show a stick knob")
+    mouseScene:touchmoved("mouse", 90 + joystick.maxRadius, 160)
+    local mx, my, knobX = mouseScene:joystickKnob()
+    assert(mx == 90 and my == 160 and knobX > 90, "a dragged mouse must report a stick knob")
+    local mouseXBefore = mouseScene.ship.x
+    mouseScene:update(1)
+    assert(mouseScene.ship.x > mouseXBefore, "a rightward mouse-drag must move the ship")
+    mouseScene:touchreleased("mouse")
+    assert(mouseScene:joystickKnob() == nil, "releasing the mouse must hide the stick knob")
 end
 
 -- Galaxy structure + radial-distance economy (docs/GAME_DESIGN.md 이동

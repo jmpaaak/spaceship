@@ -6,6 +6,8 @@ local viewport = require("game.viewport")
 local world = require("game.world")
 local joystick = require("game.joystick")
 local minimap = require("game.minimap")
+local i18n = require("game.i18n")
+local fonts = require("game.fonts")
 local M = {}
 M.__index = M
 
@@ -329,6 +331,9 @@ function M.new(options)
     local ship = shipModule.new()
     local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
     local specimenStore = options.collectionStore or collectionStore.new()
+    if love.graphics then
+        love.graphics.setFont(love.graphics.newFont(14))
+    end
     return setmetatable({
         ship = ship,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
@@ -349,7 +354,7 @@ function M.new(options)
         slotSpin = nil,
         touches = {},
         verticalOffset = 0,
-        message = "TAP TO LAUNCH",
+        message = i18n.t("launch_tap_to_launch"),
     }, M)
 end
 
@@ -666,7 +671,7 @@ function M:beginSlotSpin()
         sampleBonus = self.expedition.lastSlotSampleBonus,
         opportunitiesAfter = self.expedition.slotOpportunities,
     }
-    self.message = "SLOT SPINNING..."
+    self.message = i18n.t("slot_spinning_label")
 end
 
 function M:currentSlotReels()
@@ -689,6 +694,8 @@ end
 function M:steeringButtonState()
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
+    local up = love.keyboard.isDown("up", "w")
+    local down = love.keyboard.isDown("down", "s")
     for _, touch in pairs(self.touches) do
         if touch.x < viewport.width / 2 then
             left = true
@@ -696,7 +703,7 @@ function M:steeringButtonState()
             right = true
         end
     end
-    return { leftActive = left, rightActive = right }
+    return { leftActive = left, rightActive = right, upActive = up, downActive = down }
 end
 
 -- Omnidirectional joystick vector (docs/GAME_DESIGN.md 이동 방식 개선 항목 1):
@@ -721,6 +728,50 @@ function M:joystickVector()
     return 0, 0, 0
 end
 
+function M:joystickKnob()
+    for _, touch in pairs(self.touches) do
+        if touch.originX then
+            local dx, dy, magnitude = joystick.vector(touch.originX, touch.originY, touch.x, touch.y)
+            if magnitude > 0 then
+                local reach = magnitude * joystick.maxRadius
+                return touch.originX, touch.originY, touch.originX + dx * reach, touch.originY + dy * reach, magnitude
+            end
+        end
+    end
+    return nil
+end
+
+-- Desktop fallback: if love.mousepressed was missed, poll the mouse each
+-- frame and feed the same "mouse" touch id. Skipped during GAME_UNIT tests
+-- so injected touches["mouse"] are not cleared by isDown()==false.
+function M:pollDesktopMouse()
+    if os.getenv("GAME_UNIT") == "1" then return end
+    if not love.mouse or not love.mouse.isDown then return end
+    if self.expedition.phase ~= "ascending" and self.expedition.phase ~= "returning"
+        and self.expedition.phase ~= "launch" then
+        return
+    end
+    if not love.mouse.isDown(1) then
+        self.touches.mouse = nil
+        return
+    end
+    if not love.graphics or not love.graphics.getDimensions then return end
+    local mx, my = love.mouse.getPosition()
+    local ww, wh = love.graphics.getDimensions()
+    local gx, gy = viewport.toGame(mx, my, ww, wh, false)
+    if gx < 0 then gx = 0 elseif gx > viewport.width then gx = viewport.width end
+    if gy < 0 then gy = 0 elseif gy > viewport.height then gy = viewport.height end
+    if not self.touches.mouse then
+        self.touches.mouse = { x = gx, y = gy, originX = gx, originY = gy }
+        if self.expedition.phase == "launch" then
+            self:keypressed("space")
+        end
+    else
+        self.touches.mouse.x = gx
+        self.touches.mouse.y = gy
+    end
+end
+
 local function clampVerticalOffset(value)
     if value > verticalOffsetLimit then return verticalOffsetLimit end
     if value < -verticalOffsetLimit then return -verticalOffsetLimit end
@@ -730,6 +781,7 @@ M.clampVerticalOffset = clampVerticalOffset
 
 function M:update(dt)
     self.time = self.time + dt
+    self:pollDesktopMouse()
     local steering = self:steeringButtonState()
     local previousPhase = self.expedition.phase
     for i = #self.floatingTexts, 1, -1 do
@@ -738,7 +790,7 @@ function M:update(dt)
         ft.y = ft.y - 20 * dt
         if ft.kind == "sample" and ft.awarded and ft.rollupElapsed < sampleRollupDuration then
             ft.rollupElapsed = math.min(sampleRollupDuration, ft.rollupElapsed + dt)
-            ft.text = string.format("+$%d", rollupAmount(ft.awarded, ft.rollupElapsed, sampleRollupDuration))
+            ft.text = i18n.t("floating_sample_gain", rollupAmount(ft.awarded, ft.rollupElapsed, sampleRollupDuration))
         end
         if ft.timer <= 0 then
             table.remove(self.floatingTexts, i)
@@ -769,25 +821,25 @@ function M:update(dt)
         self.slotSpin.elapsed = self.slotSpin.elapsed + dt
         if self.slotSpin.elapsed >= self.slotSpin.duration then
             if self.slotSpin.repair and self.slotSpin.repair > 0 then
-                self.message = string.format("%s +$%d REPAIR +%d  %d LEFT",
+                self.message = i18n.t("slot_result_repair",
                     table.concat(self.slotSpin.symbols, " "),
                     self.slotSpin.reward,
                     self.slotSpin.repair,
                     self.slotSpin.opportunitiesAfter)
             elseif self.slotSpin.fuelBonus and self.slotSpin.fuelBonus > 0 then
-                self.message = string.format("%s +$%d FUEL +%d  %d LEFT",
+                self.message = i18n.t("slot_result_fuel",
                     table.concat(self.slotSpin.symbols, " "),
                     self.slotSpin.reward,
                     self.slotSpin.fuelBonus,
                     self.slotSpin.opportunitiesAfter)
             elseif self.slotSpin.sampleBonus and self.slotSpin.sampleBonus > 0 then
-                self.message = string.format("%s +$%d SAMPLE +$%d  %d LEFT",
+                self.message = i18n.t("slot_result_sample",
                     table.concat(self.slotSpin.symbols, " "),
                     self.slotSpin.reward,
                     self.slotSpin.sampleBonus,
                     self.slotSpin.opportunitiesAfter)
             else
-                self.message = string.format("%s +$%d  %d LEFT",
+                self.message = i18n.t("slot_result_plain",
                     table.concat(self.slotSpin.symbols, " "),
                     self.slotSpin.reward,
                     self.slotSpin.opportunitiesAfter)
@@ -803,9 +855,14 @@ function M:update(dt)
             self.verticalOffset = clampVerticalOffset(
                 self.verticalOffset + joyDy * speed * joyMagnitude * dt)
         else
+            local speed = expedition.steeringSpeed(self.expedition)
             self.ship.x = self.ship.x
                 + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
-                * expedition.steeringSpeed(self.expedition) * dt
+                * speed * dt
+            self.verticalOffset = clampVerticalOffset(
+                self.verticalOffset
+                    + ((steering.downActive and 1 or 0) - (steering.upActive and 1 or 0))
+                    * speed * dt)
         end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
@@ -815,9 +872,9 @@ function M:update(dt)
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
         self:persistBestAltitude()
-        self.message = string.format("RETURNING  %d SLOT CHANCES", self.expedition.slotOpportunities)
+        self.message = i18n.t("returning_message", self.expedition.slotOpportunities)
     elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
-        self.message = string.format("SETTLED +$%d  BALANCE $%d", self.expedition.lastSettlement, self.expedition.money)
+        self.message = i18n.t("settled_message", self.expedition.lastSettlement, self.expedition.money)
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
@@ -833,7 +890,7 @@ function M:update(dt)
                 local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
                 awarded = awarded or value
                 table.insert(self.floatingTexts, {
-                    text = string.format("+$%d", rollupAmount(awarded, 0, sampleRollupDuration)),
+                    text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
                     x = planet.x,
                     y = planet.y,
                     timer = 1.0,
@@ -843,14 +900,14 @@ function M:update(dt)
                 })
                 self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
                 if streakMultiplier and streakMultiplier > 1 then
-                    self.message = string.format("SAMPLE +$%d  STREAK x%.1f  %s", awarded, streakMultiplier, planet.id)
+                    self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
                 else
-                    self.message = string.format("SAMPLE +$%d  %s", awarded, planet.id)
+                    self.message = i18n.t("sample_message", awarded, planet.id)
                 end
                 local specimenId, specimenLabel = world.specimenKind(planet)
                 if self.collectionStore:record(specimenId) then
                     self.collectedSpecimens[specimenId] = true
-                    self.newSpecimenBanner = "NEW SPECIMEN: " .. specimenLabel
+                    self.newSpecimenBanner = i18n.t("new_specimen_label", specimenLabel)
                     self.newSpecimenBannerTimer = 2.0
                 end
             end
@@ -866,7 +923,7 @@ function M:update(dt)
                 -- boxes never overlap regardless of how close ship/planet
                 -- are.
                 table.insert(self.floatingTexts, {
-                    text = string.format("-%d", damage),
+                    text = i18n.t("floating_damage_text", damage),
                     x = self.ship.x + 60,
                     y = self.ship.y,
                     timer = 1.0,
@@ -876,10 +933,10 @@ function M:update(dt)
                 self.shipShakeMagnitude = sampleTierShakeMultiplier(world.sampleTier(planet))
                 if expedition.damage(self.expedition, damage) then
                     self:persistBestAltitude()
-                    self.message = string.format("SHIP DESTROYED  BEST %d  META RESET", math.floor(self.expedition.bestAltitude))
+                    self.message = i18n.t("ship_destroyed_message", math.floor(self.expedition.bestAltitude))
                     break
                 end
-                self.message = string.format("COLLISION -%d  HULL %d/%d", damage, self.expedition.durability, self.expedition.maxDurability)
+                self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
             end
         end
     end
@@ -891,51 +948,51 @@ end
 function M:keypressed(key)
     if self.expedition.phase == "settlement" and (key == "f" or key == "down" or key == "s") then
         if expedition.buyFuelUpgrade(self.expedition) then
-            self.message = string.format("FUEL TANK UPGRADED  LV.%d  MAX %d  %s  BALANCE $%d",
+            self.message = i18n.t("fuel_upgraded_message",
                 self.expedition.fuelUpgradeLevel, self.expedition.maxFuel,
                 launchForecastLine(self.expedition), self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.fuelUpgradeCost, "FUEL UPGRADE")
+                self.expedition.fuelUpgradeCost, i18n.t("item_fuel_upgrade"))
         end
         return
     end
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
         if expedition.buyDurabilityUpgrade(self.expedition) then
-            self.message = string.format(
-                "HULL UPGRADED  LV.%d  MAX FUEL %d  HULL %d  %s  BALANCE $%d",
+            self.message = i18n.t(
+                "hull_upgraded_message",
                 self.expedition.durabilityUpgradeLevel, self.expedition.maxFuel,
                 self.expedition.maxDurability,
                 launchForecastLine(self.expedition), self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.durabilityUpgradeCost, "HULL UPGRADE")
+                self.expedition.durabilityUpgradeCost, i18n.t("item_hull_upgrade"))
         end
         return
     end
     if self.expedition.phase == "settlement" and key == "y" then
         if expedition.buySampleYieldUpgrade(self.expedition) then
-            self.message = string.format(
-                "SAMPLE YIELD UPGRADED  LV.%d  x%.2f  BALANCE $%d",
+            self.message = i18n.t(
+                "yield_upgraded_message",
                 self.expedition.sampleYieldUpgradeLevel,
                 expedition.sampleYieldMultiplier(self.expedition),
                 self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.sampleYieldUpgradeCost, "SAMPLE YIELD UPGRADE")
+                self.expedition.sampleYieldUpgradeCost, i18n.t("item_yield_upgrade"))
         end
         return
     end
     if self.expedition.phase == "settlement" and key == "g" then
         if expedition.buySteeringUpgrade(self.expedition) then
-            self.message = string.format(
-                "STEERING UPGRADED  LV.%d  SPEED %d  BALANCE $%d",
+            self.message = i18n.t(
+                "steering_upgraded_message",
                 self.expedition.steeringUpgradeLevel,
                 expedition.steeringSpeed(self.expedition),
                 self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.steeringUpgradeCost, "STEERING UPGRADE")
+                self.expedition.steeringUpgradeCost, i18n.t("item_steering_upgrade"))
         end
         return
     end
@@ -943,18 +1000,18 @@ function M:keypressed(key)
         if not self.expedition.ownedShips.scout then
             if expedition.buyShip(self.expedition, "scout") then
                 expedition.selectShip(self.expedition, "scout")
-                self.message = string.format(
-                    "SCOUT PURCHASED AND SELECTED  MAX FUEL %d  HULL %d  %s  BALANCE $%d",
+                self.message = i18n.t(
+                    "scout_purchased_message",
                     self.expedition.maxFuel, self.expedition.maxDurability,
                     launchForecastLine(self.expedition), self.expedition.money)
             else
                 self.message = purchaseShortfallMessage(self.expedition.money,
-                    self.expedition.scoutShipCost, "SCOUT")
+                    self.expedition.scoutShipCost, i18n.t("item_scout"))
             end
         else
             local shipId = self.expedition.selectedShipId == "scout" and "starter" or "scout"
             expedition.selectShip(self.expedition, shipId)
-            self.message = string.format("%s SELECTED  MAX FUEL %d  HULL %d  %s",
+            self.message = i18n.t("ship_selected_message",
                 string.upper(shipId), self.expedition.maxFuel, self.expedition.maxDurability,
                 launchForecastLine(self.expedition))
         end
@@ -976,7 +1033,7 @@ function M:keypressed(key)
                     self.discoveredCount = 0
                     self.floatingTexts = {}
                 end
-                self.message = "ASCENDING  STEER LEFT / RIGHT"
+                self.message = "ASCENDING  DRAG TO STEER"
             end
         end
     end
@@ -1047,6 +1104,19 @@ end
 
 function M:touchreleased(id)
     self.touches[id] = nil
+end
+
+function M:drawJoystickStick()
+    local ox, oy, kx, ky = self:joystickKnob()
+    if not ox then return end
+    love.graphics.setColor(0.2, 0.45, 0.75, 0.35)
+    love.graphics.circle("fill", ox, oy, joystick.maxRadius)
+    love.graphics.setColor(0.55, 0.8, 1, 0.9)
+    love.graphics.circle("line", ox, oy, joystick.maxRadius)
+    love.graphics.setColor(0.9, 0.95, 1, 0.95)
+    love.graphics.circle("fill", kx, ky, 7)
+    love.graphics.setColor(0.3, 0.7, 1)
+    love.graphics.circle("line", kx, ky, 7)
 end
 
 -- Circular galaxy chart (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3).
@@ -1510,6 +1580,7 @@ function M:draw()
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
         love.graphics.printf("HOLD RIGHT", 99, ascendLabelY, 76, "center")
         love.graphics.setFont(previousSteeringFont)
+        self:drawJoystickStick()
     elseif self.expedition.phase == "returning" then
         self.smallFont = self.smallFont or love.graphics.newFont(8)
         local previousOddsFont = love.graphics.getFont()
@@ -1595,6 +1666,7 @@ function M:draw()
         end
         love.graphics.printf(slotButton.compactLabel, 60, returnLabelY, 60, "center")
         love.graphics.setFont(previousReturnButtonFont)
+        self:drawJoystickStick()
     end
     love.graphics.setColor(0.85, 0.9, 1)
     local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 50 or viewport.height - 30

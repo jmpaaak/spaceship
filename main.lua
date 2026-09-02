@@ -364,15 +364,24 @@ function love.keypressed(key)
     if scenes then sceneStack.keypressed(scenes, key) end
 end
 
+local function clampToCanvas(gameX, gameY)
+    if gameX < 0 then gameX = 0 end
+    if gameX > viewport.width then gameX = viewport.width end
+    if gameY < 0 then gameY = 0 end
+    if gameY > viewport.height then gameY = viewport.height end
+    return gameX, gameY
+end
+
 local function touchToGame(x, y)
     local width, height = love.graphics.getDimensions()
-    return viewport.toGame(x, y, width, height, false)
+    local gameX, gameY = viewport.toGame(x, y, width, height, false)
+    return clampToCanvas(gameX, gameY)
 end
 
 function love.touchpressed(id, x, y)
     if not scenes then return end
-    local gameX, gameY, inside = touchToGame(x, y)
-    if inside then sceneStack.touchpressed(scenes, id, gameX, gameY) end
+    local gameX, gameY = touchToGame(x, y)
+    sceneStack.touchpressed(scenes, id, gameX, gameY)
 end
 
 function love.touchmoved(id, x, y)
@@ -385,6 +394,33 @@ function love.touchreleased(id, x, y)
     if not scenes then return end
     local gameX, gameY = touchToGame(x, y)
     sceneStack.touchreleased(scenes, id, gameX, gameY)
+end
+
+-- Desktop `love .` never fires love.touch* (those are mobile/tablet).
+-- Route the mouse through the same PlayScene touch/joystick path so a
+-- click-drag is a virtual stick. Ignore istouch so a real touch isn't
+-- handled twice (LÖVE also synthesizes mouse events for touches).
+-- Coordinates are clamped onto the 180x320 canvas so high-dpi letterbox
+-- rounding cannot drop the press as "outside" and silently eat the drag.
+local mouseTouchId = "mouse"
+
+function love.mousepressed(x, y, button, istouch)
+    if istouch or button ~= 1 or not scenes then return end
+    local gameX, gameY = touchToGame(x, y)
+    sceneStack.touchpressed(scenes, mouseTouchId, gameX, gameY)
+end
+
+function love.mousemoved(x, y, dx, dy, istouch)
+    if istouch or not scenes then return end
+    if not love.mouse.isDown(1) then return end
+    local gameX, gameY = touchToGame(x, y)
+    sceneStack.touchmoved(scenes, mouseTouchId, gameX, gameY)
+end
+
+function love.mousereleased(x, y, button, istouch)
+    if istouch or button ~= 1 or not scenes then return end
+    local gameX, gameY = touchToGame(x, y)
+    sceneStack.touchreleased(scenes, mouseTouchId, gameX, gameY)
 end
 
 local function persistBestAltitude()
