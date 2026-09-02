@@ -394,3 +394,16 @@
 - 여전히 미착수: 실제 장착 UI(플레이어가 화면에서 카드를 고르는 화면)는 `play.lua` 영역이라 다른 레인 담당. (E)/(F)/(D) 카테고리(detectionRadius/shopDiscount/insurance/collisionRadius 등)의 run 상태 소비, 항목 12의 실제 드롭 RNG 배선, 항목 9(c)의 슬롯 교체 루프 설계는 다음 슬라이스로 남는다.
 - 다음 사이클 다음 슬라이스: (a) engine parts의 (G) 효과(fuelEfficiency/steeringResponsiveness/boostCharge)도 동일한 최소 로더 호출 방식으로 run에 배선(예: `M.effectiveFuelBurnRate`/`M.effectiveSteeringRate`를 실제 조종/연비 계산에 연결), 또는 (b) 항목 12(등급/에디션)의 실제 드롭 RNG 배선(체크포인트/상점 획득 시 `gear.rollRarity`/`gear.rollEdition` 호출), 둘 중 사용자 우선순위에 따라 선택.
 
+
+## [gear 레인] 항목 12 드롭 RNG 게임 배선 — M.rollGearOffer (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 12(등급/에디션 파밍 시스템)의 실제 게임 배선을 처리했다. 이 레인(`spaceship-gear` 브랜치)은 `loop/PROMPT.md`의 레인 스코프에 따라 항목13→9→10→12→14가 이미 1차 완료된 상태였고, 이번 사이클은 항목12의 `gear.rollRarity`/`gear.rollEdition`이 여전히 순수 함수로만 존재하던(어떤 run 코드도 실제로 호출하지 않던) 상태를 해소했다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- 신규 `game/expedition.lua`의 `M.rollGearOffer(run, pool, rolls)` — 명시적 `rolls`(rarity/pick/editionChance/editionPick, 실제 RNG 소스는 여전히 호출자 책임)를 받아 (1) `gear.rollRarity`로 등급을 결정하되 `run.equippedGear`의 luck 총합(`gear.totalLuckBonus`)을 luckBonus로 자동 주입, (2) 해당 등급 카드를 `pool`에서 선택(없으면 전체 풀로 폴백해 항상 카드를 반환), (3) `gear.rollEdition`(동일 luckBonus)으로 에디션 부여를 굴리고 부여되면 `gear.applyEditionEffects`로 실제 효과 수치까지 반영한 "오퍼" 테이블(`{id,name,nameKo,icon,rarity,tags,edition,effects}`)을 반환한다. 이 오퍼는 loadout 항목이 아니라 순수 결과값이며, 실제 장착은 기존 `M.equipGear`를 호출자가 별도 수행한다. `loop/PROMPT.md`가 명시적으로 허용한 "최소한의 로더 호출" 예외 범위이며 `play.lua`/`i18n.lua`/`world.lua`는 건드리지 않았다.
+- `game/self_test.lua`의 신규 `testGearOfferRolling()`이 다음을 회귀 검증한다: roll=0→common 등급/무에디션, roll≈1 + 에디션 보유 카드 강제선택→legendary 등급 + 에디션 실제 적용(원본 대비 효과 수치 변경 확인), 장착된 luck 카드가 동일 roll에서 무luck 대비 절대 더 낮은 등급으로 가지 않고 이 프로브 케이스(roll=0.8, luck +20)에서는 실제로 uncommon→rare로 더 높은 등급을 뽑음(항목14 (C) luck 대상 #2 회귀), 특정 등급 카드가 없는 풀에서도 폴백으로 항상 오퍼를 반환함. 수정 전 RED(`attempt to call field 'rollGearOffer' (a nil value)`) 확인 후 구현, GREEN 전환 확인.
+- `docs/GEAR_SCHEMA.md`에 "Item 12 drop RNG run wiring — M.rollGearOffer (follow-up slice)" 섹션을 추가해 계약을 문서화했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md` 네 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 12 하위에 처리 상황을 append했다.
+- 여전히 미착수: 실제 상점/체크포인트 UI에서 `M.rollGearOffer`를 호출해 플레이어에게 카드를 제시하는 화면(레인 스코프상 `play.lua` 담당), 항목14 (C) chainTrigger/rerollBonus의 run 소비, 항목14 (E) detectionRadius/autoCollect의 run 배선(예: minimap.lua 스캔 반경에 실제 연결).
+- 다음 사이클 다음 슬라이스: 항목14 (E) detectionRadius를 `minimap.lua`의 `viewRadius`/`checkpointSearchCellRadius`에 연결(이 역시 순수 함수는 이미 `gear.effectiveDetectionRadius`로 존재), 또는 (C) chainTrigger/rerollBonus를 상점 리롤/체인 트리거 소비 로직에 배선.

@@ -604,6 +604,55 @@ function M.boostChargeCount(run)
     return gearModule.boostChargeCount(run.equippedEngineParts or {})
 end
 
+-- Item 12's drop RNG (gear.rollRarity / gear.rollEdition), wired into an
+-- actual run for the first time. Given a candidate `pool` (from
+-- gear.loadHullParts/loadEngineParts) and explicit `rolls` (shop/checkpoint
+-- drop code, still out of this lane's scope, decides the real RNG source --
+-- same explicit-roll design gear.lua's own functions already use), this:
+--   1. resolves a target rarity tier via gear.rollRarity, boosted by the
+--      run's own equipped-gear luck total (item 14(C) target #2: "희귀
+--      등급... 드롭 가중치를 상위 등급 쪽으로 상향");
+--   2. picks a candidate from `pool` matching that tier (falling back to
+--      ANY pool card, in `rolls.pick` order, if the tier is empty in this
+--      pool -- callers should never have to special-case "no card of that
+--      rarity available");
+--   3. rolls whether an edition attaches via gear.rollEdition, again boosted
+--      by the run's luck total (item 14(C) target #1: "에디션... 부여 확률
+--      상향"), and applies it via gear.applyEditionEffects.
+-- Returns a plain offer table: { id, name, nameKo, icon, rarity, tags,
+-- edition, effects } -- NOT a loadout entry; callers equip it explicitly
+-- via M.equipGear once accepted.
+function M.rollGearOffer(run, pool, rolls)
+    rolls = rolls or {}
+    local luckBonus = gearModule.totalLuckBonus(run.equippedGear or {})
+    local targetRarity = gearModule.rollRarity(rolls.rarity or 0, luckBonus)
+
+    local matching = {}
+    for _, part in ipairs(pool) do
+        if part.rarity == targetRarity then matching[#matching + 1] = part end
+    end
+    local candidates = #matching > 0 and matching or pool
+    if #candidates == 0 then return nil end
+    local idx = math.floor((rolls.pick or 0) * #candidates) + 1
+    if idx > #candidates then idx = #candidates end
+    if idx < 1 then idx = 1 end
+    local part = candidates[idx]
+
+    local edition = gearModule.rollEdition(part, rolls.editionChance or 1, rolls.editionPick or 0, luckBonus)
+    local effects = gearModule.applyEditionEffects(part, edition)
+
+    return {
+        id = part.id,
+        name = part.name,
+        nameKo = part.nameKo,
+        icon = part.icon,
+        rarity = part.rarity,
+        tags = part.tags,
+        edition = edition,
+        effects = effects,
+    }
+end
+
 function M.update(run, dt)
     if dt <= 0 then return end
 

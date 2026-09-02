@@ -1276,6 +1276,97 @@ local function testGearSurvivalAndEconomyWiring()
         "a run with no shopDiscount gear must still pay the full base price, got " .. tostring(fullPriceRun.money))
 end
 
+-- Item 12's rarity/edition RNG (gear.rollRarity/gear.rollEdition) has
+-- existed only as pure functions until now -- never actually called from a
+-- run's shop/checkpoint drop path. This wires an explicit-roll offer
+-- generator (M.rollGearOffer) into expedition.lua, same "최소한의 로더
+-- 호출" exception already used for the other gear.lua/engine_parts.lua
+-- wiring above (game/expedition.lua only; play.lua/world.lua untouched).
+-- Callers still supply the actual roll numbers (shop/checkpoint code, out
+-- of this lane's scope) so the selection stays deterministically testable.
+local function testGearOfferRolling()
+    local expedition = require("game.expedition")
+    local hullPool = gear.loadHullParts()
+
+    -- roll=0 must always pick the rarest-common tier deterministically
+    -- (matches gear.rollRarity(0, 0) == "common"), and must return an
+    -- actual card of that rarity from the given pool along with no edition
+    -- when editionChanceRoll lands above the base chance.
+    local baseRun = expedition.new()
+    local commonOffer = expedition.rollGearOffer(baseRun, hullPool, {
+        rarity = 0, pick = 0, editionChance = 0.99, editionPick = 0,
+    })
+    assert(commonOffer, "rollGearOffer must return a card for roll=0")
+    assert(commonOffer.rarity == "common",
+        "roll=0 with no luck must resolve to the common tier, got " .. tostring(commonOffer.rarity))
+    assert(commonOffer.edition == nil,
+        "an editionChanceRoll above the base chance must yield no edition")
+    assert(type(commonOffer.effects) == "table" and #commonOffer.effects > 0,
+        "a rolled offer must carry a concrete effects list")
+
+    -- roll near 1 must resolve to the legendary tier (gear.rollRarity(0.999,
+    -- 0) == "legendary"), and forcing editionChanceRoll=0 (below the base
+    -- chance) on a card with a non-empty editions list must attach one.
+    local editionCard = nil
+    for _, part in ipairs(hullPool) do
+        if #part.editions > 0 then editionCard = part end
+    end
+    assert(editionCard, "fixture pool must contain at least one card with editions for this test")
+    local onlyEditionCardPool = { editionCard }
+    local legendaryOffer = expedition.rollGearOffer(baseRun, onlyEditionCardPool, {
+        rarity = 0.999, pick = 0, editionChance = 0, editionPick = 0,
+    })
+    assert(legendaryOffer, "rollGearOffer must return a card even for a single-card pool")
+    assert(legendaryOffer.edition == editionCard.editions[1],
+        "editionChanceRoll below the base chance must attach an edition from the card's own list")
+    -- The edition's effect transform (gear.applyEditionEffects) must have
+    -- actually been applied -- the offer's effects must differ from the
+    -- card's raw, un-edition'd effects (unless the multiplier happens to be
+    -- 1.0, which none of gear.editionEffects' entries are).
+    local rawTotal, offerTotal = 0, 0
+    for _, e in ipairs(editionCard.effects) do rawTotal = rawTotal + e.value end
+    for _, e in ipairs(legendaryOffer.effects) do offerTotal = offerTotal + e.value end
+    assert(rawTotal ~= offerTotal,
+        "an attached edition must actually mutate the offer's effect values")
+
+    -- Item 14(C) luck wiring: equipping a hull card with a positive `luck`
+    -- effect must raise the probability that the SAME rarity roll resolves
+    -- to a higher tier than it would with no luck at all (gear.rollRarity's
+    -- luckBonus parameter, now actually sourced from equipped gear instead
+    -- of a hand-supplied literal).
+    local luckyRun = expedition.new()
+    local luckCard = { id = "luck-fixture", tags = {}, editions = {},
+        effects = { { type = "luck", value = 20 } } }
+    assert(expedition.equipGear(luckyRun, "hull", { id = "luck-fixture", name = "Luck",
+        nameKo = "Luck", icon = "*", rarity = "common", tags = {}, editions = {}, effects = luckCard.effects }))
+    -- Pick a roll that lands in "uncommon" with zero luck but "rare" (or
+    -- better) once the equipped luck bonus shifts the cumulative weights.
+    local probeRoll = 0.8
+    local noLuckRarity = gear.rollRarity(probeRoll, 0)
+    local luckyOffer = expedition.rollGearOffer(luckyRun, hullPool, {
+        rarity = probeRoll, pick = 0, editionChance = 0.99, editionPick = 0,
+    })
+    local rarityOrder = { common = 1, uncommon = 2, rare = 3, legendary = 4 }
+    assert(rarityOrder[luckyOffer.rarity] >= rarityOrder[noLuckRarity],
+        "equipped luck must never resolve a WORSE rarity tier than the unluck baseline for the same roll")
+    assert(rarityOrder[luckyOffer.rarity] > rarityOrder[noLuckRarity],
+        "equipped luck must resolve a strictly better rarity tier for this probe roll (baseline "
+            .. tostring(noLuckRarity) .. ", got " .. tostring(luckyOffer.rarity) .. ")")
+
+    -- An empty-rarity-tier pool (no cards of the resolved rarity available)
+    -- must fall back to returning SOME card rather than nil/erroring, so
+    -- callers never have to special-case "no offer this time" themselves.
+    local commonOnlyPool = {}
+    for _, part in ipairs(hullPool) do
+        if part.rarity == "common" then commonOnlyPool[#commonOnlyPool + 1] = part end
+    end
+    assert(#commonOnlyPool > 0, "fixture pool must have at least one common card")
+    local fallbackOffer = expedition.rollGearOffer(baseRun, commonOnlyPool, {
+        rarity = 0.999, pick = 0, editionChance = 0.99, editionPick = 0,
+    })
+    assert(fallbackOffer, "rollGearOffer must fall back to an available card when the resolved rarity is empty")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -2980,6 +3071,7 @@ function M.run()
     testGearRunWiring()
     testGearPropulsionRunWiring()
     testGearSurvivalAndEconomyWiring()
+    testGearOfferRolling()
 
     print("SPACESHIP_UNIT_OK")
 end

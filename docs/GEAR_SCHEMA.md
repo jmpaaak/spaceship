@@ -415,6 +415,51 @@ then destroys normally on a second lethal hit; an uninsured run destroys on
 the first hit (baseline unchanged); a discounted purchase charges exactly
 80% of the base cost while an undiscounted run still pays full price.
 
-Still deferred: (C) `luck`/`chainTrigger`/`rerollBonus` and (E)
-`detectionRadius`/`autoCollect` run wiring, plus item 12's actual drop RNG
-call sites (shop/checkpoint code, out of this lane's current scope).
+Still deferred: (C) `chainTrigger`/`rerollBonus` and (E)
+`detectionRadius`/`autoCollect` run wiring, plus the actual shop/checkpoint
+UI call sites that decide when to offer a roll (out of this lane's current
+scope).
+
+### Item 12 drop RNG run wiring — `M.rollGearOffer` (follow-up slice)
+
+`game/expedition.lua` now exposes `M.rollGearOffer(run, pool, rolls)`,
+wiring item 12's `gear.rollRarity`/`gear.rollEdition` (previously pure
+functions with no real caller) into an actual run for the first time,
+within the same "최소한의 로더 호출" exception:
+
+- `rolls` is an explicit table (`rarity`, `pick`, `editionChance`,
+  `editionPick`, all `[0, 1)`) — the real RNG source (shop/checkpoint code,
+  still out of this lane's scope) is entirely the caller's responsibility,
+  same explicit-roll design `gear.lua`'s own functions already use.
+- The target rarity tier is resolved via `gear.rollRarity(rolls.rarity,
+  luckBonus)`, where `luckBonus` is now automatically sourced from
+  `gear.totalLuckBonus(run.equippedGear)` instead of being a
+  caller-supplied literal — this is the (C) `luck` target #2 wiring
+  ("희귀 등급... 드롭 가중치를 상위 등급 쪽으로 상향") actually taking
+  effect on a real run's equipped gear.
+- A candidate card matching that tier is picked from `pool` (in
+  `rolls.pick` order); if `pool` has no card of that tier, it falls back to
+  picking from the full `pool` instead of returning nil, so callers never
+  need to special-case an "empty tier" result.
+- `gear.rollEdition(part, rolls.editionChance, rolls.editionPick,
+  luckBonus)` (same auto-sourced `luckBonus` — (C) `luck` target #1) decides
+  whether an edition attaches, and if so `gear.applyEditionEffects` is
+  applied so the returned offer's `effects` are the *actual* post-edition
+  numbers, not the raw card data.
+- Returns a plain offer table (`id`, `name`, `nameKo`, `icon`, `rarity`,
+  `tags`, `edition`, `effects`) — not a loadout entry. Equipping an accepted
+  offer is still the caller's job via the existing `M.equipGear`.
+
+`game/self_test.lua`'s `testGearOfferRolling` regression-checks: roll=0
+resolves common with no edition; a forced-legendary roll on a
+single-edition-carrying-card pool attaches an edition and the returned
+effects differ numerically from the card's raw effects; an equipped `luck`
+card raises (never lowers) the resolved rarity tier for the same probe
+roll versus the zero-luck baseline; an empty-tier pool still falls back to
+returning some card.
+
+Still deferred: the actual shop/checkpoint UI screen that calls
+`M.rollGearOffer` with real dice and presents the offer to the player
+(`play.lua`, out of this lane's scope), (C) `chainTrigger`/`rerollBonus`
+and (E) `detectionRadius`/`autoCollect` run wiring.
+
