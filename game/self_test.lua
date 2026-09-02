@@ -691,10 +691,26 @@ function M.run()
 
     local ship = shipModule.new()
     shipModule.update(ship, 1, { thrust = true })
-    assert(ship.y < 0 and ship.fuel < 100)
+    assert(ship.y < 0)
     local before = ship.angle
     shipModule.update(ship, 1, { right = true })
     assert(ship.angle > before)
+
+    -- docs/feedback/INBOX.md item 11(c): fuel is no longer a flight
+    -- constraint anywhere in the game (game/expedition.lua's
+    -- maneuverFuel/burnManeuverFuel are no-ops), but game/ship.lua's
+    -- M.update still gated thrust on ship.fuel > 0 and locally drained it
+    -- -- dead logic modeling the old fuel-limited-flight design. Thrust
+    -- must still work with zero fuel, and the `fuel` field (kept only as a
+    -- display value synced from run.fuel by game/scenes/play.lua) must not
+    -- be drained by thrusting.
+    do
+        local zeroFuelShip = shipModule.new()
+        zeroFuelShip.fuel = 0
+        shipModule.update(zeroFuelShip, 1, { thrust = true })
+        assert(zeroFuelShip.y < 0, "thrust must work even at zero fuel")
+        assert(zeroFuelShip.fuel == 0, "ship.update must not itself drain fuel")
+    end
 
     local a = world.planets(7, -3)
     local b = world.planets(7, -3)

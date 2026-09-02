@@ -1,4 +1,14 @@
 # STATUS
+## 연료 소진 잔재 UI/로직 제거 첫 슬라이스: game/ship.lua의 죽은 fuel>0 게이트 제거 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 11번(연료 소진 관련 잔재 UI/문구 전면 제거)의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.
+
+- 11번 항목 (c)가 지목한 "코드 전반의 죽은 연료 소모 로직"을 찾던 중, `game/expedition.lua`는 이미 `maneuverFuel`/`burnManeuverFuel`이 no-op이고 `M.update(run, dt)`가 연료를 태우지 않는 것을 확인했으나, `game/ship.lua`의 `M.update(ship, dt, input)`는 여전히 옛 설계(연료가 비행을 제약한다)를 그대로 구현하고 있었다 — `if input.thrust and ship.fuel > 0 then`으로 추력을 게이트하고 `ship.fuel = math.max(0, ship.fuel - 1.8 * dt)`로 로컬 연료를 소모시켰다. 실제로는 `game/scenes/play.lua`가 매 프레임 `self.ship.fuel = self.expedition.fuel`로 이 필드를 표시용으로만 덮어쓰므로 이 게이트/소모는 게임플레이에 아무 영향이 없는 죽은 코드였지만, 코드를 읽는 사람에게 "연료가 떨어지면 추력이 막힌다"는 잘못된 인상을 줄 수 있었다.
+- `game/self_test.lua`의 `M.run()`에 회귀 테스트를 추가했다 — `fuel = 0`인 새 ship에 `thrust = true`를 줘도 `ship.y`가 여전히 음수로 움직임(추력이 작동함)과 `ship.fuel`이 `M.update` 호출 후에도 여전히 0으로 유지됨(이 모듈이 fuel을 스스로 소모하지 않음)을 검증한다. 수정 전 RED(`assertion failed! game/self_test.lua:711: thrust must work even at zero fuel`) 확인 후, `game/ship.lua`의 `M.update`에서 `ship.fuel > 0` 게이트와 `ship.fuel = math.max(...)` 소모 줄을 제거해 GREEN으로 전환했다. 기존 회귀(`ship.fuel < 100` 단언)도 이제 무의미해져 제거했다(fuel이 더 이상 이 모듈에서 변하지 않으므로).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 11번 항목에 이번 슬라이스(ship.lua 죽은 fuel 게이트 제거) 진행 상황을 기록했다. 남은 작업: (a) `launchForecastLine`/`M.launchForecast` 함수명과 `forecast_line`(REACH/도달예상, 이미 무피격→도달예상으로 라벨은 개선됐으나 함수/개념 자체가 "이 연료로 도달 가능한 고도"라는 연료-종속 프레이밍을 여전히 내포)을 연료-무관 개념으로 재정의하거나 제거, (b) `run.maxFuel`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount` 기반 "연료 업그레이드" 상점 항목 자체(오해를 유발하는 구매 항목)를 제거하거나 재정의, (c) `run.fuel`/`fuelBurnRate` 등 나머지 죽은 필드 정리.
+- 다음 사이클 다음 슬라이스: 11번 항목의 남은 (a)/(b)/(c) 중 하나(특히 (b) 연료 업그레이드 상점 항목 제거/재정의는 `game/scenes/play.lua`/`game/i18n.lua`/`game/self_test.lua` 여러 곳에 걸친 더 큰 슬라이스이므로 별도로 계획 필요), 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
 ## 아이콘 기반 HUD 간소화 네 번째/최종 슬라이스: STEER SPEED에 스피드미터 아이콘 추가 — 3번 항목 완료 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 네 번째이자 마지막 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.
