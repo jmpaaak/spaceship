@@ -21,11 +21,42 @@ M.enginePartsPath = "game/data/engine_parts.json"
 -- categories; keeping this as an explicit whitelist means malformed/typo'd
 -- effect types in hand-edited JSON fail loudly instead of silently no-op'ing.
 M.knownEffectTypes = {
+    -- (A) additive stat effects, this cycle's original 5.
     speed = true,
     sampleSellValue = true,
     money = true,
     climbSpeed = true,
     hullDurability = true,
+    -- (B) multiplicative (item 14) — the synergy payoff axis: these are
+    -- percentage bonuses (value 25 == "+25%"), applied AFTER the additive
+    -- (A) totals are summed, never blended additively with them.
+    sellMultiplier = true,
+    streakMultiplier = true,
+    -- (C) trigger/probability (item 14).
+    luck = true,
+    chainTrigger = true,
+    rerollBonus = true,
+    -- (D) survival/risk-mitigation (item 14).
+    insurance = true,
+    collisionRadius = true,
+    -- (E) scouting/information (item 14).
+    detectionRadius = true,
+    autoCollect = true,
+    -- (F) economy (item 14).
+    shopDiscount = true,
+}
+
+-- Item 14: which schema category (A~F) each known effect type belongs to.
+-- Purely descriptive metadata (used by docs + the web editor's grouped
+-- effect-type dropdown); M.knownEffectTypes above remains the actual
+-- validation whitelist.
+M.effectCategories = {
+    speed = "A", sampleSellValue = "A", money = "A", climbSpeed = "A", hullDurability = "A",
+    sellMultiplier = "B", streakMultiplier = "B",
+    luck = "C", chainTrigger = "C", rerollBonus = "C",
+    insurance = "D", collisionRadius = "D",
+    detectionRadius = "E", autoCollect = "E",
+    shopDiscount = "F",
 }
 
 M.knownRarities = {
@@ -261,7 +292,113 @@ function M.equippedTotals(parts)
         totals.climbSpeed = totals.climbSpeed * multiplier
     end
     totals.synergyMultiplier = multiplier
+
+    -- Item 14 category (B): multiplicative effects are applied AFTER every
+    -- additive (A) total above is summed, as a separate multiply pass —
+    -- "가산 총합 × 배율 총합" per docs/feedback/INBOX.md item 14. A card's
+    -- sellMultiplier value is a percentage (e.g. 25 == "+25%"); every
+    -- equipped card's sellMultiplier stacks additively into one combined
+    -- percentage BEFORE being converted to a single multiply pass against
+    -- sampleSellValue, so two +25% cards give +50% total, not +56%
+    -- (compounding), matching the additive-then-multiply design mandate.
+    if totals.sellMultiplier and totals.sampleSellValue then
+        totals.sampleSellValue = totals.sampleSellValue * (1 + totals.sellMultiplier / 100)
+    end
     return totals
+end
+
+-- ---------------------------------------------------------------------
+-- Item 14: effect schema categories (C) trigger/probability, (D)
+-- survival/risk-mitigation, (E) scouting/information, (F) economy. These
+-- effect types are not simple "sum into a run stat" additions like
+-- category (A) — each needs its own small conversion rule from a card's
+-- raw effect value into the concrete gameplay quantity it controls. Kept
+-- as pure functions (no run/state mutation, no love.* calls) so they are
+-- trivially unit-testable and composable with expedition.lua/shop code in
+-- a later wiring slice, exactly like the item 9/10/12 engines above.
+-- ---------------------------------------------------------------------
+
+-- Sums a single effect type's raw value across a list of equipped parts.
+-- Small helper shared by the category-specific converters below so each
+-- one doesn't re-implement the same scan.
+function M.totalEffect(parts, effectType)
+    local total = 0
+    for _, part in ipairs(parts) do
+        for _, effect in ipairs(part.effects) do
+            if effect.type == effectType then
+                total = total + effect.value
+            end
+        end
+    end
+    return total
+end
+
+-- (C) chainTrigger: "특정 조건마다 다른 장착 카드 효과 재발동" — the raw
+-- effect value is a count of extra re-triggers; fractional totals round
+-- down (a card list can't grant half a re-trigger) and can never go
+-- negative (a card list with no chainTrigger effects grants zero, not a
+-- negative count).
+function M.chainTriggerCount(parts)
+    return math.max(0, math.floor(M.totalEffect(parts, "chainTrigger")))
+end
+
+-- (C) rerollBonus: "상점 리롤 무료 횟수" — same discrete-count shape as
+-- chainTrigger above.
+function M.rerollCount(parts)
+    return math.max(0, math.floor(M.totalEffect(parts, "rerollBonus")))
+end
+
+-- (D) insurance: "파괴 시 1회 한정 정산 없이 생존" — a boolean-ish gate;
+-- any positive total across equipped parts grants the save (multiple
+-- insurance cards do not stack multiple lives this cycle, matching the
+-- item 14 "1회 한정" wording).
+function M.hasInsurance(parts)
+    return M.totalEffect(parts, "insurance") > 0
+end
+
+-- (D) collisionRadius: "충돌 판정 반경 축소" — negative-friendly percentage
+-- shrink applied to a base hitbox radius, clamped so it can never invert
+-- into a negative radius.
+function M.effectiveCollisionRadius(baseRadius, parts)
+    local pct = M.totalEffect(parts, "collisionRadius")
+    local radius = baseRadius * (1 - pct / 100)
+    if radius < 0 then radius = 0 end
+    return radius
+end
+
+-- (E) detectionRadius: "표본/체크포인트/상점 행성 미니맵 표시 반경 확대" —
+-- percentage growth applied to a base scan radius.
+function M.effectiveDetectionRadius(baseRadius, parts)
+    local pct = M.totalEffect(parts, "detectionRadius")
+    local radius = baseRadius * (1 + pct / 100)
+    if radius < 0 then radius = 0 end
+    return radius
+end
+
+-- (E) autoCollect: "근접 표본 완전 자동 흡수" — boolean gate, same
+-- any-positive-total shape as hasInsurance above.
+function M.autoCollectEnabled(parts)
+    return M.totalEffect(parts, "autoCollect") > 0
+end
+
+-- (F) shopDiscount: "상점 구매가 할인" — percentage discount applied to a
+-- base shop price, clamped so a stack of discount cards can reduce a price
+-- to free but never below zero (negative price).
+function M.effectiveShopPrice(basePrice, parts)
+    local pct = M.totalEffect(parts, "shopDiscount")
+    local price = basePrice * (1 - pct / 100)
+    if price < 0 then price = 0 end
+    return price
+end
+
+-- (C) luck: item 14's "전역 확률 보정", scoped to exactly the two targets
+-- item 14 specifies (edition-assignment chance and rarity-drop weighting —
+-- see M.rollEdition/M.rollRarity's luckBonus parameter above). A card's
+-- raw luck effect value (percentage-shaped, like the other new categories)
+-- is summed and converted into the fractional luckBonus those two
+-- functions already expect (e.g. a total of 5 -> 0.05).
+function M.totalLuckBonus(parts)
+    return M.totalEffect(parts, "luck") / 100
 end
 
 -- ---------------------------------------------------------------------

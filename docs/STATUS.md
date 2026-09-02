@@ -1,4 +1,27 @@
 # STATUS
+## [spaceship-gear 레인] 항목14: 효과 스키마 A~F 확장 + 웹 에디터 폼 동기화 (완료, 2026-09-03)
+
+`loop/PROMPT.md`의 gear 레인 순서(항목13 -> 항목9 -> 항목10 -> 항목12 -> 항목14)에 따라 항목12(등급/에디션 파밍) 완료 후 항목14(효과 스키마 A~F 확장)를 착수했다 — 이 레인이 지정받은 5개 항목의 마지막이다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean)로 시작했고, `git status --short`는 clean이라 이전 사이클 미완료 작업은 없었다.
+
+- TDD로 `game/self_test.lua`에 `testGearEffectSchemaExpansion()`을 먼저 추가했다(RED 확인: `attempt to index a nil value (field 'effectCategories')`).
+- `game/gear.lua`의 `M.knownEffectTypes`를 기존 5종(A: speed/sampleSellValue/money/climbSpeed/hullDurability)에서 15종으로 확장했다: **(B)** sellMultiplier/streakMultiplier, **(C)** luck/chainTrigger/rerollBonus, **(D)** insurance/collisionRadius, **(E)** detectionRadius/autoCollect, **(F)** shopDiscount. 각 타입의 스키마 카테고리를 표시하는 `M.effectCategories` 메타데이터 테이블도 함께 추가했다.
+- **(B) 배율형 — 시너지 핵심**: `M.equippedTotals`를 확장해, 항목9의 climbSpeed 태그 시너지 배율 적용 이후 sellMultiplier(퍼센트 형태, 예: `25` = "+25%")를 모든 장착 부품에서 먼저 가산 합산한 뒤, 그 결합된 퍼센트를 `sampleSellValue` 가산 총합에 곱연산 1회로만 적용하도록 했다. 두 장의 +25% 카드는 정확히 +50%가 되고(가산 스택), 복리 +56.25%로 계산되지 않는다 — 항목14가 요구한 "가산 총합 × 배율 총합" 순서를 정확히 구현했다. `streakMultiplier`는 스키마 타입으로 등록·검증만 하고, 실제 "동일 계열 연속 채집" 배율 소비 로직 자체는 `game/expedition.lua` 소관이라 이번 사이클 범위 밖으로 명시했다(레인 스코프상 최소 로더 호출 예외 외의 expedition.lua 수정은 금지).
+- **(C) 트리거/확률**: `M.chainTriggerCount(parts)`/`M.rerollCount(parts)`(효과 총합을 0 이상 정수로 내림). `M.totalLuckBonus(parts)`는 luck 효과 총합을 100으로 나눠, 항목12에서 이미 구현된 `gear.rollRarity(roll, luckBonus)`/`gear.rollEdition(part, chanceRoll, pickRoll, luckBonus)`가 곧바로 받을 수 있는 소수 `luckBonus` 형태로 변환한다 — 장착 부품의 luck 효과가 실제 등급/에디션 확률 롤과 연결되는 지점을 이번 사이클에서 마련했다(호출은 여전히 상점/드롭 코드, 이 레인 스코프 밖).
+- **(D) 생존/리스크**: `M.hasInsurance(parts)`(1회성 불리언 게이트 — 여러 장 장착해도 생명 중첩 없음, 항목12의 "1회 한정" 취지 반영), `M.effectiveCollisionRadius(baseRadius, parts)`(퍼센트 축소, 0 클램프).
+- **(E) 탐사/정보**: `M.effectiveDetectionRadius(baseRadius, parts)`(퍼센트 확대), `M.autoCollectEnabled(parts)`(불리언 게이트, hasInsurance와 동일 형태).
+- **(F) 경제**: `M.effectiveShopPrice(basePrice, parts)`(퍼센트 할인, 0 클램프 — 카드 스택으로 무료는 가능해도 음수 가격은 되지 않음).
+- `tools/gear-editor/editor.js`에 `EFFECT_TYPE_GROUPS`(카테고리별 A~F 라벨 그룹 테이블)를 신규 추가하고, 기존 `KNOWN_EFFECT_TYPES`를 `Object.values(EFFECT_TYPE_GROUPS).flat()`로 파생시켜 두 목록이 구조적으로 어긋날 수 없게 했다. 카드 폼의 효과 타입 드롭다운(`addEffectRow`)이 `<optgroup>`으로 A~F를 그룹화해 렌더링하도록 갱신해, ~15종으로 늘어난 효과 타입도 폼에서 탐색 가능하게 했다(항목14 "웹 에디터의 효과 입력 폼에도 이 전체 카테고리를 드롭다운/그룹으로 선택할 수 있도록" 요구사항).
+- `docs/GEAR_SCHEMA.md`에 "Effect schema categories A~F (item 14)" 섹션을 신규 추가해 각 카테고리의 계산 규칙, 배율 적용 순서(가산-후-곱연산), 클램프 동작을 문서화했고, "Known effect types" 섹션을 15종 전체를 나열하도록 갱신했다.
+- `game/self_test.lua`의 `testGearEffectSchemaExpansion()`이 GREEN으로 전환됨을 확인했다: 15종 전체 등록/카테고리 배정 확인, (B) 가산-후-곱연산 순서(2장 +25%→+50%, sellMultiplier 미장착 시 순가산 유지 회귀), (C)(D)(E)(F) 각 변환 함수의 정상 값과 클램프 경계(collisionRadius/shopDiscount 500% 입력 시 0으로 클램프) 동작을 검증하고, `love.filesystem.read`로 `editor.js` 소스 텍스트를 직접 읽어 `gear.knownEffectTypes`의 모든 항목이 `EFFECT_TYPE_GROUPS` 안에 문자열 리터럴로 존재하는지도 검증한다(RED 두 번 확인: 처음엔 `editor.js`가 구식 5종만 가져 `KNOWN_EFFECT_TYPES` 매칭 실패, `EFFECT_TYPE_GROUPS`로 리팩터 후 재확인해 최종 GREEN).
+- `make test`(`GAME_HEADLESS=1 GAME_UNIT=1`), `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- **아직 (C)~(F) 계산 함수들은 `run` 상태(항목7의 드롭 RNG/충돌 판정/미니맵 스캔 반경/상점 가격 등)에 배선되지 않았다** — 레인 스코프상 `game/scenes/play.lua`/`game/world.lua`/`game/expedition.lua`는 원칙적으로 다른 레인 담당이며, 이번 슬라이스는 순수 데이터/효과 계산 계층만 완성했다.
+- `docs/feedback/INBOX.md` 처리대기 섹션의 항목14 하위에 이 진행상황을 append했다.
+- **레인 스코프가 지정한 5개 항목(13→9→10→12→14) 순서를 이번 사이클로 전부 1차 완료했다.** 다음 슬라이스는 사용자/통합 우선순위에 따라 (a) 각 항목의 "다음 슬라이스"로 명시된 잔여 작업(항목9의 슬롯 교체 루프 설계, 항목10의 엔진 전용 효과 차별화/획득 경로 3원화, 항목12의 실제 드롭 RNG 배선) 또는 (b) 게임 배선(최소 로더 호출 예외 범위 내에서 `run.equippedGear`/`run.equippedEngineParts` 실제 장착 UI) 중 선택.
+
+
+
+
+
 ## [spaceship-gear 레인] 항목12: 등급(rarity) 드롭 가중치 + 에디션 파밍 시스템 1차 구현 (완료, 2026-09-03)
 
 `loop/PROMPT.md`의 gear 레인 순서(항목13 -> 항목9 -> 항목10 -> 항목12 -> 항목14)에 따라 항목10(엔진 부품 슬롯 분리) 완료 후 항목12(등급/에디션 파밍 시스템)를 착수했다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean)로 시작했고, `git status --short`에는 워크트리 설정 파일(`loop/PROMPT.md` 수정, `loop/com.jm.spaceship.gear-lane.plist` 신규)만 있어 이전 사이클 미완료 작업은 없었다.

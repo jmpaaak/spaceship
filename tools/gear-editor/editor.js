@@ -6,13 +6,22 @@
 // range) so a card that validates in this editor is guaranteed to load
 // cleanly in the actual game.
 
-const KNOWN_EFFECT_TYPES = [
-  "speed",
-  "sampleSellValue",
-  "money",
-  "climbSpeed",
-  "hullDurability",
-];
+// Item 14: "부품 효과 종류(effect schema) 확장 — 가산형 5종 + 배율/트리거/조작형
+// 추가". Grouped by schema category (A~F) so this list — and the effect
+// type <select> built from it — stays organized as the schema grows; the
+// flat KNOWN_EFFECT_TYPES array below is what actually drives validation
+// and must be kept byte-for-byte in sync with game/gear.lua's
+// M.knownEffectTypes whitelist (game/self_test.lua's
+// testGearEffectSchemaExpansion asserts this).
+const EFFECT_TYPE_GROUPS = {
+  "A: additive": ["speed", "sampleSellValue", "money", "climbSpeed", "hullDurability"],
+  "B: multiplicative": ["sellMultiplier", "streakMultiplier"],
+  "C: trigger/probability": ["luck", "chainTrigger", "rerollBonus"],
+  "D: survival/risk": ["insurance", "collisionRadius"],
+  "E: scouting/info": ["detectionRadius", "autoCollect"],
+  "F: economy": ["shopDiscount"],
+};
+const KNOWN_EFFECT_TYPES = Object.values(EFFECT_TYPE_GROUPS).flat();
 const KNOWN_RARITIES = ["common", "uncommon", "rare", "legendary"];
 // Item 12: known edition ids a card's `editions` array may reference (must
 // stay identical to game/gear.lua's M.knownEditions whitelist).
@@ -219,12 +228,20 @@ function addEffectRow(type, value) {
   const row = document.createElement("div");
   row.className = "effect-row";
   const select = document.createElement("select");
-  KNOWN_EFFECT_TYPES.forEach((t) => {
-    const opt = document.createElement("option");
-    opt.value = t;
-    opt.textContent = t;
-    if (t === type) opt.selected = true;
-    select.appendChild(opt);
+  // Item 14: group the dropdown by schema category (A~F) so the ~15
+  // effect types stay navigable as the schema grows, instead of one long
+  // flat list.
+  Object.entries(EFFECT_TYPE_GROUPS).forEach(([groupLabel, types]) => {
+    const group = document.createElement("optgroup");
+    group.label = groupLabel;
+    types.forEach((t) => {
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      if (t === type) opt.selected = true;
+      group.appendChild(opt);
+    });
+    select.appendChild(group);
   });
   const input = document.createElement("input");
   input.type = "text";

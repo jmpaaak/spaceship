@@ -69,26 +69,23 @@ Both files share the exact same document/card schema below.
 | `type`  | string enum | yes | One of the known effect types (see below). |
 | `value` | number | yes | Must be in the range `[-100, 100]` (enforced by both `game/gear.lua` and the web editor). |
 
-### Known effect types (this cycle)
+### Known effect types
 
-This cycle implements category (A), the additive stat effects proposed in
-item 14:
+Categories per item 14 ("부품 효과 종류(effect schema) 확장"). All are
+implemented in `game/gear.lua`'s `M.knownEffectTypes` whitelist and mirrored
+in `tools/gear-editor/editor.js`'s `EFFECT_TYPE_GROUPS`/`KNOWN_EFFECT_TYPES`.
+Any new type must be added to both in the same change, so the editor's
+validator/dropdown stays exactly in sync with the Lua loader's rules — see
+"Effect schema categories A~F (item 14)" below for how each category's raw
+`value` is interpreted and combined.
 
-- `speed` — steering/lateral speed bonus.
-- `sampleSellValue` — additive bonus to sample sell value.
-- `money` — direct money delta.
-- `climbSpeed` — additive bonus to ascent/altitude gain rate.
-- `hullDurability` — additive bonus to max hull durability.
-
-Item 14 will extend this enum with multiplicative (B: `sellMultiplier`,
-`streakMultiplier`), trigger/probability (C: `luck`, `chainTrigger`,
-`rerollBonus`), survival (D: `insurance`, `collisionRadius`), scouting
-(E: `detectionRadius`, `autoCollect`), and economy (F: `shopDiscount`)
-categories. Any new type must be added to `game/gear.lua`'s
-`M.knownEffectTypes` whitelist and to `tools/gear-editor/editor.js`'s
-`KNOWN_EFFECT_TYPES` list together, in the same change, so the two stay in
-sync (the editor's validator intentionally mirrors the Lua loader's rules
-exactly).
+- **(A) additive** — `speed`, `sampleSellValue`, `money`, `climbSpeed`,
+  `hullDurability`.
+- **(B) multiplicative** — `sellMultiplier`, `streakMultiplier`.
+- **(C) trigger/probability** — `luck`, `chainTrigger`, `rerollBonus`.
+- **(D) survival/risk-mitigation** — `insurance`, `collisionRadius`.
+- **(E) scouting/information** — `detectionRadius`, `autoCollect`.
+- **(F) economy** — `shopDiscount`.
 
 ## Validation rules (enforced identically by `game/gear.lua` and the editor)
 
@@ -246,3 +243,73 @@ them to `run` state; that wiring (and the UI edition sparkle/border
 treatment item 12 asks for) is deferred to a follow-up slice within this
 lane's scope, once `game/expedition.lua`'s minimal-loader-call exception is
 exercised for gear generally.
+
+## Effect schema categories A~F (item 14)
+
+`game/gear.lua` implements item 14's full category (A)~(F) effect-type
+enum (listed under "Known effect types" above) as pure conversion
+functions, each taking a list of equipped parts (hull, engine, or a mix —
+these functions are category-agnostic) and returning the concrete gameplay
+quantity that category controls:
+
+- **(A) additive** — unchanged from before item 14: `M.aggregateEffects`
+  sums every part's effect value by `type`; `M.equippedTotals` layers the
+  item 9 tag-synergy multiplier on top of `climbSpeed` only.
+- **(B) multiplicative — the synergy payoff axis** — `sellMultiplier` and
+  `streakMultiplier` are percentage-shaped (`value = 25` means "+25%").
+  `M.equippedTotals` sums every equipped part's `sellMultiplier` into one
+  combined percentage first, THEN applies it as a single multiply pass
+  against the additive `sampleSellValue` total — i.e. **additive totals
+  are computed first, multiplicative totals are applied second**, and
+  multiple multiplier cards stack additively with each other (two `+25%`
+  cards give `+50%` total, never `+56.25%` compounding). This ordering is
+  the concrete mechanism behind item 9's "조합이 곱연산으로 폭발" design
+  goal for the sell-value axis (climbSpeed already had its own synergy
+  multiplier from item 9). `streakMultiplier` is defined in the schema
+  (recognized effect type, validated range) but its consumer — the
+  "동일 계열 연속 채집 배율" streak-tracking logic itself — lives in
+  gameplay code (`game/expedition.lua`) outside this lane's current scope,
+  so `game/gear.lua` does not yet convert it into a run-state multiplier.
+- **(C) trigger/probability** — `M.chainTriggerCount(parts)` and
+  `M.rerollCount(parts)` sum the relevant effect type and floor to a
+  non-negative integer count (a fractional trigger/reroll doesn't make
+  sense). `M.totalLuckBonus(parts)` sums the `luck` effect type and
+  divides by 100 to produce the fractional `luckBonus` that
+  `M.rollRarity`/`M.rollEdition` (item 12) already accept as a parameter —
+  this is the wiring point that wasn't previously connected: any equipped
+  part with a `luck` effect now has a direct, testable path into item 12's
+  rarity/edition rolls once a caller supplies `gear.totalLuckBonus(equipped)`
+  as `luckBonus`.
+- **(D) survival/risk-mitigation** — `M.hasInsurance(parts)` is a boolean
+  gate (any positive `insurance` total grants the save; multiple insurance
+  effects do not stack multiple lives, per item 14's "1회 한정" framing).
+  `M.effectiveCollisionRadius(baseRadius, parts)` shrinks a base hitbox
+  radius by the summed `collisionRadius` percentage, clamped so it can
+  never go negative.
+- **(E) scouting/information** — `M.effectiveDetectionRadius(baseRadius, parts)`
+  grows a base scan radius by the summed `detectionRadius` percentage.
+  `M.autoCollectEnabled(parts)` is a boolean gate, same shape as
+  `hasInsurance`.
+- **(F) economy** — `M.effectiveShopPrice(basePrice, parts)` discounts a
+  base shop price by the summed `shopDiscount` percentage, clamped at
+  zero (a large discount stack can make an item free but never give money
+  back).
+
+`tools/gear-editor/editor.js`'s effect-type `<select>` in the card form is
+now grouped into `<optgroup>`s by category (A~F) via a new
+`EFFECT_TYPE_GROUPS` table, which is also the source of the flat
+`KNOWN_EFFECT_TYPES` validation list (`Object.values(EFFECT_TYPE_GROUPS).flat()`)
+— so the grouped UI and the validator can never drift apart from each
+other. `game/self_test.lua`'s `testGearEffectSchemaExpansion` verifies each
+category's conversion function behavior (including the B additive-then-
+multiply ordering and the D/F zero-clamping), and asserts by reading
+`editor.js`'s source text that every `gear.knownEffectTypes` entry appears
+in its `EFFECT_TYPE_GROUPS` table, so the Lua whitelist and the editor
+config can never silently drift apart.
+
+As with items 9/10/12, none of these category (C)~(F) conversions are yet
+wired into actual `run` state (`game/expedition.lua`'s luck-driven
+drops/collision detection/detection radius/auto-collect/shop pricing) —
+that remains deferred to a follow-up slice within this lane's
+`loop/PROMPT.md` scope (minimal-loader-call exception only), same posture
+as every other gear engine documented above.
