@@ -716,6 +716,28 @@ local function testFuelUpgradeHiddenFromShop()
         "keypressed('f') must not spend money on a fuel upgrade")
 end
 
+-- docs/feedback/INBOX.md item 11(c): once the fuel-tank purchase UI row
+-- was removed from EARTH SHOP (item 11b, testFuelUpgradeHiddenFromShop
+-- above), the three i18n message keys that only that removed UI surface
+-- ever formatted (the "T/F FUEL LV.n>n+1 $50" action line, the
+-- "FUEL TANK UPGRADED ..." confirmation message, and the "FUEL UPGRADE"
+-- shortfall-message item label) became permanently dead strings with no
+-- remaining call site in game/scenes/play.lua. Assert they are gone from
+-- both locales so this leftover UI text cannot resurface or mislead a
+-- future reader of game/i18n.lua into thinking the purchase still exists.
+local function testFuelUpgradeMessagingRemoved()
+    local i18n = require("game.i18n")
+    local savedLocale = i18n.getLocale()
+    for _, locale in ipairs({ "en", "ko" }) do
+        i18n.setLocale(locale)
+        for _, key in ipairs({ "fuel_action_line", "fuel_upgraded_message", "item_fuel_upgrade" }) do
+            local ok = pcall(i18n.t, key)
+            assert(not ok, key .. " must be removed from the " .. locale .. " locale")
+        end
+    end
+    i18n.setLocale(savedLocale)
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -2430,6 +2452,7 @@ function M.run()
     testCashCoinIcon()
     testSteerSpeedIcon()
     testFuelUpgradeHiddenFromShop()
+    testFuelUpgradeMessagingRemoved()
 
     print("SPACESHIP_UNIT_OK")
 end

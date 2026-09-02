@@ -293,3 +293,24 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
 - `docs/feedback/INBOX.md` 항목 11에 이번 슬라이스 완료 표시 및 구현 요약을 추가.
 - 다음 사이클 다음 슬라이스: 항목 11의 남은 부분(a: `launchForecastLine`/`M.launchForecast`의 연료-종속 프레이밍 자체 재정의, c: `run.fuel`/`fuelBurnRate`/`burnManeuverFuel`/`buyFuelUpgrade`/`fuelUpgradeLevel` 등 죽은 필드 전반 정리) 중 하나, 또는 3번 항목의 마지막 남은 부분(속도/스피드미터 아이콘화), 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
+## EARTH SHOP 연료 구매 UI 제거 후 남은 잔재 i18n 문구 3개 삭제 — 항목 11(c) 네 번째 슬라이스 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 11(연료 소진 관련 잔재 UI/문구 전면 제거)의 (c) 부분 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.
+
+- EARTH SHOP의 연료탱크 구매 행 자체(액션 텍스트·터치 타깃·키보드 단축키)는 이전 사이클(항목 11b)에서 이미 제거되었으나, 그 구매 행만 포맷하던 `game/i18n.lua`의 세 i18n 키(`fuel_action_line`="T/F FUEL LV.n>n+1 $50"/"T/F 연료 LV.n>n+1 $50", `fuel_upgraded_message`="FUEL TANK UPGRADED LV.n MAX n ... BALANCE $n"/"연료탱크 업그레이드 ...", `item_fuel_upgrade`="FUEL UPGRADE"/"연료 업그레이드")는 en/ko 두 로케일 테이블에 텍스트로 그대로 남아 있었다. `game/scenes/play.lua`와 `game/self_test.lua` 전체를 검색해 이 세 키를 참조하는 호출부가 전혀 없음을 먼저 확인했다(구매 행이 이미 제거됐고, 여전히 활성 상태인 슬롯머신 연료 보너스/SCOUT 트레이드오프 경로는 `fuel_bonus_line`/`scout_gains_line`이라는 별개의 키를 사용한다).
+- `game/self_test.lua`에 신규 `testFuelUpgradeMessagingRemoved()`를 추가했다. en/ko 두 로케일에서 `i18n.t("fuel_action_line")`/`i18n.t("fuel_upgraded_message")`/`i18n.t("item_fuel_upgrade")`를 `pcall`로 호출하면 `i18n.t()`의 `assert(template, "i18n: missing key ...")`가 트리거되어 실패해야 함을 회귀 검증한다(RED 확인: 세 키가 여전히 정의돼 있어 `pcall`이 성공 → assert 실패로 RED 재현). 이후 `game/i18n.lua`의 en/ko 두 로케일 테이블에서 해당 세 라인을 삭제해 GREEN으로 전환했다.
+- `game/self_test.lua`의 `M.run()`에 `testFuelUpgradeMessagingRemoved()` 호출을 등록.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`). 이 슬라이스는 순수 i18n 데이터/문자열 삭제이며 화면에 보이던 UI는 이미 이전 사이클에서 사라졌으므로 신규 런타임 캡처는 필요하지 않았다(비교 대상이 되는 화면 변화가 없음).
+- `docs/feedback/INBOX.md` 항목 11에 이번 슬라이스 완료 표시 및 구현 요약을 추가.
+- 다음 사이클 다음 슬라이스: 항목 11의 남은 부분(a: `launchForecastLine`/`M.launchForecast`가 여전히 "이 연료로 도달 가능한 고도"라는 연료-종속 프레이밍을 함수명/개념에 내포 — REACH/SLOTS 예보를 재정의할지 결정 필요, c: 활성 상태인 `run.fuel`/`maxFuel`/`fuelBurnRate`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount`/`buyFuelUpgrade`/`bankedFuelBonus`/`pendingFuelBonus`/`scoutFuelBonus` 메커니즘 자체의 재설계, 슬롯머신 연료 보너스와 SCOUT 트레이드오프가 이 필드들을 실제로 사용 중이라 단순 삭제 불가) 중 하나, 또는 3번 항목의 마지막 남은 부분(속도/스피드미터 아이콘화, 이미 완료 표시가 있어 재검토 필요), 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
+## preflight FAIL 수정: docs/STATUS.md EOF 이중 개행 제거 (완료, 2026-09-03)
+
+이번 사이클 preflight가 `git diff check: FAIL`(`docs/STATUS.md:307: new blank line at EOF.`)를 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
+
+- `tail -c` / `xxd`로 파일 끝을 직접 확인해 `docs/STATUS.md`가 `...진행.\n\n`(개행 두 개, 즉 EOF 직전 빈 줄)로 끝나고 있음을 재현했다(이전 사이클이 이 파일을 커밋 없이 수정한 상태로 남긴 잔재였다). 파일 끝을 단일 개행(`...진행.\n`)으로 정규화해 `git diff --check`가 더 이상 EOF 공백 경고를 내지 않도록 고쳤다. 이 파일의 본문 내용(이전 사이클이 작성한 항목 11(c) 네 번째 슬라이스 기록 포함)은 전혀 건드리지 않았다.
+- `git status --short`로 세션 시작 시 `docs/feedback/INBOX.md`/`game/i18n.lua`/`game/self_test.lua`에 이전 사이클의 커밋되지 않은 작업(항목 11(c) i18n 잔재 문구 삭제 슬라이스)이 이미 존재함을 확인했다. 이 작업은 완결된 상태(관련 테스트 포함, GREEN)로 보여 그대로 보존하고 이번 커밋에 함께 포함시켰다.
+- `git diff --check` 재실행으로 EOF 경고가 사라졌음을 확인(출력 없음 = clean).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`). 이 슬라이스는 공백/EOF 정규화와 기존 작업의 커밋일 뿐 신규 게임 로직 변경이 없어 런타임 캡처는 필요하지 않았다.
+- 다음 사이클 다음 슬라이스: 위 297번째 줄(이전 사이클 기록)에서 이미 식별된 항목 11의 남은 부분(a: `launchForecastLine` 재정의, c: 활성 연료 필드 재설계) 중 하나, 또는 3번 항목(속도/스피드미터 아이콘화 재검토), 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
