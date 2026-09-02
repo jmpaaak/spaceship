@@ -41,6 +41,51 @@
    나가므로 rate limit에 더 잘 걸린다. → 각 `env.sh`의 `FALLBACK_MODEL`
    fallback 체인을 반드시 유지하고, 레인 수는 동시에 감당 가능한 API
    동시성 한도 이내로 제한한다(경험상 2~3개가 안전).
+6. **레인이 조용히 죽어서 아무도 모름 (2026-09-03 실제 사고 사례)** —
+   메인 루프는 `.plist`를 `~/Library/LaunchAgents/`에 launchd로 등록하면
+   `KeepAlive`가 죽을 때마다 재시작해 준다. 하지만 `scaffold_lane.sh`가
+   만드는 레인 `.plist`는 **디스크에 파일만 써둘 뿐 자동으로
+   launchctl에 등록하지 않는다** — 사람이 직접
+   `launchctl bootstrap gui/$(id -u) <plist>`를 실행해야 하는데, 이 단계를
+   깜빡하면 레인은 idle timeout이나 크래시로 종료된 뒤 아무도 재시작하지
+   않아 몇 시간이고 조용히 멈춰 있는다. 또한 병합(merge) 충돌을 피하려고
+   사람이나 에이전트가 메인 루프를 일시적으로 `launchctl bootout`으로
+   내렸다가 재등록을 잊는 사고도 같은 증상을 낸다.
+   → **`loop/watchdog.sh`**(스켈레톤 신규 제공, 아래 참고)를 Hermes
+   cron(`cronjob` 도구, `no_agent=true`, 5~10분 간격)으로 등록해 메인
+   루프와 모든 레인 worktree의 생존을 주기적으로 점검하고, 죽어있으면
+   자동 재시작한다. `launchctl bootstrap`은 Hermes 게이트웨이 프로세스
+   내부에서 직접 실행할 수 없으므로(안전 차단), 신규 프로젝트에서는
+   레인을 launchd 대신 `nohup ./loop/loop.sh &`로 시작하고 이 워치독이
+   생존을 보장하는 방식을 기본으로 삼는다.
+
+## 재발 방지 — `loop/watchdog.sh`
+
+스켈레톤에 `loop/watchdog.sh`가 포함되어 있다. 이 스크립트는:
+
+- 메인 루프(`ROOT_DIR`)와, 인자로 준 lanes-parent-dir 아래 모든 레인
+  worktree(또는 인자가 없으면 `git worktree list`로 자동 탐지한 모든
+  worktree)에 대해 `loop.sh` 프로세스가 실행 중인지 확인한다.
+- 죽어있으면 `nohup ./loop/loop.sh &`로 재시작한다.
+- **병합/리베이스가 진행 중인 worktree는 절대 건드리지 않는다**
+  (`.git/MERGE_HEAD`/`rebase-merge`/`rebase-apply` 존재 시 스킵) — 사람이나
+  merge-reconciler 서브에이전트가 충돌을 푸는 도중에 끼어들어 레이스를
+  유발하지 않기 위함이다.
+- `loop/STOP` 파일이 있으면(의도적 정지) 건드리지 않는다.
+- 모든 판단을 `logs/watchdog.log`에 기록한다.
+
+등록 예시(신규 프로젝트 셋업 시 1회):
+
+```bash
+# 프로젝트 루트 + 레인 부모 디렉토리를 감시하는 5분 간격 워치독
+hermes cron create \
+  --schedule "*/5 * * * *" \
+  --no-agent \
+  --script "bash <project>/loop/watchdog.sh <lanes-parent-dir>"
+```
+
+(Hermes 에이전트 세션에서는 `cronjob` 도구로 동일하게 등록한다 —
+`no_agent=true`, `deliver="local"`을 권장해 조용히 감시만 하게 한다.)
 
 ## 사용법 — `loop/scaffold_lane.sh`
 
