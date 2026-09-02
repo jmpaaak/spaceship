@@ -1,3 +1,23 @@
+# LANE SCOPE — gear
+
+This worktree is one lane of a parallel multi-lane autonomous setup.
+Work ONLY within this scope. Do not touch pending feedback items owned
+by other lanes, and do not edit `docs/feedback/INBOX.md` items outside
+your scope (append-only status notes to your own item are fine).
+
+## Scope for this lane
+
+이 레인은 오직 다음 INBOX 항목만, 이 순서로 처리한다: 항목13(부품 데이터 JSON 외부화 + tools/gear-editor/ 웹 에디터) -> 항목9(선체 부품 20~30종 + 시너지 엔진, game/gear.lua 신규) -> 항목10(엔진 부품 슬롯 분리, game/engine_parts.lua 신규) -> 항목12(등급/에디션 파밍 시스템) -> 항목14(효과 스키마 A~F 확장, 웹 에디터 폼 동기화). 이 레인은 game/scenes/play.lua, game/i18n.lua, game/world.lua, game/expedition.lua를 원칙적으로 건드리지 않는다(다른 레인 담당) -- 단, gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출 추가는 예외로 허용한다. docs/feedback/INBOX.md 처리대기 섹션의 항목13/9/10/12/14 하위에만 진행상황을 append한다.
+
+## Branch and push discipline
+
+- This lane commits and pushes ONLY to branch `spaceship-gear`. Never push to
+  `main`/`master` directly, never force-push.
+- A separate integration step periodically merges this branch into
+  the base branch after `make verify` passes.
+
+---
+
 # Spaceship autonomous development brief
 
 ## First priority

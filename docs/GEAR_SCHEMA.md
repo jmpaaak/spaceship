@@ -179,3 +179,70 @@ This module still does not wire into `run.equippedGear`/
 `game/self_test.lua`'s `testEnginePartsSlotSeparation` verifies the pool
 size/tags, independent fill/empty behavior in both directions, and the two
 rejection paths (capacity, duplicate id).
+
+## Rarity + edition farming system (item 12)
+
+`game/gear.lua` implements item 12's two independent axes on top of the
+existing `rarity`/`editions` card fields (already part of the schema since
+item 13 — see "Card shape" above):
+
+- **Rarity (A)** — `M.rarityDropWeights` is a relative-weight table
+  (`common` 60 / `uncommon` 25 / `rare` 12 / `legendary` 3, i.e. rarer tiers
+  are deliberately less likely). `M.rollRarity(roll, luckBonus)` picks a
+  tier from an explicit `roll` in `[0, 1)` against this distribution;
+  `luckBonus` (item 14's `luck` effect, target #2: "희귀 등급... 드롭 가중치를
+  상위 등급 쪽으로 상향") scales `rare`/`legendary` weight up and
+  `common`/`uncommon` weight down, so higher luck can only shift the result
+  toward rarer tiers, never away from them, at a fixed `roll`. This function
+  is pure — it does not touch `love.math.random` itself — so shop/checkpoint
+  drop code (out of this lane's current scope) supplies the actual RNG
+  source and this stays deterministically unit-testable.
+- **Edition (B)** — every card's `editions` array (validated by the loader
+  against `M.knownEditions = { irradiated, crystallized, quantum_flawed,
+  refined }`, mirrored in `tools/gear-editor/editor.js`'s
+  `KNOWN_EDITIONS`) lists which editions that specific card may roll into.
+  `M.baseEditionChance = 0.08` (item 12's "낮은 확률, 예: 5~10%").
+  `M.rollEdition(part, chanceRoll, pickRoll, luckBonus)` returns `nil` for a
+  card with an empty `editions` list (editions are opt-in per card, not
+  universal), otherwise triggers when `chanceRoll < baseEditionChance +
+  luckBonus` (item 14's `luck` target #1: "에디션 부여 확률 상향") and
+  selects one of the card's own candidate editions via `pickRoll`.
+- **Edition effect transforms** — `M.editionEffects` centralizes each
+  edition's mechanical effect (spaceship-themed, per item 12's request for
+  "우주 방사선·희귀 합금·양자 결함" flavor):
+  - `irradiated` (⚠️ 방사능처리) — effect values unchanged, but adds
+    `synergyBonusAdd = 0.05` on top of the per-shared-pair tag synergy bonus
+    when equipped (item 12: "시너지 태그 매칭 시 보너스 추가 증폭"), exposed
+    via `M.editionSynergyBonusAdd(editionId)`.
+  - `crystallized` (✨ 결정화) — doubles only `sampleSellValue` (item 12:
+    "판매가 대폭 상승").
+  - `quantum_flawed` (🌀 양자결함) — doubles every effect value but appends
+    an extra `{ type = "hullDurability", value = -1 }` drawback effect
+    (item 12: "효과가 두 배지만 부작용 하나 동반").
+  - `refined` (💠 정제) — halves every effect value; `noSlotCost = true` is
+    reserved metadata for a future no-slot-cost mechanic (item 12's
+    Balatro-negative-style concept) not yet wired into
+    `game/engine_parts.lua` slot bookkeeping this cycle.
+  - `M.applyEditionEffects(part, editionId)` returns a NEW effects array
+    (never mutates the input `part`) with the edition's transform applied;
+    `editionId == nil` returns an unchanged copy. An unknown edition id
+    raises a Lua error, matching the loader's fail-loud posture elsewhere in
+    this module.
+
+`game/self_test.lua`'s `testGearRarityAndEditionSystem` verifies the rarity
+weight ordering and luck monotonicity, that editions are gated to a card's
+own candidate list, the base/luck-boosted edition chance threshold, each
+edition's effect transform (including the `quantum_flawed` drawback and
+that `applyEditionEffects` never mutates its input), and the unknown-edition
+error path. Two bundled cards per pool (`hull_reactive_hull`/
+`hull_quantum_alloy` in `hull_parts.json`, `engine_fusion_core`/
+`engine_singularity_drive` in `engine_parts.json`) now declare non-empty
+`editions` arrays so the loader/tests exercise real data, not just
+synthetic fixtures.
+
+As with items 9/10, this stays a pure data/math layer — `game/gear.lua`
+does not roll rarity/editions during actual shop/checkpoint drops or apply
+them to `run` state; that wiring (and the UI edition sparkle/border
+treatment item 12 asks for) is deferred to a follow-up slice within this
+lane's scope, once `game/expedition.lua`'s minimal-loader-call exception is
+exercised for gear generally.

@@ -14,6 +14,9 @@ const KNOWN_EFFECT_TYPES = [
   "hullDurability",
 ];
 const KNOWN_RARITIES = ["common", "uncommon", "rare", "legendary"];
+// Item 12: known edition ids a card's `editions` array may reference (must
+// stay identical to game/gear.lua's M.knownEditions whitelist).
+const KNOWN_EDITIONS = ["irradiated", "crystallized", "quantum_flawed", "refined"];
 const EFFECT_VALUE_MIN = -100;
 const EFFECT_VALUE_MAX = 100;
 
@@ -62,6 +65,13 @@ function validatePool(doc) {
     if (!isNonEmptyString(part.name)) errors.push(`${prefix}: missing non-empty name`);
     if (!isNonEmptyString(part.icon)) errors.push(`${prefix}: missing non-empty icon`);
     if (!KNOWN_RARITIES.includes(part.rarity)) errors.push(`${prefix}: unknown rarity '${part.rarity}'`);
+    if (Array.isArray(part.editions)) {
+      part.editions.forEach((edition) => {
+        if (isNonEmptyString(edition) && !KNOWN_EDITIONS.includes(edition)) {
+          errors.push(`${prefix}: unknown edition '${edition}'`);
+        }
+      });
+    }
     if (!Array.isArray(part.effects) || part.effects.length === 0) {
       errors.push(`${prefix}: must have at least one effect`);
     } else {

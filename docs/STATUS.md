@@ -1,4 +1,24 @@
 # STATUS
+## [spaceship-gear 레인] 항목12: 등급(rarity) 드롭 가중치 + 에디션 파밍 시스템 1차 구현 (완료, 2026-09-03)
+
+`loop/PROMPT.md`의 gear 레인 순서(항목13 -> 항목9 -> 항목10 -> 항목12 -> 항목14)에 따라 항목10(엔진 부품 슬롯 분리) 완료 후 항목12(등급/에디션 파밍 시스템)를 착수했다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean)로 시작했고, `git status --short`에는 워크트리 설정 파일(`loop/PROMPT.md` 수정, `loop/com.jm.spaceship.gear-lane.plist` 신규)만 있어 이전 사이클 미완료 작업은 없었다.
+
+- TDD로 `game/self_test.lua`에 `testGearRarityAndEditionSystem()`을 먼저 추가했다(RED 확인: `attempt to call a nil value (field 'rollRarity')`).
+- `game/gear.lua`에 `M.knownEditions = { irradiated, crystallized, quantum_flawed, refined }` 화이트리스트를 추가하고, `validatePart`가 카드의 `editions` 배열 각 항목을 이 목록과 대조해 미지의 edition id를 다른 필드 검증(중복 id/범위 밖 수치/미지 effect type/rarity)과 동일하게 즉시 거부하도록 확장했다.
+- **(A) 등급 드롭 가중치**: `M.rarityDropWeights`(common 60/uncommon 25/rare 12/legendary 3, 상대 가중치 — "레어일수록 희귀")와 `M.rollRarity(roll, luckBonus)`를 추가했다. 순수 함수로 명시적 `roll`(`[0,1)`)을 받아 `love.math.random`에 직접 의존하지 않으므로 결정적으로 유닛 테스트 가능하며, 실제 RNG 소스는 상점/드롭 코드(이 레인 스코프 밖)가 결정한다. `luckBonus`(항목14 luck 효과 대상 #2: "희귀 등급 드롭 가중치를 상위 등급 쪽으로 상향")는 rare/legendary 가중치를 올리고 common/uncommon을 낮춰, 동일 `roll`에서 luck이 높을수록 등급이 낮아지는 일이 없도록 설계했다.
+- **(B) 에디션 부여**: `M.baseEditionChance = 0.08`(항목12 "낮은 확률, 예: 5~10%")과 `M.rollEdition(part, chanceRoll, pickRoll, luckBonus)`를 추가했다. 카드 자신의 `editions` 목록에서만 선택하며(빈 목록이면 항상 `nil`), `luckBonus`(항목14 luck 대상 #1: "에디션 부여 확률 상향")가 확률을 가산 상향한다.
+- `M.editionEffects` 테이블로 4종 에디션의 실제 수치 변환을 정의했다(스페이스쉽 세계관 — 우주 방사선·희귀 합금·양자 결함): `irradiated`(⚠️ 방사능처리, 수치 불변 + 시너지 보너스 +0.05 via `M.editionSynergyBonusAdd`), `crystallized`(✨ 결정화, sampleSellValue만 x2), `quantum_flawed`(🌀 양자결함, 전체 효과 x2 + hullDurability -1 부작용 추가), `refined`(💠 정제, 전체 효과 x0.5, 추후 "슬롯 비점유" 컨셉을 위한 `noSlotCost` 메타데이터 예약). `M.applyEditionEffects(part, editionId)`는 원본 `part.effects`를 변형하지 않고 새 배열을 반환하며, 미지 edition id는 에러를 던진다.
+- `docs/GEAR_SCHEMA.md`에 "Rarity + edition farming system (item 12)" 섹션을 추가해 이 모든 계약을 문서화했다.
+- `tools/gear-editor/editor.js`에 `KNOWN_EDITIONS`(Lua의 `M.knownEditions`와 동일 목록)를 추가해 클라이언트 측 검증도 미지 edition을 동일하게 거부하도록 동기화했고, `index.html`의 Editions 입력 필드에 알려진 4종을 안내 문구로 노출했다.
+- `game/data/hull_parts.json`(hull_reactive_hull, hull_quantum_alloy)과 `game/data/engine_parts.json`(engine_fusion_core, engine_singularity_drive) 각 2장씩에 실제 `editions` 배열을 채워, 로더/테스트가 합성 픽스처가 아닌 번들된 실 데이터로 최소 1건씩 검증되도록 했다.
+- `game/self_test.lua`의 `testGearRarityAndEditionSystem()`이 GREEN으로 전환됨을 확인했다: 등급 가중치 순서(roll=0→common, roll≈1→legendary)/luck 단조성(동일 roll에서 luck이 등급을 낮추지 않음), 카드별 후보 목록 제한(빈 editions는 항상 nil), base/luck 부여 확률 임계값, 각 에디션의 효과 변환(crystallized 배가/quantum_flawed 배가+부작용/applyEditionEffects 원본 비변형), 미지 edition 에러 경로를 모두 검증한다.
+- `make test`(`GAME_HEADLESS=1 GAME_UNIT=1`), `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- **아직 실제 드롭/상점 로직(항목7의 획득 경로)이나 UI 카드 테두리/반짝임 이펙트에는 배선하지 않았다** — 레인 스코프상 `game/scenes/play.lua`/`game/world.lua`/`game/expedition.lua`는 원칙적으로 다른 레인 담당이며, 이번 슬라이스는 순수 데이터/확률 계산 계층만 완성했다.
+- `docs/feedback/INBOX.md` 처리대기 섹션의 항목12 하위에 이 진행상황을 append했다.
+- 다음 슬라이스: 항목14(효과 스키마 A~F 확장 — 배율/트리거/생존/탐사/경제 카테고리 — + `tools/gear-editor/editor.js`의 `KNOWN_EFFECT_TYPES` 폼 동기화, 이번 사이클의 `KNOWN_EDITIONS` 동기화 패턴을 그대로 재사용 가능).
+
+
+
 ## [spaceship-gear 레인] 항목9: 선체 부품 풀 24종으로 확장 + 태그 시너지 엔진 1차 구현 (완료, 2026-09-03)
 
 `loop/PROMPT.md`의 gear 레인 순서(항목13 -> 항목9 -> 항목10 -> 항목12 -> 항목14)에 따라 항목13(부품 데이터 외부화 + 웹 에디터) 완료 후 항목9(선체 부품 20~30종 + 시너지 엔진)를 착수했다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean)로 시작했고, `git status --short`에는 이 워크트리 설정 파일(`loop/PROMPT.md`의 레인 스코프 헤더, `loop/com.jm.spaceship.gear-lane.plist`)만 있어 이전 사이클 미완료 작업은 없었다.

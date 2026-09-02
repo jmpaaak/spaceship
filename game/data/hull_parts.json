@@ -69,7 +69,7 @@
       "icon": "◈",
       "rarity": "rare",
       "tags": ["defense", "economy"],
-      "editions": [],
+      "editions": ["irradiated", "crystallized"],
       "effects": [
         { "type": "hullDurability", "value": 2 },
         { "type": "sampleSellValue", "value": 5 }
@@ -256,7 +256,7 @@
       "icon": "◍",
       "rarity": "legendary",
       "tags": ["defense", "altitude", "economy"],
-      "editions": [],
+      "editions": ["quantum_flawed", "refined", "irradiated"],
       "effects": [
         { "type": "hullDurability", "value": 3 },
         { "type": "climbSpeed", "value": 4 },

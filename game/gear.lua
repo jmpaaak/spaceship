@@ -35,6 +35,18 @@ M.knownRarities = {
     legendary = true,
 }
 
+-- Item 12: "선체/엔진 부품 등급(레어리티) + 부수 효과(에디션) 시스템". A
+-- card's `editions` array (already parsed by validatePart) lists which of
+-- these edition ids that specific card is allowed to roll into — unknown
+-- edition names in hand-edited JSON must fail loudly, exactly like unknown
+-- effect types/rarities above, so the web editor and loader stay in sync.
+M.knownEditions = {
+    irradiated = true,
+    crystallized = true,
+    quantum_flawed = true,
+    refined = true,
+}
+
 -- Effect values are small per-part deltas (a card pool of dozens combines
 -- additively/multiplicatively later), so a generous but finite range keeps
 -- a fat-fingered "10000" in hand-edited JSON from silently corrupting a run.
@@ -95,7 +107,12 @@ local function validatePart(part, index)
     local editions = {}
     if type(part.editions) == "table" then
         for _, edition in ipairs(part.editions) do
-            if isNonEmptyString(edition) then editions[#editions + 1] = edition end
+            if isNonEmptyString(edition) then
+                if not M.knownEditions[edition] then
+                    return nil, string.format("part '%s' lists unknown edition '%s'", part.id, edition)
+                end
+                editions[#editions + 1] = edition
+            end
         end
     end
 
@@ -245,6 +262,128 @@ function M.equippedTotals(parts)
     end
     totals.synergyMultiplier = multiplier
     return totals
+end
+
+-- ---------------------------------------------------------------------
+-- Item 12: rarity drop weights + edition assignment. Two independent axes
+-- per docs/feedback/INBOX.md item 12 — (A) rarity governs a card's overall
+-- power/scarcity tier and shop/checkpoint drop odds; (B) edition is a rare,
+-- separately-rolled modifier layer any card can additionally carry
+-- (thematic to the spaceship setting: cosmic radiation / rare alloys /
+-- quantum defects). Both stay pure functions taking an explicit `roll`
+-- value in [0, 1) instead of touching love.math.random directly, so the
+-- selection math is deterministically unit-testable and callers (shop/drop
+-- code, still out of this lane's scope) decide the actual RNG source.
+-- ---------------------------------------------------------------------
+
+-- Higher-rarity tiers are deliberately rarer (item 12: "레어일수록 희귀").
+-- Weights are relative, not percentages; M.rollRarity normalizes them.
+M.rarityDropWeights = {
+    { rarity = "common", weight = 60 },
+    { rarity = "uncommon", weight = 25 },
+    { rarity = "rare", weight = 12 },
+    { rarity = "legendary", weight = 3 },
+}
+
+-- Picks a rarity given `roll` in [0, 1) against M.rarityDropWeights'
+-- cumulative distribution (in table order: common, uncommon, rare,
+-- legendary). `luckBonus` (item 14's `luck` effect, additive, may be 0)
+-- shifts weight from lower tiers toward legendary by scaling each tier's
+-- weight by (1 + luckBonus * tierIndex-ish factor) — kept simple: luck
+-- linearly redistributes a fraction of the common/uncommon share into
+-- rare/legendary, never going negative.
+function M.rollRarity(roll, luckBonus)
+    luckBonus = luckBonus or 0
+    local weights = {}
+    local total = 0
+    for _, entry in ipairs(M.rarityDropWeights) do
+        local w = entry.weight
+        if entry.rarity == "rare" or entry.rarity == "legendary" then
+            w = w * (1 + luckBonus)
+        elseif luckBonus > 0 then
+            w = w / (1 + luckBonus)
+        end
+        weights[#weights + 1] = { rarity = entry.rarity, weight = w }
+        total = total + w
+    end
+    local threshold = roll * total
+    local cumulative = 0
+    for _, entry in ipairs(weights) do
+        cumulative = cumulative + entry.weight
+        if threshold < cumulative then
+            return entry.rarity
+        end
+    end
+    return weights[#weights].rarity
+end
+
+-- Base probability (item 12: "낮은 확률, 예: 5~10%") that a freshly rolled
+-- card additionally receives an edition from its own `editions` list.
+M.baseEditionChance = 0.08
+
+-- Rolls whether a card gets an edition and, if so, which one from its own
+-- `part.editions` list (a card with an empty editions list can never roll
+-- one, regardless of luck). `chanceRoll` and `pickRoll` are both [0, 1);
+-- kept as two separate rolls so tests can pin down "did it trigger" and
+-- "which edition" independently. `luckBonus` (item 14 luck effect target
+-- #1: "에디션 부여 확률 상향") additively raises the chance.
+function M.rollEdition(part, chanceRoll, pickRoll, luckBonus)
+    local editions = part.editions or {}
+    if #editions == 0 then return nil end
+    local chance = M.baseEditionChance + (luckBonus or 0)
+    if chanceRoll >= chance then return nil end
+    local idx = math.floor((pickRoll or 0) * #editions) + 1
+    if idx > #editions then idx = #editions end
+    if idx < 1 then idx = 1 end
+    return editions[idx]
+end
+
+-- Per-edition effect transform: how an edition mutates a card's raw effect
+-- list once assigned. `scope` limits which effect `type`s get multiplied
+-- ("all" or a specific effect type); `drawback`, if present, is an extra
+-- effect appended unconditionally (item 12's "양자결함... 부작용 하나
+-- 동반"). Kept centralized so gear.lua and the web editor's preview both
+-- read the exact same table (editor mirrors this list, same pattern as
+-- knownEffectTypes/knownEditions above).
+M.editionEffects = {
+    irradiated = { scope = "all", multiplier = 1.0, synergyBonusAdd = 0.05 },
+    crystallized = { scope = "sampleSellValue", multiplier = 2.0 },
+    quantum_flawed = { scope = "all", multiplier = 2.0, drawback = { type = "hullDurability", value = -1 } },
+    refined = { scope = "all", multiplier = 0.5, noSlotCost = true },
+}
+
+-- Applies an edition's transform to a part's effects list, returning a NEW
+-- effects array (does not mutate `part`). `editionId` may be nil (returns
+-- an unchanged copy). Unknown edition ids raise an error, mirroring the
+-- loader's fail-loud posture for malformed data elsewhere in this module.
+function M.applyEditionEffects(part, editionId)
+    local out = {}
+    for _, effect in ipairs(part.effects) do
+        out[#out + 1] = { type = effect.type, value = effect.value }
+    end
+    if not editionId then return out end
+    local def = M.editionEffects[editionId]
+    if not def then
+        error("gear: unknown edition '" .. tostring(editionId) .. "'")
+    end
+    for _, effect in ipairs(out) do
+        if def.scope == "all" or def.scope == effect.type then
+            effect.value = effect.value * def.multiplier
+        end
+    end
+    if def.drawback then
+        out[#out + 1] = { type = def.drawback.type, value = def.drawback.value }
+    end
+    return out
+end
+
+-- The extra per-shared-pair synergy bonus (added on top of
+-- M.synergyBonusPerSharedPair) contributed by a part carrying the
+-- "irradiated" edition (item 12's "시너지 태그 매칭 시 보너스 추가 증폭").
+-- Returns 0 for any other/no edition.
+function M.editionSynergyBonusAdd(editionId)
+    local def = editionId and M.editionEffects[editionId]
+    return (def and def.synergyBonusAdd) or 0
 end
 
 return M

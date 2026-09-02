@@ -44,7 +44,7 @@
       "icon": "◉",
       "rarity": "rare",
       "tags": ["altitude", "economy"],
-      "editions": [],
+      "editions": ["irradiated", "crystallized"],
       "effects": [
         { "type": "climbSpeed", "value": 8 },
         { "type": "money", "value": 5 }
@@ -144,7 +144,7 @@
       "icon": "◎",
       "rarity": "legendary",
       "tags": ["void", "altitude", "speed", "economy"],
-      "editions": [],
+      "editions": ["quantum_flawed", "refined"],
       "effects": [
         { "type": "climbSpeed", "value": 12 },
         { "type": "speed", "value": 6 },
