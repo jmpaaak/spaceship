@@ -136,6 +136,31 @@ function M.run()
     sparkleScene:update(0.25)
     assert(math.abs(sparkleScene.time - 0.5) < 1e-9)
 
+    -- Anticipation glow acceleration (INBOX 2026-09-02 후속 확정 사항 #6,
+    -- "불확실성 속의 기대감"): as the ship closes in on an undiscovered
+    -- planet's collection radius, the twinkle should visibly speed up so
+    -- the player feels rising tension right before the sample is grabbed,
+    -- instead of a constant-speed shimmer regardless of proximity.
+    assert(PlayScene.sparkleAnticipationRange > 0)
+    assert(PlayScene.sparkleAnticipationMaxMultiplier > 1,
+        "anticipation multiplier must exceed 1x so the sparkle actually accelerates")
+    local collectRadius = 14
+    local atCollectEdge = PlayScene.sparkleAnticipationMultiplier(collectRadius, collectRadius)
+    assert(math.abs(atCollectEdge - PlayScene.sparkleAnticipationMaxMultiplier) < 1e-9,
+        "multiplier must peak at the collection radius edge")
+    local farAway = PlayScene.sparkleAnticipationMultiplier(
+        collectRadius + PlayScene.sparkleAnticipationRange + 50, collectRadius)
+    assert(math.abs(farAway - 1) < 1e-9,
+        "multiplier must settle to 1x once far outside the anticipation range")
+    local midway = PlayScene.sparkleAnticipationMultiplier(
+        collectRadius + PlayScene.sparkleAnticipationRange / 2, collectRadius)
+    assert(midway > 1 and midway < PlayScene.sparkleAnticipationMaxMultiplier,
+        "multiplier must interpolate strictly between 1x and the max inside the range")
+    assert(midway > farAway and midway < atCollectEdge)
+    local insideCollectRadius = PlayScene.sparkleAnticipationMultiplier(5, collectRadius)
+    assert(math.abs(insideCollectRadius - PlayScene.sparkleAnticipationMaxMultiplier) < 1e-9,
+        "multiplier must stay clamped at max once already inside the collection radius")
+
     -- Collision impact should trigger a brief ship shake so hits feel more
     -- physical, mirroring how the sample pickup triggers a scale-punch.
     local shakeScene = PlayScene.new({

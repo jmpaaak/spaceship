@@ -12,7 +12,7 @@
   3. **스코어 비례 스크린쉐이크:** ✅ 완료 (2026-09-02) — 충돌 흔들림(shipShake) 강도가 표본 등급(common x1.0/rare x1.6/epic x2.4)에 비례해 스케일링되도록 함. `PlayScene.sampleTierShakeMultiplier`/`shipShakeMagnitude` 참고.
   4. **컬렉션/도감:** ✅ 완료 (2026-09-02) — 9종 표본 발견 도감 스트립(`SPECIMENS n/9`)을 런치 화면에 추가함. `world.specimenCatalog`/`collection_store.lua` 참고. 영구 보존, 파괴돼도 리셋되지 않는다.
   5. **선택 안의 트레이드오프:** 기존 SCOUT 배 +연료/-내구도 트레이드오프를 `planet-style-editor`의 GAINS/LOSSES 수치 포맷과 통일해, 향후 "행성 스타일별 위험/보상"을 실제 게임 확률·보상에도 반영할 수 있게 준비한다.
-  6. **불확실성 속의 기대감:** 슬롯머신 릴 애니메이션(기존)을 유지하되, 표본 발견 시에도 짧은 "다가가는 긴장" 연출(접근 중 글로우 반짝임 가속)을 추가한다.
+  6. **불확실성 속의 기대감:** ✅ 완료 (2026-09-02) — 슬롯머신 릴 애니메이션(기존)을 유지하고, 표본 발견 시에도 우주선이 미발견 행성의 채집 반경(+60px)에 가까워질수록 등급별 트윙클 애니메이션 속도가 1x에서 최대 3x까지 선형으로 가속되는 "다가가는 긴장" 연출을 추가함. `PlayScene.sparkleAnticipationMultiplier`/`sparkleAnticipationRange`/`sparkleAnticipationMaxMultiplier` 참고.
 
 - **런치 화면 지구 탐험물 전시 (2026-09-02, 사용자 요청, 완료):** ✅ 완료 — 런치 화면 HUD와 LAUNCH LOADOUT 카드 사이의 빈 공간(지구·별 배경 위)에 9종 표본 발견 도감 스트립(`SPECIMENS n/9`, 등급별 색상 칩 + 미발견 항목은 outline만)을 추가했다. `game/world.lua`의 `specimenCatalog`/`specimenKind`(3 hue family x 3 tier), `game/collection_store.lua`(파괴돼도 리셋되지 않는 영구 저장, best_altitude_store.lua와 동일한 파일 라운드트립 패턴), `game/scenes/play.lua`의 `drawSpecimenStrip`/`specimenProgress`로 구현. 표본 최초 발견 시 2초짜리 "NEW SPECIMEN: {label}" 배너도 함께 표시된다. 실제 LÖVE 런타임 캡처(1440x2560, GAME_CAPTURE_PHASE=launch-with-specimens)로 HUD/LAUNCH LOADOUT/TAP TO LAUNCH와 겹치지 않는 것을 vision으로 확인했다(최초 배치는 TAP TO LAUNCH와 겹쳐 184px 위치로 재조정함).
 

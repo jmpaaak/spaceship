@@ -391,3 +391,13 @@
 - `main.lua`에 `GAME_CAPTURE_PHASE=ascending-sample-rollup` 개발 전용 진입 경로를 추가했다(0.15초/0.3초 지점에서 수동으로 floating text를 구성해 실제 프레임 타이밍에 의존하지 않고 롤업 중간 값을 안정적으로 캡처). 실제 LÖVE runtime capture(`1440×2560`)로 우주선 위에 최종값 `$140`이 아닌 중간값 `+$71`(`rollupAmount(140, 0.15, 0.3)` 계산값, `140*0.5=70`을 반올림한 `70`과 픽셀 확대 실측에서 1 오차 이내로 일치)이 렌더링되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-sample-rollup.png`, 로컬 산출물로 커밋 제외).
 - 남은 다음 슬라이스 후보: (1) `docs/feedback/INBOX.md` 발라트로 이식 목록 중 남은 항목(선택 안의 트레이드오프 통일, 불확실성 속의 기대감 접근 글로우 가속), (2) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (3) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 표본 접근 "불확실성 속의 기대감" 트윙클 가속 (완료)
+
+- `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록 6번 "불확실성 속의 기대감"을 처리했다. 슬롯머신 릴 애니메이션(기존)은 그대로 유지하고, 우주선이 미발견 행성의 채집 반경(`planet.radius + 14`)에 가까워질수록 등급별 트윙클(반짝임) 애니메이션 속도가 가속되는 "다가가는 긴장" 연출을 추가했다.
+- `game/scenes/play.lua`에 `sparkleAnticipationRange`(60)·`sparkleAnticipationMaxMultiplier`(3.0)·`PlayScene.sparkleAnticipationMultiplier(distance, collectRadius)`를 추가했다. 채집 반경 경계까지 남은 거리가 `sparkleAnticipationRange` 밖이면 배율 `1x`, 채집 반경 안쪽(경계 포함)이면 최대 배율 `3x`, 그 사이는 선형 보간된다. draw의 트윙클 렌더링 루프가 우주선-행성 거리로 이 배율을 계산해 `sparkle.speed * 0.4 * anticipation`으로 궤도 회전 각속도(트윙클 애니메이션 속도)를 가속한다.
+- engine-hosted 테스트(RED 확인: `PlayScene.sparkleAnticipationRange`가 nil이라 `game/self_test.lua:140`에서 `attempt to compare number with nil`로 즉시 실패하는 것을 확인한 뒤 구현)가 채집 반경 경계에서 정확히 최대 배율, 범위 밖에서 정확히 `1x`, 범위 중간에서 `1x`와 최대 배율 사이로 엄격히 보간되고 중간값이 먼 지점보다 크고 경계값보다 작은지, 채집 반경 안쪽에서도 최대 배율로 clamp되는지를 검증한다.
+- `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:25`).
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-sample-tiers`, `1440×2560`)로 `SAMPLE $10`/`RISK -1` 행성 두 개가 겹침·잘림 없이 렌더링되고 회귀가 없는 것을 vision으로 확인했다. 이 캡처 경로는 첫 프레임에서 스크린샷 후 종료하는 기존 dev capture 패턴이라 `self.time == 0` 순간의 정적 스냅샷이며, 가속 애니메이션 자체(거리에 따라 실시간으로 회전 속도가 빨라지는 시각적 차이)는 이전 사이클의 트윙클/스크린쉐이크 애니메이션과 동일한 제약으로 정적 스크린샷으로는 증명할 수 없어 engine-hosted `sparkleAnticipationMultiplier` 경계/중간값 테스트로 직접 검증했다.
+- `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록(1~6번) 중 5번(선택 안의 트레이드오프 통일)만 남았다.
+- 남은 다음 슬라이스 후보: (1) `docs/feedback/INBOX.md` 발라트로 이식 목록 5번(선택 안의 트레이드오프를 `planet-style-editor`의 GAINS/LOSSES 수치 포맷과 통일), (2) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (3) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+

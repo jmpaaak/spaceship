@@ -163,6 +163,29 @@ local function sparkleAlpha(tier, time, seed)
 end
 M.sparkleAlpha = sparkleAlpha
 
+-- Anticipation glow acceleration (docs/feedback/INBOX.md 2026-09-02 후속
+-- 확정 사항 #6, "불확실성 속의 기대감"): the slot-spin animation already
+-- gives a short "settling" beat for slot rewards; sample discovery had no
+-- equivalent tension beat. Accelerate the twinkle animation speed as the
+-- ship closes in on an undiscovered planet's collection radius so the
+-- shimmer visibly speeds up right before the sample is grabbed. Within
+-- `sparkleAnticipationRange` of the collection radius edge, the speed
+-- multiplier ramps linearly from 1x up to the max; once inside the
+-- collection radius (or closer) it stays clamped at the max.
+local sparkleAnticipationRange = 60
+local sparkleAnticipationMaxMultiplier = 3.0
+M.sparkleAnticipationRange = sparkleAnticipationRange
+M.sparkleAnticipationMaxMultiplier = sparkleAnticipationMaxMultiplier
+
+local function sparkleAnticipationMultiplier(distance, collectRadius)
+    local edgeDistance = distance - collectRadius
+    if edgeDistance <= 0 then return sparkleAnticipationMaxMultiplier end
+    if edgeDistance >= sparkleAnticipationRange then return 1 end
+    local progress = 1 - edgeDistance / sparkleAnticipationRange
+    return 1 + progress * (sparkleAnticipationMaxMultiplier - 1)
+end
+M.sparkleAnticipationMultiplier = sparkleAnticipationMultiplier
+
 -- Duration (seconds) of the ship scale-punch on sample pickup and the
 -- ship/camera shake on collision impact.
 local shipPunchDuration = 0.2
@@ -975,9 +998,12 @@ function M:draw()
                 local tier = world.sampleTier(planet)
                 local sparkle = sampleTierSparkle(tier)
                 local sr, sg, sb = sampleTierColor(tier)
+                local shipDx, shipDy = planet.x - self.ship.x, planet.y - self.ship.y
+                local shipDistance = math.sqrt(shipDx * shipDx + shipDy * shipDy)
+                local anticipation = sparkleAnticipationMultiplier(shipDistance, planet.radius + 14)
                 for i = 1, sparkle.count do
                     local seed = (planet.id and (tostring(planet.id):len() * 7) or 0) + i * 2.4
-                    local angle = self.time * (sparkle.speed * 0.4) + seed
+                    local angle = self.time * (sparkle.speed * 0.4 * anticipation) + seed
                     local sparkleRadius = planet.radius + 6 + (i % 3) * 3
                     local px = x + math.cos(angle) * sparkleRadius
                     local py = y + math.sin(angle) * sparkleRadius
