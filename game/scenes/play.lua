@@ -1518,7 +1518,7 @@ function M:draw()
         local row = 178
         local rowStep = 11
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf("SHIP DESTROYED", fullX, row, fullW, "center")
+        love.graphics.printf(i18n.t("ship_destroyed_title"), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(string.format("LOST TOTAL $%d",
@@ -1575,10 +1575,10 @@ function M:draw()
         local ascendLabelY = ascendControls.top + math.floor((ascendBandHeight - 10) / 2)
         love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
             steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
-        love.graphics.printf("HOLD LEFT", 5, ascendLabelY, 76, "center")
+        love.graphics.printf(i18n.t("hold_left"), 5, ascendLabelY, 76, "center")
         love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
-        love.graphics.printf("HOLD RIGHT", 99, ascendLabelY, 76, "center")
+        love.graphics.printf(i18n.t("hold_right"), 99, ascendLabelY, 76, "center")
         love.graphics.setFont(previousSteeringFont)
         self:drawJoystickStick()
     elseif self.expedition.phase == "returning" then
@@ -1679,7 +1679,7 @@ function M:draw()
         love.graphics.printf(self.newSpecimenBanner, 12, 64, viewport.width - 24, "center")
     end
     love.graphics.setColor(1, 0.65, 0.2, 0.85)
-    love.graphics.printf("DEV PLACEHOLDER", 4, viewport.height - 13, viewport.width - 8, "center")
+    love.graphics.printf(i18n.t("dev_placeholder"), 4, viewport.height - 13, viewport.width - 8, "center")
 end
 
 return M
