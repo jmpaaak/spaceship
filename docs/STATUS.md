@@ -1,4 +1,16 @@
 # STATUS
+## "무피격 N" 예보 라벨을 명확한 "REACH/도달예상"으로 교체 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 다음 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작.
+
+- LAUNCH LOADOUT/EARTH SHOP의 `forecast_line`(en `"NO-HIT %d  SLOTS %d"`, ko `"무피격 %d  슬롯 %d"`)은 실제로는 "현재 최대 연료로 충돌 없이 도달 예상되는 고도와 그 귀환 거리의 슬롯 기회"를 뜻하는데, 라벨 "무피격"/"NO-HIT"은 뜻이 불명확해 사용자가 혼동하기 쉬웠다(INBOX 4번 항목에서 명시적으로 지적).
+- `game/i18n.lua`의 en/ko 두 로케일 모두 `forecast_line`을 `"NO-HIT %d  SLOTS %d"` → `"REACH %d  SLOTS %d"`, `"무피격 %d  슬롯 %d"` → `"도달예상 %d  슬롯 %d"`로 교체해 "도달 예상 고도"라는 실제 의미를 그대로 드러내는 라벨로 바꿨다(포맷 인자 개수/순서는 그대로라 `game/scenes/play.lua`의 `launchForecastLine`/`M:loadoutLines()`/`M:shopLoadoutLines()` 호출부는 변경이 필요 없었다).
+- `game/self_test.lua`의 하드코딩된 `"NO-HIT N  SLOTS N"` 회귀 테스트 24곳을 전부 `"REACH N  SLOTS N"`으로 갱신했다(수정 전 RED `assertion failed! game/self_test.lua:1386` 확인 후 GREEN 전환 확인).
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`, 1080×1920, ko 로케일)를 vision으로 확인해 LAUNCH LOADOUT 카드에 "무피격 600  슬롯 6" 대신 "도달예상 600  슬롯 6"이 정상 렌더링됨을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 4번 항목에 이번 슬라이스 진행 상황(`"무피격 N"` → `"REACH N"`/`"도달예상 N"` 교체 완료)을 기록했다. 남은 항목: "STARTER" 함선명 제거, "발사 장비" 패널 타이틀 검토, "평균 $" 표기 정리, "개발 임시본" 축소.
+- 다음 사이클 다음 슬라이스: 4번 항목의 남은 부분(함선 이름 "STARTER" 제거, "발사 장비" 패널 타이틀 검토, "평균 $" 정리, "개발 임시본" 축소) 중 하나를 이어서 처리하거나, 3번 항목의 아이콘 기반 HUD 재구성, 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
 ## 이번 사이클 조사 결과: 코드 변경 없음 (2026-09-02)
 
 이번 사이클은 `docs/feedback/INBOX.md` 처리 대기 4개 항목과 `docs/GAME_DESIGN.md`의 "첫 플레이 가능한 목표" 체크리스트를 `game/expedition.lua`, `game/scenes/play.lua`, `game/world.lua`, `game/self_test.lua`, `main.lua`를 대조해 전수 조사했다.
