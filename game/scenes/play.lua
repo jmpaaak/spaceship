@@ -608,7 +608,18 @@ end
 function M:loadoutLines()
     local run = self.expedition
     return {
-        ship = i18n.t("loadout_ship", string.upper(run.selectedShipId)),
+        -- docs/feedback/INBOX.md UI/HUD item 4: naming the current ship is
+        -- meaningless dead text while STARTER is the only hull ever
+        -- owned (there is no choice to announce). Only show the ship
+        -- line once a second ship (scout) has actually been purchased,
+        -- when "which ship is selected" becomes real information.
+        ship = run.ownedShips.scout
+            and i18n.t("loadout_ship", string.upper(run.selectedShipId))
+            or nil,
+        -- shipLabel is always present (used by the destroyed-screen
+        -- "NEXT %s" line, which needs to name the fresh loadout even when
+        -- it is the single default STARTER hull).
+        shipLabel = string.upper(run.selectedShipId),
         stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
@@ -1701,9 +1712,11 @@ function M:draw()
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf(i18n.t("launch_loadout_title"), 16, row, viewport.width - 32, "center")
         row = row + rowStep
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(loadout.ship, 16, row, viewport.width - 32, "center")
-        row = row + rowStep
+        if loadout.ship then
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.printf(loadout.ship, 16, row, viewport.width - 32, "center")
+            row = row + rowStep
+        end
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.printf(loadout.stats, 16, row, viewport.width - 32, "center")
         row = row + rowStep
@@ -1910,7 +1923,7 @@ function M:draw()
         love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(i18n.t("next_ship_line", loadout.ship), fullX, row, fullW, "center")
+        love.graphics.printf(i18n.t("next_ship_line", loadout.shipLabel), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(loadout.upgrades, fullX, row, fullW, "center")

@@ -1390,7 +1390,13 @@ function M.run()
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     local starterLoadout = loadoutScene:loadoutLines()
-    assert(starterLoadout.ship == "SHIP STARTER")
+    -- docs/feedback/INBOX.md UI/HUD item 4: the ship-name line is dead
+    -- weight while only the single default STARTER hull is owned (no real
+    -- choice exists yet), so loadoutLines().ship is nil until a second
+    -- ship (scout) is actually owned -- only then does naming the current
+    -- ship carry any meaning.
+    assert(starterLoadout.ship == nil,
+        "loadout ship line should be hidden while only STARTER is owned")
     assert(starterLoadout.stats == "HULL 3")
     assert(starterLoadout.upgrades == "FUEL LV.0  HULL LV.0")
     assert(starterLoadout.forecast == "REACH 600  SLOTS 6")
@@ -1413,7 +1419,10 @@ function M.run()
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()
-    assert(resetLoadout.ship == "SHIP STARTER")
+    -- Destruction wipes ownedShips back down to only STARTER, so the ship
+    -- line is hidden again post-reset for the same reason as above.
+    assert(resetLoadout.ship == nil,
+        "loadout ship line should be hidden again after a meta-wipe reset")
     assert(resetLoadout.stats == "HULL 3")
     assert(resetLoadout.upgrades == "FUEL LV.0  HULL LV.0")
     assert(resetLoadout.steering == "STEER SPEED 55")

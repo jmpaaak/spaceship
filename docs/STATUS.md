@@ -1,4 +1,18 @@
 # STATUS
+## 무의미한 "SHIP STARTER" 함선명 라인을 STARTER만 소유 중일 때는 숨김 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 남은 슬라이스 중 하나("STARTER" 함선명 제거)를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short`에는 전 사이클이 남긴 미커밋 diff(`game/scenes/play.lua`, `game/self_test.lua`)가 있었으므로 그 작업을 이어받아 완성하고 검증했다(새로 시작하지 않음).
+
+- `game/scenes/play.lua`의 `M:loadoutLines()`가 반환하던 `ship = i18n.t("loadout_ship", ...)`("SHIP STARTER")는 기본 STARTER 선체 하나만 존재하는 지금 항상 표시되는 죽은 텍스트였다(선택지가 없어 "선택됨"을 알리는 정보 가치가 없음). `run.ownedShips.scout`가 참일 때만(즉 두 번째 선박을 실제로 보유해 "어떤 선박이 선택되었는지"가 진짜 정보가 될 때만) `ship` 필드를 채우고, 그 외에는 `nil`로 반환하도록 변경했다.
+- `M:draw()`의 LAUNCH LOADOUT 카드 렌더 구간이 `loadout.ship`이 `nil`이면 그 줄과 `rowStep` 간격을 아예 건너뛰도록(`if loadout.ship then ... end`) 수정해, 파괴 후 화면에 빈 줄이 남지 않는다.
+- 파괴 화면의 "NEXT %s" 줄(`next_ship_line`)은 STARTER뿐이어도 항상 다음 원정의 함선명을 알려줘야 하므로, 이 용도로만 쓰이는 신규 `shipLabel = string.upper(run.selectedShipId)` 필드를 항상 채워 반환하고 `draw()`가 `loadout.ship` 대신 `loadout.shipLabel`을 사용하도록 분리했다.
+- `game/self_test.lua`의 두 회귀 지점(초기 STARTER-only 상태, 메타 초기화 후 STARTER-only로 되돌아간 상태)에서 `starterLoadout.ship == "SHIP STARTER"`였던 기존 단언을 `== nil`로 갱신하고 이유를 주석으로 남겼다.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE=1`, 기본 launch phase, 1080x1920, ko 로케일)를 vision으로 확인해, "발사 장비" 타이틀 바로 아래에 "SHIP STARTER"/"선박 스타터" 줄 없이 곧바로 "선체 3"이 나오는 것을 확인했다(카드에 빈 줄도 남지 않음).
+- 상점 화면(`M:shopLoadoutLines()`/`draw()`의 shop 렌더 구간)은 함선명 텍스트를 별도로 그리지 않으므로 영향 없음을 코드로 확인했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 4번 항목에 이번 슬라이스(STARTER 함선명 라인 제거) 완료를 기록했다. 남은 항목: "발사 장비" 패널 타이틀 자체 검토, "개발 임시본" 축소는 이미 이전 사이클(e856611)에서 완료.
+- 다음 사이클 다음 슬라이스: 4번 항목의 남은 부분("발사 장비" 패널 타이틀 자체를 제거/대체할지 검토), 또는 3번 항목의 아이콘 기반 HUD 재구성, 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
 ## "평균 $"/"AVG $" 슬롯 기대값 라벨을 "기대값 $"/"EV $"로 교체 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 다음 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작.
