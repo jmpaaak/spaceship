@@ -1,4 +1,14 @@
 # STATUS
+## 행성·이펙트 발라트로 스타일 카드형 비주얼 강화: 최종 검수 후 처리 완료로 이동 (2026-09-02)
+
+`git status --short` clean, preflight PASS 상태로 시작. 처리 대기 3개 항목(핵심 루프, AetherAI-only, 발라트로 스타일) 중 "발라트로 스타일" 항목을 이번 사이클의 슬라이스로 선정해 코드·실기기 캡처로 최종 검수했다.
+
+- `game/scenes/play.lua`를 직접 대조해 6개 후속 확정 사항(스트릭 `expedition.streakMultiplier`/`collectSample`, 롤업 `rollupAmount`, 등급 비례 쉐이크 `sampleTierShakeMultiplier`, 도감 `world.specimenCatalog`/`collection_store.lua`, GAINS/LOSSES `shipTradeoff`/`scoutTradeoffLines`, 접근 기대감 `sparkleAnticipationMultiplier`)가 전부 코드에 존재하고 draw 경로(`sampleTierEffect`/`sampleTierColor`/`sampleTierSparkle`, 외곽 글로우 링·소프트 드롭섀도우·그라디언트 채움·등급별 트윙클)에 실제로 연결되어 있음을 라인 단위로 재확인했다.
+- `make test` GREEN 확인 후, 실제 LÖVE runtime capture(`GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-sample-tiers`, 1080×1920, `main.lua`에 이미 존재하는 개발용 진입 경로)를 촬영해 vision으로 확인했다: common(회백)/rare(하늘색)/epic(금빛) 세 행성이 각각 다른 색·두께의 외곽 글로우 링으로 렌더링되고, epic 행성은 두터운 금빛 림 글로우 + 보라색 그라디언트 채움(밝은 하이라이트 + 어두운 베이스)으로 눈에 띄게 카드처럼 도드라져 보임을 확인했다(발라트로류 "강한 외곽 글로우/림 라이트, 채도 높은 그라디언트, 등급별 차등" 요구사항 충족).
+- `docs/feedback/INBOX.md`의 "행성·이펙트 발라트로 스타일 카드형 비주얼 강화" 항목 전체(메인 항목 + 6개 후속 확정 사항)를 "처리 대기" → "처리 완료"로 이동했다. 코드 변경 없음, 실기기 vision 재검증 + 문서 정리만 수행했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN.
+- 남은 다음 슬라이스 후보: (1) 세로 상승형 로그라이트 핵심 루프 항목도 사용자 최종 검수 후 "처리 완료"로 이동, (2) AetherAI 로그인 자격 증명이 제공되면 공식 에셋 export 진행, (3) 새 feedback이 등록되면 그것을 우선 처리한다.
+
 ## `docs/feedback/INBOX.md` 문서 동기화: 완료된 런치 화면 지구 탐험물 전시 항목을 처리 완료로 이동 (2026-09-02)
 
 `git status --short` clean, preflight PASS 상태로 시작. 처리 대기 4개 항목을 다시 코드 레벨로 전수 재확인했다.
