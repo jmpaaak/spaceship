@@ -569,7 +569,7 @@ function M:hudLines()
         best = best,
         earth = earth,
         returnProgress = returnProgress,
-        status = i18n.t("hud_status", math.floor(run.fuel), run.durability,
+        status = i18n.t("hud_status", run.durability,
             run.maxDurability, i18n.phaseAbbrev(run.phase), run.slotOpportunities),
         galaxy = (run.phase == "ascending" or run.phase == "returning" or run.phase == "launch")
             and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name

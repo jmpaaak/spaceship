@@ -813,7 +813,13 @@ function M.run()
     riskScene.expedition.altitude = 250
     assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
     riskScene.expedition.phase = "settlement"
-    assert(riskScene:hudLines().status == "F100 H3/3 SETTLE S00")
+    -- Fuel is no longer a flight constraint (game/expedition.lua's
+    -- M.maneuverFuel/M.burnManeuverFuel are no-ops), so the HUD status line
+    -- no longer shows a "F%03d" fuel readout that implied a fuel cap still
+    -- gated flight (docs/feedback/INBOX.md UI/HUD item 3).
+    assert(riskScene:hudLines().status == "H3/3 SETTLE S00")
+    assert(not riskScene:hudLines().status:find("F%d"),
+        "hud status must not show a misleading fuel-cap readout")
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
     assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")

@@ -90,4 +90,17 @@
 - `docs/feedback/INBOX.md`의 "UI/HUD 대대적 정리 6개 항목" 하위 2번 항목에 완료 표시 및 구현 요약을 추가(상위 항목 자체는 6개 중 2개만 처리되었으므로 "처리 대기"에 유지).
 - 다음 사이클 다음 슬라이스: 같은 상위 항목의 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)부터 순서대로 진행.
 
+## HUD 상태 줄에서 오해를 주는 연료 상한 표기(F%03d) 제거 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 첫 슬라이스를 처리했다. preflight READY, `git status --short` clean으로 시작.
+
+- 실제 비행 로직(`game/expedition.lua`의 `M.maneuverFuel`/`M.burnManeuverFuel`)은 이미 no-op이라 연료가 상승을 막지 않는데도, 상단 HUD 상태 줄(`hud_status`)이 여전히 `F%03d`(예: `F100`)로 마치 연료 상한이 비행을 제약하는 것처럼 표시하고 있었다.
+- `game/i18n.lua`의 `hud_status` 포맷을 en/ko 두 로케일 모두 `"F%03d H%d/%d %-6s S%02d"` → `"H%d/%d %-6s S%02d"`로 변경해 연료 수치 자체를 제거했다(내구도/페이즈/슬롯 표기는 유지).
+- `game/scenes/play.lua`의 `M:hudLines()` 호출부에서 `math.floor(run.fuel)` 인자를 제거해 새 포맷 시그니처와 맞췄다.
+- `game/self_test.lua`: `hudLines().status == "F100 H3/3 SETTLE S00"` 회귀 테스트를 `== "H3/3 SETTLE S00"` + "상태 줄에 F%d 패턴이 없어야 한다"는 방어적 assert로 갱신(RED 확인 후 GREEN).
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=ascending-wide-warning`, 1080×1920)를 vision으로 확인해 HUD가 "거리 1000  자금 $0" / "표본 00  위험 $0" / "H3/3 상승 S00"으로 정상 렌더링되고 연료 수치가 더 이상 보이지 않음을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 3번 항목에 이번 슬라이스 진행 상황(HUD 상태 줄 연료 표기 제거 완료, 아이콘 기반 재구성/LOADOUT `MAX FUEL` 텍스트 정리는 다음 슬라이스)을 기록했다.
+- 다음 사이클 다음 슬라이스: 3번 항목의 남은 부분 — LAUNCH LOADOUT의 `stats_line`("MAX FUEL %d  HULL %d")과 EARTH SHOP의 연료 업그레이드 관련 문구를 아이콘 기반(로켓/방패/동전/스피드미터)으로 재구성. 그 다음은 4번(불필요한 텍스트 제거 검토)으로 진행.
+
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
