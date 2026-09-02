@@ -3,6 +3,7 @@ local shipModule = require("game.ship")
 local world = require("game.world")
 local expedition = require("game.expedition")
 local bestAltitudeStore = require("game.best_altitude_store")
+local collectionStore = require("game.collection_store")
 local PlayScene = require("game.scenes.play")
 local M = {}
 
@@ -38,6 +39,26 @@ function M.run()
     assert(world.sampleTier({ y = -300 }) == "rare")
     assert(world.sampleTier({ y = -799 }) == "rare")
     assert(world.sampleTier({ y = -800 }) == "epic")
+
+    -- Specimen catalog (9 = 3 hue families x 3 tiers): every entry has a
+    -- unique id, and specimenKind maps a planet to a stable id/label pair
+    -- that matches the catalog exactly.
+    local catalog = world.specimenCatalog()
+    assert(#catalog == 9)
+    local seenIds = {}
+    for _, entry in ipairs(catalog) do
+        assert(not seenIds[entry.id], "duplicate specimen id " .. entry.id)
+        seenIds[entry.id] = true
+    end
+    local azureCommonId, azureCommonLabel = world.specimenKind({ hue = 0.1, y = -50 })
+    assert(azureCommonId == "azure_common")
+    assert(azureCommonLabel == "AZURE DUST")
+    local emberRareId, emberRareLabel = world.specimenKind({ hue = 0.5, y = -500 })
+    assert(emberRareId == "ember_rare")
+    assert(emberRareLabel == "EMBER SHARD")
+    local voidEpicId, voidEpicLabel = world.specimenKind({ hue = 0.9, y = -900 })
+    assert(voidEpicId == "void_epic")
+    assert(voidEpicLabel == "VOID CORE")
     assert(world.sampleTier({ y = -5000 }) == "epic")
 
     local commonR, commonG, commonB = PlayScene.sampleTierColor("common")
@@ -848,6 +869,37 @@ function M.run()
     assert(bestAltitudeStore.new(testSave):load() == 125.5)
     assert(love.filesystem.remove(testSave))
 
+    -- collection_store: persists discovered specimen ids across instances
+    -- (mirrors best_altitude_store's file-round-trip test above), and
+    -- record() only reports true (a "new" discovery) the first time a
+    -- given id is seen.
+    local testCollection = "self-test-specimen-collection.txt"
+    love.filesystem.remove(testCollection)
+    local specimenStore = collectionStore.new(testCollection)
+    local emptyIds = specimenStore:load()
+    assert(next(emptyIds) == nil)
+    assert(specimenStore:record("azure_common") == true)
+    assert(specimenStore:record("azure_common") == false)
+    assert(specimenStore:record("ember_rare") == true)
+    local reloadedStore = collectionStore.new(testCollection)
+    local reloadedIds = reloadedStore:load()
+    assert(reloadedIds.azure_common == true)
+    assert(reloadedIds.ember_rare == true)
+    assert(reloadedIds.void_epic == nil)
+    assert(reloadedStore:record("azure_common") == false)
+    assert(love.filesystem.remove(testCollection))
+
+    -- PlayScene wires collectionStore into collectedSpecimens on
+    -- construction and drawSpecimenStrip/specimenProgress read from it
+    -- without erroring even when nothing has been collected yet.
+    local specimenScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        collectionStore = { load = function() return { azure_common = true } end, record = function() return true end },
+    })
+    assert(specimenScene.collectedSpecimens.azure_common == true)
+    local found, total = specimenScene:specimenProgress()
+    assert(found == 1 and total == 9)
+
     local savedBest = 40
     local fakeStore = {
         load = function() return savedBest end,
@@ -947,6 +999,24 @@ function M.run()
         "EARTH SHOP status column is under the measured worst-case status text width")
     assert(PlayScene.shopStatusColumnX >= PlayScene.shopActionColumnX + PlayScene.shopActionColumnW,
         "EARTH SHOP status column overlaps the action column")
+
+    -- EARTH SHOP touch rows are shaded with a faint alternating background
+    -- (drawn behind, never on top of, the already-verified text) purely as a
+    -- visual affordance for which rows respond to touch. Verify every row
+    -- resolves a valid RGBA color and adjacent rows alternate.
+    for index = 1, #PlayScene.settlementTouchRows do
+        local color = PlayScene.settlementRowBackgroundColor(index)
+        assert(type(color) == "table" and #color == 4,
+            "settlement row background color must be an RGBA table")
+        for _, channel in ipairs(color) do
+            assert(channel >= 0 and channel <= 1, "settlement row background channel out of range")
+        end
+    end
+    assert(PlayScene.settlementRowBackgroundColor(1) ~= PlayScene.settlementRowBackgroundColor(2),
+        "adjacent settlement rows must use different background colors")
+    assert(PlayScene.settlementRowBackgroundColor(1) == PlayScene.settlementRowBackgroundColor(3),
+        "background colors should alternate in a fixed two-color cycle")
+
     -- The smallest supported window (integer scale 1, e.g. 180x320) at a 1x
     -- device pixel ratio is the worst case for touch-target accessibility.
     -- iOS/Android guidelines require ~44pt minimum; verify every settlement

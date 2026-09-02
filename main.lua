@@ -33,6 +33,13 @@ function love.load()
             "LEFT $9999", "SHORT $125", "LEFT $105", "SHORT $105",
             "FUEL LV.0 HULL LV.0 YIELD LV.0 STEER LV.0",
             "FUEL LV.9 HULL LV.9 YIELD LV.9 STEER LV.9",
+            "H:LV.9>10", "G:LV.9>10", "Y:LV.9>10", "H:LV.0>1", "G:LV.0>1", "Y:LV.0>1",
+            "$999", "OK $999",
+            "T/H HULL", "T/G STEER", "T/Y YIELD", "T/V SCOUT",
+            "LV.9>10 $75", "LV.9>10 $65", "LV.9>10 $60", "$125",
+            "LV.0>1 $75", "LV.0>1 $65", "LV.0>1 $60",
+            "LEFT $999", "SHORT $999", "SELECT",
+            "STARTER", "SCOUT", "BUY $125",
         }
         for _, s in ipairs(samples) do
             print(string.format("FONTPROBE|%s|%d", s, font:getWidth(s)))
@@ -224,6 +231,19 @@ function love.load()
         scene.expedition.pendingSampleValue = 25
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
+    elseif capturePhase == "launch-with-specimens" then
+        -- Real-runtime capture for the launch-screen specimen log strip
+        -- (docs/feedback 2026-09-02 request: show off exploration finds
+        -- under the launch loadout card). Pre-seeds a handful of
+        -- discovered specimens across tiers/families so the strip shows a
+        -- mix of filled and empty squares instead of an all-empty grid.
+        local scene = scenes.current
+        scene.collectedSpecimens = {
+            azure_common = true,
+            ember_rare = true,
+            void_epic = true,
+            azure_rare = true,
+        }
     end
 end
 

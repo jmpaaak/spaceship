@@ -1,6 +1,7 @@
 local shipModule = require("game.ship")
 local expedition = require("game.expedition")
 local bestAltitudeStore = require("game.best_altitude_store")
+local collectionStore = require("game.collection_store")
 local viewport = require("game.viewport")
 local world = require("game.world")
 local M = {}
@@ -204,14 +205,38 @@ M.shopActionColumnW = shopActionColumnW
 M.shopStatusColumnX = shopStatusColumnX
 M.shopStatusColumnW = shopStatusColumnW
 
+-- EARTH SHOP touch-row background shading. Two prior cycles tried to move
+-- the shop's text lines to sit flush inside each settlementTouchRows band
+-- and both attempts were reverted after a real LÖVE capture showed shared
+-- HULL/STEERING and YIELD/SHIP columns' full-width centered text
+-- overlapping (see docs/STATUS.md "이번 사이클 시도 및 되돌림 기록"). This
+-- takes the safer path: instead of repositioning the already-verified,
+-- non-overlapping text, it draws a faint alternating background band behind
+-- each settlementTouchRows entry so the four tappable rows are visually
+-- distinguishable at a glance, without touching a single printf call.
+local settlementRowBackgroundColors = {
+    { 0.08, 0.14, 0.22, 0.35 },
+    { 0.05, 0.09, 0.15, 0.2 },
+}
+M.settlementRowBackgroundColors = settlementRowBackgroundColors
+
+function M.settlementRowBackgroundColor(index)
+    return settlementRowBackgroundColors[(index - 1) % #settlementRowBackgroundColors + 1]
+end
+
 function M.new(options)
     options = options or {}
     local ship = shipModule.new()
     local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
+    local specimenStore = options.collectionStore or collectionStore.new()
     return setmetatable({
         ship = ship,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
+        collectionStore = specimenStore,
+        collectedSpecimens = specimenStore:load(),
+        newSpecimenBanner = nil,
+        newSpecimenBannerTimer = 0,
         discovered = {},
         collided = {},
         discoveredCount = 0,
@@ -252,6 +277,53 @@ end
 
 function M:persistBestAltitude()
     return self.bestAltitudeStore:save(self.expedition.bestAltitude)
+end
+
+-- Draws the compact "탐험 도감" (specimen log) strip: one small square per
+-- catalog entry (9 total), filled with its tier color plus a soft glow
+-- (Balatro-style card rim glow, scaled down) when discovered, and a dim
+-- outline placeholder when not. A small "SPECIMENS n/9" label sits above
+-- the row so the strip reads as a collection, not a random decoration.
+-- Placed over the open starfield/Earth view above the LAUNCH LOADOUT
+-- card so exploration trophies decorate the otherwise-empty space under
+-- the title screen without competing with any HUD or loadout text.
+function M:drawSpecimenStrip(y)
+    local catalog = world.specimenCatalog()
+    local box = 8
+    local gap = 3
+    local totalWidth = #catalog * box + (#catalog - 1) * gap
+    local startX = math.floor((viewport.width - totalWidth) / 2)
+    self.tinyFont = self.tinyFont or love.graphics.newFont(7)
+    local previousFont = love.graphics.getFont()
+    love.graphics.setFont(self.tinyFont)
+    local found = self:specimenProgress()
+    love.graphics.setColor(0.55, 0.65, 0.85, 0.9)
+    love.graphics.printf(string.format("SPECIMENS %d/%d", found, #catalog),
+        0, y - 10, viewport.width, "center")
+    for i, entry in ipairs(catalog) do
+        local x = startX + (i - 1) * (box + gap)
+        if self.collectedSpecimens[entry.id] then
+            local r, g, b = sampleTierColor(entry.tier)
+            love.graphics.setColor(r, g, b, 0.35)
+            love.graphics.rectangle("fill", x - 2, y - 2, box + 4, box + 4)
+            love.graphics.setColor(r, g, b, 1)
+            love.graphics.rectangle("fill", x, y, box, box)
+        else
+            love.graphics.setColor(0.3, 0.35, 0.45, 0.6)
+            love.graphics.rectangle("line", x, y, box, box)
+        end
+    end
+    love.graphics.setFont(previousFont)
+end
+
+-- Count of specimen kinds discovered out of the full 9-entry catalog.
+function M:specimenProgress()
+    local total = 0
+    local catalog = world.specimenCatalog()
+    for _, entry in ipairs(catalog) do
+        if self.collectedSpecimens[entry.id] then total = total + 1 end
+    end
+    return total, #catalog
 end
 
 function M:collisionRisk(planet)
@@ -517,6 +589,12 @@ function M:update(dt)
     if self.shipShake > 0 then
         self.shipShake = math.max(0, self.shipShake - dt)
     end
+    if self.newSpecimenBannerTimer > 0 then
+        self.newSpecimenBannerTimer = math.max(0, self.newSpecimenBannerTimer - dt)
+        if self.newSpecimenBannerTimer == 0 then
+            self.newSpecimenBanner = nil
+        end
+    end
     if self.slotSpin then
         self.slotSpin.elapsed = self.slotSpin.elapsed + dt
         if self.slotSpin.elapsed >= self.slotSpin.duration then
@@ -584,6 +662,12 @@ function M:update(dt)
                 })
                 self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
                 self.message = string.format("SAMPLE +$%d  %s", awarded, planet.id)
+                local specimenId, specimenLabel = world.specimenKind(planet)
+                if self.collectionStore:record(specimenId) then
+                    self.collectedSpecimens[specimenId] = true
+                    self.newSpecimenBanner = "NEW SPECIMEN: " .. specimenLabel
+                    self.newSpecimenBannerTimer = 2.0
+                end
             end
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
                 self.collided[planet.id] = true
@@ -941,6 +1025,11 @@ function M:draw()
         love.graphics.print(hud.status, 5, 18)
     end
     if self.expedition.phase == "launch" then
+        -- Specimen log strip sits in the empty space between the HUD and
+        -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so
+        -- it never competes with loadout numbers or the TAP TO LAUNCH
+        -- message below the panel.
+        self:drawSpecimenStrip(184)
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
         love.graphics.rectangle("fill", 12, 204, viewport.width - 24, 90)
@@ -974,6 +1063,15 @@ function M:draw()
         local previousFont = love.graphics.getFont()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
         love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
+        -- Faint alternating background bands behind each tappable
+        -- settlementTouchRows entry. Drawn before any text so it never
+        -- overlaps or obscures the already real-capture-verified printf
+        -- calls below; purely a visual affordance for which rows respond
+        -- to touch (see settlementRowBackgroundColor comment above).
+        for index, touchRow in ipairs(settlementTouchRows) do
+            love.graphics.setColor(M.settlementRowBackgroundColor(index))
+            love.graphics.rectangle("fill", 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top)
+        end
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf("EARTH SHOP", 16, 74, viewport.width - 32, "center")
         local fuelBonusLine = self:summaryFuelBonusLine()
@@ -1248,6 +1346,13 @@ function M:draw()
     love.graphics.setColor(0.85, 0.9, 1)
     local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 50 or viewport.height - 30
     love.graphics.printf(self.message, 4, messageY, viewport.width - 8, "center")
+    if self.newSpecimenBanner then
+        local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
+        love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)
+        love.graphics.rectangle("fill", 12, 60, viewport.width - 24, 16)
+        love.graphics.setColor(1, 0.85, 0.3, alpha)
+        love.graphics.printf(self.newSpecimenBanner, 12, 64, viewport.width - 24, "center")
+    end
     love.graphics.setColor(1, 0.65, 0.2, 0.85)
     love.graphics.printf("DEV PLACEHOLDER", 4, viewport.height - 13, viewport.width - 8, "center")
 end
