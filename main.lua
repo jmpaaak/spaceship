@@ -114,6 +114,23 @@ function love.load()
             if planet.id == "tier-rare" then return "rare" end
             return "epic"
         end
+    elseif capturePhase == "ascending-epic-pickup-effects" then
+        -- Dev-only capture for verifying the Balatro-style particle burst
+        -- and ship scale-punch on an epic-tier sample pickup, requested in
+        -- the 2026-09-02 pending feedback.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 900
+        scene.ship.y = -900
+        scene.ship.x = 0
+        local world = require("game.world")
+        world.nearbyPlanets = function()
+            return { { id = "epic-pickup", x = 0, y = -900, radius = 9, hue = 0.8 } }
+        end
+        world.collisionDamage = function() return 0 end
+        world.sampleValue = function() return 999 end
+        world.sampleTier = function() return "epic" end
+        scene:update(0)
     elseif capturePhase == "returning-odds" then
         local scene = scenes.current
         require("game.expedition").launch(scene.expedition)

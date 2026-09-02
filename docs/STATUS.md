@@ -339,3 +339,14 @@
 - 이로써 `docs/GAME_DESIGN.md` 귀환 슬롯 보상 4종(돈, 표본 보너스, 수리권, 연료 보너스) 전부 구현·검증 완료됐다.
 - 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) 최우선 pending feedback인 발라트로 스타일 카드형 비주얼 강화(`game/scenes/play.lua`의 Lua 렌더링 레이어에 외곽 글로우/그라디언트/등급별 파티클/충돌·획득 pop-shake 이펙트 추가, `world.sampleTier`별 차등화), (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 발라트로 스타일 행성/이펙트 비주얼 강화 (완료)
+
+- 이번 사이클의 최우선 pending feedback인 "행성이 너무 밋밋하다"를 처리했다. 사용자가 명시한 대로 이 작업은 최종 텍스처 교체가 아니라 `game/scenes/play.lua`의 Lua 도형 렌더링 연출이므로 AetherAI-only 제약과 무관하게 진행했다.
+- `game/scenes/play.lua`에 `sampleTierEffects`(`common`/`rare`/`epic`별 `particleCount`·`glowRings`·`glowAlpha`)와 `M.sampleTierEffect(tier)`를 추가해 `world.sampleTier`와 같은 세 등급을 파티클 밀도(6/10/16개)·글로우 링 수(1/2/3겹)·글로우 강도(0.35/0.5/0.75)로 차등화했다.
+- 상승 중 아직 표본을 획득하지 않은 행성에는 등급별 다중 저알파 외곽 글로우 링(림 라이트)을 기존 단일 등급 링 바깥에 추가로 그린다. 모든 행성(등급 무관)의 채우기도 어두운 베이스 색 위에 좌상단으로 치우친 밝은 하이라이트 원을 겹쳐 그려 발라트로류 카드의 채도 높은 그라디언트 느낌을 준다.
+- 표본 획득 시 `M:spawnSampleParticles(x, y, tier)`가 등급별 개수의 짧은 수명(0.5초) 파티클을 표본 색으로 방사형 폭발시키고, 우주선에 `shipPunch` 스케일 펀치(0.2초, 최대 +35% 확대)를 시작한다. 행성 충돌 시에는 `shipShake`(0.25초, 감쇠하는 무작위 오프셋)로 우주선 렌더링 위치를 흔든다. 두 타이머 모두 `update`에서 매 프레임 감소·소멸한다.
+- engine-hosted 테스트가 세 등급의 파티클 밀도·글로우 강도가 `common < rare < epic` 순으로 증가하는지, `spawnSampleParticles`가 등급에 맞는 개수의 파티클을 생성하고 `shipPunch`를 시작하는지, 시간 경과에 따른 파티클 타이머 감소·만료 제거와 `shipPunch` 감쇠·소멸을, 실제 `PlayScene:update`에서 행성 충돌이 `shipShake`를 시작하는지 검증한다.
+- `make test`와 `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:24`).
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-sample-tiers`, `1440×2560`)로 `rare`(청록)·`epic`(금색) 행성이 이전보다 뚜렷하게 크고 밝은 다중 외곽 글로우 링과 좌상단 하이라이트 그라디언트로 렌더링되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-balatro-tiers.png`, 로컬 산출물로 커밋 제외). `main.lua`에 새 `GAME_CAPTURE_PHASE=ascending-epic-pickup-effects` 개발 전용 진입 경로를 추가해 캡처한 결과, 표본 획득 순간 우주선 주위에 파티클 폭발과 확대된 우주선(scale-punch)이 흐릿한 후광으로 렌더링되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-epic-pickup.png`, 로컬 산출물로 커밋 제외).
+- 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+

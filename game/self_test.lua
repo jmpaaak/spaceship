@@ -49,6 +49,58 @@ function M.run()
     assert(commonR ~= rareR or commonG ~= rareG or commonB ~= rareB)
     assert(rareR ~= epicR or rareG ~= epicG or rareB ~= epicB)
 
+    -- Balatro-style visual punch-up (2026-09-02 pending feedback): each
+    -- sample tier gets a distinct particle-burst density and glow strength
+    -- so common/rare/epic planets read as increasingly valuable at a
+    -- glance, not just by ring color.
+    local commonEffect = PlayScene.sampleTierEffect("common")
+    local rareEffect = PlayScene.sampleTierEffect("rare")
+    local epicEffect = PlayScene.sampleTierEffect("epic")
+    assert(commonEffect.particleCount < rareEffect.particleCount
+        and rareEffect.particleCount < epicEffect.particleCount,
+        "particle density must increase common < rare < epic")
+    assert(commonEffect.glowAlpha < rareEffect.glowAlpha
+        and rareEffect.glowAlpha < epicEffect.glowAlpha,
+        "glow intensity must increase common < rare < epic")
+
+    local particleScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    assert(#particleScene.particles == 0)
+    assert(particleScene.shipPunch == 0)
+    particleScene:spawnSampleParticles(0, -500, "epic")
+    assert(#particleScene.particles == PlayScene.sampleTierEffect("epic").particleCount,
+        "spawnSampleParticles must create a tier-scaled particle burst")
+    assert(particleScene.shipPunch == PlayScene.shipPunchDuration,
+        "sample pickup must start a ship scale-punch")
+    local firstParticle = particleScene.particles[1]
+    particleScene:update(0.1)
+    assert(math.abs(firstParticle.timer - 0.4) < 1e-9)
+    assert(particleScene.shipPunch < PlayScene.shipPunchDuration and particleScene.shipPunch > 0)
+    particleScene:update(1.0)
+    assert(#particleScene.particles == 0, "expired particles must be removed")
+    assert(particleScene.shipPunch == 0)
+
+    -- Collision impact should trigger a brief ship shake so hits feel more
+    -- physical, mirroring how the sample pickup triggers a scale-punch.
+    local shakeScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    shakeScene.expedition.phase = "ascending"
+    shakeScene.expedition.altitude = 500
+    shakeScene.expedition.durability = 3
+    shakeScene.ship.x = 0
+    shakeScene.ship.y = -500
+    assert(shakeScene.shipShake == 0)
+    local shakeNearby = world.nearbyPlanets
+    world.nearbyPlanets = function()
+        return { { id = "shake-test", x = 0, y = -500, radius = 7 } }
+    end
+    shakeScene:update(0)
+    world.nearbyPlanets = shakeNearby
+    assert(shakeScene.shipShake == PlayScene.shipShakeDuration,
+        "planet collision must trigger a ship shake")
+
     local riskScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })

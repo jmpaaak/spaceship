@@ -118,6 +118,33 @@ local function sampleTierColor(tier)
 end
 M.sampleTierColor = sampleTierColor
 
+-- Balatro-style card-game visual punch-up requested by the user (2026-09-02
+-- pending feedback): stronger rim glow, a burst of tier-colored particles,
+-- and a ship scale-punch/shake on sample pickup and collision impact. This
+-- only adds a Lua rendering layer on top of the existing DEV PLACEHOLDER
+-- shapes (per game/effect-studio's impact/particles/lighting recipes) -- it
+-- is not a final-art texture swap, so it is exempt from the AetherAI-only
+-- asset policy and can ship immediately. Higher sample tiers get more
+-- particles, more glow rings and a brighter glow alpha so common/rare/epic
+-- are visually distinct at a glance, not just by ring color.
+local sampleTierEffects = {
+    common = { particleCount = 6, glowRings = 1, glowAlpha = 0.35 },
+    rare = { particleCount = 10, glowRings = 2, glowAlpha = 0.5 },
+    epic = { particleCount = 16, glowRings = 3, glowAlpha = 0.75 },
+}
+
+local function sampleTierEffect(tier)
+    return sampleTierEffects[tier] or sampleTierEffects.common
+end
+M.sampleTierEffect = sampleTierEffect
+
+-- Duration (seconds) of the ship scale-punch on sample pickup and the
+-- ship/camera shake on collision impact.
+local shipPunchDuration = 0.2
+local shipShakeDuration = 0.25
+M.shipPunchDuration = shipPunchDuration
+M.shipShakeDuration = shipShakeDuration
+
 local warningLabelMargin = 2
 
 local function clampLabelX(centerX, textWidth, viewportWidth, margin)
@@ -165,10 +192,37 @@ function M.new(options)
         collided = {},
         discoveredCount = 0,
         floatingTexts = {},
+        particles = {},
+        shipPunch = 0,
+        shipShake = 0,
         slotSpin = nil,
         touches = {},
         message = "TAP TO LAUNCH",
     }, M)
+end
+
+-- Spawns a tier-scaled burst of short-lived particles at (x, y) using the
+-- tier's rim-glow color, and starts a brief ship scale-punch so pickups feel
+-- impactful (Balatro-style card pop) instead of a flat sprite swap.
+function M:spawnSampleParticles(x, y, tier)
+    local effect = sampleTierEffect(tier)
+    local r, g, b = sampleTierColor(tier)
+    for i = 1, effect.particleCount do
+        local angle = (i / effect.particleCount) * math.pi * 2 + math.random() * 0.4
+        local speed = 40 + math.random() * 50
+        table.insert(self.particles, {
+            x = x,
+            y = y,
+            vx = math.cos(angle) * speed,
+            vy = math.sin(angle) * speed,
+            timer = 0.5,
+            maxTimer = 0.5,
+            r = r,
+            g = g,
+            b = b,
+        })
+    end
+    self.shipPunch = shipPunchDuration
 end
 
 function M:persistBestAltitude()
@@ -422,6 +476,21 @@ function M:update(dt)
             table.remove(self.floatingTexts, i)
         end
     end
+    for i = #self.particles, 1, -1 do
+        local particle = self.particles[i]
+        particle.timer = particle.timer - dt
+        particle.x = particle.x + particle.vx * dt
+        particle.y = particle.y + particle.vy * dt
+        if particle.timer <= 0 then
+            table.remove(self.particles, i)
+        end
+    end
+    if self.shipPunch > 0 then
+        self.shipPunch = math.max(0, self.shipPunch - dt)
+    end
+    if self.shipShake > 0 then
+        self.shipShake = math.max(0, self.shipShake - dt)
+    end
     if self.slotSpin then
         self.slotSpin.elapsed = self.slotSpin.elapsed + dt
         if self.slotSpin.elapsed >= self.slotSpin.duration then
@@ -487,6 +556,7 @@ function M:update(dt)
                     timer = 1.0,
                     kind = "sample",
                 })
+                self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
                 self.message = string.format("SAMPLE +$%d  %s", awarded, planet.id)
             end
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
@@ -507,6 +577,7 @@ function M:update(dt)
                     timer = 1.0,
                     kind = "damage",
                 })
+                self.shipShake = shipShakeDuration
                 if expedition.damage(self.expedition, damage) then
                     self:persistBestAltitude()
                     self.message = string.format("SHIP DESTROYED  BEST %d  META RESET", math.floor(self.expedition.bestAltitude))
@@ -709,8 +780,28 @@ function M:draw()
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
         local x, y = math.floor(planet.x - cameraX), math.floor(planet.y - cameraY)
         if x > -24 and x < viewport.width + 24 and y > -24 and y < viewport.height + 24 then
-            love.graphics.setColor(planetColor(planet.hue))
+            if not self.discovered[planet.id] then
+                -- Balatro-style outer rim glow: several soft, low-alpha
+                -- rings outside the sample-tier ring, scaled by tier so
+                -- rare/epic planets read as more valuable at a glance
+                -- before the player even reads the SAMPLE $N label.
+                local tier = world.sampleTier(planet)
+                local effect = sampleTierEffect(tier)
+                local glowR, glowG, glowB = sampleTierColor(tier)
+                for ring = effect.glowRings, 1, -1 do
+                    local ringAlpha = effect.glowAlpha * (ring / effect.glowRings) * 0.5
+                    love.graphics.setColor(glowR, glowG, glowB, ringAlpha)
+                    love.graphics.circle("fill", x, y, planet.radius + 3 + ring * 4)
+                end
+            end
+            -- Saturated gradient fill: a darker base circle with a brighter
+            -- highlight offset toward the upper-left, approximating a soft
+            -- directional light instead of a single flat fill color.
+            local baseR, baseG, baseB = planetColor(planet.hue)
+            love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
             love.graphics.circle("fill", x, y, planet.radius)
+            love.graphics.setColor(math.min(1, baseR * 1.25), math.min(1, baseG * 1.25), math.min(1, baseB * 1.25))
+            love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
             if not self.discovered[planet.id] then
                 love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
                 love.graphics.circle("line", x, y, planet.radius + 3)
@@ -752,9 +843,25 @@ function M:draw()
             love.graphics.printf(ft.text, fx - 30, fy - 10, 60, "center")
         end
     end
+    for _, particle in ipairs(self.particles) do
+        local px, py = math.floor(particle.x - cameraX), math.floor(particle.y - cameraY)
+        local alpha = math.max(0, particle.timer / particle.maxTimer)
+        love.graphics.setColor(particle.r, particle.g, particle.b, alpha)
+        love.graphics.circle("fill", px, py, 1.5)
+    end
     love.graphics.push()
-    love.graphics.translate(shipScreenX, shipScreenY)
+    local shakeX, shakeY = 0, 0
+    if self.shipShake > 0 then
+        local shakeStrength = (self.shipShake / shipShakeDuration) * 3
+        shakeX = (math.random() * 2 - 1) * shakeStrength
+        shakeY = (math.random() * 2 - 1) * shakeStrength
+    end
+    love.graphics.translate(shipScreenX + shakeX, shipScreenY + shakeY)
     love.graphics.rotate(self.ship.angle + math.pi / 2)
+    if self.shipPunch > 0 then
+        local punchScale = 1 + (self.shipPunch / shipPunchDuration) * 0.35
+        love.graphics.scale(punchScale, punchScale)
+    end
     love.graphics.setColor(0.8, 0.95, 1)
     love.graphics.polygon("fill", 0, -7, -5, 6, 0, 3, 5, 6)
     if self.expedition.phase == "ascending" then
