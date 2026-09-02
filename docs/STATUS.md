@@ -1,4 +1,17 @@
 # STATUS
+## 아이콘 기반 HUD 간소화 네 번째/최종 슬라이스: STEER SPEED에 스피드미터 아이콘 추가 — 3번 항목 완료 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 네 번째이자 마지막 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.
+
+- 이전 세 슬라이스가 탭 발사(로켓)/선체 내구도(방패)/자금(동전) 세 가지에 아이콘을 추가했으나, LAUNCH LOADOUT 카드의 STEER SPEED(조종속도) 줄만 여전히 아이콘 없는 텍스트였다.
+- `game/scenes/play.lua`에 순수 함수 `M.speedIconPoints(cx, cy, size)`(반원형 다이얼 실루엣 + 중앙 바늘, `love.graphics` 호출 없는 flat `{x1,y1,x2,y2,...}` 폴리곤 점 목록, `shieldIconPoints`/`coinIconPoints`와 동일 패턴)와 신규 상수 `M.speedIconSize = 8`, `M.speedIconGap = 4`를 추가했다.
+- `M:draw()`의 LAUNCH LOADOUT 카드 렌더 구간이 `loadout.steering` 텍스트를 `printf(..., "center")`로 그리기 전에 그 텍스트의 실제 렌더 폭(현재 활성 폰트 기준)을 측정해 중앙 정렬된 텍스트의 왼쪽 시작 x좌표를 역산하고, 그 위치에서 `speedIconGap`만큼 더 왼쪽에 이 아이콘을 그린다. `stats`/`upgrades`/`forecast`/`odds` 등 다른 줄은 영향 없음.
+- `game/self_test.lua`에 `testSteerSpeedIcon()`(신규, `testHullShieldIcon`/`testCashCoinIcon`과 동일 패턴)을 추가했다 — 폴리곤 점 개수가 짝수/최소 3정점, 아이콘이 중심 y 위아래로 걸쳐 있음, cx 기준 수평 대칭임을 회귀 검증한다(RED 확인 후 GREEN). `M.run()`에 `testSteerSpeedIcon()` 호출을 등록했다.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`, `GAME_SCALE=4` → 1440×2560, ko 로케일, `build/spaceship-runtime-preview-launch-speed-icon.png`)를 vision으로 확인해, "조종속도 55" 텍스트 왼쪽에 옅은 초록색 반원형 스피드미터 아이콘이 겹침·잘림 없이 렌더링됨을 확인했다(캡처 파일은 빌드 아티팩트이므로 검증 후 삭제, 커밋 제외).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 3번 항목을 "처리 대기" 목록 내에서 완료 표시(✅)로 갱신했다 — 아이콘 기반 HUD 간소화 대상 4가지(탭 발사/선체 내구도/자금/속도) 전부 완료.
+- 다음 사이클 다음 슬라이스: "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토, 이미 거의 완료 — "발사 장비" 패널 타이틀 검토만 재확인 필요할 수 있음) 재확인, 또는 6번(표본 도감 정리 검토 + 슬롯 6개를 함선 장비 카드 UI로 전환 — 데이터 구조 설계부터 슬라이스 필요, 이후 7~15번 항목들의 기반이 되는 큰 작업)으로 진행.
+
 ## 아이콘 기반 HUD 간소화 첫 슬라이스: TAP TO LAUNCH 위에 로켓 아이콘 추가 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 "남은 작업" 부분(탭하여 발사/선체 내구도/자금/속도를 아이콘+짧은 수치로 재구성)을 첫 슬라이스로 착수했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.

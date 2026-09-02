@@ -269,6 +269,35 @@ end
 M.cashIconSize = 8
 M.cashIconGap = 4
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+-- fourth/final slice): pair the LAUNCH LOADOUT steering-speed readout
+-- (STEER SPEED %d / 조종속도 %d) with a small speedometer silhouette,
+-- mirroring shieldIconPoints/coinIconPoints. Drawn as a flat semicircular
+-- dial outline with a needle (an even-length {x,y,...} polygon list, no
+-- love.graphics calls) so its geometry can be regression tested the same
+-- way as the other three icons: horizontally symmetric around cx, spans
+-- above and below cy.
+function M.speedIconPoints(cx, cy, size)
+    local r = size * 0.5
+    local baseY = cy + r * 0.6
+    return {
+        cx - r, baseY,
+        cx - r * 0.7071, baseY - r * 0.7071,
+        cx, baseY - r,
+        cx + r * 0.7071, baseY - r * 0.7071,
+        cx + r, baseY,
+        cx + r * 0.18, baseY,
+        cx, baseY - r * 0.85,
+        cx - r * 0.18, baseY,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the speedometer icon's
+-- right edge and the STEER SPEED text's left edge, mirroring
+-- M.hullIconSize/hullIconGap and M.cashIconSize/cashIconGap.
+M.speedIconSize = 8
+M.speedIconGap = 4
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1856,6 +1885,19 @@ function M:draw()
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(loadout.forecast, 16, row, viewport.width - 32, "center")
         row = row + rowStep
+        love.graphics.setColor(0.6, 1, 0.85)
+        -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD
+        -- simplification, fourth/final slice): pair the STEER SPEED text
+        -- with a small speedometer icon drawn just to its left, mirroring
+        -- the pattern used for the coin/shield icons elsewhere. The text
+        -- is centered via printf, so the icon is measured against the
+        -- text's rendered width and placed immediately left of it.
+        local steeringTextWidth = love.graphics.getFont():getWidth(loadout.steering)
+        local steeringTextX = 16 + (viewport.width - 32 - steeringTextWidth) / 2
+        local speedIconCenterX = steeringTextX - M.speedIconGap - M.speedIconSize / 2
+        local speedIconCenterY = row + love.graphics.getFont():getHeight() / 2
+        love.graphics.polygon("fill",
+            M.speedIconPoints(speedIconCenterX, speedIconCenterY, M.speedIconSize))
         love.graphics.setColor(0.6, 1, 0.85)
         love.graphics.printf(loadout.steering, 16, row, viewport.width - 32, "center")
         row = row + rowStep

@@ -587,6 +587,37 @@ local function testCashCoinIcon()
     end
 end
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+-- fourth/final slice): the LAUNCH LOADOUT STEER SPEED readout gets a small
+-- speedometer icon paired with it. Pure-geometry regression test mirroring
+-- testHullShieldIcon/testCashCoinIcon: even-length flat polygon list, at
+-- least a triangle, spans above and below cy, and horizontally symmetric
+-- around cx.
+local function testSteerSpeedIcon()
+    local PlayScene = require("game.scenes.play")
+    local points = PlayScene.speedIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "speedometer silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "speedometer must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "speedometer outline must be horizontally symmetric around cx")
+    end
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -2345,6 +2376,7 @@ function M.run()
     testLaunchRocketIcon()
     testHullShieldIcon()
     testCashCoinIcon()
+    testSteerSpeedIcon()
 
     print("SPACESHIP_UNIT_OK")
 end
