@@ -189,6 +189,35 @@ class VerifyAssetManifestTests(unittest.TestCase):
         errors = vam.validate(self.assets_dir, self.manifest_path)
         self.assertTrue(any("source_url must be an official AetherForgeAI/AetherAI URL" in e for e in errors))
 
+    def test_non_official_terms_url_is_rejected(self):
+        # loop/PROMPT.md requires the recorded terms_url to also be the
+        # official AetherForgeAI/AetherAI terms page, not just source_url --
+        # otherwise an entry could smuggle in an unrelated/fabricated terms
+        # link while still pointing source_url at the real service.
+        data = make_png_bytes()
+        path = os.path.join(self.assets_dir, "ship.png")
+        with open(path, "wb") as fh:
+            fh.write(data)
+        digest = hashlib.sha256(data).hexdigest()
+        entry = {
+            "path": "assets/ship.png",
+            "source_url": "https://aetherforgeai.com/generations/abc123",
+            "terms_url": "https://example.com/not-aether-terms",
+            "asset_id": "abc123",
+            "prompt": "pixel-art spaceship",
+            "model": "AetherAI-v1",
+            "style": "pixel-portrait",
+            "settings": "seed=42,steps=30",
+            "downloaded_at": "2026-09-02T00:00:00Z",
+            "sha256": digest,
+            "width": 32,
+            "height": 32,
+            "qa": "Verified.",
+        }
+        self.write_manifest([entry])
+        errors = vam.validate(self.assets_dir, self.manifest_path)
+        self.assertTrue(any("terms_url must be an official AetherForgeAI/AetherAI URL" in e for e in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

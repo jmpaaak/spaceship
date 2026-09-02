@@ -90,6 +90,11 @@ def validate(assets_dir: str, manifest_path: str) -> list[str]:
             errors.append(
                 f"{image_path}: source_url must be an official AetherForgeAI/AetherAI URL, got '{source_url}'"
             )
+        terms_url = entry.get("terms_url") or ""
+        if terms_url and not terms_url.startswith(OFFICIAL_SOURCE_PREFIXES):
+            errors.append(
+                f"{image_path}: terms_url must be an official AetherForgeAI/AetherAI URL, got '{terms_url}'"
+            )
         expected_sha = entry.get("sha256")
         root = os.path.dirname(assets_dir) or "."
         full_path = os.path.join(root, image_path)

@@ -1,4 +1,15 @@
 # STATUS
+## AetherAI-only manifest 검증기에 terms_url 공식 도메인 검사 추가 (2026-09-02)
+
+`git status --short` clean, preflight PASS 상태로 시작. 처리 대기 최우선 항목인 "AetherAI-only 최종 에셋"을 이번 사이클의 슬라이스로 선정했다. 로그인/공식 export 자격 증명은 여전히 이 세션에 없음을 재확인했다(`env`에 `aether`/`api_key`/`token` 관련 키 없음, `~/.hermes/.env`는 자격 증명 파일이라 내용을 읽지 않음, `/private/tmp/aether.html`·`*.diff`는 이전 세션이 남긴 도메인 조사 산출물일 뿐 로그인 세션이 아님을 파일명·라인수만 확인). 따라서 실제 공식 에셋 import는 이번 사이클도 human-gated다. `loop/PROMPT.md`의 "If login/export is unavailable... continue non-asset gameplay, tests, persistence, balancing, touch input, packaging, and UI layout work" 지침에 따라, import 불가능한 채로 진행 가능한 이 항목의 **강제 검증 인프라 보강**을 이번 슬라이스로 진행했다.
+
+- 기존 `tools/verify_asset_manifest.py`가 매니페스트 항목의 `source_url`은 공식 `aetherforgeai.com`/`aetherai.com` 도메인인지 검사했지만, 나란히 요구되는 `terms_url`(loop/PROMPT.md 37행: "source/terms URL"을 함께 기록)은 필드 존재 여부만 확인하고 값이 실제로 공식 도메인인지는 검사하지 않는 허점을 발견했다. 이 상태에서는 `source_url`만 진짜 AetherAI 링크로 채우고 `terms_url`에 아무 URL이나(가짜 약관 페이지 등) 적어도 검증을 통과할 수 있었다.
+- TDD로 진행: `tools/test_verify_asset_manifest.py`에 `test_non_official_terms_url_is_rejected`(source_url은 공식이지만 terms_url이 `example.com`인 항목이 거부되어야 함)를 먼저 추가해 RED(`AssertionError: False is not true`, 9개 중 1개 FAIL)를 확인했다.
+- `tools/verify_asset_manifest.py`의 `validate()`에 `terms_url`도 `source_url`과 동일한 `OFFICIAL_SOURCE_PREFIXES` 검사를 적용하는 분기를 추가해 GREEN으로 만들었다(9/9 통과).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, 9/9 Python 유닛 테스트, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 "AetherAI-only 최종 에셋" 항목은 실제 공식 에셋을 아직 하나도 import하지 못했으므로(자격 증명 부재) "처리 대기"에 그대로 남겨둔다 — 이번 슬라이스는 provenance 강제 검증의 허점을 메운 것이지, 요구사항 자체를 완료한 것이 아니다.
+- 남은 다음 슬라이스 후보: (1) AetherAI 로그인 자격 증명이 제공되면 이 매니페스트 스키마에 맞춰 실제 공식 에셋 export를 진행, (2) 새 feedback이 등록되면 그것을 우선 처리, (3) 기존에 코드/실기기 검증까지 완료되어 사용자 최종 확인만 남은 3개 항목(핵심 루프/발라트로 스타일/런치 화면 표본 전시)의 사용자 재확인 대기.
+
 ## 상승 화면 조이스틱 UI 축소 + 우주선 뱅킹/RCS 이펙트 완성 및 커밋 (인계 완료, 2026-09-02)
 
 `git status --short`가 `M game/joystick.lua`/`M game/scenes/play.lua`(인계된 미커밋 GREEN 변경, preflight `git diff` 검사 PASS) 상태로 시작했다. preflight READY, 처리 대기 최우선 1개 항목(AetherAI-only)은 여전히 로그인 자격 증명이 없어 human-gated이므로, `loop/PROMPT.md` 2행 "Preserve and finish prior-cycle work; do not overwrite it"에 따라 인계된 미완성 변경을 이어받아 완료하는 것을 이번 사이클의 슬라이스로 선정했다.
