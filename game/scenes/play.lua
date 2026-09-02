@@ -571,6 +571,8 @@ function M:shopLoadoutLines()
         shipAffordable = shipAffordable,
         shipPreview = string.format("%s MAX FUEL %d  HULL %d",
             string.upper(previewShipId), previewFuel, previewDurability),
+        shipPreviewCompact = string.format("%s F%d H%d",
+            string.upper(previewShipId), previewFuel, previewDurability),
         shipPreviewForecast = launchForecastLine(run, previewFuel),
         fuelAction = string.format("T/F FUEL LV.%d>%d $%d",
             run.fuelUpgradeLevel, run.fuelUpgradeLevel + 1, run.fuelUpgradeCost),
@@ -1253,6 +1255,7 @@ function M:draw()
         -- Tightened to 8px so the last row (TAP: RELAUNCH) lands at
         -- y=140+19*8=292, comfortably above the footer again.
         local rowStep = 8
+        row = 156
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.fuelAction, actionX, row, actionW, "left")
         love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
@@ -1262,53 +1265,62 @@ function M:draw()
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(nextLaunch.fuelPreviewForecast, fullX, row, fullW, "center")
         row = row + rowStep
+        -- HULL and STEERING
+        row = 180
+        rowStep = 8
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.hullAction, actionX, row, actionW, "left")
+        love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        row = row + rowStep
+        
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
             nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.hullStatus, statusX, row, statusW, "right")
-        row = row + rowStep
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.hullPreview, fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.hullPreviewForecast, fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.steeringAction, actionX, row, actionW, "left")
+        love.graphics.printf(nextLaunch.hullStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.setColor(nextLaunch.steeringAffordable and 0.45 or 1,
             nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.steeringStatus, statusX, row, statusW, "right")
+        love.graphics.printf(nextLaunch.steeringStatus, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
+        
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.steeringPreview, fullX, row, fullW, "center")
+        love.graphics.printf(nextLaunch.hullPreviewCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        love.graphics.printf(nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
+
+        love.graphics.setColor(0.45, 1, 0.6)
+        love.graphics.printf(nextLaunch.hullPreviewForecast, fullX, row, fullW, "center")
+
+        -- YIELD and SHIP
+        row = 216
+        rowStep = 8
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.yieldAction, actionX, row, actionW, "left")
+        love.graphics.printf(nextLaunch.yieldActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        row = row + rowStep
+        
         love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
             nextLaunch.yieldAffordable and 1 or 0.4, nextLaunch.yieldAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.yieldStatus, statusX, row, statusW, "right")
+        love.graphics.printf(nextLaunch.yieldStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
+        love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
+            nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
+        love.graphics.printf(nextLaunch.shipStatus, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
+
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.yieldPreview, fullX, row, fullW, "center")
+        love.graphics.printf(nextLaunch.yieldPreview, shopColumnLeftX, row, shopColumnLeftW, "center")
+        love.graphics.printf(nextLaunch.shipPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
+        
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.scoutTradeoff[1], fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.shipPreview, fullX, row, fullW, "center")
-        row = row + rowStep
+        
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(nextLaunch.shipPreviewForecast, fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf("T/V " .. nextLaunch.shipAction, actionX, row, actionW, "left")
-        love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
-            nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.shipStatus, statusX, row, statusW, "right")
-        row = row + rowStep
+        
+        row = 264
+        rowStep = 8
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
         row = row + rowStep

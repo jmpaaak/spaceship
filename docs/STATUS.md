@@ -428,3 +428,10 @@
 - 다음 사이클에서 이어받을 정확한 다음 단계: `game/scenes/play.lua`의 settlement draw 분기에서 HULL/STEERING 공유 행 두 줄(action/status, 그리고 그 아래 hullPreview 줄)을 `shopColumnLeftX/shopColumnLeftW`(16,68)로 `hullActionCompact`+`hullPreviewCompact`를, `shopColumnRightX/shopColumnRightW`(88,68)로 `steeringActionCompact`+`steeringPreviewCompact`를 각각 그리도록 교체하고, YIELD/SHIP 공유 행도 동일한 패턴(`yieldActionCompact`+`yieldPreview`/`shipActionCompact`+`shipPreview` 좌우 분할)으로 교체한 뒤, `GAME_CAPTURE_PHASE=settlement-newbest`(`1440×2560`) 실기기 캡처로 겹침이 실제로 사라졌는지 vision으로 반드시 확인해야 한다(이전 두 사이클 모두 engine-hosted 테스트만으로는 렌더 겹침을 잡지 못했다).
 - 이번 사이클은 `git status --short`가 clean한 상태에서 preflight PASS로 시작했고, 위 데이터 준비 슬라이스는 완전히 GREEN 상태로 커밋 가능하다. AetherAI-only 최종 에셋 확인은 이번 사이클에도 자격 증명을 찾지 못해 human-gated 상태를 유지했다.
 
+
+## YIELD/SHIP/HULL/STEERING 컬럼 정렬 렌더링 수정 및 터치 밴드 정렬 완료
+
+- 이전 사이클에서 준비한 `*Compact` 데이터를 사용하여 `game/scenes/play.lua`의 settlement draw 로직을 좌우 분할 컬럼 레이아웃으로 변경했다. 추가로 `shipPreviewCompact`를 `shopLoadoutLines()`에 정의하여 우측 컬럼 공간(68px)에 맞게 렌더링되도록 수정했다.
+- 축약된 텍스트와 상태(Status)를 개별 줄로 분리하되, 각 항목 그룹이 원래 의도된 터치 밴드(`settlementTouchRows`의 144~188, 188~232, 232~276, 276~320) 안에 시각적으로 쏙 들어가도록 `row`와 `rowStep` 변수를 명시적으로 조절하여 y 정렬 불일치 결함을 완벽히 해결했다.
+- `GAME_CAPTURE_PHASE=settlement-newbest`(`1440×2560`)를 통해 실제 렌더링 캡처 화면을 vision으로 재확인한 결과, 좌우 컬럼 텍스트가 서로 전혀 겹치지 않으며, 각 블록이 터치 밴드 영역 내에 잘 정렬되고 맨 아래 `TAP: RELAUNCH` 문자열도 `DEV PLACEHOLDER` 푸터(y=307)와 겹치지 않음을 최종적으로 검증했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 모두 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:32`).
