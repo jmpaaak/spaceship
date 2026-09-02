@@ -71,3 +71,10 @@
 - 남은 다음 슬라이스 후보: (1) 자동 상승 라인을 완전 자유 2D 항해로 교체(연료를 이동 거리에 직접 연동), (2) 낮은 잔액 `SHORT $N` 캡처, (3) AetherAI-only 최종 에셋.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
+
+## 다국어(i18n) — 데모 기본 한글 (완료)
+
+- `game/i18n.lua`에 `en`/`ko` 로케일 테이블과 `i18n.t`/`setLocale`/`phaseAbbrev`를 추가했다. HUD·상점·슬롯·버튼·요약 카드 등 사용자 노출 문자열을 `game/scenes/play.lua`에서 조회하도록 바꿨다.
+- `game/fonts.lua`가 번들 한글 폰트 `assets/fonts/AppleGothic.ttf`를 크기별로 캐시한다. `PlayScene`의 기본/작은/tiny 폰트를 이 헬퍼로 교체해 Hangul 글리프가 렌더링된다.
+- 실제 실행(`love .`, 비헤드리스)은 `main.lua`에서 `setLocale("ko")`로 한글 데모가 나온다. `game/self_test.lua`는 맨 앞과 `M.run()`에서 `en`을 고정해 기존 영어 단언을 유지한다.
+- 엔진 로직·수치 포맷 지정자는 로케일 간에 동일하다.

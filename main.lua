@@ -17,6 +17,8 @@ function love.load()
         love.event.quit(0)
         return
     end
+    -- Interactive/demo/capture runs show Korean. Unit tests pin "en".
+    require("game.i18n").setLocale("ko")
     if os.getenv("GAME_FONTPROBE") == "1" then
         local smallSlotFont = love.graphics.newFont(8)
         for _, s in ipairs({ "PLANET  PLANET  PLANET", "COMET  COMET  COMET", "STAR  STAR  STAR",

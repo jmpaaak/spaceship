@@ -1,3 +1,4 @@
+require("game.i18n").setLocale("en")
 local viewport = require("game.viewport")
 local shipModule = require("game.ship")
 local world = require("game.world")
@@ -259,6 +260,7 @@ local function testMinimap()
 end
 
 function M.run()
+    require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
     local scale, x, y = viewport.fit(720, 1280, false)
     assert(scale == 4 and x == 0 and y == 0)

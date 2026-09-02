@@ -405,7 +405,7 @@ function M:drawSpecimenStrip(y)
     love.graphics.setFont(self.tinyFont)
     local found = self:specimenProgress()
     love.graphics.setColor(0.55, 0.65, 0.85, 0.9)
-    love.graphics.printf(string.format("SPECIMENS %d/%d", found, #catalog),
+    love.graphics.printf(i18n.t("specimens_count_label", found, #catalog),
         0, y - 10, viewport.width, "center")
     for i, entry in ipairs(catalog) do
         local x = startX + (i - 1) * (box + gap)
@@ -441,12 +441,12 @@ function M:collisionRisk(planet)
     local risk = {
         damage = damage,
         lethal = lethal,
-        label = string.format(lethal and "LETHAL -%d" or "RISK -%d", damage),
+        label = string.format(lethal and i18n.t("risk_lethal") or i18n.t("risk_normal"), damage),
     }
     if phase == "ascending" then
         local baseValue = world.sampleValue(planet)
         risk.sampleValue = math.floor(baseValue * expedition.sampleYieldMultiplier(self.expedition) + 0.5)
-        risk.sampleLabel = string.format("SAMPLE $%d", risk.sampleValue)
+        risk.sampleLabel = string.format(i18n.t("sample_value_label"), risk.sampleValue)
     end
     return risk
 end
@@ -467,45 +467,45 @@ function M:hudLines()
     local earth
     local returnProgress
     if run.phase == "ascending" or run.phase == "returning" then
-        samples = string.format("SAMPLES %02d  AT RISK $%d", run.sampleCount, run.pendingSampleValue)
+        samples = i18n.t("hud_samples", run.sampleCount, run.pendingSampleValue)
         if run.phase == "returning" then
-            earth = string.format("EARTH IN %d", math.ceil(run.altitude))
+            earth = i18n.t("hud_earth", math.ceil(run.altitude))
             local progress = 1
             if run.returnDistance > 0 then
                 progress = math.max(0, math.min(1, 1 - run.altitude / run.returnDistance))
             end
             local secondsLeft = run.returnSpeed > 0 and math.ceil(run.altitude / run.returnSpeed) or 0
-            returnProgress = string.format("RETURN %d%%  %ds LEFT",
+            returnProgress = i18n.t("hud_return_progress",
                 math.floor(progress * 100 + 0.5), secondsLeft)
         end
     elseif run.phase == "launch" or run.phase == "settlement" then
-        best = string.format("PERSONAL BEST %04d", math.floor(run.bestAltitude))
+        best = i18n.t("hud_personal_best", math.floor(run.bestAltitude))
     end
     return {
-        primary = string.format("ALT %04d  CASH $%d", math.floor(run.altitude), run.money),
+        primary = i18n.t("hud_primary", math.floor(run.altitude), run.money),
         samples = samples,
         best = best,
         earth = earth,
         returnProgress = returnProgress,
-        status = string.format("F%03d H%d/%d %-6s S%02d", math.floor(run.fuel), run.durability,
-            run.maxDurability, string.upper(run.phase):sub(1, 6), run.slotOpportunities),
+        status = i18n.t("hud_status", math.floor(run.fuel), run.durability,
+            run.maxDurability, i18n.phaseAbbrev(run.phase), run.slotOpportunities),
     }
 end
 
 local function launchForecastLine(run, maxFuel)
     local forecastAltitude, forecastSlots = expedition.launchForecast(run, maxFuel)
-    return string.format("NO-HIT %d  SLOTS %d", math.floor(forecastAltitude), forecastSlots)
+    return i18n.t("forecast_line", math.floor(forecastAltitude), forecastSlots)
 end
 
 function M:loadoutLines()
     local run = self.expedition
     return {
-        ship = string.format("SHIP %s", string.upper(run.selectedShipId)),
-        stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
-        upgrades = string.format("FUEL LV.%d  HULL LV.%d",
+        ship = i18n.t("loadout_ship", string.upper(run.selectedShipId)),
+        stats = i18n.t("stats_line", run.maxFuel, run.maxDurability),
+        upgrades = i18n.t("upgrades_line",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
-        steering = string.format("STEER SPEED %d", expedition.steeringSpeed(run)),
+        steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
         odds = self:slotOddsLine(),
     }
 end
@@ -513,16 +513,16 @@ end
 function M:summaryFuelBonusLine()
     local bonus = self.expedition.bankedFuelBonus or 0
     if bonus <= 0 then return nil end
-    return string.format("NEXT LAUNCH FUEL +%d", bonus)
+    return i18n.t("fuel_bonus_line", bonus)
 end
 
 local function purchaseStatus(money, cost)
-    if money >= cost then return string.format("LEFT $%d", money - cost), true end
-    return string.format("SHORT $%d", cost - money), false
+    if money >= cost then return i18n.t("purchase_left", money - cost), true end
+    return i18n.t("purchase_short", cost - money), false
 end
 
 local function purchaseShortfallMessage(money, cost, item)
-    return string.format("NEED $%d MORE FOR %s", cost - money, item)
+    return i18n.t("purchase_shortfall_message", cost - money, item)
 end
 
 -- Formats the SCOUT ship trade-off using the same explicit
@@ -538,8 +538,8 @@ function M.scoutTradeoffLines(run)
     local gain = tradeoff.gains[1]
     local loss = tradeoff.losses[1]
     return {
-        string.format("SCOUT GAINS %s %s", gain.value, gain.label),
-        string.format("LOSSES %s %s", loss.value, loss.label),
+        i18n.t("scout_gains_line", gain.value, gain.label),
+        i18n.t("scout_losses_line", loss.value, loss.label),
     }
 end
 
@@ -551,21 +551,21 @@ function M:shopLoadoutLines()
     local shipStatus
     local previewShipId
     if not run.ownedShips.scout then
-        shipAction = string.format("BUY SCOUT $%d", run.scoutShipCost)
-        shipActionCompact = string.format("V:BUY $%d", run.scoutShipCost)
+        shipAction = i18n.t("buy_scout", run.scoutShipCost)
+        shipActionCompact = i18n.t("buy_scout_compact", run.scoutShipCost)
         shipStatus, shipAffordable = purchaseStatus(run.money, run.scoutShipCost)
         previewShipId = "scout"
     elseif run.selectedShipId == "scout" then
-        shipAction = "SELECT STARTER"
-        shipActionCompact = "V:STARTER"
+        shipAction = i18n.t("select_starter")
+        shipActionCompact = i18n.t("select_starter_compact")
         shipAffordable = true
-        shipStatus = "OWNED"
+        shipStatus = i18n.t("owned_label")
         previewShipId = "starter"
     else
-        shipAction = "SELECT SCOUT"
-        shipActionCompact = "V:SCOUT"
+        shipAction = i18n.t("select_scout")
+        shipActionCompact = i18n.t("select_scout_compact")
         shipAffordable = true
-        shipStatus = "OWNED"
+        shipStatus = i18n.t("owned_label")
         previewShipId = "scout"
     end
     local previewFuel = run.baseFuel + run.fuelUpgradeLevel * run.fuelUpgradeAmount
@@ -580,9 +580,9 @@ function M:shopLoadoutLines()
     local yieldStatus, yieldAffordable = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
     local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
     return {
-        ship = string.format("NEXT %s", string.upper(run.selectedShipId)),
-        stats = string.format("MAX FUEL %d  HULL %d", run.maxFuel, run.maxDurability),
-        upgrades = string.format("FUEL LV.%d  HULL LV.%d",
+        ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
+        stats = i18n.t("stats_line", run.maxFuel, run.maxDurability),
+        upgrades = i18n.t("upgrades_line",
             run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
         forecast = launchForecastLine(run),
         scoutTradeoff = self.scoutTradeoffLines(run),
@@ -590,44 +590,44 @@ function M:shopLoadoutLines()
         shipActionCompact = shipActionCompact,
         shipStatus = shipStatus,
         shipAffordable = shipAffordable,
-        shipPreview = string.format("%s MAX FUEL %d  HULL %d",
+        shipPreview = i18n.t("ship_preview_line",
             string.upper(previewShipId), previewFuel, previewDurability),
-        shipPreviewCompact = string.format("%s F%d H%d",
+        shipPreviewCompact = i18n.t("ship_preview_compact",
             string.upper(previewShipId), previewFuel, previewDurability),
         shipPreviewForecast = launchForecastLine(run, previewFuel),
-        fuelAction = string.format("T/F FUEL LV.%d>%d $%d",
+        fuelAction = i18n.t("fuel_action_line",
             run.fuelUpgradeLevel, run.fuelUpgradeLevel + 1, run.fuelUpgradeCost),
         fuelPreviewForecast = launchForecastLine(run, run.maxFuel + run.fuelUpgradeAmount),
         fuelStatus = fuelStatus,
         fuelAffordable = fuelAffordable,
-        hullAction = string.format("T/H HULL LV.%d>%d $%d",
+        hullAction = i18n.t("hull_action_line",
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
-        hullActionCompact = string.format("H:LV.%d>%d $%d",
+        hullActionCompact = i18n.t("hull_action_compact",
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
-        hullPreview = string.format("MAX FUEL %d  HULL %d",
+        hullPreview = i18n.t("stats_line",
             run.maxFuel, run.maxDurability + run.durabilityUpgradeAmount),
-        hullPreviewCompact = string.format("HULL %d",
+        hullPreviewCompact = i18n.t("hull_preview_compact",
             run.maxDurability + run.durabilityUpgradeAmount),
         hullPreviewForecast = launchForecastLine(run),
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
-        yieldAction = string.format("T/Y YIELD LV.%d>%d $%d",
+        yieldAction = i18n.t("yield_action_line",
             run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, run.sampleYieldUpgradeCost),
-        yieldActionCompact = string.format("Y:LV.%d>%d $%d",
+        yieldActionCompact = i18n.t("yield_action_compact",
             run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, run.sampleYieldUpgradeCost),
-        yieldPreview = string.format("YIELD x%.2f",
+        yieldPreview = i18n.t("yield_preview_line",
             1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount),
         yieldStatus = yieldStatus,
         yieldAffordable = yieldAffordable,
-        steeringAction = string.format("T/G STEER LV.%d>%d $%d",
+        steeringAction = i18n.t("steering_action_line",
             run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
-        steeringActionCompact = string.format("G:LV.%d>%d $%d",
+        steeringActionCompact = i18n.t("steering_action_compact",
             run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
-        steeringPreview = string.format("STEER SPEED %d",
+        steeringPreview = i18n.t("steer_speed_line",
             run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
-        steeringPreviewCompact = string.format("SPD %d",
+        steeringPreviewCompact = i18n.t("steering_preview_compact",
             run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
         steeringStatus = steeringStatus,
         steeringAffordable = steeringAffordable,
@@ -637,7 +637,7 @@ end
 
 function M:slotOddsLine()
     local ev = expedition.slotExpectedValue()
-    return string.format("C%d P%d S%d  AVG $%.2f",
+    return i18n.t("slot_odds_line",
         math.floor(expedition.slotSymbolProbability("COMET") * 100 + 0.5),
         math.floor(expedition.slotSymbolProbability("PLANET") * 100 + 0.5),
         math.floor(expedition.slotSymbolProbability("STAR") * 100 + 0.5),
@@ -647,15 +647,15 @@ end
 function M:slotButtonState()
     local chances = self.expedition.slotOpportunities
     if self.slotSpin then
-        return { enabled = false, label = "SLOT SPINNING...", compactLabel = "SPINNING" }
+        return { enabled = false, label = i18n.t("slot_spinning_label"), compactLabel = i18n.t("spinning_compact") }
     end
     if self.expedition.phase ~= "returning" or chances <= 0 then
-        return { enabled = false, label = "NO SLOT CHANCES", compactLabel = "NO SLOTS" }
+        return { enabled = false, label = i18n.t("no_slot_chances_label"), compactLabel = i18n.t("no_slots_compact") }
     end
     return {
         enabled = true,
-        label = string.format("TAP: SLOT SPIN  %d LEFT", chances),
-        compactLabel = string.format("SPIN %d", chances),
+        label = i18n.t("slot_spin_prompt", chances),
+        compactLabel = i18n.t("spin_compact_label", chances),
     }
 end
 
@@ -1392,9 +1392,9 @@ function M:draw()
         -- share a single combined line instead of adding a second row.
         local summaryExtraLine
         if self.expedition.lastNewBest and fuelBonusLine then
-            summaryExtraLine = "NEW BEST!  FUEL +" .. tostring(self.expedition.bankedFuelBonus)
+            summaryExtraLine = i18n.t("newbest_fuel_combined", self.expedition.bankedFuelBonus)
         elseif self.expedition.lastNewBest then
-            summaryExtraLine = "NEW BEST!"
+            summaryExtraLine = i18n.t("newbest_label")
         elseif fuelBonusLine then
             summaryExtraLine = fuelBonusLine
         end
@@ -1402,12 +1402,12 @@ function M:draw()
         love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(string.format("TOTAL $%d", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(string.format("SAMPLES (%d) $%d", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 100, viewport.width - 44, "center")
-        love.graphics.printf(string.format("SPINS (%d) $%d", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 22, 109, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 100, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("spins_settlement_line", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 22, 109, viewport.width - 44, "center")
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(string.format("PEAK ALT %d", math.floor(self.expedition.lastAltitude or 0)), 22, 118, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 22, 118, viewport.width - 44, "center")
         if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
             love.graphics.printf(summaryExtraLine, 22, 127, viewport.width - 44, "center")
@@ -1521,38 +1521,38 @@ function M:draw()
         love.graphics.printf(i18n.t("ship_destroyed_title"), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(string.format("LOST TOTAL $%d",
+        love.graphics.printf(i18n.t("lost_total_line",
             (self.expedition.lastLostSampleValue or 0) + (self.expedition.lastLostSlotValue or 0)),
             fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(string.format("SAMPLES (%d) $%d",
+        love.graphics.printf(i18n.t("samples_settlement_line",
             self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
             fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.printf(string.format("SPINS (%d) $%d",
+        love.graphics.printf(i18n.t("spins_settlement_line",
             self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0),
             fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(string.format("PEAK ALT %d", math.floor(self.expedition.lastLostAltitude or 0)),
+        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastLostAltitude or 0)),
             fullX, row, fullW, "center")
         row = row + rowStep
         if self.expedition.lastLostNewBest then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf("NEW BEST!", fullX, row, fullW, "center")
+            love.graphics.printf(i18n.t("newbest_label"), fullX, row, fullW, "center")
             row = row + rowStep
         end
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf(string.format("META RESET  BEST %d", math.floor(self.expedition.bestAltitude)), fullX, row, fullW, "center")
+        love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf("NEXT " .. loadout.ship, fullX, row, fullW, "center")
+        love.graphics.printf(i18n.t("next_ship_line", loadout.ship), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(loadout.upgrades, fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.printf("TAP: START OVER", fullX, row, fullW, "center")
+        love.graphics.printf(i18n.t("tap_start_over"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
         local steering = self:steeringButtonState()
@@ -1602,7 +1602,7 @@ function M:draw()
             love.graphics.setColor(0.85, 0.95, 1)
             love.graphics.printf(table.concat(self:currentSlotReels(), "  "), 20, 216, 140, "center")
             love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf("SPINNING...", 20, 231, 140, "center")
+            love.graphics.printf(i18n.t("spinning_label"), 20, 231, 140, "center")
         elseif self.expedition.lastSlotSymbols then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
             love.graphics.rectangle("fill", 18, 210, 144, 34)
@@ -1610,19 +1610,19 @@ function M:draw()
             love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 20, 216, 140, "center")
             love.graphics.setColor(1, 0.8, 0.3)
             if self.expedition.lastSlotRepair and self.expedition.lastSlotRepair > 0 then
-                love.graphics.printf(string.format("WIN +$%d  REPAIR +%d",
+                love.graphics.printf(i18n.t("win_repair_line",
                     self.expedition.lastSlotReward,
                     self.expedition.lastSlotRepair), 20, 231, 140, "center")
             elseif self.expedition.lastSlotFuelBonus and self.expedition.lastSlotFuelBonus > 0 then
-                love.graphics.printf(string.format("WIN +$%d  FUEL +%d",
+                love.graphics.printf(i18n.t("win_fuel_line",
                     self.expedition.lastSlotReward,
                     self.expedition.lastSlotFuelBonus), 20, 231, 140, "center")
             elseif self.expedition.lastSlotSampleBonus and self.expedition.lastSlotSampleBonus > 0 then
-                love.graphics.printf(string.format("WIN +$%d  SAMPLE +$%d",
+                love.graphics.printf(i18n.t("win_sample_line",
                     self.expedition.lastSlotReward,
                     self.expedition.lastSlotSampleBonus), 20, 231, 140, "center")
             else
-                love.graphics.printf(string.format("WIN +$%d  PENDING $%d",
+                love.graphics.printf(i18n.t("win_pending_line",
                     self.expedition.lastSlotReward,
                     self.expedition.pendingSlotReward), 20, 231, 140, "center")
             end
@@ -1655,10 +1655,10 @@ function M:draw()
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(steering.leftActive and 0.05 or 0.85,
             steering.leftActive and 0.15 or 0.95, steering.leftActive and 0.2 or 1)
-        love.graphics.printf("LEFT", 5, returnLabelY, 50, "center")
+        love.graphics.printf(i18n.t("button_left"), 5, returnLabelY, 50, "center")
         love.graphics.setColor(steering.rightActive and 0.05 or 0.85,
             steering.rightActive and 0.15 or 0.95, steering.rightActive and 0.2 or 1)
-        love.graphics.printf("RIGHT", 125, returnLabelY, 50, "center")
+        love.graphics.printf(i18n.t("button_right"), 125, returnLabelY, 50, "center")
         if slotButton.enabled then
             love.graphics.setColor(0.85, 0.95, 1)
         else
