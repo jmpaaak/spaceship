@@ -181,13 +181,19 @@ end
 
 -- Fuel is no longer a flight constraint: thrusting, coasting, and
 -- expedition.update must leave fuel untouched and must not auto-return.
+-- docs/feedback/INBOX.md 항목 11(c) 잔여: maneuverFuel/burnManeuverFuel were
+-- dead no-op functions (always returned 0, never touched any state) kept
+-- around only so older call sites would still compile. Now that they have
+-- no call sites left (game/scenes/play.lua's burnManeuverFuel call is
+-- removed alongside this), the dead API is removed entirely rather than
+-- kept as a permanent no-op shim.
 local function testManeuverFuel()
     local expedition = require("game.expedition")
     local run = expedition.new()
-    assert(expedition.maneuverFuel(run, 55) == 0,
-        "maneuverFuel must be 0 once fuel is unconstrained")
-    assert(expedition.maneuverFuel(run, 0) == 0)
-    assert(expedition.burnManeuverFuel(run, 55) == 0)
+    assert(expedition.maneuverFuel == nil,
+        "dead no-op maneuverFuel API must be removed, not kept as a shim")
+    assert(expedition.burnManeuverFuel == nil,
+        "dead no-op burnManeuverFuel API must be removed, not kept as a shim")
     assert(run.fuel == run.maxFuel)
 
     expedition.launch(run)

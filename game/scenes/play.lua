@@ -1070,7 +1070,7 @@ function M:update(dt)
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
-        local startX, startOffset = self.ship.x, self.verticalOffset
+        local startOffset = self.verticalOffset
         local thrustAngle = self.ship.angle
         if joyMagnitude > 0 then
             local speed = expedition.steeringSpeed(self.expedition)
@@ -1087,15 +1087,15 @@ function M:update(dt)
                     + ((steering.downActive and 1 or 0) - (steering.upActive and 1 or 0))
                     * speed * dt)
         end
-        local extraDx = self.ship.x - startX
         local extraDy = self.verticalOffset - startOffset
-        local extraDistance = math.sqrt(extraDx * extraDx + extraDy * extraDy)
         local steeringHoriz = (steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0)
         local steeringVert = (steering.downActive and 1 or 0) - (steering.upActive and 1 or 0)
         local thrusting = joyMagnitude > 0 or steeringHoriz ~= 0 or steeringVert ~= 0
-        if thrusting then
-            expedition.burnManeuverFuel(self.expedition, extraDistance)
-        end
+        -- docs/feedback/INBOX.md 항목 11(c): expedition.burnManeuverFuel was a
+        -- dead no-op (fuel is no longer a flight constraint) and has been
+        -- removed from game/expedition.lua; this call site (and the
+        -- extraDx/extraDistance values it alone consumed) is removed too.
+        -- `thrusting` itself is still needed below to gate movement/coast.
         if joyMagnitude > 0 then
             local targetAngle = M.headingFromStick(joyDx, joyDy)
             local delta = shortestAngleDelta(self.ship.angle, targetAngle)

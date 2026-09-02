@@ -224,16 +224,12 @@ function M.launchForecast(run, maxFuel)
     return altitude, slotCount(altitude, run.slotDistance)
 end
 
--- Fuel is no longer a flight constraint. These stay as no-ops so older
--- call sites (joystick extra-distance burn) compile without draining the
--- tank or forcing a return.
-function M.maneuverFuel(run, extraDistance)
-    return 0
-end
-
-function M.burnManeuverFuel(run, extraDistance)
-    return 0
-end
+-- docs/feedback/INBOX.md 항목 11(c): M.maneuverFuel/M.burnManeuverFuel used
+-- to exist as permanent no-op shims (fuel is no longer a flight constraint,
+-- so they always returned 0 and touched nothing) purely so the joystick
+-- extra-distance call site in game/scenes/play.lua would still compile.
+-- Both the shims and that dead call site are removed now -- fuel has no
+-- remaining consumption path anywhere in the engine.
 
 -- Safe return is now an explicit action (tests / future player input),
 -- not a fuel-empty side effect.
