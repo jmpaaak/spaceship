@@ -1,4 +1,17 @@
 # STATUS
+## 아이콘 기반 HUD 간소화 첫 슬라이스: TAP TO LAUNCH 위에 로켓 아이콘 추가 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 3번(연료 무제한 반영 + 아이콘 기반 HUD 간소화)의 "남은 작업" 부분(탭하여 발사/선체 내구도/자금/속도를 아이콘+짧은 수치로 재구성)을 첫 슬라이스로 착수했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작했다.
+
+- `game/scenes/play.lua`에 순수 함수 `M.rocketIconPoints(cx, cy, size)`(love.graphics 호출 없음, 위쪽을 향한 삼각형+양쪽 핀 실루엣의 flat `{x1,y1,x2,y2,...}` 폴리곤 점 목록 반환)와 신규 상수 `M.launchIconSize = 14`, `M.launchIconGap = 12`를 추가했다.
+- `M:draw()`의 메시지 렌더 구간이 `phase == "launch"`일 때만 `love.graphics.polygon("fill", M.rocketIconPoints(...))`으로 이 로켓 아이콘을 "탭하여 발사" 텍스트 바로 위(간격 12px)에 주황색으로 그리도록 분기했다. 다른 페이즈(정산/파괴 등)는 영향 없음.
+- 이 로켓 실루엣은 도형 기반 `DEV PLACEHOLDER` 게임플레이 지오메트리이며 최종 에셋이 아니다(AetherAI-only 정책 위반 아님).
+- `game/self_test.lua`에 `testLaunchRocketIcon()` 회귀 테스트를 추가했다 — 폴리곤 점 개수가 짝수/최소 3정점, 로켓이 중심 y 위아래로 걸쳐 있음(높이 0 아님), 첫 정점(노즈 끝)이 최상단이며 `cx`에 수평 중심 정렬되어 있음을 검증한다. `M.run()`에 `testLaunchRocketIcon()` 호출을 등록했다.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE_PHASE=launch`, 1440×2560, ko 로케일, `build/spaceship-runtime-preview-launch-rocket-icon.png`)를 vision으로 확인해, 주황색 삼각형 로켓 아이콘이 "탭하여 발사" 텍스트 바로 위에 겹침·잘림 없이 깔끔하게 렌더링됨을 확인했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:42`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 3번 항목에 이번 슬라이스(TAP TO LAUNCH 로켓 아이콘) 완료를 기록했다. 남은 작업: 선체 내구도/자금($)/속도(엔진·조종속도)의 아이콘화는 아직 착수 전.
+- 다음 사이클 다음 슬라이스: 3번 항목의 나머지(선체 내구도/자금/속도 아이콘화)를 계속하거나, 6번(표본 도감 정리 + 슬롯 6개 장비 카드 UI 전환)으로 진행.
+
 ## "발사 장비"(LAUNCH LOADOUT) 패널 타이틀 제거 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 4번(불필요한 텍스트 제거 검토)의 마지막 남은 슬라이스("발사 장비" 패널 타이틀 자체 검토)를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short`는 clean이었으므로 새 슬라이스를 착수했다.

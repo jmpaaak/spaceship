@@ -496,6 +496,32 @@ local function testBackgroundStars()
     assert(distinct, "background stars must be an independently seeded point set")
 end
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first
+-- slice): TAP TO LAUNCH gets a small rocket icon above it. The icon is a
+-- pure-geometry helper (no love.graphics calls) so it can be regression
+-- tested headless: it must return an even-length flat {x,y,...} polygon
+-- list, be vertically symmetric around cx (nose tip and both fin tips
+-- centered on cx), and have its topmost point (the nose) strictly above
+-- its bottommost points (the fins) so it reads as an upward-pointing
+-- rocket silhouette.
+local function testLaunchRocketIcon()
+    local PlayScene = require("game.scenes.play")
+    local points = PlayScene.rocketIconPoints(90, 200, 14)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "rocket silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 200 and maxY > 200, "rocket must span above and below its center")
+    assert(maxY - minY > 0, "rocket must have nonzero height")
+    -- Nose tip (first point) is the topmost and horizontally centered.
+    assert(points[1] == 90 and points[2] == minY,
+        "first vertex must be the centered nose tip at the icon's topmost y")
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -2244,6 +2270,7 @@ function M.run()
     testMinimap()
     testDebris()
     testBackgroundStars()
+    testLaunchRocketIcon()
 
     print("SPACESHIP_UNIT_OK")
 end

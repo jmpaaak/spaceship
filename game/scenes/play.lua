@@ -180,6 +180,39 @@ M.launchLoadoutRowStep = 10
 -- future cycle can re-enable it cheaply if real-device feedback disagrees.
 M.showLaunchLoadoutTitle = false
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first slice):
+-- the launch phase's "TAP TO LAUNCH"/"탭하여 발사" action was a bare text
+-- line with no visual affordance beyond the words themselves. Drawing a
+-- small upward-pointing rocket silhouette directly above the message
+-- gives the tap target an icon+short-text pairing (the pattern the
+-- feedback asked for hull/cash/speed too, to follow in later slices)
+-- without needing any AetherAI-gated final art -- this is DEV PLACEHOLDER
+-- Lua-shape geometry, not a final visual asset.
+--
+-- Pure function (no love.graphics calls) so game/self_test.lua can verify
+-- the point geometry deterministically headless; draw() feeds the
+-- returned flat {x1,y1,x2,y2,...} list straight into love.graphics.polygon.
+function M.rocketIconPoints(cx, cy, size)
+    local halfWidth = size * 0.35
+    local noseY = cy - size * 0.6
+    local baseY = cy + size * 0.4
+    local finY = cy + size * 0.6
+    local finSpread = size * 0.55
+    return {
+        cx, noseY,
+        cx + halfWidth, baseY,
+        cx + finSpread, finY,
+        cx, baseY,
+        cx - finSpread, finY,
+        cx - halfWidth, baseY,
+    }
+end
+
+-- Icon diameter and the vertical gap between the icon's center and the
+-- message text's top edge, both in internal-canvas pixels.
+M.launchIconSize = 14
+M.launchIconGap = 12
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -2015,6 +2048,14 @@ function M:draw()
     end
     love.graphics.setColor(0.85, 0.9, 1)
     local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 50 or viewport.height - 30
+    if self.expedition.phase == "launch" then
+        -- docs/feedback/INBOX.md UI/HUD item 3: pair the TAP TO LAUNCH
+        -- action with a small rocket icon above it instead of bare text.
+        love.graphics.setColor(1, 0.75, 0.25)
+        love.graphics.polygon("fill", M.rocketIconPoints(
+            viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
+        love.graphics.setColor(0.85, 0.9, 1)
+    end
     love.graphics.printf(self.message, 4, messageY, viewport.width - 8, "center")
     if self.newSpecimenBanner then
         local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
