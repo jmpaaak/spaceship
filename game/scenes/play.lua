@@ -138,6 +138,30 @@ local function sampleTierEffect(tier)
 end
 M.sampleTierEffect = sampleTierEffect
 
+-- Twinkle/sparkle animation parameters per sample tier: higher tiers pulse
+-- faster, with a wider brightness swing (amplitude) around a higher base
+-- alpha, and are drawn with more sparkle points so an undiscovered epic
+-- planet visibly shimmers more than a common one instead of a static ring.
+local sampleTierSparkles = {
+    common = { count = 2, speed = 2.2, base = 0.35, amplitude = 0.15 },
+    rare = { count = 3, speed = 3.0, base = 0.5, amplitude = 0.25 },
+    epic = { count = 5, speed = 4.2, base = 0.65, amplitude = 0.35 },
+}
+
+local function sampleTierSparkle(tier)
+    return sampleTierSparkles[tier] or sampleTierSparkles.common
+end
+M.sampleTierSparkle = sampleTierSparkle
+
+-- Deterministic oscillating alpha for a sparkle point: base brightness plus
+-- a sine wave offset by `seed` (per-point phase) so multiple sparkle points
+-- on the same planet twinkle out of sync with each other.
+local function sparkleAlpha(tier, time, seed)
+    local sparkle = sampleTierSparkle(tier)
+    return sparkle.base + math.sin(time * sparkle.speed + (seed or 0)) * sparkle.amplitude
+end
+M.sparkleAlpha = sparkleAlpha
+
 -- Duration (seconds) of the ship scale-punch on sample pickup and the
 -- ship/camera shake on collision impact.
 local shipPunchDuration = 0.2
@@ -193,6 +217,7 @@ function M.new(options)
         discoveredCount = 0,
         floatingTexts = {},
         particles = {},
+        time = 0,
         shipPunch = 0,
         shipShake = 0,
         slotSpin = nil,
@@ -466,6 +491,7 @@ function M:steeringButtonState()
 end
 
 function M:update(dt)
+    self.time = self.time + dt
     local steering = self:steeringButtonState()
     local previousPhase = self.expedition.phase
     for i = #self.floatingTexts, 1, -1 do
@@ -794,6 +820,11 @@ function M:draw()
                     love.graphics.circle("fill", x, y, planet.radius + 3 + ring * 4)
                 end
             end
+            -- Soft drop shadow: a low-alpha dark circle offset toward the
+            -- lower-right, opposite the highlight, so planets read as
+            -- slightly raised cards instead of flat painted circles.
+            love.graphics.setColor(0, 0, 0, 0.25)
+            love.graphics.circle("fill", x + planet.radius * 0.22, y + planet.radius * 0.22, planet.radius * 1.02)
             -- Saturated gradient fill: a darker base circle with a brighter
             -- highlight offset toward the upper-left, approximating a soft
             -- directional light instead of a single flat fill color.
@@ -805,6 +836,22 @@ function M:draw()
             if not self.discovered[planet.id] then
                 love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
                 love.graphics.circle("line", x, y, planet.radius + 3)
+                -- Balatro-style twinkle: a handful of small points orbiting
+                -- just outside the rim glow, each with its own phase so the
+                -- shimmer isn't perfectly synchronized across points.
+                local tier = world.sampleTier(planet)
+                local sparkle = sampleTierSparkle(tier)
+                local sr, sg, sb = sampleTierColor(tier)
+                for i = 1, sparkle.count do
+                    local seed = (planet.id and (tostring(planet.id):len() * 7) or 0) + i * 2.4
+                    local angle = self.time * (sparkle.speed * 0.4) + seed
+                    local sparkleRadius = planet.radius + 6 + (i % 3) * 3
+                    local px = x + math.cos(angle) * sparkleRadius
+                    local py = y + math.sin(angle) * sparkleRadius
+                    local alpha = math.max(0, math.min(1, sparkleAlpha(tier, self.time, seed)))
+                    love.graphics.setColor(math.min(1, sr + 0.2), math.min(1, sg + 0.2), math.min(1, sb + 0.2), alpha)
+                    love.graphics.circle("fill", px, py, 1.2)
+                end
             end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)

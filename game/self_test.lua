@@ -81,6 +81,40 @@ function M.run()
     assert(#particleScene.particles == 0, "expired particles must be removed")
     assert(particleScene.shipPunch == 0)
 
+    -- Balatro-style twinkle/sparkle animation (2026-09-02 pending feedback,
+    -- "너무 밋밋하다"): undiscovered planets should shimmer over time, with
+    -- higher tiers sparkling faster, brighter and with more points so the
+    -- card-like glow feels alive rather than a static ring.
+    local commonSparkle = PlayScene.sampleTierSparkle("common")
+    local rareSparkle = PlayScene.sampleTierSparkle("rare")
+    local epicSparkle = PlayScene.sampleTierSparkle("epic")
+    assert(commonSparkle.count < rareSparkle.count and rareSparkle.count < epicSparkle.count,
+        "sparkle point count must increase common < rare < epic")
+    assert(commonSparkle.speed < rareSparkle.speed and rareSparkle.speed < epicSparkle.speed,
+        "sparkle animation speed must increase common < rare < epic")
+    assert(commonSparkle.amplitude < rareSparkle.amplitude and rareSparkle.amplitude < epicSparkle.amplitude,
+        "sparkle brightness swing must increase common < rare < epic")
+
+    -- sparkleAlpha(tier, time, seed) must oscillate deterministically around
+    -- the tier's base brightness so draw code can sample it every frame.
+    local a0 = PlayScene.sparkleAlpha("epic", 0, 0)
+    assert(math.abs(a0 - epicSparkle.base) < 1e-9, "sparkleAlpha at t=0,seed=0 must equal the tier base")
+    local aQuarter = PlayScene.sparkleAlpha("epic", (math.pi / 2) / epicSparkle.speed, 0)
+    assert(math.abs(aQuarter - (epicSparkle.base + epicSparkle.amplitude)) < 1e-6,
+        "sparkleAlpha must peak at base+amplitude a quarter period in")
+    assert(a0 >= 0 and a0 <= 1)
+
+    -- PlayScene:update must accumulate elapsed time so draw can animate
+    -- sparkles smoothly across frames instead of resetting each draw call.
+    local sparkleScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    assert(sparkleScene.time == 0)
+    sparkleScene:update(0.25)
+    assert(math.abs(sparkleScene.time - 0.25) < 1e-9, "scene time must accumulate across update calls")
+    sparkleScene:update(0.25)
+    assert(math.abs(sparkleScene.time - 0.5) < 1e-9)
+
     -- Collision impact should trigger a brief ship shake so hits feel more
     -- physical, mirroring how the sample pickup triggers a scale-punch.
     local shakeScene = PlayScene.new({

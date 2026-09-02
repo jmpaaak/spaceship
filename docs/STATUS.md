@@ -350,3 +350,14 @@
 - 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-sample-tiers`, `1440×2560`)로 `rare`(청록)·`epic`(금색) 행성이 이전보다 뚜렷하게 크고 밝은 다중 외곽 글로우 링과 좌상단 하이라이트 그라디언트로 렌더링되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-balatro-tiers.png`, 로컬 산출물로 커밋 제외). `main.lua`에 새 `GAME_CAPTURE_PHASE=ascending-epic-pickup-effects` 개발 전용 진입 경로를 추가해 캡처한 결과, 표본 획득 순간 우주선 주위에 파티클 폭발과 확대된 우주선(scale-punch)이 흐릿한 후광으로 렌더링되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-epic-pickup.png`, 로컬 산출물로 커밋 제외).
 - 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
 
+## 발라트로 스타일 행성 그림자/트윙클 애니메이션 추가 (완료)
+
+- 지난 사이클이 지목한 발라트로 스타일 비주얼 강화의 남은 항목(부드러운 그림자, 등급별 반짝임)을 이번 사이클에서 처리했다. `game/scenes/play.lua`에 `PlayScene.sampleTierSparkle(tier)`를 추가해 `common`/`rare`/`epic`별로 반짝임 점 개수(2/3/5)·애니메이션 속도(2.2/3.0/4.2)·기본 밝기(0.35/0.5/0.65)·밝기 진폭(0.15/0.25/0.35)을 차등화했다. `PlayScene.sparkleAlpha(tier, time, seed)`가 `base + sin(time*speed+seed)*amplitude`로 결정적인 진동 알파를 계산해 여러 반짝임 점이 서로 다른 위상(`seed`)으로 비동기 트윙클하게 한다.
+- `PlayScene:update(dt)`가 `self.time`을 누적해(신규 필드, `M.new`에서 0으로 초기화) draw가 프레임마다 시간 경과에 따라 반짝임을 부드럽게 애니메이션할 수 있게 했다.
+- 상승 중 아직 표본을 획득하지 않은 행성 렌더링에 두 가지를 추가했다: (1) 채우기 원 뒤에 하단-우측으로 오프셋된 저알파(0.25) 검은 원으로 부드러운 낙하 그림자를 그려 행성이 평면이 아닌 살짝 떠 있는 카드처럼 보이게 했다(발견된 행성에도 적용해 기존 하이라이트 그라디언트와 함께 항상 그려짐). (2) 등급별 반짝임 점(`sampleTierSparkle(tier).count`개)을 외곽 글로우 링 바로 바깥에서 궤도를 그리며 `sparkleAlpha`로 계산한 알파로 깜빡이게 그렸다.
+- engine-hosted 테스트(RED 확인: `PlayScene.sampleTierSparkle`이 nil이라 `game/self_test.lua:88`에서 즉시 실패하는 것을 확인한 뒤 구현)가 세 등급의 반짝임 개수·속도·밝기 진폭이 `common < rare < epic` 순으로 증가하는지, `sparkleAlpha`가 `t=0,seed=0`에서 정확히 tier의 base와 같고 4분의 1 주기 뒤 `base+amplitude`로 정점을 찍는지, `PlayScene:update`가 여러 프레임에 걸쳐 `self.time`을 정확히 누적하는지 검증한다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:24`).
+- 실제 LÖVE runtime capture(`GAME_CAPTURE_PHASE=ascending-sample-tiers`, `1440×2560`)로 확대(zoom) 확인한 결과, common(파란) 행성 아래-오른쪽에 부드러운 어두운 낙하 그림자가 렌더링되고 외곽 글로우 링 바로 바깥에 작은 회백색 반짝임 점이 함께 표시되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-balatro-sparkle.png`, 로컬 산출물로 커밋 제외). 이 캡처는 `love.draw()`가 첫 프레임에서 스크린샷·종료하는 기존 dev capture 경로라 `self.time == 0`(반짝임 알파가 tier base 값) 순간의 정적 스냅샷이며, 시간 경과에 따른 진동 애니메이션 자체는 engine-hosted 시간 누적 테스트로 검증했다(그래픽 헤드리스 비활성화로 여러 프레임의 실제 렌더 변화는 직접 캡처 비교하지 않음, 기존 애니메이션류 결함과 동일한 제약).
+- 이로써 사용자가 요청한 발라트로 스타일 항목(외곽 글로우/림 라이트, 부드러운 그림자, 채도 높은 그라디언트, 등급별 반짝임·파티클, 임팩트 시 스케일 펀치·흔들림) 전부가 렌더링 레이어에 구현·검증됐다.
+- 남은 다음 슬라이스 후보: (1) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (2) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (3) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
+
