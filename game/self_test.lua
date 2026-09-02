@@ -141,19 +141,17 @@ local function testJoystick()
         x = 90 + joystick.maxRadius, y = 160,
     }
     local hx, hy = headingThrustScene.ship.x, headingThrustScene.ship.y
-    local headingFuelBefore = headingThrustScene.expedition.fuel
     headingThrustScene:update(1)
     assert(headingThrustScene.ship.x > hx, "nose-right climb must move +x")
     assert(math.abs(headingThrustScene.ship.y - hy) < 1e-6,
         "nose-right climb must not keep forcing the ship straight up")
-    assert(headingThrustScene.expedition.fuel == headingFuelBefore,
-        "thrusting must not burn fuel; fuel is no longer a flight constraint")
+    assert(headingThrustScene.expedition.fuel == nil,
+        "thrusting must not resurrect a dead fuel field; fuel is no longer a flight constraint")
     local coastX = headingThrustScene.ship.x
-    local coastFuel = headingThrustScene.expedition.fuel
     headingThrustScene.touches["stick"] = nil
     headingThrustScene:update(1)
-    assert(headingThrustScene.expedition.fuel == coastFuel,
-        "coasting without stick input must not burn fuel")
+    assert(headingThrustScene.expedition.fuel == nil,
+        "coasting must not resurrect a dead fuel field")
     assert(headingThrustScene.ship.x ~= coastX,
         "coasting must keep moving on stored velocity")
 
@@ -194,12 +192,16 @@ local function testManeuverFuel()
         "dead no-op maneuverFuel API must be removed, not kept as a shim")
     assert(expedition.burnManeuverFuel == nil,
         "dead no-op burnManeuverFuel API must be removed, not kept as a shim")
-    assert(run.fuel == run.maxFuel)
+    -- docs/feedback/INBOX.md 항목 11(c): run.fuel was a dead state field --
+    -- only ever written (by M.launch/M.destroy), never read by any flight
+    -- decision (altitude ticks by climbSpeed unconditionally). It must not
+    -- exist at all, matching the earlier ship.fuel == nil precedent.
+    assert(run.fuel == nil,
+        "dead run.fuel state field must be removed, not just left unread")
 
     expedition.launch(run)
-    local fuelBefore = run.fuel
     expedition.update(run, 5)
-    assert(run.fuel == fuelBefore, "ascent must not burn fuel")
+    assert(run.fuel == nil, "launch/update must never resurrect a fuel field")
     assert(run.phase == "ascending", "ascent must not auto-return when fuel is unconstrained")
     assert(run.altitude > 0)
 
@@ -212,10 +214,9 @@ local function testManeuverFuel()
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     idleScene.expedition.phase = "ascending"
-    local idleFuelBefore = idleScene.expedition.fuel
     idleScene:update(1)
-    assert(idleScene.expedition.fuel == idleFuelBefore,
-        "coasting without stick/keys must not burn fuel")
+    assert(idleScene.expedition.fuel == nil,
+        "coasting must not resurrect a dead fuel field")
     assert(idleScene.expedition.phase == "ascending")
 
     local steerScene = PlayScene.new({
@@ -223,10 +224,9 @@ local function testManeuverFuel()
     })
     steerScene.expedition.phase = "ascending"
     steerScene.touches["hold"] = { x = 20, y = 160, originX = 20, originY = 160 }
-    local steerFuelBefore = steerScene.expedition.fuel
     steerScene:update(1)
-    assert(steerScene.expedition.fuel == steerFuelBefore,
-        "steering must not burn fuel")
+    assert(steerScene.expedition.fuel == nil,
+        "steering must not resurrect a dead fuel field")
     assert(steerScene.expedition.phase == "ascending")
 end
 
@@ -1263,11 +1263,11 @@ function M.run()
     assert(run.phase == "launch" and run.altitude == 0 and run.slotOpportunities == 0)
     assert(expedition.launch(run) and run.phase == "ascending")
     expedition.update(run, 1)
-    assert(run.phase == "ascending" and run.fuel == 2 and run.altitude == 60)
+    assert(run.phase == "ascending" and run.fuel == nil and run.altitude == 60)
     assert(expedition.collectSample(run, 75))
     assert(run.sampleCount == 1 and run.pendingSampleValue == 75 and run.money == 0)
     expedition.update(run, 1)
-    assert(run.phase == "ascending" and run.fuel == 2 and run.altitude == 120)
+    assert(run.phase == "ascending" and run.fuel == nil and run.altitude == 120)
     assert(expedition.beginReturn(run))
     assert(run.phase == "returning" and run.altitude == 120)
     assert(run.maxAltitude == 120 and run.returnDistance == 120 and run.slotOpportunities == 2)
@@ -1348,7 +1348,7 @@ function M.run()
     assert(not expedition.buyFuelUpgrade(shopRun))
     shopRun.maxAltitude = 120
     assert(expedition.launch(shopRun) and shopRun.phase == "ascending")
-    assert(shopRun.fuel == 15 and shopRun.altitude == 0 and shopRun.maxAltitude == 0 and shopRun.lastSettlement == 0)
+    assert(shopRun.fuel == nil and shopRun.altitude == 0 and shopRun.maxAltitude == 0 and shopRun.lastSettlement == 0)
 
     local hullShopRun = expedition.new({
         durability = 2,
@@ -1485,7 +1485,7 @@ function M.run()
     assert(expedition.selectShip(shipShopRun, "scout"))
     assert(shipShopRun.selectedShipId == "scout")
     assert(shipShopRun.maxFuel == 15 and shipShopRun.maxDurability == 2)
-    assert(expedition.launch(shipShopRun) and shipShopRun.fuel == 15 and shipShopRun.durability == 2)
+    assert(expedition.launch(shipShopRun) and shipShopRun.fuel == nil and shipShopRun.durability == 2)
     assert(not expedition.damage(shipShopRun, 1))
     assert(expedition.damage(shipShopRun, 1))
     assert(shipShopRun.phase == "destroyed")
@@ -1947,15 +1947,11 @@ function M.run()
     persistedScene.expedition.phase = "settlement"
     assert(persistedScene:hudLines().best == "PERSONAL BEST 0040")
     persistedScene.expedition.phase = "launch"
-    persistedScene.expedition.fuel = 1
-    persistedScene.expedition.maxFuel = 1
-    persistedScene.expedition.fuelBurnRate = 1
     persistedScene.expedition.climbSpeed = 60
     assert(expedition.launch(persistedScene.expedition))
     persistedScene.expedition.altitude = 60
     persistedScene.expedition.maxAltitude = 60
     persistedScene.expedition.bestAltitude = 60
-    persistedScene.expedition.fuel = 0
     persistedScene.expedition.phase = "returning"
     persistedScene:persistBestAltitude()
     assert(persistedScene.expedition.phase == "returning" and savedBest == 60)
@@ -2367,18 +2363,18 @@ function M.run()
     assert(fuelBonusRun.bankedFuelBonus == 15, "safe settlement must bank the pending fuel bonus")
     assert(fuelBonusRun.pendingFuelBonus == 0, "pending fuel bonus must clear once banked")
 
-    -- The next launch applies the banked fuel bonus on top of maxFuel and
-    -- clears the bank so it cannot be reused on a later launch.
+    -- The next launch clears the banked bonus (no fuel field exists to
+    -- apply it to any more -- see docs/feedback/INBOX.md 항목 11(c)/15).
     assert(expedition.launch(fuelBonusRun))
-    assert(fuelBonusRun.fuel == fuelBonusRun.maxFuel + 15,
-        "next launch must add the banked fuel bonus to starting fuel")
+    assert(fuelBonusRun.fuel == nil,
+        "launch must never resurrect a dead fuel field even with a banked bonus")
     assert(fuelBonusRun.bankedFuelBonus == 0, "banked fuel bonus must be consumed by the launch it funds")
 
     -- A second launch (no new bonus earned) must not carry over a bonus.
     fuelBonusRun.phase = "settlement"
     assert(expedition.launch(fuelBonusRun))
-    assert(fuelBonusRun.fuel == fuelBonusRun.maxFuel,
-        "launches without a freshly banked bonus must start at plain maxFuel")
+    assert(fuelBonusRun.fuel == nil,
+        "launches must never carry a fuel field, banked bonus or not")
 
     -- Destruction forfeits any pending/banked fuel bonus like the other
     -- pending rewards (samples, slot money, repair).

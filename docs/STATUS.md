@@ -1,4 +1,15 @@
 # STATUS
+## econ 레인 — 항목11(c) 죽은 `run.fuel` 상태 필드 완전 제거 (완료, 2026-09-03, 네 번째 슬라이스)
+
+`loop/PROMPT.md` econ 레인 스코프(항목7→8→11→15)에 따라 항목 11(c)의 남은 작업을 이어서 진행했다. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했고 `git status --short`는 clean이었다(이어받을 미커밋 diff 없음).
+
+- **문제:** `game/expedition.lua`의 `run.fuel`은 `M.new()`/`M.launch()`/`destroy()`가 값을 쓰기만 할 뿐(`M.update()`의 실제 상승/귀환 로직은 `climbSpeed`/`returnSpeed`만 참조), 어떤 비행 결정에도 읽히지 않는 죽은 상태 필드였다("Fuel is no longer a flight constraint" 주석 및 이전 슬라이스가 이미 확인한 `game/ship.lua`의 동일 패턴(fuel 필드 존재하되 미사용)과 정확히 같은 잔재 형태). `run.maxFuel`/`fuelUpgradeLevel` 등 상점 업그레이드 축(항목 11-b, 별도 남은 작업)과 달리 `run.fuel` 자체는 UI에도 전혀 노출되지 않는 순수 내부 잔재였다.
+- **수정:** `M.new()`에서 `fuel = baseFuel` 초기화를 제거, `M.launch()`의 `run.fuel = run.maxFuel + (run.bankedFuelBonus or 0)` 대입과 `destroy()`의 `run.fuel = 0` 대입을 모두 제거했다. PLANET-트리플 슬롯이 적립하는 `bankedFuelBonus`/`pendingFuelBonus`는 (fuel 필드가 사라졌으므로) 더 이상 적용할 대상이 없어졌지만, 이후 슬라이스에서 상태가 새고 있지 않도록 `bankedFuelBonus`는 launch 시점에 계속 0으로 클리어한다 — 이 보상 종류(항목 15가 지구 상점 슬롯머신으로 재설계할 대상)의 최종 의미 재정의는 항목 15 담당으로 명시했다(코드 주석에 남김).
+- `game/self_test.lua`를 새 상태에 맞춰 갱신 — `testManeuverFuel`이 이제 `run.fuel == nil`(launch/update 전후 모두)을 회귀 검증하고, 조종/코스팅/체류 시나리오(heading-thrust, idle, steer)의 "burn fuel 안 함" 검증도 "fuel 필드가 존재하지 않음"으로 교체했다. 상점/재출항/전멸 관련 기존 어서션(`shopRun.fuel`, `shipShopRun.fuel`, `fuelBonusRun.fuel` 등 6곳)도 모두 `== nil`로 갱신했다. `persistedScene` best-altitude 회귀 테스트에서 존재하지 않는 `fuel`/`fuelBurnRate` 필드에 대한 불필요한 대입도 함께 제거했다(RED로 `assert(run.fuel == nil, ...)` 실패를 먼저 확인한 뒤 구현 → GREEN 전환 확인).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 11 하위에 진행상황을 append했다. `play.lua`는 이 항목 소유 규칙에 따라 손대지 않았다(fuel 필드를 읽는 코드가 애초에 없었으므로 구조 변경 자체가 불필요했음). **남은 작업(항목 11):** (a) `launchForecastLine`/`forecast_line`("REACH %d SLOTS %d")의 `maxFuel` 기반 프레이밍(메인 레인 텍스트 영역과 조율 필요), (b) `run.maxFuel`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount`/`fuelBurnRate` 기반 연료 업그레이드 상점 항목/엔진 로직 자체(다음 슬라이스 대상 — 이번 슬라이스는 죽은 `run.fuel` *상태* 필드만 제거했고, 여전히 살아서 UI에 노출되는 `maxFuel`/업그레이드 시스템은 항목 11-b가 요구하는 별도 재정의 결정(제거 vs 엔진 부품 소모성 자원으로 재정의, 항목 10과 연계)이 필요해 더 큰 범위의 후속 슬라이스로 남긴다).
+- 다음 사이클 다음 슬라이스: 항목 11(b) — `run.maxFuel`/`fuelUpgradeLevel` 계열 연료 업그레이드 시스템의 제거/재정의 설계, 또는 항목 15(귀환/비행중 슬롯머신 폐지 + 지구상점 전용 슬롯머신) 착수.
+
 ## econ 레인 — 항목11(c) 죽은 `game/ship.lua` fuel 필드/게이트 제거 (완료, 2026-09-03)
 
 `loop/PROMPT.md` econ 레인 스코프(항목7→8→11→15)에 따라 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거)에 착수했다. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했다. `git status --short`로 확인한 결과 이전 사이클이 이미 이 슬라이스의 diff(`game/ship.lua`, `game/self_test.lua`, `game/scenes/play.lua`)를 uncommitted 상태로 남겨두었고 `make test`/`make verify`가 이미 GREEN이었다 — prior-cycle work를 그대로 이어받아 검증 후 커밋했다(덮어쓰지 않음).

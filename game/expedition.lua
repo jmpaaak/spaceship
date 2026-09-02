@@ -283,7 +283,6 @@ end
 
 local function destroy(run)
     run.phase = "destroyed"
-    run.fuel = 0
     run.durability = 0
     run.lastLostSampleCount = run.sampleCount
     run.lastLostSampleValue = run.pendingSampleValue
@@ -341,7 +340,6 @@ function M.new(options)
         launchBestAltitude = options.bestAltitude or 0,
         lastNewBest = false,
         lastLostNewBest = false,
-        fuel = baseFuel,
         baseFuel = baseFuel,
         maxFuel = baseFuel,
         durability = baseDurability,
@@ -411,7 +409,14 @@ function M.launch(run)
     if run.phase ~= "launch" then
         run.altitude = 0
         run.maxAltitude = 0
-        run.fuel = run.maxFuel + (run.bankedFuelBonus or 0)
+        -- docs/feedback/INBOX.md 항목 11(c): run.fuel was a dead state field
+        -- (never read by any flight decision -- altitude ticks by
+        -- climbSpeed unconditionally) and has been removed entirely. The
+        -- banked PLANET-triple slot bonus (bankedFuelBonus/pendingFuelBonus)
+        -- no longer has a fuel field to apply itself to; it is still
+        -- cleared here so a stale bank cannot leak into a later launch, but
+        -- item 15's Earth-shop-only slot machine redesign is the owner of
+        -- redefining what this reward kind means going forward.
         run.bankedFuelBonus = 0
         run.durability = run.maxDurability
         run.returnDistance = 0
