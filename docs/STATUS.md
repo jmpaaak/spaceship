@@ -275,3 +275,17 @@
 - `docs/feedback/INBOX.md`의 항목 13 하위에 처리 상황을 append했다(항목 자체는 완료로 표시).
 - 다음 사이클 다음 슬라이스: 항목 9(핵심 게임성 방향 — 발라트로 규모의 부품 다양성 + 조합/시너지 중심 고도 상승). `game/gear.lua`를 이용해 선체 부품 카드 풀을 20~30종으로 확장하고, 부품 조합이 고도 상승 속도/효율에 배가 효과를 내는 시너지 계산 엔진을 설계한다.
 
+
+## [gear 레인] 엔진 부품 슬롯 분리 — game/engine_parts.lua 신규 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md` 항목 10(부품 슬롯 이원화 — 선체(허브/조커형) 부품 + 엔진(타로/소모형) 부품 분리)을 처리했다. 이 레인(`spaceship-gear` 브랜치)은 `loop/PROMPT.md`의 레인 스코프에 따라 항목 13→9→10→12→14 순서로 진행하며, `game/scenes/play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 원칙적으로 건드리지 않는다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- 신규 `game/engine_parts.lua` — 순수 함수 슬롯 이원화 API. `M.newLoadout()`이 `{ hull = {}, engine = {} }`(두 독립 배열)를 반환하고, `M.hullSlotCount = 6`(기존 "슬롯 6개")/`M.engineSlotCount = 3`(신규, 독립 캡)을 별도 상수로 둔다. `M.equip(loadout, category, part)`/`M.unequip(loadout, category, id)`/`M.isFull(loadout, category)`가 `category`("hull" 또는 "engine")로 지정된 리스트만 조작하고 다른 카테고리에는 절대 영향을 주지 않는다. 같은 카테고리 내 중복 id·용량 초과 장착은 `false, 에러메시지`로 거부(예외를 던지지 않음).
+- `game/data/engine_parts.json`을 4종에서 12종으로 확장했다 — 항목13의 JSON 외부화 인프라(`game/gear.lua`의 `M.loadPool`/`M.loadEngineParts`)를 그대로 재사용하며, hull_parts.json과 동일 스키마(id/name/nameKo/icon/rarity/tags/editions/effects)로 common~legendary 등급 분포와 azure/ember/void hue-family 태그를 포함시켜 모든 카드가 기존 시너지 엔진(`gear.aggregateEffects`/`gear.tagSynergyMultiplier`/`gear.equippedTotals`, 항목9에서 이미 구현됨)과 그대로 호환된다.
+- `docs/GEAR_SCHEMA.md`에 "Engine part slot separation (item 10)" 섹션을 추가해 슬롯 API 계약을 문서화했다.
+- `game/self_test.lua`의 `testEnginePartsSlotSeparation()`(신규)이 다음을 회귀 검증한다: 엔진 풀 크기(>=10)/전카드 태그 보유, hull 장착이 engine 리스트 길이에 전혀 영향을 주지 않음(그 역도 마찬가지), engine 슬롯 unequip이 hull 리스트에 영향 없음, engine 슬롯을 캡(3)까지 채워도 hull은 여전히 안 가득참(`isFull`이 카테고리별로 독립적으로 계산됨), 용량 초과 장착과 같은 카테고리 내 중복 id 장착이 모두 `false`+에러로 거부됨. 수정 전(`game/engine_parts.lua` require 시점) RED(`module 'game.engine_parts' not found`) 확인 후 구현, GREEN 전환 확인.
+- `unzip -l build/game.love`로 `game/engine_parts.lua`와 갱신된 `game/data/engine_parts.json`이 `.love` 번들에 정상 포함됨을 확인했다(55개 항목).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 10 하위에 처리 상황을 append했다((a) 완료, (b)(c)는 다음 사이클로 명시).
+- 아직 게임 배선(`run.equippedGear`/`run.equippedEngineParts`, 실제 장착 UI)에는 연결하지 않았다 — 레인 스코프상 `play.lua`/`expedition.lua`는 원칙적으로 다른 레인 담당이라 순수 데이터/슬롯 엔진 계층만 완성했다(향후 로더 호출 최소 예외 범위에서 배선 검토).
+- 다음 사이클 다음 슬라이스: 항목 12(선체/엔진 부품 등급/에디션 파밍 시스템 — rarity별 드롭 가중치, edition 부여 확률 등을 `game/gear.lua`/`game/engine_parts.lua`에 순수 함수로 추가).

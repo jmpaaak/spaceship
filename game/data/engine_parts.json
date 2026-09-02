@@ -49,6 +49,107 @@
         { "type": "climbSpeed", "value": 8 },
         { "type": "money", "value": 5 }
       ]
+    },
+    {
+      "id": "engine_ion_drive",
+      "name": "Ion Drive",
+      "nameKo": "이온 드라이브",
+      "icon": "◈",
+      "rarity": "uncommon",
+      "tags": ["altitude", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 4 },
+        { "type": "money", "value": 2 }
+      ]
+    },
+    {
+      "id": "engine_gyro_stabilizer",
+      "name": "Gyro Stabilizer",
+      "nameKo": "자이로 안정기",
+      "icon": "◍",
+      "rarity": "common",
+      "tags": ["control"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 2 }
+      ]
+    },
+    {
+      "id": "engine_azure_coolant_jet",
+      "name": "Azure Coolant Jet",
+      "nameKo": "청옥 냉각 제트",
+      "icon": "◐",
+      "rarity": "uncommon",
+      "tags": ["azure", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 5 }
+      ]
+    },
+    {
+      "id": "engine_ember_burst_valve",
+      "name": "Ember Burst Valve",
+      "nameKo": "적염 분사 밸브",
+      "icon": "◑",
+      "rarity": "uncommon",
+      "tags": ["ember", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 5 }
+      ]
+    },
+    {
+      "id": "engine_void_phase_thruster",
+      "name": "Void Phase Thruster",
+      "nameKo": "공허 위상 추진기",
+      "icon": "◒",
+      "rarity": "rare",
+      "tags": ["void", "altitude", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 6 },
+        { "type": "speed", "value": 3 }
+      ]
+    },
+    {
+      "id": "engine_solar_sail_flap",
+      "name": "Solar Sail Flap",
+      "nameKo": "태양돛 플랩",
+      "icon": "◇",
+      "rarity": "common",
+      "tags": ["economy", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 2 },
+        { "type": "money", "value": 1 }
+      ]
+    },
+    {
+      "id": "engine_burst_capacitor",
+      "name": "Burst Capacitor",
+      "nameKo": "버스트 축전기",
+      "icon": "◆",
+      "rarity": "uncommon",
+      "tags": ["speed", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 6 }
+      ]
+    },
+    {
+      "id": "engine_singularity_drive",
+      "name": "Singularity Drive",
+      "nameKo": "특이점 드라이브",
+      "icon": "◎",
+      "rarity": "legendary",
+      "tags": ["void", "altitude", "speed", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "climbSpeed", "value": 12 },
+        { "type": "speed", "value": 6 },
+        { "type": "money", "value": 4 }
+      ]
     }
   ]
 }

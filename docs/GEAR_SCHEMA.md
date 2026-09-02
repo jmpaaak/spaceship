@@ -144,3 +144,38 @@ that connection (and the actual equip/unequip UI) is deferred to a
 follow-up slice per `loop/PROMPT.md`'s scope (this lane may only touch
 `game/scenes/play.lua`/`game/expedition.lua` for the minimal loader-call
 exception, not full gameplay wiring).
+
+## Engine part slot separation (item 10)
+
+`game/engine_parts.json` (bundled via `game/gear.lua`'s generic
+`M.loadPool`/`M.loadEngineParts`) shares the exact same card schema as
+`game/data/hull_parts.json` documented above — no schema changes were
+needed for item 10, since the "이원화" (separation) item 10 calls for is
+purely a *slot-tracking* concern, not a card-data concern. The pool
+currently has 12 cards (own initial size; independent of hull's 24), all
+with at least one synergy tag so `gear.aggregateEffects` /
+`gear.tagSynergyMultiplier` / `gear.equippedTotals` (which already operate
+generically on any list of parts) work identically for engine loadouts.
+
+`game/engine_parts.lua` (new) owns ONLY the independent slot-list
+bookkeeping item 10(a) requires:
+
+- `M.newLoadout()` returns `{ hull = {}, engine = {} }` — two separate
+  arrays.
+- `M.hullSlotCount = 6` (matches the existing "슬롯 6개" hull loadout
+  ceiling) and `M.engineSlotCount = 3` (a smaller, independent capacity for
+  the propulsion-specialist category).
+- `M.equip(loadout, category, part)` / `M.unequip(loadout, category, id)` /
+  `M.isFull(loadout, category)` operate on exactly one of the two lists
+  (`category` is `"hull"` or `"engine"`) and never touch the other list —
+  filling the engine category to capacity has zero effect on hull slot
+  availability, and vice versa. Duplicate ids within the same category and
+  equipping past a category's capacity are both rejected with a
+  false, error-message return (no silent corruption).
+
+This module still does not wire into `run.equippedGear`/
+`run.equippedEngineParts` gameplay state — that remains deferred per
+`loop/PROMPT.md`'s lane scope (see above), same as the hull synergy engine.
+`game/self_test.lua`'s `testEnginePartsSlotSeparation` verifies the pool
+size/tags, independent fill/empty behavior in both directions, and the two
+rejection paths (capacity, duplicate id).
