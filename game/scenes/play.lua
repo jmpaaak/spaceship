@@ -1115,7 +1115,6 @@ function M:update(dt)
         if thrusting then
             local altBefore = self.expedition.altitude
             expedition.update(self.expedition, dt)
-            self.ship.fuel = self.expedition.fuel
             if previousPhase == "ascending" then
                 local step = self.expedition.altitude - altBefore
                 if step < 0 then step = 0 end
@@ -1127,13 +1126,13 @@ function M:update(dt)
                 self.ship.vy = (self.ship.y - yBeforeThrust) / dt
             end
         elseif previousPhase == "ascending" then
-            -- Coast on stored velocity. No stick/keys → no fuel burn.
+            -- Coast on stored velocity. Fuel is not a flight constraint
+            -- (docs/feedback/INBOX.md item 11), so there is nothing to
+            -- burn or mirror here regardless of stick/key input.
             self.ship.x = self.ship.x + (self.ship.vx or 0) * dt
             self.ship.y = self.ship.y + (self.ship.vy or 0) * dt
-            self.ship.fuel = self.expedition.fuel
         else
             expedition.update(self.expedition, dt)
-            self.ship.fuel = self.expedition.fuel
         end
         if self.expedition.phase == "returning" then
             self.ship.y = -self.expedition.altitude + self.verticalOffset
@@ -1419,7 +1418,6 @@ function M:keypressed(key)
                 if relaunching then
                     self.ship.x = 0
                     self.ship.y = 0
-                    self.ship.fuel = self.expedition.fuel
                     self.verticalOffset = 0
                     self.discovered = {}
                     self.collided = {}

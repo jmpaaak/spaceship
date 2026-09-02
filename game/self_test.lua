@@ -844,8 +844,20 @@ function M.run()
     assert(gx == 90 and gy == 160 and inside)
 
     local ship = shipModule.new()
+    -- docs/feedback/INBOX.md 처리대기 항목 11(c): game/ship.lua's standalone
+    -- fuel field and "if ship.fuel > 0" thrust gate were a leftover from the
+    -- old fuel-gated-flight design (game/expedition.lua's real flight loop
+    -- has never fuel-gated altitude -- see its "Fuel is no longer a flight
+    -- constraint" comment). ship.new()/ship.update() are only ever exercised
+    -- directly here in tests (game/scenes/play.lua drives its own movement
+    -- and only ever *wrote* a dead ship.fuel mirror, never read it), so this
+    -- module-local fuel simulation was pure unreachable/misleading residue.
+    -- Thrust must now apply unconditionally and the ship table must carry no
+    -- fuel field at all.
     shipModule.update(ship, 1, { thrust = true })
-    assert(ship.y < 0 and ship.fuel < 100)
+    assert(ship.y < 0, "thrust must move the ship regardless of any fuel state")
+    assert(ship.fuel == nil,
+        "ship must not carry a dead fuel field; flight is fuel-unconstrained")
     local before = ship.angle
     shipModule.update(ship, 1, { right = true })
     assert(ship.angle > before)

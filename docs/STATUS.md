@@ -1,4 +1,15 @@
 # STATUS
+## econ 레인 — 항목11(c) 죽은 `game/ship.lua` fuel 필드/게이트 제거 (완료, 2026-09-03)
+
+`loop/PROMPT.md` econ 레인 스코프(항목7→8→11→15)에 따라 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거)에 착수했다. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했다. `git status --short`로 확인한 결과 이전 사이클이 이미 이 슬라이스의 diff(`game/ship.lua`, `game/self_test.lua`, `game/scenes/play.lua`)를 uncommitted 상태로 남겨두었고 `make test`/`make verify`가 이미 GREEN이었다 — prior-cycle work를 그대로 이어받아 검증 후 커밋했다(덮어쓰지 않음).
+
+- **문제:** `game/ship.lua`의 `M.new()`가 독립적인 `fuel = 100` 필드를 가지고 `M.update()`가 `if input.thrust and ship.fuel > 0 then`으로 추력을 게이트하고 있었다. 이는 항목 8/이전 사이클에서 이미 확인된 옛 설계("연료 0이면 상승 불가")의 잔재다. 실제 비행 로직(`game/expedition.lua`)은 이미 연료로 상승을 막지 않는다("Fuel is no longer a flight constraint" 주석 참고) — `game/scenes/play.lua`는 `expedition.fuel` 값을 `ship.fuel`에 매 프레임 *쓰기만* 했을 뿐 한 번도 읽지 않았으므로, `ship.lua`의 이 모듈-로컬 fuel 시뮬레이션은 도달 불가능하고 오해를 유발하는 죽은 코드였다(테스트에서 `shipModule.new()`/`shipModule.update()`를 직접 호출할 때만 실제로 게이트가 작동해, 유닛 테스트로만 우연히 살아있었다).
+- **수정:** `game/ship.lua`에서 `fuel` 필드와 추력 게이트를 완전히 제거 — 추력은 이제 무조건 적용되고 ship 테이블은 fuel 필드를 전혀 갖지 않는다. `game/scenes/play.lua`의 세 곳(`update()` 두 위치, `keypressed()`의 relaunch 분기)에서 죽은 `self.ship.fuel = self.expedition.fuel` 미러링 대입을 제거했다(구조적 변경 없음, 값을 읽는 곳이 전혀 없었으므로 순수 삭제).
+- `game/self_test.lua`의 기존 ship 테스트를 갱신 — `assert(ship.y < 0 and ship.fuel < 100)` → `assert(ship.y < 0, ...)` + `assert(ship.fuel == nil, "ship must not carry a dead fuel field; flight is fuel-unconstrained")`로 교체하고, 이 필드가 왜 제거되었는지 설명하는 주석을 추가했다(RED로 옛 assert가 실패함을 확인한 뒤 GREEN 전환 확인).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 항목 11 하위에 진행상황을 append했다. **남은 작업(항목 11):** (a) `game/scenes/play.lua`의 `launchForecastLine`/`forecast_line`("REACH %d SLOTS %d") — 연료(`maxFuel`) 기반 프레이밍이 여전히 남아있음(연료-무관 재정의 또는 제거 필요, `play.lua` 텍스트/HUD 세부는 메인 레인 담당이므로 이 부분은 다음 사이클에서 최소 구조 변경 범위 내에서 신중히 처리하거나 메인 레인과 조율 필요). (b) `run.maxFuel`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount` 기반 연료 업그레이드 상점 항목(engine-side `game/expedition.lua`) 및 관련 문구는 아직 제거되지 않음 — 오늘 슬라이스는 (c)의 `game/ship.lua` 표준-fuel-필드 부분만 완료. (c)의 나머지(`run.fuel`, `fuelBurnRate`, `burnManeuverFuel` 등 `game/expedition.lua` 내 죽은 필드 정리)는 여전히 진행 중.
+- 다음 사이클 다음 슬라이스: 항목 11(b)/(a) — `game/expedition.lua`의 연료 업그레이드 엔진 로직(fuelUpgradeLevel/fuelUpgradeCost/fuelUpgradeAmount) 제거 또는 재정의 설계부터 착수(engine-side라 econ 레인 담당, 다만 상점 UI 텍스트 변경은 메인 레인과 조율).
+
 ## econ 레인 — 항목7/8 UI 도킹 연결 + 치명적 충돌 판정 버그 수정 (완료, 2026-09-03)
 
 `loop/PROMPT.md` econ 레인 스코프(항목7→8→11→15)에 따라 진행. preflight READY(engine tests/package PASS, `git diff` clean)로 시작했다. `git status --short`로 확인한 결과 이전 사이클이 항목 7/8의 UI 연결부(`game/scenes/play.lua`의 hub/shop 랜드마크 도킹 감지, `game/i18n.lua`의 메시지 문구, `game/self_test.lua`의 `testCheckpointAndShopDocking`)를 이미 uncommitted diff로 작성해 두었으나 테스트에 아직 연결(run 목록에 호출 추가)되지 않은 상태였다. 이 diff를 이어받아 완성했다(prior-cycle work 보존, 덮어쓰지 않음).
