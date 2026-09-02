@@ -1,4 +1,16 @@
 # STATUS
+## 세로 상승형 로그라이트 핵심 루프: full-loop-relaunch 캡처 무한 루프 버그 수정 + 실기기 검증 (2026-09-02)
+
+`git status --short`가 `M main.lua`(인계된 미커밋 GREEN 변경, preflight `git diff` 검사 PASS) 상태로 시작했다. preflight READY, 처리 대기 최우선 2개 항목(핵심 루프, AetherAI-only) 중 인계된 변경이 이미 핵심 루프 항목의 실기기 검증 도구였으므로 이를 완성하는 것을 이번 사이클의 슬라이스로 선정했다.
+
+- 인계된 `main.lua`의 `GAME_CAPTURE_PHASE=full-loop-relaunch` 개발 전용 진입 경로(실제 `PlayScene:keypressed`/`update`로 launch→ascend→collect→fuel-empty return→slot spin→settlement→shop upgrade→relaunch 전체를 구동)를 실행해 검증하려 했으나, 실제로 실행하자 LÖVE 프로세스가 종료되지 않고 무한 행(hang)함을 발견했다(180초 타임아웃, 프로세스를 강제 종료해야 했음).
+- 근본 원인: `while scene.expedition.phase == "returning" and scene.expedition.slotOpportunities > 0 do scene:keypressed("space") end` 루프가 `scene:update()`를 호출하지 않은 채 매 반복마다 즉시 재입력한다. `game/scenes/play.lua:1054`의 `keypressed`는 `not self.slotSpin`일 때만 `expedition.useSlot`을 호출해 새 스핀을 시작하는데, `beginSlotSpin()`이 설정한 `self.slotSpin`은 `PlayScene:update`가 `slotSpin.elapsed >= slotSpin.duration`(0.45초 애니메이션)에 도달했을 때만 `nil`로 지워진다(`game/scenes/play.lua:848-850` 근방). `scene:update()` 없이 `keypressed`만 반복 호출하면 첫 스핀 이후 `slotOpportunities`가 절대 줄지 않아(가드가 항상 막음) 무한 루프가 된다.
+- `main.lua`의 해당 while 루프 안에 `scene:update(1)`을 추가해 매 스핀 후 애니메이션이 실제로 정착(`slotSpin`이 `nil`로 클리어)하도록 고쳤다. 수정 후 재실행하자 즉시 정상 종료(`SPACESHIP_CAPTURE_OK`)했다.
+- 실제 LÖVE runtime capture(`GAME_CAPTURE=1 GAME_CAPTURE_PHASE=full-loop-relaunch`, 1080×1920, `build/spaceship-runtime-preview-full-loop-relaunch.png`, 로컬 산출물로 커밋 제외)를 vision으로 확인했다: relaunch 후 화면이 고도 0000, 자금 $55(슬롯/정산 보상 반영), F119(연료 업그레이드 반영, 상점에서 구매한 fuel upgrade가 실제로 적용됨), 신선한 상승 화면(우주선이 지구 위에서 다시 상승 시작)으로 렌더링되어 `launch → ascending → returning/slots → settlement/shop → relaunch` 전체 루프가 실제 LÖVE 런타임에서 정상 작동함을 확인했다. 겹침/깨짐 없음.
+- 이 수정은 `main.lua`의 개발 전용 캡처 하네스 코드에 한정되며 `game/*.lua` 게임 로직 자체는 변경하지 않았다(핵심 루프는 이미 구현되어 있었고, 이번 사이클은 그 실기기 검증 도구의 버그를 고쳐 검증을 완성한 것). `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:33`).
+- `docs/feedback/INBOX.md`의 "세로 상승형 로그라이트 핵심 루프" 항목을 실기기 검증 완료로 "처리 완료"로 이동했다.
+- 남은 다음 슬라이스 후보: (1) AetherAI 로그인 자격 증명이 제공되면 공식 에셋 export 진행(계속 human-gated), (2) 새 feedback이 등록되면 그것을 우선 처리한다.
+
 ## 행성·이펙트 발라트로 스타일 카드형 비주얼 강화: 최종 검수 후 처리 완료로 이동 (2026-09-02)
 
 `git status --short` clean, preflight PASS 상태로 시작. 처리 대기 3개 항목(핵심 루프, AetherAI-only, 발라트로 스타일) 중 "발라트로 스타일" 항목을 이번 사이클의 슬라이스로 선정해 코드·실기기 캡처로 최종 검수했다.

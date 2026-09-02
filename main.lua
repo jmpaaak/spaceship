@@ -322,6 +322,38 @@ function love.load()
         scene.ship.y = -400
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
+    elseif capturePhase == "full-loop-relaunch" then
+        -- Real-runtime capture for the top pending feedback item (세로
+        -- 상승형 로그라이트 핵심 루프): drives the actual scene through a
+        -- full launch -> ascend -> collect -> fuel-empty return -> slot
+        -- spin -> safe settlement -> shop upgrade -> relaunch round trip
+        -- via the same PlayScene:keypressed/update entry points a real
+        -- player uses (not just field assignment), then captures the
+        -- resulting fresh ascending screen so the loop is verified
+        -- end-to-end in one real LOVE runtime frame instead of only via
+        -- static per-phase field seeding.
+        local scene = scenes.current
+        local world = require("game.world")
+        local expeditionModule = require("game.expedition")
+        scene:keypressed("space") -- launch
+        world.nearbyPlanets = function()
+            return { { id = "full-loop-sample", x = 0, y = -5, radius = 7, hue = 0.1 } }
+        end
+        scene.ship.x = 0
+        scene.expedition.altitude = 5
+        scene:update(0.001) -- collect the sample near-instantly
+        world.nearbyPlanets = function() return {} end
+        scene:update(scene.expedition.fuel / scene.expedition.fuelBurnRate + 1) -- burn to fuel-empty -> returning
+        while scene.expedition.phase == "returning" and scene.expedition.slotOpportunities > 0 do
+            scene:keypressed("space") -- spin every offered slot
+            scene:update(1) -- let the slot-spin animation resolve before the
+            -- next keypress, otherwise self.slotSpin never clears and
+            -- keypressed's "not self.slotSpin" guard blocks all further
+            -- spins forever (infinite loop / hang).
+        end
+        scene:update(1000) -- finish the return -> settlement
+        expeditionModule.buyFuelUpgrade(scene.expedition) -- shop upgrade with settled money
+        scene:keypressed("space") -- relaunch
     elseif capturePhase == "launch-with-specimens" then
         -- Real-runtime capture for the launch-screen specimen log strip
         -- (docs/feedback 2026-09-02 request: show off exploration finds
