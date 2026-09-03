@@ -521,7 +521,7 @@ end
 -- knownEffectTypes/knownEditions above).
 M.editionEffects = {
     irradiated = { scope = "all", multiplier = 1.0, synergyBonusAdd = 0.05 },
-    crystallized = { scope = "sampleSellValue", multiplier = 2.0 },
+    crystallized = { scope = "sampleSellValue", multiplier = 2.0, sellMultiplier = 2 },
     quantum_flawed = { scope = "all", multiplier = 2.0, drawback = { type = "hullDurability", value = -1 } },
     refined = { scope = "all", multiplier = 0.5, noSlotCost = true },
 }
@@ -646,6 +646,16 @@ M.raritySellValue = {
 -- players who'd rather cash it in than use it.
 M.editionSellBonus = 6
 
+-- Item 12 crystallized ("✨ 결정화 — 판매가 대폭 상승"): every other
+-- edition already has a unique mechanic (irradiated synergy, quantum_flawed
+-- double+drawback, refined noSlotCost). Crystallized's documented unique
+-- promise is a SELL-PRICE spike, not just the shared +6 that every
+-- edition already gets. Applied to the rarity base before the shared
+-- edition premium so legendary crystallized scales harder than common.
+-- Kept as a named alias of editionEffects.crystallized.sellMultiplier so
+-- tests/docs can cite one number without duplicating the table.
+M.crystallizedSellMultiplier = M.editionEffects.crystallized.sellMultiplier
+
 -- Computes the sell (refund) value for a single part. Falls back to the
 -- common tier's value for any part with a missing/unknown rarity rather
 -- than erroring -- this is a money calculation, not schema validation
@@ -653,6 +663,10 @@ M.editionSellBonus = 6
 -- rarity; this stays defensive for hand-built test fixtures/future callers).
 function M.sellValue(part)
     local base = M.raritySellValue[part.rarity] or M.raritySellValue.common
+    local def = part.edition and M.editionEffects[part.edition]
+    if def and def.sellMultiplier then
+        base = base * def.sellMultiplier
+    end
     if part.edition then
         base = base + M.editionSellBonus
     end

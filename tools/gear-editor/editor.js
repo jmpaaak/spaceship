@@ -29,7 +29,7 @@ const KNOWN_RARITIES = ["common", "uncommon", "rare", "legendary"];
 const KNOWN_EDITIONS = ["irradiated", "crystallized", "quantum_flawed", "refined"];
 const EDITION_EFFECTS = {
   "irradiated": { scope: "all", multiplier: 1.0, synergyBonusAdd: 0.05 },
-  "crystallized": { scope: "sampleSellValue", multiplier: 2.0 },
+  "crystallized": { scope: "sampleSellValue", multiplier: 2.0, sellMultiplier: 2 },
   "quantum_flawed": { scope: "all", multiplier: 2.0, drawback: { type: "hullDurability", value: -1 } },
   "refined": { scope: "all", multiplier: 0.5, noSlotCost: true },
 };
@@ -346,6 +346,9 @@ function updateEditionPreview() {
     }
     if (def.noSlotCost) {
       effectStrs.push(`(no slot cost)`);
+    }
+    if (def.sellMultiplier) {
+      effectStrs.push(`(sell x${def.sellMultiplier})`);
     }
     html += effectStrs.join(", ");
     

@@ -308,8 +308,11 @@ item 13 — see "Card shape" above):
     `synergyBonusAdd = 0.05` on top of the per-shared-pair tag synergy bonus
     when equipped (item 12: "시너지 태그 매칭 시 보너스 추가 증폭"), exposed
     via `M.editionSynergyBonusAdd(editionId)`.
-  - `crystallized` (✨ 결정화) — doubles only `sampleSellValue` (item 12:
-    "판매가 대폭 상승").
+  - `crystallized` (✨ 결정화) — doubles only `sampleSellValue` AND
+    multiplies the card's sell refund (`gear.sellValue`) by
+    `sellMultiplier = 2` on top of the shared `editionSellBonus`
+    (item 12: 판매가 대폭 상승). Other editions keep the flat +6 only.
+    See "Item 12: crystallized sell-price wiring" below.
   - `quantum_flawed` (🌀 양자결함) — doubles every effect value but appends
     an extra `{ type = "hullDurability", value = -1 }` drawback effect
     (item 12: "효과가 두 배지만 부작용 하나 동반").
@@ -1300,4 +1303,39 @@ crystallized still does not invent hull-scoped `sampleSellValue`.
 `testGearEquippedEditionEffectsRunWiring` covers crystallized 5→10,
 quantum_flawed maxDurability 3→6, refined climbSpeed 8→4, engine-slot
 scope, already-transformed idempotence, and input non-mutation.
+
+### Item 12: crystallized sell-price wiring — `gear.sellValue` honors 판매가 대폭 상승
+
+Item 12's crystallized edition (✨ 결정화) was documented in INBOX as
+판매가 대폭 상승 and in this schema as doubling `sampleSellValue`.
+The sample-value doubling was already wired (`applyEditionEffects` +
+`equipGear` materialize), but `gear.sellValue` treated every edition as
+the same flat `editionSellBonus = 6`. Irradiated / quantum_flawed /
+refined already had unique mechanics (synergy / double+drawback /
+noSlotCost); crystallized's unique cash-out promise was dead — selling
+a crystallized rare refunded 24, identical to irradiated/refined.
+
+- `M.editionEffects.crystallized.sellMultiplier = 2` (mirrored in
+  `tools/gear-editor/editor.js`'s `EDITION_EFFECTS`). `M.sellValue`
+  multiplies the rarity base by this field when present, then adds the
+  shared edition premium: rare crystallized = `18 * 2 + 6 = 42`
+  (vs 24 for any other edition). Legendary crystallized = `40 * 2 + 6
+  = 86`. `M.crystallizedSellMultiplier` is a named alias of that table
+  field so tests/docs cite one number.
+- `M.buyPrice` stays `sellValue * 3`, so sell-to-rebuy remains lossy
+  even for the high-refund edition (item 9(c) invariant).
+- The web editor's `updateEditionPreview` surfaces `(sell x2)` so
+  authors see the cash-out, matching the existing drawback / synergy /
+  noSlotCost preview fields. `testGearEditorEditionEffectPreviewSync`
+  now locks `sellMultiplier` the same way.
+- `game/self_test.lua`'s new `testGearCrystallizedSellPremiumWiring`
+  covers: other editions stay at the shared +6; crystallized strictly
+  beats them; legendary scales the rarity base; unknown rarity falls
+  back to common before the multiplier; `buyPrice` is 3x; settlement
+  `sellGear` credits 42 for a rare crystallized hull card; engine-slot
+  crystallized sale does not touch the hull list.
+
+Still deferred (out of this lane's scope per `loop/PROMPT.md`): the
+shop UI that displays the crystallized sell price to the player
+(`play.lua`).
 
