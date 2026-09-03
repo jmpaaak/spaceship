@@ -449,6 +449,42 @@ local function testGearAndCheckpointSettlement()
     assert(next(wipeRun.exploredCheckpoints) == nil, "destruction must wipe explored checkpoints")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 15(a): M.returnToEarth is the new,
+-- additive immediate-settlement entry point that lets the ascending phase
+-- go straight to settlement (mirroring item 8's checkpoint-settle model)
+-- without the manually-declared beginReturn/"returning" phase travel-down
+-- step or its in-flight slot machine. It must settle pending sample AND
+-- slot-reward value exactly like the existing returning-phase-reaches-
+-- altitude-0 path, only from "ascending" directly.
+local function testReturnToEarth()
+    local expedition = require("game.expedition")
+
+    local run = expedition.new()
+    expedition.launch(run)
+    run.altitude = 250
+    run.maxAltitude = 250
+    run.pendingSampleValue = 60
+    run.pendingSlotReward = 10
+    assert(expedition.returnToEarth(run), "returnToEarth must succeed from the ascending phase")
+    assert(run.phase == "settlement", "returnToEarth must settle immediately, skipping the returning phase")
+    assert(run.money == 70, "returnToEarth must pay out pending sample + slot reward, like the old returning-phase settle")
+    assert(run.pendingSampleValue == 0 and run.pendingSlotReward == 0)
+    assert(run.lastSettlement == 70)
+    assert(run.lastAltitude == 250)
+
+    -- Only valid from the ascending phase -- launch/settlement/destroyed/
+    -- returning must all reject it (no state mutation).
+    local launchRun = expedition.new()
+    assert(not expedition.returnToEarth(launchRun), "returnToEarth must require the ascending phase (launch)")
+    local settledRun = expedition.new()
+    expedition.launch(settledRun)
+    settledRun.altitude = 10
+    settledRun.maxAltitude = 10
+    expedition.returnToEarth(settledRun)
+    assert(not expedition.returnToEarth(settledRun),
+        "returnToEarth must require the ascending phase (already settlement)")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 15(b)/(c): the EARTH SHOP now hosts
 -- its own paid slot-machine minigame (M.spinEarthShopSlot), separate from
 -- the in-flight returning-phase slot machine, whose odds vary by which
@@ -2774,6 +2810,7 @@ function M.run()
     testManeuverFuel()
     testGalaxyStructure()
     testGearAndCheckpointSettlement()
+    testReturnToEarth()
     testEarthShopSlotMachine()
     testCheckpointAndShopDocking()
     testEarthShopSlotUiWiring()

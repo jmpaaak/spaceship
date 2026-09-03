@@ -371,6 +371,25 @@ local function settle(run)
     run.phase = "settlement"
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 15(a): the manually-declared
+-- beginReturn phase and the in-flight returning-phase slot machine
+-- (useSlot/slotSpin) are being phased out in favor of immediate settlement
+-- on arrival at Earth or a galaxy checkpoint (matching item 8's checkpoint
+-- settle model). M.returnToEarth is the new, additive entry point for
+-- that: it settles the run exactly like the old "returning phase reaches
+-- altitude 0" path (same settle() as M.update's returning branch used),
+-- but works directly from the ascending phase, with no intermediate
+-- returning-phase travel-down animation or slot-machine step required.
+-- M.beginReturn/the "returning" phase/M.useSlot are left in place for now
+-- (still exercised by game/scenes/play.lua's existing returning-phase UI,
+-- which is out of this lane's scope to rewrite in one slice -- see
+-- docs/STATUS.md) so this is purely additive, not yet a removal.
+function M.returnToEarth(run)
+    if not run or run.phase ~= "ascending" then return false end
+    settle(run)
+    return true
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 8 -- ordinary (non-checkpoint,
 -- non-shop) planet exploration only ever grants samples (collectSample
 -- above), never money directly. Samples only convert to money at a
