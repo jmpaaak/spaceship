@@ -3092,6 +3092,48 @@ local function testNextShipIconSprite()
     end
 end
 
+-- LAUNCH LOADOUT loadout.ship (selected hull name, shown once SCOUT
+-- is owned) is still a bare centered printf while shop
+-- nextLaunch.ship already has a ComfyUI hangar-roof icon. Same
+-- file-existence + always-set-path pattern as testNextShipIconSprite,
+-- plus Lua hexagonal nameplate fallback geometry (even-length,
+-- spans cy, horizontally symmetric). Graphics-gated
+-- loadoutShipIconImage cannot be asserted under GAME_HEADLESS=1.
+-- Invoked from testCanvasLayoutScale so M.run() stays under Lua's
+-- 60-upvalue cap.
+local function testLoadoutShipIconSprite()
+    local path = "assets/effects/loadout_ship.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated loadout-ship icon sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.loadoutShipIconImagePath == path,
+        "PlayScene must load assets/effects/loadout_ship.png into self.loadoutShipIconImagePath")
+    assert(play.loadoutShipIconSize == 24 and play.loadoutShipIconGap == 8)
+    local points = play.loadoutShipIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "loadout-ship silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "loadout-ship icon must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "loadout-ship outline must be horizontally symmetric around cx")
+    end
+end
+
 -- SAMPLES HUD readout is still bare gold text (hud_samples) while
 -- DIST/CASH/HULL/STEER/BEST already have ComfyUI icons. Same
 -- file-existence + always-set-path pattern as testBestIconSprite,
@@ -3180,6 +3222,7 @@ local function testCanvasLayoutScale()
     testYieldPreviewIconSprite()
     testShipPreviewIconSprite()
     testNextShipIconSprite()
+    testLoadoutShipIconSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows

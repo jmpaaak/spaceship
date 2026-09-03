@@ -1098,6 +1098,34 @@ end
 M.nextShipIconSize = 24
 M.nextShipIconGap = 8
 
+-- LAUNCH LOADOUT loadout.ship icon (icon-based HUD
+-- simplification follow-on): pair the selected-hull name
+-- (shown once SCOUT is owned) with a small hexagonal
+-- nameplate, mirroring nextLaunch.ship. Drawn as a flat
+-- hexagon (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.loadoutShipIconPoints(cx, cy, size)
+    local w = size * 0.5
+    local h = size * 0.32
+    local inset = size * 0.22
+    return {
+        cx - w, cy,
+        cx - inset, cy - h,
+        cx + inset, cy - h,
+        cx + w, cy,
+        cx + inset, cy + h,
+        cx - inset, cy + h,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- nameplate's right edge and the loadout.ship label's
+-- left edge. Matches nextShip because both sit next to
+-- gold ship-name labels.
+M.loadoutShipIconSize = 24
+M.loadoutShipIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2601,6 +2629,22 @@ function M.new(options)
             nextShipIconImage = img
         end
     end
+    -- assets/effects/loadout_ship.png is the ComfyUI-generated
+    -- LAUNCH LOADOUT loadout.ship hexagonal nameplate
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as nextShipIconImagePath.
+    -- :draw() scales it to M.loadoutShipIconSize instead of
+    -- M.loadoutShipIconPoints, and falls back to that hexagon
+    -- when the image failed to load.
+    local loadoutShipIconImagePath = "assets/effects/loadout_ship.png"
+    local loadoutShipIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, loadoutShipIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            loadoutShipIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2751,6 +2795,8 @@ function M.new(options)
         shipPreviewIconImagePath = shipPreviewIconImagePath,
         nextShipIconImage = nextShipIconImage,
         nextShipIconImagePath = nextShipIconImagePath,
+        loadoutShipIconImage = loadoutShipIconImage,
+        loadoutShipIconImagePath = loadoutShipIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4713,8 +4759,29 @@ function M:draw()
         local row = M.launchLoadoutBoxTop + 16
         local rowStep = M.launchLoadoutRowStep
         if loadout.ship then
+            local loadoutShipLabel = loadout.ship
+            local loadoutShipFont = love.graphics.getFont()
+            local loadoutShipWidth = loadoutShipFont:getWidth(loadoutShipLabel)
+            local loadoutShipIconSpan = M.loadoutShipIconSize + M.loadoutShipIconGap
+            local loadoutShipBoxX = 64
+            local loadoutShipBoxW = viewport.width - 128
+            local loadoutShipStartX = loadoutShipBoxX + (loadoutShipBoxW - (loadoutShipIconSpan + loadoutShipWidth)) / 2
+            local loadoutShipIconCenterX = loadoutShipStartX + M.loadoutShipIconSize / 2
+            local loadoutShipIconCenterY = row + loadoutShipFont:getHeight() / 2
+            if self.loadoutShipIconImage then
+                local iw, ih = self.loadoutShipIconImage:getDimensions()
+                local scale = M.loadoutShipIconSize / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.draw(self.loadoutShipIconImage, loadoutShipIconCenterX, loadoutShipIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+            else
+                -- Fallback: gold hexagonal nameplate, used only when the
+                -- ComfyUI-generated sprite failed to load.
+                love.graphics.setColor(1, 0.8, 0.3)
+                love.graphics.polygon("fill",
+                    M.loadoutShipIconPoints(loadoutShipIconCenterX, loadoutShipIconCenterY, M.loadoutShipIconSize))
+            end
             love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(loadout.ship, 64, row, viewport.width - 128, "center")
+            love.graphics.print(loadoutShipLabel, loadoutShipStartX + loadoutShipIconSpan, row)
             row = row + rowStep
         end
         if M.drawLoadoutStatsIcon then
