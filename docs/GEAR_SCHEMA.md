@@ -902,4 +902,54 @@ Still deferred (out of this lane's scope per `loop/PROMPT.md` — requires
 that calls `M.spendBoost` and applies a real thrust/altitude burst while
 flying.
 
+### Item 9/14 (A) `hullDurability` run-state gap — `refreshShipStats` closes it
+
+Same "documented but silently dead" pattern this lane's audit slices have
+repeatedly found and closed for `sampleSellValue`/`sellMultiplier`,
+`irradiated` synergy, `noSlotCost`, and `boostCharge` consumption:
+`gear.equippedTotals(parts).hullDurability` has additively summed a part's
+`hullDurability` effect since item 14's very first slice, and the bundled
+`hull_parts.json` pool has carried 9 `hullDurability` cards
+(`hull_scrap_plate`, `hull_titan_frame`, etc.) since item 9's 24-card
+expansion — but `refreshShipStats(run)`, the *only* place `run.maxDurability`
+is (re)computed (called from `M.new`/`M.launch`'s meta-wipe,
+`M.buyDurabilityUpgrade`, `M.selectShip`), never read that total. All 9
+cards were fully equippable with zero effect on the ship's actual maximum
+hull points — the intended payoff of item 9's own `(A)` additive schema
+category was dead content for the entire lifetime of this lane's work.
+
+- New private `equippedHullDurabilityBonus(run)` (exposed as
+  `M.equippedHullDurabilityBonus` for tests/future callers) reads
+  `gearModule.equippedTotals(run.equippedGear or {}).hullDurability` — hull-
+  only, matching `M.effectiveClimbSpeed`/`M.effectiveSampleBonus`'s scope
+  (item 9 explicitly scopes the combo-synergy/stat payoff to hull "조커형"
+  parts), unlike the category-agnostic `(C)`/`(E)`/`collisionRadius`
+  wrappers that sum both hull and engine slots.
+- `refreshShipStats(run)` now adds this bonus into the existing
+  `baseDurability + shipBonus + upgradeLevel*upgradeAmount` formula, so
+  gear stacks additively on top of the ship/upgrade axis rather than
+  replacing it.
+- Because `refreshShipStats` previously only ran from launch/shop-purchase/
+  ship-select call sites (never from an equip/unequip action), `M.equipGear`/
+  `M.unequipGear` now also call it immediately for the `hull` category —
+  a hull-slot change can shift `maxDurability`, so the recompute can't wait
+  for the next shop purchase. Before this run's very first launch
+  (`run.phase == "launch"`, the pre-flight loadout screen) current
+  `durability` is kept synced to the freshly recomputed max too (raised on
+  equip, clamped down on unequip) — matching `M.new`'s invariant that a
+  never-yet-launched run always has `durability == maxDurability`. Engine-
+  category equip/unequip is untouched (no recompute, no durability sync),
+  since `hullDurability` on an engine-slot card intentionally does not
+  count (see the hull-only scoping above).
+- `game/self_test.lua`'s new `testGearHullDurabilityRunWiring` regression-
+  checks: an unequipped run's `maxDurability` is unchanged from its
+  pre-wiring base+ship+upgrade value; equipping a `hullDurability +2` hull
+  card and launching raises `maxDurability` from 3 to 5 and refills current
+  `durability` to match; the identical card equipped into the ENGINE slot
+  instead is correctly excluded (hull-only scoping, `maxDurability` stays
+  at the unmodified 3); and gear `hullDurability` stacks additively with a
+  purchased `durabilityUpgradeLevel` (both bonuses present simultaneously
+  sum correctly on top of base).
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN.
+
 

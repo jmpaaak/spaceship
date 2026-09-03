@@ -1,4 +1,19 @@
 # STATUS
+## [gear 레인] 항목9/14 (A) hullDurability gap — 9종 카드가 실제로는 죽은 콘텐츠였던 것을 발견·배선 (완료, 2026-09-03)
+
+레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료 상태였으나, 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 이번 사이클에도 다시 적용해 새 gap을 찾아 처리했다. `gear.equippedTotals`가 항목14 첫 슬라이스 때부터 (A) `hullDurability` 효과를 가산 합산해왔고, `hull_parts.json`에는 항목9의 24종 확장 이후 `hullDurability` 카드가 9종(`hull_scrap_plate`, `hull_titan_frame` 등) 실재했지만, `run.maxDurability`를 계산하는 유일한 지점인 `refreshShipStats(run)`가 이 총합을 전혀 읽지 않아 이 9종 카드를 장착해도 선체 최대 내구도가 조금도 달라지지 않았다 — 항목9가 명시한 "부품 조합이 실제 스탯에 배가 효과"의 (A) 가산형 카테고리 중 하나가 이 레인의 전체 작업 기간 동안 조용히 죽어있던 콘텐츠였다(이전 사이클들이 이미 sampleSellValue/sellMultiplier, irradiated 시너지, noSlotCost, boostCharge 소비에서 동일한 패턴의 gap을 발견·처리한 것과 완전히 같은 유형). preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
+
+- TDD로 `game/self_test.lua`에 신규 `testGearHullDurabilityRunWiring()`을 먼저 추가했다(RED 확인: "equipping a hullDurability +2 hull card must raise maxDurability from 3 to 5 ... got 3" 실패).
+- `game/expedition.lua`에 신규 private `equippedHullDurabilityBonus(run)`(공개 `M.equippedHullDurabilityBonus`로도 노출)이 `gearModule.equippedTotals(run.equippedGear or {}).hullDurability`를 읽는다 — `M.effectiveClimbSpeed`/`M.effectiveSampleBonus`와 동일하게 hull 전용(엔진 슬롯 미포함, 항목9가 콤보 페이오프를 선체 부품으로 명시적으로 한정하기 때문).
+- `refreshShipStats(run)`가 기존 `baseDurability + shipBonus + upgradeLevel*upgradeAmount` 공식에 이 보너스를 가산하도록 변경했다.
+- `refreshShipStats`가 기존에는 발사/상점구매/함선선택 지점에서만 호출돼 장비 장착/해제 시점에 즉시 반영되지 않았으므로, `M.equipGear`/`M.unequipGear`가 `hull` 카테고리에 한해 즉시 `refreshShipStats`를 재호출하도록 확장했다. 아직 첫 발사 전(`run.phase == "launch"`, 발사 전 로드아웃 화면)에는 현재 `durability`도 재계산된 max에 맞춰 동기화한다(장착 시 상향, 해제 시 하향 클램프) — `M.new`가 보장하는 "아직 발사하지 않은 run은 항상 durability == maxDurability" 불변식과 일치시킴. 엔진 카테고리 장착/해제는 그대로 둔다(hullDurability는 hull 전용 스코프이므로 재계산도 durability 동기화도 하지 않음).
+- `testGearHullDurabilityRunWiring()` 회귀 검증: 미장착 run은 기존 base+ship+upgrade 공식 그대로(3), `hullDurability +2` 선체 카드 장착 후 발사하면 maxDurability가 3→5로 오르고 현재 durability도 5로 채워짐, 동일 카드를 엔진 슬롯에 장착하면 hull 전용 스코프대로 제외되어 maxDurability가 3 그대로 유지됨, 장비 hullDurability(+2)와 구매한 durabilityUpgradeLevel(+1)이 base 3 위에 함께 가산됨(합계 6).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `docs/GEAR_SCHEMA.md`에 "Item 9/14 (A) `hullDurability` run-state gap — `refreshShipStats` closes it" 섹션을 신규 추가했다.
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`와, 이번 슬라이스가 건드릴 필요 없었던 `game/gear.lua`/`game/engine_parts.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 9 하위에 처리 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화) 순수 함수 계층 검토, 또는 이 감사 패턴을 계속 적용해 항목9/10/12/13/14의 다른 잔여 gap을 재검증(예: `hullDurability`처럼 스키마-등록만 되고 run 소비자가 없던 다른 조합이 아직 남아있는지).
+
 ## [spaceship-gear 레인] 항목9/14 gap — `sampleSellValue`/`sellMultiplier` 실 게임 미소비 발견·배선 — `M.effectiveSampleBonus` (완료, 2026-09-03)
 
 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료된 상태였으나, 이전 슬라이스들이 반복해온 "문서-코드 정합성 감사" 패턴을 이번 사이클에도 다시 적용해 새 gap을 찾아 처리했다. `gear.equippedTotals`가 item 14 첫 슬라이스 때부터 (A) `sampleSellValue` 가산 총합에 (B) `sellMultiplier` 배율을 곱연산 1회로 적용해왔고, 번들 데이터에도 `hull_parts.json` 기준 `sampleSellValue` 카드 8종 + `sellMultiplier` 카드 1종(`hull_market_broker`)이 실재했지만, `game/expedition.lua`의 어떤 함수도 이 `equippedTotals.sampleSellValue` 값을 실제로 읽지 않아 이 9종 카드를 장착해도 표본 채집으로 버는 실제 금액이 조금도 달라지지 않았다 — item 9가 명시한 "부품 조합이 고도 상승 속도/효율에 배가 효과"의 경제 쪽 절반이(고도 쪽은 이미 `M.effectiveClimbSpeed`로 배선됨) 이 레인의 전체 작업 기간 동안 조용히 죽어있던 콘텐츠였다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).

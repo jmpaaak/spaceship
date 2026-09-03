@@ -130,6 +130,20 @@ local function slotSampleBonus(symbols)
 end
 M.slotSampleBonus = slotSampleBonus
 
+-- Item 9/14 (A) hullDurability gap: gear.equippedTotals has additively
+-- summed a part's hullDurability effect since item 14's very first slice,
+-- and the bundled hull_parts.json pool has carried 9 hullDurability cards
+-- since item 9's 24-card expansion, but this function -- the only place
+-- run.maxDurability is (re)computed -- never read that total, so every one
+-- of those cards was equippable with zero actual effect on the ship's
+-- maximum hull points. Kept hull-only (like climbSpeed/sampleSellValue,
+-- unlike the category-agnostic (C)/(E)/collisionRadius wrappers) because
+-- item 9 explicitly scopes hullDurability's payoff to hull ("선체") gear.
+local function equippedHullDurabilityBonus(run)
+    return gearModule.equippedTotals(run.equippedGear or {}).hullDurability or 0
+end
+M.equippedHullDurabilityBonus = equippedHullDurabilityBonus
+
 local function refreshShipStats(run)
     local fuelBonus = 0
     local durabilityBonus = 0
@@ -140,6 +154,7 @@ local function refreshShipStats(run)
     run.maxFuel = run.baseFuel + fuelBonus + run.fuelUpgradeLevel * run.fuelUpgradeAmount
     run.maxDurability = run.baseDurability + durabilityBonus
         + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
+        + equippedHullDurabilityBonus(run)
 end
 
 local function slotCount(distance, slotDistance)
@@ -356,11 +371,24 @@ end
 -- underlying engine_parts.lua loadout. Returns true, nil on success or
 -- false, error-message on failure (full slot / duplicate id), matching
 -- engine_parts.equip's own contract.
+--
+-- Item 9/14 (A) hullDurability wiring: a hull-slot change can shift
+-- run.maxDurability (equippedHullDurabilityBonus above), so this
+-- recomputes ship stats immediately on every hull equip/unequip -- unlike
+-- climbSpeed/sampleSellValue (pure per-tick/per-sample derived values that
+-- read equippedGear live and never need a cached run field refreshed).
+-- Before this run's very first launch (phase == "launch", the pre-flight
+-- loadout screen) current durability is kept synced to the recomputed max
+-- too, since M.launch only refills durability on a RE-launch (settlement/
+-- destroyed -> ascending) -- matching M.new's invariant that a fresh,
+-- never-yet-launched run always starts with durability == maxDurability.
 function M.equipGear(run, category, part)
     local ok, err = enginePartsModule.equip(run.gearLoadout, category, part)
     if not ok then return false, err end
     if category == "hull" then
         run.equippedGear = run.gearLoadout.hull
+        refreshShipStats(run)
+        if run.phase == "launch" then run.durability = run.maxDurability end
     else
         run.equippedEngineParts = run.gearLoadout.engine
     end
@@ -369,9 +397,21 @@ end
 
 -- Unequips by id from the given category; keeps run.equippedGear /
 -- run.equippedEngineParts pointed at the (mutated in place) underlying
--- list, same as equipGear above.
+-- list, same as equipGear above. Hull unequips also recompute ship stats
+-- (see equipGear's comment) so removing a hullDurability card shrinks
+-- maxDurability back down immediately, clamping current durability down
+-- to the new max if it would otherwise exceed it (pre-launch only, same
+-- guard as equipGear -- mid-flight durability is never silently reduced
+-- by a shop/loadout-only action).
 function M.unequipGear(run, category, id)
-    return enginePartsModule.unequip(run.gearLoadout, category, id)
+    local removed = enginePartsModule.unequip(run.gearLoadout, category, id)
+    if removed and category == "hull" then
+        refreshShipStats(run)
+        if run.phase == "launch" then
+            run.durability = math.min(run.durability, run.maxDurability)
+        end
+    end
+    return removed
 end
 
 -- Item 9(c): "카드 획득... 과 교체가 잦아지는 루프". With a fixed 6/3-slot
