@@ -1403,6 +1403,32 @@ local function testPlanetTwinkleSprite()
         "PlayScene must load assets/effects/planet_twinkle.png into self.planetTwinkleImagePath")
 end
 
+-- Collision impact and RCS/main-engine thrust particles are still Lua
+-- circles / a triangle plume. Same file-existence + always-set-path
+-- pattern as testPlanetTwinkleSprite. Graphics-gated images cannot be
+-- asserted under GAME_HEADLESS=1.
+local function testCollisionEffectSprite()
+    local path = "assets/effects/collision_spark.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated collision effect sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.collisionEffectImagePath == path,
+        "PlayScene must load assets/effects/collision_spark.png into self.collisionEffectImagePath")
+end
+
+local function testThrustEffectSprite()
+    local path = "assets/effects/thrust_plume.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated thrust effect sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.thrustEffectImagePath == path,
+        "PlayScene must load assets/effects/thrust_plume.png into self.thrustEffectImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3273,6 +3299,8 @@ function M.run()
     testShopIconSprites()
     testDebrisSprites()
     testPlanetTwinkleSprite()
+    testCollisionEffectSprite()
+    testThrustEffectSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

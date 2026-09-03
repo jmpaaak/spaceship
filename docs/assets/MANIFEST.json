@@ -558,5 +558,55 @@
     "width": 64,
     "height": 64,
     "qa": "planet approach twinkle sprite wired into PlayScene planetTwinkleImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/collision_spark.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "6232958c-c241-48ab-abb8-3129a983f2a1",
+    "prompt": "pixel art, 16-bit, small orange-red impact spark burst sprite, jagged collision flash, bright white core with orange rim flare, isolated icon, solid white background, no text, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904105,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:43:39Z",
+    "sha256": "b04ff2aa60ab9ae8425ccfb956e667c860ac04ab3c6420bfc97c3a4a124c63b2",
+    "width": 64,
+    "height": 64,
+    "qa": "collision impact spark wired into PlayScene collisionEffectImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/thrust_plume.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "e59b0b14-e35f-40f1-9d59-34c3717ec76a",
+    "prompt": "pixel art, 16-bit, small rocket engine exhaust flame plume sprite, orange cyan jet pointing upward, isolated icon, solid white background, no text, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904106,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:44:47Z",
+    "sha256": "edc2fdcc73c445cf9ec565b1eedf3382e6264fcebb0ed4db55d9db9009df4262",
+    "width": 64,
+    "height": 64,
+    "qa": "thrust/RCS exhaust plume wired into PlayScene thrustEffectImage; pipeline PNG signature/decode gate"
   }
 ]

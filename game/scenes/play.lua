@@ -797,6 +797,30 @@ function M.new(options)
             planetTwinkleImage = img
         end
     end
+    -- assets/effects/collision_spark.png is the ComfyUI-generated collision
+    -- impact burst (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated-image pattern as planetTwinkleImagePath.
+    local collisionEffectImagePath = "assets/effects/collision_spark.png"
+    local collisionEffectImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, collisionEffectImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            collisionEffectImage = img
+        end
+    end
+    -- assets/effects/thrust_plume.png is the ComfyUI-generated RCS/main-
+    -- engine exhaust plume (docs/GENERATED_ASSET_LOG.md). Same always-set-
+    -- path / graphics-gated-image pattern as sampleEffectImagePath.
+    local thrustEffectImagePath = "assets/effects/thrust_plume.png"
+    local thrustEffectImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, thrustEffectImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            thrustEffectImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -817,6 +841,10 @@ function M.new(options)
         debrisImagePaths = debrisImagePaths,
         planetTwinkleImage = planetTwinkleImage,
         planetTwinkleImagePath = planetTwinkleImagePath,
+        collisionEffectImage = collisionEffectImage,
+        collisionEffectImagePath = collisionEffectImagePath,
+        thrustEffectImage = thrustEffectImage,
+        thrustEffectImagePath = thrustEffectImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -864,9 +892,32 @@ function M:spawnSampleParticles(x, y, tier)
             r = r,
             g = g,
             b = b,
+            kind = "sample",
         })
     end
     self.shipPunch = shipPunchDuration
+end
+
+-- Short orange/red burst at a hull impact. Distinct from sample-pickup
+-- sparkles so collision reads as damage, not a collect.
+function M:spawnCollisionParticles(x, y)
+    local count = 10
+    for i = 1, count do
+        local angle = (i / count) * math.pi * 2 + math.random() * 0.4
+        local speed = 50 + math.random() * 60
+        table.insert(self.particles, {
+            x = x,
+            y = y,
+            vx = math.cos(angle) * speed,
+            vy = math.sin(angle) * speed,
+            timer = 0.4,
+            maxTimer = 0.4,
+            r = 1,
+            g = 0.45,
+            b = 0.2,
+            kind = "collision",
+        })
+    end
 end
 
 function M:persistBestAltitude()
@@ -1482,6 +1533,7 @@ function M:update(dt)
                 r = 0.7,
                 g = 0.88,
                 b = 1,
+                kind = "thrust",
             }
         end
     end
@@ -1590,6 +1642,7 @@ function M:update(dt)
                     timer = 1.0,
                     kind = "damage",
                 })
+                self:spawnCollisionParticles(self.ship.x, self.ship.y)
                 self.shipShake = shipShakeDuration
                 self.shipShakeMagnitude = sampleTierShakeMultiplier(world.sampleTier(planet))
                 if expedition.damage(self.expedition, damage) then
@@ -1616,6 +1669,7 @@ function M:update(dt)
                     timer = 1.0,
                     kind = "damage",
                 })
+                self:spawnCollisionParticles(self.ship.x, self.ship.y)
                 self.shipShake = shipShakeDuration
                 self.shipShakeMagnitude = 1.4
                 if expedition.damage(self.expedition, damage) then
@@ -2152,10 +2206,16 @@ function M:draw()
         local px, py = math.floor(particle.x - cameraX), math.floor(particle.y - cameraY)
         local alpha = math.max(0, particle.timer / particle.maxTimer)
         love.graphics.setColor(particle.r, particle.g, particle.b, alpha)
-        if self.sampleEffectImage then
-            local iw, ih = self.sampleEffectImage:getDimensions()
+        local sprite = self.sampleEffectImage
+        if particle.kind == "collision" then
+            sprite = self.collisionEffectImage
+        elseif particle.kind == "thrust" then
+            sprite = self.thrustEffectImage
+        end
+        if sprite then
+            local iw, ih = sprite:getDimensions()
             local scale = 3 / math.max(iw, ih)
-            love.graphics.draw(self.sampleEffectImage, px, py, 0, scale, scale, iw / 2, ih / 2)
+            love.graphics.draw(sprite, px, py, 0, scale, scale, iw / 2, ih / 2)
         else
             love.graphics.circle("fill", px, py, 1.5)
         end
@@ -2188,7 +2248,13 @@ function M:draw()
     end
     if self.expedition.phase == "ascending" then
         love.graphics.setColor(1, 0.55, 0.15)
-        love.graphics.polygon("fill", -8, 20, 0, 44, 8, 20)
+        if self.thrustEffectImage then
+            local iw, ih = self.thrustEffectImage:getDimensions()
+            local scale = 28 / math.max(iw, ih)
+            love.graphics.draw(self.thrustEffectImage, 0, 32, 0, scale, scale, iw / 2, ih / 2)
+        else
+            love.graphics.polygon("fill", -8, 20, 0, 44, 8, 20)
+        end
     end
     love.graphics.pop()
 
