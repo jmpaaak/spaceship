@@ -890,6 +890,35 @@ end
 M.steeringStatusIconSize = 24
 M.steeringStatusIconGap = 8
 
+-- EARTH SHOP yieldStatus icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn yieldStatus printf
+-- ("SHORT $n" / "LEFT $n") with a small crystal-coin hexagon,
+-- mirroring steeringStatus. Shop-row drawShopIcon sits in
+-- the margin and does not replace this label. Drawn as a
+-- flat pointed hexagon (even-length {x,y,...} list, no
+-- love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.yieldStatusIconPoints(cx, cy, size)
+    local w = size * 0.38
+    local h = size * 0.5
+    local waist = size * 0.12
+    return {
+        cx, cy - h,
+        cx + w, cy - waist,
+        cx + w, cy + waist,
+        cx, cy + h,
+        cx - w, cy + waist,
+        cx - w, cy - waist,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- crystal-coin hexagon's right edge and the yieldStatus
+-- label's left edge. Matches steeringStatus because both sit
+-- next to always-drawn shop labels.
+M.yieldStatusIconSize = 24
+M.yieldStatusIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2281,6 +2310,22 @@ function M.new(options)
             steeringStatusIconImage = img
         end
     end
+    -- assets/effects/shop_yield_status.png is the ComfyUI-generated
+    -- EARTH SHOP yieldStatus crystal-coin hexagon
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as steeringStatusIconImagePath.
+    -- :draw() scales it to M.yieldStatusIconSize instead of
+    -- M.yieldStatusIconPoints, and falls back to that crystal-coin
+    -- hexagon when the image failed to load.
+    local yieldStatusIconImagePath = "assets/effects/shop_yield_status.png"
+    local yieldStatusIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, yieldStatusIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            yieldStatusIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2417,6 +2462,8 @@ function M.new(options)
         hullStatusIconImagePath = hullStatusIconImagePath,
         steeringStatusIconImage = steeringStatusIconImage,
         steeringStatusIconImagePath = steeringStatusIconImagePath,
+        yieldStatusIconImage = yieldStatusIconImage,
+        yieldStatusIconImagePath = yieldStatusIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4659,7 +4706,27 @@ function M:draw()
         
         love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
             nextLaunch.yieldAffordable and 1 or 0.4, nextLaunch.yieldAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.yieldStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
+        local yieldStatusLabel = nextLaunch.yieldStatus
+        local yieldStatusFont = love.graphics.getFont()
+        local yieldStatusWidth = yieldStatusFont:getWidth(yieldStatusLabel)
+        local yieldStatusIconSpan = M.yieldStatusIconSize + M.yieldStatusIconGap
+        local yieldStatusStartX = shopColumnLeftX + (shopColumnLeftW - (yieldStatusIconSpan + yieldStatusWidth)) / 2
+        local yieldStatusIconCenterX = yieldStatusStartX + M.yieldStatusIconSize / 2
+        local yieldStatusIconCenterY = row + yieldStatusFont:getHeight() / 2
+        if self.yieldStatusIconImage then
+            local iw, ih = self.yieldStatusIconImage:getDimensions()
+            local scale = M.yieldStatusIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.yieldStatusIconImage, yieldStatusIconCenterX, yieldStatusIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan crystal-coin hexagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.yieldStatusIconPoints(yieldStatusIconCenterX, yieldStatusIconCenterY, M.yieldStatusIconSize))
+        end
+        love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
+            nextLaunch.yieldAffordable and 1 or 0.4, nextLaunch.yieldAffordable and 0.55 or 0.35)
+        love.graphics.print(yieldStatusLabel, yieldStatusStartX + yieldStatusIconSpan, row)
         love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
             nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
         love.graphics.printf(nextLaunch.shipStatus, shopColumnRightX, row, shopColumnRightW, "center")

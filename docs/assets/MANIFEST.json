@@ -2008,5 +2008,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.steeringStatusIconImage for steeringStatus; Lua gyro-coin octagon fallback"
+  },
+  {
+    "path": "assets/effects/shop_yield_status.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "96a80214-1594-407f-9e7f-d8ef9208bfb5",
+    "prompt": "pixel art, 16-bit, small cyan hexagonal crystal-coin HUD icon sprite, simple diamond crystal coin silhouette, isolated EARTH SHOP yield upgrade affordability HUD icon, solid white background, no letters, no numbers, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904163,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T20:55:49Z",
+    "sha256": "1d9bde30c4e2369a82b70d8c6d5431fef8392a862339505af40f31f71a2d89e2",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.yieldStatusIconImage for yieldStatus; Lua crystal-coin hexagon fallback"
   }
 ]
