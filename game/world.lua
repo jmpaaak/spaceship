@@ -109,6 +109,27 @@ function M.galaxyBackgroundColor(galaxy)
     return family[1] + jitter, family[2] + jitter, family[3] + jitter
 end
 
+-- Deterministic world-space position of a galaxy's central star (the pivot
+-- its spiral arms/orbits wind around) -- docs/feedback/INBOX.md item 1 part
+-- 3: the home solar system must spiral around the SUN, not Earth, with
+-- Earth relocated to an orbiting planet marker instead of the center. Every
+-- other galaxy already spirals/orbits around its own `galaxy.x/y` center
+-- (that point IS its star for non-home galaxies), so this keeps milkyway
+-- consistent with the same rule instead of special-casing it as "centered
+-- on Earth". Earth itself stays fixed at world origin (0, 0) -- all
+-- existing altitude/distance-from-Earth gameplay math depends on that --
+-- this only moves the SUN to its own nearby point for spiral/orbit
+-- rendering purposes.
+function M.sunPosition(galaxy)
+    if not galaxy then return nil end
+    if galaxy.id == "milkyway" then
+        local angle = hash(0, 0, 570) * math.pi * 2
+        local dist = M.galaxyCellSize * 0.12
+        return { x = math.cos(angle) * dist, y = math.sin(angle) * dist }
+    end
+    return { x = galaxy.x, y = galaxy.y }
+end
+
 -- The "center planet" of a galaxy (docs/GAME_DESIGN.md 이동 방식 개선
 -- 항목 2, "각 은하계의 중심 행성들"). The home galaxy's center is Earth
 -- itself (drawn separately in PlayScene), so milkyway has no extra hub

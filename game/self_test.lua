@@ -592,9 +592,12 @@ local function testMinimap()
     assert(not inside)
     assert(math.abs(mx - minimap.mapRadius) < 1e-6 and math.abs(my) < 1e-6)
 
-    -- Galaxy rings: home view is sun-centered (Earth/sun at origin) and
-    -- includes the solar-system orbit rings plus the galaxy disk.
-    assert(originView.sun and originView.sun.x == 0 and originView.sun.y == 0)
+    -- Galaxy rings: home view includes the solar-system orbit rings plus
+    -- the galaxy disk. docs/feedback/INBOX.md item 1 part 3: the sun is no
+    -- longer pinned to Earth's origin -- it has its own deterministic
+    -- offset (world.sunPosition) so Earth reads as an orbiting planet.
+    assert(originView.sun and (originView.sun.x ~= 0 or originView.sun.y ~= 0),
+        "the sun marker must sit away from Earth's origin (item 1 part 3)")
     assert(originView.galaxyName == "SOLAR SYSTEM")
     assert(originView.rings and #originView.rings >= 2, "home minimap must draw galaxy/solar rings")
     local sawDisk, sawOrbit = false, false
@@ -667,6 +670,71 @@ local function testMinimap()
     local otherR2, otherG2, otherB2 = world.galaxyBackgroundColor(foundGalaxy)
     assert(otherR == otherR2 and otherG == otherG2 and otherB == otherB2,
         "galaxy background tint must be deterministic")
+
+    -- Spiral-arm minimap glyph (docs/feedback/INBOX.md item 1 part 1):
+    -- the same galaxy must always regenerate the identical spiral point
+    -- list (determinism), and a different galaxy overwhelmingly produces a
+    -- different shape (arm count and/or rotation).
+    local home = world.galaxy(0, 0)
+    local spiralA = minimap.spiralPoints(home)
+    local spiralB = minimap.spiralPoints(home)
+    assert(#spiralA > 0, "spiralPoints must produce points for a real galaxy")
+    assert(#spiralA == #spiralB, "spiralPoints must be deterministic (same point count)")
+    for i = 1, #spiralA do
+        assert(math.abs(spiralA[i].x - spiralB[i].x) < 1e-9 and math.abs(spiralA[i].y - spiralB[i].y) < 1e-9,
+            "spiralPoints must be deterministic (same coordinates)")
+    end
+    local otherSpiral = minimap.spiralPoints(foundGalaxy)
+    local sameArmCount = minimap.spiralArmCount(home) == minimap.spiralArmCount(foundGalaxy)
+    local sameRotation = math.abs(minimap.spiralRotation(home) - minimap.spiralRotation(foundGalaxy)) < 1e-9
+    assert(not (sameArmCount and sameRotation),
+        "two different galaxies must not produce an identical spiral arm count + rotation")
+
+    -- Crossing into a different galaxy swaps view.spiral/spiralGalaxyId to
+    -- that galaxy's own shape.
+    local homeSpiralView = minimap.view(0, 0)
+    assert(homeSpiralView.spiralGalaxyId == "milkyway")
+    assert(homeSpiralView.spiral and #homeSpiralView.spiral > 0)
+    local otherGalaxyView = minimap.view(foundGalaxy.x, foundGalaxy.y)
+    assert(otherGalaxyView.spiralGalaxyId == foundGalaxy.id,
+        "minimap.view must report the containing galaxy's own id for its spiral")
+    assert(otherGalaxyView.spiralGalaxyId ~= homeSpiralView.spiralGalaxyId,
+        "moving into a different galaxy must switch which spiral is drawn")
+
+    -- Sun-centered solar system (item 1 part 3): the home galaxy's sun sits
+    -- at its own deterministic point distinct from Earth (world origin),
+    -- and the milkyway spiral must pivot on that sun, not on (0, 0).
+    local homeSun = world.sunPosition(home)
+    assert(homeSun and (math.abs(homeSun.x) > 1e-6 or math.abs(homeSun.y) > 1e-6),
+        "the sun must not sit exactly on Earth's origin")
+    local homeSunAgain = world.sunPosition(world.galaxy(0, 0))
+    assert(math.abs(homeSun.x - homeSunAgain.x) < 1e-9 and math.abs(homeSun.y - homeSunAgain.y) < 1e-9,
+        "sunPosition must be deterministic for the same galaxy")
+    -- Every home-galaxy spiral point must be measured from the sun, not
+    -- from Earth: at t=1 (outermost arm sample) the point sits `radius`
+    -- world-units from the sun, not from the origin.
+    local homeSpiralPoints = minimap.spiralPoints(home)
+    local outer = homeSpiralPoints[minimap.spiralPointsPerArm]
+    local distFromSun = math.sqrt((outer.x - homeSun.x) ^ 2 + (outer.y - homeSun.y) ^ 2)
+    assert(math.abs(distFromSun - home.radius) < 1e-6,
+        "milkyway spiral arms must be centered on the sun, not on Earth's origin")
+    -- Every other galaxy's "sun" is just its own center (galaxy.x, galaxy.y)
+    -- -- it's already the pivot both the spiral and the checkpoint hub use.
+    local otherSun = world.sunPosition(foundGalaxy)
+    assert(otherSun.x == foundGalaxy.x and otherSun.y == foundGalaxy.y,
+        "a non-home galaxy's sun is simply its own center")
+    -- minimap.view()'s reported sun marker must differ from its Earth
+    -- marker for a ship sitting at Earth (world origin) -- previously both
+    -- were the same point.
+    assert(homeSpiralView.sun.x ~= homeSpiralView.earth.x or homeSpiralView.sun.y ~= homeSpiralView.earth.y,
+        "the sun marker must be a different chart position than the Earth marker")
+
+    -- Checkpoint star glyph (item 1 part 2): a small, distinct polygon
+    -- (10 points for a 5-point star) rather than the old oversized ring.
+    local starPts = minimap.starPoints(0, 0, 10)
+    assert(#starPts == 20, "star glyph must have 5 spikes = 10 vertices = 20 flat coords")
+    assert(minimap.markerGalaxyHubRadius < minimap.markerGalaxyHubRingRadius,
+        "checkpoint marker glyph radius must be smaller than the old oversized ring radius it replaces")
 end
 
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
@@ -1152,7 +1220,9 @@ local function testCanvasLayoutScale()
     assert(PlayScene.floatingTextBoxHalfWidth == 120 and PlayScene.floatingTextBoxTopOffset == 40)
     assert(minimap.markerSunRadius == 10.4)
     assert(minimap.markerGalaxyHomeRadius == 8.8)
-    assert(minimap.markerGalaxyHubRadius == 9.2 and minimap.markerGalaxyHubRingRadius == 16)
+    -- markerGalaxyHubRadius shrunk (docs/feedback/INBOX.md item 1 part 2:
+    -- checkpoint marker now a small star glyph, not an oversized dot+ring).
+    assert(minimap.markerGalaxyHubRadius == 5.6 and minimap.markerGalaxyHubRingRadius == 16)
     assert(minimap.markerGalaxyPlainRadius == 6)
     assert(minimap.markerEarthRadius == 8)
     assert(minimap.markerPlayerFillRadius == 6.8 and minimap.markerPlayerLineRadius == 9.6)

@@ -29,7 +29,13 @@ M.viewRadius = world.galaxyCellSize * 2.5
 -- scaled 48 -> 192, i.e. also ×4).
 M.markerSunRadius = 10.4
 M.markerGalaxyHomeRadius = 8.8
-M.markerGalaxyHubRadius = 9.2
+-- docs/feedback/INBOX.md item 1 part 2: the checkpoint galaxy marker used to
+-- be a plain filled dot (radius 9.2) plus a big pulsing ring (radius 16,
+-- 20% of the whole mapRadius=80) -- too large relative to the chart and
+-- indistinguishable in shape from an ordinary galaxy dot at a glance.
+-- Shrunk and replaced with a small distinct star glyph (M.starPoints) so it
+-- reads as a special waypoint rather than "a bigger circle".
+M.markerGalaxyHubRadius = 5.6
 M.markerGalaxyHubRingRadius = 16
 M.markerGalaxyPlainRadius = 6
 M.markerEarthRadius = 8
@@ -56,6 +62,84 @@ M.galaxyCellRadius = 2
 -- square scan can still be farther than viewRadius on the diagonal, so it
 -- is silently skipped by the dot-drawing "inside" check today).
 M.checkpointSearchCellRadius = M.galaxyCellRadius + 4
+
+-- Deterministic pseudo-random in [0, 1), independent of world.lua's local
+-- hash (minimap.lua stays framework-free and dependency-light -- it only
+-- needs a stable per-galaxy hash, not the exact same sequence world.lua
+-- uses for planet/galaxy placement).
+local function spiralHash(n)
+    n = (n * 2654435761) % 2147483647
+    n = (n * 48271 + 12345) % 2147483647
+    return n / 2147483647
+end
+
+-- docs/feedback/INBOX.md item 1 part 1: each galaxy must draw its OWN
+-- spiral-arm shape on the minimap, derived deterministically from its grid
+-- coordinates, and that shape must change when the player crosses into a
+-- different galaxy. Arm count (2-5) and overall rotation are both derived
+-- from (gx, gy) so two different galaxies overwhelmingly get visibly
+-- different spirals, while the same galaxy always regenerates the exact
+-- same shape (pure function of gx, gy only).
+function M.spiralArmCount(galaxy)
+    if not galaxy then return 2 end
+    return 2 + math.floor(spiralHash(galaxy.gx * 92821 + galaxy.gy * 68917 + 7001) * 4)
+end
+
+function M.spiralRotation(galaxy)
+    if not galaxy then return 0 end
+    return spiralHash(galaxy.gx * 55529 + galaxy.gy * 40399 + 7002) * math.pi * 2
+end
+
+-- How many sample points are plotted along each arm, tightest near the
+-- core and reaching the galaxy's outer radius.
+M.spiralPointsPerArm = 14
+-- How many full turns each arm winds through from core to rim.
+M.spiralWindTurns = 1.2
+
+-- Pure function: world-space (x, y) points tracing `galaxy`'s spiral arms,
+-- centered on its central star (docs/feedback/INBOX.md item 1 part 3:
+-- world.sunPosition(galaxy) -- the home solar system spirals around the
+-- SUN, not Earth; every other galaxy's star sits at its own galaxy.x/y, so
+-- this is unchanged for them) and bounded by galaxy.radius. Same galaxy
+-- (same gx, gy, x, y, radius) always returns the identical point list.
+function M.spiralPoints(galaxy)
+    if not galaxy then return {} end
+    local sun = world.sunPosition(galaxy)
+    local armCount = M.spiralArmCount(galaxy)
+    local rotation = M.spiralRotation(galaxy)
+    local points = {}
+    for arm = 0, armCount - 1 do
+        local armAngle = rotation + (arm / armCount) * math.pi * 2
+        for i = 1, M.spiralPointsPerArm do
+            local t = i / M.spiralPointsPerArm
+            local radius = galaxy.radius * t
+            local angle = armAngle + t * math.pi * 2 * M.spiralWindTurns
+            points[#points + 1] = {
+                x = sun.x + math.cos(angle) * radius,
+                y = sun.y + math.sin(angle) * radius,
+                arm = arm,
+            }
+        end
+    end
+    return points
+end
+
+-- Pure function: flat {x1, y1, x2, y2, ...} polygon points for a small
+-- 5-point star glyph centered on (cx, cy), alternating outer/inner radius.
+-- Used to mark checkpoint galaxies distinctly from ordinary galaxy dots
+-- (docs/feedback/INBOX.md item 1 part 2) instead of a large plain ring.
+function M.starPoints(cx, cy, outerRadius, innerRadius)
+    innerRadius = innerRadius or outerRadius * 0.45
+    local points = {}
+    local spikes = 5
+    for i = 0, spikes * 2 - 1 do
+        local r = (i % 2 == 0) and outerRadius or innerRadius
+        local angle = -math.pi / 2 + i * math.pi / spikes
+        points[#points + 1] = cx + math.cos(angle) * r
+        points[#points + 1] = cy + math.sin(angle) * r
+    end
+    return points
+end
 
 -- Projects world point (wx, wy) into minimap space relative to origin
 -- (ox, oy). Returns mx, my (canvas offsets from the chart center, already
@@ -113,6 +197,14 @@ function M.view(shipX, shipY)
         returnDy = -shipY / distEarth
     end
     local earthX, earthY, earthInside = M.project(0, 0, shipX, shipY)
+    -- docs/feedback/INBOX.md item 1 part 3: the home solar system's spiral
+    -- and orbit rings must pivot on the SUN (world.sunPosition), not on
+    -- Earth. Earth keeps its own separate marker (projected at world
+    -- origin above) so it now reads as one of the orbiting planets rather
+    -- than the center.
+    local homeGalaxy = world.galaxy(0, 0)
+    local homeSun = world.sunPosition(homeGalaxy)
+    local sunX, sunY, sunInside = M.project(homeSun.x, homeSun.y, shipX, shipY)
     local galaxies = {}
     local rings = {}
     for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.galaxyCellRadius)) do
@@ -137,18 +229,32 @@ function M.view(shipX, shipY)
         }
     end
     -- Sun-centered solar-system orbits: readable pixel rings around the
-    -- sun marker (true AU scale is sub-pixel on this chart).
-    if earthInside or math.sqrt(earthX * earthX + earthY * earthY) < M.mapRadius then
+    -- sun marker (true AU scale is sub-pixel on this chart). Earth's own
+    -- orbit (radius 7, matching its position roughly between the inner and
+    -- outer decorative rings) is included below so Earth visibly reads as
+    -- one of the orbiting bodies around the sun rather than the pivot.
+    if sunInside or math.sqrt(sunX * sunX + sunY * sunY) < M.mapRadius then
         for _, radius in ipairs({ 4, 7, 11 }) do
             rings[#rings + 1] = {
-                x = earthX,
-                y = earthY,
+                x = sunX,
+                y = sunY,
                 radius = radius,
                 kind = "orbit",
             }
         end
     end
     local containing = world.galaxyContaining(shipX, shipY)
+    -- docs/feedback/INBOX.md item 1 part 1: the player's current galaxy
+    -- draws its own deterministic spiral-arm shape (instead of the generic
+    -- circular disk ring above), and this spiral swaps for a different
+    -- shape the moment `containing` changes to a different galaxy id.
+    local spiral = {}
+    if containing then
+        for _, point in ipairs(M.spiralPoints(containing)) do
+            local mx, my, inside = M.project(point.x, point.y, shipX, shipY)
+            spiral[#spiral + 1] = { x = mx, y = my, inside = inside, arm = point.arm }
+        end
+    end
     -- Off-chart checkpoint direction arrow (item 1): only surfaced when the
     -- nearest checkpoint galaxy's center falls outside viewRadius, i.e. its
     -- dot would not already be plotted on the chart.
@@ -158,9 +264,11 @@ function M.view(shipX, shipY)
     return {
         player = { x = 0, y = 0 },
         earth = { x = earthX, y = earthY, inside = earthInside },
-        sun = { x = earthX, y = earthY, inside = earthInside },
+        sun = { x = sunX, y = sunY, inside = sunInside },
         galaxies = galaxies,
         rings = rings,
+        spiral = spiral,
+        spiralGalaxyId = containing and containing.id or nil,
         galaxyName = containing and world.galaxyName(containing) or nil,
         beyond = beyond,
         distanceBeyond = beyond and (distEarth - M.chartRadius) or 0,

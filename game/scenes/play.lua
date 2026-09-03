@@ -1763,6 +1763,19 @@ function M:drawMinimap()
             love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
         end
     end
+    -- docs/feedback/INBOX.md item 1 part 1: the player's current galaxy
+    -- (view.spiralGalaxyId) draws its own deterministic spiral-arm shape as
+    -- small dots instead of relying only on the generic disk ring above, so
+    -- crossing into a different galaxy visibly changes the minimap's spiral
+    -- shape (view.spiral is recomputed per-galaxy by minimap.view()).
+    if view.spiral and #view.spiral > 0 then
+        love.graphics.setColor(0.6, 0.8, 1, 0.55)
+        for _, point in ipairs(view.spiral) do
+            if point.inside ~= false then
+                love.graphics.circle("fill", cx + point.x, cy + point.y, 1.4)
+            end
+        end
+    end
     if view.sun then
         love.graphics.setColor(1, 0.85, 0.25)
         love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, minimap.markerSunRadius)
@@ -1773,15 +1786,18 @@ function M:drawMinimap()
                 love.graphics.setColor(0.25, 0.55, 1)
                 love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius)
             elseif galaxy.hub then
-                -- Checkpoint galaxy: bigger dot plus a shimmering ring so it
-                -- reads as distinct from an ordinary galaxy on the chart
-                -- (docs/feedback/INBOX.md item 1). Ring's alpha pulses with
-                -- self.time for a "sparkling" beacon feel.
-                local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
-                love.graphics.setColor(0.9, 0.75, 0.3)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius)
-                love.graphics.setColor(1, 0.95, 0.6, pulse)
-                love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRingRadius)
+                -- Checkpoint galaxy (docs/feedback/INBOX.md item 1 part 2):
+                -- a small, sharply distinct 5-point star glyph instead of
+                -- the old plain dot + large pulsing ring (which read as
+                -- "too big" relative to the rest of the chart at
+                -- markerGalaxyHubRingRadius=16, 20% of the whole
+                -- mapRadius). The glyph itself still pulses subtly via
+                -- self.time so it keeps a "special waypoint" beacon feel.
+                local pulse = 0.75 + 0.25 * math.abs(math.sin((self.time or 0) * 2.4))
+                love.graphics.setColor(1, 0.85, 0.35, pulse)
+                love.graphics.polygon("fill", minimap.starPoints(
+                    cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius))
+
             else
                 love.graphics.setColor(0.9, 0.75, 0.3)
                 love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius)

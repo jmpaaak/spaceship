@@ -56,6 +56,53 @@ def compact_pending_feedback(pending: list[str]) -> list[str]:
     return header + shown
 
 
+DOC_ONLY_PATHS = {"docs/STATUS.md", "docs/STATUS_HISTORY.md", "docs/feedback/INBOX.md"}
+DOC_ONLY_STREAK_THRESHOLD = 3
+
+
+def recent_commits_doc_only_streak(root: Path, n: int = DOC_ONLY_STREAK_THRESHOLD) -> bool:
+    """True if the last n commits touched only doc/status-report files.
+
+    Deterministic signature of a loop stuck re-confirming out-of-scope or
+    already-done INBOX items every cycle with no real product change.
+    Requires at least n commits of history to fire.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "log", f"-n{n}", "--name-only", "--pretty=format:__COMMIT__"],
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if result.returncode != 0 or not result.stdout.strip():
+        return False
+    commits = [c for c in result.stdout.split("__COMMIT__") if c.strip()]
+    if len(commits) < n:
+        return False
+    for commit in commits:
+        files = {line.strip() for line in commit.splitlines() if line.strip()}
+        if not files or not files.issubset(DOC_ONLY_PATHS):
+            return False
+    return True
+
+
+def write_auto_stop(root: Path, reason: str) -> None:
+    stop_path = root / "loop" / "STOP"
+    try:
+        stop_path.write_text(
+            f"Auto-stopped by preflight.py: {reason}\n"
+            "Remove this file to resume the loop.\n",
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
+
+
 def check(label: str, command: list[str], root: Path, env: dict[str, str], timeout: int) -> tuple[bool, str]:
     try:
         result = subprocess.run(
@@ -92,6 +139,16 @@ def main() -> int:
         print("\n\n".join(failures))
         return CHECK_FAILED
     pending = pending_feedback(root)
+    if pending and recent_commits_doc_only_streak(root):
+        reason = (
+            f"last {DOC_ONLY_STREAK_THRESHOLD} commits touched only docs/STATUS*/INBOX.md "
+            "-- no real product work is happening even though INBOX.md still has "
+            "pending items. Auto-stopping to avoid burning tokens on repeat no-op cycles."
+        )
+        print("PREFLIGHT_RESULT=IDLE")
+        print(reason)
+        write_auto_stop(root, reason)
+        return IDLE
     if pending:
         print("PREFLIGHT_RESULT=READY")
         print("PENDING_FEEDBACK:")
