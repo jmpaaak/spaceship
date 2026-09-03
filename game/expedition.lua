@@ -825,9 +825,21 @@ end
 -- gear's climbSpeed effects (already synergy-multiplied by
 -- gear.equippedTotals, see game/gear.lua) stack ON TOP of the run's own
 -- climbSpeed (upgrades etc.), rather than replacing it.
+--
+-- Item 10(b)/9 gap wiring: 7 of the 24 bundled engine_parts.json cards
+-- carry a climbSpeed effect (item 10's "상승 가속" propulsion stat), but
+-- this function historically only ever read run.equippedGear (hull), so
+-- every engine-slot climbSpeed value was validated/loaded/synergy-tagged
+-- yet never actually applied to ascent -- silently dead content on nearly
+-- a third of the engine pool. The engine-slot total is added as a PLAIN
+-- additive bonus (gearModule.aggregateEffects, not equippedTotals) since
+-- item 9 explicitly scopes the tag-synergy combo multiplier to hull
+-- ("선체(조커형)") parts only; engine climbSpeed stacks alongside the
+-- hull synergy-multiplied total rather than being folded into it.
 function M.effectiveClimbSpeed(run)
     local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
-    return run.climbSpeed + (gearTotals.climbSpeed or 0)
+    local engineClimb = gearModule.aggregateEffects(run.equippedEngineParts or {}).climbSpeed or 0
+    return run.climbSpeed + (gearTotals.climbSpeed or 0) + engineClimb
 end
 
 -- Item 9/14 economy-stat gap audit: gear.equippedTotals already combines a
