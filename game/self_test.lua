@@ -1910,6 +1910,22 @@ local function testStarPointSprite()
         "PlayScene must load assets/effects/star_point.png into self.starPointImagePath")
 end
 
+-- Ship body fallback is still a Lua triangle polygon (0,-28 / -20,24 /
+-- 0,12 / 20,24) when shipImage failed to load. Same file-existence +
+-- always-set-path pattern as testStarPointSprite. Graphics-gated
+-- shipSilhouetteImage cannot be asserted under GAME_HEADLESS=1. Invoked
+-- from testCanvasLayoutScale so M.run() stays under Lua's 60-upvalue cap.
+local function testShipSilhouetteSprite()
+    local path = "assets/effects/ship_silhouette.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated ship silhouette sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.shipSilhouetteImagePath == path,
+        "PlayScene must load assets/effects/ship_silhouette.png into self.shipSilhouetteImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1927,6 +1943,7 @@ local function testCanvasLayoutScale()
     testShopTouchRowSprite()
     testPlanetRimSprite()
     testStarPointSprite()
+    testShipSilhouetteSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows

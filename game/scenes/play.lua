@@ -1298,6 +1298,20 @@ function M.new(options)
             starPointImage = img
         end
     end
+    -- assets/effects/ship_silhouette.png is the ComfyUI-generated ship
+    -- body silhouette (docs/GENERATED_ASSET_LOG.md). Same always-set-path
+    -- / graphics-gated image pattern as starPointImagePath. :draw() uses
+    -- it instead of the Lua triangle polygon when shipImage failed to
+    -- load, and falls back to that polygon when this image also failed.
+    local shipSilhouetteImagePath = "assets/effects/ship_silhouette.png"
+    local shipSilhouetteImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shipSilhouetteImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shipSilhouetteImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1386,6 +1400,8 @@ function M.new(options)
         planetRimImagePath = planetRimImagePath,
         starPointImage = starPointImage,
         starPointImagePath = starPointImagePath,
+        shipSilhouetteImage = shipSilhouetteImage,
+        shipSilhouetteImagePath = shipSilhouetteImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3003,6 +3019,11 @@ function M:draw()
         local targetSize = 64
         local scale = targetSize / math.max(iw, ih)
         love.graphics.draw(self.shipImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
+    elseif self.shipSilhouetteImage then
+        local iw, ih = self.shipSilhouetteImage:getWidth(), self.shipSilhouetteImage:getHeight()
+        local targetSize = 64
+        local scale = targetSize / math.max(iw, ih)
+        love.graphics.draw(self.shipSilhouetteImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
     else
         love.graphics.polygon("fill", 0, -28, -20, 24, 0, 12, 20, 24)
     end

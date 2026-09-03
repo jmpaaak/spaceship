@@ -1408,5 +1408,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.starPointImage for playfield star points"
+  },
+  {
+    "path": "assets/effects/ship_silhouette.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "834e9bd5-1f94-4ebc-9b50-76ea8e55e371",
+    "prompt": "pixel art, 16-bit, simple cyan triangle spaceship silhouette pointing up, nose at top, isolated game sprite, solid white background, no letters, no numbers, no scene, no planets, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904139,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T19:03:24Z",
+    "sha256": "154175c94a6021fd18b72d2bdcaeb2b6d5f7ff8deb5d8f1f8edcb19cb56b8d4d",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shipSilhouetteImage for ship Lua polygon fallback"
   }
 ]
