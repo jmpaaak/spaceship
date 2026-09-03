@@ -683,5 +683,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap chart disc sprite wired into PlayScene minimapDiscImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/joystick_pad.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "a9bf8e05-c104-48b9-805a-a5e32821b0bd",
+    "prompt": "pixel art, 16-bit, small circular virtual joystick pad sprite, dark navy circular analog stick base with thin cyan rim, isolated circular HUD joystick background icon, solid white background, no text, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904110,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:03:05Z",
+    "sha256": "82a0f4586a7c8a0b1d8c7c70a4c0eb9cfd3ac44e2100e23db1ea6f46f4861cb6",
+    "width": 64,
+    "height": 64,
+    "qa": "joystick pad sprite wired into PlayScene joystickPadImage; pipeline PNG signature/decode gate"
   }
 ]

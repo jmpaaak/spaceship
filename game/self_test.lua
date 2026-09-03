@@ -1472,6 +1472,20 @@ local function testMinimapDiscSprite()
         "PlayScene must load assets/effects/minimap_disc.png into self.minimapDiscImagePath")
 end
 
+-- Virtual joystick pad is still a Lua circle fill + line. Same
+-- file-existence + always-set-path pattern as testMinimapDiscSprite.
+-- Graphics-gated joystickPadImage cannot be asserted under GAME_HEADLESS=1.
+local function testJoystickPadSprite()
+    local path = "assets/effects/joystick_pad.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated joystick pad sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.joystickPadImagePath == path,
+        "PlayScene must load assets/effects/joystick_pad.png into self.joystickPadImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3347,6 +3361,7 @@ function M.run()
     testPlanetGlowSprite()
     testPlanetShadowSprite()
     testMinimapDiscSprite()
+    testJoystickPadSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

@@ -863,6 +863,20 @@ function M.new(options)
             minimapDiscImage = img
         end
     end
+    -- assets/effects/joystick_pad.png is the ComfyUI-generated virtual
+    -- joystick pad disc (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated-image pattern as minimapDiscImagePath. drawJoystickStick()
+    -- scales it to joystick.visualRadius * 2 instead of a love.graphics.circle
+    -- fill+line, and falls back to those circles when the image failed to load.
+    local joystickPadImagePath = "assets/effects/joystick_pad.png"
+    local joystickPadImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, joystickPadImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            joystickPadImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -893,6 +907,8 @@ function M.new(options)
         planetShadowImagePath = planetShadowImagePath,
         minimapDiscImage = minimapDiscImage,
         minimapDiscImagePath = minimapDiscImagePath,
+        joystickPadImage = joystickPadImage,
+        joystickPadImagePath = joystickPadImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -1912,10 +1928,19 @@ function M:drawJoystickStick()
     if not ox then return end
     local radius = joystick.visualRadius
     local knob = joystick.visualKnobRadius
-    love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha)
-    love.graphics.circle("fill", ox, oy, radius)
-    love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha)
-    love.graphics.circle("line", ox, oy, radius)
+    if self.joystickPadImage then
+        local iw, ih = self.joystickPadImage:getDimensions()
+        local scale = (radius * 2) / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, joystick.visualFillAlpha + joystick.visualLineAlpha)
+        love.graphics.draw(self.joystickPadImage, ox, oy, 0, scale, scale, iw / 2, ih / 2)
+    else
+        -- Fallback: flat navy disc + cyan rim, used only when the
+        -- ComfyUI-generated sprite failed to load.
+        love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha)
+        love.graphics.circle("fill", ox, oy, radius)
+        love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha)
+        love.graphics.circle("line", ox, oy, radius)
+    end
     love.graphics.setColor(0.9, 0.95, 1, joystick.visualKnobAlpha)
     love.graphics.circle("fill", kx, ky, knob)
 end
