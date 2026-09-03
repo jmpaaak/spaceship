@@ -572,6 +572,35 @@ end
 M.floatingDamageIconSize = 24
 M.floatingDamageIconGap = 8
 
+-- Collision/message banner icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn bottom self.message printf
+-- (collision_message and other non-launch banners) with a small
+-- 8-pointed burst-star silhouette, mirroring the floating damage
+-- minus-badge. Drawn as a flat burst polygon (even-length
+-- {x,y,...} list, no love.graphics calls) so headless tests can
+-- pin geometry: horizontally symmetric around cx, spans above
+-- and below cy.
+function M.messageBannerIconPoints(cx, cy, size)
+    local r = size * 0.5
+    local n = size * 0.18
+    return {
+        cx, cy - r,
+        cx + n, cy - n,
+        cx + r, cy,
+        cx + n, cy + n,
+        cx, cy + r,
+        cx - n, cy + n,
+        cx - r, cy,
+        cx - n, cy - n,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the burst-star's
+-- right edge and the banner text's left edge. Matches the floating
+-- damage minus-badge because both sit next to collision readouts.
+M.messageBannerIconSize = 24
+M.messageBannerIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1752,6 +1781,22 @@ function M.new(options)
             floatingDamageIconImage = img
         end
     end
+    -- assets/effects/message_banner.png is the ComfyUI-generated
+    -- collision/message banner burst-star
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as floatingDamageIconImagePath.
+    -- :draw() scales it to M.messageBannerIconSize instead of
+    -- M.messageBannerIconPoints, and falls back to that burst-star
+    -- polygon when the image failed to load.
+    local messageBannerIconImagePath = "assets/effects/message_banner.png"
+    local messageBannerIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, messageBannerIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            messageBannerIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1866,6 +1911,8 @@ function M.new(options)
         floatingSampleIconImagePath = floatingSampleIconImagePath,
         floatingDamageIconImage = floatingDamageIconImage,
         floatingDamageIconImagePath = floatingDamageIconImagePath,
+        messageBannerIconImage = messageBannerIconImage,
+        messageBannerIconImagePath = messageBannerIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4159,7 +4206,26 @@ function M:draw()
         love.graphics.printf(self.message, 16 + ox, messageY + oy, viewport.width - 32, "center")
         love.graphics.setFont(previousPromptFont)
     else
-        love.graphics.printf(self.message, 16, messageY, viewport.width - 32, "center")
+        local font = love.graphics.getFont()
+        local textWidth = font:getWidth(self.message or "")
+        local iconSpan = M.messageBannerIconSize + M.messageBannerIconGap
+        local startX = viewport.width / 2 - (iconSpan + textWidth) / 2
+        local iconCenterX = startX + M.messageBannerIconSize / 2
+        local iconCenterY = messageY + font:getHeight() / 2
+        if self.messageBannerIconImage then
+            local iw, ih = self.messageBannerIconImage:getDimensions()
+            local scale = M.messageBannerIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.messageBannerIconImage, iconCenterX, iconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: amber burst-star, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.75, 0.3, 1)
+            love.graphics.polygon("fill",
+                M.messageBannerIconPoints(iconCenterX, iconCenterY, M.messageBannerIconSize))
+        end
+        love.graphics.setColor(0.85, 0.9, 1)
+        love.graphics.print(self.message, startX + iconSpan, messageY)
     end
     if self.newSpecimenBanner then
         local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
