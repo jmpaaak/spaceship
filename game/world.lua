@@ -112,6 +112,24 @@ function M.hubPlanet(galaxy)
     }
 end
 
+function M.shopPlanet(galaxy)
+    if not galaxy or galaxy.id == "milkyway" then
+        return nil
+    end
+    local gx, gy = galaxy.gx, galaxy.gy
+    local dx = (hash(gx, gy, 800) - 0.5) * galaxy.radius * 1.2
+    local dy = (hash(gx, gy, 810) - 0.5) * galaxy.radius * 1.2
+    return {
+        id = "shop:" .. galaxy.id,
+        x = galaxy.x + dx,
+        y = galaxy.y + dy,
+        radius = 14 + math.floor(hash(gx, gy, 820) * 6),
+        hue = hash(gx, gy, 830),
+        isShop = true,
+        galaxyId = galaxy.id,
+    }
+end
+
 -- Finds the galaxy (if any) containing world point (x, y). Searches the
 -- point's grid cell and its 8 neighbors since a galaxy's radius can
 -- extend past its own cell's boundary into an adjacent one.
@@ -189,6 +207,13 @@ function M.nearbyPlanets(x, y, radiusInSectors)
             local hsx, hsy = M.sectorAt(hub.x, hub.y)
             if hsx >= minSx and hsx <= maxSx and hsy >= minSy and hsy <= maxSy then
                 result[#result + 1] = hub
+            end
+        end
+        local shop = M.shopPlanet(galaxy)
+        if shop then
+            local ssx, ssy = M.sectorAt(shop.x, shop.y)
+            if ssx >= minSx and ssx <= maxSx and ssy >= minSy and ssy <= maxSy then
+                result[#result + 1] = shop
             end
         end
     end

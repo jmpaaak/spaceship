@@ -167,6 +167,7 @@ local function validatePart(part, index)
         tags = tags,
         editions = editions,
         effects = effects,
+        galaxyExclusive = part.galaxyExclusive == true,
     }
 end
 
@@ -658,4 +659,37 @@ function M.sellValue(part)
     return base
 end
 
+-- Returns a new pool containing only parts that are NOT galaxy-exclusive.
+function M.earthShopPool(pool)
+    local result = {}
+    for _, part in ipairs(pool) do
+        if not part.galaxyExclusive then
+            result[#result + 1] = part
+        end
+    end
+    return result
+end
+
+-- Deterministically picks a part from the pool based on the given galaxyId.
+-- Prioritizes galaxyExclusive parts; falls back to the full pool if none exist.
+function M.galaxySpecificGear(pool, galaxyId)
+    local h = 0
+    for i = 1, #galaxyId do
+        h = (h * 31 + string.byte(galaxyId, i)) % 2147483647
+    end
+    local candidates = {}
+    for _, part in ipairs(pool) do
+        if part.galaxyExclusive then
+            candidates[#candidates + 1] = part
+        end
+    end
+    if #candidates == 0 then
+        for _, part in ipairs(pool) do
+            candidates[#candidates + 1] = part
+        end
+    end
+    table.sort(candidates, function(a, b) return a.id < b.id end)
+    local index = (h % #candidates) + 1
+    return candidates[index]
+end
 return M

@@ -84,3 +84,12 @@ preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --
 - `game/i18n.lua`에 `equipped_gear_label` ("EQUIPPED GEAR", "장착 장비")을 추가해 명확한 캡션을 달았다.
 - `game/self_test.lua`에서 더 이상 존재하지 않는 `specimenProgress` 단언문을 제거해 회귀 테스트 정합성을 맞췄다.
 - `make test`와 `make verify` 모두 GREEN 확인 완료. 이로써 사용자 요청 "UI/HUD 대대적 정리 6개 항목" 작업이 100% 완료되었다.
+
+## [gear 레인] 항목7 장비 획득 경로 3원화 데이터 계층 준비 완료 (2026-09-03)
+
+- `docs/feedback/INBOX.md`의 "항목 7 (함선 장비 획득 경로 3원화)" 중 백엔드 데이터 계층과 결정론적 생성 로직을 `spaceship-gear` 레인 내에서 우선 구현했다.
+- `game/world.lua`에 결정론적 `M.shopPlanet(galaxy)` 생성 함수를 추가하여 은하마다 고유한 좌표에 상점 행성이 단 하나씩 생성되도록 보장했다.
+- `game/gear.lua`의 스키마에 `galaxyExclusive` (은하 고유 장비) 부울 필드를 추가하고, `M.earthShopPool` 함수를 통해 이 속성이 켜진 장비는 지구 상점 풀에서 제외되도록 필터링 로직을 구축했다.
+- `game/expedition.lua`에 `M.exploreHub(run, galaxyId, pool)`을 신설하여, 각 은하계의 중심 체크포인트 행성을 최초 탐사 시 `run.hubExplored`를 마킹하고 해당 은하계 특유의 고유 장비를 확률 굴림 없이 확정 지급(1개)하도록 구현했다.
+- `game/data/hull_parts.json`의 특정 부품에 `galaxyExclusive = true` 속성을 시범 적용한 뒤, `game/self_test.lua`에 지구 상점 필터링과 은하 중심 확정 드롭을 검증하는 회귀 테스트(`testGearGalaxyExclusiveWiring`, `testGalaxyStructure` 보완)를 작성하여 TDD RED/GREEN 사이클을 완료했다.
+- 실제 UI 배선(행성 접근 시 팝업 및 인벤토리 지급 처리 등)은 이후 다른 레인이나 슬라이스에서 담당할 수 있도록 순수 함수 기반 인프라를 마련해 둔 상태다.

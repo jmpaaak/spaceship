@@ -1170,5 +1170,6 @@ data the Lua loader would reject.
   `world.lua`/`game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`/
   `tools/gear-editor/editor.js` untouched (`git status --short` confirms).
 
+### Item 7: Galaxy-exclusive gear (shop/hub logic)
 
-
+Added `galaxyExclusive` boolean to the `gear.lua` schema. Gears marked as such are omitted from `gear.earthShopPool` and instead guaranteed to drop exactly once per run when players visit a specific galaxy's hub planet via `expedition.exploreHub(run, galaxyId, pool)`. A deterministic shop planet per galaxy is also generated via `world.shopPlanet(galaxy)`.

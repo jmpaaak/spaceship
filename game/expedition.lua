@@ -279,6 +279,7 @@ local function destroy(run)
     run.equippedEngineParts = run.gearLoadout.engine
     run.insuranceUsed = false
     run.rerollsUsed = 0
+    run.hubExplored = {}
 end
 
 function M.new(options)
@@ -287,6 +288,7 @@ function M.new(options)
     local baseDurability = options.durability or 3
     local run = {
         phase = "launch",
+        hubExplored = {},
         altitude = 0,
         maxAltitude = 0,
         bestAltitude = options.bestAltitude or 0,
@@ -911,7 +913,13 @@ end
 -- via M.equipGear once accepted.
 function M.rollGearOffer(run, pool, rolls)
     rolls = rolls or {}
-    local luckBonus = gearModule.totalLuckBonus(run.equippedGear or {})
+    -- luck (item 14(C)) is category-agnostic like chainTrigger/rerollBonus/
+    -- detectionRadius/autoCollect above -- an ENGINE-slot luck card (e.g.
+    -- the bundled engine_probability_core) must contribute to drop-RNG
+    -- luck exactly like a hull-slot one. combinedGearList(run) is the same
+    -- hull+engine union every other category-agnostic wrapper in this file
+    -- already uses.
+    local luckBonus = gearModule.totalLuckBonus(combinedGearList(run))
     local targetRarity = gearModule.rollRarity(rolls.rarity or 0, luckBonus)
 
     local matching = {}
@@ -937,6 +945,29 @@ function M.rollGearOffer(run, pool, rolls)
         tags = part.tags,
         edition = edition,
         effects = effects,
+    }
+end
+
+-- Item 7(b): Exploring a galaxy hub deterministically drops a specific
+-- gear part for that galaxy (100% chance, only once per run).
+function M.exploreHub(run, galaxyId, pool)
+    if run.hubExplored[galaxyId] then
+        return nil
+    end
+    run.hubExplored[galaxyId] = true
+
+    local part = gearModule.galaxySpecificGear(pool, galaxyId)
+    if not part then return nil end
+
+    return {
+        id = part.id,
+        name = part.name,
+        nameKo = part.nameKo,
+        icon = part.icon,
+        rarity = part.rarity,
+        tags = part.tags,
+        edition = nil,
+        effects = part.effects,
     }
 end
 

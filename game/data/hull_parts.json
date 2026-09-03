@@ -334,7 +334,8 @@
       "editions": [],
       "effects": [
         { "type": "streakMultiplier", "value": 10 }
-      ]
+      ],
+      "galaxyExclusive": true
     },
     {
       "id": "hull_market_broker",

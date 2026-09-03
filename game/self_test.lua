@@ -334,6 +334,15 @@ local function testGalaxyStructure()
         if planet.id == hub.id then sawHub = true end
     end
     assert(sawHub, "nearbyPlanets at a galaxy center must include that galaxy's hub planet")
+
+    local shop = world.shopPlanet(foreignGalaxy)
+    assert(shop and shop.isShop and shop.id == "shop:" .. foreignGalaxy.id)
+    local shopsNearby = world.nearbyPlanets(shop.x, shop.y, 1)
+    local sawShop = false
+    for _, planet in ipairs(shopsNearby) do
+        if planet.id == shop.id then sawShop = true end
+    end
+    assert(sawShop, "nearbyPlanets at a shop planet location must include that shop planet")
 end
 
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
@@ -1658,6 +1667,30 @@ local function testGearOfferRolling()
         rarity = 0.999, pick = 0, editionChance = 0.99, editionPick = 0,
     })
     assert(fallbackOffer, "rollGearOffer must fall back to an available card when the resolved rarity is empty")
+
+    -- Item 14(C)/(G) category-agnostic luck gap: gear.totalLuckBonus is a
+    -- pure sum over an arbitrary parts list, and the bundled engine pool
+    -- carries a dedicated luck card (engine_probability_core) specifically
+    -- so ENGINE-slot luck is a reachable, testable path -- but
+    -- M.rollGearOffer historically only fed it run.equippedGear (hull),
+    -- silently dropping any luck contributed by an equipped engine part.
+    -- luck is documented/wired everywhere else (gear.totalLuckBonus itself,
+    -- and every other category-agnostic (C)/(E) wrapper in this file via
+    -- combinedGearList) as hull+engine combined, so this is a real,
+    -- narrow parity gap, not a design choice.
+    local engineLuckRun = expedition.new()
+    local engineLuckCard = { id = "engine-luck-fixture", name = "EngineLuck", nameKo = "EngineLuck",
+        icon = "*", rarity = "common", tags = {}, editions = {},
+        effects = { { type = "luck", value = 20 } } }
+    assert(expedition.equipGear(engineLuckRun, "engine", engineLuckCard))
+    local engineProbeRoll = 0.8
+    local engineNoLuckRarity = gear.rollRarity(engineProbeRoll, 0)
+    local engineLuckyOffer = expedition.rollGearOffer(engineLuckRun, hullPool, {
+        rarity = engineProbeRoll, pick = 0, editionChance = 0.99, editionPick = 0,
+    })
+    assert(rarityOrder[engineLuckyOffer.rarity] > rarityOrder[engineNoLuckRarity],
+        "an ENGINE-slot luck card must also raise rollGearOffer's resolved rarity tier (baseline "
+            .. tostring(engineNoLuckRarity) .. ", got " .. tostring(engineLuckyOffer.rarity) .. ")")
 end
 
 -- Item 14 (C) chainTrigger/rerollBonus + (E) detectionRadius/autoCollect run
@@ -2357,6 +2390,33 @@ local function testGearNoSlotCostEditionWiring()
     -- capacity/fullness at all.
     assert(not enginePartsModule.isFull(loadout, "engine"),
         "hull-category noSlotCost bookkeeping must never leak into the independent engine category")
+end
+
+local function testGearGalaxyExclusiveWiring()
+    local hullPool = gear.loadHullParts()
+    local earthPool = gear.earthShopPool(hullPool)
+    local hasExclusive = false
+    for _, part in ipairs(hullPool) do
+        if part.galaxyExclusive then hasExclusive = true end
+    end
+    if hasExclusive then
+        assert(#earthPool < #hullPool, "Earth shop pool must exclude galaxy-exclusive parts")
+        for _, part in ipairs(earthPool) do
+            assert(not part.galaxyExclusive, "Earth shop pool must not contain galaxy-exclusive parts")
+        end
+    end
+
+    local specific = gear.galaxySpecificGear(hullPool, "galaxy:1:2")
+    assert(specific, "galaxySpecificGear must return a part")
+
+    local expedition = require("game.expedition")
+    local run = expedition.new()
+    local offer1 = expedition.exploreHub(run, "galaxy:1:2", hullPool)
+    assert(offer1 and offer1.id == specific.id, "exploreHub must return the deterministic galaxy-specific gear")
+    assert(run.hubExplored["galaxy:1:2"], "exploreHub must mark the hub as explored")
+
+    local offer2 = expedition.exploreHub(run, "galaxy:1:2", hullPool)
+    assert(offer2 == nil, "exploreHub must return nil on subsequent visits to the same hub in the same run")
 end
 
 function M.run()
@@ -4079,6 +4139,7 @@ function M.run()
     testGearSlotSwapEconomyWiring()
     testGearNoSlotCostEditionWiring()
     testGearIrradiatedSynergyBonusWiring()
+    testGearGalaxyExclusiveWiring()
 
     print("SPACESHIP_UNIT_OK")
 end
