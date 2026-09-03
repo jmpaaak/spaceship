@@ -1,70 +1,11 @@
 # STATUS
-- (2026-09-03, Gemini fallback cycle) preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short` clean.
-- `docs/feedback/INBOX.md`를 검토한 결과, `## 처리 완료`에 이미 "항목 7/8/15 — econ 레인 스코프 완결"로 상세히 기록되어 완전히 끝난 항목들임에도 불구하고, `## 처리 대기` 섹션에 항목 7, 8, 11, 15가 "완료됨, `## 처리 완료` 참고"라는 포인터 텍스트 형태로 여전히 남아있었다.
-- 2026-09-03에 추가된 토큰 최적화 규칙에 따라, 매 사이클마다 토큰 낭비를 막기 위해 `## 처리 대기` 섹션에서 이 4개의 stale 포인터 라인(번호 7/8/11/15)을 삭제했다. 실제 완료 증거는 `## 처리 완료` 섹션에 그대로 보존되어 있으므로 내용 손실은 없다.
-- 코드 변경 없음(`game/*.lua` 무변경). 이 레인이 착수 가능한 새 스코프 지시가 `loop/PROMPT.md`에 없으므로 `docs/feedback/INBOX.md` 정리(포인터 4줄 삭제)만 커밋 대상이다.
-- `make verify LOVE=/Users/jm/.local/bin/love` 재실행 — 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:46`, `ASSET_MANIFEST_OK`).
+
+- (2026-09-03, 신규 사이클) preflight READY(`engine tests and package` PASS, `git diff` clean). 세션 시작 시 `git status --short`가 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`의 미완결 아카이브 정리(이전 사이클이 `docs/STATUS_backup.md`/`docs/STATUS_new.md`/`update_status.py` 스크래치 파일을 남긴 채 중단됨)를 보여 이를 먼저 정리했다: 스크래치 파일 3개를 삭제하고, `docs/STATUS.md`의 오래된 다중 사이클 히스토리 섹션 전체를 `docs/STATUS_HISTORY.md`로 이동해 `docs/STATUS.md`에는 최신 사이클 요약만 남겼다.
+- 이번 사이클의 `PENDING_FEEDBACK` 목록(생성 에셋 LLM 비전 검토 제외 / AetherAI human-gate 제거 / 미니맵 은하나선+체크포인트 가독성 / 국제화+발라트로 점수 연출+HUD 약자 정리)을 `docs/feedback/INBOX.md`에서 확인했다 — 4건 모두 `loop/PROMPT.md` line 10이 지정한 이 레인(econ) 스코프(항목7→8→11→15) 밖이다(에셋 파이프라인/미니맵 나선/국제화·HUD 연출은 각각 다른 레인·영역 담당). econ 레인은 착수하지 않는다.
+- `docs/feedback/INBOX.md`의 `## 처리 대기` 섹션을 재확인한 결과 항목 7/8/11/15는 번호로도, 포인터 텍스트로도 더 이상 등장하지 않는다(전량 `## 처리 완료`로 이미 이관되어 있다) — 이 레인 스코프는 코드/문서 양쪽에서 완결 상태를 유지하고 있다.
+- `game/expedition.lua`/`game/scenes/play.lua`/`main.lua`/`game/self_test.lua`를 `beginReturn|useSlot|slotSpin|returnControls|slotButtonState|"returning"` 패턴으로 재검색 — 실제 코드 참조 0건(부재를 검증하는 주석/회귀 테스트만 존재)임을 재확인했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`).
+- 이번 사이클 코드 diff 없음 — 커밋 대상은 스크래치 파일 삭제 + STATUS 문서 아카이브 정리뿐이다.
 - 다음 사이클: `loop/PROMPT.md`가 이 레인에 새 스코프를 지정하기 전까지는 착수할 신규 코드 작업이 없다. preflight READY 확인 후 대기하거나, 사용자/운영자의 다음 지시를 따른다.
-
-> 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
-
-
-## (신규 사이클, 2026-09-03) 스코프 4항목(7/8/11/15) 완료 상태 재확인 — 코드 변경 없음
-preflight READY(`engine tests and package` PASS, `git diff` clean) 확인. 이번 사이클의 `PENDING_FEEDBACK` 목록(생성 에셋 LLM 비전 검토 제외/AetherAI human-gate 제거/미니맵 은하나선/국제화+발라트로 연출+HUD 약자 등)은 모두 `loop/PROMPT.md` line 10이 정의한 이 레인 스코프(항목7→8→11→15) 밖이며, 다른 레인(main/gear) 또는 아직 미배정 항목이므로 econ 레인은 착수하지 않는다. `game/expedition.lua`/`game/scenes/play.lua`/`main.lua`/`game/self_test.lua`를 `beginReturn|useSlot|slotSpin|returnControls|slotButtonState|\"returning\"|launchForecast` 패턴으로 재검색 — 실제 코드 참조 0건(주석/회귀 테스트만), `M.rangeForecast`(항목11a)도 여전히 정상 사용 중임을 확인했다. `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:46`, `ASSET_MANIFEST_OK`). 코드 diff 없음 — 이전 사이클이 남긴 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`의 아카이브 정리(오래된 항목을 히스토리로 이동)만 이번 커밋에 함께 반영한다. 다음 사이클: `loop/PROMPT.md`가 이 레인에 새 스코프를 지정할 때까지 이 상태를 매 사이클 재조사하지 않는다(토큰 최적화 규칙).
-
-## (이전 사이클 기록)
-preflight READY(`engine tests and package` PASS, `git diff` clean)를 확인했다. `git status --short`가 clean함(이전 사이클의 미커밋 작업 없음)을 확인한 뒤, `docs/feedback/INBOX.md`의 이 레인 스코프 순서(항목7→8→11→15)에서 유일하게 남아있던 항목 11의 잔여 부분 — (c) "코드 전반의 죽은 연료 소모 로직/필드 정리" — 를 마저 처리했다.
-
-- `game/expedition.lua`/`game/ship.lua`의 죽은 연료 필드·함수는 이전 사이클들이 이미 전부 제거했지만, `game/i18n.lua`에 그 시절 문구 8개(en/ko 각각, 총 16줄)가 저장소 어디서도 참조되지 않는 죽은 문자열로 남아있음을 발견했다: `fuel_bonus_line`("NEXT LAUNCH FUEL +%d"/"다음발사 연료 +%d"), `newbest_fuel_combined`("NEW BEST! FUEL +%d"/"신기록! 연료+%d"), `spinning_label`/`win_repair_line`/`win_fuel_line`/`win_sample_line`/`win_pending_line`/`spins_settlement_line`(옛 in-flight 슬롯머신 릴 스핀/결과 문구).
-- 저장소의 전체 15개 `.lua` 파일을 grep해 이 8개 키가 각자의 `game/i18n.lua` 정의 줄 외에는 단 한 곳도 등장하지 않음(연료 상점 업그레이드와 in-flight `beginReturn`/`useSlot`/`slotSpin` 시스템이 이전 사이클들에서 이미 완전히 삭제되어 이 문구들의 유일한 호출부가 함께 사라졌기 때문)을 확인했다.
-- `game/self_test.lua`에 신규 `testDeadFuelAndSlotMessagingRemoved()`를 추가했다 — en/ko 두 로케일 모두에서 이 8개 키가 `i18n.t()` 호출 시 반드시 실패(존재하지 않음)해야 함을 회귀 검증한다. RED를 실제로 확인했다(`GAME_HEADLESS=1 GAME_UNIT=1 love .` 실행 시 `game/self_test.lua:1229: fuel_bonus_line must be removed from the en locale` 단언 실패 재현) → `game/i18n.lua`에서 8개 키를 en/ko 양쪽에서 모두 삭제 → GREEN 전환 확인.
-- `make test`(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `tools.test_verify_asset_manifest` 9건)/`make verify LOVE=/Users/jm/.local/bin/love`(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:46`, `ASSET_MANIFEST_OK`) 모두 GREEN.
-- 수정 파일은 `game/i18n.lua`/`game/self_test.lua` 둘뿐이다(순수 데이터 삭제 + 회귀 테스트, `game/scenes/play.lua`는 무변경 — 애초에 이 8개 키를 호출하는 코드가 없었으므로 UI 동작에 아무 변화가 없다). 신규 화면/렌더 변경이 없어 런타임 캡처는 필요하지 않았다.
-- `docs/feedback/INBOX.md` 처리대기 항목 11 하위에 이번 슬라이스 진행 상황을 append했다. 이로써 항목 11의 (a)를 제외한 (b)/(c)가 모두 완료 상태다 — (a)(`launchForecastLine`/`forecast_line`의 연료 기반 프레이밍 재정의)만 `game/scenes/play.lua` 텍스트 세부 영역이라 메인 레인 조율이 여전히 필요해 항목 11을 완전한 처리완료로 옮기지는 않았다(레인 규칙상 이 항목 자체의 완료 마커는 이미 최상위 그룹 bullet 없이 번호 항목이라 하위 진행 로그로만 기록). — 위 절의 이후 사이클이 (a)를 `M.rangeForecast` 리네이밍으로 완결했다.
-- 이 레인 스코프(항목7→8→11→15) 4개 항목의 남은 유일한 미완결 지점은 항목 11(a) — main 레인 소유의 `play.lua` 텍스트 프레이밍 작업 — 뿐이다. 다음 사이클은 (11(a)가 메인 레인에서 처리되었는지 확인 후) 이 레인이 새로 착수할 수 있는 코드 변경이 없다면 `loop/PROMPT.md` 갱신 또는 사용자 확인을 대기해야 한다.
-
-## (이전 기록) preflight FAIL 수정 — `module 'game.gear' not found`
-이번 사이클 preflight가 `engine tests and package: FAIL`(`game/scenes/play.lua:11: module 'game.gear' not found`)을 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
-
-- `git status --short`로 세션 시작 시 `game/scenes/play.lua`/`game/i18n.lua`에 커밋되지 않은 변경이 있음을 확인했다. 이 diff는 `M:drawGearStrip(y)`(장착된 기어 아이콘 스트립 렌더)와 `gear_label` i18n 키를 추가하며 `local gear = require("game.gear")`로 `game/gear.lua`를 require하고 있었다.
-- 그러나 직전 커밋 `dfa2da2`(\"fix: resolve lane conflict on game/gear.lua (item 6 -> gear lane)\")가 이미 `game/gear.lua`와 그 회귀 테스트를 의도적으로 삭제했다 — `docs/feedback/INBOX.md` 6번 항목의 \"⚠️ 레인 충돌 통보\" 문구가 명시하듯 이 경로는 이제 `spaceship-gear` 레인이 JSON 데이터 로더(`game/data/hull_parts.json`/`engine_parts.json`)로 재작성 중이며 **main 레인은 앞으로 `game/gear.lua`를 건드리지 않는다**고 못박혀 있다. 세션 시작 시 미커밋 상태로 남아있던 `drawGearStrip` diff는 이 레인 재배정 이전(또는 이를 무시하고) 작성된 고아 상태 작업으로, `game/gear.lua`가 사라진 채로 남아 require 실패를 그대로 유발하고 있었다.
-- 수정 경로로 (a) `game/gear.lua`를 main 레인에서 재생성하는 방법과 (b) 고아 diff를 되돌리는 방법을 검토했다. INBOX.md의 명시적 레인 재배정 통보를 존중해 (b)를 선택했다 — `git checkout -- game/scenes/play.lua game/i18n.lua`로 두 파일을 직전 커밋(`dfa2da2`) 상태로 되돌렸다. 이 되돌림은 어떤 완료된 작업도 덮어쓰지 않는다: `drawGearStrip`/`gear_label`은 세션 시작 시점에 이미 이번 사이클 이전 어떤 커밋에도 존재하지 않았던 순수 미커밋 diff였다.
-- `git status --short`가 되돌림 후 완전히 clean함을 확인(worktree == HEAD, 커밋할 코드 변경 없음).
-- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`) — preflight가 보고한 정확한 `module 'game.gear' not found` 실패가 재현되지 않고 해소됨을 확인했다.
-- 이번 슬라이스는 preflight 실패 원인 진단·제거만 수행했다(신규 게임 로직/UI 변경 없음, 코드 diff 없음 — `docs/STATUS.md` 갱신만 커밋 대상). 다음 사이클이 6번 항목의 UI 노출(예: 장착된 기어를 HUD에 아이콘으로 보여주는 작업)을 다시 시도하려면, main 레인이 아니라 `spaceship-gear` 레인의 최신 `game/gear.lua`(JSON 데이터 로더 기반, `game.gear.equipped`/`game.gear.cardCount` API가 바뀌었을 수 있음) 구조에 맞춰 새로 설계해야 한다.
-- 다음 사이클 다음 슬라이스: 11번 항목의 남은 부분(a: `launchForecastLine`/`M.launchForecast`의 연료-종속 프레이밍 재정의 — `game/expedition.lua:142`), 또는 3번 항목(속도/스피드미터 아이콘화는 이미 완료 표시가 있으나 재검토 필요할 수 있음), 또는 4번(불필요한 텍스트 제거 검토, 거의 완료). 6번/7번/8번/9번/10번/11(c)/12번/13번/14번 항목은 `spaceship-gear`/`spaceship-econ` 레인이 별도로 진행 중이므로 main 레인은 이 경로들(`game/gear.lua` 등)을 건드리지 않는다.
-
-## 항목 11 (c) 세 번째 슬라이스 (완료, 2026-09-03)
-`docs/feedback/INBOX.md` 처리대기 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거)의 (c) 부분의 세 번째 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작. 이 사이클은 이 레인(econ)의 스코프 순서(항목7→8→11→15) 중 항목 11을 이어서 진행했다.
-
-- `game/expedition.lua`의 `M.maneuverFuel(run, extraDistance)`/`M.burnManeuverFuel(run, extraDistance)`는 "Fuel is no longer a flight constraint"가 된 이후로 항상 `return 0`만 반환하며 어떤 상태도 건드리지 않는 영구 no-op 셸이었다. 유일한 실사용 호출부는 `game/scenes/play.lua`의 조이스틱 추가-거리 계산이 `thrusting`일 때 `expedition.burnManeuverFuel(...)`을 호출(반환값 버려짐)하는 죽은 코드였다.
-- 두 함수를 `game/expedition.lua`에서 완전히 제거하고, `game/scenes/play.lua`에서 그 죽은 호출과 그 계산에만 쓰이던 `extraDx`/`extraDistance`/`startX` 로컬 변수를 함께 제거했다(실제 이동 계산에 쓰이는 `extraDy`/`startOffset`/`thrusting`은 그대로 유지). `game/scenes/play.lua`의 텍스트/HUD 세부 표현은 이 레인 스코프 규칙에 따라 건드리지 않았고, 불가피한 최소 구조적 죽은코드 제거만 수행했다.
-- `game/self_test.lua`의 `testManeuverFuel`을 `expedition.maneuverFuel == nil`/`expedition.burnManeuverFuel == nil`(죽은 API가 셸로도 남아있지 않음을 검증)로 갱신했다(수정 전 옛 단언이 여전히 두 함수 호출을 가정해 RED 확인 후 구현, GREEN 전환 확인).
-- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
-- `docs/feedback/INBOX.md` 처리대기 항목 11 하위에 이번 슬라이스 진행 상황을 append했다.
-- 다음 사이클 다음 슬라이스: 항목 11의 남은 부분 — (a) `launchForecastLine`/`forecast_line`의 연료 기반 프레이밍 텍스트 재정의(메인 레인 텍스트 영역과 조율 필요), (b) `game/expedition.lua`의 `run.maxFuel`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount`/`fuelBurnRate`/`run.fuel` 등 연료 업그레이드 엔진 로직/필드 제거 또는 재정의. 이후 이 레인 스코프 순서대로 항목 15(귀환/비행중 슬롯머신 폐지, 지구상점 전용 슬롯머신 은하계별 오즈)로 진행.
-
-## preflight FAIL 수정: item 11(b) fuelUpgradeLevel 필드 제거 후 갱신되지 않은 self_test.lua REACH/SLOTS 단언 3건 수정 (완료, 2026-09-03)
-
-이번 사이클 preflight가 `engine tests and package: FAIL`(`game/self_test.lua:1637: assertion failed!`)을 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
-
-- `git status --short`로 세션 시작 시 `game/expedition.lua`/`game/self_test.lua`/`main.lua`/`docs/*.md`에 이전(이 econ 레인) 사이클의 커밋되지 않은 항목 11(b) 작업(연료탱크 상점 업그레이드 `buyFuelUpgrade`/`fuelUpgradeLevel`/`fuelUpgradeCost`/`fuelUpgradeAmount`를 `game/expedition.lua`에서 완전 제거)이 이미 존재함을 확인했다. 이 작업은 완결 직전 상태로 보여 그대로 보존했다.
-- `GAME_HEADLESS=1 GAME_UNIT=1 love .`로 정확한 실패를 재현: `game/self_test.lua:1637`의 `assert(shopScene.message == "SCOUT PURCHASED AND SELECTED  HULL 3  REACH 960  SLOTS 10  BALANCE $20")`가 실패했다. 원인은 이전 사이클이 `fuelUpgradeLevel` 필드를 제거하면서 SCOUT 구매 전에 연료탱크를 미리 사두던(`shopScene.expedition.money`를 올려 `expedition.buyFuelUpgrade`를 호출) 준비 코드를 함께 삭제했으나, 그 결과로 바뀐 `maxFuel`(연료탱크 미구매 → SCOUT 보너스만 적용된 `100+40=140`)에 맞춰 REACH/SLOTS 예상 문자열은 갱신하지 않은 채로 옛 값(`REACH 960 SLOTS 10`, 연료탱크 구매분 포함)이 그대로 남아있었기 때문이다.
-- 계산 검증(`forecastAltitude = maxFuel / fuelBurnRate * climbSpeed = 140/5*30 = 840`, `slots = ceil(840/100) = 9`)을 거쳐 `game/self_test.lua:1637-1638`의 단언을 `"SCOUT PURCHASED AND SELECTED  HULL 3  REACH 840  SLOTS 9  BALANCE $20"`로 갱신했다.
-- 동일 근본 원인의 두 번째 잔재를 `game/self_test.lua:1945-1950`(NEXT LAUNCH 프리뷰의 STARTER/SCOUT 재선택 메시지)에서도 발견 — `"STARTER SELECTED HULL 4 REACH 720 SLOTS 8"`/`"SCOUT SELECTED HULL 3 REACH 960 SLOTS 10"`도 같은 옛 연료탱크-포함 계산이었다. STARTER(연료탱크 없이 base 100) `REACH 600 SLOTS 6`, SCOUT(140) `REACH 840 SLOTS 9`로 갱신했다.
-- `GAME_HEADLESS=1 GAME_UNIT=1 love .` 재실행으로 `SPACESHIP_UNIT_OK`/`SPACESHIP_SMOKE_OK` 확인, `make test`(엔진 유닛 + `tools.test_verify_asset_manifest` 9건) 전체 GREEN, `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`) 확인했다. 이 슬라이스는 이전 사이클 diff의 단언 문자열만 계산값에 맞춰 갱신한 것으로 신규 게임 로직/화면 변경이 없어 런타임 캡처는 필요하지 않았다.
-- 이 econ 레인의 스코프 순서(항목7→8→11→15) 상 항목 11(b)는 이제 완결(연료탱크 상점 업그레이드가 엔진 API/필드 수준에서 완전히 제거되고 관련 테스트도 모두 GREEN)로 보인다.
-- 다음 사이클 다음 슬라이스: 이 레인 스코프 순서상 항목 11의 나머지(있다면 `run.fuel`/`fuelBurnRate`/`run.maxFuel` 등 여전히 활성 게임플레이에 쓰이는 필드는 유지하고 죽은 잔재만 마저 정리) 확인 후, 항목 15(귀환/비행중 슬롯머신 폐지, 지구상점 전용 슬롯머신 은하계별 오즈)로 진행.
-
-## 항목 15(a) 정찰 슬라이스 — 코드 변경 없음, 다음 사이클 실행 계획만 확정 (2026-09-03)
-
-`docs/feedback/INBOX.md`의 econ 레인 스코프 순서(항목7→8→11→15) 중 마지막으로 남은 항목 15(a) — 옛 `beginReturn`/`"returning"` 페이즈/in-flight `slotSpin`·`useSlot`의 완전 폐지 — 를 이번 사이클에 실제로 착수하려 했다. preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.
-
-- `game/expedition.lua`(`M.beginReturn`/`M.useSlot`/`spinSlot`/`slotRepairVoucher`/`slotFuelBonus`/`slotSampleBonus`와 그 상수, `M.update`의 `"returning"` 분기, `settle()`/`destroy()`/`M.new()`/`M.launch()`의 관련 필드 초기화·리셋), `game/scenes/play.lua`(`returnControls`, `slotButtonState`/`beginSlotSpin`/`currentSlotReels`, `collisionRisk`/`approachWarning`/`hudLines`/`pollDesktopMouse`/`M:update`의 이동·충돌 블록/`keypressed`의 space-bar 슬롯 분기/`touchpressed`의 return-band 처리/`drawMinimap`의 odds 줄/`draw()`의 returning 전용 슬롯 UI 블록, `M.hudOddsLineHeight`/`M.hudHeight`의 returning 분기), `main.lua`(`returning-odds`/`returning-repair`/`returning-fuelbonus`/`returning-samplebonus`/`full-loop-relaunch` 5개 `GAME_CAPTURE_PHASE` 하네스), `game/self_test.lua`(`expedition.beginReturn`/`expedition.useSlot` 호출부 다수, `testReturnToEarthUiWiring`의 "beginReturn 경로 보존" 검증)를 전부 재확인해 이전 사이클(`logs/loop-2026-09-03.log`)의 추적 결과가 여전히 정확함을 검증했다.
-- 이 재확인 과정에서 `expedition.slotReward`/`weightedSlotSymbol`/`slotExpectedValue`/`slotSymbolProbability`는 LAUNCH LOADOUT/EARTH SHOP의 `slotOddsLine` 미리보기와 `spinEarthShopSlot`(항목 15b/c, EARTH SHOP 전용 슬롯머신, 이미 완료)이 계속 사용하므로 15(a) 제거 대상이 **아니며**, `spinSlot`/`slotRepairVoucher`/`slotFuelBonus`/`slotSampleBonus`(그리고 이들의 in-flight 전용 소비자인 `M.useSlot`)만 returning 전용이라 제거 대상임을 새로 명확히 확정했다. 이 구분을 정확히 하지 않고 편집을 시작했다면 이미 완료된 EARTH SHOP 슬롯머신(15b/c)까지 회귀시킬 위험이 컸다.
-- **이번 사이클은 코드 변경을 내지 못했다.** 위 재확인 작업 자체가 안전한 편집을 위한 필수 선행 단계였고, 시간 예산이 여기서 소진되어 실제로 커밋 가능한 diff를 만들기 전에 중단했다. `game/expedition.lua`/`game/scenes/play.lua`/`main.lua`/`game/self_test.lua`에 대한 실제 코드 diff는 이번 사이클에 전혀 없다.
-- `make test`를 재실행해 코드가 변경되지 않았음을 확인했다 — `SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `tools.test_verify_asset_manifest` 9건 모두 GREEN(직전 사이클과 동일 상태 유지).
-- `docs/feedback/INBOX.md` 처리대기 항목 15 하위에 이번 정찰 슬라이스 기록과, 다음 사이클이 그대로 실행할 수 있는 4단계 슬라이스 계획(엔진→UI→하네스→테스트, 매 슬라이스마다 `make test` GREEN 확인)을 append했다.
-- 다음 사이클 다음 슬라이스: 위 INBOX.md에 기록한 4단계 계획의 (1)부터 순서대로 — 먼저 `game/expedition.lua`에서 `M.beginReturn`/`M.useSlot`/`spinSlot`/`slotRepairVoucher`/`slotFuelBonus`/`slotSampleBonus`와 관련 상수/필드만 제거(EARTH SHOP 슬롯 관련 API인 `M.slotReward`/`M.weightedSlotSymbol`/`M.slotExpectedValue`/`M.slotSymbolProbability`는 절대 건드리지 말 것)하고 `make test`로 GREEN 확인 후 커밋, 그 다음 슬라이스에서 `game/scenes/play.lua`의 UI/터치/키 입력을, 그 다음 `main.lua`의 캡처 하네스를, 마지막으로 `game/self_test.lua`의 테스트 단언을 정리한다.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
