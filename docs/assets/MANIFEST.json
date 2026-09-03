@@ -208,5 +208,30 @@
     "width": 64,
     "height": 64,
     "qa": "regen after remote host instability corrupted the prior file (docs/feedback/INBOX.md 깨진 우주선/행성 스프라이트 재생성)"
+  },
+  {
+    "path": "assets/earth/earth_generic.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "03662b77-b629-4ce3-ade6-3c92b403a60b",
+    "prompt": "pixel art, 16-bit, small round planet Earth sprite for a vertical space roguelite, blue oceans with green and brown continents visible, white cloud swirls, soft top-down lighting, crisp clean circular silhouette, solid white background, no text, no watermark, no rings, no stars, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260903358,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T11:34:17Z",
+    "sha256": "fcbe46f91254c699e7440be16889f318fd437bc6e40845c93436f15d2f90eee5",
+    "width": 64,
+    "height": 64,
+    "qa": "pending runtime QA - launch-screen earth disc replacement"
   }
 ]

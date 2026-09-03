@@ -1001,6 +1001,27 @@ local function testPlanetSprite()
         "PlayScene must load assets/planet/planet_generic.png into self.planetImagePath")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목: ComfyUI로 실제 에셋 작업 진행 --
+-- next slice after ship/planet: the launch-screen Earth disc is still two
+-- flat love.graphics.circle() fills (ocean blue + two green "continent"
+-- blobs), not a ComfyUI-generated texture, even though the AetherAI-only
+-- asset rule explicitly lists Earth among the required final visuals.
+-- Mirror testShipSprite/testPlanetSprite: verify the file exists AND that
+-- PlayScene.new() records it as self.earthImagePath (the load target
+-- :draw() actually uses whenever love.graphics is available). earthImage
+-- itself cannot be asserted here for the same GAME_HEADLESS=1 reason
+-- documented above testShipSprite.
+local function testEarthSprite()
+    local path = "assets/earth/earth_generic.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated earth sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.earthImagePath == path,
+        "PlayScene must load assets/earth/earth_generic.png into self.earthImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -2776,6 +2797,7 @@ function M.run()
     testSpecimenSprites()
     testShipSprite()
     testPlanetSprite()
+    testEarthSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

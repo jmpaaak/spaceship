@@ -604,12 +604,29 @@ function M.new(options)
             planetImage = img
         end
     end
+    -- assets/earth/earth_generic.png is the ComfyUI-generated Earth sprite
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated-image pattern as shipImage/planetImage above; :draw()
+    -- draws this sprite instead of the flat ocean-circle + two green-blob
+    -- fills, and falls back to the flat circle whenever the image failed
+    -- to load.
+    local earthImagePath = "assets/earth/earth_generic.png"
+    local earthImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, earthImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            earthImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
         shipImagePath = shipImagePath,
         planetImage = planetImage,
         planetImagePath = planetImagePath,
+        earthImage = earthImage,
+        earthImagePath = earthImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
@@ -1727,11 +1744,20 @@ function M:draw()
     end
     local earthX, earthY = math.floor(-cameraX), math.floor(M.earthCenterY - cameraY)
     if earthY < viewport.height + M.earthRadius + 24 then
-        love.graphics.setColor(0.15, 0.45, 0.9)
-        love.graphics.circle("fill", earthX, earthY, M.earthRadius)
-        love.graphics.setColor(0.25, 0.8, 0.45)
-        love.graphics.circle("fill", earthX - 72, earthY - 72, 60)
-        love.graphics.circle("fill", earthX + 84, earthY - 20, 48)
+        if self.earthImage then
+            local imgW, imgH = self.earthImage:getDimensions()
+            local scale = (M.earthRadius * 2) / math.max(imgW, imgH)
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.draw(self.earthImage, earthX, earthY, 0, scale, scale, imgW / 2, imgH / 2)
+        else
+            -- Fallback: flat ocean-circle + two green "continent" blobs,
+            -- used only when the ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.15, 0.45, 0.9)
+            love.graphics.circle("fill", earthX, earthY, M.earthRadius)
+            love.graphics.setColor(0.25, 0.8, 0.45)
+            love.graphics.circle("fill", earthX - 72, earthY - 72, 60)
+            love.graphics.circle("fill", earthX + 84, earthY - 20, 48)
+        end
     end
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
         local x, y = math.floor(planet.x - cameraX), math.floor(planet.y - cameraY)
