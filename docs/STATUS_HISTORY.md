@@ -2,6 +2,11 @@
 
 자동 아카이브. 코딩 루프는 평소에 이 파일을 읽지 않는다.
 
+## Archived from STATUS.md (2026-09-03, econ lane reconfirmation cycles)
+
+- (2026-09-03) preflight READY(`engine tests and package` PASS, `git diff` clean), `git status --short` clean, `work-econ`가 `origin/spaceship-econ`(`c246934`)과 동일 커밋으로 fast-forward tracking(새 원격 커밋 없음)임을 확인했다. 이번 사이클의 `PENDING_FEEDBACK` 4건(생성 에셋 LLM 비전 검토 제외 / AetherAI human-gate 제거 / 미니맵 은하나선+체크포인트 가독성 / 국제화+발라트로 점수 연출+HUD 약자 정리)은 직전 사이클과 동일한 목록이며, 전부 `loop/PROMPT.md` line 10의 이 레인 스코프(항목7→8→11→15) 밖이라 econ 레인은 착수하지 않는다. `game/expedition.lua`/`game/scenes/play.lua`/`main.lua`/`game/self_test.lua`를 `beginReturn|useSlot|slotSpin|returnControls|slotButtonState|"returning"|launchForecast` 패턴으로 재검색한 결과 실제 코드 참조 0건, `M.rangeForecast`(항목11a)만 정상 사용 중임을 재확인했다. `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN. 코드 변경 없음.
+- (2026-09-03, 이전) preflight READY(`engine tests and package` PASS, `git diff` clean). 세션 시작 시 `git status --short`가 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`의 미완결 아카이브 정리(이전 사이클이 `docs/STATUS_backup.md`/`docs/STATUS_new.md`/`update_status.py` 스크래치 파일을 남긴 채 중단됨)를 보여 이를 먼저 정리했다: 스크래치 파일 3개를 삭제하고, `docs/STATUS.md`의 오래된 다중 사이클 히스토리 섹션 전체를 `docs/STATUS_HISTORY.md`로 이동해 `docs/STATUS.md`에는 최신 사이클 요약만 남겼다. 이번 사이클의 `PENDING_FEEDBACK` 목록(생성 에셋 LLM 비전 검토 제외 / AetherAI human-gate 제거 / 미니맵 은하나선+체크포인트 가독성 / 국제화+발라트로 점수 연출+HUD 약자 정리)을 `docs/feedback/INBOX.md`에서 확인했다 — 4건 모두 이 레인(econ) 스코프(항목7→8→11→15) 밖이다. `docs/feedback/INBOX.md`의 `## 처리 대기` 섹션을 재확인한 결과 항목 7/8/11/15는 번호로도, 포인터 텍스트로도 더 이상 등장하지 않는다(전량 `## 처리 완료`로 이미 이관되어 있다). `beginReturn|useSlot|slotSpin|returnControls|slotButtonState|"returning"` 패턴 재검색 — 실제 코드 참조 0건. `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN. 이번 사이클 코드 diff 없음 — 커밋 대상은 스크래치 파일 삭제 + STATUS 문서 아카이브 정리뿐이다.
+
 ## Archived from STATUS.md (2026-09-02 12:41)
 
 
