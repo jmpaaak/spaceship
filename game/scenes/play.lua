@@ -934,6 +934,21 @@ function M.new(options)
             speedIconImage = img
         end
     end
+    -- assets/effects/minimap_checkpoint_star.png is the ComfyUI-generated
+    -- checkpoint-galaxy waypoint star (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as speedIconImagePath.
+    -- drawMinimap() scales it to 2 * minimap.markerGalaxyHubRadius instead
+    -- of minimap.starPoints, and falls back to that 5-point polygon when
+    -- the image failed to load.
+    local checkpointStarImagePath = "assets/effects/minimap_checkpoint_star.png"
+    local checkpointStarImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, checkpointStarImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            checkpointStarImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -974,6 +989,8 @@ function M.new(options)
         hullIconImagePath = hullIconImagePath,
         speedIconImage = speedIconImage,
         speedIconImagePath = speedIconImagePath,
+        checkpointStarImage = checkpointStarImage,
+        checkpointStarImagePath = checkpointStarImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2091,9 +2108,19 @@ function M:drawMinimap()
                 -- mapRadius). The glyph itself still pulses subtly via
                 -- self.time so it keeps a "special waypoint" beacon feel.
                 local pulse = 0.75 + 0.25 * math.abs(math.sin((self.time or 0) * 2.4))
-                love.graphics.setColor(1, 0.85, 0.35, pulse)
-                love.graphics.polygon("fill", minimap.starPoints(
-                    cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius))
+                if self.checkpointStarImage then
+                    local iw, ih = self.checkpointStarImage:getDimensions()
+                    local drawSize = minimap.markerGalaxyHubRadius * 2
+                    local scale = drawSize / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, pulse)
+                    love.graphics.draw(
+                        self.checkpointStarImage,
+                        cx + galaxy.x, cy + galaxy.y, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    love.graphics.setColor(1, 0.85, 0.35, pulse)
+                    love.graphics.polygon("fill", minimap.starPoints(
+                        cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius))
+                end
 
             else
                 love.graphics.setColor(0.9, 0.75, 0.3)

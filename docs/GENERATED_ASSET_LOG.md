@@ -49,3 +49,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-04T02:10:46+0900 | assets/effects/hud_coin.png | ComfyUI-generated 64x64 HUD cash coin sprite (seed 20260904112), wired into PlayScene as self.cashIconImage, replaces the Lua octagon CASH icon
 2026-09-04T02:14:09+0900 | assets/effects/hud_shield.png | ComfyUI-generated 64x64 HUD hull shield sprite (seed 20260904113), wired into PlayScene as self.hullIconImage, replaces the Lua pentagon HULL icon
 2026-09-04T02:17:55+0900 | assets/effects/hud_speed.png | ComfyUI-generated 64x64 HUD speedometer sprite (seed 20260904114), wired into PlayScene as self.speedIconImage, replaces the Lua semicircle+needle STEER SPEED icon
+2026-09-04T02:21:21+0900 | assets/effects/minimap_checkpoint_star.png | ComfyUI-generated 64x64 minimap checkpoint star sprite (seed 20260904115), wired into PlayScene as self.checkpointStarImage, replaces the Lua 5-point star polygon for checkpoint galaxies

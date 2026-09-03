@@ -1542,6 +1542,21 @@ local function testSpeedIconSprite()
         "PlayScene must load assets/effects/hud_speed.png into self.speedIconImagePath")
 end
 
+-- Minimap checkpoint-galaxy marker is still a Lua 5-point star polygon
+-- (minimap.starPoints). Same file-existence + always-set-path pattern as
+-- testSpeedIconSprite. Graphics-gated checkpointStarImage cannot be
+-- asserted under GAME_HEADLESS=1.
+local function testCheckpointStarSprite()
+    local path = "assets/effects/minimap_checkpoint_star.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated minimap checkpoint star sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.checkpointStarImagePath == path,
+        "PlayScene must load assets/effects/minimap_checkpoint_star.png into self.checkpointStarImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3422,6 +3437,7 @@ function M.run()
     testCashIconSprite()
     testHullIconSprite()
     testSpeedIconSprite()
+    testCheckpointStarSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

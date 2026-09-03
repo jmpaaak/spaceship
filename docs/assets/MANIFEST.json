@@ -808,5 +808,30 @@
     "width": 64,
     "height": 64,
     "qa": "HUD speedometer sprite wired into PlayScene speedIconImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_checkpoint_star.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "2c44f95d-64cb-458f-9559-e3fc64e57915",
+    "prompt": "pixel art, 16-bit, small 5-point gold star HUD icon sprite, sharp five-pointed star, golden yellow metallic waypoint marker, isolated minimap checkpoint star icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904115,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:21:16Z",
+    "sha256": "395c25010149c460b2e15ba461960bf039f200b36d96c9a57121f5dade60eaf0",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap checkpoint star sprite wired into PlayScene checkpointStarImage; pipeline PNG signature/decode gate"
   }
 ]
