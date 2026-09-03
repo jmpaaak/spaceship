@@ -1185,6 +1185,35 @@ end
 M.destroyedTapStartOverIconSize = 24
 M.destroyedTapStartOverIconGap = 8
 
+-- Destroyed-phase lost_total_line icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- lost_total_line printf ("LOST TOTAL $N" after meta wipe)
+-- with a small cracked-coin octagon, mirroring tap_start_over.
+-- Drawn as a flat octagon (even-length {x,y,...} list, no
+-- love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.destroyedLostTotalIconPoints(cx, cy, size)
+    local outer = size * 0.5
+    local cut = size * 0.22
+    return {
+        cx - cut, cy - outer,
+        cx + cut, cy - outer,
+        cx + outer, cy - cut,
+        cx + outer, cy + cut,
+        cx + cut, cy + outer,
+        cx - cut, cy + outer,
+        cx - outer, cy + cut,
+        cx - outer, cy - cut,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- cracked-coin octagon's right edge and the lost_total_line
+-- label's left edge. Matches destroyedTapStartOver because both
+-- sit next to gold destroyed-phase labels.
+M.destroyedLostTotalIconSize = 24
+M.destroyedLostTotalIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2736,6 +2765,22 @@ function M.new(options)
             destroyedTapStartOverIconImage = img
         end
     end
+    -- assets/effects/destroyed_lost_total.png is the ComfyUI-generated
+    -- destroyed-phase lost_total_line cracked-coin octagon
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as destroyedTapStartOverIconImagePath.
+    -- :draw() scales it to M.destroyedLostTotalIconSize instead of
+    -- M.destroyedLostTotalIconPoints, and falls back to that octagon
+    -- when the image failed to load.
+    local destroyedLostTotalIconImagePath = "assets/effects/destroyed_lost_total.png"
+    local destroyedLostTotalIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedLostTotalIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedLostTotalIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2892,6 +2937,8 @@ function M.new(options)
         destroyedNextShipIconImagePath = destroyedNextShipIconImagePath,
         destroyedTapStartOverIconImage = destroyedTapStartOverIconImage,
         destroyedTapStartOverIconImagePath = destroyedTapStartOverIconImagePath,
+        destroyedLostTotalIconImage = destroyedLostTotalIconImage,
+        destroyedLostTotalIconImagePath = destroyedLostTotalIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5381,9 +5428,28 @@ function M:draw()
         love.graphics.print(destroyedTitle, destroyedTitleStartX + destroyedTitleIconSpan, row)
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(i18n.t("lost_total_line",
-            (self.expedition.lastLostSampleValue or 0) + (self.expedition.lastLostSlotValue or 0)),
-            fullX, row, fullW, "center")
+        local destroyedLostTotalLabel = i18n.t("lost_total_line",
+            (self.expedition.lastLostSampleValue or 0) + (self.expedition.lastLostSlotValue or 0))
+        local destroyedLostTotalFont = love.graphics.getFont()
+        local destroyedLostTotalWidth = destroyedLostTotalFont:getWidth(destroyedLostTotalLabel)
+        local destroyedLostTotalIconSpan = M.destroyedLostTotalIconSize + M.destroyedLostTotalIconGap
+        local destroyedLostTotalStartX = fullX + (fullW - (destroyedLostTotalIconSpan + destroyedLostTotalWidth)) / 2
+        local destroyedLostTotalIconCenterX = destroyedLostTotalStartX + M.destroyedLostTotalIconSize / 2
+        local destroyedLostTotalIconCenterY = row + destroyedLostTotalFont:getHeight() / 2
+        if self.destroyedLostTotalIconImage then
+            local iw, ih = self.destroyedLostTotalIconImage:getDimensions()
+            local scale = M.destroyedLostTotalIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.destroyedLostTotalIconImage, destroyedLostTotalIconCenterX, destroyedLostTotalIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: gold cracked-coin octagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.polygon("fill",
+                M.destroyedLostTotalIconPoints(destroyedLostTotalIconCenterX, destroyedLostTotalIconCenterY, M.destroyedLostTotalIconSize))
+        end
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.print(destroyedLostTotalLabel, destroyedLostTotalStartX + destroyedLostTotalIconSpan, row)
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(i18n.t("samples_settlement_line",
