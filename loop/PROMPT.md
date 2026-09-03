@@ -35,7 +35,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## Non-negotiable game rules
 
-- Portrait internal canvas `180×320`; phone portrait is the product orientation.
+- Portrait internal canvas `720×1280` (9:16, Balatro-level pixel density — the old `180×320` is too low and is superseded); phone portrait is the product orientation.
 - Earth is below and progression is upward. Free-roaming landscape exploration is superseded.
 - Increasing height increases planet/sample value and risk.
 - Fuel 0 starts automatic return; return distance controls slot opportunities.

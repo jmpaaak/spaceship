@@ -24,7 +24,7 @@ M.deadzone = 6
 M.maxRadius = 40
 
 -- On-screen stick size/alpha. The old disc used maxRadius (40px) at
--- ~0.35/0.9 alpha and read as a huge opaque overlay on the 180x320
+-- ~0.35/0.9 alpha and read as a huge opaque overlay on the 720x1280
 -- canvas. Keep input math on maxRadius; only the draw uses these.
 M.visualRadius = 14
 M.visualKnobRadius = 3

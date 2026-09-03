@@ -1,4 +1,4 @@
-local M = { width = 180, height = 320 }
+local M = { width = 720, height = 1280 }
 
 function M.fit(windowWidth, windowHeight, fractional)
     local available = math.min(windowWidth / M.width, windowHeight / M.height)

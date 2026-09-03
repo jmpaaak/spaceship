@@ -1003,11 +1003,17 @@ end
 
 function M.run()
     require("game.i18n").setLocale("en")
-    assert(viewport.width == 180 and viewport.height == 320)
-    local scale, x, y = viewport.fit(720, 1280, false)
+    -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향":
+    -- internal canvas is 720x1280 (old 180x320 x4). Integer-scale 1 window
+    -- is now 720x1280; a 4x window is 2880x5120.
+    assert(viewport.width == 720 and viewport.height == 1280)
+    local scale, x, y = viewport.fit(2880, 5120, false)
     assert(scale == 4 and x == 0 and y == 0)
-    local gx, gy, inside = viewport.toGame(360, 640, 720, 1280, false)
-    assert(gx == 90 and gy == 160 and inside)
+    local gx, gy, inside = viewport.toGame(1440, 2560, 2880, 5120, false)
+    assert(gx == 360 and gy == 640 and inside)
+    -- Reuse the existing locals: M.run already sits on Lua's 200-local cap.
+    scale, x, y = viewport.fit(720, 1280, false)
+    assert(scale == 1 and x == 0 and y == 0)
 
     local ship = shipModule.new()
     -- docs/feedback/INBOX.md 처리대기 항목 11(c): game/ship.lua's standalone
@@ -1624,7 +1630,7 @@ function M.run()
     })
     steeringMoveScene.expedition.phase = "ascending"
     steeringMoveScene.expedition.steeringUpgradeLevel = 1
-    steeringMoveScene.touches["upgraded-steer"] = { x = 160, y = 10 }
+    steeringMoveScene.touches["upgraded-steer"] = { x = 640, y = 10 }
     local shipXBefore = steeringMoveScene.ship.x
     steeringMoveScene:update(1)
     assert(math.abs(steeringMoveScene.ship.x - shipXBefore - 70) < 1e-9,
@@ -1772,7 +1778,7 @@ function M.run()
     local releasedAscendSteering = touchScene:steeringButtonState()
     assert(not releasedAscendSteering.leftActive and not releasedAscendSteering.rightActive)
     touchScene:update(1)
-    touchScene:touchpressed("steer-right", 160, 160)
+    touchScene:touchpressed("steer-right", 640, 160)
     local rightAscendSteering = touchScene:steeringButtonState()
     assert(not rightAscendSteering.leftActive and rightAscendSteering.rightActive)
     local xBeforeRight = touchScene.ship.x
@@ -1807,7 +1813,7 @@ function M.run()
     local returnSteeredX = touchScene.ship.x
     touchScene:update(1)
     assert(touchScene.ship.x == returnSteeredX)
-    touchScene:touchpressed("return-right", 160, 266)
+    touchScene:touchpressed("return-right", 640, 266)
     local rightReturnSteering = touchScene:steeringButtonState()
     assert(not rightReturnSteering.leftActive and rightReturnSteering.rightActive)
     assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 1)
@@ -2231,19 +2237,19 @@ function M.run()
     assert(PlayScene.settlementRowBackgroundColor(1) == PlayScene.settlementRowBackgroundColor(3),
         "background colors should alternate in a fixed two-color cycle")
 
-    -- The smallest supported window (integer scale 1, e.g. 180x320) at a 1x
+    -- The smallest supported window (integer scale 1, e.g. 720x1280) at a 1x
     -- device pixel ratio is the worst case for touch-target accessibility.
     -- iOS/Android guidelines require ~44pt minimum; verify every settlement
     -- row actually clears that bar via the real canvas-to-points conversion,
     -- not just the previously-checked 34px minimum.
     for _, row in ipairs(PlayScene.settlementTouchRows) do
-        local heightPoints = viewport.canvasPixelsToPoints(row.bottom - row.top, 180, 320, 1, false)
+        local heightPoints = viewport.canvasPixelsToPoints(row.bottom - row.top, 720, 1280, 1, false)
         assert(heightPoints >= 44,
             "settlement touch row " .. (row.key or "columns")
                 .. " is under the 44pt accessibility minimum at scale 1 (" .. heightPoints .. "pt)")
         if row.columns then
             for _, column in ipairs(row.columns) do
-                local widthPoints = viewport.canvasPixelsToPoints(column.right - column.left, 180, 320, 1, false)
+                local widthPoints = viewport.canvasPixelsToPoints(column.right - column.left, 720, 1280, 1, false)
                 assert(widthPoints >= 44,
                     "settlement touch column " .. column.key
                         .. " is under the 44pt accessibility minimum width at scale 1 (" .. widthPoints .. "pt)")
@@ -2285,7 +2291,7 @@ function M.run()
     assert(returnControls.bottom - returnControls.top >= 34,
         "returning control band is under the 34px minimum")
     local returnBandPoints = viewport.canvasPixelsToPoints(
-        returnControls.bottom - returnControls.top, 180, 320, 1, false)
+        returnControls.bottom - returnControls.top, 720, 1280, 1, false)
     assert(returnBandPoints >= 44,
         "returning control band is under the 44pt accessibility minimum at scale 1 (" .. returnBandPoints .. "pt)")
 
@@ -2305,7 +2311,7 @@ function M.run()
     assert(edgeLeftSteering.leftActive and not edgeLeftSteering.rightActive,
         "returning band top edge did not register left steering")
     returnEdgeScene:touchreleased("edge-left")
-    returnEdgeScene:touchpressed("edge-right", 160, returnControls.bottom - 1)
+    returnEdgeScene:touchpressed("edge-right", 640, returnControls.bottom - 1)
     local edgeRightSteering = returnEdgeScene:steeringButtonState()
     assert(not edgeRightSteering.leftActive and edgeRightSteering.rightActive,
         "returning band bottom edge did not register right steering")
@@ -2340,7 +2346,7 @@ function M.run()
 
     -- LAUNCH phase's TAP TO LAUNCH action already accepts any tap on the
     -- internal canvas regardless of x/y (unconditional touchpressed branch),
-    -- so the functional touch target has always spanned the full 180x320
+    -- so the functional touch target has always spanned the full 720x1280
     -- canvas -- but unlike destroyedTouchArea, this was never given a named
     -- constant or an explicit corner-touch regression test. Documented and
     -- tested here to close out the remaining unverified touch surface noted
@@ -2351,7 +2357,7 @@ function M.run()
     assert(launchArea.right - launchArea.left >= 34,
         "launch touch area width is under the 34px minimum")
     local launchAreaPoints = viewport.canvasPixelsToPoints(
-        launchArea.bottom - launchArea.top, 180, 320, 1, false)
+        launchArea.bottom - launchArea.top, 720, 1280, 1, false)
     assert(launchAreaPoints >= 44,
         "launch touch area is under the 44pt accessibility minimum at scale 1 (" .. launchAreaPoints .. "pt)")
     local launchCorners = {
@@ -2379,7 +2385,7 @@ function M.run()
     -- box's top y is at or above the Earth disc's topmost extent for a
     -- ship parked at the world origin (the launch-phase ship position),
     -- so the disc can never render above the box again.
-    local shipScreenY = math.floor(320 * 0.58)
+    local shipScreenY = math.floor(viewport.height * 0.58)
     local cameraY = 0 - shipScreenY
     local earthY = math.floor(75 - cameraY)
     local earthTopY = earthY - 58
@@ -2410,7 +2416,7 @@ function M.run()
     assert(ascendEdgeLeftSteering.leftActive and not ascendEdgeLeftSteering.rightActive,
         "ascending tap on the left half must still register left steering")
     ascendEdgeScene:touchreleased("ascend-edge-left")
-    ascendEdgeScene:touchpressed("ascend-edge-right", 160, ascendControls.bottom - 1)
+    ascendEdgeScene:touchpressed("ascend-edge-right", 640, ascendControls.bottom - 1)
     local ascendEdgeRightSteering = ascendEdgeScene:steeringButtonState()
     assert(not ascendEdgeRightSteering.leftActive and ascendEdgeRightSteering.rightActive,
         "ascending tap on the right half must still register right steering")

@@ -1,15 +1,17 @@
 # STATUS
-## 항목 "국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리" — (1) "SOLAR SYSTEM" 하드코딩 i18n 이관 (완료, 2026-09-03)
+## 내부 해상도 720×1280 상향 — viewport+conf+회귀 단언 (완료, 2026-09-03)
 
-preflight READY(engine tests/package PASS, git diff clean)로 시작. `git status --short`로 세션 시작 시 `game/i18n.lua`/`game/minimap.lua`/`game/scenes/play.lua`/`game/self_test.lua`/`game/world.lua`에 이전 사이클의 커밋되지 않은 작업이 이미 존재함을 확인했다 — `docs/feedback/INBOX.md` 처리대기 항목 "국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 3건"의 (1)번("SOLAR SYSTEM" 미번역) 구현이 완결 직전 상태였다. 이 사이클은 이 작업을 이어받아 검증하고 마무리했다.
+preflight READY(engine tests/package PASS, git diff check PASS). 세션 시작 시 `docs/GAME_DESIGN.md`/`loop/PROMPT.md`/`docs/feedback/INBOX.md`/`loop/env.sh`에 이전 사이클의 미커밋 문서 작업이 이미 있었다(해상도 비협상 규칙 문구를 `720×1280`으로 바꿔 둔 상태, env idle timeout 600s). 이 작업을 보존하고, INBOX 최우선 항목 「내부 해상도를 발라트로 수준으로 상향」의 첫 슬라이스(viewport+conf+회귀 테스트 단언)를 구현했다.
 
-- `game/world.lua`의 `M.galaxy()`가 `\"SOLAR SYSTEM\"`/`\"GALAXY %d-%d\"` 문자열을 galaxy 테이블에 직접 담아 반환하던 것을 제거했다 — 홈 은하는 `id=\"milkyway\"`, 그 외는 `id=\"galaxy:%d:%d\"` + 좌표(`gx`/`gy`)만 남기고, 신규 순수 함수 `M.galaxyName(galaxy)`가 `i18n.t(\"galaxy_home\")`/`i18n.t(\"galaxy_named\", gx, gy)`로 로케일에 맞는 표시명을 조회하도록 분리했다.
-- `game/i18n.lua`에 en/ko 두 로케일 모두 `galaxy_home`(`\"SOLAR SYSTEM\"`/`\"태양계\"`)과 `galaxy_named`(`\"GALAXY %d-%d\"`/`\"은하 %d-%d\"`) 키를 추가했다.
-- 실제 표시 시점 세 곳 — `game/scenes/play.lua`의 `M:hudLines()`(HUD galaxy 라벨), `game/minimap.lua`의 `M.view()`(minimap galaxies 리스트/rings 배열, containing galaxy 이름) — 를 모두 `galaxy.name` 직접 참조에서 `world.galaxyName(galaxy)` 호출로 전환해, 화면에 보이는 은하 이름이 항상 i18n을 거치도록 통일했다.
-- `game/self_test.lua`의 `testGalaxyStructure`에 (a) `home.name == nil`(하드코딩 문자열이 galaxy 테이블 자체에는 더 이상 남아있지 않음), (b) locale을 en/ko로 전환해가며 `world.galaxyName(home)`이 각각 `\"SOLAR SYSTEM\"`/`\"태양계\"`로 바뀜(실제로 i18n을 경유함을 증명), (c) `world.galaxyName(nil) == nil`(방어적 nil 처리) 회귀 테스트를 추가했다. `GAME_HEADLESS=1 GAME_UNIT=1 love .`로 RED(수정 전에는 `home.name`이 여전히 `\"SOLAR SYSTEM\"` 문자열이었음)를 먼저 확인한 뒤 GREEN 전환을 확인했다.
-- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:61`, `ASSET_MANIFEST_OK`).
-- `docs/feedback/INBOX.md`의 해당 처리대기 항목 아래에 이번 슬라이스 완료 로그를 append했다(항목 자체는 (2)(3)이 남아 있으므로 처리대기에 그대로 유지, 완료된 (1) 부분만 하위 로그로 기록).
-- 다음 사이클 다음 슬라이스: 같은 항목의 (2) 발라트로식 점수 펀치 연출(`run.bestAltitude` 갱신 시 카운트업/스케일 펀치, `PlayScene.rollupAmount` 패턴 재사용) 또는 (3) `hud_status`(`\"H%d/%d %-6s S%02d\"`)의 `H%d/%d` 약자를 읽기 쉬운 라벨로 교체(항목 UI 대개편의 좌상단 내구도 상시 표시와 통합 검토 포함).
+- TDD: `game/self_test.lua`의 `assert(viewport.width == 180 and viewport.height == 320)`를 `720`/`1280`으로 먼저 바꿔 RED(`assertion failed` at the new size assert)를 확인. `M.run()`에 로컬을 추가하면 Lua 200-local 한도에 걸리므로 1x fit 검증은 기존 `scale,x,y` 로컬을 재사용.
+- `game/viewport.lua` `M.width`/`M.height` = 720/1280, `conf.lua` 창 크기 `720 * scale` / `1280 * scale`.
+- 풀캔버스 터치 상수 `PlayScene.destroyedTouchArea`/`launchTouchArea`가 새 캔버스를 덮도록 `viewport.width`/`viewport.height`를 참조.
+- 좌/우 반 분할(`touch.x < viewport.width / 2`)을 쓰던 회귀 테스트의 우측 탭 `x=160`(옛 180폭의 오른쪽)을 `x=640`으로 갱신. 상점/귀환 슬롯 밴드처럼 아직 ×4 하지 않은 히트박스를 두드리는 좌표(`90,244` 등)는 그대로 둠.
+- 우주선 스프라이트 논리 footprint 16px → 64px (`game/scenes/play.lua` draw): 기존 64×64 ComfyUI 원본을 새 캔버스에서 1:1로 그림.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:64`, `ASSET_MANIFEST_OK`).
+- 항목은 HUD/터치 좌표 전량이 남아 있으므로 `docs/feedback/INBOX.md` 처리대기에 유지하고 첫 슬라이스 로그만 append.
+
+다음 사이클 다음 슬라이스: 같은 항목의 HUD/터치 히트박스·미니맵(`game/minimap.lua` size 48)·조이스틱 비주얼 반경·상점 `settlementTouchRows`/`returnControls`/`ascendControls`·폰트·로드아웃 박스·지구 원반을 ×4 또는 캔버스 비율로 재배치. 행성 스프라이트는 ComfyUI로 더 큰 원본을 재생성하거나 논리 크기를 키운다. econ/gear 레인 소유 항목(7/8/11/15, 13/9/10/12/14)과 `game/gear.lua`는 건드리지 않는다.
 
 ## preflight FAIL 수정: 레인 충돌로 제거된 game/gear.lua를 여전히 require하던 미커밋 game/scenes/play.lua diff 되돌림 (완료, 2026-09-03)
 

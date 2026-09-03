@@ -491,7 +491,7 @@ end
 -- Route the mouse through the same PlayScene touch/joystick path so a
 -- click-drag is a virtual stick. Ignore istouch so a real touch isn't
 -- handled twice (LÖVE also synthesizes mouse events for touches).
--- Coordinates are clamped onto the 180x320 canvas so high-dpi letterbox
+-- Coordinates are clamped onto the 720x1280 canvas so high-dpi letterbox
 -- rounding cannot drop the press as "outside" and silently eat the drag.
 local mouseTouchId = "mouse"
 

@@ -1063,3 +1063,21 @@ preflight READY(`engine tests and package: PASS`, `git diff check: PASS`). 세�
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:44`, `ASSET_MANIFEST_OK`).
 - `docs/feedback/INBOX.md` 6번 항목에 이번 슬라이스 완료 표시 및 구현 요약, 남은 작업(카드 아이콘 UI 노출, 표본 도감 스트립 제거 재검토, 나머지 3종 카드 구매 경로 설계)을 기록했다.
 - 다음 사이클 다음 슬라이스: 6번 항목의 남은 부분(HUD 하단 또는 EARTH SHOP에 `gear.equipped(run)` 아이콘 상시 노출 UI 추가, 표본 도감 스트립 제거 여부 재검토, 행운의 주사위/스트릭 증폭기/정밀 자이로의 실제 구매/장착 경로 설계) 중 하나, 또는 11번 항목의 남은 부분(a: `launchForecastLine` 연료-종속 프레이밍 재정의, c: 활성 연료 필드 재설계) 중 하나로 진행.
+
+## Archived from STATUS.md (2026-09-03 17:51)
+
+## 항목 "국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리" — (1) "SOLAR SYSTEM" 하드코딩 i18n 이관 (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 17:54)
+
+preflight READY(engine tests/package PASS, git diff clean)로 시작. `git status --short`로 세션 시작 시 `game/i18n.lua`/`game/minimap.lua`/`game/scenes/play.lua`/`game/self_test.lua`/`game/world.lua`에 이전 사이클의 커밋되지 않은 작업이 이미 존재함을 확인했다 — `docs/feedback/INBOX.md` 처리대기 항목 "국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 3건"의 (1)번("SOLAR SYSTEM" 미번역) 구현이 완결 직전 상태였다. 이 사이클은 이 작업을 이어받아 검증하고 마무리했다.
+
+## Archived from STATUS.md (2026-09-03 17:55)
+
+- `game/world.lua`의 `M.galaxy()`가 `\"SOLAR SYSTEM\"`/`\"GALAXY %d-%d\"` 문자열을 galaxy 테이블에 직접 담아 반환하던 것을 제거했다 — 홈 은하는 `id=\"milkyway\"`, 그 외는 `id=\"galaxy:%d:%d\"` + 좌표(`gx`/`gy`)만 남기고, 신규 순수 함수 `M.galaxyName(galaxy)`가 `i18n.t(\"galaxy_home\")`/`i18n.t(\"galaxy_named\", gx, gy)`로 로케일에 맞는 표시명을 조회하도록 분리했다.
+- `game/i18n.lua`에 en/ko 두 로케일 모두 `galaxy_home`(`\"SOLAR SYSTEM\"`/`\"태양계\"`)과 `galaxy_named`(`\"GALAXY %d-%d\"`/`\"은하 %d-%d\"`) 키를 추가했다.
+- 실제 표시 시점 세 곳 — `game/scenes/play.lua`의 `M:hudLines()`(HUD galaxy 라벨), `game/minimap.lua`의 `M.view()`(minimap galaxies 리스트/rings 배열, containing galaxy 이름) — 를 모두 `galaxy.name` 직접 참조에서 `world.galaxyName(galaxy)` 호출로 전환해, 화면에 보이는 은하 이름이 항상 i18n을 거치도록 통일했다.
+- `game/self_test.lua`의 `testGalaxyStructure`에 (a) `home.name == nil`(하드코딩 문자열이 galaxy 테이블 자체에는 더 이상 남아있지 않음), (b) locale을 en/ko로 전환해가며 `world.galaxyName(home)`이 각각 `\"SOLAR SYSTEM\"`/`\"태양계\"`로 바뀜(실제로 i18n을 경유함을 증명), (c) `world.galaxyName(nil) == nil`(방어적 nil 처리) 회귀 테스트를 추가했다. `GAME_HEADLESS=1 GAME_UNIT=1 love .`로 RED(수정 전에는 `home.name`이 여전히 `\"SOLAR SYSTEM\"` 문자열이었음)를 먼저 확인한 뒤 GREEN 전환을 확인했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:61`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md`의 해당 처리대기 항목 아래에 이번 슬라이스 완료 로그를 append했다(항목 자체는 (2)(3)이 남아 있으므로 처리대기에 그대로 유지, 완료된 (1) 부분만 하위 로그로 기록).
+- 다음 사이클 다음 슬라이스: 같은 항목의 (2) 발라트로식 점수 펀치 연출(`run.bestAltitude` 갱신 시 카운트업/스케일 펀치, `PlayScene.rollupAmount` 패턴 재사용) 또는 (3) `hud_status`(`\"H%d/%d %-6s S%02d\"`)의 `H%d/%d` 약자를 읽기 쉬운 라벨로 교체(항목 UI 대개편의 좌상단 내구도 상시 표시와 통합 검토 포함).

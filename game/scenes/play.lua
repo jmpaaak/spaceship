@@ -105,16 +105,16 @@ M.settlementTouchRows = settlementTouchRows
 
 -- SHIP DESTROYED restart touch target. Unlike EARTH SHOP's four stacked
 -- rows, this phase has a single action (restart), so touchpressed accepts
--- any tap on the full 180x320 internal canvas rather than a narrow band.
+-- any tap on the full 720x1280 internal canvas rather than a narrow band.
 -- Documented and engine-tested explicitly so this stays true if the
 -- destroyed phase ever grows per-row touch targets like settlement did.
-local destroyedTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
+local destroyedTouchArea = { top = 0, bottom = viewport.height, left = 0, right = viewport.width }
 M.destroyedTouchArea = destroyedTouchArea
 
 -- Ascending-phase HOLD LEFT/HOLD RIGHT steering buttons. touchpressed for
 -- this phase already accepts a tap anywhere on the internal canvas (no y
 -- restriction; see the "ascending" branch below), so the *functional*
--- touch target already spans the full 180x320 canvas -- far beyond the
+-- touch target already spans the full 720x1280 canvas -- far beyond the
 -- 44pt accessibility minimum. This constant only documents/tests the
 -- *visual* button box drawn on screen, which was a 24px-tall row
 -- (254-278, only ~24pt at the smallest supported window, integer scale 1,
@@ -128,11 +128,11 @@ M.ascendControls = ascendControls
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
 -- already accepts any tap on the internal canvas regardless of x/y (see the
 -- "launch" branch below), so the functional touch target has always spanned
--- the full 180x320 canvas -- far beyond the 44pt accessibility minimum.
+-- the full 720x1280 canvas -- far beyond the 44pt accessibility minimum.
 -- Named and exposed to close out the last remaining touch surface that was
 -- accepted unconditionally but never given an explicit constant or
 -- corner-touch regression test, matching destroyedTouchArea's pattern.
-local launchTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
+local launchTouchArea = { top = 0, bottom = viewport.height, left = 0, right = viewport.width }
 M.launchTouchArea = launchTouchArea
 
 -- Launch-screen text size/layout cleanup (docs/feedback 2026-09-02, user
@@ -1879,10 +1879,10 @@ function M:draw()
     if self.shipImage then
         local iw, ih = self.shipImage:getWidth(), self.shipImage:getHeight()
         -- ComfyUI-generated 64x64 sprite (docs/GENERATED_ASSET_LOG.md);
-        -- scaled to roughly the same footprint as the previous polygon
-        -- silhouette (~14px tall) so runtime placement/collision reads
-        -- unchanged at the 180x320 internal canvas scale.
-        local targetSize = 16
+        -- drawn at a 64px logical footprint (old 16px x4) so it stays the
+        -- same relative size on the 720x1280 canvas and is no longer
+        -- downscaled from the 64x64 original.
+        local targetSize = 64
         local scale = targetSize / math.max(iw, ih)
         love.graphics.draw(self.shipImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
     else

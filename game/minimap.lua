@@ -11,7 +11,7 @@ local world = require("game.world")
 local M = {}
 
 -- Canvas-pixel diameter of the drawn chart (fits in the top-right of the
--- 180x320 HUD without covering the left-aligned ALT/CASH text).
+-- 720x1280 HUD without covering the left-aligned DIST/CASH text).
 M.size = 48
 M.inset = 4
 M.mapRadius = M.size / 2 - M.inset
