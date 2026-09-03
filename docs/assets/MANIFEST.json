@@ -2308,5 +2308,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.destroyedSamplesSettlementIconImage for samples_settlement_line; Lua hexagonal sample-crystal fallback"
+  },
+  {
+    "path": "assets/effects/destroyed_spins_settlement.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "f2a55359-de90-480a-8c2b-41d9704b82f3",
+    "prompt": "pixel art, 16-bit, small cyan spinning slot-reel HUD icon sprite, simple three-window slot machine reel silhouette, isolated destroyed-phase lost-spins HUD icon, solid white background, no letters, no numbers, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904175,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T21:45:10Z",
+    "sha256": "b9b1ba37e50aa43c2cc5904fc07f54dfd1ffc996841892b6e43eb6fe9e80789b",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.destroyedSpinsSettlementIconImage for spins_settlement_line; Lua slot-reel barrel fallback"
   }
 ]

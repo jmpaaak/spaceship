@@ -1244,6 +1244,36 @@ end
 M.destroyedSamplesSettlementIconSize = 24
 M.destroyedSamplesSettlementIconGap = 8
 
+-- Destroyed-phase spins_settlement_line icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- spins_settlement_line printf ("SPINS (n) $N" of wiped
+-- unbanked slot spins) with a small slot-reel barrel,
+-- mirroring samples_settlement_line. Drawn as a flat wide
+-- hexagon (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.destroyedSpinsSettlementIconPoints(cx, cy, size)
+    local peak = size * 0.38
+    local w = size * 0.5
+    local mid = size * 0.18
+    return {
+        cx, cy - peak,
+        cx + w, cy - mid,
+        cx + w, cy + mid,
+        cx, cy + peak,
+        cx - w, cy + mid,
+        cx - w, cy - mid,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- slot-reel barrel's right edge and the
+-- spins_settlement_line label's left edge. Matches
+-- destroyedSamplesSettlement because both sit next to
+-- destroyed-phase summary labels.
+M.destroyedSpinsSettlementIconSize = 24
+M.destroyedSpinsSettlementIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2827,6 +2857,22 @@ function M.new(options)
             destroyedSamplesSettlementIconImage = img
         end
     end
+    -- assets/effects/destroyed_spins_settlement.png is the ComfyUI-generated
+    -- destroyed-phase spins_settlement_line slot-reel barrel
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as destroyedSamplesSettlementIconImagePath.
+    -- :draw() scales it to M.destroyedSpinsSettlementIconSize instead of
+    -- M.destroyedSpinsSettlementIconPoints, and falls back to that barrel
+    -- when the image failed to load.
+    local destroyedSpinsSettlementIconImagePath = "assets/effects/destroyed_spins_settlement.png"
+    local destroyedSpinsSettlementIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedSpinsSettlementIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedSpinsSettlementIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2987,6 +3033,8 @@ function M.new(options)
         destroyedLostTotalIconImagePath = destroyedLostTotalIconImagePath,
         destroyedSamplesSettlementIconImage = destroyedSamplesSettlementIconImage,
         destroyedSamplesSettlementIconImagePath = destroyedSamplesSettlementIconImagePath,
+        destroyedSpinsSettlementIconImage = destroyedSpinsSettlementIconImage,
+        destroyedSpinsSettlementIconImagePath = destroyedSpinsSettlementIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5523,9 +5571,29 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.print(destroyedSamplesSettlementLabel, destroyedSamplesSettlementStartX + destroyedSamplesSettlementIconSpan, row)
         row = row + rowStep
-        love.graphics.printf(i18n.t("spins_settlement_line",
-            self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0),
-            fullX, row, fullW, "center")
+        love.graphics.setColor(0.75, 0.9, 1)
+        local destroyedSpinsSettlementLabel = i18n.t("spins_settlement_line",
+            self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0)
+        local destroyedSpinsSettlementFont = love.graphics.getFont()
+        local destroyedSpinsSettlementWidth = destroyedSpinsSettlementFont:getWidth(destroyedSpinsSettlementLabel)
+        local destroyedSpinsSettlementIconSpan = M.destroyedSpinsSettlementIconSize + M.destroyedSpinsSettlementIconGap
+        local destroyedSpinsSettlementStartX = fullX + (fullW - (destroyedSpinsSettlementIconSpan + destroyedSpinsSettlementWidth)) / 2
+        local destroyedSpinsSettlementIconCenterX = destroyedSpinsSettlementStartX + M.destroyedSpinsSettlementIconSize / 2
+        local destroyedSpinsSettlementIconCenterY = row + destroyedSpinsSettlementFont:getHeight() / 2
+        if self.destroyedSpinsSettlementIconImage then
+            local iw, ih = self.destroyedSpinsSettlementIconImage:getDimensions()
+            local scale = M.destroyedSpinsSettlementIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.destroyedSpinsSettlementIconImage, destroyedSpinsSettlementIconCenterX, destroyedSpinsSettlementIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan slot-reel barrel, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.destroyedSpinsSettlementIconPoints(destroyedSpinsSettlementIconCenterX, destroyedSpinsSettlementIconCenterY, M.destroyedSpinsSettlementIconSize))
+        end
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.print(destroyedSpinsSettlementLabel, destroyedSpinsSettlementStartX + destroyedSpinsSettlementIconSpan, row)
         row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
         love.graphics.printf(i18n.t("peak_dist_line", math.floor(self.expedition.lastLostAltitude or 0)),
