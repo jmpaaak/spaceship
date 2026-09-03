@@ -8,6 +8,30 @@ preflight READY(`engine tests and package` PASS, `git diff` clean이라고 보�
 - `docs/feedback/INBOX.md`를 재확인한 결과 이 레인(econ) 스코프 순서(항목7→8→11→15) 4개 항목이 모두 `✅ 완료(econ 레인, 2026-09-03)` 마커로 표시되어 있음을 재확인했다: 항목7(a/b/c 장비 획득 경로 3원화), 항목8(체크포인트 정산), 항목11(a/b/c 연료 잔재 전면 제거, 이번 커밋으로 (a) 최종 슬라이스까지 반영), 항목15(a/b/c 귀환/비행중 슬롯머신 폐지 + 지구상점 전용 슬롯머신).
 - **레인 스코프 소진 확인(재확인):** `loop/PROMPT.md`가 이 레인에 지정한 4개 항목이 전부 완료되어 이 레인이 자체적으로 착수할 다음 슬라이스가 없다. 다음 사이클은 `loop/PROMPT.md` 갱신(다른 pending 항목으로 스코프 재배정) 또는 사용자 확인을 대기해야 하며, 레인 스코프 밖 항목(9/10/12/13/14 등, gear 레인 등 다른 레인 소유)을 임의로 착수하지 않는다.
 - `docs/feedback/INBOX.md`는 이미 항목 7/8/11/15가 완료 표시되어 있어 이번 사이클에서 추가로 append할 새 항목 상태 변경이 없었다(진행상황 로그는 이전 사이클이 이미 기록 완료).
+- 병합 메모: 원격 `spaceship-econ`에 이미 푸시되어 있던 항목 11(c) i18n 잔재 정리(아래 절 참고)와 병합했다 — 두 작업 모두 항목 11(a)/(b)/(c) 전체 완료라는 동일 결론에 도달했으며 서로 코드 충돌이 없었다.
+
+## 항목 11(c) 잔여 정리 — 죽은 i18n 연료/슬롯머신 문구 8종 삭제 (완료, 2026-09-03)
+
+preflight READY(`engine tests and package` PASS, `git diff` clean)를 확인했다. `git status --short`가 clean함(이전 사이클의 미커밋 작업 없음)을 확인한 뒤, `docs/feedback/INBOX.md`의 이 레인 스코프 순서(항목7→8→11→15)에서 유일하게 남아있던 항목 11의 잔여 부분 — (c) "코드 전반의 죽은 연료 소모 로직/필드 정리" — 를 마저 처리했다.
+
+- `game/expedition.lua`/`game/ship.lua`의 죽은 연료 필드·함수는 이전 사이클들이 이미 전부 제거했지만, `game/i18n.lua`에 그 시절 문구 8개(en/ko 각각, 총 16줄)가 저장소 어디서도 참조되지 않는 죽은 문자열로 남아있음을 발견했다: `fuel_bonus_line`("NEXT LAUNCH FUEL +%d"/"다음발사 연료 +%d"), `newbest_fuel_combined`("NEW BEST! FUEL +%d"/"신기록! 연료+%d"), `spinning_label`/`win_repair_line`/`win_fuel_line`/`win_sample_line`/`win_pending_line`/`spins_settlement_line`(옛 in-flight 슬롯머신 릴 스핀/결과 문구).
+- 저장소의 전체 15개 `.lua` 파일을 grep해 이 8개 키가 각자의 `game/i18n.lua` 정의 줄 외에는 단 한 곳도 등장하지 않음(연료 상점 업그레이드와 in-flight `beginReturn`/`useSlot`/`slotSpin` 시스템이 이전 사이클들에서 이미 완전히 삭제되어 이 문구들의 유일한 호출부가 함께 사라졌기 때문)을 확인했다.
+- `game/self_test.lua`에 신규 `testDeadFuelAndSlotMessagingRemoved()`를 추가했다 — en/ko 두 로케일 모두에서 이 8개 키가 `i18n.t()` 호출 시 반드시 실패(존재하지 않음)해야 함을 회귀 검증한다. RED를 실제로 확인했다(`GAME_HEADLESS=1 GAME_UNIT=1 love .` 실행 시 `game/self_test.lua:1229: fuel_bonus_line must be removed from the en locale` 단언 실패 재현) → `game/i18n.lua`에서 8개 키를 en/ko 양쪽에서 모두 삭제 → GREEN 전환 확인.
+- `make test`(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `tools.test_verify_asset_manifest` 9건)/`make verify LOVE=/Users/jm/.local/bin/love`(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:46`, `ASSET_MANIFEST_OK`) 모두 GREEN.
+- 수정 파일은 `game/i18n.lua`/`game/self_test.lua` 둘뿐이다(순수 데이터 삭제 + 회귀 테스트, `game/scenes/play.lua`는 무변경 — 애초에 이 8개 키를 호출하는 코드가 없었으므로 UI 동작에 아무 변화가 없다). 신규 화면/렌더 변경이 없어 런타임 캡처는 필요하지 않았다.
+- `docs/feedback/INBOX.md` 처리대기 항목 11 하위에 이번 슬라이스 진행 상황을 append했다. 이로써 항목 11의 (a)를 제외한 (b)/(c)가 모두 완료 상태다 — (a)(`launchForecastLine`/`forecast_line`의 연료 기반 프레이밍 재정의)만 `game/scenes/play.lua` 텍스트 세부 영역이라 메인 레인 조율이 여전히 필요해 항목 11을 완전한 처리완료로 옮기지는 않았다(레인 규칙상 이 항목 자체의 완료 마커는 이미 최상위 그룹 bullet 없이 번호 항목이라 하위 진행 로그로만 기록). — 위 절의 이후 사이클이 (a)를 `M.rangeForecast` 리네이밍으로 완결했다.
+- 이 레인 스코프(항목7→8→11→15) 4개 항목의 남은 유일한 미완결 지점은 항목 11(a) — main 레인 소유의 `play.lua` 텍스트 프레이밍 작업 — 뿐이다. 다음 사이클은 (11(a)가 메인 레인에서 처리되었는지 확인 후) 이 레인이 새로 착수할 수 있는 코드 변경이 없다면 `loop/PROMPT.md` 갱신 또는 사용자 확인을 대기해야 한다.
+
+## (이전 기록) preflight FAIL 수정 — `module 'game.gear' not found`
+이번 사이클 preflight가 `engine tests and package: FAIL`(`game/scenes/play.lua:11: module 'game.gear' not found`)을 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
+
+- `git status --short`로 세션 시작 시 `game/scenes/play.lua`/`game/i18n.lua`에 커밋되지 않은 변경이 있음을 확인했다. 이 diff는 `M:drawGearStrip(y)`(장착된 기어 아이콘 스트립 렌더)와 `gear_label` i18n 키를 추가하며 `local gear = require("game.gear")`로 `game/gear.lua`를 require하고 있었다.
+- 그러나 직전 커밋 `dfa2da2`(\"fix: resolve lane conflict on game/gear.lua (item 6 -> gear lane)\")가 이미 `game/gear.lua`와 그 회귀 테스트를 의도적으로 삭제했다 — `docs/feedback/INBOX.md` 6번 항목의 \"⚠️ 레인 충돌 통보\" 문구가 명시하듯 이 경로는 이제 `spaceship-gear` 레인이 JSON 데이터 로더(`game/data/hull_parts.json`/`engine_parts.json`)로 재작성 중이며 **main 레인은 앞으로 `game/gear.lua`를 건드리지 않는다**고 못박혀 있다. 세션 시작 시 미커밋 상태로 남아있던 `drawGearStrip` diff는 이 레인 재배정 이전(또는 이를 무시하고) 작성된 고아 상태 작업으로, `game/gear.lua`가 사라진 채로 남아 require 실패를 그대로 유발하고 있었다.
+- 수정 경로로 (a) `game/gear.lua`를 main 레인에서 재생성하는 방법과 (b) 고아 diff를 되돌리는 방법을 검토했다. INBOX.md의 명시적 레인 재배정 통보를 존중해 (b)를 선택했다 — `git checkout -- game/scenes/play.lua game/i18n.lua`로 두 파일을 직전 커밋(`dfa2da2`) 상태로 되돌렸다. 이 되돌림은 어떤 완료된 작업도 덮어쓰지 않는다: `drawGearStrip`/`gear_label`은 세션 시작 시점에 이미 이번 사이클 이전 어떤 커밋에도 존재하지 않았던 순수 미커밋 diff였다.
+- `git status --short`가 되돌림 후 완전히 clean함을 확인(worktree == HEAD, 커밋할 코드 변경 없음).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`) — preflight가 보고한 정확한 `module 'game.gear' not found` 실패가 재현되지 않고 해소됨을 확인했다.
+- 이번 슬라이스는 preflight 실패 원인 진단·제거만 수행했다(신규 게임 로직/UI 변경 없음, 코드 diff 없음 — `docs/STATUS.md` 갱신만 커밋 대상). 다음 사이클이 6번 항목의 UI 노출(예: 장착된 기어를 HUD에 아이콘으로 보여주는 작업)을 다시 시도하려면, main 레인이 아니라 `spaceship-gear` 레인의 최신 `game/gear.lua`(JSON 데이터 로더 기반, `game.gear.equipped`/`game.gear.cardCount` API가 바뀌었을 수 있음) 구조에 맞춰 새로 설계해야 한다.
+- 다음 사이클 다음 슬라이스: 11번 항목의 남은 부분(a: `launchForecastLine`/`M.launchForecast`의 연료-종속 프레이밍 재정의 — `game/expedition.lua:142`), 또는 3번 항목(속도/스피드미터 아이콘화는 이미 완료 표시가 있으나 재검토 필요할 수 있음), 또는 4번(불필요한 텍스트 제거 검토, 거의 완료). 6번/7번/8번/9번/10번/11(c)/12번/13번/14번 항목은 `spaceship-gear`/`spaceship-econ` 레인이 별도로 진행 중이므로 main 레인은 이 경로들(`game/gear.lua` 등)을 건드리지 않는다.
 
 ## 항목 11 (c) 세 번째 슬라이스 (완료, 2026-09-03)
 `docs/feedback/INBOX.md` 처리대기 항목 11(연료 소진 관련 UI/문구 잔재 전면 제거)의 (c) 부분의 세 번째 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), `git status --short` clean으로 시작. 이 사이클은 이 레인(econ)의 스코프 순서(항목7→8→11→15) 중 항목 11을 이어서 진행했다.

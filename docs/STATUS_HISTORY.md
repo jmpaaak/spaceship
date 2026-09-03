@@ -983,8 +983,11 @@
 
 이번 사이클 preflight가 `git diff check: FAIL`(`docs/STATUS.md:307: new blank line at EOF.`)를 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
 
-## Archived from STATUS.md (2026-09-03 14:09)
+## Archived from STATUS.md (2026-09-03 14:20)
 
+## 재확인 사이클 — 레인 스코프(항목7→8→11→15) 여전히 소진 상태, 신규 변경 없음 (2026-09-03)
+
+preflight READY(engine tests and package PASS, git diff clean)를 확인한 뒤 `git status --short`로 미커밋 diff가 없음을 확인했다. `git log`/`git diff`로 로컬 HEAD(`b16326f`)가 `origin/spaceship-econ`과 완전히 동일함을 재확인했다. `loop/PROMPT.md`가 이 레인에 지정한 순서(항목7→8→11→15)를 `docs/feedback/INBOX.md`의 `## 처리 완료` 섹션과 코드(`grep beginReturn/useSlot/buyFuelUpgrade/fuelUpgradeLevel/run.fuel game/expedition.lua game/scenes/play.lua`)로 재검증했다 — 항목7(a/b/c)/8/11(b)(c)/15(a)(b)(c) 전부 코드에서 제거·완결되어 있고, 남은 항목11(a)는 이전 사이클이 이미 명시적으로 "econ 스코프 밖(메인 레인이 소유한 `play.lua` 텍스트 프레이밍 작업)"으로 이관 문서화해뒀다. `GAME_HEADLESS=1 GAME_UNIT=1 love .`(`SPACESHIP_UNIT_OK`/`SPACESHIP_SMOKE_OK`), `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 재실행해 GREEN을 재확인했다. 이 레인이 착수할 수 있는 신규 코드 변경은 없다 — `loop/PROMPT.md` 갱신(다른 pending 항목으로 스코프 재배정) 또는 사용자 확인이 있을 때까지 이 레인 스코프 밖 항목(9/10/12/13/14 등, gear 레인 소유이거나 메인 레인 텍스트 영역)을 임의로 착수하지 않는다.
 
 ## 항목7→8→11→15 INBOX 정리(pending→done 표시) + 이전 사이클 미커밋 작업 커밋 (완료, 2026-09-03)
 
@@ -1080,15 +1083,15 @@
 - `docs/feedback/INBOX.md` 처리대기 항목 15 하위에 이번 슬라이스 진행 상황을 append했다.
 - 다음 사이클 다음 슬라이스: 이 레인 스코프 순서상 항목 15의 남은 부분 — (a) `beginReturn`/returning 페이즈/in-flight `slotSpin`·`useSlot`의 완전 폐지와 체크포인트/지구 도달 시 즉시 정산으로의 구조 전환(`game/scenes/play.lua`의 returning 페이즈 UI/터치/키 입력 전반을 광범위하게 재작성해야 하는 큰 작업, 메인 레인과의 조율 필요), (b)의 UI 노출(EARTH SHOP 화면에 `M.spinEarthShopSlot`을 실제로 그리고 누를 수 있게 하는 `game/scenes/play.lua` 연결).
 
-## Archived from STATUS.md (2026-09-03 14:16)
+## Archived from STATUS.md (2026-09-03 14:37)
 
 ## 항목 6 첫 슬라이스 — 슬롯 6개를 함선 장비 카드 6종으로 재해석하는 game/gear.lua 카탈로그 추가 (완료, 2026-09-03)
 
-## Archived from STATUS.md (2026-09-03 14:24)
+## Archived from STATUS.md (2026-09-03 14:39)
 
 `docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 6번(표본 도감 정리 검토 + 슬롯 6개를 개성 있는 함선 장비 카드 UI로 전환)의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.
 
-## Archived from STATUS.md (2026-09-03 14:26)
+## Archived from STATUS.md (2026-09-03 15:02)
 
 - 귀환 시 `slotOpportunities` 최대치인 "슬롯 6개"가 추상적인 확률 슬롯으로만 표시되고 있어, 사용자가 요청한 "발라트로 조커 카드처럼 이름·아이콘·능력이 있는 6종 함선 장비" 재해석을 위한 데이터 카탈로그부터 착수했다(UI/렌더 변경은 이번 슬라이스 범위 밖).
 - 신규 `game/gear.lua`에 `M.catalog`(정확히 6개 항목, `M.cardCount == 6`)를 추가했다. 사용자 세션 초안의 6종(오버드라이브 코어/강화 장갑판/채집 자석/행운의 주사위/스트릭 증폭기/정밀 자이로)을 모두 담되, 앞의 세 개(오버드라이브 코어=steeringUpgradeLevel, 강화 장갑판=durabilityUpgradeLevel, 채집 자석=sampleYieldUpgradeLevel)는 이미 존재하는 EARTH SHOP 업그레이드 레벨에 `upgradeField`로 매핑했다. 뒤의 세 개(행운의 주사위/스트릭 증폭기/정밀 자이로)는 대응하는 단일 수치 업그레이드가 아직 없어(슬롯 오즈·스트릭 배율·조종 반응성은 지금도 다른 메커니즘이 따로 존재) `upgradeField = nil`로 남겨 "아직 구매 불가"임을 정직하게 표현했다.
