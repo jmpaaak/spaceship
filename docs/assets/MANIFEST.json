@@ -958,5 +958,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap home-galaxy marker sprite wired into PlayScene galaxyHomeMarkerImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_galaxy_plain.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "8c583330-afb7-4710-b0c4-6eb268c5c398",
+    "prompt": "pixel art, 16-bit, small gold generic-galaxy HUD icon sprite, tiny distant spiral galaxy disc with warm gold core and faint amber arms, isolated minimap other-galaxy marker, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904121,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:48:41Z",
+    "sha256": "b9db963324e9f33d4d4e431aed3440129d730ff1b987130cf25a1f7b30b4fb7a",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap generic-galaxy marker sprite wired into PlayScene galaxyPlainMarkerImage; pipeline PNG signature/decode gate"
   }
 ]

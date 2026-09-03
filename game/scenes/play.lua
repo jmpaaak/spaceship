@@ -1029,6 +1029,21 @@ function M.new(options)
             galaxyHomeMarkerImage = img
         end
     end
+    -- assets/effects/minimap_galaxy_plain.png is the ComfyUI-generated
+    -- generic (non-home, non-checkpoint) galaxy waypoint marker
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path / graphics-gated
+    -- image pattern as galaxyHomeMarkerImagePath. drawMinimap() scales it
+    -- to 2 * minimap.markerGalaxyPlainRadius instead of the Lua filled
+    -- circle, and falls back to that circle when the image failed to load.
+    local galaxyPlainMarkerImagePath = "assets/effects/minimap_galaxy_plain.png"
+    local galaxyPlainMarkerImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, galaxyPlainMarkerImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            galaxyPlainMarkerImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1081,6 +1096,8 @@ function M.new(options)
         earthMarkerImagePath = earthMarkerImagePath,
         galaxyHomeMarkerImage = galaxyHomeMarkerImage,
         galaxyHomeMarkerImagePath = galaxyHomeMarkerImagePath,
+        galaxyPlainMarkerImage = galaxyPlainMarkerImage,
+        galaxyPlainMarkerImagePath = galaxyPlainMarkerImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2237,8 +2254,20 @@ function M:drawMinimap()
                 end
 
             else
-                love.graphics.setColor(0.9, 0.75, 0.3)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius)
+                if self.galaxyPlainMarkerImage then
+                    local iw, ih = self.galaxyPlainMarkerImage:getDimensions()
+                    local drawSize = minimap.markerGalaxyPlainRadius * 2
+                    local scale = drawSize / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.draw(
+                        self.galaxyPlainMarkerImage,
+                        cx + galaxy.x, cy + galaxy.y, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    -- Fallback: gold filled circle, used only when the
+                    -- ComfyUI-generated sprite failed to load.
+                    love.graphics.setColor(0.9, 0.75, 0.3)
+                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius)
+                end
             end
         end
     end
