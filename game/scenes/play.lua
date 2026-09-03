@@ -1013,6 +1013,22 @@ function M.new(options)
             earthMarkerImage = img
         end
     end
+    -- assets/effects/minimap_galaxy_home.png is the ComfyUI-generated
+    -- home-galaxy (milkyway) waypoint marker (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- earthMarkerImagePath. drawMinimap() scales it to
+    -- 2 * minimap.markerGalaxyHomeRadius instead of the Lua filled
+    -- circle, and falls back to that circle when the image
+    -- failed to load.
+    local galaxyHomeMarkerImagePath = "assets/effects/minimap_galaxy_home.png"
+    local galaxyHomeMarkerImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, galaxyHomeMarkerImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            galaxyHomeMarkerImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1063,6 +1079,8 @@ function M.new(options)
         sunMarkerImagePath = sunMarkerImagePath,
         earthMarkerImage = earthMarkerImage,
         earthMarkerImagePath = earthMarkerImagePath,
+        galaxyHomeMarkerImage = galaxyHomeMarkerImage,
+        galaxyHomeMarkerImagePath = galaxyHomeMarkerImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2181,8 +2199,20 @@ function M:drawMinimap()
     for _, galaxy in ipairs(view.galaxies) do
         if galaxy.inside then
             if galaxy.id == "milkyway" then
-                love.graphics.setColor(0.25, 0.55, 1)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius)
+                if self.galaxyHomeMarkerImage then
+                    local iw, ih = self.galaxyHomeMarkerImage:getDimensions()
+                    local drawSize = minimap.markerGalaxyHomeRadius * 2
+                    local scale = drawSize / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.draw(
+                        self.galaxyHomeMarkerImage,
+                        cx + galaxy.x, cy + galaxy.y, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    -- Fallback: blue filled circle, used only when the
+                    -- ComfyUI-generated sprite failed to load.
+                    love.graphics.setColor(0.25, 0.55, 1)
+                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius)
+                end
             elseif galaxy.hub then
                 -- Checkpoint galaxy (docs/feedback/INBOX.md item 1 part 2):
                 -- a small, sharply distinct 5-point star glyph instead of

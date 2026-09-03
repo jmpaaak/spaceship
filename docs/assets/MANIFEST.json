@@ -933,5 +933,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap earth marker sprite wired into PlayScene earthMarkerImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_galaxy_home.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "8326cf85-7f2e-4bbc-9ae1-e7b92a8ddfa5",
+    "prompt": "pixel art, 16-bit, small blue home-galaxy HUD icon sprite, tiny spiral galaxy disc with bright blue core and faint arms, isolated minimap milky way home galaxy marker, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904120,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:44:49Z",
+    "sha256": "b3d9c54c545676879a1cd2f1103f5aa4f9c9d76de4e8e7880a75a63a95744fbd",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap home-galaxy marker sprite wired into PlayScene galaxyHomeMarkerImage; pipeline PNG signature/decode gate"
   }
 ]
