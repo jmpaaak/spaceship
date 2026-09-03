@@ -2,15 +2,14 @@
 
 preflight PASS 진입 및 이번 사이클 작업 완료.
 
-- Collision impact and RCS/main-engine thrust were still Lua `circle`/`polygon` decorations.
-  - `game/self_test.lua` `testCollisionEffectSprite()` / `testThrustEffectSprite()`: file exists + `PlayScene.collisionEffectImagePath` / `thrustEffectImagePath` wiring (RED 확인 후 GREEN).
-  - `assets/effects/collision_spark.png` via remote ComfyUI (`http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, seed `20260904105`).
-  - `assets/effects/thrust_plume.png` via same host/workflow, seed `20260904106`. Pipeline PNG signature/decode gate only; no vision QA.
-  - `game/scenes/play.lua`: always-set paths + graphics-gated images; particles tagged `sample`/`collision`/`thrust` so `:draw()` picks the matching sprite (Lua circle remains load-failure fallback); planet/debris hits call `spawnCollisionParticles`; ascending tail plume uses `thrustEffectImage` (Lua triangle fallback).
-  - `docs/assets/MANIFEST.json` provenance + `docs/GENERATED_ASSET_LOG.md` two append-only lines.
-- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:88`, `ASSET_MANIFEST_OK`).
+- Undiscovered-planet rim glow was still stacked Lua `circle` fills.
+  - `game/self_test.lua` `testPlanetGlowSprite()`: file exists + `PlayScene.planetGlowImagePath` wiring (RED 확인 후 GREEN).
+  - `assets/effects/planet_glow.png` via remote ComfyUI (`http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, seed `20260904107`). Pipeline PNG signature/decode gate only; no vision QA.
+  - `game/scenes/play.lua`: always-set path + graphics-gated image; undiscovered planets draw the tinted sprite scaled to glow radius (Lua circle rings remain load-failure fallback).
+  - `docs/assets/MANIFEST.json` provenance + `docs/GENERATED_ASSET_LOG.md` one append-only line.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK:build/game.love:89`, `ASSET_MANIFEST_OK`).
 - INBOX 처리 대기 항목 6은 gear, 7/8/11/15는 econ, 9/10/12/13/14는 gear. 이번 사이클에서 다른 레인 항목은 건드리지 않음.
 
 ## Next Slice
-- 남은 Lua 장식은 HUD/미니맵/조이스틱/행성 림 글로우 등 UI 도형. 최종 에셋 슬롯(ship/earth/planets/samples/effects/slot symbols/shop icons/backgrounds)은 배선됨.
+- 남은 Lua 장식은 HUD/미니맵/조이스틱/행성 드롭섀도 등 UI 도형. 최종 에셋 슬롯(ship/earth/planets/samples/effects/slot symbols/shop icons/backgrounds)은 배선됨.
 - 항목 6은 gear 레인. 항목 7/8/11/15는 econ, 9/10/12/13/14는 gear.

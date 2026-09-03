@@ -608,5 +608,30 @@
     "width": 64,
     "height": 64,
     "qa": "thrust/RCS exhaust plume wired into PlayScene thrustEffectImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/planet_glow.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "3d788f4d-a4b1-468f-88e8-ab69125fd999",
+    "prompt": "pixel art, 16-bit, small circular halo glow sprite, soft white radial aura bloom with brighter core fading to edges, isolated icon, solid white background, no text, no planet, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904107,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:50:16Z",
+    "sha256": "40e86eee39f60ecd917f9f72b86b00564a49a87301fab695e05c6be0f6ef3969",
+    "width": 64,
+    "height": 64,
+    "qa": "planet rim glow sprite wired into PlayScene planetGlowImage; pipeline PNG signature/decode gate"
   }
 ]

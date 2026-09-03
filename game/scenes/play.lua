@@ -821,6 +821,20 @@ function M.new(options)
             thrustEffectImage = img
         end
     end
+    -- assets/effects/planet_glow.png is the ComfyUI-generated undiscovered-
+    -- planet rim glow (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated-image pattern as planetTwinkleImagePath. :draw() tints
+    -- and scales it per-planet instead of stacking love.graphics.circle
+    -- fills, and falls back to those circles when the image failed to load.
+    local planetGlowImagePath = "assets/effects/planet_glow.png"
+    local planetGlowImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, planetGlowImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            planetGlowImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -845,6 +859,8 @@ function M.new(options)
         collisionEffectImagePath = collisionEffectImagePath,
         thrustEffectImage = thrustEffectImage,
         thrustEffectImagePath = thrustEffectImagePath,
+        planetGlowImage = planetGlowImage,
+        planetGlowImagePath = planetGlowImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2075,10 +2091,18 @@ function M:draw()
                 local tier = world.sampleTier(planet)
                 local effect = sampleTierEffect(tier)
                 local glowR, glowG, glowB = sampleTierColor(tier)
-                for ring = effect.glowRings, 1, -1 do
-                    local ringAlpha = effect.glowAlpha * (ring / effect.glowRings) * 0.5
-                    love.graphics.setColor(glowR, glowG, glowB, ringAlpha)
-                    love.graphics.circle("fill", x, y, planet.radius + 3 + ring * 4)
+                if self.planetGlowImage then
+                    local iw, ih = self.planetGlowImage:getDimensions()
+                    local glowRadius = planet.radius + 3 + effect.glowRings * 4
+                    local scale = (glowRadius * 2) / math.max(iw, ih)
+                    love.graphics.setColor(glowR, glowG, glowB, effect.glowAlpha)
+                    love.graphics.draw(self.planetGlowImage, x, y, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    for ring = effect.glowRings, 1, -1 do
+                        local ringAlpha = effect.glowAlpha * (ring / effect.glowRings) * 0.5
+                        love.graphics.setColor(glowR, glowG, glowB, ringAlpha)
+                        love.graphics.circle("fill", x, y, planet.radius + 3 + ring * 4)
+                    end
                 end
             end
             -- Soft drop shadow: a low-alpha dark circle offset toward the

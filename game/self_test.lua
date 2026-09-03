@@ -1429,6 +1429,21 @@ local function testThrustEffectSprite()
         "PlayScene must load assets/effects/thrust_plume.png into self.thrustEffectImagePath")
 end
 
+-- Undiscovered-planet rim glow is still stacked love.graphics.circle
+-- fills. Same file-existence + always-set-path pattern as
+-- testThrustEffectSprite. Graphics-gated planetGlowImage cannot be
+-- asserted under GAME_HEADLESS=1.
+local function testPlanetGlowSprite()
+    local path = "assets/effects/planet_glow.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated planet rim glow sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.planetGlowImagePath == path,
+        "PlayScene must load assets/effects/planet_glow.png into self.planetGlowImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3301,6 +3316,7 @@ function M.run()
     testPlanetTwinkleSprite()
     testCollisionEffectSprite()
     testThrustEffectSprite()
+    testPlanetGlowSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")
