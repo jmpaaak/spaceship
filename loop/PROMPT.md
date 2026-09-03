@@ -51,7 +51,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## AetherAI-only asset rule
 
-- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI/API or the local ComfyUI pipeline (`http://127.0.0.1:8188`, workflow IDs `7a3eb820-f17d-47ce-a337-da2358c2a0d5` / `5c257929-dff5-4ef4-bd1e-2c99dbbf3dee`).
+- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI/API or the remote GPU ComfyUI pipeline (`http://222.238.86.132:8188`, workflow IDs `7a3eb820-f17d-47ce-a337-da2358c2a0d5` / `5c257929-dff5-4ef4-bd1e-2c99dbbf3dee`).
 - Never crawl, scrape, macro, or automate the AetherAI website.
 - Never generate final art with Python/Pillow, Lua, another image model, or hand-authored raster scripts.
 - 2026-09-03 update: the user human-gate on final art (waiting for manual AetherAI login/export) is removed. The loop may drive the ComfyUI HTTP API (`/prompt`, `/history`, `/view`) directly, save the PNG, record provenance in the manifest, and append `docs/GENERATED_ASSET_LOG.md`. Do **not** vision-analyze or otherwise send generated images to the model — the user reviews the 10-minute MEDIA delivery. AetherAI import remains available whenever credentials appear; ComfyUI is an equally official path, not a fallback that needs later re-approval.
