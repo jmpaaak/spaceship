@@ -1258,5 +1258,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.slotResultPanelImage for the returning-phase slot result box"
+  },
+  {
+    "path": "assets/effects/slot_spin_button.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "8c30d676-3e6e-4702-9d56-ac9d610e5940",
+    "prompt": "pixel art, 16-bit, entire frame filled edge to edge with a cyan-blue glass UI push-button texture for a vertical space roguelite returning-phase slot SPIN button, subtle cyan edge highlight and faint scanlines, metallic UI chrome bezel, no empty margin, no white background, no circle, no icon, no text, no watermark, game UI asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904133,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:35:16Z",
+    "sha256": "636d4a992f7d0313cc881a677d2a6279e9af353459c6828a0adf0741c5137b9a",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.slotSpinButtonImage for the returning-phase slot SPIN button"
   }
 ]

@@ -1208,6 +1208,21 @@ function M.new(options)
             slotResultPanelImage = img
         end
     end
+    -- assets/effects/slot_spin_button.png is the ComfyUI-generated
+    -- returning-phase slot SPIN button (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- slotResultPanelImagePath. :draw() stretches it across the slot
+    -- spin hit box instead of the Lua fill rectangle, and falls back
+    -- to that rectangle when the image failed to load.
+    local slotSpinButtonImagePath = "assets/effects/slot_spin_button.png"
+    local slotSpinButtonImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, slotSpinButtonImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            slotSpinButtonImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1284,6 +1299,8 @@ function M.new(options)
         destroyedPanelImagePath = destroyedPanelImagePath,
         slotResultPanelImage = slotResultPanelImage,
         slotResultPanelImagePath = slotResultPanelImagePath,
+        slotSpinButtonImage = slotSpinButtonImage,
+        slotSpinButtonImagePath = slotSpinButtonImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3291,12 +3308,25 @@ function M:draw()
         local slotButton = self:slotButtonState()
         local returnBandHeight = returnControls.bottom - returnControls.top
         local returnLabelY = returnControls.top + math.floor((returnBandHeight - 40) / 2)
-        if slotButton.enabled then
-            love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+        local slotBtnX = returnControls.slotMinX
+        local slotBtnW = returnControls.slotMaxX - returnControls.slotMinX
+        if self.slotSpinButtonImage then
+            local iw, ih = self.slotSpinButtonImage:getDimensions()
+            if slotButton.enabled then
+                love.graphics.setColor(1, 1, 1, 0.9)
+            else
+                love.graphics.setColor(0.45, 0.48, 0.55, 0.75)
+            end
+            love.graphics.draw(self.slotSpinButtonImage, slotBtnX, returnControls.top, 0,
+                slotBtnW / iw, returnBandHeight / ih)
         else
-            love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
+            if slotButton.enabled then
+                love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
+            else
+                love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
+            end
+            love.graphics.rectangle("fill", slotBtnX, returnControls.top, slotBtnW, returnBandHeight)
         end
-        love.graphics.rectangle("fill", returnControls.slotMinX, returnControls.top, returnControls.slotMaxX - returnControls.slotMinX, returnBandHeight)
         self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousReturnButtonFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)

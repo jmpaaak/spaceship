@@ -1814,6 +1814,22 @@ local function testSlotResultPanelSprite()
         "PlayScene must load assets/effects/slot_result_panel.png into self.slotResultPanelImagePath")
 end
 
+-- Returning-phase slot SPIN button is still a Lua fill rectangle. Same
+-- file-existence + always-set-path pattern as testSlotResultPanelSprite.
+-- Graphics-gated slotSpinButtonImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run() stays
+-- under Lua's 60-upvalue cap.
+local function testSlotSpinButtonSprite()
+    local path = "assets/effects/slot_spin_button.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated slot spin button sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.slotSpinButtonImagePath == path,
+        "PlayScene must load assets/effects/slot_spin_button.png into self.slotSpinButtonImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1825,6 +1841,7 @@ local function testCanvasLayoutScale()
     testShopPanelSprite()
     testDestroyedPanelSprite()
     testSlotResultPanelSprite()
+    testSlotSpinButtonSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows
