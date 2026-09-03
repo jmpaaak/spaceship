@@ -48,7 +48,7 @@ function cacheEls() {
     "downloadBtn", "newCardBtn", "statusBar", "grid", "formPanel",
     "formTitle", "cardForm", "fieldId", "fieldName", "fieldNameKo",
     "fieldIcon", "fieldRarity", "rarityPreview", "fieldTags",
-    "fieldEditions", "effectsList", "addEffectBtn", "saveCardBtn",
+    "fieldEditions", "fieldGalaxyExclusive", "effectsList", "addEffectBtn", "saveCardBtn",
     "deleteCardBtn", "cancelBtn", "formError", "editionPreviewContainer"
   ].forEach((id) => { els[id] = document.getElementById(id); });
 }
@@ -217,7 +217,7 @@ function renderGrid() {
     card.innerHTML = `
       <div class="icon">${escapeHtml(part.icon || "?")}</div>
       <div class="name">${escapeHtml(part.name || part.id)}</div>
-      <div class="rarity-label">${escapeHtml(part.rarity || "?")}</div>
+      <div class="rarity-label">${escapeHtml(part.rarity || "?")}${part.galaxyExclusive ? " · galaxy exclusive" : ""}</div>
       <div class="effects">${(part.effects || []).map((e) => `<div>${escapeHtml(e.type)} ${e.value >= 0 ? "+" : ""}${e.value}</div>`).join("")}</div>
     `;
     card.addEventListener("click", () => openForm(part.id));
@@ -284,6 +284,7 @@ function openForm(id) {
     els.fieldRarity.value = "common";
     els.fieldTags.value = "";
     els.fieldEditions.value = "";
+    els.fieldGalaxyExclusive.checked = false;
     addEffectRow(KNOWN_EFFECT_TYPES[0], 1);
     els.deleteCardBtn.style.display = "none";
   } else {
@@ -297,6 +298,7 @@ function openForm(id) {
     els.fieldRarity.value = part.rarity || "common";
     els.fieldTags.value = (part.tags || []).join(", ");
     els.fieldEditions.value = (part.editions || []).join(", ");
+    els.fieldGalaxyExclusive.checked = part.galaxyExclusive === true;
     (part.effects || []).forEach((e) => addEffectRow(e.type, e.value));
     els.deleteCardBtn.style.display = "";
   }
@@ -373,6 +375,7 @@ function collectFormPart() {
     rarity: els.fieldRarity.value,
     tags,
     editions,
+    galaxyExclusive: els.fieldGalaxyExclusive.checked,
     effects,
   };
 }

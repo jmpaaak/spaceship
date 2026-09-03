@@ -1,20 +1,18 @@
 # STATUS
-## [gear 레인] 항목7 획득 경로 3원화 — engine_parts.json 은하 고유 콘텐츠 gap 발견·수정 (완료, 2026-09-03)
+## [gear 레인] 항목13 웹 에디터 galaxyExclusive 라운드트립 + Card-shape 스키마 표 명문화 (완료, 2026-09-03)
 
-preflight READY(엔진 테스트/패키지 PASS, git diff clean)로 시작. `git status --short`가 이전 사이클이 남긴 uncommitted 항목7 순수-데이터 슬라이스(`M.shopPlanet`/`M.earthShopPool`/`M.exploreHub`/`M.galaxySpecificGear`, GREEN 확인됨)를 보고해 그대로 커밋·푸시부터 완료한 뒤, 같은 항목7의 후속 gap을 감사해 처리했다.
+preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). `git status --short`가 이전 사이클이 남긴 uncommitted 항목13 후속(웹 에디터 `galaxyExclusive` 폼 + Card-shape 스키마 표)을 보고해 그대로 마무리했다.
 
-- 감사 질문: "항목7의 은하-고유(galaxyExclusive) 확정 드롭이 hull/engine 두 카드 풀 모두에서 실제로 동작하는가?" 항목7 원문("범용(은하 특정적이지 않은) 일반 등급 장비 부품은 지구 EARTH SHOP에서도 구매 가능 — 특정 은하 고유의 희귀 장비는 지구에서 판매하지 않는다")과 항목10(c)("획득 경로는 항목 7의 3원화 구조를 그대로 재사용하되, 엔진 부품 전용 카드 풀로 별도 관리한다")를 근거로, `game/data/engine_parts.json`을 Python으로 직접 감사한 결과 `galaxyExclusive: true` 카드가 0건이었다 — 직전 슬라이스가 `hull_combo_matrix` 단 1장에만 이 속성을 시범 적용하고 엔진 풀 전체를 감사하지 않은 것이 원인. `M.exploreHub(run, galaxyId, enginePool)`을 호출하면 항상 조용히 전체 풀로 폴백해, 엔진 부품만 장착한 플레이어는 은하 고유 엔진 보상을 영원히 받을 수 없고 지구 상점 엔진 풀도 아무것도 걸러지지 않는 죽은 콘텐츠였다.
-- TDD: `game/self_test.lua`에 신규 `testGearGalaxyExclusiveEnginePoolWiring()`을 먼저 추가했다(RED 확인: `the bundled engine_parts.json pool must contain at least one galaxyExclusive card`). 엔진 풀의 Earth-shop 필터링, `galaxySpecificGear`가 은하-고유 카드를 우선 선택함, `exploreHub`의 확정 드롭·1회성 소진을 회귀 검증하고, 마지막으로 hull/engine 두 풀이 `run.hubExplored`를 갤럭시 ID로 공유함(한 풀로 탐험을 마치면 다른 풀로도 재탐험 불가 — 항목8의 "체크포인트 탐사는 은하당 1회" 설계와 일치)을 확인한다.
-- `game/data/engine_parts.json`의 기존 legendary 카드 `engine_singularity_drive`(void/altitude/speed/economy 태그, 밸런스 수치 변경 없음)에 `galaxyExclusive: true`만 추가해 GREEN 전환.
-- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
-- `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/STATUS.md`/`docs/feedback/INBOX.md`/`docs/GEAR_SCHEMA.md`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`도 전혀 건드리지 않았다.
-- 이 슬라이스 이전에 커밋한 항목7 순수-데이터 슬라이스(`world.shopPlanet`/`gear.earthShopPool`/`gear.galaxySpecificGear`/`expedition.exploreHub`)는 커밋 `b1e3f92`로 `spaceship-gear`에 이미 push됨.
-- 실제 UI 배선(상점 행성 접근 팝업, 은하 허브 탐험 프롬프트, 지구 상점 화면에서 필터링된 풀 사용)은 여전히 이 레인 스코프 밖(`play.lua`/`world.lua` 담당).
-- 다음 사이클 다음 슬라이스: 항목15(귀환/비행중 슬롯머신 폐지 + 지구 상점 전용 슬롯머신 은하별 오즈)의 순수 함수/데이터 계층 준비, 또는 이 레인이 완료한 항목13→9→10→12→14의 남은 잔여 gap(문서-코드 정합성 감사 패턴) 재검증.
+- 감사 질문 1: 항목7이 JSON에 넣은 `galaxyExclusive`를 항목13 웹 에디터가 Save 시 보존하는가? `gear.validatePart`는 플래그를 복사하지만 `tools/gear-editor/` 폼에는 컨트롤이 없었고 `collectFormPart()`가 필드를 생략해, `hull_combo_matrix`/`engine_singularity_drive`를 열고 다른 필드만 고친 뒤 Save하면 Earth-shop 필터/허브 확정 드롭이 조용히 풀렸다.
+- TDD: `game/self_test.lua`의 `testGearEditorGalaxyExclusiveFieldSync()`가 `index.html`의 `fieldGalaxyExclusive` 체크박스, `collectFormPart` 출력, `openForm` 복원을 소스 텍스트로 잠근다.
+- `tools/gear-editor/index.html`에 Galaxy exclusive 체크박스, `editor.js`의 `openForm`/`collectFormPart`/그리드 라벨, `editor.css` 체크박스 레이아웃을 연결했다.
+- 감사 질문 2 (직전 슬라이스가 명시한 다음 작업): `docs/GEAR_SCHEMA.md` Card-shape 예시 JSON·필드 표가 `galaxyExclusive`를 빠뜨려 스키마만 읽는 작성자가 플래그 존재를 알 수 없었다. 예시 JSON과 표 행에 optional boolean(기본 false, Earth-shop 제외 / hub-drop 전용)을 명문화했다.
+- TDD: `testGearSchemaDocumentsGalaxyExclusive()`가 Card-shape 섹션(Effect shape 이전)에 예시 JSON 키, 표의 `` `galaxyExclusive` ``, Earth-shop/hub 노트가 남아 있는지를 잠근다.
+- `make test` GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, asset-manifest unittest OK).
+- 변경 파일은 `tools/gear-editor/editor.js`/`index.html`/`editor.css`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`docs/feedback/INBOX.md`뿐 — `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua` 미변경.
+- 다음 슬라이스: 항목13→9→10→12→14 잔여 gap 재감사(문서-코드 정합성). 항목15·UI 소비 지점(`play.lua`)은 이 레인 스코프 밖.
 
 ## [gear 레인] 항목10/14 콘텐츠 커버리지 심화 감사 — engine_parts.json 9종이 엔진 슬롯에서 완전히 죽은 콘텐츠였음을 발견·수정 (완료, 2026-09-03)
-
-이 레인이 지정받은 항목13→9→10→12→14가 모두 1차 완료되고 여러 후속 gap 슬라이스까지 닫힌 상태에서, 기존 `testGearEffectTypeContentCoverage`("모든 효과 타입이 두 풀 어딘가에는 등장하는가")보다 한 단계 더 깊은 감사를 수행했다 — preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
 
 - 감사 질문: "엔진 부품 하나가 실제로 엔진 슬롯에 장착됐을 때 유효한 효과를 최소 1개는 갖는가?" `game/self_test.lua`의 `testGearHullSpeedRunWiring`/`testGearMoneyRunWiring`/`testGearHullDurabilityRunWiring`가 명시적으로 "엔진 슬롯 카드의 speed/money/hullDurability는 절대 반영되지 않는다"고 문서화·검증해왔고, `M.effectiveSampleBonus`/`M.effectiveClimbSpeed`도 hull-only 스코프임을 재확인했다. 이 5개 타입(speed/money/climbSpeed/hullDurability/sampleSellValue)만으로 구성된 엔진 카드는 그 유일한 합법 슬롯(엔진)에 장착해도 게임플레이에 아무 영향이 없는 완전히 죽은 콘텐츠다.
 - Python으로 실제 `game/data/engine_parts.json`(14종)을 감사한 결과, item 10(b) 이전부터 존재하던 원본 엔진 카드 9종(`engine_basic_thruster`, `engine_afterburner`, `engine_fusion_core`, `engine_azure_coolant_jet`, `engine_ember_burst_valve`, `engine_void_phase_thruster`, `engine_solar_sail_flap`, `engine_burst_capacitor`, `engine_singularity_drive`)이 전부 이 상태였다 — item 10(b)가 (G) 추진 특화 효과 카테고리를 도입했을 때 신규 카드 2종에만 반영하고 기존 9종을 감사하지 않았던 것이 원인.

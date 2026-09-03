@@ -41,6 +41,7 @@ Both files share the exact same document/card schema below.
   "rarity": "common",
   "tags": ["defense"],
   "editions": [],
+  "galaxyExclusive": false,
   "effects": [
     { "type": "hullDurability", "value": 1 }
   ]
@@ -56,6 +57,7 @@ Both files share the exact same document/card schema below.
 | `rarity`   | string enum       | yes      | One of `common`, `uncommon`, `rare`, `legendary` (item 12's rarity axis). |
 | `tags`     | array of strings  | no       | Free-form synergy/category tags (e.g. `"speed"`, `"economy"`, `"defense"`, `"altitude"`). Reserved for the item 9 synergy engine to match combos against. |
 | `editions` | array of strings  | no       | Item 12's "부수 효과" (edition) pool this specific card can roll into (e.g. `"radioactive"`). Empty array means no editions defined yet. |
+| `galaxyExclusive` | boolean     | no       | Item 7 acquisition path. When `true`, `gear.earthShopPool` (Earth shop) excludes the card and `expedition.exploreHub` can grant it as a once-per-galaxy hub drop. Omitted or `false` means the card is generic and may appear in Earth shop. `game/gear.lua`'s `validatePart` treats any non-`true` value as `false`. |
 | `effects`  | array of Effect   | yes      | At least one entry. See below. |
 
 ## Effect shape
@@ -1192,4 +1194,25 @@ one-settlement-per-checkpoint design), so calling `exploreHub` with the
 hull pool after already exploring with the engine pool (or vice versa)
 correctly returns `nil`. `game/self_test.lua`'s
 `testGearGalaxyExclusiveEnginePoolWiring()` covers this.
+
+### Item 13 follow-up: web editor round-trips `galaxyExclusive`
+
+`gear.validatePart` already persisted `galaxyExclusive` on loaded cards,
+but `tools/gear-editor/` had no form control and `collectFormPart()`
+omitted the field. Opening `hull_parts.json` / `engine_parts.json`,
+editing any other field, and saving would silently strip the flag from
+`hull_combo_matrix` / `engine_singularity_drive` and undo the Earth-shop
+filter / hub-drop wiring. The editor now has a "Galaxy exclusive"
+checkbox, `openForm` restores it, `collectFormPart` writes it, and the
+grid labels exclusive cards. `testGearEditorGalaxyExclusiveFieldSync()`
+locks the HTML id + collect/open round-trip.
+
+### Item 13 follow-up: Card-shape table documents `galaxyExclusive`
+
+The Card-shape example JSON and field table at the top of this document
+now include optional `galaxyExclusive` (boolean, default false). Authors
+reading only the published schema can mark a card as Earth-shop-excluded /
+hub-drop-only without hunting later item-7 notes. `game/self_test.lua`'s
+`testGearSchemaDocumentsGalaxyExclusive()` locks the Card-shape section
+(example JSON + table row + Earth-shop / hub-drop notes).
 
