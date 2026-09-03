@@ -874,10 +874,35 @@ layers were both nominally "done".
   documents it as wired — the earlier paragraph now cross-references that
   section instead of repeating the outdated claim.
 - Still deferred: the actual shop/checkpoint UI affordance that would let
-  a player tap "free reroll" and call `M.spendReroll` (`play.lua`, out of
+  a player tap "free reroll" and call `M.rerollGearOffer` (`play.lua`, out of
   this lane's scope) — this slice only establishes the run-level
   spend/remaining state a future consumer will read from and mutate,
   same posture as every other item 14 (C)/(E) wrapper before it.
+
+### Item 14(C) rerollBonus consumption gap: `M.spendReroll` had no effect of
+### its own — `M.rerollGearOffer` closes it
+
+A follow-up audit of this same rerollBonus wiring found a narrower gap one
+level deeper than the "Still deferred" note above: `M.spendReroll(run)`
+only ever decremented a per-expedition counter, and `M.rollGearOffer(run,
+pool, rolls)` only ever generated a gear offer with no gate on an actual
+reroll budget — the two halves of "spend a free reroll to get a new gear
+offer" existed but were never atomically joined, exactly the "counter
+exists but nothing spends it for its documented effect" class of gap this
+lane closed for `boostCharge` (`M.spendBoost`) and `insurance`
+(`M.damage`'s one-shot gate). `M.rerollGearOffer(run, pool, rolls)` closes
+it: refuses (`false` + error-message, no state mutated) when
+`M.rerollsRemaining(run)` is zero, otherwise spends exactly one free reroll
+via `M.spendReroll` and returns `true` + the freshly generated offer from
+`M.rollGearOffer` — same reject-don't-partial-apply contract as every other
+atomic run mutator in `game/expedition.lua`. `game/self_test.lua`'s new
+`testGearRerollOfferSpendWiring()` verifies: refusal with zero rerolls
+remaining (no `rerollsUsed` mutation), a successful call with exactly one
+`rerollBonus` card returning a real offer table and decrementing
+`rerollsRemaining` from 1 to 0, and a second call refusing once the budget
+is exhausted (no offer leaked, no further decrement). Still deferred: the
+actual "free reroll" tap affordance in the shop/checkpoint UI that calls
+this (`play.lua`, out of this lane's scope).
 
 ### Item 9/14 economy-stat gap: `sampleSellValue`/`sellMultiplier` had no
 ### run-state consumer — `M.effectiveSampleBonus` closes it

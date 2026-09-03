@@ -2592,6 +2592,73 @@ local function testGearChainTriggerConsumptionWiring()
     assert(ok3 and awarded3 == 200, "an engine-slot chainTrigger card must also double the awarded value, got " .. tostring(awarded3))
 end
 
+-- Item 14(C) rerollBonus gap, one level deeper than testGearRunEffectWiring's
+-- coverage: M.spendReroll(run) (a prior slice) only decrements a per-
+-- expedition counter -- it never actually re-rolls anything, so a shop/hub
+-- UI wired to it would spend the resource for literally no effect. Likewise
+-- M.rollGearOffer(run, pool, rolls) (an even earlier slice) only ever
+-- generates an offer -- nothing gates that generation behind an available
+-- free reroll or spends one atomically alongside it. Every other item 14
+-- (C)/(D) "counter exists but nothing spends it for its documented purpose"
+-- gap this lane has found (boostCharge -> M.spendBoost, insurance ->
+-- M.damage's one-shot gate, rerollBonus's OWN counter -> M.spendReroll) got
+-- exactly this kind of atomic "spend the resource AND perform the effect it
+-- names" wrapper; rerollBonus was still missing the second half specific to
+-- ITS effect (getting a NEW gear offer), unlike insurance/boostCharge whose
+-- counter IS their effect. TDD: this test is written first and expects
+-- expedition.rerollGearOffer to not exist yet (RED).
+local function testGearRerollOfferSpendWiring()
+    local expedition = require("game.expedition")
+    local gear = require("game.gear")
+    local hullPool = gear.loadHullParts()
+
+    -- No free rerolls remaining: rerollGearOffer must refuse atomically
+    -- (false + message, no state mutated), the same "reject-don't-partial-
+    -- apply" contract as spendReroll/equipGear/sellGear.
+    local bareRun = expedition.new()
+    local okBare, errBare = expedition.rerollGearOffer(bareRun, hullPool, {
+        rarity = 0, pick = 0, editionChance = 0.99, editionPick = 0,
+    })
+    assert(okBare == false and type(errBare) == "string",
+        "rerollGearOffer must refuse (false + message) when no free rerolls remain")
+    assert(bareRun.rerollsUsed == 0,
+        "a refused rerollGearOffer call must not consume a reroll")
+
+    -- Equip a rerollBonus +1 card: one free reroll is available. Spending
+    -- it must both (a) return a real gear offer (same shape as
+    -- rollGearOffer's return value) and (b) decrement rerollsRemaining by
+    -- exactly one, proving the two previously-separate halves (the offer
+    -- generator and the spend counter) are now atomically joined.
+    local run = expedition.new()
+    local rerollCard = {
+        id = "reroll-fixture", name = "Reroll", nameKo = "Reroll", icon = "*",
+        rarity = "common", tags = {}, editions = {},
+        effects = { { type = "rerollBonus", value = 1 } },
+    }
+    assert(expedition.equipGear(run, "hull", rerollCard))
+    assert(expedition.rerollsRemaining(run) == 1,
+        "a run with rerollBonus == 1 must start with exactly one remaining free reroll")
+
+    local ok, offer = expedition.rerollGearOffer(run, hullPool, {
+        rarity = 0, pick = 0, editionChance = 0.99, editionPick = 0,
+    })
+    assert(ok == true, "rerollGearOffer must succeed while a free reroll remains")
+    assert(type(offer) == "table" and type(offer.id) == "string",
+        "a successful rerollGearOffer must return a real gear offer table, got " .. tostring(offer))
+    assert(expedition.rerollsRemaining(run) == 0,
+        "a successful rerollGearOffer must consume exactly one free reroll")
+
+    -- A second call with zero remaining rerolls must refuse and must NOT
+    -- generate/leak another offer.
+    local ok2, err2 = expedition.rerollGearOffer(run, hullPool, {
+        rarity = 0, pick = 0, editionChance = 0.99, editionPick = 0,
+    })
+    assert(ok2 == false and type(err2) == "string",
+        "rerollGearOffer must refuse once its per-expedition reroll budget is exhausted")
+    assert(expedition.rerollsRemaining(run) == 0,
+        "a refused rerollGearOffer call must not further decrement remaining rerolls")
+end
+
 -- Item 9(c): "카드 획득... 과 교체가 잦아지는 루프를 설계한다." With a fixed
 -- 6/3-slot loadout, M.sellGear is the swap-loop's release valve -- it frees
 -- an equipped slot and refunds money in one atomic action, scaled by
@@ -5337,6 +5404,7 @@ function M.run()
     testGearMoneyRunWiring()
     testGearStreakMultiplierWiring()
     testGearChainTriggerConsumptionWiring()
+    testGearRerollOfferSpendWiring()
     testGearSlotSwapEconomyWiring()
     testGearCrystallizedSellPremiumWiring()
     testGearBuyEconomyWiring()

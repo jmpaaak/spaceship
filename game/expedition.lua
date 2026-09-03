@@ -1021,6 +1021,33 @@ function M.spendReroll(run)
     return true
 end
 
+-- Item 14(C) rerollBonus consumption: M.spendReroll(run) above only ever
+-- decremented a per-expedition counter with no effect of its own, and
+-- M.rollGearOffer(run, pool, rolls) above only ever generated an offer with
+-- no gate on an actual reroll budget -- exactly the "counter exists but
+-- nothing spends it for its documented effect" gap this lane closed for
+-- boostCharge (M.spendBoost) and insurance (M.damage's one-shot gate).
+-- M.rerollGearOffer atomically joins the two: it refuses (false +
+-- error-message, no state mutated) when M.rerollsRemaining(run) is zero,
+-- otherwise it spends exactly one free reroll via M.spendReroll and returns
+-- true + the freshly generated offer from M.rollGearOffer. Same
+-- reject-don't-partial-apply contract as every other atomic run mutator in
+-- this file (M.equipGear/M.sellGear/M.buyGear/M.spendReroll/M.spendBoost).
+function M.rerollGearOffer(run, pool, rolls)
+    if M.rerollsRemaining(run) <= 0 then
+        return false, "rerollGearOffer: no free rerolls remaining"
+    end
+    local offer = M.rollGearOffer(run, pool, rolls)
+    if not offer then
+        return false, "rerollGearOffer: pool produced no offer"
+    end
+    local ok, err = M.spendReroll(run)
+    if not ok then
+        return false, err
+    end
+    return true, offer
+end
+
 function M.detectionRadius(run, baseRadius)
     return gearModule.effectiveDetectionRadius(baseRadius, combinedGearList(run))
 end
