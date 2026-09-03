@@ -160,3 +160,26 @@ form fieldset {
   margin-top: 8px;
   white-space: pre-wrap;
 }
+.edition-preview {
+  margin-top: 12px;
+  font-size: 13px;
+  background: #2a2a2a;
+  padding: 8px;
+  border-radius: 4px;
+}
+.edition-preview:empty {
+  display: none;
+}
+.edition-preview h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--fg);
+}
+.edition-preview-item {
+  margin-bottom: 8px;
+  border-left: 2px solid var(--border);
+  padding-left: 8px;
+}
+.edition-preview-item strong {
+  color: #ffb347;
+}

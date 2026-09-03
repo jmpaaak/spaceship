@@ -961,6 +961,56 @@ local function testGearEditorEditionAndRaritySync()
     end
 end
 
+-- docs/feedback/INBOX.md item 12/13 (follow-up): STATUS.md's own recorded
+-- next-slice note flagged that the web editor's edition sync check (just
+-- above) only verifies the editor *accepts* the right edition ids -- it
+-- never verifies the editor actually *previews* what an edition numerically
+-- does to a card's effects (e.g. "crystallized" doubling sampleSellValue,
+-- "quantum_flawed" doubling everything but appending a hullDurability
+-- drawback), even though `game/gear.lua`'s `M.editionEffects` is the single
+-- source of truth for exactly that transform and is documented as something
+-- "the web editor's preview" should also read (gear.lua's own comment on
+-- `M.editionEffects`: "Kept centralized so gear.lua and the web editor's
+-- preview both read the exact same table"). Until this test, no code ever
+-- checked that editor.js actually has such a preview table, so a numeric
+-- edit to `M.editionEffects` (e.g. rebalancing crystallized from 2.0x to
+-- 2.5x) could silently drift from what the editor shows an author while
+-- they design a card.
+local function testGearEditorEditionEffectPreviewSync()
+    local editorSrc = love.filesystem.read("tools/gear-editor/editor.js")
+    assert(editorSrc, "tools/gear-editor/editor.js must be readable for the sync check")
+
+    local tableStart = editorSrc:find("EDITION_EFFECTS%s*=%s*{")
+    assert(tableStart, "editor.js must define an EDITION_EFFECTS table mirroring gear.lua's M.editionEffects")
+    local tableEnd = editorSrc:find("\n};", tableStart) or editorSrc:find("\n}", tableStart)
+    assert(tableEnd, "editor.js EDITION_EFFECTS table must be closed with a '}'")
+    local block = editorSrc:sub(tableStart, tableEnd)
+
+    for editionId, def in pairs(gear.editionEffects) do
+        local entryStart = block:find('"' .. editionId .. '"%s*:%s*{')
+        assert(entryStart, "editor.js EDITION_EFFECTS must include an entry for '" .. editionId .. "'")
+        local entryEnd = block:find("}", entryStart)
+        local entry = block:sub(entryStart, entryEnd)
+
+        local scopeMatch = entry:match('scope%s*:%s*"([%w]+)"')
+        assert(scopeMatch == def.scope,
+            "editor.js EDITION_EFFECTS['" .. editionId .. "'].scope must be '" .. tostring(def.scope) ..
+            "' to match gear.lua, got '" .. tostring(scopeMatch) .. "'")
+
+        local multMatch = entry:match("multiplier%s*:%s*([%d%.]+)")
+        assert(multMatch and tonumber(multMatch) == def.multiplier,
+            "editor.js EDITION_EFFECTS['" .. editionId .. "'].multiplier must be " .. tostring(def.multiplier) ..
+            " to match gear.lua, got " .. tostring(multMatch))
+    end
+
+    -- The preview must actually be wired to the form, not just declared as
+    -- dead data: the editions field's change handler (or an equivalent
+    -- explicit preview-update function) must exist and reference
+    -- EDITION_EFFECTS so an author sees the transformed values live.
+    assert(editorSrc:find("updateEditionPreview"),
+        "editor.js must define/wire an updateEditionPreview function so effect values reflect selected editions live")
+end
+
 -- docs/feedback/INBOX.md item 14: "부품 효과 종류(effect schema) 확장 — 가산형
 -- 5종 + 배율/트리거/조작형 추가". Verifies every newly whitelisted effect
 -- type from categories (B)~(F) actually does something distinct (not just
@@ -1233,6 +1283,31 @@ end
 -- detectionRadius/autoCollect/insurance/shopDiscount/sellMultiplier/
 -- streakMultiplier in actual play even though every one of their run
 -- wrappers reads the engine slot list too.
+
+local function testHullCardsHaveNonEngineOnlyEffect()
+    -- The (G) engine-only types
+    local engineOnlyTypes = {
+        fuelEfficiency = true, steeringResponsiveness = true, boostCharge = true
+    }
+    local hullPool = gear.loadHullParts()
+    local deadCards = {}
+    for _, part in ipairs(hullPool) do
+        local hasNonEngineOnlyEffect = false
+        for _, effect in ipairs(part.effects) do
+            if not engineOnlyTypes[effect.type] then
+                hasNonEngineOnlyEffect = true
+                break
+            end
+        end
+        if not hasNonEngineOnlyEffect then
+            deadCards[#deadCards + 1] = part.id
+        end
+    end
+    assert(#deadCards == 0,
+        "hull_parts.json contains cards with ONLY engine-scoped (G) effects, " ..
+        "making them completely dead in the hull slot: " .. table.concat(deadCards, ", "))
+end
+
 local function testEngineCardsHaveCategoryAgnosticEffectCoverage()
     local categoryAgnosticTypes = {
         "luck", "chainTrigger", "rerollBonus", "collisionRadius",
@@ -3968,10 +4043,12 @@ function M.run()
     testEnginePartsSlotSeparation()
     testGearRarityAndEditionSystem()
     testGearEditorEditionAndRaritySync()
+    testGearEditorEditionEffectPreviewSync()
     testGearEffectSchemaExpansion()
     testEnginePropulsionSpecialization()
     testGearEffectTypeContentCoverage()
     testEngineCardsHaveNonHullOnlyEffect()
+    testHullCardsHaveNonEngineOnlyEffect()
     testEngineCardsHaveCategoryAgnosticEffectCoverage()
     testGearRunWiring()
     testGearPropulsionRunWiring()

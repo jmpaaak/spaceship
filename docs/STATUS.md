@@ -35,6 +35,24 @@
 - `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
 - 다음 사이클 다음 슬라이스: `game/data/hull_parts.json`(34종)에 대해서도 동일한 "슬롯 스코프 내 완전 무효 카드" 감사를 수행(hull은 (C)/(E)/(D) 카테고리 무관 타입이 많아 훨씬 적은 카드가 걸릴 것으로 예상되나 확인되지 않음), 또는 항목7(획득 경로 3원화) 순수 데이터 계층 준비.
 
+## [gear 레인] 항목13/12 웹 에디터 에디션 미리보기 기능 구현 + 선체 부품 슬롯 스코프 감사 (완료, 2026-09-03)
+
+preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작. 직전 슬라이스에서 다음 슬라이스 후보로 명시했던 두 가지 잔여 작업을 모두 처리했다.
+
+1. **웹 에디터 에디션 미리보기 (항목 13/12 잔여):**
+   - `tools/gear-editor/editor.js`와 `index.html`에 에디션 효과 미리보기(`updateEditionPreview`) 기능을 구현했다. 
+   - `M.editionEffects`와 동일한 변환 로직(`EDITION_EFFECTS`)을 에디터에 이식하여, 사용자가 카드 폼에서 `editions`를 입력하거나 `effects` 목록을 수정할 때마다 하단에 각 에디션(irradiated, crystallized, quantum_flawed, refined)이 적용되었을 때의 최종 수치(multiplier 적용, drawback 추가, synergyBonusAdd 표시 등)를 실시간으로 미리보기할 수 있게 했다.
+   - 이를 통해 화이트리스트 동기화만 검증되던 상태에서 벗어나, 항목 13의 "수치 미리보기" 요건을 완전히 만족시켰다.
+
+2. **hull_parts.json 슬롯 스코프 콘텐츠 커버리지 (항목 10/14 후속):**
+   - 직전 사이클들에서 `engine_parts.json`에 수행했던 "슬롯 스코프 내 완전 무효 카드" 감사를 `game/data/hull_parts.json`(34종)에도 동일하게 적용했다.
+   - `game/self_test.lua`에 신규 `testHullCardsHaveNonEngineOnlyEffect()`를 추가해, 선체 카드가 오직 (G) 엔진 전용 타입(`fuelEfficiency`, `steeringResponsiveness`, `boostCharge`)만으로 구성되어 선체 슬롯에서 완전히 무효가 되는 경우가 있는지 검증했다.
+   - 예상대로 0건(클린)임이 확인되어 추가 카드 수정 없이 GREEN 통과. 이로써 두 슬롯 풀의 스코프 커버리지 감사가 모두 완료되었다.
+
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `tools/gear-editor/editor.js`, `tools/gear-editor/index.html`, `tools/gear-editor/editor.css`, `game/self_test.lua` 파일만 수정으로 보고함 — 레인 스코프가 금지한 게임 코어 시스템(`play.lua`, `world.lua`, `expedition.lua`)은 전혀 건드리지 않았다.
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화) 순수 데이터 계층/획득 확률 구조 준비.
+
 ## [gear 레인] 항목14(C) chainTrigger 소비 배선 — rerollBonus/boostCharge와 동일한 "카운트는 있지만 아무도 쓰지 않는" 마지막 잔여 처리 (완료, 2026-09-03)
 
 preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작. 직전 슬라이스가 `game/data/hull_parts.json`(34종)에 대해 항목10/14의 "슬롯 스코프 내 완전 무효 카드" 감사를 다음 후보로 명시했으나, Python으로 실제 감사한 결과 hull_parts.json은 이미 (G) 엔진 전용 타입을 전혀 쓰지 않고 hull-only 5종 타입만으로 구성된 카드가 하나도 없어(0건) 이 감사는 클린 상태였다. 대신 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 항목14 (C) `chainTrigger`에 다시 적용해 새 gap을 찾아 처리했다.

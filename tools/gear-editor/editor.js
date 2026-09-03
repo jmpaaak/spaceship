@@ -27,6 +27,12 @@ const KNOWN_RARITIES = ["common", "uncommon", "rare", "legendary"];
 // Item 12: known edition ids a card's `editions` array may reference (must
 // stay identical to game/gear.lua's M.knownEditions whitelist).
 const KNOWN_EDITIONS = ["irradiated", "crystallized", "quantum_flawed", "refined"];
+const EDITION_EFFECTS = {
+  "irradiated": { scope: "all", multiplier: 1.0, synergyBonusAdd: 0.05 },
+  "crystallized": { scope: "sampleSellValue", multiplier: 2.0 },
+  "quantum_flawed": { scope: "all", multiplier: 2.0, drawback: { type: "hullDurability", value: -1 } },
+  "refined": { scope: "all", multiplier: 0.5, noSlotCost: true },
+};
 const EFFECT_VALUE_MIN = -100;
 const EFFECT_VALUE_MAX = 100;
 
@@ -43,7 +49,7 @@ function cacheEls() {
     "formTitle", "cardForm", "fieldId", "fieldName", "fieldNameKo",
     "fieldIcon", "fieldRarity", "rarityPreview", "fieldTags",
     "fieldEditions", "effectsList", "addEffectBtn", "saveCardBtn",
-    "deleteCardBtn", "cancelBtn", "formError",
+    "deleteCardBtn", "cancelBtn", "formError", "editionPreviewContainer"
   ].forEach((id) => { els[id] = document.getElementById(id); });
 }
 
@@ -248,10 +254,14 @@ function addEffectRow(type, value) {
   input.type = "text";
   input.placeholder = "value";
   input.value = value !== undefined ? String(value) : "";
+  
+  input.addEventListener("input", updateEditionPreview);
+  select.addEventListener("change", updateEditionPreview);
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.textContent = "✕";
-  removeBtn.addEventListener("click", () => row.remove());
+  removeBtn.addEventListener("click", () => { row.remove(); updateEditionPreview(); });
+
   row.appendChild(select);
   row.appendChild(input);
   row.appendChild(removeBtn);
@@ -291,11 +301,55 @@ function openForm(id) {
     els.deleteCardBtn.style.display = "";
   }
   updateRarityPreview();
+  updateEditionPreview();
 }
 
 function closeForm() {
   els.formPanel.classList.add("hidden");
   editingId = null;
+}
+
+
+function updateEditionPreview() {
+  els.editionPreviewContainer.innerHTML = "";
+  const candidate = collectFormPart();
+  const validEditions = candidate.editions.filter(e => KNOWN_EDITIONS.includes(e));
+  if (validEditions.length === 0 || candidate.effects.length === 0) return;
+
+  const h3 = document.createElement("h3");
+  h3.textContent = "Edition Previews";
+  els.editionPreviewContainer.appendChild(h3);
+
+  validEditions.forEach(editionId => {
+    const def = EDITION_EFFECTS[editionId];
+    if (!def) return;
+    
+    const outEffects = candidate.effects.map(e => ({ type: e.type, value: e.value }));
+    outEffects.forEach(effect => {
+      if (def.scope === "all" || def.scope === effect.type) {
+        effect.value = effect.value * def.multiplier;
+      }
+    });
+    if (def.drawback) {
+      outEffects.push({ type: def.drawback.type, value: def.drawback.value });
+    }
+
+    const item = document.createElement("div");
+    item.className = "edition-preview-item";
+    
+    let html = `<strong>${escapeHtml(editionId)}</strong>: `;
+    const effectStrs = outEffects.map(e => `${escapeHtml(e.type)} ${e.value >= 0 ? "+" : ""}${e.value}`);
+    if (def.synergyBonusAdd) {
+      effectStrs.push(`(synergy +${def.synergyBonusAdd})`);
+    }
+    if (def.noSlotCost) {
+      effectStrs.push(`(no slot cost)`);
+    }
+    html += effectStrs.join(", ");
+    
+    item.innerHTML = html;
+    els.editionPreviewContainer.appendChild(item);
+  });
 }
 
 function updateRarityPreview() {
@@ -325,6 +379,7 @@ function collectFormPart() {
 
 function wireForm() {
   els.fieldRarity.addEventListener("change", updateRarityPreview);
+  els.fieldEditions.addEventListener("input", updateEditionPreview);
   els.addEffectBtn.addEventListener("click", () => addEffectRow(KNOWN_EFFECT_TYPES[0], 0));
   els.cancelBtn.addEventListener("click", closeForm);
   els.newCardBtn.addEventListener("click", () => openForm(null));
