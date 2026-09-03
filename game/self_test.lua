@@ -2697,6 +2697,14 @@ function M.run()
     assert(PlayScene.showSpecimenStrip == false,
         "launch screen specimen strip should stay hidden (docs/feedback UI overhaul item 1)")
 
+    -- docs/feedback/INBOX.md "UI 대개편 6건" item 6: user wants the "DEV
+    -- PLACEHOLDER"/"개발 임시본" footer fully invisible (not just smaller/
+    -- dimmer, which an earlier cycle already did). M.showDevPlaceholder
+    -- gates the conditional draw() call; pin it false so the footer stays
+    -- fully gone.
+    assert(PlayScene.showDevPlaceholder == false,
+        "dev placeholder footer should be fully hidden (docs/feedback UI overhaul item 6)")
+
     -- Ascending no longer draws HOLD LEFT/HOLD RIGHT boxes; the full
     -- canvas is still a tap-hold fallback (left half / right half).
     local ascendControls = PlayScene.ascendControls

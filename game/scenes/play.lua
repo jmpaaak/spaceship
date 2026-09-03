@@ -170,6 +170,15 @@ M.showLaunchLoadoutTitle = false
 -- persistence stays untouched -- only the launch-screen render is removed.
 M.showSpecimenStrip = false
 
+-- docs/feedback/INBOX.md "UI 대개편 6건" item 6: the "DEV PLACEHOLDER"
+-- footer had already been shrunk/dimmed in an earlier cycle, but the user
+-- confirmed (2026-09-03) they want it fully invisible, not just quieter.
+-- Named flag follows the same pattern as M.showSpecimenStrip /
+-- M.showLaunchLoadoutTitle: the conditional draw call itself is gated off
+-- rather than deleting the printf plumbing, so it can be re-enabled for a
+-- future dev build without re-threading render code.
+M.showDevPlaceholder = false
+
 -- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first slice):
 -- the launch phase's "TAP TO LAUNCH"/"탭하여 발사" action was a bare text
 -- line with no visual affordance beyond the words themselves. Drawing a
@@ -2544,12 +2553,14 @@ function M:draw()
         love.graphics.setColor(1, 0.85, 0.3, alpha)
         love.graphics.printf(self.newSpecimenBanner, 48, 256, viewport.width - 96, "center")
     end
-    self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
-    local previousFooterFont = love.graphics.getFont()
-    love.graphics.setFont(self.tinyFont)
-    love.graphics.setColor(1, 0.65, 0.2, M.devPlaceholderAlpha)
-    love.graphics.printf(i18n.t("dev_placeholder"), 16, viewport.height - 44, viewport.width - 32, "center")
-    love.graphics.setFont(previousFooterFont)
+    if M.showDevPlaceholder then
+        self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
+        local previousFooterFont = love.graphics.getFont()
+        love.graphics.setFont(self.tinyFont)
+        love.graphics.setColor(1, 0.65, 0.2, M.devPlaceholderAlpha)
+        love.graphics.printf(i18n.t("dev_placeholder"), 16, viewport.height - 44, viewport.width - 32, "center")
+        love.graphics.setFont(previousFooterFont)
+    end
 end
 
 return M
