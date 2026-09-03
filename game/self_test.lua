@@ -1722,6 +1722,21 @@ local function testHubPlanetSprite()
         "PlayScene must load assets/planet/planet_hub.png into self.hubPlanetImagePath")
 end
 
+-- Galaxy shop planets still reuse the generic planet sprite
+-- (planet_generic.png). Same file-existence + always-set-path pattern as
+-- testHubPlanetSprite. Graphics-gated shopPlanetImage cannot
+-- be asserted under GAME_HEADLESS=1.
+local function testShopPlanetSprite()
+    local path = "assets/planet/planet_shop.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated shop planet sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.shopPlanetImagePath == path,
+        "PlayScene must load assets/planet/planet_shop.png into self.shopPlanetImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3614,6 +3629,7 @@ function M.run()
     testMinimapOrbitRingSprite()
     testMinimapGalaxyRingSprite()
     testHubPlanetSprite()
+    testShopPlanetSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

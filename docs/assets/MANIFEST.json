@@ -1108,5 +1108,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.hubPlanetImage for planet.hub landmarks"
+  },
+  {
+    "path": "assets/planet/planet_shop.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "6b4ec6dd-5309-4d92-a91d-e664e151ef11",
+    "prompt": "pixel art, 16-bit, small round galaxy shop market planet sprite for a vertical space roguelite, compact trading world with a cyan neon bazaar ring and clustered market-stall lights around the equator, cratered surface, soft top-down lighting, mostly grayscale/neutral tone so game code can tint it per biome while the cyan bazaar ring stays readable, crisp clean circular silhouette, solid white background, no text, no watermark, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904127,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:11:13Z",
+    "sha256": "c6650222174e706e26d97c1f993119fb3ae2e743a8f5e77fb943fe375b013886",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shopPlanetImage for planet.shop landmarks"
   }
 ]

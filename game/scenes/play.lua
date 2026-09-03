@@ -1119,6 +1119,21 @@ function M.new(options)
             hubPlanetImage = img
         end
     end
+    -- assets/planet/planet_shop.png is the ComfyUI-generated galaxy
+    -- shop/market planet (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- hubPlanetImagePath. :draw() uses it for planet.shop landmarks
+    -- instead of planet_generic.png, and falls back to planetImage
+    -- (then the Lua circle) when the image failed to load.
+    local shopPlanetImagePath = "assets/planet/planet_shop.png"
+    local shopPlanetImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shopPlanetImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shopPlanetImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1183,6 +1198,8 @@ function M.new(options)
         galaxyRingImagePath = galaxyRingImagePath,
         hubPlanetImage = hubPlanetImage,
         hubPlanetImagePath = hubPlanetImagePath,
+        shopPlanetImage = shopPlanetImage,
+        shopPlanetImagePath = shopPlanetImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2610,6 +2627,8 @@ function M:draw()
             -- existing planetColor(hue) lookup instead of a flat filled
             -- circle, so per-planet hue variety is preserved. Hub/checkpoint
             -- planets use planet_hub.png so they read as a distinct landmark.
+            -- Shop/market planets use planet_shop.png so they read as a
+            -- distinct landmark from both hub and generic worlds.
             -- Falls back to planetImage, then the previous flat
             -- gradient-circle rendering whenever the image failed to load
             -- (e.g. missing file/graphics disabled).
@@ -2617,6 +2636,8 @@ function M:draw()
             local planetSprite = self.planetImage
             if planet.hub and self.hubPlanetImage then
                 planetSprite = self.hubPlanetImage
+            elseif planet.shop and self.shopPlanetImage then
+                planetSprite = self.shopPlanetImage
             end
             if planetSprite then
                 local iw, ih = planetSprite:getWidth(), planetSprite:getHeight()
