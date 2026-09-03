@@ -589,6 +589,22 @@ local function testEarthShopSlotMachine()
     local poorRun = expedition.new({ money = expedition.earthShopSlotCost - 1 })
     poorRun.phase = "settlement"
     assert(not expedition.spinEarthShopSlot(poorRun), "EARTH SHOP slot must require enough money for the fee")
+
+    -- Item 15(c): lastCheckpointGalaxyId is per-expedition. Settlement after
+    -- a checkpoint visit must still remember that galaxy so EARTH SHOP spins
+    -- use its odds, but launching the next expedition must start from home
+    -- odds again -- otherwise a previous run's outer-galaxy table leaks.
+    local leakRun = expedition.new()
+    expedition.launch(leakRun)
+    expedition.exploreCheckpoint(leakRun, galaxyId)
+    assert(leakRun.lastCheckpointGalaxyId == galaxyId)
+    assert(expedition.returnToEarth(leakRun))
+    assert(leakRun.phase == "settlement")
+    assert(leakRun.lastCheckpointGalaxyId == galaxyId,
+        "settlement must keep the expedition's last checkpoint so EARTH SHOP odds still apply")
+    assert(expedition.launch(leakRun))
+    assert(leakRun.lastCheckpointGalaxyId == nil,
+        "a new expedition must reset lastCheckpointGalaxyId so EARTH SHOP odds start at home")
 end
 
 -- docs/feedback/INBOX.md 처리대기 항목 7/8 UI 연결부: PlayScene.update must
@@ -664,6 +680,35 @@ local function testCheckpointAndShopDocking()
     shopScene:update(0)
     assert(shopScene.dockedShopPlanetId == nil,
         "leaving the shop planet's vicinity must clear the docked flag")
+
+    -- Item 15(c): re-docking a previously discovered hub must still refresh
+    -- lastCheckpointGalaxyId. discovered[] correctly blocks a second gear
+    -- grant / sample settle, but EARTH SHOP odds follow the most recently
+    -- visited checkpoint this expedition -- not the first one forever.
+    local galaxyB
+    for gx = -20, 20 do
+        for gy = -20, 20 do
+            if not (gx == 0 and gy == 0) then
+                local candidate = world.galaxy(gx, gy)
+                if candidate and candidate.id ~= galaxy.id then
+                    galaxyB = candidate
+                    break
+                end
+            end
+        end
+        if galaxyB then break end
+    end
+    assert(galaxyB, "need a second non-home galaxy for last-checkpoint refresh")
+    local hubB = world.hubPlanet(galaxyB)
+    assert(hubB)
+    hubScene.ship.x, hubScene.ship.y = hubB.x, hubB.y
+    hubScene:update(0)
+    assert(hubScene.expedition.lastCheckpointGalaxyId == galaxyB.id,
+        "docking a second hub must record it as the most recent checkpoint")
+    hubScene.ship.x, hubScene.ship.y = hub.x, hub.y
+    hubScene:update(0)
+    assert(hubScene.expedition.lastCheckpointGalaxyId == galaxy.id,
+        "re-docking the first hub must refresh lastCheckpointGalaxyId for EARTH SHOP odds")
 end
 
 -- docs/feedback/INBOX.md 처리대기 항목 15(b) UI wiring: the settlement

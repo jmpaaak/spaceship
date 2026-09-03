@@ -1112,9 +1112,14 @@ function M:update(dt)
             -- ascending phase) immediately settles any pending sample
             -- value into money without ending the expedition.
             if planet.hub and distanceSquared <= (planet.radius + 14) ^ 2 then
+                -- Item 15(c): every hub dock (including a re-dock of a
+                -- previously discovered checkpoint) must refresh
+                -- lastCheckpointGalaxyId so EARTH SHOP odds follow the
+                -- most recently visited galaxy this expedition. Gear grant
+                -- and sample settle stay one-shot via discovered[].
+                local granted, gearId = expedition.exploreCheckpoint(self.expedition, planet.galaxyId)
                 if not self.discovered[planet.id] then
                     self.discovered[planet.id] = true
-                    local granted, gearId = expedition.exploreCheckpoint(self.expedition, planet.galaxyId)
                     if granted then
                         self.message = i18n.t("checkpoint_gear_message", gearId)
                     end

@@ -476,6 +476,11 @@ function M.launch(run)
         run.lastLostSampleCount = 0
         run.lastLostSampleValue = 0
         run.lastLostAltitude = 0
+        -- docs/feedback/INBOX.md 처리대기 항목 15(c): EARTH SHOP slot odds
+        -- follow the most recently visited checkpoint *this expedition*.
+        -- Settlement still needs the previous climb's id so spins in the
+        -- shop use that table; a fresh launch must start from home odds.
+        run.lastCheckpointGalaxyId = nil
     end
     run.phase = "ascending"
     return true
