@@ -151,16 +151,6 @@ M.launchHudHeight = 128
 M.launchLoadoutBoxTop = 808
 M.launchLoadoutRowStep = 40
 
--- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
--- panel caption itself was flagged for removal during the "remove
--- unnecessary text" review -- the card's own contents (hull/upgrades/
--- forecast/steering/odds numbers) are self-explanatory once shown inside
--- an obviously bordered box directly under the Earth disc, so the extra
--- caption line was pure redundant text eating a row of vertical space.
--- Kept as a named flag (rather than deleting the printf outright) so a
--- future cycle can re-enable it cheaply if real-device feedback disagrees.
-M.showLaunchLoadoutTitle = false
-
 -- docs/feedback/INBOX.md UI 대개편 6건 item 1: the "SPECIMENS n/9" specimen
 -- log strip is pure decoration with zero effect on gameplay numbers (user
 -- ruling, 2026-09-03) -- gate the launch-screen draw call behind this flag
@@ -2256,11 +2246,6 @@ function M:draw()
         love.graphics.setFont(self.smallFont)
         local row = M.launchLoadoutBoxTop + 16
         local rowStep = M.launchLoadoutRowStep
-        if M.showLaunchLoadoutTitle then
-            love.graphics.setColor(0.7, 0.9, 1)
-            love.graphics.printf(i18n.t("launch_loadout_title"), 64, row, viewport.width - 128, "center")
-            row = row + rowStep
-        end
         if loadout.ship then
             love.graphics.setColor(1, 0.8, 0.3)
             love.graphics.printf(loadout.ship, 64, row, viewport.width - 128, "center")
