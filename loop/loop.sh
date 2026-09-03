@@ -131,7 +131,7 @@ while :; do
     -- \
     "${HERMES_BIN}" chat --oneshot -Q \
     --provider "${PROVIDER}" --model "${MODEL}" --reasoning "${REASONING}" \
-    --toolsets terminal,file,vision --ignore-rules --yolo --source tool \
+    --toolsets terminal,file --ignore-rules --yolo --source tool \
     --in "${ROOT_DIR}" --max-turns "${MAX_TURNS}" \
     --run-budget "${RUN_BUDGET_SECONDS}" --query-file "${prompt_file}" \
     2>&1 | tee "${agent_output}" | tee -a "${log_file}"
