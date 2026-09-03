@@ -590,6 +590,22 @@ local function testCashCoinIcon()
     end
 end
 
+local function testSpeedometerIcon()
+    local PlayScene = require("game.scenes.play")
+    local points = PlayScene.speedIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "speedometer silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY == 20, "speedometer must span above cy and be flat on bottom")
+    -- The needle tip is at cx + r*0.5, cy - r*0.5 -> 24, 16.
+    -- The left edge is at cx - r, cy -> 16, 20.
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -3191,7 +3207,7 @@ function M.run()
     assert(starterLoadout.stats == "HULL 3")
     assert(starterLoadout.upgrades == "FUEL LV.0  HULL LV.0")
     assert(starterLoadout.forecast == "REACH 600  SLOTS 6")
-    assert(starterLoadout.steering == "STEER SPEED 55")
+    assert(starterLoadout.steering == "55")
     loadoutScene.expedition.phase = "settlement"
     loadoutScene.expedition.money = loadoutScene.expedition.fuelUpgradeCost
         + loadoutScene.expedition.durabilityUpgradeCost + loadoutScene.expedition.scoutShipCost
@@ -3206,7 +3222,7 @@ function M.run()
     assert(upgradedLoadout.stats == "HULL 3")
     assert(upgradedLoadout.upgrades == "FUEL LV.1  HULL LV.1")
     assert(upgradedLoadout.forecast == "REACH 960  SLOTS 10")
-    assert(upgradedLoadout.steering == "STEER SPEED 70")
+    assert(upgradedLoadout.steering == "70")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()
@@ -3216,7 +3232,7 @@ function M.run()
         "loadout ship line should be hidden again after a meta-wipe reset")
     assert(resetLoadout.stats == "HULL 3")
     assert(resetLoadout.upgrades == "FUEL LV.0  HULL LV.0")
-    assert(resetLoadout.steering == "STEER SPEED 55")
+    assert(resetLoadout.steering == "55")
 
     local nextLaunchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -3244,7 +3260,7 @@ function M.run()
     assert(starterNextLaunch.yieldPreview == "YIELD x1.25")
     assert(starterNextLaunch.yieldStatus == "SHORT $60" and not starterNextLaunch.yieldAffordable)
     assert(starterNextLaunch.steeringAction == "T/G STEER LV.0>1 $65")
-    assert(starterNextLaunch.steeringPreview == "STEER SPEED 70")
+    assert(starterNextLaunch.steeringPreview == "70")
     assert(starterNextLaunch.steeringStatus == "SHORT $65" and not starterNextLaunch.steeringAffordable)
     -- Compact column labels for the HULL/STEERING shared touch row (see
     -- settlementTouchRows: HULL occupies the left half, STEERING the right
@@ -3257,7 +3273,7 @@ function M.run()
     assert(starterNextLaunch.hullActionCompact == "H:LV.0>1 $75")
     assert(starterNextLaunch.steeringActionCompact == "G:LV.0>1 $65")
     assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
-    assert(starterNextLaunch.steeringPreviewCompact == "SPD 70")
+    assert(starterNextLaunch.steeringPreviewCompact == "70")
     -- Same compact treatment for the YIELD/SHIP shared touch row (see
     -- settlementTouchRows: YIELD occupies the left half, SHIP the right
     -- half). yieldAction ("T/Y YIELD LV.0>1 $60", 92-97px) and shipAction
@@ -4038,6 +4054,7 @@ function M.run()
     testLaunchRocketIcon()
     testHullShieldIcon()
     testCashCoinIcon()
+    testSpeedometerIcon()
     testGearJsonLoader()
     testGearSynergyEngine()
     testEnginePartsSlotSeparation()

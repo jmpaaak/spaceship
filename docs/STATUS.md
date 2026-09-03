@@ -1,17 +1,4 @@
 # STATUS
-## [gear 레인] 항목13/12 웹 에디터 등급/에디션 화이트리스트 동기화 회귀 가드 (완료, 2026-09-03)
-
-레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료 상태였고, 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 이번 사이클에도 다시 적용했다. `tools/gear-editor/editor.js`(항목13)가 항목12의 등급/에디션 화이트리스트를 실제로 `game/gear.lua`와 동기화 유지하는지 감사한 결과, `editor.js` 헤더 주석/`README.md`가 오래전부터 "Validation rules here intentionally mirror game/gear.lua's loader exactly"라고 문서화해왔고, 기존 `testGearEffectSchemaExpansion()`이 `EFFECT_TYPE_GROUPS`/`M.knownEffectTypes` 동기화는 이미 회귀 검증했지만, `KNOWN_EDITIONS`/`KNOWN_RARITIES` 축에는 동일한 검증이 존재하지 않았다 — 문서상 보장일 뿐 코드가 확인한 적이 없어 향후 한쪽에만 새 등급/에디션이 추가되면 조용히 어긋날 수 있는 gap이었다. preflight READY(엔진 테스트/패키지 PASS, git diff clean)로 시작.
-
-- TDD: `game/self_test.lua`에 신규 `testGearEditorEditionAndRaritySync()`를 먼저 추가했다 — `editor.js`를 `love.filesystem.read`로 직접 읽어 `gear.knownEditions`/`gear.knownRarities`의 모든 키가 `KNOWN_EDITIONS`/`KNOWN_RARITIES` 배열 리터럴에 문자열로 존재하는지 검증한다(기존 효과 타입 동기화 검증과 동일 기법).
-- RED 확인: `game/gear.lua`의 `M.knownEditions`에 임시로 `__test_temp_edition = true`를 주입(커밋 안 함)해 `make test` 실행 시 `editor.js KNOWN_EDITIONS must include '__test_temp_edition' to stay in sync with gear.lua` 에러로 정확히 실패함을 확인, 원복 후 GREEN.
-- 실제 감사 결과 현재 `editor.js`는 이미 `gear.lua`와 완전히 동기화돼 있었다(에디션 4종 `irradiated`/`crystallized`/`quantum_flawed`/`refined`, 등급 4종 `common`/`uncommon`/`rare`/`legendary` 모두 양쪽 일치) — 이번 슬라이스는 기존 드리프트를 고친 것이 아니라 향후 드리프트를 잡아낼 회귀 가드를 신규 추가한 것이다.
-- `docs/GEAR_SCHEMA.md`에 "Item 13/12: web editor edition/rarity whitelist sync check" 섹션을 신규 추가했다.
-- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
-- `git status --short`가 `game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 이번 슬라이스가 건드릴 필요 없었던 `game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`/`tools/gear-editor/editor.js`도 전혀 건드리지 않았다.
-- `docs/feedback/INBOX.md`의 항목 13 하위(항목14 앞)에 처리 상황을 append했다.
-- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 웹 에디터가 에디션별 `M.editionEffects` 수치 변환(예: crystallized의 sampleSellValue x2)을 카드 폼에서 실제로 미리보기하는지 감사(현재는 화이트리스트 동기화만 검증됨, 수치 미리보기 자체는 미구현으로 보임).
-
 ## [gear 레인] 항목10(b) boostCharge 소비 배선 — 미장착 시 안전 거부, 재발사 시 리필 (완료, 2026-09-03)
 
 - `game/expedition.lua`에 신규 `run.boostsUsed`(`M.new`에서 0 초기화, `M.launch`에서 `run.insuranceUsed`/`run.rerollsUsed`와 함께 0으로 리셋)와 두 함수를 추가했다: `M.boostsRemaining(run)`(현재 `M.boostChargeCount(run)`에서 `run.boostsUsed`를 뺀 값, 0 미만 방지 — 장비 재장착 시 즉시 상한 상승, `rerollsRemaining`과 동일 계약)와 `M.spendBoost(run)`(성공 시 `true`+카운터 증가, 잔여 없으면 예외 없이 `false, 에러메시지` 반환 — `M.spendReroll`/`M.sellGear`/`M.equipGear`와 동일한 원자적 거부 패턴).
@@ -79,3 +66,12 @@ preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --
 - 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 다시 적용해 항목9/10/12/13/14의 남은 잔여 gap(예: 시너지 엔진의 다른 에디션 상호작용, 슬롯 교체 루프 실사용 UI는 다른 레인 담당) 재검증.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
+
+## [gear 레인] 항목3 스피드미터 아이콘 간소화 추가 완료 (2026-09-03)
+
+- 이전 사이클들이 로켓/방패/동전 아이콘을 완료한 데 이어, 마지막 남은 속도(조종속도/엔진속도) 정보를 스피드미터 아이콘으로 간소화했다.
+- `game/scenes/play.lua`에 `M.speedIconPoints(cx, cy, size)` 헬퍼를 추가해 하단은 평면이고 우측 상단으로 바늘 모양이 파인(negative space) 게이지 형태의 폴리곤을 구현했다.
+- `M.drawCenteredIconText` 헬퍼를 도입하여 LAUNCH LOADOUT의 `loadout.steering`과 EARTH SHOP의 `nextLaunch.steeringPreviewCompact` 문자열을 그릴 때 스피드미터 아이콘과 문자열이 함께 중앙 정렬되도록 했다.
+- `game/i18n.lua`의 관련 문자열("STEER SPEED %d", "조종속도 %d", "SPD %d", "속도 %d")을 모두 "%d"로 대폭 축소해 아이콘만으로 직관적으로 이해할 수 있게 했다.
+- `game/self_test.lua`에 `testSpeedometerIcon()`을 추가해 폴리곤의 기하학적 형태를 회귀 검증하고, 기존 "STEER SPEED" 텍스트에 의존하던 테스트 단언문들도 새 숫자로 갱신했다.
+- `make test`와 `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN 확인. `git diff` clean. 항목 3의 HUD 간소화 작업이 모두 완료되었다.

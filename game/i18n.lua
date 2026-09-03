@@ -33,7 +33,8 @@ locales.en = {
     loadout_ship = "SHIP %s",
     stats_line = "HULL %d",
     upgrades_line = "FUEL LV.%d  HULL LV.%d",
-    steer_speed_line = "STEER SPEED %d",
+    steer_speed_line = "%d",
+    item_speed_upgrade = "ENGINE UPGRADE",
     fuel_bonus_line = "NEXT LAUNCH FUEL +%d",
     purchase_left = "LEFT $%d",
     purchase_short = "SHORT $%d",
@@ -59,7 +60,7 @@ locales.en = {
     yield_preview_line = "YIELD x%.2f",
     steering_action_line = "T/G STEER LV.%d>%d $%d",
     steering_action_compact = "G:LV.%d>%d $%d",
-    steering_preview_compact = "SPD %d",
+    steering_preview_compact = "%d",
     -- docs/feedback/INBOX.md UI/HUD item 4: "AVG $" (formerly Korean "평균
     -- $") read as an ambiguous label for the slot machine's expected-value
     -- payout. "EV $" (Expected Value) is the precise statistical term this
@@ -149,7 +150,7 @@ locales.ko = {
     loadout_ship = "함선 %s",
     stats_line = "선체 %d",
     upgrades_line = "연료 LV.%d  선체 LV.%d",
-    steer_speed_line = "조종속도 %d",
+    steer_speed_line = "%d",
     fuel_bonus_line = "다음발사 연료 +%d",
     purchase_left = "잔액 $%d",
     purchase_short = "부족 $%d",
@@ -175,7 +176,7 @@ locales.ko = {
     yield_preview_line = "산출 x%.2f",
     steering_action_line = "T/G 조종 LV.%d>%d $%d",
     steering_action_compact = "G:LV.%d>%d $%d",
-    steering_preview_compact = "속도 %d",
+    steering_preview_compact = "%d",
     slot_odds_line = "C%d P%d S%d  기대값 $%.2f",
     slot_spinning_label = "슬롯 회전중...",
     no_slot_chances_label = "슬롯 기회 없음",

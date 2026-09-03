@@ -269,6 +269,40 @@ end
 M.cashIconSize = 8
 M.cashIconGap = 4
 
+-- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
+-- final slice): a small speedometer-like gauge icon paired with the steering
+-- speed readout. Drawn as a half-circle base polygon with a negative-space
+-- needle cut out from the bottom.
+function M.speedIconPoints(cx, cy, size)
+    local r = size * 0.5
+    local rDiag = r * 0.7071
+    return {
+        cx - r, cy,
+        cx - rDiag, cy - rDiag,
+        cx, cy - r,
+        cx + rDiag, cy - rDiag,
+        cx + r, cy,
+        cx + r * 0.2, cy,
+        cx + r * 0.5, cy - r * 0.5,
+        cx - r * 0.2, cy,
+    }
+end
+
+M.speedIconSize = 8
+M.speedIconGap = 4
+
+function M.drawCenteredIconText(iconPointsFn, iconSize, iconGap, text, x, y, w)
+    local font = love.graphics.getFont()
+    local textWidth = font:getWidth(text)
+    local totalWidth = iconSize + iconGap + textWidth
+    local startX = x + w / 2 - totalWidth / 2
+    local iconCenterX = startX + iconSize / 2
+    local iconCenterY = y + font:getHeight() / 2
+    
+    love.graphics.polygon("fill", iconPointsFn(iconCenterX, iconCenterY, iconSize))
+    love.graphics.print(text, startX + iconSize + iconGap, y)
+end
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1857,7 +1891,7 @@ function M:draw()
         love.graphics.printf(loadout.forecast, 16, row, viewport.width - 32, "center")
         row = row + rowStep
         love.graphics.setColor(0.6, 1, 0.85)
-        love.graphics.printf(loadout.steering, 16, row, viewport.width - 32, "center")
+        M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, loadout.steering, 16, row, viewport.width - 32)
         row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
         love.graphics.printf(loadout.odds, 16, row, viewport.width - 32, "center")
@@ -1958,7 +1992,7 @@ function M:draw()
         
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.printf(nextLaunch.hullPreviewCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
-        love.graphics.printf(nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW)
         row = row + rowStep
 
         love.graphics.setColor(0.45, 1, 0.6)

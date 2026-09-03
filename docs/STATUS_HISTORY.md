@@ -1219,3 +1219,18 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
 - `git status --short`가 `game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`/`tools/gear-editor/editor.js`도 전혀 건드리지 않았다.
 - 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 다시 적용해 남은 잔여 gap 재검증(예: 웹 에디터가 에디션별 `M.editionEffects` 수치 변환을 실제로 미리보기하는지, 현재는 화이트리스트만 동기화되고 수치 미리보기는 미구현으로 보임).
+
+## Archived from STATUS.md (2026-09-03 15:40)
+
+## [gear 레인] 항목13/12 웹 에디터 등급/에디션 화이트리스트 동기화 회귀 가드 (완료, 2026-09-03)
+
+레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료 상태였고, 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 이번 사이클에도 다시 적용했다. `tools/gear-editor/editor.js`(항목13)가 항목12의 등급/에디션 화이트리스트를 실제로 `game/gear.lua`와 동기화 유지하는지 감사한 결과, `editor.js` 헤더 주석/`README.md`가 오래전부터 "Validation rules here intentionally mirror game/gear.lua's loader exactly"라고 문서화해왔고, 기존 `testGearEffectSchemaExpansion()`이 `EFFECT_TYPE_GROUPS`/`M.knownEffectTypes` 동기화는 이미 회귀 검증했지만, `KNOWN_EDITIONS`/`KNOWN_RARITIES` 축에는 동일한 검증이 존재하지 않았다 — 문서상 보장일 뿐 코드가 확인한 적이 없어 향후 한쪽에만 새 등급/에디션이 추가되면 조용히 어긋날 수 있는 gap이었다. preflight READY(엔진 테스트/패키지 PASS, git diff clean)로 시작.
+
+- TDD: `game/self_test.lua`에 신규 `testGearEditorEditionAndRaritySync()`를 먼저 추가했다 — `editor.js`를 `love.filesystem.read`로 직접 읽어 `gear.knownEditions`/`gear.knownRarities`의 모든 키가 `KNOWN_EDITIONS`/`KNOWN_RARITIES` 배열 리터럴에 문자열로 존재하는지 검증한다(기존 효과 타입 동기화 검증과 동일 기법).
+- RED 확인: `game/gear.lua`의 `M.knownEditions`에 임시로 `__test_temp_edition = true`를 주입(커밋 안 함)해 `make test` 실행 시 `editor.js KNOWN_EDITIONS must include '__test_temp_edition' to stay in sync with gear.lua` 에러로 정확히 실패함을 확인, 원복 후 GREEN.
+- 실제 감사 결과 현재 `editor.js`는 이미 `gear.lua`와 완전히 동기화돼 있었다(에디션 4종 `irradiated`/`crystallized`/`quantum_flawed`/`refined`, 등급 4종 `common`/`uncommon`/`rare`/`legendary` 모두 양쪽 일치) — 이번 슬라이스는 기존 드리프트를 고친 것이 아니라 향후 드리프트를 잡아낼 회귀 가드를 신규 추가한 것이다.
+- `docs/GEAR_SCHEMA.md`에 "Item 13/12: web editor edition/rarity whitelist sync check" 섹션을 신규 추가했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 이번 슬라이스가 건드릴 필요 없었던 `game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`/`tools/gear-editor/editor.js`도 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 13 하위(항목14 앞)에 처리 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 웹 에디터가 에디션별 `M.editionEffects` 수치 변환(예: crystallized의 sampleSellValue x2)을 카드 폼에서 실제로 미리보기하는지 감사(현재는 화이트리스트 동기화만 검증됨, 수치 미리보기 자체는 미구현으로 보임).
