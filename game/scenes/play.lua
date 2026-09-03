@@ -673,6 +673,32 @@ function M.new(options)
             end
         end
     end
+    -- assets/shop_icons/{hull,steering,yield,ship}.png are the
+    -- ComfyUI-generated EARTH SHOP row icons (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-paths / graphics-gated-images pattern as
+    -- slotSymbolImagePaths/slotSymbolImages above: shopIconImagePaths is
+    -- always fully populated so engine-hosted tests can verify the wiring
+    -- under GAME_HEADLESS=1, and shopIconImages holds the actual drawable
+    -- Image objects used by :draw() (drawn beside each EARTH SHOP row's
+    -- existing compact action text, not replacing any verified text
+    -- placement -- see the comment above settlementRowBackgroundColors on
+    -- why EARTH SHOP text positions are treated as fragile/verified).
+    local shopIconImagePaths = {
+        hull = "assets/shop_icons/hull.png",
+        steering = "assets/shop_icons/steering.png",
+        yield = "assets/shop_icons/yield.png",
+        ship = "assets/shop_icons/ship.png",
+    }
+    local shopIconImages = {}
+    if love.graphics and love.graphics.newImage then
+        for key, path in pairs(shopIconImagePaths) do
+            local ok, img = pcall(love.graphics.newImage, path)
+            if ok and img then
+                img:setFilter("nearest", "nearest")
+                shopIconImages[key] = img
+            end
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -687,6 +713,8 @@ function M.new(options)
         sampleEffectImagePath = sampleEffectImagePath,
         slotSymbolImages = slotSymbolImages,
         slotSymbolImagePaths = slotSymbolImagePaths,
+        shopIconImages = shopIconImages,
+        shopIconImagePaths = shopIconImagePaths,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
@@ -1090,6 +1118,25 @@ function M:drawSlotReel(symbols, boxX, boxY, boxW)
             love.graphics.printf(symbol, x - 20, boxY + slotReelIconSize / 2 - 6, slotReelIconSize + 40, "center")
         end
     end
+end
+
+-- docs/feedback/INBOX.md "ComfyUI로 실제 에셋 작업 진행" 남은 부분 (shop icons):
+-- draws a small ComfyUI-generated icon (self.shopIconImages[key]) to the
+-- left of an EARTH SHOP row's action text, at (leftX, y) with the row's
+-- text vertical center. Silently no-ops when the icon failed to load (same
+-- fallback pattern as :drawSlotReel -- the text itself is unaffected either
+-- way since this only draws in the margin outside the verified text
+-- columns, never repositioning existing printf calls).
+local shopIconSize = 24
+M.shopIconSize = shopIconSize
+function M:drawShopIcon(key, leftX, y)
+    local image = self.shopIconImages and self.shopIconImages[key]
+    if not image then
+        return
+    end
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(image, leftX, y, 0,
+        shopIconSize / image:getWidth(), shopIconSize / image:getHeight())
 end
 
 function M:steeringButtonState()
@@ -2236,6 +2283,8 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        self:drawShopIcon("hull", shopColumnLeftX, row)
+        self:drawShopIcon("steering", shopColumnRightX, row)
         row = row + rowStep
         
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
@@ -2260,6 +2309,8 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.yieldActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        self:drawShopIcon("yield", shopColumnLeftX, row)
+        self:drawShopIcon("ship", shopColumnRightX, row)
         row = row + rowStep
         
         love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,

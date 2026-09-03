@@ -1087,6 +1087,27 @@ local function testSlotSymbolSprites()
     end
 end
 
+-- docs/feedback/INBOX.md "ComfyUI로 실제 에셋 작업 진행" — last remaining
+-- piece (shop icons). Same file-existence + always-set-path regression
+-- pattern as testSlotSymbolSprites above.
+local function testShopIconSprites()
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    local expected = {
+        hull = "assets/shop_icons/hull.png",
+        steering = "assets/shop_icons/steering.png",
+        yield = "assets/shop_icons/yield.png",
+        ship = "assets/shop_icons/ship.png",
+    }
+    for key, path in pairs(expected) do
+        local info = love.filesystem.getInfo(path, "file")
+        assert(info ~= nil, "missing ComfyUI-generated shop icon sprite at " .. path)
+        assert(info.size > 0)
+        assert(scene.shopIconImagePaths and scene.shopIconImagePaths[key] == path,
+            "PlayScene must load " .. path .. " into self.shopIconImagePaths." .. key)
+    end
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -2866,6 +2887,7 @@ function M.run()
     testSampleEffectSprite()
     testBackgroundSprite()
     testSlotSymbolSprites()
+    testShopIconSprites()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")
