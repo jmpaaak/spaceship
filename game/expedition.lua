@@ -64,68 +64,6 @@ function M.slotExpectedValue()
     return total, probabilitySum
 end
 
-local function spinSlot(run)
-    local symbols = {}
-    for reel = 1, 3 do
-        symbols[reel] = weightedSlotSymbol(run.slotRandom(slotTotalWeight))
-    end
-    return symbols, slotReward(symbols)
-end
-
--- docs/GAME_DESIGN.md's 귀환 슬롯 section lists repair vouchers (수리권)
--- as one of the reward kinds a slot spin can grant, alongside money. Only
--- the rarest/most valuable combo (STAR-STAR-STAR jackpot, 10% per reel,
--- 0.1% overall) also grants a repair voucher worth 1 durability point.
-local function slotRepairVoucher(symbols)
-    if symbols[1] == "STAR" and symbols[2] == "STAR" and symbols[3] == "STAR" then
-        return 1
-    end
-    return 0
-end
-M.slotRepairVoucher = slotRepairVoucher
-
--- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "다음 원정 연료 보너스"
--- (next-expedition fuel bonus) as one of the reward kinds a slot spin can
--- grant, alongside money and repair vouchers. A PLANET-PLANET-PLANET
--- triple (40% per reel, 6.4% overall -- rarer than a mismatched-symbol
--- payout but far more common than the STAR jackpot) grants a fuel bonus.
--- Unlike the repair voucher, this bonus cannot help the current, already
--- fuel-empty expedition; it is banked at safe settlement and applied to
--- the *next* launch's starting fuel instead.
-local slotFuelBonusAmount = 15
-M.slotFuelBonusAmount = slotFuelBonusAmount
-
-local function slotFuelBonus(symbols)
-    if symbols[1] == "PLANET" and symbols[2] == "PLANET" and symbols[3] == "PLANET" then
-        return slotFuelBonusAmount
-    end
-    return 0
-end
-M.slotFuelBonus = slotFuelBonus
-
--- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "표본 보너스" (sample
--- bonus) as one of the four slot reward kinds, alongside money multiples,
--- repair vouchers and the fuel bonus above. It was the only one of the four
--- still unimplemented. A COMET-COMET-COMET triple (50% per reel, 12.5%
--- overall -- the most common triple, since COMET is the common filler
--- symbol) grants a flat bonus added directly to the current expedition's
--- unbanked sample value. Unlike the fuel bonus (which cannot help the
--- already fuel-empty current expedition and must be banked for next
--- launch), a sample bonus can still help this expedition: it stacks into
--- run.pendingSampleValue immediately, same as a collected sample, and is
--- confirmed at settlement or forfeited at destruction like any other
--- pending sample value.
-local slotSampleBonusAmount = 25
-M.slotSampleBonusAmount = slotSampleBonusAmount
-
-local function slotSampleBonus(symbols)
-    if symbols[1] == "COMET" and symbols[2] == "COMET" and symbols[3] == "COMET" then
-        return slotSampleBonusAmount
-    end
-    return 0
-end
-M.slotSampleBonus = slotSampleBonus
-
 -- docs/feedback/INBOX.md 처리대기 항목 7 -- gear acquisition is three-way:
 -- (a) buy at a galaxy's deterministic 상점 행성 (world.shopPlanet) with
 -- money, (b) a guaranteed (non-random) one-time drop the first time a
@@ -361,48 +299,33 @@ end
 -- Both the shims and that dead call site are removed now -- fuel has no
 -- remaining consumption path anywhere in the engine.
 
--- Safe return is now an explicit action (tests / future player input),
--- not a fuel-empty side effect.
-function M.beginReturn(run)
-    if not run or run.phase ~= "ascending" then return false end
-    run.phase = "returning"
-    run.returnDistance = run.maxAltitude
-    run.slotOpportunities = slotCount(run.returnDistance, run.slotDistance)
-    return true
-end
-
 local function settle(run)
     run.lastSampleSettlement = run.pendingSampleValue
-    run.lastSlotSettlement = run.pendingSlotReward
-    local payout = run.lastSampleSettlement + run.lastSlotSettlement
-    run.money = run.money + payout
-    run.lastSettlement = payout
+    run.money = run.money + run.lastSampleSettlement
+    run.lastSettlement = run.lastSampleSettlement
     run.lastSampleCount = run.sampleCount
-    run.lastSlotSpinsCount = run.slotSpins
     run.lastAltitude = run.maxAltitude
     run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
-    run.bankedFuelBonus = run.pendingFuelBonus
-    run.pendingFuelBonus = 0
     run.pendingSampleValue = 0
-    run.pendingSlotReward = 0
     run.sampleCount = 0
-    run.slotOpportunities = 0
+    -- docs/feedback/INBOX.md 처리대기 항목 15(a): with the manually-declared
+    -- "returning" phase removed, returnToEarth settles directly from
+    -- "ascending" with no travel-down animation ever bringing altitude back
+    -- to 0 -- do it here instead, since arriving at Earth means altitude 0
+    -- by definition.
+    run.altitude = 0
     run.phase = "settlement"
 end
 
 -- docs/feedback/INBOX.md 처리대기 항목 15(a): the manually-declared
 -- beginReturn phase and the in-flight returning-phase slot machine
--- (useSlot/slotSpin) are being phased out in favor of immediate settlement
--- on arrival at Earth or a galaxy checkpoint (matching item 8's checkpoint
--- settle model). M.returnToEarth is the new, additive entry point for
--- that: it settles the run exactly like the old "returning phase reaches
--- altitude 0" path (same settle() as M.update's returning branch used),
--- but works directly from the ascending phase, with no intermediate
--- returning-phase travel-down animation or slot-machine step required.
--- M.beginReturn/the "returning" phase/M.useSlot are left in place for now
--- (still exercised by game/scenes/play.lua's existing returning-phase UI,
--- which is out of this lane's scope to rewrite in one slice -- see
--- docs/STATUS.md) so this is purely additive, not yet a removal.
+-- (useSlot/slotSpin) have been fully removed -- every expedition now
+-- settles immediately on arrival at Earth or a galaxy checkpoint
+-- (matching item 8's checkpoint settle model). M.returnToEarth is the
+-- sole return-to-Earth entry point: it settles the run exactly like the
+-- old "returning phase reaches altitude 0" path did (same settle()
+-- helper), directly from the ascending phase, with no intermediate
+-- returning-phase travel-down animation or slot-machine step.
 function M.returnToEarth(run)
     if not run or run.phase ~= "ascending" then return false end
     settle(run)
@@ -435,31 +358,16 @@ local function destroy(run)
     run.durability = 0
     run.lastLostSampleCount = run.sampleCount
     run.lastLostSampleValue = run.pendingSampleValue
-    run.lastLostSlotSpinsCount = run.slotSpins
-    run.lastLostSlotValue = run.pendingSlotReward
     run.lastLostAltitude = run.maxAltitude
     run.lastLostNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.sampleCount = 0
     run.pendingSampleValue = 0
     run.sampleStreakCount = 0
     run.sampleStreakFamily = nil
-    run.pendingSlotReward = 0
-    run.slotOpportunities = 0
-    run.slotSpins = 0
-    run.lastSlotSymbols = nil
-    run.lastSlotReward = 0
-    run.lastSlotRepair = 0
-    run.lastSlotFuelBonus = 0
-    run.lastSlotSampleBonus = 0
-    run.pendingFuelBonus = 0
-    run.bankedFuelBonus = 0
-    run.returnDistance = 0
     run.money = 0
     run.lastSettlement = 0
     run.lastSampleSettlement = 0
-    run.lastSlotSettlement = 0
     run.lastSampleCount = 0
-    run.lastSlotSpinsCount = 0
     run.durabilityUpgradeLevel = 0
     run.sampleYieldUpgradeLevel = 0
     run.steeringUpgradeLevel = 0
@@ -511,35 +419,19 @@ function M.new(options)
         selectedShipId = "starter",
         fuelBurnRate = options.fuelBurnRate or 5,
         climbSpeed = options.climbSpeed or 30,
-        returnSpeed = options.returnSpeed or 45,
         slotDistance = options.slotDistance or 100,
-        returnDistance = 0,
-        slotOpportunities = 0,
-        slotSpins = 0,
         slotRandom = options.slotRandom or math.random,
-        lastSlotSymbols = nil,
-        lastSlotReward = 0,
-        lastSlotRepair = 0,
-        lastSlotFuelBonus = 0,
-        lastSlotSampleBonus = 0,
-        pendingFuelBonus = 0,
-        bankedFuelBonus = 0,
         sampleCount = 0,
         pendingSampleValue = 0,
         sampleStreakCount = 0,
         sampleStreakFamily = nil,
-        pendingSlotReward = 0,
         money = options.money or 0,
         lastSettlement = 0,
         lastSampleSettlement = 0,
-        lastSlotSettlement = 0,
         lastSampleCount = 0,
-        lastSlotSpinsCount = 0,
         lastAltitude = 0,
         lastLostSampleCount = 0,
         lastLostSampleValue = 0,
-        lastLostSlotSpinsCount = 0,
-        lastLostSlotValue = 0,
         lastLostAltitude = 0,
         ownedGear = {},
         exploredCheckpoints = {},
@@ -558,38 +450,18 @@ function M.launch(run)
         run.maxAltitude = 0
         -- docs/feedback/INBOX.md 항목 11(c): run.fuel was a dead state field
         -- (never read by any flight decision -- altitude ticks by
-        -- climbSpeed unconditionally) and has been removed entirely. The
-        -- banked PLANET-triple slot bonus (bankedFuelBonus/pendingFuelBonus)
-        -- no longer has a fuel field to apply itself to; it is still
-        -- cleared here so a stale bank cannot leak into a later launch, but
-        -- item 15's Earth-shop-only slot machine redesign is the owner of
-        -- redefining what this reward kind means going forward.
-        run.bankedFuelBonus = 0
+        -- climbSpeed unconditionally) and has been removed entirely.
         run.durability = run.maxDurability
-        run.returnDistance = 0
-        run.slotOpportunities = 0
-        run.slotSpins = 0
-        run.lastSlotSymbols = nil
-        run.lastSlotReward = 0
-        run.lastSlotRepair = 0
-        run.lastSlotFuelBonus = 0
-        run.lastSlotSampleBonus = 0
-        run.pendingFuelBonus = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
         run.sampleStreakCount = 0
         run.sampleStreakFamily = nil
-        run.pendingSlotReward = 0
         run.lastSettlement = 0
         run.lastSampleSettlement = 0
-        run.lastSlotSettlement = 0
         run.lastSampleCount = 0
-        run.lastSlotSpinsCount = 0
         run.lastAltitude = 0
         run.lastLostSampleCount = 0
         run.lastLostSampleValue = 0
-        run.lastLostSlotSpinsCount = 0
-        run.lastLostSlotValue = 0
         run.lastLostAltitude = 0
     end
     run.phase = "ascending"
@@ -674,27 +546,6 @@ function M.selectShip(run, shipId)
     return true
 end
 
-function M.useSlot(run)
-    if run.phase ~= "returning" or run.slotOpportunities <= 0 then return false end
-    local symbols, reward = spinSlot(run)
-    run.slotOpportunities = run.slotOpportunities - 1
-    run.slotSpins = run.slotSpins + 1
-    run.lastSlotSymbols = symbols
-    run.lastSlotReward = reward
-    run.pendingSlotReward = run.pendingSlotReward + reward
-    local voucher = slotRepairVoucher(symbols)
-    local applied = math.min(voucher, run.maxDurability - run.durability)
-    run.durability = run.durability + applied
-    run.lastSlotRepair = applied
-    local fuelBonus = slotFuelBonus(symbols)
-    run.lastSlotFuelBonus = fuelBonus
-    run.pendingFuelBonus = (run.pendingFuelBonus or 0) + fuelBonus
-    local sampleBonus = slotSampleBonus(symbols)
-    run.lastSlotSampleBonus = sampleBonus
-    run.pendingSampleValue = run.pendingSampleValue + sampleBonus
-    return true
-end
-
 -- docs/feedback/INBOX.md's Balatro core-mechanics porting plan item 1
 -- ("점진적 시너지/빌드업") requests a multiplicative STREAK bonus for
 -- collecting consecutive same-hue-family samples, mirroring a card game's
@@ -727,7 +578,7 @@ function M.collectSample(run, value, hueKey)
 end
 
 function M.damage(run, amount)
-    if (run.phase ~= "ascending" and run.phase ~= "returning") or type(amount) ~= "number" or amount <= 0 then
+    if run.phase ~= "ascending" or type(amount) ~= "number" or amount <= 0 then
         return false
     end
     run.durability = math.max(0, run.durability - amount)
@@ -740,12 +591,6 @@ end
 
 function M.update(run, dt)
     if dt <= 0 then return end
-
-    if run.phase == "returning" then
-        run.altitude = math.max(0, run.altitude - run.returnSpeed * dt)
-        if run.altitude == 0 then settle(run) end
-        return
-    end
 
     if run.phase ~= "ascending" then return end
 
