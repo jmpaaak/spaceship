@@ -617,51 +617,87 @@ function M:persistBestAltitude()
     return self.bestAltitudeStore:save(self.expedition.bestAltitude)
 end
 
--- Draws the compact "탐험 도감" (specimen log) strip: one small square per
--- catalog entry (9 total), filled with its tier color plus a soft glow
--- (Balatro-style card rim glow, scaled down) when discovered, and a dim
--- outline placeholder when not. A small "SPECIMENS n/9" label sits above
--- the row so the strip reads as a collection, not a random decoration.
--- Placed over the open starfield/Earth view above the LAUNCH LOADOUT
--- card so exploration trophies decorate the otherwise-empty space under
--- the title screen without competing with any HUD or loadout text.
-function M:drawSpecimenStrip(y)
-    local catalog = world.specimenCatalog()
-    local box = 8
+-- Draws equipped gear slots (Item 6): up to 6 hull parts and 3 engine parts
+-- displayed as Balatro-style card icons in the launch screen, replacing the
+-- old specimen log.
+function M:drawGearSlots(y)
+    local hullSlots = 6
+    local engineSlots = 3
+    local boxW = 10
+    local boxH = 14
     local gap = 3
-    local totalWidth = #catalog * box + (#catalog - 1) * gap
+    local groupGap = 8
+    
+    local run = self.expedition
+    local hullGear = run.equippedGear or {}
+    local engineGear = run.equippedEngineParts or {}
+
+    local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
     local startX = math.floor((viewport.width - totalWidth) / 2)
+    
     self.tinyFont = self.tinyFont or fonts.get(7)
     local previousFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)
-    local found = self:specimenProgress()
-    love.graphics.setColor(0.55, 0.65, 0.85, 0.9)
-    love.graphics.printf(i18n.t("specimens_count_label", found, #catalog),
-        0, y - 10, viewport.width, "center")
-    for i, entry in ipairs(catalog) do
-        local x = startX + (i - 1) * (box + gap)
-        if self.collectedSpecimens[entry.id] then
-            local r, g, b = sampleTierColor(entry.tier)
-            love.graphics.setColor(r, g, b, 0.35)
-            love.graphics.rectangle("fill", x - 2, y - 2, box + 4, box + 4)
-            love.graphics.setColor(r, g, b, 1)
-            love.graphics.rectangle("fill", x, y, box, box)
+    
+    for i = 1, hullSlots do
+        local x = startX + (i - 1) * (boxW + gap)
+        local part = hullGear[i]
+        if part then
+            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
+            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1)
+            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
+            else love.graphics.setColor(0.7, 0.7, 0.7) end
+            love.graphics.rectangle("fill", x, y, boxW, boxH)
+            
+            love.graphics.setColor(1, 1, 1, 0.5)
+            local pts = M.shieldIconPoints(x + boxW/2, y + boxH/2, 4)
+            if pts then love.graphics.polygon("fill", pts) end
+            
+            if part.edition and part.edition ~= "base" then
+                love.graphics.setColor(1, 1, 0.5, 0.8)
+                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
+            else
+                love.graphics.setColor(0.1, 0.1, 0.1, 1)
+                love.graphics.rectangle("line", x, y, boxW, boxH)
+            end
         else
             love.graphics.setColor(0.3, 0.35, 0.45, 0.6)
-            love.graphics.rectangle("line", x, y, box, box)
+            love.graphics.rectangle("line", x, y, boxW, boxH)
         end
     end
-    love.graphics.setFont(previousFont)
-end
-
--- Count of specimen kinds discovered out of the full 9-entry catalog.
-function M:specimenProgress()
-    local total = 0
-    local catalog = world.specimenCatalog()
-    for _, entry in ipairs(catalog) do
-        if self.collectedSpecimens[entry.id] then total = total + 1 end
+    
+    local engineStartX = startX + (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap
+    
+    for i = 1, engineSlots do
+        local x = engineStartX + (i - 1) * (boxW + gap)
+        local part = engineGear[i]
+        if part then
+            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
+            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1)
+            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
+            else love.graphics.setColor(0.7, 0.7, 0.7) end
+            love.graphics.rectangle("fill", x, y, boxW, boxH)
+            
+            love.graphics.setColor(1, 1, 1, 0.5)
+            local pts = M.rocketIconPoints(x + boxW/2, y + boxH/2, 4)
+            if pts then love.graphics.polygon("fill", pts) end
+            
+            if part.edition and part.edition ~= "base" then
+                love.graphics.setColor(1, 1, 0.5, 0.8)
+                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
+            else
+                love.graphics.setColor(0.1, 0.1, 0.1, 1)
+                love.graphics.rectangle("line", x, y, boxW, boxH)
+            end
+        else
+            love.graphics.setColor(0.45, 0.35, 0.3, 0.6)
+            love.graphics.rectangle("line", x, y, boxW, boxH)
+        end
     end
-    return total, #catalog
+    
+    love.graphics.setColor(0.6, 0.7, 0.8, 0.9)
+    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 10, viewport.width, "center")
+    love.graphics.setFont(previousFont)
 end
 
 function M:collisionRisk(planet)
@@ -1849,7 +1885,7 @@ function M:draw()
         -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so
         -- it never competes with loadout numbers or the TAP TO LAUNCH
         -- message below the panel.
-        self:drawSpecimenStrip(184)
+        self:drawGearSlots(184)
         local loadout = self:loadoutLines()
         -- The card box now extends all the way to the canvas bottom
         -- (viewport.height) instead of stopping at y=294: a real LÖVE

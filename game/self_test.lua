@@ -3435,8 +3435,6 @@ function M.run()
         collectionStore = { load = function() return { azure_common = true } end, record = function() return true end },
     })
     assert(specimenScene.collectedSpecimens.azure_common == true)
-    local found, total = specimenScene:specimenProgress()
-    assert(found == 1 and total == 9)
 
     local savedBest = 40
     local fakeStore = {

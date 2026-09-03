@@ -75,3 +75,12 @@ preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --
 - `game/i18n.lua`의 관련 문자열("STEER SPEED %d", "조종속도 %d", "SPD %d", "속도 %d")을 모두 "%d"로 대폭 축소해 아이콘만으로 직관적으로 이해할 수 있게 했다.
 - `game/self_test.lua`에 `testSpeedometerIcon()`을 추가해 폴리곤의 기하학적 형태를 회귀 검증하고, 기존 "STEER SPEED" 텍스트에 의존하던 테스트 단언문들도 새 숫자로 갱신했다.
 - `make test`와 `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN 확인. `git diff` clean. 항목 3의 HUD 간소화 작업이 모두 완료되었다.
+
+## [gear 레인] 항목6 장착 장비 카드 UI 완료 및 도감 UI 제거 (2026-09-03)
+
+- 이전 `gear` 레인에서 백엔드 로직이 완성된 함선 부품 장비 시스템(슬롯 이원화 포함)을 실제 발사 화면(LAUNCH LOADOUT UI)에 시각적으로 배선했다. 이는 사용자의 "UI/HUD 대대적 정리 6개 항목" 중 마지막 남은 항목 6 ("표본 9종 도감 정리 + 슬롯 6개를 개성 있는 함선 장비 카드 UI로 전환")을 완전히 충족한다.
+- `game/scenes/play.lua`에서 기존 장식용 요소였던 "SPECIMENS 9/9" 표본 도감 스트립 렌더링 함수(`drawSpecimenStrip`, `specimenProgress`)를 완전히 제거해 화면 공간을 확보했다. (표본 획득 배너 등 실제 기능 관련 상태인 `collectedSpecimens` 로직은 유지).
+- 그 자리에 `M.drawGearSlots`를 신규 추가해 발라트로 조커 카드 형태의 장비 슬롯 렌더링을 구현했다. 선체 장비 슬롯 6개와 엔진 장비 슬롯 3개를 한 줄에 모두 그려 넣고, 각 카드의 등급(rarity)에 따라 색상(회색/녹색/파란색/주황색)을 달리 표시하며, 에디션(edition)이 있는 경우 추가 노란색 테두리로 강조한다. 각 카드 아이콘에는 이전에 구현된 `shieldIconPoints`(선체)와 `rocketIconPoints`(엔진)를 조합해 시각적 개성을 부여했다.
+- `game/i18n.lua`에 `equipped_gear_label` ("EQUIPPED GEAR", "장착 장비")을 추가해 명확한 캡션을 달았다.
+- `game/self_test.lua`에서 더 이상 존재하지 않는 `specimenProgress` 단언문을 제거해 회귀 테스트 정합성을 맞췄다.
+- `make test`와 `make verify` 모두 GREEN 확인 완료. 이로써 사용자 요청 "UI/HUD 대대적 정리 6개 항목" 작업이 100% 완료되었다.
