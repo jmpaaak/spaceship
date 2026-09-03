@@ -507,6 +507,33 @@ flying) — all out of this lane's scope (`play.lua`/`world.lua`/
 slice, every category (A)~(F) conversion function named in item 14 now has
 at least one run-level wrapper wired in `game/expedition.lua`.
 
+### Item 14(D) collisionRadius run wiring (follow-up slice)
+
+A gap this file's own text above did not previously call out: unlike its
+(D) sibling `insurance` (wired into `M.damage` two slices earlier) and its
+(C)/(E) neighbors (`chainTriggerCount`/`rerollCount`/`detectionRadius`/
+`autoCollectEnabled`, all wired in the previous slice), `game/gear.lua`'s
+`M.effectiveCollisionRadius(baseRadius, parts)` had never gained a
+run-facing wrapper in `game/expedition.lua`. This slice closes that last
+remaining item 14 gap:
+
+- New `M.collisionRadius(run, baseRadius)` thinly wraps
+  `gear.effectiveCollisionRadius(baseRadius, combinedGearList(run))` —
+  same category-agnostic combined hull+engine list as the (C)/(E)
+  wrappers above (a `collisionRadius` effect can legally live on either
+  slot type per the schema).
+- `game/self_test.lua`'s new `testGearCollisionRadiusRunWiring` regression-
+  checks: an unequipped run returns the base radius unmodified; a hull
+  card with `collisionRadius = 20` shrinks a base radius of 10 to exactly
+  8 through the run wrapper; an ENGINE-slot card with `collisionRadius = 50`
+  also shrinks the total (base 10 → 5), confirming hull/engine
+  category-agnosticism matches every other (C)/(E)/(D) wrapper.
+
+Still deferred: the actual collision-detection call site that would pass
+a real base hitbox radius into `M.collisionRadius` (lives in `play.lua`/
+`world.lua`, out of this lane's scope) — this slice only establishes the
+run-level source of truth, same posture as `M.boostChargeCount`.
+
 ### Item 14(B) streakMultiplier run wiring (follow-up slice)
 
 `streakMultiplier` was the one (B) category effect type still unwired at

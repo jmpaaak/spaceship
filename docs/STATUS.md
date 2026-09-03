@@ -1,4 +1,19 @@
 # STATUS
+## [spaceship-gear 레인] 항목14(D) `collisionRadius` 마지막 run-level gap 배선 (완료, 2026-09-03)
+
+`docs/GEAR_SCHEMA.md`가 "항목14의 (A)~(F) 전 카테고리가 최소 1개 run-level 배선을 갖는다"고 여러 차례 명시했으나, 실제로 코드를 확인해보니 (D) 카테고리의 `collisionRadius`(`gear.effectiveCollisionRadius`)만 유일하게 `game/expedition.lua`에 run 래퍼가 없는 상태였다 — 같은 (D)의 `insurance`는 이미 `M.damage`에 배선됐고, (C)/(E)의 `chainTrigger`/`rerollBonus`/`detectionRadius`/`autoCollect`는 이전 슬라이스에서 배선됐으나 `collisionRadius`만 문서의 낙관적 서술과 달리 실제로는 빠져 있었다. 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료된 상태였고, 이번 사이클은 문서가 반복적으로 "전 카테고리 완료"라 주장했던 것을 코드로 직접 검증해 발견한 이 실제 gap을 닫았다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
+
+- 코드 감사: `game/expedition.lua`에서 `gear.effectiveCollisionRadius`를 감싸는 함수가 전혀 존재하지 않음을 `search_files`로 확인(반면 같은 (C)/(E) 계열의 `detectionRadius`/`autoCollectEnabled`/`chainTriggerCount`/`rerollCount`는 모두 존재).
+- TDD로 `game/self_test.lua`에 `testGearCollisionRadiusRunWiring()`을 먼저 추가했다(RED 확인: `attempt to call field 'collisionRadius' (a nil value)`).
+- `game/expedition.lua`의 신규 `M.collisionRadius(run, baseRadius)` — 기존 `combinedGearList(run)` 헬퍼(hull+engine 합산, item 10의 슬롯 수 독립성은 유지하되 이 효과 타입의 스탯 풀은 카테고리 무관)를 재사용해 `gear.effectiveCollisionRadius(baseRadius, combinedGearList(run))`를 얇게 감싼다. `loop/PROMPT.md`가 허용한 "최소한의 로더 호출" 예외 범위에서 `game/expedition.lua`만 수정했다(`play.lua`/`i18n.lua`/`world.lua` 미변경).
+- `game/self_test.lua`의 `testGearCollisionRadiusRunWiring()`이 다음을 회귀 검증한다: 미장착 run은 기저 반경 그대로 반환, hull 카드에 `collisionRadius +20` 장착 시 기저 10 → 정확히 8로 축소, ENGINE 슬롯 카드에 `collisionRadius +50` 장착 시에도 기저 10 → 정확히 5로 축소(카테고리 무관 설계 재확인).
+- `docs/GEAR_SCHEMA.md`에 "Item 14(D) collisionRadius run wiring" 섹션을 신규 추가해 이 gap과 그 해소를 명시적으로 문서화했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md`/`docs/STATUS.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 14 하위(항목15 앞)에 처리 상황을 다섯 번째 슬라이스로 append했다.
+- **이로써 항목14의 (A)~(G) 전 효과 타입이 실제로 예외 없이 최소 1개 run-level 소비자를 갖는다** — 이전 사이클들의 "전 카테고리 완료" 서술이 실제로 정확해졌다.
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성 등 순수 함수/데이터 계층에서 준비 가능한 부분)의 순수 함수 계층 검토, 또는 이 레인이 완료한 항목13→9→10→12→14 순서 밖의 잔여 작업 재검토. 실제 게임플레이 소비 지점(충돌 판정에 `M.collisionRadius` 실사용, 상점/체크포인트 UI가 `M.rollGearOffer` 호출 등)은 대부분 `play.lua`/`world.lua` 담당이라 다른 레인 소관.
+
 ## [spaceship-gear 레인] 항목12 `noSlotCost`(refined 에디션) 슬롯 예외 배선 (완료, 2026-09-03)
 
 `docs/GEAR_SCHEMA.md`/`game/gear.lua`가 항목12 슬라이스 이후 계속 "reserved metadata for a future no-slot-cost mechanic ... not yet wired" 라고 명시해 온 마지막 미배선 항목을 처리했다. 레인이 지정받은 5개 항목(13→9→10→12→14)의 순수 함수/데이터/run 배선 계층이 이전 사이클들에서 이미 1차 완료된 상태였고, 이번 사이클은 `docs/GEAR_SCHEMA.md`가 문서상 명시적으로 남겨둔 "아직 안 됨" 항목 중 유일하게 남아있던 항목12의 `refined` 에디션 `noSlotCost` 플래그를 실제 슬롯 계산에 연결했다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).

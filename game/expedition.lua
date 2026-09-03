@@ -687,6 +687,21 @@ function M.autoCollectEnabled(run)
     return gearModule.autoCollectEnabled(combinedGearList(run))
 end
 
+-- Item 14(D) run wiring: gear.effectiveCollisionRadius (percentage shrink
+-- of a base hitbox radius) has existed as a pure conversion since item 14's
+-- first slice, but -- unlike its (D) sibling `insurance` (wired into
+-- M.damage) and its (C)/(E) neighbors above -- never gained a run-facing
+-- wrapper. Category-agnostic like chainTrigger/rerollBonus/detectionRadius/
+-- autoCollect: both hull and engine slots count toward the total (item 10
+-- keeps SLOT capacity independent per category, not every effect's stat
+-- pool). Actual collision-detection call sites that would pass a real
+-- base hitbox radius live in play.lua/world.lua, out of this lane's scope
+-- per loop/PROMPT.md; this establishes the single run-level source of
+-- truth a future consumer will read from, same posture as boostChargeCount.
+function M.collisionRadius(run, baseRadius)
+    return gearModule.effectiveCollisionRadius(baseRadius, combinedGearList(run))
+end
+
 -- Item 12's drop RNG (gear.rollRarity / gear.rollEdition), wired into an
 -- actual run for the first time. Given a candidate `pool` (from
 -- gear.loadHullParts/loadEngineParts) and explicit `rolls` (shop/checkpoint
