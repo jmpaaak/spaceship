@@ -2674,6 +2674,14 @@ function M.run()
     assert(PlayScene.showLaunchLoadoutTitle == false,
         "launch loadout panel title should stay hidden (docs/feedback item 4)")
 
+    -- docs/feedback/INBOX.md "UI 대개편 6건" item 1: the "SPECIMENS n/9"
+    -- specimen log strip is pure decoration with no gameplay effect (user
+    -- ruling, 2026-09-03) and should be fully removed from the launch
+    -- screen. M.showSpecimenStrip gates the drawSpecimenStrip() call in
+    -- draw(); this regression pins it to false so the strip stays gone.
+    assert(PlayScene.showSpecimenStrip == false,
+        "launch screen specimen strip should stay hidden (docs/feedback UI overhaul item 1)")
+
     -- Ascending no longer draws HOLD LEFT/HOLD RIGHT boxes; the full
     -- canvas is still a tap-hold fallback (left half / right half).
     local ascendControls = PlayScene.ascendControls

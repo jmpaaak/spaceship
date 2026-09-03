@@ -3,7 +3,7 @@
 ## 처리 대기
 
 - **UI 대개편 6건 — 표본도감/선체LV/슬롯 카드화/오즈텍스트/탭발사 이펙트/개발임시본 (2026-09-03, 사용자 확정, 최우선, 실제 캡처 기반):**
-  1. **"SPECIMENS 9/9" 표본 도감 스트립 제거:** 게임플레이에 영향 없는 순수 장식이라는 사용자 판정. `world.specimenCatalog`/`collection_store.lua` 참고. 런치 화면에서 완전히 제거한다.
+  1. ✅ 완료(2026-09-03, main 레인) — **"SPECIMENS 9/9" 표본 도감 스트립 제거:** `game/scenes/play.lua`에 신규 `M.showSpecimenStrip = false`(named flag, `M.showLaunchLoadoutTitle`과 동일 패턴 — 언더라잉 `collectionStore`/`specimenCatalog` 영구 저장은 그대로 두고 런치 화면 렌더 호출만 게이팅)를 추가하고, `draw()`의 `self:drawSpecimenStrip(736)` 호출을 이 플래그로 감쌌다. `game/self_test.lua`에 `PlayScene.showSpecimenStrip == false` 회귀 테스트를 추가했다(RED 확인 후 GREEN). `GAME_HEADLESS=1 GAME_UNIT=1 love .`(`SPACESHIP_UNIT_OK`/`SPACESHIP_SMOKE_OK`), `make verify LOVE=/Users/jm/.local/bin/love`(전체 GREEN, `LOVE_BUNDLE_OK`/`ASSET_MANIFEST_OK` 포함) 모두 통과.
   2. **"선체 LV.0" 표기 제거:** 좌상단에 선체 내구도를 상시 표시할 예정이므로(항목 3과 연계) LAUNCH LOADOUT의 `upgrades_line`(HULL LV.%d) 자체를 제거한다.
   3. **슬롯(부품) UI를 화면 좌/우측 네모 칸 아이콘 그리드로 전환 + 마우스오버 카드 설명:** 현재 "도달예상 600 슬롯 6" 같은 텍스트 예보 줄(`forecast_line`)을 모두 제거하고, 대신 화면 좌측 또는 우측 가장자리에 선체 부품/엔진 부품 슬롯을 작은 네모 칸(빈 슬롯은 테두리만)으로 상시 배치한다. 부품이 장착되면 해당 칸에 부품 고유 아이콘이 표시되고, 아이콘에 터치/마우스오버 시 발라트로 조커 카드 설명처럼 이름·등급·효과 수치를 담은 작은 오버레이 패널이 뜬다. 이 항목은 `spaceship-gear` 레인이 진행 중인 항목 9/10/13(JSON 데이터 외부화 + 부품 카드 시스템)과 직결되므로 **gear 레인과 조율**해 UI 소비 측(play.lua)에서 gear 레인의 데이터 구조를 그대로 사용한다. `game/self_test.lua`에 슬롯 그리드 렌더/오버레이 트리거 회귀 테스트를 추가한다.
   4. **"C50 P40 S10" 슬롯 오즈 텍스트 제거 + 우주선 좌표를 미니맵 근처에 작게 표시:** 현재 귀환 화면 미니맵 위에 표시되는 `slot_odds_line`(C/P/S 심볼 확률, 발라트로 EV 표기)은 사용자가 좌표로 오인할 만큼 불명확하고 이제 의미가 없어졌다(슬롯머신이 지구 상점으로 이전됨, 항목15). 이 줄을 완전히 제거하고, 대신 현재 우주선의 world 좌표(`self.ship.x, self.ship.y`)를 미니맵 옆에 작은 텍스트로 상시 표시한다(예: `(120, -340)` 형식, 8px 폰트).

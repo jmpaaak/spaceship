@@ -161,6 +161,15 @@ M.launchLoadoutRowStep = 40
 -- future cycle can re-enable it cheaply if real-device feedback disagrees.
 M.showLaunchLoadoutTitle = false
 
+-- docs/feedback/INBOX.md UI 대개편 6건 item 1: the "SPECIMENS n/9" specimen
+-- log strip is pure decoration with zero effect on gameplay numbers (user
+-- ruling, 2026-09-03) -- gate the launch-screen draw call behind this flag
+-- (kept named, not deleted, mirroring M.showLaunchLoadoutTitle above) so a
+-- future cycle can revive it cheaply if the collection mechanic gets a
+-- real gameplay hook later. The underlying collectionStore/specimenCatalog
+-- persistence stays untouched -- only the launch-screen render is removed.
+M.showSpecimenStrip = false
+
 -- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first slice):
 -- the launch phase's "TAP TO LAUNCH"/"탭하여 발사" action was a bare text
 -- line with no visual affordance beyond the words themselves. Drawing a
@@ -2225,7 +2234,9 @@ function M:draw()
         -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so
         -- it never competes with loadout numbers or the TAP TO LAUNCH
         -- message below the panel.
-        self:drawSpecimenStrip(736)
+        if M.showSpecimenStrip then
+            self:drawSpecimenStrip(736)
+        end
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
         love.graphics.rectangle("fill", 48, M.launchLoadoutBoxTop, viewport.width - 96,
