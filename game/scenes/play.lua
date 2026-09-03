@@ -2322,7 +2322,7 @@ function M:draw()
         love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 88, 400, viewport.width - 176, "center")
         love.graphics.printf(i18n.t("spins_settlement_line", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 88, 436, viewport.width - 176, "center")
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 88, 472, viewport.width - 176, "center")
+        love.graphics.printf(i18n.t("peak_dist_line", math.floor(self.expedition.lastAltitude or 0)), 88, 472, viewport.width - 176, "center")
         if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
             love.graphics.printf(summaryExtraLine, 88, 508, viewport.width - 176, "center")
@@ -2426,7 +2426,7 @@ function M:draw()
             fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastLostAltitude or 0)),
+        love.graphics.printf(i18n.t("peak_dist_line", math.floor(self.expedition.lastLostAltitude or 0)),
             fullX, row, fullW, "center")
         row = row + rowStep
         if self.expedition.lastLostNewBest then

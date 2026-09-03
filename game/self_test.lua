@@ -954,6 +954,31 @@ local function testSteerSpeedIcon()
     end
 end
 
+-- docs/feedback/INBOX.md UI/HUD item 2 leftover (STATUS next slice):
+-- HUD distance already says DIST/거리, but EARTH SHOP and SHIP DESTROYED
+-- summary cards still printed PEAK ALT / 최고고도. User-facing copy must
+-- match the distance-from-Earth wording; format arg stays a single integer.
+local function testPeakDistLine()
+    local i18n = require("game.i18n")
+    i18n.setLocale("en")
+    local en = i18n.t("peak_dist_line", 400)
+    assert(en == "PEAK DIST 400",
+        "en settlement peak line must read PEAK DIST N: " .. tostring(en))
+    assert(not en:find("ALT"),
+        "en peak line must not keep the old ALT label: " .. tostring(en))
+    i18n.setLocale("ko")
+    local ko = i18n.t("peak_dist_line", 400)
+    assert(ko == "최고거리 400",
+        "ko settlement peak line must read 최고거리 N: " .. tostring(ko))
+    assert(not ko:find("고도"),
+        "ko peak line must not keep the old 고도 label: " .. tostring(ko))
+    i18n.setLocale("en")
+    assert(i18n.locales.en.peak_alt_line == nil,
+        "old peak_alt_line key must be removed so leftover ALT copy cannot return")
+    assert(i18n.locales.ko.peak_alt_line == nil,
+        "old ko peak_alt_line key must be removed")
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -3105,6 +3130,7 @@ function M.run()
     testHullShieldIcon()
     testCashCoinIcon()
     testSteerSpeedIcon()
+    testPeakDistLine()
     testLaunchForecastRemoved()
     testFuelUpgradeHiddenFromShop()
     testFuelUpgradeMessagingRemoved()
