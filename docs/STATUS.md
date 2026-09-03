@@ -1,4 +1,19 @@
 # STATUS
+## [spaceship-gear 레인] 항목9/14 gap — `sampleSellValue`/`sellMultiplier` 실 게임 미소비 발견·배선 — `M.effectiveSampleBonus` (완료, 2026-09-03)
+
+레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료된 상태였으나, 이전 슬라이스들이 반복해온 "문서-코드 정합성 감사" 패턴을 이번 사이클에도 다시 적용해 새 gap을 찾아 처리했다. `gear.equippedTotals`가 item 14 첫 슬라이스 때부터 (A) `sampleSellValue` 가산 총합에 (B) `sellMultiplier` 배율을 곱연산 1회로 적용해왔고, 번들 데이터에도 `hull_parts.json` 기준 `sampleSellValue` 카드 8종 + `sellMultiplier` 카드 1종(`hull_market_broker`)이 실재했지만, `game/expedition.lua`의 어떤 함수도 이 `equippedTotals.sampleSellValue` 값을 실제로 읽지 않아 이 9종 카드를 장착해도 표본 채집으로 버는 실제 금액이 조금도 달라지지 않았다 — item 9가 명시한 "부품 조합이 고도 상승 속도/효율에 배가 효과"의 경제 쪽 절반이(고도 쪽은 이미 `M.effectiveClimbSpeed`로 배선됨) 이 레인의 전체 작업 기간 동안 조용히 죽어있던 콘텐츠였다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
+
+- TDD로 `game/self_test.lua`의 기존 `testGearRunEffectWiring()`을 확장했다(RED 확인: `attempt to call field 'effectiveSampleBonus' (a nil value)`).
+- `game/expedition.lua`에 신규 `M.effectiveSampleBonus(run)` — `gear.equippedTotals(run.equippedGear or {}).sampleSellValue`를 그대로 노출한다. `M.effectiveClimbSpeed`와 동일하게 hull 전용(엔진 슬롯은 포함하지 않음) — item 9가 콤보 시너지 대상을 선체("조커형") 부품으로 명시적으로 한정하기 때문에 (C)/(E) 카테고리 무관 래퍼들과는 의도적으로 다른 설계.
+- `M.collectSample(run, value, hueKey)`가 기존 `sampleYieldMultiplier × streakMultiplier` 체인을 적용해 반올림(floor)한 값에 `M.effectiveSampleBonus(run)`을 가산(insurance/collisionRadius와 동일하게 "최종 산출값을 수정" 자세 — 배율 체인 내부로 접지 않음, 카드의 raw value가 배율이 아니라 고정 수치이므로 최종 가산이 자연스러움).
+- `testGearRunEffectWiring()`이 다음을 회귀 검증한다: 미장착 run은 `effectiveSampleBonus == 0`, `sampleSellValue=10`+`sellMultiplier=50` 카드 장착 시 `effectiveSampleBonus == 15`(`10 * 1.5`, `testGearEffectSchemaExpansion`이 이미 검증한 `equippedTotals` 수학과 일치), 실제 `collectSample(run, 100)` 호출이 정확히 115(기본 100 + 가산 보너스 15)를 반환.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `docs/GEAR_SCHEMA.md`에 "Item 9/14 economy-stat gap ... `M.effectiveSampleBonus`" 섹션을 신규 추가했다.
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md`/`docs/STATUS.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`와, 이번 슬라이스가 건드릴 필요 없었던 `game/gear.lua`/`game/engine_parts.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 14 하위(항목15 앞)에 처리 상황을 일곱 번째 슬라이스로 append했다.
+- 여전히 미착수: `sellMultiplier`/`sampleSellValue`를 쓰는 엔진 슬롯 카드(현재 번들 `engine_parts.json`에는 둘 다 0종 — 이번 슬라이스는 이미 콘텐츠가 있던 hull 쪽 소비자 gap만 닫음), 상점/체크포인트 UI가 장착 중인 기어의 실제 예상 표본 보너스를 시각적으로 표시하는 지점(`play.lua`, 레인 스코프 밖), 실제 상점 UI에서 "무료 리롤" 버튼이 `M.spendReroll`을 호출하는 지점(이전 슬라이스부터 계속 미착수).
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성 등 순수 함수/데이터 계층에서 준비 가능한 부분)의 순수 함수 계층 검토, 또는 엔진 슬롯 전용 `sampleSellValue`/`sellMultiplier` 카드 콘텐츠 추가(item 10b가 엔진을 추진/기동 특화로 차별화하라고 명시했으므로 신중히 검토 필요 — 무분별하게 늘리면 hull/engine 역할 분리 취지가 흐려짐), 또는 이 감사 패턴을 계속 적용해 항목9/10/12/13/14의 다른 잔여 gap을 재검증.
+
 ## [spaceship-gear 레인] 항목14(C) `rerollBonus` 소비 배선 — `M.rerollsRemaining`/`M.spendReroll` (완료, 2026-09-03)
 
 이 레인(`spaceship-gear` 브랜치)이 지정받은 항목13→9→10→12→14가 모두 1차 완료된 상태에서, 항목14 (C) `rerollBonus`가 문서상 "run-level 소비자 있음"으로 기록돼 있었으나 실제로는 `M.rerollCount(run)`이라는 매 호출마다 재계산되는 순수 파생값만 존재하고, 실제로 리롤을 "쓰고" 잔여량이 줄어드는 소비 경로가 전혀 없었던 gap을 감사로 발견해 처리했다. 이는 같은 (C)/(E) 계열의 `chainTrigger`/`detectionRadius`/`autoCollect`(상태 없는 매 틱 수정자로 정상)와 달리, "무료 리롤"은 개념상 소비되어 고갈되는 자원이어야 하는데 그 소비 메커니즘 자체가 없었다는 뜻이다(같은 (D) 카테고리의 `insurance`가 `run.insuranceUsed`라는 1회성 boolean으로 실제 소비되는 것과 대비됨). preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).

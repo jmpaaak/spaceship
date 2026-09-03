@@ -1484,6 +1484,42 @@ local function testGearRunEffectWiring()
     assert(expedition.rerollsRemaining(run) == 2,
         "launching a new expedition must refill remaining rerolls back to the equipped rerollBonus total")
 
+    -- Item 9/14 gap audit: gear.equippedTotals already computes a combined
+    -- (A) sampleSellValue flat bonus + (B) sellMultiplier scaling (see the
+    -- "sellA"/"sellB" fixture in testGearEffectSchemaExpansion), but until
+    -- this slice NOTHING in expedition.lua ever read that total -- equipping
+    -- 8 bundled sampleSellValue hull cards (or the sellMultiplier
+    -- hull_market_broker card) had literally zero effect on the actual
+    -- money a player earned from M.collectSample. This is item 9's core
+    -- "combo synergy multiplies the payoff" promise for the ECONOMY stat,
+    -- not just climbSpeed.
+    local sellRun = expedition.new()
+    local sellCard = {
+        id = "sell-fixture", name = "Sell", nameKo = "Sell", icon = "*",
+        rarity = "common", tags = {}, editions = {},
+        effects = {
+            { type = "sampleSellValue", value = 10 },
+            { type = "sellMultiplier", value = 50 },
+        },
+    }
+    assert(expedition.equipGear(sellRun, "hull", sellCard))
+    -- equippedTotals: flat sampleSellValue 10, sellMultiplier +50% ->
+    -- combined bonus = 10 * 1.5 = 15.
+    assert(math.abs(expedition.effectiveSampleBonus(sellRun) - 15) < 1e-9,
+        "equipped sampleSellValue+sellMultiplier gear must resolve to a flat +15 sample bonus")
+    sellRun.phase = "ascending"
+    local sellOk, sellAwarded = expedition.collectSample(sellRun, 100)
+    -- base 100 * sampleYieldMultiplier(1, no upgrade) * streakMultiplier(1,
+    -- first collect) + gear bonus 15 = 115.
+    assert(sellOk and sellAwarded == 115,
+        "collectSample must add the equipped gear's flat sampleSellValue/sellMultiplier bonus: got " .. tostring(sellAwarded))
+
+    -- An unequipped run must be a strict no-op (regression safety matching
+    -- every other item 14 "no gear" baseline in this test).
+    local bareSellRun = expedition.new()
+    assert(expedition.effectiveSampleBonus(bareSellRun) == 0,
+        "an unequipped run must have zero gear sample bonus")
+
     -- Engine-slot equips must feed the same wrappers too (item 10: hull and
     -- engine are independent slot lists, but both should count toward these
     -- run-wide totals, matching how boostChargeCount/effectiveFuelBurnRate

@@ -813,4 +813,54 @@ layers were both nominally "done".
   spend/remaining state a future consumer will read from and mutate,
   same posture as every other item 14 (C)/(E) wrapper before it.
 
+### Item 9/14 economy-stat gap: `sampleSellValue`/`sellMultiplier` had no
+### run-state consumer — `M.effectiveSampleBonus` closes it
+
+A documentation-vs-code audit (the same pattern that found the item 12
+`noSlotCost`/irradiated-synergy gaps and item 14's 7-type content-coverage
+gap in earlier slices) found one more: `gear.equippedTotals` has combined a
+part's flat (A) `sampleSellValue` with the (B) `sellMultiplier` percentage
+(additive-sum-then-multiply, per the "Effect schema categories A~F"
+section above) since item 14's very first slice, and 8 bundled hull cards
+use `sampleSellValue` / 1 (`hull_market_broker`) uses `sellMultiplier` —
+but **nothing in `game/expedition.lua` ever read `equippedTotals.sampleSellValue`**.
+Equipping every one of those 9 cards had literally zero effect on the
+money a player actually earned from collecting samples. This is item 9's
+core "부품 조합이 고도 상승 *및 경제* 효율에 배가 효과" promise for the
+economy half of the stat (climbSpeed synergy was already wired in an
+earlier slice via `M.effectiveClimbSpeed`) — silently dead for the entire
+lifetime of this lane's work on items 9/12/13/14 until this slice.
+
+- `game/expedition.lua`'s new `M.effectiveSampleBonus(run)` reads
+  `gear.equippedTotals(run.equippedGear or {}).sampleSellValue` — hull-only
+  (unlike the category-agnostic (C)/(E) wrappers), matching climbSpeed
+  synergy's hull-only scope immediately above it in the same file, since
+  item 9 explicitly scopes the combo-synergy payoff to hull ("조커형")
+  parts.
+- `M.collectSample(run, value, hueKey)` now adds
+  `M.effectiveSampleBonus(run)` to the awarded amount AFTER the existing
+  `sampleYieldMultiplier` × `streakMultiplier` chain is applied and
+  floored — gear modifies the final resolved quantity, the same posture
+  `insurance`/`collisionRadius` already established, rather than being
+  folded into the multiplier chain itself (so the gear bonus is not
+  itself affected by the streak/yield upgrades — it's a flat top-up per
+  collection, matching a card's raw effect `value` being a flat number,
+  not a percentage, for the (A) `sampleSellValue` part of the combo).
+
+`game/self_test.lua`'s `testGearRunEffectWiring` regression-checks: an
+unequipped run's `effectiveSampleBonus` is exactly `0`; a hull card
+combining `sampleSellValue = 10` + `sellMultiplier = 50` resolves to a
+flat `+15` bonus (`10 * 1.5`, matching `equippedTotals`' existing
+additive-then-multiply math verified separately in
+`testGearEffectSchemaExpansion`); and an end-to-end `collectSample(run,
+100)` call with that gear equipped awards exactly `115` (base
+`100 * 1.0 * 1.0` floored, plus the flat `+15` gear bonus).
+
+Still deferred: `sellMultiplier`/`sampleSellValue` engine-slot cards (the
+bundled `engine_parts.json` pool currently has none of either type — this
+slice only fixes the hull-side consumer gap that already had bundled
+content); any shop/checkpoint UI that visually surfaces the gear-boosted
+sample value to the player before it's earned (`play.lua`, out of this
+lane's scope).
+
 

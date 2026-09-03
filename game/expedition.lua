@@ -620,7 +620,14 @@ function M.collectSample(run, value, hueKey)
     end
     run.sampleStreakFamily = hueKey
     local streakMultiplier = M.streakMultiplier(run.sampleStreakCount, run)
+    -- Item 9/14: equipped hull gear's flat sampleSellValue+sellMultiplier
+    -- bonus (M.effectiveSampleBonus, already synergy-scaled by
+    -- gear.equippedTotals) is added AFTER the yield/streak multipliers are
+    -- applied to the base value, matching insurance/collisionRadius's
+    -- posture of "gear modifies the final resolved quantity" rather than
+    -- being folded into the multiplier chain itself.
     local awarded = math.floor(value * M.sampleYieldMultiplier(run) * streakMultiplier + 0.5)
+        + M.effectiveSampleBonus(run)
     run.sampleCount = run.sampleCount + 1
     run.pendingSampleValue = run.pendingSampleValue + awarded
     return true, awarded, streakMultiplier
@@ -657,6 +664,24 @@ end
 function M.effectiveClimbSpeed(run)
     local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
     return run.climbSpeed + (gearTotals.climbSpeed or 0)
+end
+
+-- Item 9/14 economy-stat gap audit: gear.equippedTotals already combines a
+-- part's flat (A) sampleSellValue with the (B) sellMultiplier percentage
+-- (additive-sum-then-multiply, see game/gear.lua's M.equippedTotals) into
+-- one number, but until this slice nothing in this file ever READ that
+-- total -- every bundled sampleSellValue/sellMultiplier hull card (8 of
+-- the former, 1 of the latter, per docs/GEAR_SCHEMA.md's item 14 content
+-- coverage audit) was equippable but had zero effect on actual money
+-- earned. This wrapper is the single source of truth for "how much extra
+-- money per sample does the currently equipped hull gear grant" -- kept
+-- hull-only (unlike the category-agnostic (C)/(E) wrappers) because item
+-- 9 explicitly scopes sampleSellValue/sellMultiplier to hull ("조합이
+-- 시너지"의 대상은 선체 조커형 부품), matching climbSpeed's synergy scope
+-- immediately above.
+function M.effectiveSampleBonus(run)
+    local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
+    return gearTotals.sampleSellValue or 0
 end
 
 -- Item 10(b)/14(G) wiring: how many one-shot emergency boost charges the
