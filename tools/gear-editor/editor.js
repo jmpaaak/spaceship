@@ -36,6 +36,37 @@ const EDITION_EFFECTS = {
 const EFFECT_VALUE_MIN = -100;
 const EFFECT_VALUE_MAX = 100;
 
+// Item 9(c)/12 economy axis: game/gear.lua's M.raritySellValue /
+// M.editionSellBonus / M.buyPriceMultiplier / M.sellValue / M.buyPrice.
+// Until this constant set existed, the web editor had zero visibility into
+// a card's actual sell/buy economics -- an author designing a new legendary
+// card had no way to see (without reading Lua) that it refunds 40 (or 86
+// crystallized) and costs 120 (or 258 crystallized) at Earth shop, even
+// though those numbers are entirely rarity+edition-derived and therefore
+// exactly the kind of thing item 14's "웹 에디터 폼 동기화" mandate covers.
+// Must stay byte-for-byte in sync with gear.lua (mirrors the existing
+// EDITION_EFFECTS/KNOWN_EDITIONS/KNOWN_RARITIES/EFFECT_VALUE_MIN/MAX sync
+// pattern already enforced by game/self_test.lua).
+const RARITY_SELL_VALUE = { common: 4, uncommon: 9, rare: 18, legendary: 40 };
+const EDITION_SELL_BONUS = 6;
+const BUY_PRICE_MULTIPLIER = 3;
+
+// Mirrors gear.lua's M.sellValue(part): unknown/missing rarity falls back
+// to common (defensive money calc, not schema validation -- validatePool
+// above already guarantees a known rarity for any card that would save).
+function computeSellValue(rarity, editionId) {
+  let base = RARITY_SELL_VALUE[rarity] !== undefined ? RARITY_SELL_VALUE[rarity] : RARITY_SELL_VALUE.common;
+  const def = editionId && EDITION_EFFECTS[editionId];
+  if (def && def.sellMultiplier) base = base * def.sellMultiplier;
+  if (editionId) base = base + EDITION_SELL_BONUS;
+  return base;
+}
+
+// Mirrors gear.lua's M.buyPrice(part) = M.sellValue(part) * M.buyPriceMultiplier.
+function computeBuyPrice(rarity, editionId) {
+  return computeSellValue(rarity, editionId) * BUY_PRICE_MULTIPLIER;
+}
+
 /** @type {{schemaVersion: number, parts: Array<object>}|null} */
 let pool = null;
 let fileHandle = null; // File System Access API handle, when available
@@ -49,7 +80,7 @@ function cacheEls() {
     "formTitle", "cardForm", "fieldId", "fieldName", "fieldNameKo",
     "fieldIcon", "fieldRarity", "rarityPreview", "fieldTags",
     "fieldEditions", "fieldGalaxyExclusive", "effectsList", "addEffectBtn", "saveCardBtn",
-    "deleteCardBtn", "cancelBtn", "formError", "editionPreviewContainer"
+    "deleteCardBtn", "cancelBtn", "formError", "editionPreviewContainer", "economyPreviewContainer"
   ].forEach((id) => { els[id] = document.getElementById(id); });
 }
 
@@ -304,6 +335,7 @@ function openForm(id) {
   }
   updateRarityPreview();
   updateEditionPreview();
+  updateEconomyPreview();
 }
 
 function closeForm() {
@@ -361,6 +393,35 @@ function updateRarityPreview() {
   els.rarityPreview.style.background = RARITY_COLOR[els.fieldRarity.value] || "#000";
 }
 
+// Item 9(c)/12/14: renders the sell/buy economics preview so an author can
+// see -- live, as they change rarity or editions -- exactly what a card
+// will refund on sale and cost to (re)purchase, without cross-referencing
+// game/gear.lua by hand. Mirrors updateEditionPreview's "only show once
+// there's something meaningful to show" posture.
+function updateEconomyPreview() {
+  if (!els.economyPreviewContainer) return;
+  els.economyPreviewContainer.innerHTML = "";
+  const rarity = els.fieldRarity.value;
+  const editionsRaw = els.fieldEditions.value.split(",").map((s) => s.trim()).filter(Boolean);
+  const validEditions = editionsRaw.filter((e) => KNOWN_EDITIONS.includes(e));
+
+  const h3 = document.createElement("h3");
+  h3.textContent = "Economy Preview";
+  els.economyPreviewContainer.appendChild(h3);
+
+  const baseline = document.createElement("div");
+  baseline.className = "economy-preview-item";
+  baseline.innerHTML = `<strong>no edition</strong>: sell $${computeSellValue(rarity, null)} · buy $${computeBuyPrice(rarity, null)}`;
+  els.economyPreviewContainer.appendChild(baseline);
+
+  validEditions.forEach((editionId) => {
+    const item = document.createElement("div");
+    item.className = "economy-preview-item";
+    item.innerHTML = `<strong>${escapeHtml(editionId)}</strong>: sell $${computeSellValue(rarity, editionId)} · buy $${computeBuyPrice(rarity, editionId)}`;
+    els.economyPreviewContainer.appendChild(item);
+  });
+}
+
 function collectFormPart() {
   const effects = Array.from(els.effectsList.querySelectorAll(".effect-row")).map((row) => {
     const type = row.querySelector("select").value;
@@ -384,8 +445,8 @@ function collectFormPart() {
 }
 
 function wireForm() {
-  els.fieldRarity.addEventListener("change", updateRarityPreview);
-  els.fieldEditions.addEventListener("input", updateEditionPreview);
+  els.fieldRarity.addEventListener("change", () => { updateRarityPreview(); updateEconomyPreview(); });
+  els.fieldEditions.addEventListener("input", () => { updateEditionPreview(); updateEconomyPreview(); });
   els.addEffectBtn.addEventListener("click", () => addEffectRow(KNOWN_EFFECT_TYPES[0], 0));
   els.cancelBtn.addEventListener("click", closeForm);
   els.newCardBtn.addEventListener("click", () => openForm(null));

@@ -1415,6 +1415,68 @@ Still deferred (out of this lane's scope per `loop/PROMPT.md`): the
 shop UI that displays the crystallized sell price to the player
 (`play.lua`).
 
+### Item 13/14: web editor gains a live sell/buy economy preview
+
+Every other numeric axis this lane added to `game/gear.lua` (effect value
+range, rarity/edition validation, edition effect transforms) already has a
+byte-for-byte sync check against `tools/gear-editor/editor.js`, but item
+9(c)/12's sell-to-rebuy economy constants (`M.raritySellValue`,
+`M.editionSellBonus`, `M.buyPriceMultiplier`, and their `M.sellValue`/
+`M.buyPrice` combination formulas) had no editor counterpart at all — an
+author designing a new card in the web editor had no way to see what it
+would actually sell for or cost to rebuy at Earth shop without reading
+`game/gear.lua` by hand, even though item 14's own mandate ("웹 에디터 폼
+동기화") explicitly calls for the editor to mirror gameplay-affecting
+numbers, not just validation rules.
+
+- `tools/gear-editor/editor.js` gains `RARITY_SELL_VALUE`/
+  `EDITION_SELL_BONUS`/`BUY_PRICE_MULTIPLIER` constants (byte-for-byte
+  mirrors of `gear.lua`'s `M.raritySellValue`/`M.editionSellBonus`/
+  `M.buyPriceMultiplier`) and pure `computeSellValue(rarity, editionId)`/
+  `computeBuyPrice(rarity, editionId)` functions replicating `M.sellValue`/
+  `M.buyPrice`'s exact combination order (rarity base × edition
+  `sellMultiplier` if any, THEN + the flat `editionSellBonus`, THEN × 3 for
+  buy price) — same additive-then-multiply care this lane has applied to
+  every other ported formula.
+- New `updateEconomyPreview()` renders a "no edition" baseline row plus one
+  row per edition currently listed in the card's `Editions` field, each
+  showing `sell $N · buy $N`, into a new `economyPreviewContainer` div
+  (`tools/gear-editor/index.html`, reusing the existing `.edition-preview`
+  CSS class so no new styling was needed). Wired into the same three call
+  sites `updateEditionPreview` already uses: `openForm` (new/edit card),
+  the rarity `<select>`'s `change` handler, and the editions `<input>`'s
+  `input` handler — so the preview updates live as an author edits either
+  field, matching the existing edition-transform preview's UX.
+- `game/self_test.lua`'s new `testGearEditorEconomyPreviewSync()` locks the
+  three constants against `gear.lua`, confirms `updateEconomyPreview` is
+  both defined and actually called (not dead code), confirms
+  `economyPreviewContainer` exists in `index.html`, and confirms
+  `computeSellValue` actually applies an edition's `sellMultiplier` (not
+  just the flat bonus) so a wrong combination order would be caught, not
+  just a wrong constant. RED confirmed by temporarily setting
+  `EDITION_SELL_BONUS = 99` in `editor.js` (assertion failure: "editor.js
+  EDITION_SELL_BONUS must equal gear.lua's M.editionSellBonus (6), got
+  99"), reverted, GREEN restored.
+- This slice also grouped the five gear-editor sync test calls
+  (`testGearEditorEditionAndRaritySync`, `testGearEditorEditionEffectPreviewSync`,
+  `testGearEditorEffectValueRangeSync`, the new
+  `testGearEditorEconomyPreviewSync`, `testGearEditorGalaxyExclusiveFieldSync`)
+  behind one `testGearEditorSyncSuite()` wrapper — `game/self_test.lua`'s
+  `M.run()` was about to exceed Lua's 60-upvalue-per-function ceiling
+  purely from the sheer number of local test functions this lane has
+  accumulated across many cycles (RED confirmed: `function at line 3741
+  has more than 60 upvalues` before this refactor, GREEN after). No test
+  behavior changed, only how the calls are grouped.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN
+  (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3,
+  `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- Changed files: `tools/gear-editor/editor.js`, `tools/gear-editor/index.html`,
+  `game/self_test.lua`, this doc, `docs/STATUS.md`,
+  `docs/feedback/INBOX.md`. `git status --short` confirms
+  `play.lua`/`i18n.lua`/`world.lua`/`game/gear.lua`/`game/engine_parts.lua`/
+  `game/expedition.lua` were not touched — pure web-editor content + a
+  regression-suite grouping refactor, no gameplay code changed.
+
 ### Item 12/10: engine-slot quantum_flawed hullDurability drawback
 
 `applyEditionEffects` already appends `{ type = "hullDurability", value = -1 }`

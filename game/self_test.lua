@@ -1149,6 +1149,64 @@ local function testGearEditorEffectValueRangeSync()
         "), got " .. tostring(maxMatch))
 end
 
+-- docs/feedback/INBOX.md item 13/14 follow-up: gear.lua's M.raritySellValue/
+-- M.editionSellBonus/M.buyPriceMultiplier (item 9(c)/12's sell-to-rebuy
+-- economy loop) had no counterpart in the web editor at all -- an author
+-- designing a new card had no way to see its actual sell/buy price without
+-- reading Lua by hand, unlike every other numeric constant this lane has
+-- already locked into an editor<->gear.lua sync test (effect value range,
+-- edition effect transforms, known editions/rarities). This test locks the
+-- new RARITY_SELL_VALUE/EDITION_SELL_BONUS/BUY_PRICE_MULTIPLIER constants
+-- and confirms the preview is actually wired to the form, not dead data.
+local function testGearEditorEconomyPreviewSync()
+    local editorSrc = love.filesystem.read("tools/gear-editor/editor.js")
+    assert(editorSrc, "tools/gear-editor/editor.js must be readable for the sync check")
+    local htmlSrc = love.filesystem.read("tools/gear-editor/index.html")
+    assert(htmlSrc, "tools/gear-editor/index.html must be readable for the sync check")
+
+    local tableStart = editorSrc:find("RARITY_SELL_VALUE%s*=%s*{")
+    assert(tableStart, "editor.js must define a RARITY_SELL_VALUE table mirroring gear.lua's M.raritySellValue")
+    local tableEnd = editorSrc:find("}", tableStart)
+    local block = editorSrc:sub(tableStart, tableEnd)
+    for rarity, value in pairs(gear.raritySellValue) do
+        local match = block:match(rarity .. "%s*:%s*(%d+)")
+        assert(match and tonumber(match) == value,
+            "editor.js RARITY_SELL_VALUE['" .. rarity .. "'] must be " .. tostring(value) ..
+            " to match gear.lua, got " .. tostring(match))
+    end
+
+    local bonusMatch = editorSrc:match("EDITION_SELL_BONUS%s*=%s*(%d+)")
+    assert(bonusMatch and tonumber(bonusMatch) == gear.editionSellBonus,
+        "editor.js EDITION_SELL_BONUS must equal gear.lua's M.editionSellBonus (" ..
+        tostring(gear.editionSellBonus) .. "), got " .. tostring(bonusMatch))
+
+    local multMatch = editorSrc:match("BUY_PRICE_MULTIPLIER%s*=%s*(%d+)")
+    assert(multMatch and tonumber(multMatch) == gear.buyPriceMultiplier,
+        "editor.js BUY_PRICE_MULTIPLIER must equal gear.lua's M.buyPriceMultiplier (" ..
+        tostring(gear.buyPriceMultiplier) .. "), got " .. tostring(multMatch))
+
+    -- The preview must actually be wired to the form (rarity + edition
+    -- change handlers), not just declared as dead computeSellValue/
+    -- computeBuyPrice functions nobody calls.
+    assert(editorSrc:find("function updateEconomyPreview"),
+        "editor.js must define function updateEconomyPreview")
+    assert(editorSrc:find("updateEconomyPreview()", 1, true),
+        "editor.js must actually call updateEconomyPreview somewhere (form open/rarity/edition change)")
+    assert(htmlSrc:find('id="economyPreviewContainer"', 1, true),
+        "index.html must expose an economyPreviewContainer element for the sell/buy preview to render into")
+
+    -- Sanity-check the JS math itself matches gear.lua's M.sellValue/M.buyPrice
+    -- for a representative case (legendary + crystallized), since a
+    -- constant-level sync check alone would not catch a wrong combination
+    -- formula (e.g. applying the edition bonus before the multiplier).
+    local previewStart = editorSrc:find("function computeSellValue")
+    assert(previewStart, "editor.js must define function computeSellValue")
+    local previewEnd = editorSrc:find("\nfunction ", previewStart + 1) or #editorSrc
+    local previewBlock = editorSrc:sub(previewStart, previewEnd)
+    assert(previewBlock:find("sellMultiplier"),
+        "computeSellValue must apply an edition's sellMultiplier (e.g. crystallized) like gear.lua's M.sellValue")
+end
+
 -- docs/feedback/INBOX.md item 13 follow-up: gear.lua's validatePart already
 -- round-trips the item-7 `galaxyExclusive` boolean (hull_combo_matrix and
 -- engine_singularity_drive both carry it so earthShopPool can exclude them),
@@ -1183,6 +1241,18 @@ local function testGearEditorGalaxyExclusiveFieldSync()
     local openBlock = editorSrc:sub(openStart, openEnd)
     assert(openBlock:find("galaxyExclusive"),
         "openForm must restore galaxyExclusive from the loaded part")
+end
+
+-- Groups the gear-editor <-> gear.lua sync regression checks into one
+-- wrapper so M.run() only references a single upvalue for all five
+-- (Lua's 60-upvalue-per-function ceiling: this suite has grown enough
+-- local test functions that M.run() itself was about to exceed it).
+local function testGearEditorSyncSuite()
+    testGearEditorEditionAndRaritySync()
+    testGearEditorEditionEffectPreviewSync()
+    testGearEditorEffectValueRangeSync()
+    testGearEditorEconomyPreviewSync()
+    testGearEditorGalaxyExclusiveFieldSync()
 end
 
 -- docs/feedback/INBOX.md item 13 follow-up (named next slice after the
@@ -5378,10 +5448,7 @@ function M.run()
     testGearSynergyEngine()
     testEnginePartsSlotSeparation()
     testGearRarityAndEditionSystem()
-    testGearEditorEditionAndRaritySync()
-    testGearEditorEditionEffectPreviewSync()
-    testGearEditorEffectValueRangeSync()
-    testGearEditorGalaxyExclusiveFieldSync()
+    testGearEditorSyncSuite()
     testGearSchemaDocumentsGalaxyExclusive()
     testGearEffectSchemaExpansion()
     testEnginePropulsionSpecialization()
