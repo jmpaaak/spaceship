@@ -183,5 +183,30 @@
     "width": 64,
     "height": 64,
     "qa": "wired into PlayScene.shipImage/shipImagePath and rendered at 16px footprint (game/scenes/play.lua); regression-checked by game/self_test.lua testShipSprite(); vision/runtime-capture QA intentionally skipped per docs/feedback/INBOX.md item 생성 에셋 LLM 비전 검토 제외 (2026-09-03)"
+  },
+  {
+    "path": "assets/planet/planet_generic.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "968ae1fe-6cb1-4f87-b9fa-672b66f0e01e",
+    "prompt": "pixel art, 16-bit, small round alien planet sprite for a vertical space roguelite, cratered rocky surface with subtle color bands, soft top-down lighting, grayscale/neutral tone so game code can tint it per biome, crisp clean circular silhouette, solid white background, no text, no watermark, no rings, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260903,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T08:05:33Z",
+    "sha256": "6b159332445c814453d895451a4f812843d9b3467ef9da208f5cd9a769ca8f24",
+    "width": 64,
+    "height": 64,
+    "qa": "wired into PlayScene.planetImage/planetImagePath and rendered tinted-per-hue via planetColor(hue) in the nearbyPlanets draw loop (game/scenes/play.lua), replacing the flat gradient-circle fallback (kept as a fallback when the image fails to load); regression-checked by game/self_test.lua testPlanetSprite(); vision/runtime-capture QA intentionally skipped per docs/feedback/INBOX.md item 생성 에셋 LLM 비전 검토 제외 (2026-09-03)"
   }
 ]

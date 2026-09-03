@@ -587,10 +587,27 @@ function M.new(options)
             shipImage = img
         end
     end
+    -- assets/planet/planet_generic.png is the ComfyUI-generated neutral-tone
+    -- planet sprite (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated-image pattern as shipImage above; :draw() tints this
+    -- single grayscale sprite per-planet with the existing planetColor()
+    -- hue lookup instead of drawing a flat filled circle, and falls back to
+    -- the flat circle whenever the image failed to load.
+    local planetImagePath = "assets/planet/planet_generic.png"
+    local planetImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, planetImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            planetImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
         shipImagePath = shipImagePath,
+        planetImage = planetImage,
+        planetImagePath = planetImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
@@ -1736,14 +1753,25 @@ function M:draw()
             -- slightly raised cards instead of flat painted circles.
             love.graphics.setColor(0, 0, 0, 0.25)
             love.graphics.circle("fill", x + planet.radius * 0.22, y + planet.radius * 0.22, planet.radius * 1.02)
-            -- Saturated gradient fill: a darker base circle with a brighter
-            -- highlight offset toward the upper-left, approximating a soft
-            -- directional light instead of a single flat fill color.
+            -- docs/feedback/INBOX.md 처리대기 항목 "ComfyUI로 실제 에셋 작업
+            -- 진행" (planet slice): render the ComfyUI-generated neutral-tone
+            -- sprite (assets/planet/planet_generic.png) tinted by the
+            -- existing planetColor(hue) lookup instead of a flat filled
+            -- circle, so per-planet hue variety is preserved. Falls back to
+            -- the previous flat gradient-circle rendering whenever the
+            -- image failed to load (e.g. missing file/graphics disabled).
             local baseR, baseG, baseB = planetColor(planet.hue)
-            love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
-            love.graphics.circle("fill", x, y, planet.radius)
-            love.graphics.setColor(math.min(1, baseR * 1.25), math.min(1, baseG * 1.25), math.min(1, baseB * 1.25))
-            love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
+            if self.planetImage then
+                local iw, ih = self.planetImage:getWidth(), self.planetImage:getHeight()
+                local scale = (planet.radius * 2) / math.max(iw, ih)
+                love.graphics.setColor(baseR, baseG, baseB)
+                love.graphics.draw(self.planetImage, x, y, 0, scale, scale, iw / 2, ih / 2)
+            else
+                love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
+                love.graphics.circle("fill", x, y, planet.radius)
+                love.graphics.setColor(math.min(1, baseR * 1.25), math.min(1, baseG * 1.25), math.min(1, baseB * 1.25))
+                love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
+            end
             if not self.discovered[planet.id] then
                 love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
                 love.graphics.circle("line", x, y, planet.radius + 3)

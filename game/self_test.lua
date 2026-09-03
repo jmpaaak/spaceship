@@ -969,6 +969,23 @@ local function testShipSprite()
         "PlayScene must load assets/ship/ship_default.png into self.shipImagePath")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목: ComfyUI로 실제 에셋 작업 진행 --
+-- next slice after the ship sprite: the ComfyUI-generated planet texture
+-- (assets/planet/planet_generic.png, see docs/GENERATED_ASSET_LOG.md) must
+-- be recorded as a real load target on PlayScene, mirroring testShipSprite.
+-- planetImage itself cannot be asserted here for the same GAME_HEADLESS=1
+-- reason documented above testShipSprite.
+local function testPlanetSprite()
+    local path = "assets/planet/planet_generic.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated planet sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.planetImagePath == path,
+        "PlayScene must load assets/planet/planet_generic.png into self.planetImagePath")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -2685,6 +2702,7 @@ function M.run()
     testFuelUpgradeMessagingRemoved()
     testSpecimenSprites()
     testShipSprite()
+    testPlanetSprite()
 
     print("SPACESHIP_UNIT_OK")
 end
