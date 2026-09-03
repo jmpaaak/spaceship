@@ -1367,6 +1367,27 @@ local function testShopIconSprites()
     end
 end
 
+-- GAME_DESIGN.md drifting asteroids/cans/scrap are still Lua shapes, not
+-- ComfyUI textures. Same file-existence + always-set-path pattern as
+-- testShopIconSprites. Graphics-gated debrisImages cannot be asserted
+-- under GAME_HEADLESS=1.
+local function testDebrisSprites()
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    local expected = {
+        asteroid = "assets/debris/asteroid.png",
+        can = "assets/debris/can.png",
+        scrap = "assets/debris/scrap.png",
+    }
+    for kind, path in pairs(expected) do
+        local info = love.filesystem.getInfo(path, "file")
+        assert(info ~= nil, "missing ComfyUI-generated debris sprite at " .. path)
+        assert(info.size > 0)
+        assert(scene.debrisImagePaths and scene.debrisImagePaths[kind] == path,
+            "PlayScene must load " .. path .. " into self.debrisImagePaths." .. kind)
+    end
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3235,6 +3256,7 @@ function M.run()
     testBackgroundSprite()
     testSlotSymbolSprites()
     testShopIconSprites()
+    testDebrisSprites()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

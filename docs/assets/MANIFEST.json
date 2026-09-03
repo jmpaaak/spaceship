@@ -458,5 +458,80 @@
     "width": 64,
     "height": 64,
     "qa": "shop icon, ship purchase row"
+  },
+  {
+    "path": "assets/debris/asteroid.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "03b69baf-10cd-4fea-8c8e-fefde3a52a4d",
+    "prompt": "pixel art, 16-bit, small grey cratered asteroid space rock sprite, irregular rocky silhouette, solid white background, no text, centered, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904101,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:33:30Z",
+    "sha256": "c81fe6c83f687f62ce13d3c6cb542c289d73b826b59e49eb22dd60b670ceb2cc",
+    "width": 64,
+    "height": 64,
+    "qa": "debris asteroid sprite wired into PlayScene debrisImages.asteroid; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/debris/can.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "07fbffbf-ee84-4937-ba69-0090d03da567",
+    "prompt": "pixel art, 16-bit, small dented aluminum soda can space junk sprite, floating debris, solid white background, no text, centered, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904102,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:34:22Z",
+    "sha256": "1032e23dbb9f1914173aa3377620cdf28722bb11b328c90d33941fa43be2410f",
+    "width": 64,
+    "height": 64,
+    "qa": "debris can sprite wired into PlayScene debrisImages.can; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/debris/scrap.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "21450a22-a9c3-45f2-857a-c86e7beac90f",
+    "prompt": "pixel art, 16-bit, small rusty metal scrap debris sprite, twisted iron plate fragment, solid white background, no text, centered, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904103,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:35:15Z",
+    "sha256": "33cbb9ede302d38226d14fe78bed849ac358ac1f5ed781e5b9ad0fa940a481e4",
+    "width": 64,
+    "height": 64,
+    "qa": "debris scrap sprite wired into PlayScene debrisImages.scrap; pipeline PNG signature/decode gate"
   }
 ]

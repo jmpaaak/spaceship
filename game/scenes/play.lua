@@ -760,6 +760,27 @@ function M.new(options)
             end
         end
     end
+    -- assets/debris/{asteroid,can,scrap}.png are ComfyUI-generated drifting
+    -- hazard sprites (docs/GENERATED_ASSET_LOG.md). Same always-set-paths /
+    -- graphics-gated-images pattern as shopIconImagePaths: debrisImagePaths
+    -- is always fully populated so engine-hosted tests can verify wiring
+    -- under GAME_HEADLESS=1, and debrisImages holds the drawables :draw()
+    -- uses instead of the Lua rectangle/circle/triangle placeholders.
+    local debrisImagePaths = {
+        asteroid = "assets/debris/asteroid.png",
+        can = "assets/debris/can.png",
+        scrap = "assets/debris/scrap.png",
+    }
+    local debrisImages = {}
+    if love.graphics and love.graphics.newImage then
+        for kind, path in pairs(debrisImagePaths) do
+            local ok, img = pcall(love.graphics.newImage, path)
+            if ok and img then
+                img:setFilter("nearest", "nearest")
+                debrisImages[kind] = img
+            end
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -776,6 +797,8 @@ function M.new(options)
         slotSymbolImagePaths = slotSymbolImagePaths,
         shopIconImages = shopIconImages,
         shopIconImagePaths = shopIconImagePaths,
+        debrisImages = debrisImages,
+        debrisImagePaths = debrisImagePaths,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2061,7 +2084,13 @@ function M:draw()
     for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
         local x, y = math.floor(junk.x - cameraX), math.floor(junk.y - cameraY)
         if x > -20 and x < viewport.width + 20 and y > -20 and y < viewport.height + 20 then
-            if junk.kind == "can" then
+            local sprite = self.debrisImages and self.debrisImages[junk.kind]
+            if sprite then
+                local iw, ih = sprite:getWidth(), sprite:getHeight()
+                local scale = (junk.radius * 2) / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1)
+                love.graphics.draw(sprite, x, y, 0, scale, scale, iw / 2, ih / 2)
+            elseif junk.kind == "can" then
                 love.graphics.setColor(0.72, 0.76, 0.7)
                 love.graphics.rectangle("fill", x - junk.radius, y - junk.radius * 1.4,
                     junk.radius * 2, junk.radius * 2.8)
