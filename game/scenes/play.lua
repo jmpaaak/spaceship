@@ -420,6 +420,31 @@ end
 M.galaxyIconSize = 32
 M.galaxyIconGap = 16
 
+-- Returning-phase RETURN progress HUD icon (icon-based HUD
+-- simplification follow-on): pair the cyan hud_return_progress readout
+-- with a small downward chevron silhouette, mirroring
+-- coin/shield/speed/distance/best/samples/galaxy. Drawn as a flat
+-- chevron polygon (even-length {x,y,...} list, no love.graphics calls)
+-- so headless tests can pin geometry: horizontally symmetric around cx,
+-- spans above and below cy.
+function M.returnIconPoints(cx, cy, size)
+    local r = size * 0.5
+    return {
+        cx - r, cy - r * 0.55,
+        cx, cy + r,
+        cx + r, cy - r * 0.55,
+        cx + r * 0.45, cy - r * 0.55,
+        cx, cy + r * 0.25,
+        cx - r * 0.45, cy - r * 0.55,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the return chevron's
+-- right edge and the RETURN text's left edge, mirroring
+-- M.galaxyIconSize/galaxyIconGap.
+M.returnIconSize = 32
+M.returnIconGap = 16
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1507,6 +1532,21 @@ function M.new(options)
             galaxyIconImage = img
         end
     end
+    -- assets/effects/hud_return.png is the ComfyUI-generated RETURN
+    -- progress HUD chevron (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- galaxyIconImagePath. :draw() scales it to M.returnIconSize instead
+    -- of M.returnIconPoints, and falls back to that downward chevron
+    -- polygon when the image failed to load.
+    local returnIconImagePath = "assets/effects/hud_return.png"
+    local returnIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, returnIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            returnIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1609,6 +1649,8 @@ function M.new(options)
         samplesIconImagePath = samplesIconImagePath,
         galaxyIconImage = galaxyIconImage,
         galaxyIconImagePath = galaxyIconImagePath,
+        returnIconImage = returnIconImage,
+        returnIconImagePath = returnIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3400,7 +3442,23 @@ function M:draw()
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
             love.graphics.print(hud.earth, 20, 172 + M.hudPrimaryStatusGap + galaxyShift)
-            love.graphics.print(hud.returnProgress, 20, 220 + M.hudPrimaryStatusGap + galaxyShift)
+            local returnY = 220 + M.hudPrimaryStatusGap + galaxyShift
+            local returnIconCenterX = 20 + M.returnIconSize / 2
+            local returnIconCenterY = returnY + (love.graphics.getFont():getHeight() / 2)
+            if self.returnIconImage then
+                local iw, ih = self.returnIconImage:getDimensions()
+                local scale = M.returnIconSize / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.draw(self.returnIconImage, returnIconCenterX, returnIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+            else
+                -- Fallback: cyan downward chevron, used only when the
+                -- ComfyUI-generated sprite failed to load.
+                love.graphics.setColor(0.4, 0.85, 1)
+                love.graphics.polygon("fill",
+                    M.returnIconPoints(returnIconCenterX, returnIconCenterY, M.returnIconSize))
+            end
+            love.graphics.setColor(0.4, 0.85, 1)
+            love.graphics.print(hud.returnProgress, 20 + M.returnIconSize + M.returnIconGap, returnY)
         end
     elseif hud.best then
         drawStatusWithShield((isLaunchHud and 52 or 72) + galaxyShift)
