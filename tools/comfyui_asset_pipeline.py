@@ -194,6 +194,36 @@ def main() -> int:
 
     full_out_path = os.path.join(ROOT, args.asset_path)
     os.makedirs(os.path.dirname(full_out_path), exist_ok=True)
+
+    # 2026-09-03: the remote GPU ComfyUI host has been observed to return a
+    # short/garbled response (server restart, mid-generation drop) that
+    # decodes as bytes but is not a valid, non-degenerate PNG. Previously
+    # this was written to disk and reported as success. Validate the PNG
+    # signature and decode it (Pillow if available; a manual pixel-variance
+    # check otherwise) before treating the generation as final -- corrupt
+    # noise must fail the cycle, not silently become "final art".
+    if not image_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        print(f"ERROR: response is not a valid PNG (len={len(image_bytes)}); ComfyUI host may be unstable")
+        return 1
+    try:
+        from PIL import Image
+        import io
+
+        im = Image.open(io.BytesIO(image_bytes))
+        im.verify()
+        im = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        extrema = im.getextrema()
+        # RGB.getextrema() returns ((rlo,rhi),(glo,ghi),(blo,bhi)); flag a
+        # fully flat (single-color) image as a failed generation.
+        if all(isinstance(ch, tuple) and ch[0] == ch[1] for ch in extrema):
+            print(f"ERROR: image is a flat single color {extrema}; treating as a failed/corrupt generation")
+            return 1
+    except ImportError:
+        pass  # Pillow not installed; PNG-signature check above is the fallback gate.
+    except Exception as exc:
+        print(f"ERROR: image failed to decode as a valid PNG: {exc}")
+        return 1
+
     with open(full_out_path, "wb") as fh:
         fh.write(image_bytes)
 
