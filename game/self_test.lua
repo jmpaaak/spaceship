@@ -1036,6 +1036,33 @@ local function testGearEditorEditionEffectPreviewSync()
         "editor.js must define/wire an updateEditionPreview function so effect values reflect selected editions live")
 end
 
+-- docs/feedback/INBOX.md item 13/14 follow-up: editor.js's own header
+-- comment ("Validation rules here intentionally mirror game/gear.lua's
+-- loader exactly (same known effect types, known rarities, and effect
+-- value range)") explicitly promises the effect value RANGE stays in sync
+-- too, but until this test nothing ever checked
+-- EFFECT_VALUE_MIN/EFFECT_VALUE_MAX against gear.lua's
+-- M.effectValueMin/M.effectValueMax the way testGearEditorEditionAndRaritySync
+-- already does for editions/rarities -- a future rebalance of gear.lua's
+-- range (e.g. -100..100 -> -50..50) could silently drift so the editor
+-- keeps accepting/rejecting cards the real game loader would reject/accept.
+local function testGearEditorEffectValueRangeSync()
+    local editorSrc = love.filesystem.read("tools/gear-editor/editor.js")
+    assert(editorSrc, "tools/gear-editor/editor.js must be readable for the sync check")
+
+    local minMatch = editorSrc:match("EFFECT_VALUE_MIN%s*=%s*(-?%d+)")
+    assert(minMatch, "editor.js must define EFFECT_VALUE_MIN")
+    assert(tonumber(minMatch) == gear.effectValueMin,
+        "editor.js EFFECT_VALUE_MIN must equal gear.lua's M.effectValueMin (" .. tostring(gear.effectValueMin) ..
+        "), got " .. tostring(minMatch))
+
+    local maxMatch = editorSrc:match("EFFECT_VALUE_MAX%s*=%s*(-?%d+)")
+    assert(maxMatch, "editor.js must define EFFECT_VALUE_MAX")
+    assert(tonumber(maxMatch) == gear.effectValueMax,
+        "editor.js EFFECT_VALUE_MAX must equal gear.lua's M.effectValueMax (" .. tostring(gear.effectValueMax) ..
+        "), got " .. tostring(maxMatch))
+end
+
 -- docs/feedback/INBOX.md item 13 follow-up: gear.lua's validatePart already
 -- round-trips the item-7 `galaxyExclusive` boolean (hull_combo_matrix and
 -- engine_singularity_drive both carry it so earthShopPool can exclude them),
@@ -4316,6 +4343,7 @@ function M.run()
     testGearRarityAndEditionSystem()
     testGearEditorEditionAndRaritySync()
     testGearEditorEditionEffectPreviewSync()
+    testGearEditorEffectValueRangeSync()
     testGearEditorGalaxyExclusiveFieldSync()
     testGearSchemaDocumentsGalaxyExclusive()
     testGearEffectSchemaExpansion()

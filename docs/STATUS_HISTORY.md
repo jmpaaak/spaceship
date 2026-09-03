@@ -1333,3 +1333,21 @@ preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --
    - `tools/gear-editor/editor.js`와 `index.html`에 에디션 효과 미리보기(`updateEditionPreview`) 기능을 구현했다.
    - `M.editionEffects`와 동일한 변환 로직(`EDITION_EFFECTS`)을 에디터에 이식하여, 사용자가 카드 폼에서 `editions`를 입력하거나 `effects` 목록을 수정할 때마다 하단에 각 에디션(irradiated, crystallized, quantum_flawed, refined)이 적용되었을 때의 최종 수치(multiplier 적용, drawback 추가, synergyBonusAdd 표시 등)를 실시간으로 미리보기할 수 있게 했다.
    - 이를 통해 화이트리스트 동기화만 검증되던 상태에서 벗어나, 항목 13의 "수치 미리보기" 요건을 완전히 만족시켰다.
+
+## Archived from STATUS.md (2026-09-03 17:26)
+
+
+## [gear 레인] preflight FAIL 수정 — ENGINE-slot insurance가 M.damage에서 여전히 run.equippedGear만 읽던 잔여 배선 gap (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 17:30)
+
+이번 사이클은 preflight가 `make test` FAIL(`game/self_test.lua:1653: an equipped ENGINE-slot insurance part must prevent destruction on the first lethal hit, same as a hull one`)과 `git diff` FAIL(`docs/STATUS_HISTORY.md:1333` trailing whitespace)을 함께 보고하며 시작했다. 워크플로우에 따라 이 두 실패를 최우선으로 재현·수정했다.
+
+## Archived from STATUS.md (2026-09-03 17:33)
+
+- 재현: 직전 사이클이 이미 `game/self_test.lua`에 `testGearInsuranceCategoryAgnosticWiring()`(RED 상태로 커밋되지 않은 워킹트리 변경)을 추가해 놓았으나, 대응하는 구현 수정이 아직 `game/expedition.lua`에 반영되지 않은 상태였다. 원인: `M.damage(run, amount)`의 파괴 판정 분기가 `gearModule.hasInsurance(run.equippedGear or {})`처럼 hull 슬롯(`equippedGear`)만 직접 읽고 있어, 이 레인이 luck/chainTrigger/rerollBonus/detectionRadius/autoCollect/shopDiscount/sellMultiplier/streakMultiplier 등 다른 모든 카테고리 무관 효과에 이미 적용한 `combinedGearList(run)`(hull+engine 합산) 패턴에서 `insurance`만 홀로 예외로 남아 있었다 — engine_escape_pod_thruster처럼 엔진 슬롯에만 insurance를 장착한 런은 치명타에서 전혀 보호받지 못했다.
+- 수정: `game/expedition.lua`의 `M.damage`에서 `gearModule.hasInsurance(run.equippedGear or {})`를 `gearModule.hasInsurance(combinedGearList(run))`로 교체해, 다른 category-agnostic 효과들과 동일한 hull+engine 합산 소스를 사용하도록 통일했다.
+- `docs/STATUS_HISTORY.md:1333`의 트레일링 스페이스 1건도 함께 제거해 `git diff --check`를 clean으로 되돌렸다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체(GREEN: `SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`)와 `git diff --check`(clean) 모두 통과 확인.
+- `git status --short`가 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`game/expedition.lua`/`game/self_test.lua`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 건드리지 않았다.
+- 다음 사이클 다음 슬라이스: preflight가 다시 READY로 돌아온 뒤, 항목7(획득 경로 3원화) 순수 데이터 계층/획득 확률 구조 준비를 이어간다.

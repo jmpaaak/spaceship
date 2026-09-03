@@ -1,15 +1,15 @@
 # STATUS
 
-## [gear 레인] preflight FAIL 수정 — ENGINE-slot insurance가 M.damage에서 여전히 run.equippedGear만 읽던 잔여 배선 gap (완료, 2026-09-03)
+## [gear 레인] 항목13 웹 에디터 EFFECT_VALUE_MIN/MAX 동기화 회귀 가드 추가 (완료, 2026-09-03)
 
-이번 사이클은 preflight가 `make test` FAIL(`game/self_test.lua:1653: an equipped ENGINE-slot insurance part must prevent destruction on the first lethal hit, same as a hull one`)과 `git diff` FAIL(`docs/STATUS_HISTORY.md:1333` trailing whitespace)을 함께 보고하며 시작했다. 워크플로우에 따라 이 두 실패를 최우선으로 재현·수정했다.
+preflight READY(엔진 테스트/패키지 PASS, git diff clean)로 시작했으나 `git status --short`가 이전 사이클이 남긴 uncommitted 변경(`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`game/self_test.lua`)을 보고했다. 워크플로우 3항("Preserve and finish prior-cycle work; do not overwrite it")에 따라 이 미완료 슬라이스를 완주해 커밋하는 것을 이번 사이클의 작업으로 채택했다.
 
-- 재현: 직전 사이클이 이미 `game/self_test.lua`에 `testGearInsuranceCategoryAgnosticWiring()`(RED 상태로 커밋되지 않은 워킹트리 변경)을 추가해 놓았으나, 대응하는 구현 수정이 아직 `game/expedition.lua`에 반영되지 않은 상태였다. 원인: `M.damage(run, amount)`의 파괴 판정 분기가 `gearModule.hasInsurance(run.equippedGear or {})`처럼 hull 슬롯(`equippedGear`)만 직접 읽고 있어, 이 레인이 luck/chainTrigger/rerollBonus/detectionRadius/autoCollect/shopDiscount/sellMultiplier/streakMultiplier 등 다른 모든 카테고리 무관 효과에 이미 적용한 `combinedGearList(run)`(hull+engine 합산) 패턴에서 `insurance`만 홀로 예외로 남아 있었다 — engine_escape_pod_thruster처럼 엔진 슬롯에만 insurance를 장착한 런은 치명타에서 전혀 보호받지 못했다.
-- 수정: `game/expedition.lua`의 `M.damage`에서 `gearModule.hasInsurance(run.equippedGear or {})`를 `gearModule.hasInsurance(combinedGearList(run))`로 교체해, 다른 category-agnostic 효과들과 동일한 hull+engine 합산 소스를 사용하도록 통일했다.
-- `docs/STATUS_HISTORY.md:1333`의 트레일링 스페이스 1건도 함께 제거해 `git diff --check`를 clean으로 되돌렸다.
-- `make verify LOVE=/Users/jm/.local/bin/love` 전체(GREEN: `SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`)와 `git diff --check`(clean) 모두 통과 확인.
-- `git status --short`가 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`game/expedition.lua`/`game/self_test.lua`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 건드리지 않았다.
-- 다음 사이클 다음 슬라이스: preflight가 다시 READY로 돌아온 뒤, 항목7(획득 경로 3원화) 순수 데이터 계층/획득 확률 구조 준비를 이어간다.
+- 감사 배경: `tools/gear-editor/editor.js` 헤더 주석이 오래전부터 "Validation rules here intentionally mirror game/gear.lua's loader exactly (same known effect types, known rarities, and effect value range)"라고 문서화해왔다. 기존 `testGearEditorEditionAndRaritySync()`는 KNOWN_EDITIONS/KNOWN_RARITIES 동기화를, `testGearEffectSchemaExpansion()`은 EFFECT_TYPE_GROUPS/`M.knownEffectTypes` 동기화를 이미 회귀 검증했지만, 세 번째로 문서화된 "effect value range"(`EFFECT_VALUE_MIN`/`EFFECT_VALUE_MAX` vs `gear.effectValueMin`/`gear.effectValueMax`) 축에는 동일한 회귀 검증이 없었다 — 문서상 보장일 뿐 코드가 확인한 적이 없어, 향후 `gear.lua`의 범위(-100..100)가 리밸런스되면 에디터가 조용히 실제 게임 로더와 어긋난 값을 승인/거부할 수 있는 gap이었다.
+- TDD: `game/self_test.lua`에 신규 `testGearEditorEffectValueRangeSync()`를 추가해 `editor.js`의 `EFFECT_VALUE_MIN`/`EFFECT_VALUE_MAX` 리터럴을 `gear.effectValueMin`/`gear.effectValueMax`와 대조 검증한다(불일치 시 어떤 값이 기대되는지 명시하는 에러 메시지 포함).
+- 감사 결과 `editor.js`는 이미 `EFFECT_VALUE_MIN = -100`/`EFFECT_VALUE_MAX = 100`로 `gear.lua`와 정확히 일치하는 클린 상태였다(직전 사이클이 이미 값을 맞춰 두었을 뿐 회귀 가드만 없었음) — 추가 구현 수정 없이 신규 테스트가 즉시 GREEN으로 통과했다. `M.run()`에 새 테스트를 등록했다.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/self_test.lua`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 건드리지 않았다.
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 다시 적용해 항목9/10/12/13/14의 남은 잔여 gap 재검증.
 
 2. **hull_parts.json 슬롯 스코프 콘텐츠 커버리지 (항목 10/14 후속):**
    - 직전 사이클들에서 `engine_parts.json`에 수행했던 "슬롯 스코프 내 완전 무효 카드" 감사를 `game/data/hull_parts.json`(34종)에도 동일하게 적용했다.
