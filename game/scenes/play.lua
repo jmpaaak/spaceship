@@ -1349,6 +1349,51 @@ M.destroyedMetaResetIconSize = 24
 M.destroyedMetaResetIconGap  = 8
 
 
+-- Settlement-phase peak_dist_line icon: same mountain-peak silhouette as
+-- destroyedPeakDistIconPoints, reused for the EARTH SHOP return summary card
+-- so both surfaces share identical geometry. Drawn via icon+label centered
+-- pair instead of bare printf (TDD: testSettlementPeakDistIconSprite).
+function M.settlementPeakDistIconPoints(cx, cy, size)
+    local half = size * 0.5
+    local top  = size * 0.42
+    local bot  = size * 0.22
+    return {
+        cx,        cy - top,
+        cx + half, cy + bot,
+        cx,        cy + bot * 0.4,
+        cx - half, cy + bot,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the mountain-peak's
+-- right edge and the settlement peak_dist_line label's left edge.
+M.settlementPeakDistIconSize = 24
+M.settlementPeakDistIconGap  = 8
+
+-- Settlement-phase newbest_label icon: same 4-point diamond star silhouette as
+-- destroyedNewBestIconPoints, reused for the EARTH SHOP NEW BEST! line
+-- so both surfaces share identical geometry (TDD: testSettlementNewBestIconSprite).
+function M.settlementNewBestIconPoints(cx, cy, size)
+    local out = size * 0.50
+    local inn = size * 0.20
+    return {
+        cx,        cy - out,
+        cx + inn,  cy - inn,
+        cx + out,  cy,
+        cx + inn,  cy + inn,
+        cx,        cy + out,
+        cx - inn,  cy + inn,
+        cx - out,  cy,
+        cx - inn,  cy - inn,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the star-burst's
+-- right edge and the settlement newbest_label label's left edge.
+M.settlementNewBestIconSize = 24
+M.settlementNewBestIconGap  = 8
+
+
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
 -- keep the same centered icon+label pair (TDD: testStatsIconSprite).
@@ -2983,6 +3028,30 @@ function M.new(options)
             destroyedMetaResetIconImage = img
         end
     end
+    -- Settlement-phase peak_dist_line icon: reuses the same mountain-peak
+    -- sprite as destroyed_peak_dist.png (identical visual intent).
+    -- always-set-path + graphics-gated image pattern (TDD: testSettlementPeakDistIconSprite).
+    local settlementPeakDistIconImagePath = "assets/effects/destroyed_peak_dist.png"
+    local settlementPeakDistIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, settlementPeakDistIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            settlementPeakDistIconImage = img
+        end
+    end
+    -- Settlement-phase newbest_label icon: reuses the same star-burst
+    -- sprite as destroyed_new_best.png (identical visual intent).
+    -- always-set-path + graphics-gated image pattern (TDD: testSettlementNewBestIconSprite).
+    local settlementNewBestIconImagePath = "assets/effects/destroyed_new_best.png"
+    local settlementNewBestIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, settlementNewBestIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            settlementNewBestIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -3151,6 +3220,10 @@ function M.new(options)
         destroyedNewBestIconImagePath = destroyedNewBestIconImagePath,
         destroyedMetaResetIconImage = destroyedMetaResetIconImage,
         destroyedMetaResetIconImagePath = destroyedMetaResetIconImagePath,
+        settlementPeakDistIconImage = settlementPeakDistIconImage,
+        settlementPeakDistIconImagePath = settlementPeakDistIconImagePath,
+        settlementNewBestIconImage = settlementNewBestIconImage,
+        settlementNewBestIconImagePath = settlementNewBestIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5252,10 +5325,55 @@ function M:draw()
         love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 88, 400, viewport.width - 176, "center")
         love.graphics.printf(i18n.t("spins_settlement_line", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 88, 436, viewport.width - 176, "center")
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_dist_line", math.floor(self.expedition.lastAltitude or 0)), 88, 472, viewport.width - 176, "center")
+        do
+            local settlementPeakDistLabel = i18n.t("peak_dist_line", math.floor(self.expedition.lastAltitude or 0))
+            local settlementPeakDistFont = love.graphics.getFont()
+            local settlementPeakDistWidth = settlementPeakDistFont:getWidth(settlementPeakDistLabel)
+            local settlementPeakDistIconSpan = M.settlementPeakDistIconSize + M.settlementPeakDistIconGap
+            local fullX, fullW = 88, viewport.width - 176
+            local settlementPeakDistStartX = fullX + (fullW - (settlementPeakDistIconSpan + settlementPeakDistWidth)) / 2
+            local settlementPeakDistIconCenterX = settlementPeakDistStartX + M.settlementPeakDistIconSize / 2
+            local settlementPeakDistIconCenterY = 472 + settlementPeakDistFont:getHeight() / 2
+            if self.settlementPeakDistIconImage then
+                local iw, ih = self.settlementPeakDistIconImage:getDimensions()
+                local scale = M.settlementPeakDistIconSize / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.draw(self.settlementPeakDistIconImage, settlementPeakDistIconCenterX, settlementPeakDistIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+            else
+                -- Fallback: blue mountain-peak, used only when the
+                -- ComfyUI-generated sprite failed to load.
+                love.graphics.setColor(0.6, 0.8, 1)
+                love.graphics.polygon("fill",
+                    M.settlementPeakDistIconPoints(settlementPeakDistIconCenterX, settlementPeakDistIconCenterY, M.settlementPeakDistIconSize))
+            end
+            love.graphics.setColor(0.6, 0.8, 1)
+            love.graphics.print(settlementPeakDistLabel, settlementPeakDistStartX + settlementPeakDistIconSpan, 472)
+        end
         if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf(summaryExtraLine, 88, 508, viewport.width - 176, "center")
+            do
+                local settlementNewBestFont = love.graphics.getFont()
+                local settlementNewBestWidth = settlementNewBestFont:getWidth(summaryExtraLine)
+                local settlementNewBestIconSpan = M.settlementNewBestIconSize + M.settlementNewBestIconGap
+                local fullX, fullW = 88, viewport.width - 176
+                local settlementNewBestStartX = fullX + (fullW - (settlementNewBestIconSpan + settlementNewBestWidth)) / 2
+                local settlementNewBestIconCenterX = settlementNewBestStartX + M.settlementNewBestIconSize / 2
+                local settlementNewBestIconCenterY = 508 + settlementNewBestFont:getHeight() / 2
+                if self.settlementNewBestIconImage then
+                    local iw, ih = self.settlementNewBestIconImage:getDimensions()
+                    local scale = M.settlementNewBestIconSize / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.draw(self.settlementNewBestIconImage, settlementNewBestIconCenterX, settlementNewBestIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    -- Fallback: gold star-burst, used only when the
+                    -- ComfyUI-generated sprite failed to load.
+                    love.graphics.setColor(1, 0.95, 0.3)
+                    love.graphics.polygon("fill",
+                        M.settlementNewBestIconPoints(settlementNewBestIconCenterX, settlementNewBestIconCenterY, M.settlementNewBestIconSize))
+                end
+                love.graphics.setColor(1, 0.95, 0.3)
+                love.graphics.print(summaryExtraLine, settlementNewBestStartX + settlementNewBestIconSpan, 508)
+            end
         end
         local nextLaunch = self:shopLoadoutLines()
         local fullX, fullW = 64, viewport.width - 128

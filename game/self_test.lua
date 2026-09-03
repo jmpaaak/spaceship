@@ -3455,6 +3455,81 @@ local function testDestroyedMetaResetIconSprite()
 end
 
 
+-- Settlement-phase peak_dist_line was a bare centered printf. Same
+-- file-existence + always-set-path pattern as testDestroyedPeakDistIconSprite,
+-- plus Lua mountain-peak fallback geometry (even-length, spans cy,
+-- horizontally symmetric). Invoked from testCanvasLayoutScale.
+local function testSettlementPeakDistIconSprite()
+    local path = "assets/effects/destroyed_peak_dist.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated settlement peak-dist icon sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.settlementPeakDistIconImagePath == path,
+        "PlayScene must load assets/effects/destroyed_peak_dist.png into self.settlementPeakDistIconImagePath")
+    assert(play.settlementPeakDistIconSize == 24 and play.settlementPeakDistIconGap == 8)
+    local points = play.settlementPeakDistIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "settlement peak-dist silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "settlement peak-dist icon must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "settlement peak-dist outline must be horizontally symmetric around cx")
+    end
+end
+
+-- Settlement-phase newbest_label was a bare centered printf. Same
+-- file-existence + always-set-path pattern as testDestroyedNewBestIconSprite,
+-- plus Lua star-burst fallback geometry (even-length, spans cy,
+-- horizontally symmetric). Invoked from testCanvasLayoutScale.
+local function testSettlementNewBestIconSprite()
+    local path = "assets/effects/destroyed_new_best.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated settlement new-best icon sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.settlementNewBestIconImagePath == path,
+        "PlayScene must load assets/effects/destroyed_new_best.png into self.settlementNewBestIconImagePath")
+    assert(play.settlementNewBestIconSize == 24 and play.settlementNewBestIconGap == 8)
+    local points = play.settlementNewBestIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 8, "settlement new-best silhouette needs at least 4 vertices (star-burst)")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "settlement new-best icon must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "settlement new-best outline must be horizontally symmetric around cx")
+    end
+end
+
+
 -- DIST/CASH/HULL/STEER/BEST already have ComfyUI icons. Same
 -- file-existence + always-set-path pattern as testBestIconSprite,
 -- plus Lua vial fallback geometry (even-length, spans cy,
@@ -3551,6 +3626,8 @@ local function testCanvasLayoutScale()
     testDestroyedPeakDistIconSprite()
     testDestroyedNewBestIconSprite()
     testDestroyedMetaResetIconSprite()
+    testSettlementPeakDistIconSprite()
+    testSettlementNewBestIconSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows
