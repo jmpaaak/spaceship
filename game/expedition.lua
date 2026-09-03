@@ -534,10 +534,14 @@ end
 -- planet-style-editor tool's numeric format (label + signed value) so the
 -- same shape can later describe per-planet-style risk/reward without a
 -- separate ad-hoc string format for each source.
+-- docs/feedback/INBOX.md 항목 11: scoutFuelBonus still scales
+-- rangeForecast's capacity budget (SCOUT's extra maxFuel), but fuel no
+-- longer constrains flight, so the on-screen gain is RANGE -- the same
+-- capacity-budget framing as M.rangeForecast -- never FUEL.
 function M.shipTradeoff(run, shipId)
     if shipId == "scout" then
         return {
-            gains = { { label = "FUEL", value = string.format("%+d", run.scoutFuelBonus) } },
+            gains = { { label = "RANGE", value = string.format("%+d", run.scoutFuelBonus) } },
             losses = { { label = "HULL", value = string.format("%+d", run.scoutDurabilityBonus) } },
         }
     end

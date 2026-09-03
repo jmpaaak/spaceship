@@ -1289,6 +1289,30 @@ local function testDeadFuelAndSlotMessagingRemoved()
         end
     end
     i18n.setLocale(savedLocale)
+
+    -- docs/feedback/INBOX.md 항목 11: SCOUT's shop tradeoff still advertised
+    -- a "+N FUEL" gain after fuel stopped constraining flight. The bonus
+    -- only scales rangeForecast's capacity budget, so the engine label must
+    -- be RANGE (matching the launchForecast -> rangeForecast rename) and
+    -- the on-screen line must not contain the word FUEL.
+    local expedition = require("game.expedition")
+    local tradeoff = expedition.shipTradeoff(expedition.new(), "scout")
+    assert(tradeoff.gains[1] and tradeoff.gains[1].label == "RANGE",
+        "scout gain label must be RANGE, not a fuel-framed leftover: "
+            .. tostring(tradeoff.gains[1] and tradeoff.gains[1].label))
+    assert(tradeoff.gains[1].label ~= "FUEL",
+        "scout tradeoff must not expose a FUEL gain after item 11")
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scene.expedition.phase = "settlement"
+    local lines = scene:shopLoadoutLines()
+    assert(lines.scoutTradeoff[1] == "SCOUT GAINS +40 RANGE",
+        "EARTH SHOP scout tradeoff must advertise RANGE, not FUEL: "
+            .. tostring(lines.scoutTradeoff[1]))
+    assert(not lines.scoutTradeoff[1]:find("FUEL", 1, true),
+        "EARTH SHOP scout tradeoff must not contain FUEL: "
+            .. tostring(lines.scoutTradeoff[1]))
 end
 
 function M.run()
@@ -2050,7 +2074,7 @@ function M.run()
     assert(starterNextLaunch.stats == "HULL 3")
     assert(starterNextLaunch.upgrades == "HULL LV.0")
     assert(starterNextLaunch.forecast == "REACH 600  SLOTS 6")
-    assert(starterNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +40 FUEL")
+    assert(starterNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +40 RANGE")
     assert(starterNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
     assert(starterNextLaunch.shipAction == "BUY SCOUT $125")
     assert(starterNextLaunch.shipPreview == "SCOUT HULL 2")
@@ -2139,7 +2163,7 @@ function M.run()
     assert(scoutNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
     assert(scoutNextLaunch.hullPreview == "HULL 4")
     assert(scoutNextLaunch.hullPreviewForecast == "REACH 840  SLOTS 9")
-    assert(scoutNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +40 FUEL")
+    assert(scoutNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +40 RANGE")
     assert(scoutNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
     assert(scoutNextLaunch.shipAction == "SELECT STARTER")
     assert(scoutNextLaunch.shipStatus == "OWNED" and scoutNextLaunch.shipAffordable)
