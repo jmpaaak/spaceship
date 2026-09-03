@@ -8,4 +8,6 @@
 
 - (2026-09-03, 추가 사이클) preflight READY. INBOX `## 처리 대기`에는 항목7/8/11/15가 더 이상 없다(모두 `## 처리 완료`로 이미 이동됨) — 이 사이클의 신규 최우선 4건도 전부 다른 레인 소관. `make verify LOVE=/Users/jm/.local/bin/love` 재실행 GREEN(unit/smoke/bundle/asset-manifest). 코드 변경 없음. 다음 사이클은 이 대기 상태를 다시 재확인하지 말고, 새 스코프 지시가 `loop/PROMPT.md`에 나타날 때까지만 이 한 줄을 참고할 것.
 
+- (2026-09-03, 신규 사이클) preflight READY. `docs/feedback/INBOX.md`의 이번 사이클 신규 처리대기 4건(생성에셋 비전검토 제외/AetherAI human-gate 제거/미니맵 은하나선/국제화+HUD 3건)은 전부 다른 레인(에셋/미니맵/UI) 소관이며 이 레인의 스코프(항목7/8/11/15)와 무관해 손대지 않았다. 항목7/8/11/15는 `## 처리 완료`에 이미 이동되어 있고, `game/world.lua`/`game/expedition.lua`/`game/scenes/play.lua`/`main.lua`에서 `shopPlanet`/`genericGearCatalog`/`exploreCheckpoint`/`buyGear`/`buyEarthGear`/`buyShopGear`/`galaxySlotProfile`/`spinEarthShopSlot`/`returnToEarth`/`checkpointSettle`가 정상 구현으로 살아있고 `beginReturn`/`useSlot`/`spinSlot`/`slotButtonState`/`returnControls`/`maneuverFuel`/`burnManeuverFuel`은 오직 제거 설명 주석으로만 남아 실제 참조 0건임을 재확인했다. `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN(unit/smoke 원본+빌드/bundle/asset-manifest). 코드 변경 없음(스코프 밖 `loop/env.sh`/`loop/loop.sh` 미커밋 diff는 운영자/loop 하네스 설정이라 계속 손대지 않음). **이후 사이클은 새 스코프 지시가 `loop/PROMPT.md`에 명시되기 전까지 이 재확인을 반복 기록하지 말 것** — 토큰 절약을 위해 이번 항목이 마지막 명시적 재확인이다.
+
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
