@@ -2457,19 +2457,33 @@ function M.run()
     assert(ev > 0 and ev < 25)
     assert(math.abs(ev - 18.585) < 0.01)
 
-    local slotOddsScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    assert(slotOddsScene:slotOddsLine() == "C50 P40 S10  EV $18.58")
+    -- docs/feedback/INBOX.md UI 대개편 6건 item 4: the "C50 P40 S10  EV
+    -- $18.58" slot-odds text near the minimap was unclear enough that the
+    -- user mistook it for coordinates and it lost meaning once the slot
+    -- machine moved to the Earth shop (item 15). PlayScene:slotOddsLine()
+    -- and the "odds" fields on loadoutLines()/shopLoadoutLines() are
+    -- removed entirely -- replaced by a small always-shown ship-coordinate
+    -- readout near the minimap (M.shipCoordsLine below).
+    assert(PlayScene.slotOddsLine == nil, "slotOddsLine must be fully removed, not just unused")
 
     local oddsLoadoutScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     local launchLoadoutOdds = oddsLoadoutScene:loadoutLines()
-    assert(launchLoadoutOdds.odds == "C50 P40 S10  EV $18.58")
+    assert(launchLoadoutOdds.odds == nil, "loadoutLines() must no longer expose a slot-odds line")
     oddsLoadoutScene.expedition.phase = "settlement"
     local shopLoadoutOdds = oddsLoadoutScene:shopLoadoutLines()
-    assert(shopLoadoutOdds.odds == "C50 P40 S10  EV $18.58")
+    assert(shopLoadoutOdds.odds == nil, "shopLoadoutLines() must no longer expose a slot-odds line")
+
+    -- New: a small "(x, y)" ship-coordinate readout replaces the removed
+    -- slot-odds line near the minimap, always shown (not gated to the
+    -- returning phase like the old odds line was).
+    assert(PlayScene.shipCoordsLine(120, -340) == "(120, -340)")
+    assert(PlayScene.shipCoordsLine(0, 0) == "(0, 0)")
+    assert(PlayScene.shipCoordsLine(119.6, -339.6) == "(120, -340)",
+        "coordinates must round to the nearest integer")
+    assert(PlayScene.shipCoordsLine(-0.4, 0.4) == "(0, 0)",
+        "rounding must not produce a signed zero or off-by-one near zero")
 
     for _, row in ipairs(PlayScene.settlementTouchRows) do
         assert(row.bottom - row.top >= 34,

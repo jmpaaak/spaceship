@@ -347,6 +347,16 @@ function M.hudHeight(phase, hud, galaxyShift)
     return 136 + galaxyShift
 end
 
+-- docs/feedback/INBOX.md UI 대개편 6건 item 4: the small C%/P%/S%/EV$
+-- slot-odds readout near the minimap was unclear enough that the user
+-- mistook it for coordinates, and lost its meaning once the slot machine
+-- moved to the Earth shop (item 15). Replaced by the ship's actual world
+-- coordinates in "(x, y)" form. Pure function so it's easy to unit test in
+-- isolation from love.graphics.
+function M.shipCoordsLine(x, y)
+    return string.format("(%d, %d)", math.floor(x + 0.5), math.floor(y + 0.5))
+end
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
@@ -951,7 +961,6 @@ function M:loadoutLines()
         -- top-left (item 3's card layout) instead of duplicated here.
         forecast = launchForecastLine(run),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
-        odds = self:slotOddsLine(),
     }
 end
 
@@ -1068,17 +1077,7 @@ function M:shopLoadoutLines()
             run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
         steeringStatus = steeringStatus,
         steeringAffordable = steeringAffordable,
-        odds = self:slotOddsLine(),
     }
-end
-
-function M:slotOddsLine()
-    local ev = expedition.slotExpectedValue()
-    return i18n.t("slot_odds_line",
-        math.floor(expedition.slotSymbolProbability("COMET") * 100 + 0.5),
-        math.floor(expedition.slotSymbolProbability("PLANET") * 100 + 0.5),
-        math.floor(expedition.slotSymbolProbability("STAR") * 100 + 0.5),
-        ev)
 end
 
 function M:slotButtonState()
@@ -1859,24 +1858,18 @@ function M:drawMinimap()
         local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
-    if self.expedition.phase == "returning" then
-        -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
-        -- readout used to be a full-width standalone line during the
-        -- returning phase, competing for attention with the DIST/CASH/fuel
-        -- HUD text. It is small supplementary context (expected slot value),
-        -- not primary flight info, so it is now drawn as a small right-
-        -- aligned line directly above the minimap chart instead.
-        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
-        local previousOddsFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        love.graphics.setColor(0.6, 0.8, 1)
-        -- Full canvas width (rather than the narrow size+4 minimap column)
-        -- so the localized Korean odds string (wider than its English
-        -- equivalent at this small font) stays on one line instead of
-        -- wrapping down into the minimap circle below it.
-        love.graphics.printf(self:slotOddsLine(), 16, hudHeight - 36, viewport.width - 32, "right")
-        love.graphics.setFont(previousOddsFont)
-    end
+    -- docs/feedback/INBOX.md UI 대개편 6건 item 4: always show the ship's
+    -- actual world coordinates as a small readout next to the minimap
+    -- (replacing the removed, unclear C%/P%/S%/EV$ slot-odds text). Shown
+    -- in every phase the minimap itself is drawn in (settlement/destroyed
+    -- already early-return above).
+    self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
+    local previousCoordsFont = love.graphics.getFont()
+    love.graphics.setFont(self.smallFont)
+    love.graphics.setColor(0.6, 0.8, 1)
+    love.graphics.printf(M.shipCoordsLine(self.ship.x, self.ship.y),
+        16, hudHeight - 36, viewport.width - 32, "right")
+    love.graphics.setFont(previousCoordsFont)
     if view.checkpointBeyond then
         -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct
         -- magenta from the orange Earth-return marker above, and offset
@@ -2286,9 +2279,6 @@ function M:draw()
             M.speedIconPoints(speedIconCenterX, speedIconCenterY, M.speedIconSize))
         love.graphics.setColor(0.6, 1, 0.85)
         love.graphics.printf(loadout.steering, 64, row, viewport.width - 128, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(loadout.odds, 64, row, viewport.width - 128, "center")
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
         -- The summary card is drawn with the same scene-cached small font as
@@ -2419,9 +2409,6 @@ function M:draw()
         row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(nextLaunch.forecast, fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(nextLaunch.odds, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
