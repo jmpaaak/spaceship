@@ -1274,7 +1274,81 @@ end
 M.destroyedSpinsSettlementIconSize = 24
 M.destroyedSpinsSettlementIconGap = 8
 
--- LAUNCH LOADOUT loadout.stats was still a bare centered
+-- Destroyed-phase peak_dist_line icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn peak_dist_line printf ("PEAK DIST N")
+-- with a small mountain-peak silhouette, mirroring spins_settlement_line.
+-- Drawn as a symmetric triangle peak (even-length {x,y,...} list, no
+-- love.graphics calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.destroyedPeakDistIconPoints(cx, cy, size)
+    local half = size * 0.5
+    local top  = size * 0.42
+    local bot  = size * 0.22
+    return {
+        cx,        cy - top,
+        cx + half, cy + bot,
+        cx,        cy + bot * 0.4,
+        cx - half, cy + bot,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the mountain-peak's
+-- right edge and the peak_dist_line label's left edge.
+M.destroyedPeakDistIconSize = 24
+M.destroyedPeakDistIconGap  = 8
+
+-- Destroyed-phase newbest_label icon (icon-based HUD simplification
+-- follow-on): pair the conditional newbest_label printf ("NEW BEST!")
+-- with a small star-burst silhouette, mirroring peak_dist_line.
+-- Drawn as a 4-point diamond star (even-length {x,y,...} list, no
+-- love.graphics calls): horizontally symmetric around cx, spans above
+-- and below cy.
+function M.destroyedNewBestIconPoints(cx, cy, size)
+    local out = size * 0.50
+    local inn = size * 0.20
+    return {
+        cx,        cy - out,
+        cx + inn,  cy - inn,
+        cx + out,  cy,
+        cx + inn,  cy + inn,
+        cx,        cy + out,
+        cx - inn,  cy + inn,
+        cx - out,  cy,
+        cx - inn,  cy - inn,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the star-burst's
+-- right edge and the newbest_label's left edge.
+M.destroyedNewBestIconSize = 24
+M.destroyedNewBestIconGap  = 8
+
+-- Destroyed-phase meta_reset_line icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn meta_reset_line printf
+-- ("META RESET  BEST N") with a small cyclic-arrow silhouette,
+-- mirroring newbest_label. Drawn as a symmetric chevron-ring approximation
+-- (even-length {x,y,...} list, no love.graphics calls): horizontally
+-- symmetric around cx, spans above and below cy.
+function M.destroyedMetaResetIconPoints(cx, cy, size)
+    local r  = size * 0.46
+    local r2 = size * 0.26
+    local t  = size * 0.14
+    return {
+        cx - r,  cy - t,
+        cx,      cy - r,
+        cx + r,  cy - t,
+        cx + r,  cy + t,
+        cx,      cy + r2,
+        cx - r,  cy + t,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the cyclic-arrow's
+-- right edge and the meta_reset_line label's left edge.
+M.destroyedMetaResetIconSize = 24
+M.destroyedMetaResetIconGap  = 8
+
+
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
 -- keep the same centered icon+label pair (TDD: testStatsIconSprite).
@@ -2873,6 +2947,42 @@ function M.new(options)
             destroyedSpinsSettlementIconImage = img
         end
     end
+    -- Destroyed-phase peak_dist_line icon: mountain-peak silhouette
+    -- (docs/feedback/INBOX.md icon-based HUD follow-on). Same always-set-path
+    -- + graphics-gated image pattern as destroyedSpinsSettlementIconImagePath.
+    local destroyedPeakDistIconImagePath = "assets/effects/destroyed_peak_dist.png"
+    local destroyedPeakDistIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedPeakDistIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedPeakDistIconImage = img
+        end
+    end
+    -- Destroyed-phase newbest_label icon: star-burst silhouette
+    -- (docs/feedback/INBOX.md icon-based HUD follow-on). Same always-set-path
+    -- + graphics-gated image pattern as destroyedPeakDistIconImagePath.
+    local destroyedNewBestIconImagePath = "assets/effects/destroyed_new_best.png"
+    local destroyedNewBestIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedNewBestIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedNewBestIconImage = img
+        end
+    end
+    -- Destroyed-phase meta_reset_line icon: cyclic-arrow silhouette
+    -- (docs/feedback/INBOX.md icon-based HUD follow-on). Same always-set-path
+    -- + graphics-gated image pattern as destroyedNewBestIconImagePath.
+    local destroyedMetaResetIconImagePath = "assets/effects/destroyed_meta_reset.png"
+    local destroyedMetaResetIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedMetaResetIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedMetaResetIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -3035,6 +3145,12 @@ function M.new(options)
         destroyedSamplesSettlementIconImagePath = destroyedSamplesSettlementIconImagePath,
         destroyedSpinsSettlementIconImage = destroyedSpinsSettlementIconImage,
         destroyedSpinsSettlementIconImagePath = destroyedSpinsSettlementIconImagePath,
+        destroyedPeakDistIconImage = destroyedPeakDistIconImage,
+        destroyedPeakDistIconImagePath = destroyedPeakDistIconImagePath,
+        destroyedNewBestIconImage = destroyedNewBestIconImage,
+        destroyedNewBestIconImagePath = destroyedNewBestIconImagePath,
+        destroyedMetaResetIconImage = destroyedMetaResetIconImage,
+        destroyedMetaResetIconImagePath = destroyedMetaResetIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5596,16 +5712,75 @@ function M:draw()
         love.graphics.print(destroyedSpinsSettlementLabel, destroyedSpinsSettlementStartX + destroyedSpinsSettlementIconSpan, row)
         row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_dist_line", math.floor(self.expedition.lastLostAltitude or 0)),
-            fullX, row, fullW, "center")
+        local destroyedPeakDistLabel = i18n.t("peak_dist_line", math.floor(self.expedition.lastLostAltitude or 0))
+        local destroyedPeakDistFont = love.graphics.getFont()
+        local destroyedPeakDistWidth = destroyedPeakDistFont:getWidth(destroyedPeakDistLabel)
+        local destroyedPeakDistIconSpan = M.destroyedPeakDistIconSize + M.destroyedPeakDistIconGap
+        local destroyedPeakDistStartX = fullX + (fullW - (destroyedPeakDistIconSpan + destroyedPeakDistWidth)) / 2
+        local destroyedPeakDistIconCenterX = destroyedPeakDistStartX + M.destroyedPeakDistIconSize / 2
+        local destroyedPeakDistIconCenterY = row + destroyedPeakDistFont:getHeight() / 2
+        if self.destroyedPeakDistIconImage then
+            local iw, ih = self.destroyedPeakDistIconImage:getDimensions()
+            local scale = M.destroyedPeakDistIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.destroyedPeakDistIconImage, destroyedPeakDistIconCenterX, destroyedPeakDistIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: blue mountain-peak, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.6, 0.8, 1)
+            love.graphics.polygon("fill",
+                M.destroyedPeakDistIconPoints(destroyedPeakDistIconCenterX, destroyedPeakDistIconCenterY, M.destroyedPeakDistIconSize))
+        end
+        love.graphics.setColor(0.6, 0.8, 1)
+        love.graphics.print(destroyedPeakDistLabel, destroyedPeakDistStartX + destroyedPeakDistIconSpan, row)
         row = row + rowStep
         if self.expedition.lastLostNewBest then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf(i18n.t("newbest_label"), fullX, row, fullW, "center")
+            local destroyedNewBestLabel = i18n.t("newbest_label")
+            local destroyedNewBestFont = love.graphics.getFont()
+            local destroyedNewBestWidth = destroyedNewBestFont:getWidth(destroyedNewBestLabel)
+            local destroyedNewBestIconSpan = M.destroyedNewBestIconSize + M.destroyedNewBestIconGap
+            local destroyedNewBestStartX = fullX + (fullW - (destroyedNewBestIconSpan + destroyedNewBestWidth)) / 2
+            local destroyedNewBestIconCenterX = destroyedNewBestStartX + M.destroyedNewBestIconSize / 2
+            local destroyedNewBestIconCenterY = row + destroyedNewBestFont:getHeight() / 2
+            if self.destroyedNewBestIconImage then
+                local iw, ih = self.destroyedNewBestIconImage:getDimensions()
+                local scale = M.destroyedNewBestIconSize / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.draw(self.destroyedNewBestIconImage, destroyedNewBestIconCenterX, destroyedNewBestIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+            else
+                -- Fallback: gold star-burst, used only when the
+                -- ComfyUI-generated sprite failed to load.
+                love.graphics.setColor(1, 0.95, 0.3)
+                love.graphics.polygon("fill",
+                    M.destroyedNewBestIconPoints(destroyedNewBestIconCenterX, destroyedNewBestIconCenterY, M.destroyedNewBestIconSize))
+            end
+            love.graphics.setColor(1, 0.95, 0.3)
+            love.graphics.print(destroyedNewBestLabel, destroyedNewBestStartX + destroyedNewBestIconSpan, row)
             row = row + rowStep
         end
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)), fullX, row, fullW, "center")
+        local destroyedMetaResetLabel = i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude))
+        local destroyedMetaResetFont = love.graphics.getFont()
+        local destroyedMetaResetWidth = destroyedMetaResetFont:getWidth(destroyedMetaResetLabel)
+        local destroyedMetaResetIconSpan = M.destroyedMetaResetIconSize + M.destroyedMetaResetIconGap
+        local destroyedMetaResetStartX = fullX + (fullW - (destroyedMetaResetIconSpan + destroyedMetaResetWidth)) / 2
+        local destroyedMetaResetIconCenterX = destroyedMetaResetStartX + M.destroyedMetaResetIconSize / 2
+        local destroyedMetaResetIconCenterY = row + destroyedMetaResetFont:getHeight() / 2
+        if self.destroyedMetaResetIconImage then
+            local iw, ih = self.destroyedMetaResetIconImage:getDimensions()
+            local scale = M.destroyedMetaResetIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.destroyedMetaResetIconImage, destroyedMetaResetIconCenterX, destroyedMetaResetIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: red cyclic-arrow, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.55, 0.45)
+            love.graphics.polygon("fill",
+                M.destroyedMetaResetIconPoints(destroyedMetaResetIconCenterX, destroyedMetaResetIconCenterY, M.destroyedMetaResetIconSize))
+        end
+        love.graphics.setColor(1, 0.55, 0.45)
+        love.graphics.print(destroyedMetaResetLabel, destroyedMetaResetStartX + destroyedMetaResetIconSpan, row)
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
         local destroyedNextShipLabel = i18n.t("next_ship_line", loadout.shipLabel)

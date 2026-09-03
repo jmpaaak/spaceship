@@ -2333,5 +2333,80 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.destroyedSpinsSettlementIconImage for spins_settlement_line; Lua slot-reel barrel fallback"
+  },
+  {
+    "path": "assets/effects/destroyed_peak_dist.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "e01e437b-4556-4fec-a613-630d6f6214a6",
+    "prompt": "minimalist HUD icon: mountain peak silhouette, sharp triangular summit pointing up, flat pixel art, light blue on dark background, 64x64, game UI icon",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904301,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T21:51:19Z",
+    "sha256": "c18155ae2dda356529bf6cfc65deeae04129fab6c5ca0dbd2bea703a55ebbbc8",
+    "width": 64,
+    "height": 64,
+    "qa": "pending runtime QA"
+  },
+  {
+    "path": "assets/effects/destroyed_new_best.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "dad55919-d4a3-4502-b019-e7bfce8eeb05",
+    "prompt": "minimalist HUD icon: glowing star burst, 8-pointed star, golden yellow color, flat pixel art, game UI new record icon, transparent background, 64x64",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904302,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T21:52:20Z",
+    "sha256": "2382cc3e894aacbaff4fa5d4a1559e37128398cac79adb8512fccd773346129d",
+    "width": 64,
+    "height": 64,
+    "qa": "pending runtime QA"
+  },
+  {
+    "path": "assets/effects/destroyed_meta_reset.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "ba713b27-e795-404b-a1fd-5f94089b78df",
+    "prompt": "minimalist HUD icon: circular reset arrow, cyclic refresh symbol, red-orange color, flat pixel art, game UI reset icon, 64x64",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904303,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T21:53:13Z",
+    "sha256": "c15b379486335f45fe393017ed4181a9a05a08d16346ce36d13169bdb29cbcab",
+    "width": 64,
+    "height": 64,
+    "qa": "pending runtime QA"
   }
 ]
