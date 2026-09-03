@@ -659,6 +659,17 @@ function M.sellValue(part)
     return base
 end
 
+-- Item 9(c) Earth-shop purchase counterpart to M.sellValue. Multiplier is
+-- deliberately 3 so sell-to-rebuy is a lossy trade-off (common 4 refund vs
+-- 12 cost), matching the schema note that sell values sit well below shop
+-- purchase prices. An edition premium scales the same way (3x the sell
+-- bonus) rather than inventing a second table that can drift.
+M.buyPriceMultiplier = 3
+
+function M.buyPrice(part)
+    return M.sellValue(part) * M.buyPriceMultiplier
+end
+
 -- Returns a new pool containing only parts that are NOT galaxy-exclusive.
 function M.earthShopPool(pool)
     local result = {}

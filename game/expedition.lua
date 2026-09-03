@@ -476,12 +476,46 @@ function M.sellGear(run, category, id)
         return false, string.format("sellGear: '%s' is not equipped in %s", tostring(id), tostring(category))
     end
     local value = gearModule.sellValue(part)
-    local removed = enginePartsModule.unequip(run.gearLoadout, category, id)
+    -- Route through M.unequipGear (not engine_parts.unequip directly) so a
+    -- sold hullDurability card immediately shrinks maxDurability the same
+    -- way M.unequipGear already does for a loadout-screen unequip. Direct
+    -- unequip left run.maxDurability stale after the slot-swap slice.
+    local removed = M.unequipGear(run, category, id)
     if not removed then
         return false, "sellGear: unequip failed unexpectedly"
     end
     run.money = run.money + value
     return true, value
+end
+
+-- Item 9(c) Earth-shop purchase counterpart to M.sellGear: spend money to
+-- occupy a hull/engine slot. Same settlement-only / no-partial-apply
+-- contract as sellGear and the existing buy*Upgrade helpers. Item 14(F)
+-- shopDiscount applies via M.shopPrice so a trade-license loadout actually
+-- cheapens the card that is the shop's main product, not only fuel/hull
+-- upgrades. Item 7's Earth-shop rule (galaxyExclusive cards are never
+-- sold on Earth) is enforced here because this IS that Earth-shop action.
+-- Returns true, price on success or false, error-message on failure.
+function M.buyGear(run, category, part)
+    if run.phase ~= "settlement" then
+        return false, "buyGear: only allowed during the settlement/shop phase"
+    end
+    if type(part) ~= "table" then
+        return false, "buyGear: part must be a table"
+    end
+    if part.galaxyExclusive then
+        return false, "buyGear: galaxy-exclusive parts are not sold on Earth"
+    end
+    local price = M.shopPrice(run, gearModule.buyPrice(part))
+    if run.money < price then
+        return false, "buyGear: not enough money"
+    end
+    local ok, err = M.equipGear(run, category, part)
+    if not ok then
+        return false, err
+    end
+    run.money = run.money - price
+    return true, price
 end
 
 function M.launch(run)

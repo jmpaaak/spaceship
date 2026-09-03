@@ -635,12 +635,14 @@ swap:
 - `game/expedition.lua`'s new `M.sellGear(run, category, id)` is the
   run-level wiring: it looks up the equipped part by id in the given
   category's slot list, computes its sell value via `gear.sellValue`,
-  removes it via `engine_parts.unequip`, and credits `run.money` — all
-  atomically (no partial money-without-removal or removal-without-money
-  state). Restricted to `run.phase == "settlement"`, matching every other
-  money-moving action in this module (`M.buyFuelUpgrade` etc.) so it
-  can't be spammed mid-flight. Returns `true, value` on success or
-  `false, error-message` on failure (wrong phase, unknown/unequipped id).
+  removes it via `M.unequipGear` (so a sold hullDurability card shrinks
+  `run.maxDurability` the same way a loadout unequip does), and credits
+  `run.money` — all atomically (no partial money-without-removal or
+  removal-without-money state). Restricted to `run.phase == "settlement"`,
+  matching every other money-moving action in this module
+  (`M.buyFuelUpgrade` etc.) so it can't be spammed mid-flight. Returns
+  `true, value` on success or `false, error-message` on failure (wrong
+  phase, unknown/unequipped id).
 
 `game/self_test.lua`'s new `testGearSlotSwapEconomyWiring` regression-checks:
 `gear.sellValue`'s rarity/edition scaling (including the common-tier
@@ -652,10 +654,42 @@ value, that selling an ENGINE-slot card leaves the HULL slot list untouched
 action), and that selling an unequipped/unknown id fails cleanly with no
 money change.
 
+### Item 9(c) follow-up: Earth-shop `M.buyGear` counterpart
+
+The slot-swap loop's sell half existed, but item 9(c) also names
+"카드 획득(상점 구매/체크포인트 확정 드롭)". Hub drops (`exploreHub`)
+were already wired; Earth-shop *purchase* of a part was not — so
+item 14(F) `shopDiscount` never applied to the card that is supposed
+to be the shop's main product, and there was no run-level counterpart
+to `sellGear` that spends money to occupy a slot.
+
+- `game/gear.lua`'s new `M.buyPrice(part)` is `M.sellValue(part) *
+  M.buyPriceMultiplier` (`3`). Common costs 12 against a 4 refund,
+  legendary+edition costs 138 against a 46 refund — sell-to-rebuy
+  stays lossy without a second price table that can drift from sell
+  values. Unknown/missing rarity falls back to common, same as
+  `sellValue`.
+- `game/expedition.lua`'s new `M.buyGear(run, category, part)` is
+  settlement-only, no-partial-apply, and routes through `M.equipGear`
+  so a purchased hullDurability card immediately refreshes
+  `maxDurability`. Price goes through `M.shopPrice` so an equipped
+  trade-license (`shopDiscount +20`) cheapens the card itself
+  (common 12 → 9.6). Item 7's Earth-shop rule is enforced here:
+  `galaxyExclusive` parts are refused with money and slots unchanged.
+
+`game/self_test.lua`'s new `testGearBuyEconomyWiring` regression-checks
+the 3x price table (including edition premium and common fallback),
+flight-phase / too-poor / duplicate-id / galaxyExclusive rejection
+without mutation, successful hull purchase with exact debit and
+immediate durability refresh, engine-slot independence, shopDiscount
+applied to the gear price, and that selling the just-bought
+hullDurability card routes through `unequipGear` so maxDurability
+shrinks back down.
+
 Still deferred (out of this lane's scope per `loop/PROMPT.md` — requires
 `game/scenes/play.lua` UI): an actual EARTH SHOP screen surfacing
-`M.sellGear` as a tappable "sell" action per equipped card, and any visual
-sell-value display on the card grid.
+`M.buyGear` / `M.sellGear` as tappable buy/sell actions per card, and
+any visual buy/sell-value display on the card grid.
 
 ### Item 12: `noSlotCost` edition wiring — `refined` cards equip past capacity
 
