@@ -1339,3 +1339,28 @@ Still deferred (out of this lane's scope per `loop/PROMPT.md`): the
 shop UI that displays the crystallized sell price to the player
 (`play.lua`).
 
+### Item 12/10: engine-slot quantum_flawed hullDurability drawback
+
+`applyEditionEffects` already appends `{ type = "hullDurability", value = -1 }`
+for `quantum_flawed`, and hull-slot equipping that drawback was covered by
+`testGearEquippedEditionEffectsRunWiring`. `equippedHullDurabilityBonus`
+historically read only `run.equippedGear`, so an engine-slot
+`quantum_flawed` card (the bundled `engine_singularity_drive` actually
+lists that edition) doubled its (G) propulsion effects with zero hull
+penalty — the documented unique promise was dead for the only engine
+card that can roll it.
+
+- New pure `gear.engineSlotHullDurabilityDrawback(parts)` sums only
+  *negative* `hullDurability` values on an engine-slot list. Positive
+  plating on an engine card stays 0 (item 9 hull-only).
+- `equippedHullDurabilityBonus` adds that total on top of hull
+  `equippedTotals.hullDurability`. `M.equipGear` / `M.unequipGear` now
+  refresh ship stats for engine as well as hull, so the drawback lands
+  on `maxDurability` immediately (not only after launch) and unequip
+  restores it.
+- `testGearQuantumFlawedEngineDrawbackWiring` covers: empty list 0 /
+  positive engine hullDurability ignored / -1 counts / stacked -2 /
+  positive engine card does not raise maxDurability / quantum_flawed
+  engine fixture 3→2 plus fuelEfficiency 10→20 / unequip restores 3 /
+  live `engine_singularity_drive` with the edition 3→2.
+

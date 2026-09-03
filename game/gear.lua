@@ -551,6 +551,25 @@ function M.applyEditionEffects(part, editionId)
     return out
 end
 
+-- Item 12 quantum_flawed on an ENGINE card: applyEditionEffects still
+-- appends hullDurability -1, but equippedTotals(run.equippedGear) never
+-- sees engine-slot lists, so the documented unique promise (doubled (G)
+-- effects PLUS a hull penalty) was dead for engine_singularity_drive —
+-- the only bundled engine card that can actually roll quantum_flawed.
+-- Positive hullDurability on an engine card stays ignored (item 9 hull-
+-- only plating); only negative values cross slots, as an edition drawback.
+function M.engineSlotHullDurabilityDrawback(parts)
+    local total = 0
+    for _, part in ipairs(parts or {}) do
+        for _, effect in ipairs(part.effects or {}) do
+            if effect.type == "hullDurability" and effect.value < 0 then
+                total = total + effect.value
+            end
+        end
+    end
+    return total
+end
+
 -- The extra per-shared-pair synergy bonus (added on top of
 -- M.synergyBonusPerSharedPair) contributed by a part carrying the
 -- "irradiated" edition (item 12's "시너지 태그 매칭 시 보너스 추가 증폭").

@@ -139,8 +139,12 @@ M.slotSampleBonus = slotSampleBonus
 -- maximum hull points. Kept hull-only (like climbSpeed/sampleSellValue,
 -- unlike the category-agnostic (C)/(E)/collisionRadius wrappers) because
 -- item 9 explicitly scopes hullDurability's payoff to hull ("선체") gear.
+-- Exception: item 12 quantum_flawed's hullDurability -1 drawback on an
+-- ENGINE card is the edition's unique cost and must still land on
+-- maxDurability. Positive engine-slot hullDurability stays 0.
 local function equippedHullDurabilityBonus(run)
-    return gearModule.equippedTotals(run.equippedGear or {}).hullDurability or 0
+    return (gearModule.equippedTotals(run.equippedGear or {}).hullDurability or 0)
+        + gearModule.engineSlotHullDurabilityDrawback(run.equippedEngineParts or {})
 end
 M.equippedHullDurabilityBonus = equippedHullDurabilityBonus
 
@@ -389,8 +393,9 @@ end
 -- engine_parts.equip's own contract.
 --
 -- Item 9/14 (A) hullDurability wiring: a hull-slot change can shift
--- run.maxDurability (equippedHullDurabilityBonus above), so this
--- recomputes ship stats immediately on every hull equip/unequip -- unlike
+-- run.maxDurability (equippedHullDurabilityBonus above). Item 12
+-- quantum_flawed engine drawbacks can too, so this recomputes ship
+-- stats immediately on every hull OR engine equip/unequip -- unlike
 -- climbSpeed/sampleSellValue (pure per-tick/per-sample derived values that
 -- read equippedGear live and never need a cached run field refreshed).
 -- Before this run's very first launch (phase == "launch", the pre-flight
@@ -423,11 +428,13 @@ function M.equipGear(run, category, part)
     if not ok then return false, err end
     if category == "hull" then
         run.equippedGear = run.gearLoadout.hull
-        refreshShipStats(run)
-        if run.phase == "launch" then run.durability = run.maxDurability end
     else
         run.equippedEngineParts = run.gearLoadout.engine
     end
+    -- Hull plating AND engine-slot quantum_flawed drawbacks both shift
+    -- maxDurability, so every category recomputes immediately.
+    refreshShipStats(run)
+    if run.phase == "launch" then run.durability = run.maxDurability end
     return true
 end
 
@@ -441,7 +448,12 @@ end
 -- by a shop/loadout-only action).
 function M.unequipGear(run, category, id)
     local removed = enginePartsModule.unequip(run.gearLoadout, category, id)
-    if removed and category == "hull" then
+    if removed then
+        if category == "hull" then
+            run.equippedGear = run.gearLoadout.hull
+        else
+            run.equippedEngineParts = run.gearLoadout.engine
+        end
         refreshShipStats(run)
         if run.phase == "launch" then
             run.durability = math.min(run.durability, run.maxDurability)
