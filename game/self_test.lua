@@ -1692,6 +1692,21 @@ local function testMinimapOrbitRingSprite()
         "PlayScene must load assets/effects/minimap_orbit_ring.png into self.orbitRingImagePath")
 end
 
+-- Minimap galaxy-disk rings (kind ~= "orbit") are still Lua line circles.
+-- Same file-existence + always-set-path pattern as
+-- testMinimapOrbitRingSprite. Graphics-gated galaxyRingImage cannot
+-- be asserted under GAME_HEADLESS=1.
+local function testMinimapGalaxyRingSprite()
+    local path = "assets/effects/minimap_galaxy_ring.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated minimap galaxy-disk ring sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.galaxyRingImagePath == path,
+        "PlayScene must load assets/effects/minimap_galaxy_ring.png into self.galaxyRingImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3582,6 +3597,7 @@ function M.run()
     testMinimapEarthReturnSprite()
     testMinimapSpiralArmSprite()
     testMinimapOrbitRingSprite()
+    testMinimapGalaxyRingSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

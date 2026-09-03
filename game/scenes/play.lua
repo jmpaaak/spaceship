@@ -1090,6 +1090,20 @@ function M.new(options)
             orbitRingImage = img
         end
     end
+    -- assets/effects/minimap_galaxy_ring.png is the ComfyUI-generated
+    -- galaxy-disk ring (docs/GENERATED_ASSET_LOG.md). Same always-set-path
+    -- / graphics-gated image pattern as orbitRingImagePath. drawMinimap()
+    -- scales it to 2 * ring.radius for kind=="galaxy" rings and falls
+    -- back to the Lua line circle when the image failed to load.
+    local galaxyRingImagePath = "assets/effects/minimap_galaxy_ring.png"
+    local galaxyRingImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, galaxyRingImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            galaxyRingImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1150,6 +1164,8 @@ function M.new(options)
         spiralArmImagePath = spiralArmImagePath,
         orbitRingImage = orbitRingImage,
         orbitRingImagePath = orbitRingImagePath,
+        galaxyRingImage = galaxyRingImage,
+        galaxyRingImagePath = galaxyRingImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2240,12 +2256,24 @@ function M:drawMinimap()
                 love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
             end
         elseif ring.inside ~= false then
-            if ring.id == "milkyway" then
-                love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
+            if self.galaxyRingImage then
+                local iw, ih = self.galaxyRingImage:getDimensions()
+                local drawSize = ring.radius * 2
+                local scale = drawSize / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 0.55)
+                love.graphics.draw(
+                    self.galaxyRingImage,
+                    cx + ring.x, cy + ring.y, 0, scale, scale, iw / 2, ih / 2)
             else
-                love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
+                -- Fallback: cyan/gold line circle, used only when the
+                -- ComfyUI-generated sprite failed to load.
+                if ring.id == "milkyway" then
+                    love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
+                else
+                    love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
+                end
+                love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
             end
-            love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
         end
     end
     -- docs/feedback/INBOX.md item 1 part 1: the player's current galaxy

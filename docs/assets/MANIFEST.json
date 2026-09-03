@@ -1058,5 +1058,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap orbit-ring sprite wired into PlayScene orbitRingImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_galaxy_ring.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "20a0c112-e615-4548-921d-3aa88b812f9e",
+    "prompt": "pixel art, 16-bit, thin cyan circular galaxy disk ring HUD icon sprite, hollow pale blue ring outline, isolated minimap galaxy boundary marker, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904125,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:03:21Z",
+    "sha256": "d9c005e56bc37580ca914b162b2741d1c022eb87191f8ff2a26d3671f323a2c4",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap galaxy-disk ring sprite wired into PlayScene galaxyRingImage; pipeline PNG signature/decode gate"
   }
 ]
