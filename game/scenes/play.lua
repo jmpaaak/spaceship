@@ -657,6 +657,34 @@ end
 M.destroyedTitleIconSize = 24
 M.destroyedTitleIconGap = 8
 
+-- EARTH SHOP TAP: RELAUNCH action icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn tap_relaunch
+-- printf with a small upward-chevron silhouette, mirroring the
+-- EARTH SHOP storefront / destroyed-title cracked hull. Drawn as
+-- a flat pentagon (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.relaunchIconPoints(cx, cy, size)
+    local w = size * 0.45
+    local peak = size * 0.5
+    local mid = size * 0.05
+    local bottom = size * 0.45
+    return {
+        cx, cy - peak,
+        cx + w, cy + mid,
+        cx + w * 0.35, cy + bottom,
+        cx - w * 0.35, cy + bottom,
+        cx - w, cy + mid,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- upward chevron's right edge and the TAP: RELAUNCH label's
+-- left edge. Matches the EARTH SHOP / destroyed titles because
+-- all three sit next to always-drawn shop/settlement labels.
+M.relaunchIconSize = 24
+M.relaunchIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1885,6 +1913,22 @@ function M.new(options)
             destroyedTitleIconImage = img
         end
     end
+    -- assets/effects/relaunch.png is the ComfyUI-generated
+    -- EARTH SHOP TAP: RELAUNCH action chevron
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as destroyedTitleIconImagePath.
+    -- :draw() scales it to M.relaunchIconSize instead of
+    -- M.relaunchIconPoints, and falls back to that upward-chevron
+    -- pentagon when the image failed to load.
+    local relaunchIconImagePath = "assets/effects/relaunch.png"
+    local relaunchIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, relaunchIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            relaunchIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2005,6 +2049,8 @@ function M.new(options)
         shopTitleIconImagePath = shopTitleIconImagePath,
         destroyedTitleIconImage = destroyedTitleIconImage,
         destroyedTitleIconImagePath = destroyedTitleIconImagePath,
+        relaunchIconImage = relaunchIconImage,
+        relaunchIconImagePath = relaunchIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4155,7 +4201,27 @@ function M:draw()
         row = row + rowStep
 
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
+        local relaunchLabel = i18n.t("tap_relaunch")
+        local relaunchFont = love.graphics.getFont()
+        local relaunchWidth = relaunchFont:getWidth(relaunchLabel)
+        local relaunchIconSpan = M.relaunchIconSize + M.relaunchIconGap
+        local relaunchStartX = viewport.width / 2 - (relaunchIconSpan + relaunchWidth) / 2
+        local relaunchIconCenterX = relaunchStartX + M.relaunchIconSize / 2
+        local relaunchIconCenterY = row + relaunchFont:getHeight() / 2
+        if self.relaunchIconImage then
+            local iw, ih = self.relaunchIconImage:getDimensions()
+            local scale = M.relaunchIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.relaunchIconImage, relaunchIconCenterX, relaunchIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan upward chevron, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.relaunchIconPoints(relaunchIconCenterX, relaunchIconCenterY, M.relaunchIconSize))
+        end
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.print(relaunchLabel, relaunchStartX + relaunchIconSpan, row)
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
