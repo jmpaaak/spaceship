@@ -1133,5 +1133,42 @@ schema-legal but practically dead content for that slot.
   `play.lua`/`i18n.lua`/`world.lua`/`game/gear.lua`/`game/engine_parts.lua`/
   `game/expedition.lua` untouched (`git status --short` confirms).
 
+## Item 13/12: web editor edition/rarity whitelist sync check
+
+`tools/gear-editor/README.md` and `editor.js`'s own header comment
+("Validation rules here intentionally mirror `game/gear.lua`'s loader
+exactly") have always *documented* that the editor's `KNOWN_EDITIONS`
+and `KNOWN_RARITIES` arrays stay byte-for-byte in sync with `game/gear.lua`'s
+`M.knownEditions`/`M.knownRarities` whitelists — exactly the same guarantee
+`testGearEffectSchemaExpansion` already enforced (by reading `editor.js`'s
+source text) for `M.knownEffectTypes`/`EFFECT_TYPE_GROUPS`. Auditing this
+lane's own test suite found that guarantee existed only as prose for
+editions/rarities: nothing ever re-read `editor.js`'s `KNOWN_EDITIONS`/
+`KNOWN_RARITIES` arrays and compared them against `gear.lua`, so a future
+rarity or edition added to one side but not the other would silently drift
+undetected — the editor would then either reject valid game data or accept
+data the Lua loader would reject.
+
+- TDD: new `game/self_test.lua` `testGearEditorEditionAndRaritySync()`
+  reads `tools/gear-editor/editor.js` via `love.filesystem.read` (same
+  technique as the existing effect-type sync check) and asserts every key of
+  `gear.knownEditions`/`gear.knownRarities` appears as a quoted string
+  literal inside `editor.js`'s `KNOWN_EDITIONS`/`KNOWN_RARITIES` array
+  literals. RED confirmed by temporarily injecting an extra
+  `__test_temp_edition = true` entry into `M.knownEditions` (not committed)
+  and observing the exact assertion failure
+  (`editor.js KNOWN_EDITIONS must include '__test_temp_edition' to stay in
+  sync with gear.lua`); reverting restored GREEN, then the real sync
+  discovery: current `editor.js` was already byte-for-byte in sync with
+  `gear.lua` (4 editions, 4 rarities, both sides matching) — this slice adds
+  the missing regression guard rather than fixing an existing drift.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN
+  (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3,
+  `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- Changed files: `game/self_test.lua`/`docs/GEAR_SCHEMA.md`/
+  `docs/STATUS.md`/`docs/feedback/INBOX.md` only — `play.lua`/`i18n.lua`/
+  `world.lua`/`game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`/
+  `tools/gear-editor/editor.js` untouched (`git status --short` confirms).
+
 
 

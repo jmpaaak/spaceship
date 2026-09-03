@@ -14,13 +14,21 @@ _STRONG_CODEX_LIMIT_PATTERNS = (
     re.compile(r"\b(?:error|status)(?:\s+code)?\s*[:=]\s*429\b", re.IGNORECASE),
     re.compile(r"\byou(?:'|’)ve hit your usage limit\b", re.IGNORECASE),
     re.compile(r"\b(?:codex|chatgpt).{0,80}\busage limit (?:reached|exceeded)\b", re.IGNORECASE),
+    re.compile(r"codex_rate_limited", re.IGNORECASE),
+    re.compile(r"Agent idle timeout after ", re.IGNORECASE),
 )
 
 
 def is_codex_rate_limit(output: str, exit_status: int) -> bool:
-    """True only for a failed cycle with a strong upstream limit marker."""
+    """True for a failed cycle that should retry on the configured fallback.
+
+    Exit 124 is the loop's idle-timeout (no stdout). That usually means the
+    primary is rate-limited or hung without printing a 429 — still switch.
+    """
     if exit_status == 0:
         return False
+    if exit_status == 124:
+        return True
     return any(pattern.search(output) for pattern in _STRONG_CODEX_LIMIT_PATTERNS)
 
 

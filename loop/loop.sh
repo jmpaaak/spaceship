@@ -41,10 +41,9 @@ if (( RUN_BUDGET_SECONDS < 1 )); then
   printf 'RUN_BUDGET_SECONDS must be at least 1\n' >&2
   exit 2
 fi
-if (( RUN_BUDGET_SECONDS >= MAX_IDLE_SECONDS )); then
-  printf 'RUN_BUDGET_SECONDS must be less than MAX_IDLE_SECONDS\n' >&2
-  exit 2
-fi
+# RUN_BUDGET is total wall-clock for a cycle. MAX_IDLE is "no stdout
+# for this many seconds" — they are independent. A silent/rate-limited
+# primary should be detected quickly and retried on the fallback model.
 
 mkdir -p "${LOG_DIR}"
 if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
@@ -86,6 +85,14 @@ while :; do
       "${ROOT_DIR}" "${PROVIDER}" "${MODEL}" "${MAX_TURNS}" "${RUN_BUDGET_SECONDS}"
   } | tee -a "${log_file}"
 
+  # Token-opt is first: compact STATUS.md before preflight/prompt so the
+  # agent never ingests an unbounded history. compact_status.py no-ops if
+  # the file is already small or was written in the last 45s (live edit).
+  COMPACT_STATUS="${HOME}/.hermes/scripts/compact_status.py"
+  if [[ -f "${COMPACT_STATUS}" ]]; then
+    /usr/bin/python3 "${COMPACT_STATUS}" "${ROOT_DIR}/docs/STATUS.md" 2>&1 | tee -a "${log_file}" || true
+  fi
+
   preflight_report="$(LOOP_ROOT="${ROOT_DIR}" /usr/bin/python3 "${PREFLIGHT}" 2>&1)"
   preflight_status=$?
   printf '%s\n' "${preflight_report}" | tee -a "${log_file}"
@@ -123,7 +130,7 @@ while :; do
     -- \
     "${HERMES_BIN}" chat --oneshot -Q \
     --provider "${PROVIDER}" --model "${MODEL}" --reasoning "${REASONING}" \
-    --toolsets terminal,file,vision --ignore-rules --yolo --source tool \
+    --toolsets terminal,file --ignore-rules --yolo --source tool \
     --in "${ROOT_DIR}" --max-turns "${MAX_TURNS}" \
     --run-budget "${RUN_BUDGET_SECONDS}" --query-file "${prompt_file}" \
     2>&1 | tee "${agent_output}" | tee -a "${log_file}"
@@ -157,7 +164,9 @@ while :; do
   printf '===== cycle %d end %s status=%d =====\n' \
     "${cycle}" "${finished_at}" "${agent_status}" | tee -a "${log_file}"
 
-  if (( agent_status != 0 )); then
+  if (( agent_status == 124 )); then
+    printf 'Primary went silent (idle timeout); fallback was attempted if Codex. Continuing next cycle.\n' | tee -a "${log_file}"
+  elif (( agent_status != 0 )); then
     printf 'Agent cycle failed with status=%d; propagating failure.\n' \
       "${agent_status}" | tee -a "${log_file}"
     exit "${agent_status}"
