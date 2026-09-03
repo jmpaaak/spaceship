@@ -2254,9 +2254,7 @@ function M:draw()
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.printf(loadout.stats, 64, row, viewport.width - 128, "center")
         row = row + rowStep
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(loadout.forecast, 64, row, viewport.width - 128, "center")
-        row = row + rowStep
+
         love.graphics.setColor(0.6, 1, 0.85)
         -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD
         -- simplification, fourth/final slice): pair the STEER SPEED text
@@ -2357,8 +2355,6 @@ function M:draw()
         love.graphics.printf(nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
 
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.hullPreviewForecast, fullX, row, fullW, "center")
 
         -- YIELD and SHIP
         row = 864
@@ -2388,9 +2384,7 @@ function M:draw()
         row = row + rowStep
         love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
         row = row + rowStep
-        
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.shipPreviewForecast, fullX, row, fullW, "center")
+
         
         row = 1056
         rowStep = 32
@@ -2400,9 +2394,7 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.forecast, fullX, row, fullW, "center")
-        row = row + rowStep
+
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)

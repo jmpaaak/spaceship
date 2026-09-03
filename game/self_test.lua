@@ -1024,6 +1024,22 @@ end
 -- expedition.buyFuelUpgrade/fuelUpgradeLevel/fuelUpgradeCost fields have
 -- since been removed entirely (see item 11(b) STATUS slice); this test
 -- now verifies those symbols are simply gone rather than merely hidden.
+local function testLaunchForecastRemoved()
+    -- docs/feedback/INBOX.md UI/HUD item 11(a)
+    assert(expedition.launchForecast == nil, "M.launchForecast must be completely removed")
+    
+    local PlayScene = require("game.scenes.play")
+    -- Check that loadout lines do not contain forecast
+    local scene = PlayScene.new(expedition.new())
+    local loadout = scene:loadoutLines()
+    assert(loadout.forecast == nil, "loadout.forecast must be removed")
+    
+    local shopLoadout = scene:shopLoadoutLines()
+    assert(shopLoadout.shipPreviewForecast == nil, "shopLoadout.shipPreviewForecast must be removed")
+    assert(shopLoadout.hullPreviewForecast == nil, "shopLoadout.hullPreviewForecast must be removed")
+    assert(shopLoadout.forecast == nil, "shopLoadout.forecast must be removed")
+end
+
 local function testFuelUpgradeHiddenFromShop()
     local PlayScene = require("game.scenes.play")
     local scene = PlayScene.new({
@@ -3072,6 +3088,7 @@ function M.run()
     testHullShieldIcon()
     testCashCoinIcon()
     testSteerSpeedIcon()
+    testLaunchForecastRemoved()
     testFuelUpgradeHiddenFromShop()
     testFuelUpgradeMessagingRemoved()
     testSpecimenSprites()

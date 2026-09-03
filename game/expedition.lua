@@ -222,12 +222,7 @@ local function slotCount(distance, slotDistance)
     return math.ceil(distance / slotDistance)
 end
 
-function M.launchForecast(run, maxFuel)
-    local forecastFuel = maxFuel or run.maxFuel
-    if forecastFuel <= 0 or run.fuelBurnRate <= 0 or run.climbSpeed <= 0 then return 0, 0 end
-    local altitude = forecastFuel / run.fuelBurnRate * run.climbSpeed
-    return altitude, slotCount(altitude, run.slotDistance)
-end
+
 
 -- docs/feedback/INBOX.md 항목 11(c): M.maneuverFuel/M.burnManeuverFuel used
 -- to exist as permanent no-op shims (fuel is no longer a flight constraint,
