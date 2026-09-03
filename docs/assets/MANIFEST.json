@@ -258,5 +258,30 @@
     "width": 64,
     "height": 64,
     "qa": "sample pickup particle effect, runtime placement pending"
+  },
+  {
+    "path": "assets/backgrounds/deep_space_tile.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "e27a762c-b5db-4b88-b7dd-ecaa97d20f30",
+    "prompt": "pixel art, 16-bit, seamless deep space background tile, dark navy nebula clouds, subtle purple and teal cosmic dust, sparse tiny stars, no foreground objects, no text, tileable texture",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260903612,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 128,
+      "height": 128,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T11:45:18Z",
+    "sha256": "27d41de8e46ca4b42ee2d6bed168375905ffdc9cbebc18931c2f78967fc4fd54",
+    "width": 128,
+    "height": 128,
+    "qa": "deterministic pixel/connected-component silhouette analysis pending wiring"
   }
 ]

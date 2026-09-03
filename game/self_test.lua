@@ -1041,6 +1041,26 @@ local function testSampleEffectSprite()
         "PlayScene must load assets/effects/sample_sparkle.png into self.sampleEffectImagePath")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목: ComfyUI로 실제 에셋 작업 진행 --
+-- next slice after ship/planet/earth/effect: the deep-space backdrop
+-- (world.backgroundStars() layer drawn in PlayScene:draw()) is still a
+-- Lua love.graphics.points() dot field, not a ComfyUI-generated texture,
+-- even though the AetherAI-only asset rule explicitly lists "backgrounds"
+-- among the required final visuals. Mirror testSampleEffectSprite: verify
+-- the file exists AND that PlayScene.new() records it as
+-- self.backgroundImagePath (the load target :draw() actually uses
+-- whenever love.graphics is available).
+local function testBackgroundSprite()
+    local path = "assets/backgrounds/deep_space_tile.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated background sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.backgroundImagePath == path,
+        "PlayScene must load assets/backgrounds/deep_space_tile.png into self.backgroundImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -2818,6 +2838,7 @@ function M.run()
     testPlanetSprite()
     testEarthSprite()
     testSampleEffectSprite()
+    testBackgroundSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

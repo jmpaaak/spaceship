@@ -634,6 +634,22 @@ function M.new(options)
             sampleEffectImage = img
         end
     end
+    -- assets/backgrounds/deep_space_tile.png is the ComfyUI-generated deep-
+    -- space nebula backdrop (docs/GENERATED_ASSET_LOG.md). draw() tiles it
+    -- (wrap-repeat quad) as a near-static backdrop layer drawn behind the
+    -- existing backgroundStars()/stars() point layers, and falls back to
+    -- the flat clear color only when the image failed to load (same
+    -- fallback pattern as ship/planet/earth/effect above).
+    local backgroundImagePath = "assets/backgrounds/deep_space_tile.png"
+    local backgroundImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, backgroundImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            pcall(img.setWrap, img, "repeat", "repeat")
+            backgroundImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -642,6 +658,8 @@ function M.new(options)
         planetImagePath = planetImagePath,
         earthImage = earthImage,
         earthImagePath = earthImagePath,
+        backgroundImage = backgroundImage,
+        backgroundImagePath = backgroundImagePath,
         sampleEffectImage = sampleEffectImage,
         sampleEffectImagePath = sampleEffectImagePath,
         specimenImages = loadSpecimenImages(),
@@ -1726,6 +1744,27 @@ function M:draw()
     love.graphics.clear(world.galaxyBackgroundColor(galaxy))
     local shipScreenX, shipScreenY = viewport.width / 2, math.floor(viewport.height * 0.58)
     local cameraX, cameraY = self.ship.x - shipScreenX, self.ship.y - shipScreenY
+    -- docs/feedback/INBOX.md 처리대기 항목 "ComfyUI로 실제 에셋 작업 진행"
+    -- (background slice): tile the ComfyUI-generated deep-space nebula
+    -- backdrop (assets/backgrounds/deep_space_tile.png) across the whole
+    -- viewport at a slow parallax rate (same 0.4x camera factor as the
+    -- backgroundStars() point layer immediately below) so it reads as a
+    -- distant, mostly-static nebula behind the star fields. Falls back to
+    -- the flat galaxy-tint clear color above when the image failed to
+    -- load.
+    if self.backgroundImage then
+        local bgCameraX, bgCameraY = cameraX * 0.4, cameraY * 0.4
+        local imgW, imgH = self.backgroundImage:getDimensions()
+        local offsetX = bgCameraX % imgW
+        local offsetY = bgCameraY % imgH
+        love.graphics.setColor(1, 1, 1, 0.55)
+        local quad = love.graphics.newQuad(
+            offsetX, offsetY,
+            viewport.width + imgW, viewport.height + imgH,
+            imgW, imgH)
+        love.graphics.draw(self.backgroundImage, quad, -offsetX, -offsetY)
+        love.graphics.setColor(1, 1, 1, 1)
+    end
     local sx, sy = world.sectorAt(self.ship.x, self.ship.y)
     -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): a dense,
     -- near-static background star layer drawn behind the streaking-meteor
