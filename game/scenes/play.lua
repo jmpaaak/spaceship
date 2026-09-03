@@ -518,6 +518,37 @@ end
 M.riskIconSize = 24
 M.riskIconGap = 8
 
+-- Floating sample-pickup "+$N" icon (icon-based HUD simplification
+-- follow-on): pair the green floating_sample_gain readout with a
+-- small plus-badge silhouette, mirroring the planet-approach SAMPLE
+-- $N crystal. Drawn as a flat plus polygon (even-length {x,y,...}
+-- list, no love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.floatingSampleIconPoints(cx, cy, size)
+    local r = size * 0.5
+    local arm = size * 0.18
+    return {
+        cx - arm, cy - r,
+        cx + arm, cy - r,
+        cx + arm, cy - arm,
+        cx + r, cy - arm,
+        cx + r, cy + arm,
+        cx + arm, cy + arm,
+        cx + arm, cy + r,
+        cx - arm, cy + r,
+        cx - arm, cy + arm,
+        cx - r, cy + arm,
+        cx - r, cy - arm,
+        cx - arm, cy - arm,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the plus-badge's
+-- right edge and the "+$N" text's left edge. Matches the SAMPLE $N
+-- crystal because both are in-world sample-value labels.
+M.floatingSampleIconSize = 24
+M.floatingSampleIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1666,6 +1697,22 @@ function M.new(options)
             riskIconImage = img
         end
     end
+    -- assets/effects/floating_sample.png is the ComfyUI-generated
+    -- floating sample-pickup "+$N" plus-badge
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as riskIconImagePath. :draw()
+    -- scales it to M.floatingSampleIconSize instead of
+    -- M.floatingSampleIconPoints, and falls back to that plus-badge
+    -- polygon when the image failed to load.
+    local floatingSampleIconImagePath = "assets/effects/floating_sample.png"
+    local floatingSampleIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, floatingSampleIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            floatingSampleIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1776,6 +1823,8 @@ function M.new(options)
         sampleValueIconImagePath = sampleValueIconImagePath,
         riskIconImage = riskIconImage,
         riskIconImagePath = riskIconImagePath,
+        floatingSampleIconImage = floatingSampleIconImage,
+        floatingSampleIconImagePath = floatingSampleIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3380,13 +3429,37 @@ function M:draw()
         local fx, fy = math.floor(ft.x - cameraX), math.floor(ft.y - cameraY)
         if fx >= -30 and fx <= viewport.width + 30 and fy >= -20 and fy <= viewport.height + 20 then
             local alpha = math.max(0, math.min(1, ft.timer))
-            if ft.kind == "damage" then
-                love.graphics.setColor(1, 0.35, 0.3, alpha)
-            else
+            local textY = fy - M.floatingTextBoxTopOffset
+            if ft.kind == "sample" then
+                local font = love.graphics.getFont()
+                local textWidth = font:getWidth(ft.text)
+                local iconSpan = M.floatingSampleIconSize + M.floatingSampleIconGap
+                local startX = fx - (iconSpan + textWidth) / 2
+                local iconCenterX = startX + M.floatingSampleIconSize / 2
+                local iconCenterY = textY + font:getHeight() / 2
+                if self.floatingSampleIconImage then
+                    local iw, ih = self.floatingSampleIconImage:getDimensions()
+                    local scale = M.floatingSampleIconSize / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, alpha)
+                    love.graphics.draw(self.floatingSampleIconImage, iconCenterX, iconCenterY, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    -- Fallback: cyan plus-badge, used only when the
+                    -- ComfyUI-generated sprite failed to load.
+                    love.graphics.setColor(0.45, 1, 0.6, alpha)
+                    love.graphics.polygon("fill",
+                        M.floatingSampleIconPoints(iconCenterX, iconCenterY, M.floatingSampleIconSize))
+                end
                 love.graphics.setColor(0.45, 1, 0.6, alpha)
+                love.graphics.print(ft.text, startX + iconSpan, textY)
+            else
+                if ft.kind == "damage" then
+                    love.graphics.setColor(1, 0.35, 0.3, alpha)
+                else
+                    love.graphics.setColor(0.45, 1, 0.6, alpha)
+                end
+                love.graphics.printf(ft.text, fx - M.floatingTextBoxHalfWidth,
+                    textY, M.floatingTextBoxHalfWidth * 2, "center")
             end
-            love.graphics.printf(ft.text, fx - M.floatingTextBoxHalfWidth,
-                fy - M.floatingTextBoxTopOffset, M.floatingTextBoxHalfWidth * 2, "center")
         end
     end
     for _, particle in ipairs(self.particles) do

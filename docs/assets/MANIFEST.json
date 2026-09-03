@@ -1683,5 +1683,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.riskIconImage for planet RISK/LETHAL Lua warning triangle"
+  },
+  {
+    "path": "assets/effects/floating_sample.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "0e4255ce-7ad2-4bbd-bebf-904fdd113cfd",
+    "prompt": "pixel art, 16-bit, small cyan plus-sign badge HUD icon sprite, simple plus in diamond, isolated sample-pickup gain HUD icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904150,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T19:57:31Z",
+    "sha256": "23ee061a5133ef1d2fd4f009b7269e3efb92616f5696e9ac1f869beafd2977ba",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.floatingSampleIconImage for floating sample-pickup +; Lua plus-badge fallback"
   }
 ]
