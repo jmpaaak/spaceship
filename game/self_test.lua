@@ -982,11 +982,26 @@ end
 -- docs/feedback/INBOX.md UI/HUD item 3 leftover + STATUS next slice:
 -- bankedFuelBonus is consumed as a no-op at launch (no run.fuel field),
 -- but settlement/returning still advertise "NEXT LAUNCH FUEL +N" /
--- "WIN +$N FUEL +N". Hide that copy. Engine bonus fields stay (econ
--- item 15 owns any later redefinition of the PLANET-triple reward).
+-- "WIN +$N FUEL +N". Hide that copy, then delete the gated i18n keys
+-- themselves so the leftover fuel framing cannot return. Engine bonus
+-- fields stay (econ item 15 owns any later redefinition of the
+-- PLANET-triple reward).
 local function testFuelBonusTextHidden()
+    local i18n = require("game.i18n")
     assert(PlayScene.showFuelBonusText == false,
         "showFuelBonusText must gate leftover fuel-reward copy off")
+    local leftoverFuelKeys = {
+        "fuel_bonus_line",
+        "win_fuel_line",
+        "slot_result_fuel",
+        "newbest_fuel_combined",
+    }
+    for _, key in ipairs(leftoverFuelKeys) do
+        assert(i18n.locales.en[key] == nil,
+            "en leftover fuel key must be removed: " .. key)
+        assert(i18n.locales.ko[key] == nil,
+            "ko leftover fuel key must be removed: " .. key)
+    end
 
     local scene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },

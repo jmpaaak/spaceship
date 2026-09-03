@@ -989,10 +989,10 @@ function M:loadoutLines()
 end
 
 function M:summaryFuelBonusLine()
-    if not M.showFuelBonusText then return nil end
-    local bonus = self.expedition.bankedFuelBonus or 0
-    if bonus <= 0 then return nil end
-    return i18n.t("fuel_bonus_line", bonus)
+    -- Keys fuel_bonus_line / newbest_fuel_combined were deleted. The
+    -- PLANET-triple engine bonus still exists (econ item 15), but UI
+    -- never advertises it as fuel.
+    return nil
 end
 
 -- Pure helper for the returning-phase slot result WIN line so tests can
@@ -1001,8 +1001,6 @@ end
 function M.slotWinLine(run)
     if run.lastSlotRepair and run.lastSlotRepair > 0 then
         return i18n.t("win_repair_line", run.lastSlotReward, run.lastSlotRepair)
-    elseif M.showFuelBonusText and run.lastSlotFuelBonus and run.lastSlotFuelBonus > 0 then
-        return i18n.t("win_fuel_line", run.lastSlotReward, run.lastSlotFuelBonus)
     elseif run.lastSlotSampleBonus and run.lastSlotSampleBonus > 0 then
         return i18n.t("win_sample_line", run.lastSlotReward, run.lastSlotSampleBonus)
     end
@@ -1353,12 +1351,6 @@ function M:update(dt)
                     table.concat(self.slotSpin.symbols, " "),
                     self.slotSpin.reward,
                     self.slotSpin.repair,
-                    self.slotSpin.opportunitiesAfter)
-            elseif M.showFuelBonusText and self.slotSpin.fuelBonus and self.slotSpin.fuelBonus > 0 then
-                self.message = i18n.t("slot_result_fuel",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.fuelBonus,
                     self.slotSpin.opportunitiesAfter)
             elseif self.slotSpin.sampleBonus and self.slotSpin.sampleBonus > 0 then
                 self.message = i18n.t("slot_result_sample",
@@ -2325,20 +2317,11 @@ function M:draw()
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf(i18n.t("earth_shop_title"), 64, 296, viewport.width - 128, "center")
         local fuelBonusLine = self:summaryFuelBonusLine()
-        -- The previously-verified capture (build/spaceship-runtime-preview-
-        -- settlement-newbest-*.png) fit exactly one extra summary line
-        -- (NEW BEST!) at y=127 with shop rows starting unshifted at
-        -- row=140 and the last shop line (TAP: RELAUNCH) landing just
-        -- above the y=307 DEV PLACEHOLDER footer. A second real capture
-        -- of both NEW BEST! and the new NEXT LAUNCH FUEL bonus stacked as
-        -- separate lines pushed TAP: RELAUNCH into the footer (found and
-        -- reverted in this slice; see docs/STATUS.md). To keep the
-        -- verified-safe unshifted baseline, when both are present they
-        -- share a single combined line instead of adding a second row.
+        -- Fuel-bonus copy keys were deleted. NEW BEST! is the only extra
+        -- settlement summary line; a combined "NEW BEST! FUEL +N" row
+        -- cannot return because newbest_fuel_combined is gone.
         local summaryExtraLine
-        if self.expedition.lastNewBest and fuelBonusLine then
-            summaryExtraLine = i18n.t("newbest_fuel_combined", self.expedition.bankedFuelBonus)
-        elseif self.expedition.lastNewBest then
+        if self.expedition.lastNewBest then
             summaryExtraLine = i18n.t("newbest_label")
         elseif fuelBonusLine then
             summaryExtraLine = fuelBonusLine
