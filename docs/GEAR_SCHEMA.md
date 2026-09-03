@@ -932,6 +932,57 @@ follow-up section immediately below. Shop/checkpoint UI that visually
 surfaces the gear-boosted sample value remains out of this lane's scope
 (`play.lua`).
 
+### Item 7(a) shop-planet purchase wiring
+
+`world.shopPlanet(galaxy)` has generated a deterministic per-galaxy shop-
+planet coordinate since the item 7 data-layer slice, and item 9(c)'s
+`M.buyGear` already lets a player spend money to occupy a hull/engine
+slot — but `M.buyGear` is hard-gated to `run.phase == "settlement"` (the
+Earth shop) and explicitly refuses `galaxyExclusive` parts (item 7(c)'s
+Earth-only exclusion rule). That left item 7(a)'s actual promise — "각
+은하계의 고정 좌표에 존재하는 상점 행성에서 돈으로 구매" — with a real
+world coordinate (`world.shopPlanet`) and a real price/equip mechanism
+(`gearModule.buyPrice`/`M.equipGear`) but literally no run function a
+shop-planet encounter could call: a mid-flight (`ascending`) purchase
+would be refused by `M.buyGear`'s settlement gate, and item 7(a) never
+restricts shop planets to non-exclusive gear the way item 7(c) restricts
+Earth specifically. This was a documented-acquisition-path-with-zero-
+consumers gap, the same class this lane has repeatedly found and closed
+for individual effect types.
+
+New `game/expedition.lua` function `M.buyGearFromShopPlanet(run, category,
+part)`:
+
+- Gated to `run.phase == "ascending"` (a shop planet can only be reached
+  mid-flight) — refuses during `settlement` too, since that is a distinct
+  acquisition path (`M.buyGear`), not an alias for it.
+- Same atomic no-partial-apply contract as `M.buyGear`/`M.sellGear`:
+  returns `true, price` on success or `false, error-message` on failure,
+  never a partial deduction/equip.
+- Uses `M.shopPrice` (so item 14(F) `shopDiscount` gear applies here too)
+  and `M.equipGear` (so hull/engine slot independence and immediate
+  `refreshShipStats` on a purchased `hullDurability` card both carry over
+  unchanged from `M.buyGear`).
+- Unlike `M.buyGear`, does **not** reject `galaxyExclusive` parts — item
+  7(c) only names Earth's exclusion; a shop planet's whole reason to exist
+  per item 7(a) is a physical, in-galaxy location that may legitimately
+  stock that galaxy's own exclusive card.
+
+`game/self_test.lua`'s new `testGearShopPlanetPurchaseWiring` regression-
+checks: refusal outside `ascending` (including during `settlement`,
+proving this is not `M.buyGear` under another name), a successful
+`ascending`-phase purchase with exact price deduction and immediate
+`maxDurability` refresh, insufficient-money refusal without mutation, a
+successful `galaxyExclusive` purchase (the behavioral difference from
+`M.buyGear`), `shopDiscount` gear reducing the price the same way it does
+for `M.buyGear`, and engine-slot purchases staying independent of the
+hull list (item 10).
+
+Still deferred (out of this lane's scope per `loop/PROMPT.md` — requires
+`game/scenes/play.lua`/`game/world.lua` UI): the actual in-flight prompt
+that detects proximity to `world.shopPlanet` and calls
+`M.buyGearFromShopPlanet` with a real card offer.
+
 ### Item 10/14 (B) `sellMultiplier` engine-slot wiring
 
 The category-agnostic coverage slice (`testEngineCardsHaveCategoryAgnosticEffectCoverage`)

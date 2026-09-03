@@ -530,6 +530,49 @@ function M.buyGear(run, category, part)
     return true, price
 end
 
+-- Item 7(a) gap: `world.shopPlanet(galaxy)` has generated a deterministic
+-- per-galaxy shop-planet location since the item 7 data-layer slice, and
+-- `M.buyGear` (item 9(c)) already lets a player spend money to occupy a
+-- slot -- but `M.buyGear` is hard-gated to `run.phase == "settlement"`
+-- (the Earth shop) and explicitly REJECTS `galaxyExclusive` parts (item
+-- 7(c)'s Earth-only exclusion rule). That left item 7(a)'s actual promise
+-- -- "각 은하계의 고정 좌표에 존재하는 상점 행성에서 돈으로 구매" -- with
+-- a real-world coordinate (world.shopPlanet) and a real price/equip
+-- mechanism (gearModule.buyPrice/M.equipGear), but literally NO run
+-- function a shop-planet encounter could call: `buyGear` would refuse both
+-- because a shop-planet purchase happens mid-flight (`ascending`, not
+-- `settlement`) and item 7(a) never says shop planets are limited to
+-- generic (non-exclusive) gear the way Earth is -- only item 7(c) singles
+-- out Earth's restriction. This was a documented-acquisition-path-with-no-
+-- consumer gap, the same class this lane has repeatedly found and closed
+-- for individual effect types.
+--
+-- Same atomic no-partial-apply / phase-gated / M.shopPrice-discounted
+-- contract as `M.buyGear`, but scoped to the in-flight `ascending` phase
+-- (when a shop planet can actually be reached) and, unlike `M.buyGear`,
+-- does NOT reject `galaxyExclusive` parts -- a shop planet's whole reason
+-- to exist per item 7(a) is a physical, in-galaxy location, so it may
+-- legitimately sell that galaxy's own exclusive card. Returns
+-- `true, price` on success or `false, error-message` on failure.
+function M.buyGearFromShopPlanet(run, category, part)
+    if run.phase ~= "ascending" then
+        return false, "buyGearFromShopPlanet: only allowed while in flight (ascending) near a shop planet"
+    end
+    if type(part) ~= "table" then
+        return false, "buyGearFromShopPlanet: part must be a table"
+    end
+    local price = M.shopPrice(run, gearModule.buyPrice(part))
+    if run.money < price then
+        return false, "buyGearFromShopPlanet: not enough money"
+    end
+    local ok, err = M.equipGear(run, category, part)
+    if not ok then
+        return false, err
+    end
+    run.money = run.money - price
+    return true, price
+end
+
 function M.launch(run)
     if run.phase ~= "launch" and run.phase ~= "settlement" and run.phase ~= "destroyed" then return false end
     run.launchBestAltitude = run.bestAltitude
