@@ -1308,5 +1308,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.specimenBannerImage for the new-specimen banner box"
+  },
+  {
+    "path": "assets/effects/settlement_summary_panel.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "cc35832e-d0c9-41e1-8ce5-3c9fcecae12f",
+    "prompt": "pixel art, 16-bit, entire frame filled edge to edge with a dark navy glass UI inset card panel texture for a vertical space roguelite Earth shop settlement summary box, gold amber edge highlight and faint scanlines, metallic UI chrome bezel, no empty margin, no white background, no circle, no icon, no text, no watermark, game UI asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904135,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:43:42Z",
+    "sha256": "6376bfe6718a71c4e7cb7ef06b6a1ef407fb85b385bab35f468fa2260893b26e",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.settlementSummaryPanelImage for the EARTH SHOP settlement summary inner box"
   }
 ]

@@ -1238,6 +1238,21 @@ function M.new(options)
             specimenBannerImage = img
         end
     end
+    -- assets/effects/settlement_summary_panel.png is the ComfyUI-generated
+    -- EARTH SHOP settlement summary inner box (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- specimenBannerImagePath. :draw() stretches it across the summary
+    -- inner box instead of the Lua fill rectangle, and falls back to
+    -- that rectangle when the image failed to load.
+    local settlementSummaryPanelImagePath = "assets/effects/settlement_summary_panel.png"
+    local settlementSummaryPanelImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, settlementSummaryPanelImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            settlementSummaryPanelImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1318,6 +1333,8 @@ function M.new(options)
         slotSpinButtonImagePath = slotSpinButtonImagePath,
         specimenBannerImage = specimenBannerImage,
         specimenBannerImagePath = specimenBannerImagePath,
+        settlementSummaryPanelImage = settlementSummaryPanelImage,
+        settlementSummaryPanelImagePath = settlementSummaryPanelImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3140,8 +3157,15 @@ function M:draw()
         if self.expedition.lastNewBest then
             summaryExtraLine = i18n.t("newbest_label")
         end
-        love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
-        love.graphics.rectangle("fill", 72, 352, viewport.width - 144, 184)
+        if self.settlementSummaryPanelImage then
+            local iw, ih = self.settlementSummaryPanelImage:getDimensions()
+            love.graphics.setColor(1, 1, 1, 0.85)
+            love.graphics.draw(self.settlementSummaryPanelImage, 72, 352, 0,
+                (viewport.width - 144) / iw, 184 / ih)
+        else
+            love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
+            love.graphics.rectangle("fill", 72, 352, viewport.width - 144, 184)
+        end
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 88, 364, viewport.width - 176, "center")

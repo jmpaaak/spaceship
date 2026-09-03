@@ -1846,6 +1846,22 @@ local function testSpecimenBannerSprite()
         "PlayScene must load assets/effects/specimen_banner.png into self.specimenBannerImagePath")
 end
 
+-- EARTH SHOP settlement summary inner box is still a Lua fill rectangle.
+-- Same file-existence + always-set-path pattern as testSpecimenBannerSprite.
+-- Graphics-gated settlementSummaryPanelImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run() stays
+-- under Lua's 60-upvalue cap.
+local function testSettlementSummaryPanelSprite()
+    local path = "assets/effects/settlement_summary_panel.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated settlement summary panel sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.settlementSummaryPanelImagePath == path,
+        "PlayScene must load assets/effects/settlement_summary_panel.png into self.settlementSummaryPanelImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1859,6 +1875,7 @@ local function testCanvasLayoutScale()
     testSlotResultPanelSprite()
     testSlotSpinButtonSprite()
     testSpecimenBannerSprite()
+    testSettlementSummaryPanelSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows
