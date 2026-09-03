@@ -1647,6 +1647,21 @@ local function testMinimapGalaxyPlainSprite()
         "PlayScene must load assets/effects/minimap_galaxy_plain.png into self.galaxyPlainMarkerImagePath")
 end
 
+-- Off-chart Earth-return rim marker is still a Lua filled circle
+-- (markerBeyondRadius). Same file-existence + always-set-path pattern as
+-- testMinimapGalaxyPlainSprite. Graphics-gated earthReturnMarkerImage
+-- cannot be asserted under GAME_HEADLESS=1.
+local function testMinimapEarthReturnSprite()
+    local path = "assets/effects/minimap_earth_return.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated minimap earth-return marker sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.earthReturnMarkerImagePath == path,
+        "PlayScene must load assets/effects/minimap_earth_return.png into self.earthReturnMarkerImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3534,6 +3549,7 @@ function M.run()
     testMinimapEarthSprite()
     testMinimapGalaxyHomeSprite()
     testMinimapGalaxyPlainSprite()
+    testMinimapEarthReturnSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

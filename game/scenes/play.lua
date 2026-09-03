@@ -1044,6 +1044,22 @@ function M.new(options)
             galaxyPlainMarkerImage = img
         end
     end
+    -- assets/effects/minimap_earth_return.png is the ComfyUI-generated
+    -- off-chart Earth-return rim marker (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- galaxyPlainMarkerImagePath. drawMinimap() scales it to
+    -- 2 * minimap.markerBeyondRadius, rotates it toward Earth (sprite
+    -- default is up / -y), and falls back to the Lua filled circle
+    -- when the image failed to load.
+    local earthReturnMarkerImagePath = "assets/effects/minimap_earth_return.png"
+    local earthReturnMarkerImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, earthReturnMarkerImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            earthReturnMarkerImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1098,6 +1114,8 @@ function M.new(options)
         galaxyHomeMarkerImagePath = galaxyHomeMarkerImagePath,
         galaxyPlainMarkerImage = galaxyPlainMarkerImage,
         galaxyPlainMarkerImagePath = galaxyPlainMarkerImagePath,
+        earthReturnMarkerImage = earthReturnMarkerImage,
+        earthReturnMarkerImagePath = earthReturnMarkerImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2302,10 +2320,26 @@ function M:drawMinimap()
         love.graphics.circle("line", cx + view.player.x, cy + view.player.y, minimap.markerPlayerLineRadius)
     end
     if view.beyond then
-        love.graphics.setColor(1, 0.55, 0.3)
         local rim = size / 2 - 5
-        love.graphics.circle("fill", cx + view.returnDx * rim, cy + view.returnDy * rim, minimap.markerBeyondRadius)
+        local tipX = cx + view.returnDx * rim
+        local tipY = cy + view.returnDy * rim
+        if self.earthReturnMarkerImage then
+            local iw, ih = self.earthReturnMarkerImage:getDimensions()
+            local drawSize = minimap.markerBeyondRadius * 2
+            local scale = drawSize / math.max(iw, ih)
+            local rotation = math.atan2(view.returnDx, -view.returnDy)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(
+                self.earthReturnMarkerImage,
+                tipX, tipY, rotation, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: orange filled circle, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.55, 0.3)
+            love.graphics.circle("fill", tipX, tipY, minimap.markerBeyondRadius)
+        end
         local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
+        love.graphics.setColor(1, 0.55, 0.3)
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
     -- docs/feedback/INBOX.md UI 대개편 6건 item 4: always show the ship's
