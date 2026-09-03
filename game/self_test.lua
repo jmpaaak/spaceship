@@ -938,6 +938,16 @@ local function testFuelUpgradeMessagingRemoved()
     i18n.setLocale(savedLocale)
 end
 
+local function testSpecimenSprites()
+    local catalog = world.specimenCatalog()
+    for _, entry in ipairs(catalog) do
+        local path = "assets/sprites/specimens/" .. entry.id .. ".png"
+        local info = love.filesystem.getInfo(path, "file")
+        assert(info ~= nil, "missing AetherAI free-asset specimen sprite for " .. entry.id)
+        assert(info.size > 0)
+    end
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -2652,6 +2662,7 @@ function M.run()
     testSteerSpeedIcon()
     testFuelUpgradeHiddenFromShop()
     testFuelUpgradeMessagingRemoved()
+    testSpecimenSprites()
 
     print("SPACESHIP_UNIT_OK")
 end

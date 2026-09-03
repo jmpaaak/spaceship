@@ -544,6 +544,26 @@ function M.settlementRowBackgroundColor(index)
     return settlementRowBackgroundColors[(index - 1) % #settlementRowBackgroundColors + 1]
 end
 
+local function specimenImagePath(id)
+    return "assets/sprites/specimens/" .. id .. ".png"
+end
+
+local function loadSpecimenImages()
+    local images = {}
+    if not (love and love.graphics and love.graphics.newImage) then
+        return images
+    end
+    for _, entry in ipairs(world.specimenCatalog()) do
+        local path = specimenImagePath(entry.id)
+        local ok, img = pcall(love.graphics.newImage, path)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            images[entry.id] = img
+        end
+    end
+    return images
+end
+
 function M.new(options)
     options = options or {}
     local ship = shipModule.new()
@@ -554,6 +574,7 @@ function M.new(options)
     end
     return setmetatable({
         ship = ship,
+        specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -630,7 +651,15 @@ function M:drawSpecimenStrip(y)
         0, y - 10, viewport.width, "center")
     for i, entry in ipairs(catalog) do
         local x = startX + (i - 1) * (box + gap)
-        if self.collectedSpecimens[entry.id] then
+        local sprite = self.specimenImages and self.specimenImages[entry.id]
+        if sprite then
+            if self.collectedSpecimens[entry.id] then
+                love.graphics.setColor(1, 1, 1, 1)
+            else
+                love.graphics.setColor(1, 1, 1, 0.28)
+            end
+            love.graphics.draw(sprite, x, y, 0, box / sprite:getWidth(), box / sprite:getHeight())
+        elseif self.collectedSpecimens[entry.id] then
             local r, g, b = sampleTierColor(entry.tier)
             love.graphics.setColor(r, g, b, 0.35)
             love.graphics.rectangle("fill", x - 2, y - 2, box + 4, box + 4)

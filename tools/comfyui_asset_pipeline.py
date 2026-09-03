@@ -4,7 +4,7 @@
 This is the ComfyUI-equal-to-AetherAI path documented in
 docs/feedback/INBOX.md and loop/PROMPT.md's "AetherAI-only asset rule"
 (2026-09-03 update). It drives the running ComfyUI instance at
-http://127.0.0.1:8188 with the "base pixel factory" workflow
+http://222.238.86.132:8188 with the "base pixel factory" workflow
 (id 7a3eb820-f17d-47ce-a337-da2358c2a0d5) using stdlib-only HTTP calls
 (no extra pip deps), saves the resulting PNG under assets/, and writes
 a matching docs/assets/MANIFEST.json entry with full provenance
@@ -34,7 +34,7 @@ import urllib.error
 import urllib.request
 import uuid
 
-COMFY_HOST = "http://127.0.0.1:8188"
+COMFY_HOST = "http://222.238.86.132:8188"
 WORKFLOW_ID = "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
 CHECKPOINT = "Juggernaut-XL_v9.safetensors"
 LORA = "RW_pixelart_XL_v1.safetensors"

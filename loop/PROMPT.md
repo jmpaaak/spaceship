@@ -1,20 +1,14 @@
-# LANE SCOPE — econ
+# LANE SCOPE — main
 
-This worktree is one lane of a parallel multi-lane autonomous setup.
-Work ONLY within this scope. Do not touch pending feedback items owned
-by other lanes, and do not edit `docs/feedback/INBOX.md` items outside
-your scope (append-only status notes to your own item are fine).
+This worktree is the main Spaceship autonomous loop
+(`/Users/jm/orca/workspaces/spaceship/main`). Process `docs/feedback/INBOX.md`
+pending items from the top. Do not take over items owned by other lanes:
 
-## Scope for this lane
+- econ lane owns items 7 / 8 / 11 / 15
+- gear lane owns items 13 / 9 / 10 / 12 / 14
 
-이 레인은 오직 다음 INBOX 항목만, 이 순서로 처리한다: 항목7(장비 획득 경로 3원화 -- 상점행성/체크포인트확정드롭/지구상점) -> 항목8(행성탐사=표본만, 정산은 체크포인트/지구에서만) -> 항목11(연료 소진 관련 UI/문구 잔재 전면 제거) -> 항목15(귀환/비행중 슬롯머신 폐지, 지구상점 전용 슬롯머신 은하계별 오즈). 이 레인은 주로 game/world.lua, game/expedition.lua를 수정한다. game/scenes/play.lua의 텍스트/HUD 세부 표현은 메인 레인 담당이므로 최소한의 구조적 변경(신규 화면/버튼 추가 등 불가피한 경우)만 하고 기존 텍스트 정리는 건드리지 않는다. docs/feedback/INBOX.md 처리대기 섹션의 항목7/8/11/15 하위에만 진행상황을 append한다.
-
-## Branch and push discipline
-
-- This lane commits and pushes ONLY to branch `spaceship-econ`. Never push to
-  `main`/`master` directly, never force-push.
-- A separate integration step periodically merges this branch into
-  the base branch after `make verify` passes.
+Everything else — including 「생성 에셋 LLM 비전 검토 제외」 and AetherAI/ComfyUI
+asset work — is this lane. Commit and push to `main` after tests pass.
 
 ---
 
@@ -51,7 +45,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## AetherAI-only asset rule
 
-- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI/API or the local ComfyUI pipeline (`http://127.0.0.1:8188`, workflow IDs `7a3eb820-f17d-47ce-a337-da2358c2a0d5` / `5c257929-dff5-4ef4-bd1e-2c99dbbf3dee`).
+- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI/API or the remote GPU ComfyUI pipeline (`http://222.238.86.132:8188`, workflow IDs `7a3eb820-f17d-47ce-a337-da2358c2a0d5` / `5c257929-dff5-4ef4-bd1e-2c99dbbf3dee`).
 - Never crawl, scrape, macro, or automate the AetherAI website.
 - Never generate final art with Python/Pillow, Lua, another image model, or hand-authored raster scripts.
 - 2026-09-03 update: the user human-gate on final art (waiting for manual AetherAI login/export) is removed. The loop may drive the ComfyUI HTTP API (`/prompt`, `/history`, `/view`) directly and self-judge quality (matches the object's intended silhouette/readability, no artifacts, runtime-legible at actual `1864×860` scale) instead of waiting on a manual approval. AetherAI import remains available whenever credentials appear; ComfyUI is an equally official path, not a fallback that needs later re-approval.
@@ -61,7 +55,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## Safety and scope
 
-- Work only in `/Users/jm/orca/workspaces/interactive-story-game-factory/spaceship`.
+- Work only in `/Users/jm/orca/workspaces/spaceship/main`.
 - Do not access credentials or paid actions.
 - Do not edit or stop the `man-of-korea` loop.
 - Do not claim device QA without an actual device result.

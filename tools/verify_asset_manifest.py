@@ -41,6 +41,9 @@ OFFICIAL_SOURCE_PREFIXES = (
     # (user-approved, human-gate removed) -- its manifest terms_url
     # records the local instance + workflow id instead of a public URL.
     "http://127.0.0.1:8188/",
+    # 2026-09-03: ComfyUI moved to a remote GPU server -- keep both the old
+    # local URL (already-recorded manifest entries) and the new one.
+    "http://222.238.86.132:8188/",
 )
 
 
