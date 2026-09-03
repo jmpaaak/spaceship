@@ -1,7 +1,8 @@
 # STATUS
 
-- (2026-09-03, 이번 사이클) preflight READY. `loop/PROMPT.md`에 지정된 econ 레인 전용 스코프(항목 7, 8, 11, 15)가 이미 완료되어 `docs/feedback/INBOX.md`의 `## 처리 완료` 섹션에 완결 보고되어 있음을 확인했다.
-- 이 사이클에서 코드를 수정하지 않고 `make verify LOVE=/Users/jm/.local/bin/love`를 실행해 전체 빌드, 유닛 테스트, 스모크 테스트, 에셋 출처 검증(AetherAI-only provenance)이 모두 GREEN임을 재확인했다.
-- 다음 슬라이스: 항목 7, 8, 11, 15 코드 레벨 완결 유지. `loop/PROMPT.md`가 새 스코프를 주기 전까지 착수할 신규 항목은 없다. 대기.
+- (2026-09-03, 이번 사이클) preflight READY, `git status --short`는 이 레인 스코프 밖 파일(`loop/env.sh`/`loop/loop.sh`, loop 하네스 설정)만 미커밋 상태였고 `game/world.lua`/`game/expedition.lua`/INBOX 항목 7·8·11·15와는 무관해 손대지 않았다.
+- 코드 참조 재검증: `game/world.lua`/`game/expedition.lua`/`game/scenes/play.lua`/`main.lua`에서 `beginReturn`/`useSlot`/`spinSlot`/`slotButtonState`/`returnControls`/`maneuverFuel`/`burnManeuverFuel`는 오직 "제거됨을 설명하는 주석"으로만 7곳에 남아 있고 실제 코드 참조는 0건임을 grep으로 재확인했다. `shopPlanet`/`genericGearCatalog`/`checkpointSettle`/`exploreCheckpoint`/`buyGear`/`buyEarthGear`/`buyShopGear`는 `game/world.lua`(2)/`game/expedition.lua`(16)에 정상적으로 살아있는 구현으로 존재한다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 재실행: unit/smoke(원본+빌드된 .love)/asset manifest provenance 전부 GREEN(코드 변경 없음, 순수 재확인).
+- 이 레인 스코프(항목7→8→11→15)는 여전히 코드로 완결 가능한 부분을 전부 마친 상태이며 `docs/feedback/INBOX.md`의 `## 처리 완료`에 보고되어 있다. `loop/PROMPT.md`가 새 스코프를 주기 전까지 착수할 신규 항목 없음 — 대기.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
