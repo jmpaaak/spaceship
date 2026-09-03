@@ -1633,5 +1633,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.earthIconImage for EARTH HUD Lua globe octagon"
+  },
+  {
+    "path": "assets/effects/planet_sample.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "3fc38312-4675-4f3e-a561-bd21724379fa",
+    "prompt": "pixel art, 16-bit, small cyan hexagonal crystal gem HUD icon sprite, simple faceted mineral sample, isolated planet sample-value HUD icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904148,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T19:49:23Z",
+    "sha256": "effc7b8d4a59f2ff707dcbd70de33665f33d751f18c136db6e13c88aa1e7e2e6",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.sampleValueIconImage for planet SAMPLE  Lua hexagon crystal"
   }
 ]

@@ -472,6 +472,31 @@ end
 M.earthIconSize = 32
 M.earthIconGap = 16
 
+-- Planet approach SAMPLE $N icon (icon-based HUD simplification
+-- follow-on): pair the cyan sample_value_label readout with a small
+-- hexagonal crystal silhouette, mirroring
+-- coin/shield/speed/distance/best/samples/galaxy/return/earth. Drawn as
+-- a flat hexagon polygon (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally symmetric
+-- around cx, spans above and below cy.
+function M.sampleValueIconPoints(cx, cy, size)
+    local r = size * 0.5
+    return {
+        cx, cy - r,
+        cx + r * 0.70, cy - r * 0.35,
+        cx + r * 0.70, cy + r * 0.35,
+        cx, cy + r,
+        cx - r * 0.70, cy + r * 0.35,
+        cx - r * 0.70, cy - r * 0.35,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the crystal's right
+-- edge and the SAMPLE $N text's left edge. Smaller than HUD icons
+-- because these labels sit next to in-world planets.
+M.sampleValueIconSize = 24
+M.sampleValueIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1589,6 +1614,21 @@ function M.new(options)
             earthIconImage = img
         end
     end
+    -- assets/effects/planet_sample.png is the ComfyUI-generated planet
+    -- approach SAMPLE $N crystal (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- earthIconImagePath. :draw() scales it to M.sampleValueIconSize
+    -- instead of M.sampleValueIconPoints, and falls back to that
+    -- hexagonal crystal polygon when the image failed to load.
+    local sampleValueIconImagePath = "assets/effects/planet_sample.png"
+    local sampleValueIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, sampleValueIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            sampleValueIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1695,6 +1735,8 @@ function M.new(options)
         returnIconImagePath = returnIconImagePath,
         earthIconImage = earthIconImage,
         earthIconImagePath = earthIconImagePath,
+        sampleValueIconImage = sampleValueIconImage,
+        sampleValueIconImagePath = sampleValueIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3211,9 +3253,25 @@ function M:draw()
                 local previewY
                 if risk.sampleLabel then
                     previewY = math.max(48, y - planet.radius - 24)
+                    local sampleTextWidth = font:getWidth(risk.sampleLabel)
+                    local sampleIconSpan = M.sampleValueIconSize + M.sampleValueIconGap
+                    local sampleLabelX = clampLabelX(x, sampleIconSpan + sampleTextWidth, viewport.width)
+                    local sampleIconCenterX = sampleLabelX + M.sampleValueIconSize / 2
+                    local sampleIconCenterY = previewY + font:getHeight() / 2
+                    if self.sampleValueIconImage then
+                        local iw, ih = self.sampleValueIconImage:getDimensions()
+                        local scale = M.sampleValueIconSize / math.max(iw, ih)
+                        love.graphics.setColor(1, 1, 1, 1)
+                        love.graphics.draw(self.sampleValueIconImage, sampleIconCenterX, sampleIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+                    else
+                        -- Fallback: cyan hexagonal crystal, used only when
+                        -- the ComfyUI-generated sprite failed to load.
+                        love.graphics.setColor(0.45, 0.95, 1)
+                        love.graphics.polygon("fill",
+                            M.sampleValueIconPoints(sampleIconCenterX, sampleIconCenterY, M.sampleValueIconSize))
+                    end
                     love.graphics.setColor(0.45, 0.95, 1)
-                    love.graphics.print(risk.sampleLabel,
-                        clampLabelX(x, font:getWidth(risk.sampleLabel), viewport.width), previewY)
+                    love.graphics.print(risk.sampleLabel, sampleLabelX + sampleIconSpan, previewY)
                     previewY = previewY + 11
                 else
                     previewY = math.max(72, y - planet.radius - 12)
