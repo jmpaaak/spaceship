@@ -235,6 +235,33 @@ actual `run` state. This lane's follow-up slice closed that gap within the
   (`play.lua`) and is deferred to a future slice; this only establishes the
   single source of truth a future consumer will read from.
 
+### Engine card content-coverage gap (item 10/14 follow-up slice)
+
+A deeper audit than the existing "every effect type appears somewhere"
+`testGearEffectTypeContentCoverage` check found that 9 of
+`game/data/engine_parts.json`'s 14 cards (`engine_basic_thruster`,
+`engine_afterburner`, `engine_fusion_core`, `engine_azure_coolant_jet`,
+`engine_ember_burst_valve`, `engine_void_phase_thruster`,
+`engine_solar_sail_flap`, `engine_burst_capacitor`,
+`engine_singularity_drive` — every original pre-item-10(b) engine card)
+carried ONLY effect types documented as hull-only-scoped
+(`speed`/`money`/`climbSpeed`/`hullDurability`/`sampleSellValue`, per
+`testGearHullSpeedRunWiring`/`testGearMoneyRunWiring`/
+`testGearHullDurabilityRunWiring`'s explicit "engine-slot part must NOT
+count" regressions and `M.effectiveSampleBonus`'s hull-only scope). Since
+these are the ONLY legal slot for an engine card, equipping any of these 9
+cards had literally zero effect on any run stat — real-looking pool
+content that was actually dead the moment it left the hull card pool's
+shared schema. `game/self_test.lua`'s new
+`testEngineCardsHaveNonHullOnlyEffect` regression-checks that every bundled
+engine card carries at least one effect type outside that hull-only set.
+Fixed by adding a second, engine-scoped effect (mostly `fuelEfficiency` or
+`steeringResponsiveness`, one `boostCharge`) to each of the 9 affected
+cards — their original hull-only-scoped effects stay in place unchanged
+(a card can and often does carry both a dead-in-engine-slot stat for
+flavor/future-hull-reuse and a live engine-scoped one), so no rarity/tag
+balance was altered, only new effects appended.
+
 `game/self_test.lua`'s `testGearPropulsionRunWiring` regression-checks all
 three: an equipped `engine_cryo_fuel_cell` (fuelEfficiency +25) raises
 `launchForecast`'s altitude and matches the expected 25% burn-rate

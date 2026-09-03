@@ -1125,6 +1125,57 @@ local function testGearEffectTypeContentCoverage()
     end
 end
 
+-- Item 10/14 content-coverage gap audit (this lane's recurring "문서-코드
+-- 정합성 감사" pattern applied one level deeper than
+-- testGearEffectTypeContentCoverage above): that test only checks that
+-- every effect TYPE appears somewhere across the two pools combined, but
+-- several run-level wrappers are documented (game/self_test.lua's
+-- testGearHullSpeedRunWiring/testGearMoneyRunWiring and
+-- docs/GEAR_SCHEMA.md) as explicitly HULL-ONLY -- an engine-slot card
+-- carrying `speed`/`money`/`climbSpeed`/`hullDurability`/`sampleSellValue`
+-- (the (A) additive types item 9 scopes to hull "조커형" gear) contributes
+-- NOTHING when equipped in the engine slot. A bundled engine_parts.json
+-- card whose effects are ENTIRELY drawn from that hull-only set is
+-- therefore live-looking schema but dead-in-practice content: a player can
+-- equip it in its only legal slot category and see zero gameplay effect.
+-- Auditing the actual bundled pool finds 9 of engine_parts.json's 14 cards
+-- in exactly this state (engine_basic_thruster, engine_afterburner,
+-- engine_fusion_core, engine_azure_coolant_jet, engine_ember_burst_valve,
+-- engine_void_phase_thruster, engine_solar_sail_flap,
+-- engine_burst_capacitor, engine_singularity_drive) -- every single one of
+-- the original pre-item-10(b) engine cards, none of which ever got a (G)
+-- propulsion-specialization or category-agnostic (C)/(E) effect added
+-- alongside their hull-only-scoped stats.
+local function testEngineCardsHaveNonHullOnlyEffect()
+    -- The (A) additive types with documented hull-only run-scope (per
+    -- testGearHullDurabilityRunWiring/testGearHullSpeedRunWiring/
+    -- testGearMoneyRunWiring/testGearRunWiring's climbSpeed synergy scope
+    -- and testGearSurvivalAndEconomyWiring's sampleSellValue scope).
+    local hullOnlyTypes = {
+        speed = true, money = true, climbSpeed = true,
+        hullDurability = true, sampleSellValue = true,
+    }
+    local enginePool = gear.loadEngineParts()
+    local deadCards = {}
+    for _, part in ipairs(enginePool) do
+        local hasNonHullOnlyEffect = false
+        for _, effect in ipairs(part.effects) do
+            if not hullOnlyTypes[effect.type] then
+                hasNonHullOnlyEffect = true
+                break
+            end
+        end
+        if not hasNonHullOnlyEffect then
+            deadCards[#deadCards + 1] = part.id
+        end
+    end
+    assert(#deadCards == 0,
+        "every bundled engine_parts.json card must carry at least one effect type that is NOT " ..
+        "hull-only-scoped (speed/money/climbSpeed/hullDurability/sampleSellValue), otherwise the " ..
+        "card contributes nothing when equipped in its only legal (engine) slot; dead cards: " ..
+        table.concat(deadCards, ", "))
+end
+
 -- Minimal game wiring for items 9/10/13 ("최소한의 로더 호출 추가는 예외로
 -- 허용"): expedition.lua now owns a run.gearLoadout (hull + engine slot
 -- lists via engine_parts.lua) and applies the item 9 climbSpeed synergy
@@ -3783,6 +3834,7 @@ function M.run()
     testGearEffectSchemaExpansion()
     testEnginePropulsionSpecialization()
     testGearEffectTypeContentCoverage()
+    testEngineCardsHaveNonHullOnlyEffect()
     testGearRunWiring()
     testGearPropulsionRunWiring()
     testGearSurvivalAndEconomyWiring()

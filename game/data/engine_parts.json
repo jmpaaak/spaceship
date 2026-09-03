@@ -10,7 +10,8 @@
       "tags": ["speed"],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 3 }
+        { "type": "speed", "value": 3 },
+        { "type": "steeringResponsiveness", "value": 5 }
       ]
     },
     {
@@ -22,7 +23,8 @@
       "tags": ["speed", "altitude"],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 6 }
+        { "type": "climbSpeed", "value": 6 },
+        { "type": "fuelEfficiency", "value": 10 }
       ]
     },
     {
@@ -48,7 +50,8 @@
       "editions": ["irradiated", "crystallized"],
       "effects": [
         { "type": "climbSpeed", "value": 8 },
-        { "type": "money", "value": 5 }
+        { "type": "money", "value": 5 },
+        { "type": "fuelEfficiency", "value": 15 }
       ]
     },
     {
@@ -87,7 +90,8 @@
       "tags": ["azure", "speed"],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 5 }
+        { "type": "speed", "value": 5 },
+        { "type": "fuelEfficiency", "value": 12 }
       ]
     },
     {
@@ -99,7 +103,8 @@
       "tags": ["ember", "altitude"],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 5 }
+        { "type": "climbSpeed", "value": 5 },
+        { "type": "steeringResponsiveness", "value": 8 }
       ]
     },
     {
@@ -112,7 +117,8 @@
       "editions": [],
       "effects": [
         { "type": "climbSpeed", "value": 6 },
-        { "type": "speed", "value": 3 }
+        { "type": "speed", "value": 3 },
+        { "type": "steeringResponsiveness", "value": 12 }
       ]
     },
     {
@@ -125,7 +131,8 @@
       "editions": [],
       "effects": [
         { "type": "climbSpeed", "value": 2 },
-        { "type": "money", "value": 1 }
+        { "type": "money", "value": 1 },
+        { "type": "fuelEfficiency", "value": 8 }
       ]
     },
     {
@@ -137,7 +144,8 @@
       "tags": ["speed", "control"],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 6 }
+        { "type": "speed", "value": 6 },
+        { "type": "boostCharge", "value": 1 }
       ]
     },
     {
@@ -151,7 +159,9 @@
       "effects": [
         { "type": "climbSpeed", "value": 12 },
         { "type": "speed", "value": 6 },
-        { "type": "money", "value": 4 }
+        { "type": "money", "value": 4 },
+        { "type": "fuelEfficiency", "value": 20 },
+        { "type": "steeringResponsiveness", "value": 15 }
       ]
     },
     {
