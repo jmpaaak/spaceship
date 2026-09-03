@@ -836,9 +836,28 @@ end
 -- item 9 explicitly scopes the tag-synergy combo multiplier to hull
 -- ("선체(조커형)") parts only; engine climbSpeed stacks alongside the
 -- hull synergy-multiplied total rather than being folded into it.
+-- Item 9/10 gap wiring: hull-slot climbSpeed already goes through
+-- gearModule.equippedTotals, which applies item 9's tag-synergy multiplier
+-- (gearModule.tagSynergyMultiplier -- two equipped parts sharing a synergy
+-- tag multiply their combined contribution beyond a flat sum, item 12's
+-- "irradiated" edition amplifies that multiplier further). The engine-slot
+-- climbSpeed total, however, used to go through a plain
+-- gearModule.aggregateEffects call with no synergy pass at all -- two
+-- engine-slot cards sharing a tag (e.g. bundled engine_fusion_core, an
+-- "irradiated" edition candidate specifically for its synergy amplification)
+-- got zero combo bonus between themselves, and the irradiated edition could
+-- never have any observable effect when rolled on an engine card. Engine
+-- climbSpeed now runs through the SAME tagSynergyMultiplier (scoped to the
+-- engine-slot list only, so hull and engine synergy pairs never cross-
+-- contaminate each other -- a hull/engine pair sharing a tag still
+-- contributes nothing, matching item 10(a)'s slot-category independence),
+-- mirroring gearModule.equippedTotals's own multiply-only-climbSpeed shape
+-- without pulling in equippedTotals's other hull-only totals.
 function M.effectiveClimbSpeed(run)
     local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
-    local engineClimb = gearModule.aggregateEffects(run.equippedEngineParts or {}).climbSpeed or 0
+    local engineParts = run.equippedEngineParts or {}
+    local engineClimbRaw = gearModule.aggregateEffects(engineParts).climbSpeed or 0
+    local engineClimb = engineClimbRaw * gearModule.tagSynergyMultiplier(engineParts)
     return run.climbSpeed + (gearTotals.climbSpeed or 0) + engineClimb
 end
 

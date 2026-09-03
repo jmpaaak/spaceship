@@ -1397,3 +1397,60 @@ itself is unchanged (no code fix needed — this was purely a content-density
 gap, the hashing/selection logic was already correct once given more than
 one candidate to choose from).
 
+### Item 9/10: engine-slot climbSpeed never received item 9's tag-synergy multiplier
+
+`expedition.effectiveClimbSpeed(run)` has applied item 9's tag-synergy
+multiplier (`gear.equippedTotals` → `gear.tagSynergyMultiplier`) to the
+HULL climbSpeed total since the very first item 9 slice, and item 12's
+"irradiated" edition amplifies that multiplier further when equipped
+(`gear.editionSynergyBonusAdd`). But when the item 10(b)/9 "engine-slot
+climbSpeed run wiring" slice added the engine slot's own climbSpeed
+contribution, it summed that total with a plain `gear.aggregateEffects`
+call — never once invoking `tagSynergyMultiplier` at all. Auditing every
+caller of `tagSynergyMultiplier`/`equippedTotals` against
+`run.equippedEngineParts` found two live consequences: (1) two engine-slot
+cards sharing a synergy tag (item 10(b) explicitly says engine parts carry
+their own synergy tags too, e.g. bundled `engine_fusion_core`'s
+`altitude`/`economy` tags) got exactly zero combo bonus between themselves,
+unlike the identical situation on the hull side; (2) `engine_fusion_core`
+lists `irradiated` as a candidate edition specifically for its synergy
+amplification, but since engine-slot synergy was never computed at all,
+rolling `irradiated` on that card could never have any observable effect —
+the same "documented mechanism with zero actual effect for a specific
+card/slot" class of gap this lane has repeatedly found and closed
+(hullDurability/speed/money/sampleSellValue run-wiring, irradiated hull
+synergy, quantum_flawed engine drawback, noSlotCost engine slots), just
+found one slot category further this time.
+
+- `expedition.effectiveClimbSpeed(run)` now multiplies the engine-slot
+  climbSpeed additive total by `gear.tagSynergyMultiplier(engineParts)`
+  (scoped strictly to the engine-slot list, mirroring how the hull side is
+  scoped strictly to `run.equippedGear` via `equippedTotals`) — a hull card
+  and an engine card sharing a tag still contribute zero synergy to each
+  other, preserving item 10(a)'s slot-category independence; only pairs
+  *within* the same slot category synergize.
+- No code change was needed in `game/gear.lua` — `tagSynergyMultiplier` was
+  already a plain function over any list of parts (hull or engine); the gap
+  was purely in `expedition.lua` never calling it for the engine list.
+- `game/self_test.lua`'s new `testGearEngineSynergyMultiplierWiring()`
+  covers (RED confirmed: two engine-tag-sharing climbSpeed cards summed to
+  a plain flat 40 instead of the synergy-multiplied 41.5 before the fix):
+  two engine-slot parts sharing a tag produce a synergy-multiplied
+  `effectiveClimbSpeed` strictly greater than the flat additive sum; two
+  engine-slot parts with NO shared tag stay a plain sum (regression guard);
+  and the bundled `engine_fusion_core` with the `irradiated` edition applied
+  and paired with another altitude-tagged engine card yields a strictly
+  higher `effectiveClimbSpeed` than the identical pairing without the
+  edition, proving the live drop path (`gear.rollEdition` /
+  `expedition.rollGearOffer`) can now actually reach this amplification.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN
+  (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3,
+  `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- Changed files: `game/expedition.lua`, `game/self_test.lua`, this doc,
+  `docs/STATUS.md`, `docs/feedback/INBOX.md`. `git status --short` confirms
+  `play.lua`/`i18n.lua`/`world.lua`/`game/gear.lua`/`game/engine_parts.lua`
+  were not touched — `game/expedition.lua`'s change is exactly the loader/
+  run-wiring call this lane's `loop/PROMPT.md` exception permits (wiring an
+  already-existing `game/gear.lua` pure function into run consumption, no
+  new gameplay mechanic added).
+
