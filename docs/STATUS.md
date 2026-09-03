@@ -480,5 +480,17 @@
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
 - `git status --short`가 `game/data/hull_parts.json`/`game/expedition.lua`/`game/gear.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
 - `docs/feedback/INBOX.md`의 항목 14 하위에 처리 상황을 append했다.
-- **이제 항목14의 (A)~(G) 전체 효과 타입이 최소 1개 실제 run-level 소비자를 갖는다** — 항목13→9→10→12→14 레인 스코프의 순수 함수/데이터/기본 run 배선 레이어가 사실상 완료된 상태다.
-- 다음 사이클 다음 슬라이스: 항목9(c)(슬롯 수 유지하되 카드 획득/교체가 잦아지는 루프 설계) 또는 항목10(c)/항목7(획득 경로 3원화 — 상점 행성 구매/체크포인트 확정 드롭/지구 상점 범용 구매) 중 우선순위에 따라 선택. 두 항목 모두 `game/world.lua`의 상점 행성 결정론적 좌표 생성이나 `play.lua`의 실제 장착/구매 UI가 필요해 이 레인의 "최소 로더 호출" 예외 범위를 넘어설 가능성이 높다 — 다음 사이클에서는 순수 함수/데이터 계층에서 준비 가능한 부분(예: 상점 행성 좌표 생성 함수 자체, 또는 여전히 미착수인 chainTrigger/rerollBonus/detectionRadius/autoCollect의 실제 게임플레이 소비 로직 설계)부터 검토가 필요하다.
+- **이제 항목14의 (A)~(G) 전 효과 타입이 최소 1개 실제 run-level 소비자를 갖는다** — 항목13→9→10→12→14 레인 스코프의 순수 함수/데이터/기본 run 배선 레이어가 사실상 완료된 상태다.
+
+## [gear 레인] 항목14 효과 타입 콘텐츠 커버리지 — 카드 없이 방치되던 7개 타입에 실제 카드 추가 (완료, 2026-09-03)
+
+이 레인(`spaceship-gear` 브랜치)이 지정받은 항목13→9→10→12→14가 이미 1차 완료된 상태에서, `docs/STATUS.md`/`docs/GEAR_SCHEMA.md`가 항목14의 A~G 전 효과 타입이 "최소 1개 실제 run-level 소비자"를 갖는다고 문서화해 왔으나, 이는 소비 *함수*(예: `expedition.detectionRadius`)가 존재한다는 뜻일 뿐 실제 번들 카드 데이터(`game/data/hull_parts.json`/`engine_parts.json`)가 그 타입을 사용하는 카드를 하나라도 포함하는지는 검증한 적이 없었다는 gap을 발견하고 처리했다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- 감사 결과: `sellMultiplier`/`luck`/`chainTrigger`/`rerollBonus`/`collisionRadius`/`detectionRadius`/`autoCollect` 7개 효과 타입이 run-level 배선 함수는 모두 존재하지만 실제 번들 카드 풀(선체 27종 + 엔진 14종) 어디에도 사용되지 않아, 플레이어가 실제 플레이에서 절대 마주칠 수 없는 죽은 콘텐츠였다.
+- `game/self_test.lua`의 신규 `testGearEffectTypeContentCoverage()`가 항목10(b)의 `testEnginePropulsionSpecialization()`이 (G) 3종에만 적용하던 "번들 풀이 실제로 이 타입을 사용해야 한다" 패턴을 `gear.knownEffectTypes` 전체로 일반화한다 — 두 풀을 로드해 등장하는 모든 effect type의 합집합을 구하고, 알려진 모든 타입이 최소 1회 등장하는지 검증한다(RED 확인: `effect type 'detectionRadius' must be used by at least one bundled hull/engine part` 실패 후 데이터 추가, GREEN 전환).
+- `game/data/hull_parts.json`에 7종 신규 선체 카드를 추가했다(누락 타입당 1장): `hull_market_broker`(sellMultiplier +20%), `hull_lucky_charm`(luck +15), `hull_echo_relay`(chainTrigger +1), `hull_negotiator_chip`(rerollBonus +2), `hull_slipstream_hull`(collisionRadius -15%), `hull_scanner_array`(detectionRadius +25%), `hull_collector_drone`(autoCollect). 기존 태그 관례(economy/control/defense/speed/void)를 유지해 항목9의 태그 시너지 엔진과 그대로 호환된다. 선체 풀이 27종에서 34종으로 확장(엔진 풀은 14종 그대로).
+- `docs/GEAR_SCHEMA.md`에 "Item 14: effect-type content coverage" 섹션을 신규 추가했다.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/data/hull_parts.json`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 전혀 건드리지 않았다(순수 데이터 + 테스트 슬라이스).
+- 이로써 항목14의 A~G 전 효과 타입이 (1) 스키마 등록, (2) run-level 소비 함수, (3) 실제 번들 카드에서의 사용, 세 층위 모두를 갖춘 상태가 되었다.
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점/체크포인트 UI는 다른 레인 담당이라 순수 함수/데이터 계층에서 준비 가능한 부분만) 검토, 또는 신규 카드들의 실제 게임플레이 소비 지점(collisionRadius/detectionRadius를 minimap.lua/충돌판정에 연결 등, `play.lua`/`world.lua`/`minimap.lua` 담당이라 다른 레인 소관)은 이 레인 스코프 밖으로 명시.

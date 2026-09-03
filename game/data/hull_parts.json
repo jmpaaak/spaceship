@@ -335,6 +335,90 @@
       "effects": [
         { "type": "streakMultiplier", "value": 10 }
       ]
+    },
+    {
+      "id": "hull_market_broker",
+      "name": "Market Broker",
+      "nameKo": "시세 중개기",
+      "icon": "◈",
+      "rarity": "uncommon",
+      "tags": ["economy"],
+      "editions": [],
+      "effects": [
+        { "type": "sellMultiplier", "value": 20 }
+      ]
+    },
+    {
+      "id": "hull_lucky_charm",
+      "name": "Lucky Charm",
+      "nameKo": "행운의 부적",
+      "icon": "✦",
+      "rarity": "rare",
+      "tags": ["control", "void"],
+      "editions": [],
+      "effects": [
+        { "type": "luck", "value": 15 }
+      ]
+    },
+    {
+      "id": "hull_echo_relay",
+      "name": "Echo Relay",
+      "nameKo": "에코 릴레이",
+      "icon": "◎",
+      "rarity": "rare",
+      "tags": ["control", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "chainTrigger", "value": 1 }
+      ]
+    },
+    {
+      "id": "hull_negotiator_chip",
+      "name": "Negotiator Chip",
+      "nameKo": "협상 칩",
+      "icon": "◫",
+      "rarity": "uncommon",
+      "tags": ["economy", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "rerollBonus", "value": 2 }
+      ]
+    },
+    {
+      "id": "hull_slipstream_hull",
+      "name": "Slipstream Hull",
+      "nameKo": "슬립스트림 선체",
+      "icon": "◔",
+      "rarity": "uncommon",
+      "tags": ["defense", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "collisionRadius", "value": 15 }
+      ]
+    },
+    {
+      "id": "hull_scanner_array",
+      "name": "Scanner Array",
+      "nameKo": "스캐너 배열",
+      "icon": "◍",
+      "rarity": "common",
+      "tags": ["control"],
+      "editions": [],
+      "effects": [
+        { "type": "detectionRadius", "value": 25 }
+      ]
+    },
+    {
+      "id": "hull_collector_drone",
+      "name": "Collector Drone",
+      "nameKo": "수집 드론",
+      "icon": "◉",
+      "rarity": "rare",
+      "tags": ["economy", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "autoCollect", "value": 1 }
+      ]
     }
   ]
 }

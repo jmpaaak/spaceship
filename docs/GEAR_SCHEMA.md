@@ -668,4 +668,41 @@ metadata across items 9/10/12/13/14 in this lane's scope.
   `play.lua`/`i18n.lua`/`world.lua` were not touched, matching this
   lane's scope in `loop/PROMPT.md`.
 
+### Item 14: effect-type content coverage — every A~G type now has a real card
+
+Prior slices gave every effect type (A~G) a *run-level consumer function*
+(e.g. `expedition.detectionRadius`, `expedition.chainTriggerCount`), but
+`docs/STATUS.md` never actually checked whether the *shipped card data*
+(`game/data/hull_parts.json` / `engine_parts.json`) contained a card using
+each type. Auditing the bundled pools found seven effect types with a fully
+working run-wiring path but **zero cards in either pool that could ever
+trigger them**: `sellMultiplier`, `luck`, `chainTrigger`, `rerollBonus`,
+`collisionRadius`, `detectionRadius`, `autoCollect`. A player could never
+encounter these mechanics in actual play no matter what they equipped.
+
+- `game/self_test.lua`'s new `testGearEffectTypeContentCoverage()`
+  generalizes the existing (G)-specific "bundled pool must actually use
+  this type" pattern (`testEnginePropulsionSpecialization`) to the full
+  `gear.knownEffectTypes` set: it loads both bundled pools, unions every
+  effect type actually present across all cards, and asserts every known
+  type appears at least once. RED confirmed
+  (`effect type 'detectionRadius' must be used by at least one bundled
+  hull/engine part`) before the data fix.
+- `game/data/hull_parts.json` gained 7 new hull cards, one per previously-
+  uncovered type: `hull_market_broker` (sellMultiplier +20%),
+  `hull_lucky_charm` (luck +15), `hull_echo_relay` (chainTrigger +1),
+  `hull_negotiator_chip` (rerollBonus +2), `hull_slipstream_hull`
+  (collisionRadius -15%), `hull_scanner_array` (detectionRadius +25%),
+  `hull_collector_drone` (autoCollect). Each keeps existing tag-synergy
+  conventions (economy/control/defense/speed/void families) so they
+  compose with the item 9 synergy engine like any other card. Hull pool
+  is now 34 cards (was 27); engine pool unchanged at 14.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` both GREEN
+  after the data addition.
+- Changed files: `game/data/hull_parts.json`, `game/self_test.lua`, this
+  doc, `docs/STATUS.md`, `docs/feedback/INBOX.md`. `git status --short`
+  confirms `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`
+  were not touched — this slice was pure data + a new regression test.
+
+
 
