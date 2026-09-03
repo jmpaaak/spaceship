@@ -965,6 +965,22 @@ function M.new(options)
             checkpointArrowImage = img
         end
     end
+    -- assets/effects/minimap_player.png is the ComfyUI-generated
+    -- you-are-here player location marker (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- checkpointArrowImagePath. drawMinimap() scales it to
+    -- 2 * minimap.markerPlayerLineRadius instead of the Lua filled
+    -- circle + outline, and falls back to those circles when the
+    -- image failed to load.
+    local playerMarkerImagePath = "assets/effects/minimap_player.png"
+    local playerMarkerImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, playerMarkerImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            playerMarkerImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1009,6 +1025,8 @@ function M.new(options)
         checkpointStarImagePath = checkpointStarImagePath,
         checkpointArrowImage = checkpointArrowImage,
         checkpointArrowImagePath = checkpointArrowImagePath,
+        playerMarkerImage = playerMarkerImage,
+        playerMarkerImagePath = playerMarkerImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2148,10 +2166,22 @@ function M:drawMinimap()
     end
     love.graphics.setColor(0.3, 0.85, 1)
     love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius)
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, minimap.markerPlayerFillRadius)
-    love.graphics.setColor(1, 1, 1, 0.9)
-    love.graphics.circle("line", cx + view.player.x, cy + view.player.y, minimap.markerPlayerLineRadius)
+    if self.playerMarkerImage then
+        local iw, ih = self.playerMarkerImage:getDimensions()
+        local drawSize = minimap.markerPlayerLineRadius * 2
+        local scale = drawSize / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(
+            self.playerMarkerImage,
+            cx + view.player.x, cy + view.player.y, 0, scale, scale, iw / 2, ih / 2)
+    else
+        -- Fallback: white filled circle + outline, used only when the
+        -- ComfyUI-generated sprite failed to load.
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, minimap.markerPlayerFillRadius)
+        love.graphics.setColor(1, 1, 1, 0.9)
+        love.graphics.circle("line", cx + view.player.x, cy + view.player.y, minimap.markerPlayerLineRadius)
+    end
     if view.beyond then
         love.graphics.setColor(1, 0.55, 0.3)
         local rim = size / 2 - 5
