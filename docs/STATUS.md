@@ -17,7 +17,11 @@
 - `GAME_HEADLESS=1 GAME_CAPTURE=1 GAME_CAPTURE_PHASE=return-to-earth GAME_LOCALE=ko` 실제 LÖVE 런타임 캡처(1080×1920)를 vision으로 확인했다 — "정산 +$75  잔액 $75", "지구 상점" 화면이 크래시나 에러 텍스트 없이 정상 렌더링되고, returning 전용 UI(슬롯 릴, 조이스틱 하강 등) 잔재가 전혀 보이지 않음을 확인했다. (화면에 여전히 보이는 "도달예상 600 슬롯 6" 등 텍스트는 항목 11(a)/6의 몫이며 play.lua 텍스트 세부는 메인 레인 담당이라 이 슬라이스에서 손대지 않았다.)
 - `GAME_HEADLESS=1 GAME_UNIT=1 love .`, `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
 - 이로써 이 레인의 스코프 순서(항목7→8→11→15) 4개 항목이 모두 완료되었다: 항목7(a/b/c), 항목8, 항목11(b/c 완료, a는 메인 레인 조율 필요 텍스트 영역), 항목15(a/b/c). `docs/feedback/INBOX.md` 처리대기 항목 15 하위에 이번 슬라이스 진행 상황을 append하고, 항목 15 전체를 처리완료로 이동했다.
-- 다음 사이클 다음 슬라이스: 이 레인의 지정된 4개 항목(7/8/11/15)이 모두 완료되어, `loop/PROMPT.md`의 레인 스코프에 명시된 작업이 소진되었다. 다음 사이클은 `loop/PROMPT.md` 갱신(다른 미해결 pending 항목으로 스코프 재배정) 또는 사용자 확인을 대기해야 한다 — 이 레인 스코프 밖의 새 항목을 임의로 착수하지 않는다.
+다음 사이클 다음 슬라이스: 이 레인의 지정된 4개 항목(7/8/11/15)이 모두 완료되어, `loop/PROMPT.md`의 레인 스코프에 명시된 작업이 소진되었다. 다음 사이클은 `loop/PROMPT.md` 갱신(다른 미해결 pending 항목으로 스코프 재배정) 또는 사용자 확인을 대기해야 한다 — 이 레인 스코프 밖의 새 항목을 임의로 착수하지 않는다.
+
+## (병합 메모, 2026-09-03) origin/spaceship-econ의 항목 15(a) 회귀 안전망 커밋(1e2778b) 흡수
+
+원격에 이미 푸시되어 있던 `1e2778b`(항목 15(a) 회귀 안전망 — `keypressed`가 옛 `beginReturn`/`\"returning\"` 페이즈로 절대 진입하지 않음을 고정하는 `testReturningPhaseUnreachableFromKeypressed()` 추가)는 이 병합 시점에는 이미 이번 사이클이 옛 `beginReturn`/`\"returning\"`/`useSlot`/`spinSlot` API 자체를 완전히 삭제했으므로 그 테스트가 참조하던 `expedition.beginReturn(...)` 호출이 더 이상 존재하지 않는 API를 가리키게 되어 그대로는 적용할 수 없었다. 안전망이 검증했던 불변조건(실제 플레이 `keypressed` 경로가 옛 `\"returning\"` 페이즈에 진입할 수 없다) 자체는 이제 `expedition.beginReturn == nil`이 되어 더 강하게(진입이 아예 불가능한 수준으로) 성립하므로, 별도 테스트 없이도 이미 만족된 상태다. `game/self_test.lua` 병합에서 이 안전망 테스트 블록은 제거하고 기존 삭제-완료 상태(HEAD)를 유지했다.
 
 ## 항목 7(c) UI 연결 — EARTH SHOP 범용 장비 구매 경로를 "n" 키로 실제 플레이에 연결 (완료, 2026-09-03)
 
