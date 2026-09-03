@@ -1061,6 +1061,32 @@ local function testBackgroundSprite()
         "PlayScene must load assets/backgrounds/deep_space_tile.png into self.backgroundImagePath")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목: ComfyUI로 실제 에셋 작업 진행 --
+-- next slice after ship/planet/earth/effect/background: the returning-phase
+-- slot machine reel (COMET/PLANET/STAR) is still plain text
+-- (table.concat(reels, "  ")), not a ComfyUI-generated icon, even though the
+-- AetherAI-only asset rule explicitly lists "slot symbols" among the
+-- required final visuals. Mirror testShipSprite/testBackgroundSprite:
+-- verify all three symbol files exist AND PlayScene.new() records them as
+-- self.slotSymbolImagePaths[symbol] (the load target :draw() actually uses
+-- whenever love.graphics is available).
+local function testSlotSymbolSprites()
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    local expected = {
+        COMET = "assets/slot_symbols/comet.png",
+        PLANET = "assets/slot_symbols/planet.png",
+        STAR = "assets/slot_symbols/star.png",
+    }
+    for symbol, path in pairs(expected) do
+        local info = love.filesystem.getInfo(path, "file")
+        assert(info ~= nil, "missing ComfyUI-generated slot symbol sprite at " .. path)
+        assert(info.size > 0)
+        assert(scene.slotSymbolImagePaths and scene.slotSymbolImagePaths[symbol] == path,
+            "PlayScene must load " .. path .. " into self.slotSymbolImagePaths." .. symbol)
+    end
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -2839,6 +2865,7 @@ function M.run()
     testEarthSprite()
     testSampleEffectSprite()
     testBackgroundSprite()
+    testSlotSymbolSprites()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

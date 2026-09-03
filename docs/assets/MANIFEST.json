@@ -283,5 +283,80 @@
     "width": 128,
     "height": 128,
     "qa": "deterministic pixel/connected-component silhouette analysis pending wiring"
+  },
+  {
+    "path": "assets/slot_symbols/comet.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "e34211b9-f90d-4c7e-b8e0-76c4c48181e8",
+    "prompt": "pixel art, 16-bit, small icon of a bright blue-white comet with a glowing tail, slot machine reel symbol, crisp clean silhouette, solid white background, no text, no watermark, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260903701,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T11:52:57Z",
+    "sha256": "2ac41abfa940ffb4b4ddd6d7f8a585efcc3f9f93b3ebfeb8c98f92c1bef18cc3",
+    "width": 64,
+    "height": 64,
+    "qa": "slot machine reel symbol icon, runtime placement pending"
+  },
+  {
+    "path": "assets/slot_symbols/planet.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "b70c91e6-faae-45e0-9ad5-3ea745aa5e6b",
+    "prompt": "pixel art, 16-bit, small icon of a colorful ringed alien planet, slot machine reel symbol, crisp clean circular silhouette, solid white background, no text, no watermark, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260903702,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T11:53:51Z",
+    "sha256": "ec31f96a92b2974f24cd8920255c98bb96098e2ff433bf73a31425015cb5ffdf",
+    "width": 64,
+    "height": 64,
+    "qa": "slot machine reel symbol icon, runtime placement pending"
+  },
+  {
+    "path": "assets/slot_symbols/star.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "49da0fec-d338-49a4-ab42-290915cb6dbf",
+    "prompt": "pixel art, 16-bit, small icon of a bright golden sparkling shooting star, slot machine jackpot reel symbol, crisp clean silhouette, solid white background, no text, no watermark, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260903703,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T11:54:40Z",
+    "sha256": "f2f4f42dcafe544f4b75a73ef9af03ec009ac6d8138f66dbd55f8a4c21dda4bc",
+    "width": 64,
+    "height": 64,
+    "qa": "slot machine jackpot reel symbol icon, runtime placement pending"
   }
 ]

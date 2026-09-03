@@ -650,6 +650,29 @@ function M.new(options)
             backgroundImage = img
         end
     end
+    -- assets/slot_symbols/{comet,planet,star}.png are the ComfyUI-generated
+    -- returning-phase slot-machine reel icons (docs/GENERATED_ASSET_LOG.md).
+    -- slotSymbolImagePaths is always fully populated (even under
+    -- GAME_HEADLESS=1) so engine-hosted tests can verify the wiring;
+    -- slotSymbolImages holds the actual drawable Image objects :draw() uses
+    -- instead of the plain "COMET  PLANET  STAR" text reel, falling back to
+    -- text whenever an image failed to load (same fallback pattern as
+    -- ship/planet/earth/effect/background above).
+    local slotSymbolImagePaths = {
+        COMET = "assets/slot_symbols/comet.png",
+        PLANET = "assets/slot_symbols/planet.png",
+        STAR = "assets/slot_symbols/star.png",
+    }
+    local slotSymbolImages = {}
+    if love.graphics and love.graphics.newImage then
+        for symbol, path in pairs(slotSymbolImagePaths) do
+            local ok, img = pcall(love.graphics.newImage, path)
+            if ok and img then
+                img:setFilter("nearest", "nearest")
+                slotSymbolImages[symbol] = img
+            end
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -662,6 +685,8 @@ function M.new(options)
         backgroundImagePath = backgroundImagePath,
         sampleEffectImage = sampleEffectImage,
         sampleEffectImagePath = sampleEffectImagePath,
+        slotSymbolImages = slotSymbolImages,
+        slotSymbolImagePaths = slotSymbolImagePaths,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
@@ -1039,6 +1064,32 @@ function M:currentSlotReels()
         end
     end
     return reels
+end
+
+-- docs/feedback/INBOX.md 처리대기 항목 "ComfyUI로 실제 에셋 작업 진행": draws
+-- the returning-phase slot-machine reel using the ComfyUI-generated
+-- comet/planet/star icons (self.slotSymbolImages) instead of the plain
+-- "COMET  PLANET  STAR" text row, falling back to text per-symbol whenever
+-- an icon failed to load (same fallback pattern as ship/planet/earth
+-- sprites elsewhere in this file). (boxX, boxY, boxW) matches the same
+-- printf box the old text reel used so callers don't need to change.
+local slotReelIconSize = 48
+function M:drawSlotReel(symbols, boxX, boxY, boxW)
+    local gap = 16
+    local totalWidth = #symbols * slotReelIconSize + (#symbols - 1) * gap
+    local startX = boxX + math.floor((boxW - totalWidth) / 2)
+    for i, symbol in ipairs(symbols) do
+        local x = startX + (i - 1) * (slotReelIconSize + gap)
+        local image = self.slotSymbolImages and self.slotSymbolImages[symbol]
+        if image then
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(image, x, boxY, 0,
+                slotReelIconSize / image:getWidth(), slotReelIconSize / image:getHeight())
+        else
+            love.graphics.setColor(0.85, 0.95, 1)
+            love.graphics.printf(symbol, x - 20, boxY + slotReelIconSize / 2 - 6, slotReelIconSize + 40, "center")
+        end
+    end
 end
 
 function M:steeringButtonState()
@@ -2320,15 +2371,13 @@ function M:draw()
         if self.slotSpin then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
             love.graphics.rectangle("fill", 72, 840, 576, 136)
-            love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(table.concat(self:currentSlotReels(), "  "), 80, 864, 560, "center")
+            self:drawSlotReel(self:currentSlotReels(), 80, 864, 560)
             love.graphics.setColor(1, 0.8, 0.3)
             love.graphics.printf(i18n.t("spinning_label"), 80, 924, 560, "center")
         elseif self.expedition.lastSlotSymbols then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
             love.graphics.rectangle("fill", 72, 840, 576, 136)
-            love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 80, 864, 560, "center")
+            self:drawSlotReel(self.expedition.lastSlotSymbols, 80, 864, 560)
             love.graphics.setColor(1, 0.8, 0.3)
             if self.expedition.lastSlotRepair and self.expedition.lastSlotRepair > 0 then
                 love.graphics.printf(i18n.t("win_repair_line",
