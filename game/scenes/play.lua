@@ -974,6 +974,37 @@ end
 M.hullPreviewIconSize = 24
 M.hullPreviewIconGap = 8
 
+-- EARTH SHOP steeringPreviewCompact icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- steeringPreviewCompact printf ("SPD n" after upgrade) with a
+-- small 4-point gyro-star, mirroring hullPreviewCompact.
+-- Shop-row drawShopIcon sits in the margin and does not replace
+-- this label. Drawn as a flat 4-point star (even-length
+-- {x,y,...} list, no love.graphics calls) so headless tests can
+-- pin geometry: horizontally symmetric around cx, spans above
+-- and below cy.
+function M.steeringPreviewIconPoints(cx, cy, size)
+    local outer = size * 0.5
+    local inner = size * 0.18
+    return {
+        cx, cy - outer,
+        cx + inner, cy - inner,
+        cx + outer, cy,
+        cx + inner, cy + inner,
+        cx, cy + outer,
+        cx - inner, cy + inner,
+        cx - outer, cy,
+        cx - inner, cy - inner,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- gyro-star's right edge and the steeringPreviewCompact
+-- label's left edge. Matches hullPreview because both sit
+-- next to always-drawn shop labels.
+M.steeringPreviewIconSize = 24
+M.steeringPreviewIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2413,6 +2444,22 @@ function M.new(options)
             hullPreviewIconImage = img
         end
     end
+    -- assets/effects/shop_steering_preview.png is the ComfyUI-generated
+    -- EARTH SHOP steeringPreviewCompact gyro-star
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as hullPreviewIconImagePath.
+    -- :draw() scales it to M.steeringPreviewIconSize instead of
+    -- M.steeringPreviewIconPoints, and falls back to that 4-point
+    -- gyro-star when the image failed to load.
+    local steeringPreviewIconImagePath = "assets/effects/shop_steering_preview.png"
+    local steeringPreviewIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, steeringPreviewIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            steeringPreviewIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2555,6 +2602,8 @@ function M.new(options)
         shipStatusIconImagePath = shipStatusIconImagePath,
         hullPreviewIconImage = hullPreviewIconImage,
         hullPreviewIconImagePath = hullPreviewIconImagePath,
+        steeringPreviewIconImage = steeringPreviewIconImage,
+        steeringPreviewIconImagePath = steeringPreviewIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4762,7 +4811,27 @@ function M:draw()
         end
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.print(hullPreviewLabel, hullPreviewStartX + hullPreviewIconSpan, row)
-        love.graphics.printf(nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        love.graphics.setColor(0.4, 0.85, 1)
+        local steeringPreviewLabel = nextLaunch.steeringPreviewCompact
+        local steeringPreviewFont = love.graphics.getFont()
+        local steeringPreviewWidth = steeringPreviewFont:getWidth(steeringPreviewLabel)
+        local steeringPreviewIconSpan = M.steeringPreviewIconSize + M.steeringPreviewIconGap
+        local steeringPreviewStartX = shopColumnRightX + (shopColumnRightW - (steeringPreviewIconSpan + steeringPreviewWidth)) / 2
+        local steeringPreviewIconCenterX = steeringPreviewStartX + M.steeringPreviewIconSize / 2
+        local steeringPreviewIconCenterY = row + steeringPreviewFont:getHeight() / 2
+        if self.steeringPreviewIconImage then
+            local iw, ih = self.steeringPreviewIconImage:getDimensions()
+            local scale = M.steeringPreviewIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.steeringPreviewIconImage, steeringPreviewIconCenterX, steeringPreviewIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan 4-point gyro-star, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.steeringPreviewIconPoints(steeringPreviewIconCenterX, steeringPreviewIconCenterY, M.steeringPreviewIconSize))
+        end
+        love.graphics.setColor(0.4, 0.85, 1)
+        love.graphics.print(steeringPreviewLabel, steeringPreviewStartX + steeringPreviewIconSpan, row)
         row = row + rowStep
 
 

@@ -2083,5 +2083,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.hullPreviewIconImage for hullPreviewCompact; Lua layered hull-plate fallback"
+  },
+  {
+    "path": "assets/effects/shop_steering_preview.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "4c4d7526-be72-4ced-acd3-f1b16964025a",
+    "prompt": "pixel art, 16-bit, small cyan 4-point gyro-star HUD icon sprite, simple compass-gyro silhouette, isolated EARTH SHOP steering preview HUD icon, solid white background, no letters, no numbers, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904166,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T21:07:57Z",
+    "sha256": "6d6e9fdf10964f7b9d1d4b7db9279c07797934e4773af947e240dbd4d72dac66",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.steeringPreviewIconImage for steeringPreviewCompact; Lua 4-point gyro-star fallback"
   }
 ]

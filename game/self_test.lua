@@ -2924,6 +2924,48 @@ local function testHullPreviewIconSprite()
     end
 end
 
+-- EARTH SHOP steeringPreviewCompact (SPD n after upgrade) is still a
+-- bare centered printf while hullPreviewCompact already has a ComfyUI
+-- icon. Shop-row drawShopIcon sits in the margin and does not replace
+-- this label. Same file-existence + always-set-path pattern as
+-- testHullPreviewIconSprite, plus Lua 4-point gyro-star fallback
+-- geometry (even-length, spans cy, horizontally symmetric).
+-- Graphics-gated steeringPreviewIconImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run()
+-- stays under Lua's 60-upvalue cap.
+local function testSteeringPreviewIconSprite()
+    local path = "assets/effects/shop_steering_preview.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated steering preview icon sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.steeringPreviewIconImagePath == path,
+        "PlayScene must load assets/effects/shop_steering_preview.png into self.steeringPreviewIconImagePath")
+    assert(play.steeringPreviewIconSize == 24 and play.steeringPreviewIconGap == 8)
+    local points = play.steeringPreviewIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "steering-preview silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "steering-preview icon must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "steering-preview outline must be horizontally symmetric around cx")
+    end
+end
+
 -- SAMPLES HUD readout is still bare gold text (hud_samples) while
 -- DIST/CASH/HULL/STEER/BEST already have ComfyUI icons. Same
 -- file-existence + always-set-path pattern as testBestIconSprite,
@@ -3008,6 +3050,7 @@ local function testCanvasLayoutScale()
     testYieldStatusIconSprite()
     testShipStatusIconSprite()
     testHullPreviewIconSprite()
+    testSteeringPreviewIconSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows
