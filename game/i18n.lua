@@ -49,7 +49,6 @@ locales.en = {
     -- player action (engine-level expedition.buyFuelUpgrade stays only
     -- for older regression fixtures), permanently misleading. Now shows
     -- only the still-purchasable hull upgrade level.
-    upgrades_line = "HULL LV.%d",
     steer_speed_line = "STEER SPEED %d",
     fuel_bonus_line = "NEXT LAUNCH FUEL +%d",
     purchase_left = "LEFT $%d",
@@ -168,7 +167,6 @@ locales.ko = {
     galaxy_named = "은하 %d-%d",
     loadout_ship = "함선 %s",
     stats_line = "선체 %d",
-    upgrades_line = "선체 LV.%d",
     steer_speed_line = "조종속도 %d",
     fuel_bonus_line = "다음발사 연료 +%d",
     purchase_left = "잔액 $%d",

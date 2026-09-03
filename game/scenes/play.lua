@@ -946,7 +946,9 @@ function M:loadoutLines()
         -- it is the single default STARTER hull).
         shipLabel = string.upper(run.selectedShipId),
         stats = i18n.t("stats_line", run.maxDurability),
-        upgrades = i18n.t("upgrades_line", run.durabilityUpgradeLevel),
+        -- docs/feedback/INBOX.md UI 대개편 6건 item 2: the "HULL LV.n" line
+        -- is dropped entirely -- hull durability will be shown persistently
+        -- top-left (item 3's card layout) instead of duplicated here.
         forecast = launchForecastLine(run),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
         odds = self:slotOddsLine(),
@@ -1022,7 +1024,8 @@ function M:shopLoadoutLines()
     return {
         ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
         stats = i18n.t("stats_line", run.maxDurability),
-        upgrades = i18n.t("upgrades_line", run.durabilityUpgradeLevel),
+        -- docs/feedback/INBOX.md UI 대개편 6건 item 2: "HULL LV.n" dropped
+        -- (see M:loadoutLines() above for rationale).
         forecast = launchForecastLine(run),
         scoutTradeoff = self.scoutTradeoffLines(run),
         shipAction = shipAction,
@@ -2265,9 +2268,6 @@ function M:draw()
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.printf(loadout.stats, 64, row, viewport.width - 128, "center")
         row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, 64, row, viewport.width - 128, "center")
-        row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(loadout.forecast, 64, row, viewport.width - 128, "center")
         row = row + rowStep
@@ -2417,8 +2417,6 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
-        row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(nextLaunch.forecast, fullX, row, fullW, "center")
         row = row + rowStep
@@ -2469,9 +2467,6 @@ function M:draw()
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(i18n.t("next_ship_line", loadout.shipLabel), fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.printf(i18n.t("tap_start_over"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
