@@ -714,6 +714,34 @@ end
 M.hullActionIconSize = 24
 M.hullActionIconGap = 8
 
+-- EARTH SHOP steering compact-action icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- steering_action_compact printf with a small gyro-hexagon
+-- silhouette, mirroring hull_action_compact. Shop-row
+-- drawShopIcon sits in the margin and does not replace this
+-- label. Drawn as a flat hexagon (even-length {x,y,...} list,
+-- no love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.steeringActionIconPoints(cx, cy, size)
+    local w = size * 0.45
+    local h = size * 0.5
+    return {
+        cx, cy - h,
+        cx + w, cy - h * 0.5,
+        cx + w, cy + h * 0.5,
+        cx, cy + h,
+        cx - w, cy + h * 0.5,
+        cx - w, cy - h * 0.5,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- gyro-hexagon's right edge and the steering compact action
+-- label's left edge. Matches hull compact action because both
+-- sit next to always-drawn shop action labels.
+M.steeringActionIconSize = 24
+M.steeringActionIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1974,6 +2002,22 @@ function M.new(options)
             hullActionIconImage = img
         end
     end
+    -- assets/effects/shop_steering_action.png is the ComfyUI-generated
+    -- EARTH SHOP steering compact-action gyro hexagon
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as hullActionIconImagePath.
+    -- :draw() scales it to M.steeringActionIconSize instead of
+    -- M.steeringActionIconPoints, and falls back to that gyro
+    -- hexagon when the image failed to load.
+    local steeringActionIconImagePath = "assets/effects/shop_steering_action.png"
+    local steeringActionIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, steeringActionIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            steeringActionIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2098,6 +2142,8 @@ function M.new(options)
         relaunchIconImagePath = relaunchIconImagePath,
         hullActionIconImage = hullActionIconImage,
         hullActionIconImagePath = hullActionIconImagePath,
+        steeringActionIconImage = steeringActionIconImage,
+        steeringActionIconImagePath = steeringActionIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4209,8 +4255,27 @@ function M:draw()
         end
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.print(hullActionLabel, hullActionStartX + hullActionIconSpan, row)
-        love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
-        self:drawShopIcon("steering", shopColumnRightX, row)
+        local steeringActionLabel = nextLaunch.steeringActionCompact
+        local steeringActionFont = love.graphics.getFont()
+        local steeringActionWidth = steeringActionFont:getWidth(steeringActionLabel)
+        local steeringActionIconSpan = M.steeringActionIconSize + M.steeringActionIconGap
+        local steeringActionStartX = shopColumnRightX + (shopColumnRightW - (steeringActionIconSpan + steeringActionWidth)) / 2
+        local steeringActionIconCenterX = steeringActionStartX + M.steeringActionIconSize / 2
+        local steeringActionIconCenterY = row + steeringActionFont:getHeight() / 2
+        if self.steeringActionIconImage then
+            local iw, ih = self.steeringActionIconImage:getDimensions()
+            local scale = M.steeringActionIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.steeringActionIconImage, steeringActionIconCenterX, steeringActionIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan gyro hexagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.steeringActionIconPoints(steeringActionIconCenterX, steeringActionIconCenterY, M.steeringActionIconSize))
+        end
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.print(steeringActionLabel, steeringActionStartX + steeringActionIconSpan, row)
         row = row + rowStep
         
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
