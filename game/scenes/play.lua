@@ -1148,6 +1148,21 @@ function M.new(options)
             hudPanelImage = img
         end
     end
+    -- assets/effects/loadout_panel.png is the ComfyUI-generated launch
+    -- LOADOUT card panel (docs/GENERATED_ASSET_LOG.md). Same always-set-path
+    -- / graphics-gated image pattern as hudPanelImagePath. :draw()
+    -- stretches it across the launch loadout box instead of the Lua fill
+    -- rectangle, and falls back to that rectangle when the image failed
+    -- to load.
+    local loadoutPanelImagePath = "assets/effects/loadout_panel.png"
+    local loadoutPanelImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, loadoutPanelImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            loadoutPanelImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1216,6 +1231,8 @@ function M.new(options)
         shopPlanetImagePath = shopPlanetImagePath,
         hudPanelImage = hudPanelImage,
         hudPanelImagePath = hudPanelImagePath,
+        loadoutPanelImage = loadoutPanelImage,
+        loadoutPanelImagePath = loadoutPanelImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2943,9 +2960,19 @@ function M:draw()
             self:drawSpecimenStrip(736)
         end
         local loadout = self:loadoutLines()
-        love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 48, M.launchLoadoutBoxTop, viewport.width - 96,
-            viewport.height - M.launchLoadoutBoxTop)
+        local loadoutBoxX = 48
+        local loadoutBoxY = M.launchLoadoutBoxTop
+        local loadoutBoxW = viewport.width - 96
+        local loadoutBoxH = viewport.height - M.launchLoadoutBoxTop
+        if self.loadoutPanelImage then
+            local iw, ih = self.loadoutPanelImage:getDimensions()
+            love.graphics.setColor(1, 1, 1, 0.92)
+            love.graphics.draw(self.loadoutPanelImage, loadoutBoxX, loadoutBoxY, 0,
+                loadoutBoxW / iw, loadoutBoxH / ih)
+        else
+            love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
+            love.graphics.rectangle("fill", loadoutBoxX, loadoutBoxY, loadoutBoxW, loadoutBoxH)
+        end
         -- Every LOADOUT line now uses the small 8px scene-cached font
         -- (previously the default 14px font) so the text sizes relative
         -- to the small circular minimap chart/specimen-strip squares

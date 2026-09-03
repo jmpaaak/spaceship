@@ -1158,5 +1158,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.hudPanelImage for the top HUD status bar"
+  },
+  {
+    "path": "assets/effects/loadout_panel.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "78a90796-1c0f-4f34-a067-450e0542dd4d",
+    "prompt": "pixel art, 16-bit, entire frame filled edge to edge with a dark navy glass UI card panel texture for a vertical space roguelite launch loadout card, subtle cyan edge highlight and faint scanlines, metallic UI chrome bezel, no empty margin, no white background, no circle, no icon, no text, no watermark, game UI asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904129,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:19:58Z",
+    "sha256": "7054d5356ed16ad3902e4f7eba69cb8155e83126b271e643960ecc851ec31597",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.loadoutPanelImage for the launch LOADOUT card"
   }
 ]
