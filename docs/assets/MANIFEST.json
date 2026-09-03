@@ -908,5 +908,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap sun marker sprite wired into PlayScene sunMarkerImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_earth.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "2ed3be24-edd7-48db-9606-663b18e2e62a",
+    "prompt": "pixel art, 16-bit, small cyan-blue Earth HUD icon sprite, tiny planet Earth globe with oceans and continents, isolated minimap earth marker, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904119,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:40:26Z",
+    "sha256": "c167827b347179be7bdf77993686891a363ca7c1e4416fd564dbabfeabdaecac",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap earth marker sprite wired into PlayScene earthMarkerImage; pipeline PNG signature/decode gate"
   }
 ]

@@ -997,6 +997,22 @@ function M.new(options)
             sunMarkerImage = img
         end
     end
+    -- assets/effects/minimap_earth.png is the ComfyUI-generated
+    -- Earth waypoint marker (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- sunMarkerImagePath. drawMinimap() scales it to
+    -- 2 * minimap.markerEarthRadius instead of the Lua filled
+    -- circle, and falls back to that circle when the image
+    -- failed to load.
+    local earthMarkerImagePath = "assets/effects/minimap_earth.png"
+    local earthMarkerImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, earthMarkerImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            earthMarkerImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1045,6 +1061,8 @@ function M.new(options)
         playerMarkerImagePath = playerMarkerImagePath,
         sunMarkerImage = sunMarkerImage,
         sunMarkerImagePath = sunMarkerImagePath,
+        earthMarkerImage = earthMarkerImage,
+        earthMarkerImagePath = earthMarkerImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2194,8 +2212,20 @@ function M:drawMinimap()
             end
         end
     end
-    love.graphics.setColor(0.3, 0.85, 1)
-    love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius)
+    if self.earthMarkerImage then
+        local iw, ih = self.earthMarkerImage:getDimensions()
+        local drawSize = minimap.markerEarthRadius * 2
+        local scale = drawSize / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(
+            self.earthMarkerImage,
+            cx + view.earth.x, cy + view.earth.y, 0, scale, scale, iw / 2, ih / 2)
+    else
+        -- Fallback: cyan filled circle, used only when the
+        -- ComfyUI-generated sprite failed to load.
+        love.graphics.setColor(0.3, 0.85, 1)
+        love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius)
+    end
     if self.playerMarkerImage then
         local iw, ih = self.playerMarkerImage:getDimensions()
         local drawSize = minimap.markerPlayerLineRadius * 2

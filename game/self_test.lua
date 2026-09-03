@@ -1602,6 +1602,21 @@ local function testMinimapSunSprite()
         "PlayScene must load assets/effects/minimap_sun.png into self.sunMarkerImagePath")
 end
 
+-- Minimap Earth marker is still a Lua filled circle (markerEarthRadius).
+-- Same file-existence + always-set-path pattern as
+-- testMinimapSunSprite. Graphics-gated earthMarkerImage cannot
+-- be asserted under GAME_HEADLESS=1.
+local function testMinimapEarthSprite()
+    local path = "assets/effects/minimap_earth.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated minimap earth marker sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.earthMarkerImagePath == path,
+        "PlayScene must load assets/effects/minimap_earth.png into self.earthMarkerImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3486,6 +3501,7 @@ function M.run()
     testCheckpointArrowSprite()
     testMinimapPlayerSprite()
     testMinimapSunSprite()
+    testMinimapEarthSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")
