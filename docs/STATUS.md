@@ -1,4 +1,16 @@
 # STATUS
+
+## 항목 15(b) UI 연결 — settlement 페이즈 "m" 키로 EARTH SHOP 슬롯머신 실행 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md`의 econ 레인 스코프 순서(항목7→8→11→15) 중 항목 15의 두 번째 슬라이스. preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.
+
+- 이전 슬라이스가 `game/expedition.lua`에 순수 엔진 API로만 추가했던 `M.spinEarthShopSlot(run)`(항목 15b — settlement 페이즈 전용, 고정 요금 `earthShopSlotCost=20`, `run.lastCheckpointGalaxyId`의 은하별 변동 오즈로 즉시 정산)가 여전히 어디서도 호출되지 않아 실제 플레이로 접근 불가능한 상태였다. 이번 슬라이스에서 `game/scenes/play.lua`의 `M:keypressed`에 settlement 페이즈 전용 신규 `"m"` 키 분기를 추가해 이 엔진 API를 실제로 연결했다 — 스핀 성공 시 `earth_shop_slot_result`(심볼/보상/잔액) 메시지, 요금 부족 시 기존 HULL/YIELD/STEERING/SCOUT 구매 키들과 동일한 `purchaseShortfallMessage` 패턴으로 안내한다.
+- 이 레인 스코프 규칙(`game/scenes/play.lua`의 텍스트/HUD 세부 표현은 메인 레인 담당, 이 레인은 불가피한 최소 구조적 변경만)에 따라 새 버튼/터치 로우 등 시각 레이아웃은 추가하지 않고 키보드 입력 분기만 최소 추가했다 — settlement 화면의 기존 4개 `settlementTouchRows`도 건드리지 않았다. `game/i18n.lua`에 en/ko `earth_shop_slot_result`/`item_earth_shop_slot` 두 문구 쌍만 신규 추가했다(기존 문구는 전혀 수정하지 않음).
+- `game/self_test.lua`에 신규 `testEarthShopSlotUiWiring()`을 추가했다 — settlement 페이즈에서 `keypressed("m")`이 실제로 `expedition.spinEarthShopSlot`을 호출해 잔액/메시지에 반영됨, 요금 부족 시 차감 없이 shortfall 메시지가 뜸, settlement가 아닌 페이즈(ascending)에서는 완전히 no-op임을 회귀 검증한다(RED 확인: 구현 전 `scene.message`가 `nil`/`keypressed`가 "m"을 처리하지 않아 단언 실패 → 구현 후 GREEN).
+- `GAME_HEADLESS=1 GAME_UNIT=1 love .`, `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md` 처리대기 항목 15 하위에 이번 슬라이스 진행 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 항목 15의 남은 (a) — `beginReturn`/returning 페이즈/in-flight `slotSpin`·`useSlot`의 완전 폐지와 체크포인트/지구 도달 시 즉시 정산으로의 구조 전환(`game/scenes/play.lua`의 returning 페이즈 UI/터치/키 입력 전반을 광범위하게 재작성해야 하는 큰 작업, 메인 레인과의 조율 필요). UI 연출(슬롯 결과를 EARTH SHOP 화면에 시각적으로 그리는 것)은 메인 레인의 텍스트/HUD 영역이므로 이 레인은 엔진 연결까지만 완료로 본다.
+
 - `tail -c` / `xxd`로 파일 끝을 직접 확인해 `docs/STATUS.md`가 `...진행.\n\n`(개행 두 개, 즉 EOF 직전 빈 줄)로 끝나고 있음을 재현했다(이전 사이클이 이 파일을 커밋 없이 수정한 상태로 남긴 잔재였다). 파일 끝을 단일 개행(`...진행.\n`)으로 정규화해 `git diff --check`가 더 이상 EOF 공백 경고를 내지 않도록 고쳤다. 이 파일의 본문 내용(이전 사이클이 작성한 항목 11(c) 네 번째 슬라이스 기록 포함)은 전혀 건드리지 않았다.
 - `git status --short`로 세션 시작 시 `docs/feedback/INBOX.md`/`game/i18n.lua`/`game/self_test.lua`에 이전 사이클의 커밋되지 않은 작업(항목 11(c) i18n 잔재 문구 삭제 슬라이스)이 이미 존재함을 확인했다. 이 작업은 완결된 상태(관련 테스트 포함, GREEN)로 보여 그대로 보존하고 이번 커밋에 함께 포함시켰다.
 - `git diff --check` 재실행으로 EOF 경고가 사라졌음을 확인(출력 없음 = clean).

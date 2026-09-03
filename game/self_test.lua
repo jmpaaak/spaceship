@@ -615,6 +615,47 @@ local function testCheckpointAndShopDocking()
         "leaving the shop planet's vicinity must clear the docked flag")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 15(b) UI wiring: the settlement
+-- phase's "m" key must actually reach expedition.spinEarthShopSlot through
+-- PlayScene:keypressed, since the engine-only entry point added by a prior
+-- slice was not yet reachable from real play. Own top-level function for
+-- the same 200-local limit as testJoystick.
+local function testEarthShopSlotUiWiring()
+    local expedition = require("game.expedition")
+
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scene.expedition.phase = "settlement"
+    scene.expedition.money = 100
+    scene.expedition.lastCheckpointGalaxyId = nil
+    scene:keypressed("m")
+    assert(scene.expedition.money == 100 - expedition.earthShopSlotCost + scene.expedition.lastEarthShopSlotReward,
+        "settlement 'm' key must spin the EARTH SHOP slot machine and reflect its payout")
+    assert(scene.message:find("SLOT"), "spin result message must mention the slot outcome: " .. tostring(scene.message))
+
+    -- Insufficient funds surfaces the same shortfall messaging pattern used
+    -- by the other settlement purchase keys, rather than silently no-op'ing.
+    local poorScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    poorScene.expedition.phase = "settlement"
+    poorScene.expedition.money = expedition.earthShopSlotCost - 1
+    poorScene:keypressed("m")
+    assert(poorScene.expedition.money == expedition.earthShopSlotCost - 1,
+        "insufficient funds must not deduct the slot fee")
+    assert(poorScene.message:find("SLOT SPIN"), "shortfall message must name the slot spin item: " .. tostring(poorScene.message))
+
+    -- Wrong phase (e.g. ascending) must not spin at all.
+    local flightScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    flightScene.expedition.phase = "ascending"
+    flightScene.expedition.money = 100
+    flightScene:keypressed("m")
+    assert(flightScene.expedition.money == 100, "'m' key must be a no-op outside the settlement phase")
+end
+
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
 -- (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3). Own top-level function
 -- for the same 200-local limit as testJoystick.
@@ -2735,6 +2776,7 @@ function M.run()
     testGearAndCheckpointSettlement()
     testEarthShopSlotMachine()
     testCheckpointAndShopDocking()
+    testEarthShopSlotUiWiring()
     testMinimap()
     testDebris()
     testBackgroundStars()

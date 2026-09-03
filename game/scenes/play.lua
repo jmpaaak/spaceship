@@ -1415,6 +1415,24 @@ function M:keypressed(key)
         end
         return
     end
+    -- docs/feedback/INBOX.md 처리대기 항목 15(b): the EARTH SHOP-only paid
+    -- slot machine (expedition.spinEarthShopSlot, engine-only until now) is
+    -- wired up here via a settlement-phase key so it is actually reachable
+    -- in play, rather than growing the settlement screen's existing
+    -- HULL/STEERING/YIELD/SHIP touch rows -- this lane's scope only allows
+    -- minimal structural additions to play.lua, not new touch-row layout,
+    -- which is the main lane's territory.
+    if self.expedition.phase == "settlement" and key == "m" then
+        local spun, symbols, reward = expedition.spinEarthShopSlot(self.expedition)
+        if spun then
+            self.message = i18n.t("earth_shop_slot_result",
+                table.concat(symbols, " "), reward, self.expedition.money)
+        else
+            self.message = purchaseShortfallMessage(self.expedition.money,
+                expedition.earthShopSlotCost, i18n.t("item_earth_shop_slot"))
+        end
+        return
+    end
     if key == "space" or key == "return" or key == "up" or key == "w" then
         if self.expedition.phase == "returning" and not self.slotSpin and expedition.useSlot(self.expedition) then
             self:beginSlotSpin()
