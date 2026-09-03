@@ -1022,6 +1022,25 @@ local function testEarthSprite()
         "PlayScene must load assets/earth/earth_generic.png into self.earthImagePath")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목: ComfyUI로 실제 에셋 작업 진행 --
+-- next slice after ship/planet/earth: sample-pickup particles are still
+-- plain love.graphics.circle("fill") dots tinted by tier color, not a
+-- ComfyUI-generated texture, even though the AetherAI-only asset rule
+-- explicitly lists "effects" among the required final visuals. Mirror
+-- testShipSprite/testPlanetSprite/testEarthSprite: verify the file exists
+-- AND that PlayScene.new() records it as self.sampleEffectImagePath (the
+-- load target :draw() actually uses whenever love.graphics is available).
+local function testSampleEffectSprite()
+    local path = "assets/effects/sample_sparkle.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated sample effect sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.sampleEffectImagePath == path,
+        "PlayScene must load assets/effects/sample_sparkle.png into self.sampleEffectImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -2798,6 +2817,7 @@ function M.run()
     testShipSprite()
     testPlanetSprite()
     testEarthSprite()
+    testSampleEffectSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

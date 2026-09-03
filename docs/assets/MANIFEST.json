@@ -233,5 +233,30 @@
     "width": 64,
     "height": 64,
     "qa": "pending runtime QA - launch-screen earth disc replacement"
+  },
+  {
+    "path": "assets/effects/sample_sparkle.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "0873c95b-be55-4814-a854-6a46ef5dd953",
+    "prompt": "pixel art, 16-bit, small glowing sparkle burst effect sprite, star-shaped magical shimmer particle, bright white and cyan highlights, transparent-friendly flat white background, isolated icon, no scene, no text",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260903501,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T11:39:41Z",
+    "sha256": "856785787acd588295160905f55c8aaeecb6bf7beec4a8bd8358e9740805b0f3",
+    "width": 64,
+    "height": 64,
+    "qa": "sample pickup particle effect, runtime placement pending"
   }
 ]

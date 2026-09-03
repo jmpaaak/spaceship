@@ -619,6 +619,21 @@ function M.new(options)
             earthImage = img
         end
     end
+
+    -- assets/effects/sample_sparkle.png is the ComfyUI-generated sample
+    -- pickup effect sprite (docs/GENERATED_ASSET_LOG.md). draw() tints and
+    -- scales it per-particle instead of drawing a flat love.graphics.circle
+    -- fill, and falls back to the flat circle whenever the image failed to
+    -- load (same fallback pattern as ship/planet/earth above).
+    local sampleEffectImagePath = "assets/effects/sample_sparkle.png"
+    local sampleEffectImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, sampleEffectImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            sampleEffectImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -627,6 +642,8 @@ function M.new(options)
         planetImagePath = planetImagePath,
         earthImage = earthImage,
         earthImagePath = earthImagePath,
+        sampleEffectImage = sampleEffectImage,
+        sampleEffectImagePath = sampleEffectImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
@@ -1889,7 +1906,13 @@ function M:draw()
         local px, py = math.floor(particle.x - cameraX), math.floor(particle.y - cameraY)
         local alpha = math.max(0, particle.timer / particle.maxTimer)
         love.graphics.setColor(particle.r, particle.g, particle.b, alpha)
-        love.graphics.circle("fill", px, py, 1.5)
+        if self.sampleEffectImage then
+            local iw, ih = self.sampleEffectImage:getDimensions()
+            local scale = 3 / math.max(iw, ih)
+            love.graphics.draw(self.sampleEffectImage, px, py, 0, scale, scale, iw / 2, ih / 2)
+        else
+            love.graphics.circle("fill", px, py, 1.5)
+        end
     end
     love.graphics.push()
     local shakeX, shakeY = 0, 0
