@@ -1,11 +1,11 @@
 # STATUS
-preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항목 「미니맵 은하나선 표기 + 체크포인트 가독성」을 완료해 처리 대기에서 처리 완료로 이동했다.
+preflight FAIL(engine tests) fixed this cycle. INBOX 항목 「국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 3건」을 완료해 처리 대기에서 처리 완료로 이동했다.
 
-- 이 사이클 진입 시 이전 사이클이 이미 이 항목 전체(4개 서브 요청)를 uncommitted diff로 구현해 두었음을 발견했다: `game/minimap.lua`의 `M.spiralArmCount`/`M.spiralRotation`/`M.spiralPoints`/`M.starPoints`(순수 함수), `game/world.lua`의 `M.sunPosition(galaxy)`, `game/scenes/play.lua`의 `drawMinimap()` 나선/별심볼 렌더 배선, `game/self_test.lua`의 `testMinimap()` 회귀 케이스 다수(결정성/은하전환/태양중심피벗/별 심볼 정점수).
-- 코드는 변경하지 않고 검증만 수행: `make test`(`SPACESHIP_UNIT_OK`/`SPACESHIP_SMOKE_OK`), `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:79`, `ASSET_MANIFEST_OK`).
-- `GAME_CAPTURE=1 GAME_SCALE=8 GAME_CAPTURE_PHASE=ascending-checkpoint-tint /Users/jm/.local/bin/love .`로 실제 LÖVE 런타임 스크린샷을 로컬에 생성했다(`~/Library/Application Support/LOVE/spaceship/spaceship-runtime-preview.png`). **정직한 한계:** 이번 세션에는 vision(이미지 분석) 도구가 연결되어 있지 않아 육안 확인은 수행하지 못했다 — 기하학적 정확성(결정성/은하별 나선 차별화/태양 중심 피벗/별 심볼 5각 20좌표/체크포인트 반경 축소)은 엔진 테스트로 전량 검증되었으나, 렌더링 겹침·색 대비 등 순수 시각적 품질은 다음 사이클에서 vision 도구가 있을 때 이 캡처(또는 재캡처)로 확인이 필요하다.
-- `docs/feedback/INBOX.md`에서 이 항목을 처리 대기에서 처리 완료로 이동하고 완료 근거를 기록했다(토큰 최적화 규칙).
+- 이 사이클 진입 시 preflight가 `game/self_test.lua:1390`(distancePunch 회귀 테스트)에서 FAIL이었다. 원인: `game/scenes/play.lua`의 `M:update()`가 `previousBestAltitude`를 매 프레임 `self.expedition.bestAltitude`(현재 값, 즉 이미 갱신된 값)로 지역변수 재계산했기 때문에, 테스트가 `expedition.bestAltitude`를 씬 바깥에서 직접 증가시켜도(실제 상승 중 `expedition.update`가 만드는 것과 동일한 효과) `previousBestAltitude`가 항상 최신값과 같아져 `bestAltitude > previousBestAltitude` 비교가 절대 참이 되지 않았다(신기록 펀치가 발동 안 됨).
+- 수정: 신규 필드 `self.lastKnownBestAltitude`(초기값 = `altitudeStore:load()`)를 추가해 프레임 간 상태로 유지하고, `previousBestAltitude`는 이 필드에서 읽으며, `M:update()` 끝에서 `self.lastKnownBestAltitude = self.expedition.bestAltitude`로 갱신한다. 이제 씬 외부(테스트 또는 실제 상승 로직)에서 `bestAltitude`가 오른 다음 프레임에 정확히 감지된다.
+- `GAME_HEADLESS=1 GAME_UNIT=1 love .` → `SPACESHIP_UNIT_OK`/`SPACESHIP_SMOKE_OK`. `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:79`, `ASSET_MANIFEST_OK`).
+- 이 수정으로 이전 사이클이 uncommitted로 남겨둔 나머지 작업(발라트로식 DIST 펀치 연출 전체 + HUD `HULL` 약자 라벨 교체)도 함께 GREEN이 되어, 해당 INBOX 3건 항목(1/2/3)이 모두 완료됨을 확인했다. `docs/feedback/INBOX.md`에서 이 항목을 처리 대기에서 처리 완료로 이동하고 완료 근거(버그 원인/수정/테스트)를 기록했다(토큰 최적화 규칙).
 
-다음 사이클 다음 슬라이스: `docs/feedback/INBOX.md` 처리대기 상단의 다음 최우선 항목 "국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 3건" 중 아직 착수 전인 (2) 발라트로식 점수 펀치 연출(`run.bestAltitude` 갱신 시 카운트업/스케일 펀치)과 (3) `hud_status`의 `H%d/%d` 약자 정리를 진행. econ/gear 레인 소유 항목(7/8/11/15, 13/9/10/12/14)과 `game/gear.lua`는 건드리지 않는다. 가능하면 vision 도구로 이번 사이클의 `ascending-checkpoint-tint` 캡처(또는 재캡처)를 실제로 확인해 이 STATUS의 "정직한 한계" 문구를 확정 문구로 갱신할 것.
+다음 사이클 다음 슬라이스: `docs/feedback/INBOX.md` 처리대기 상단의 다음 최우선 항목 "UI 대개편 6건"(표본도감 제거/선체LV 표기 제거/슬롯 카드 그리드 UI/슬롯오즈텍스트 제거+좌표표시/탭발사 이펙트 정리/개발임시본 제거) 중 순수 장식 성격이라 독립적으로 처리 가능한 서브항목(1, 2, 4, 5, 6 중 표본도감 제거)부터 슬라이스. 항목 3(슬롯 카드 그리드)은 `spaceship-gear` 레인과 데이터 구조 조율이 필요하므로 gear 레인 진행 상황을 먼저 확인. econ/gear 레인 소유 항목(7/8/11/15, 13/9/10/12/14)과 `game/gear.lua`는 건드리지 않는다.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

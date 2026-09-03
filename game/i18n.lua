@@ -27,8 +27,12 @@ locales.en = {
     hud_personal_best = "PERSONAL BEST %04d",
     hud_distance = "DIST %04d",
     hud_cash = "CASH $%d",
-    hud_status = "H%d/%d %-6s S%02d",
-    hud_status_no_slots = "H%d/%d %-6s",
+    -- docs/feedback/INBOX.md HUD 약자 정리 항목: the bare "H%d/%d"
+    -- abbreviation read as unexplained noise in real runtime captures.
+    -- Spell out "HULL" so the durability segment is self-explanatory
+    -- without needing to consult a legend.
+    hud_status = "HULL %d/%d %-6s S%02d",
+    hud_status_no_slots = "HULL %d/%d %-6s",
     forecast_line = "REACH %d  SLOTS %d",
     -- docs/feedback/INBOX.md 국제화 누락 항목: game/world.lua's M.galaxy()
     -- used to hardcode "SOLAR SYSTEM"/"GALAXY %d-%d" directly, bypassing
@@ -157,8 +161,8 @@ locales.ko = {
     hud_personal_best = "최고기록 %04d",
     hud_distance = "거리 %04d",
     hud_cash = "자금 $%d",
-    hud_status = "H%d/%d %-6s S%02d",
-    hud_status_no_slots = "H%d/%d %-6s",
+    hud_status = "내구 %d/%d %-6s S%02d",
+    hud_status_no_slots = "내구 %d/%d %-6s",
     forecast_line = "도달예상 %d  슬롯 %d",
     galaxy_home = "태양계",
     galaxy_named = "은하 %d-%d",

@@ -1360,6 +1360,42 @@ function M.run()
     assert(#particleScene.particles == 0, "expired particles must be removed")
     assert(particleScene.shipPunch == 0)
 
+    -- docs/feedback/INBOX.md 국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 항목 (2):
+    -- Balatro-style score punch for the DIST HUD number: the moment
+    -- run.bestAltitude (the all-time record) increases, the scene must
+    -- start a distancePunch countdown, mirroring the sample-pickup
+    -- shipPunch pattern above.
+    do
+        local distanceScale = PlayScene.distancePunchScale
+        assert(distanceScale(PlayScene.distancePunchDuration, PlayScene.distancePunchDuration) == 1.5,
+            "punch scale must peak at 1.5x the instant the punch starts")
+        assert(distanceScale(0, PlayScene.distancePunchDuration) == 1,
+            "punch scale must settle back to 1x (no scale) once the countdown reaches zero")
+        local midScale = distanceScale(PlayScene.distancePunchDuration / 2, PlayScene.distancePunchDuration)
+        assert(midScale > 1 and midScale < 1.5, "punch scale must interpolate between 1x and 1.5x mid-countdown")
+
+        local punchScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 100 end, save = function() return false end },
+        })
+        assert(punchScene.expedition.bestAltitude == 100)
+        assert(punchScene.distancePunch == 0, "distancePunch must start at rest with no fresh record")
+        punchScene:update(0.1)
+        assert(punchScene.distancePunch == 0,
+            "distancePunch must stay at rest when bestAltitude does not increase")
+        -- Simulate an external bestAltitude increase (the same effect an
+        -- ascending run's expedition.update would produce) and confirm the
+        -- next scene update notices the jump and starts the punch.
+        punchScene.expedition.bestAltitude = 150
+        punchScene:update(0.05)
+        assert(punchScene.distancePunch == PlayScene.distancePunchDuration,
+            "a bestAltitude increase must start the distance punch at full duration")
+        punchScene:update(0.05)
+        assert(punchScene.distancePunch < PlayScene.distancePunchDuration and punchScene.distancePunch > 0,
+            "distancePunch must count down toward zero")
+        punchScene:update(10)
+        assert(punchScene.distancePunch == 0, "distancePunch must settle back to zero once expired")
+    end
+
     -- Balatro-style twinkle/sparkle animation (2026-09-02 pending feedback,
     -- "너무 밋밋하다"): undiscovered planets should shimmer over time, with
     -- higher tiers sparkling faster, brighter and with more points so the
@@ -1543,7 +1579,12 @@ function M.run()
     -- M.maneuverFuel/M.burnManeuverFuel are no-ops), so the HUD status line
     -- no longer shows a "F%03d" fuel readout that implied a fuel cap still
     -- gated flight (docs/feedback/INBOX.md UI/HUD item 3).
-    assert(riskScene:hudLines().status == "H3/3 SETTLE S00")
+    -- docs/feedback/INBOX.md HUD 약자 정리 항목: "H%d/%d" read as a bare,
+    -- unexplained abbreviation in real runtime captures. Spell out "HULL"
+    -- (en) / read cleanly in ko via i18n.t rather than a single letter.
+    assert(riskScene:hudLines().status == "HULL 3/3 SETTLE S00",
+        "hud status must use a readable 'HULL' label instead of the bare 'H' abbreviation: "
+        .. tostring(riskScene:hudLines().status))
     assert(not riskScene:hudLines().status:find("F%d"),
         "hud status must not show a misleading fuel-cap readout")
     -- docs/feedback/INBOX.md UI/HUD item 4: during the launch phase the
@@ -1552,7 +1593,7 @@ function M.run()
     -- the slot segment for the launch phase only; every other phase
     -- (including SETTLE, asserted above) keeps showing it.
     riskScene.expedition.phase = "launch"
-    assert(riskScene:hudLines().status == "H3/3 LAUNCH",
+    assert(riskScene:hudLines().status == "HULL 3/3 LAUNCH",
         "launch-phase status must omit the always-zero slot forecast: "
         .. tostring(riskScene:hudLines().status))
     assert(not riskScene:hudLines().status:find("S%d%d"),

@@ -430,6 +430,26 @@ local shipShakeDuration = 0.25
 M.shipPunchDuration = shipPunchDuration
 M.shipShakeDuration = shipShakeDuration
 
+-- docs/feedback/INBOX.md 국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 항목 (2):
+-- Balatro-style score punch for the DIST HUD number, mirroring the
+-- sample-pickup ship scale-punch pattern above. Fires whenever
+-- run.bestAltitude (the all-time record, not the current-run altitude)
+-- increases -- i.e. exactly at the moment a new personal best is set --
+-- so the number that is actually a "score" gets the same emphasis
+-- Balatro gives a chip/mult scoreboard update.
+local distancePunchDuration = 0.3
+M.distancePunchDuration = distancePunchDuration
+
+-- Pure function: given the remaining countdown (distancePunchDuration down
+-- to 0, same convention as shipPunch) returns the scale multiplier to draw
+-- the DIST text at. 1.0 at rest, up to 1.5x at the instant the punch fires.
+local function distancePunchScale(remaining, duration)
+    if duration <= 0 then return 1 end
+    remaining = math.max(0, math.min(duration, remaining))
+    return 1 + (remaining / duration) * 0.5
+end
+M.distancePunchScale = distancePunchScale
+
 -- Score-proportional screen shake (docs/feedback/INBOX.md 2026-09-02 후속
 -- 확정 사항 #3): the collision shake used to be a fixed magnitude
 -- regardless of what was hit. Scale the shake strength by the tier of the
@@ -717,6 +737,7 @@ function M.new(options)
         shopIconImagePaths = shopIconImagePaths,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
+        lastKnownBestAltitude = altitudeStore:load(),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
         collectedSpecimens = specimenStore:load(),
@@ -731,6 +752,7 @@ function M.new(options)
         shipPunch = 0,
         shipShake = 0,
         shipShakeMagnitude = sampleTierShakeMultiplier("common"),
+        distancePunch = 0,
         slotSpin = nil,
         touches = {},
         verticalOffset = 0,
@@ -1232,6 +1254,7 @@ function M:update(dt)
     self:pollDesktopMouse()
     local steering = self:steeringButtonState()
     local previousPhase = self.expedition.phase
+    local previousBestAltitude = self.lastKnownBestAltitude or self.expedition.bestAltitude
     for i = #self.floatingTexts, 1, -1 do
         local ft = self.floatingTexts[i]
         ft.timer = ft.timer - dt
@@ -1258,6 +1281,9 @@ function M:update(dt)
     end
     if self.shipShake > 0 then
         self.shipShake = math.max(0, self.shipShake - dt)
+    end
+    if self.distancePunch > 0 then
+        self.distancePunch = math.max(0, self.distancePunch - dt)
     end
     if self.newSpecimenBannerTimer > 0 then
         self.newSpecimenBannerTimer = math.max(0, self.newSpecimenBannerTimer - dt)
@@ -1545,6 +1571,10 @@ function M:update(dt)
     if self.expedition.phase ~= "ascending" and self.expedition.phase ~= "returning" then
         self.touches = {}
     end
+    if self.expedition.bestAltitude > previousBestAltitude then
+        self.distancePunch = distancePunchDuration
+    end
+    self.lastKnownBestAltitude = self.expedition.bestAltitude
 end
 
 function M:keypressed(key)
@@ -2120,6 +2150,23 @@ function M:draw()
         love.graphics.setColor(0.7, 0.9, 1)
     end
     love.graphics.print(hud.distance, 20, hudY)
+    -- docs/feedback/INBOX.md 국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 항목 (2):
+    -- draw a punch-scaled, color-emphasized overlay of the DIST text
+    -- whenever a new all-time best altitude was just set (self.distancePunch
+    -- counts down from distancePunchDuration). Re-print on top of the plain
+    -- print above (same origin) rather than replacing it, so layout/width
+    -- measurement below stays anchored to the unscaled baseline text.
+    if self.distancePunch > 0 then
+        local scale = distancePunchScale(self.distancePunch, distancePunchDuration)
+        local fadeProgress = self.distancePunch / distancePunchDuration
+        love.graphics.push()
+        love.graphics.translate(20, hudY)
+        love.graphics.scale(scale, scale)
+        love.graphics.setColor(1, 0.85, 0.25, fadeProgress)
+        love.graphics.print(hud.distance, 0, 0)
+        love.graphics.pop()
+        love.graphics.setColor(0.7, 0.9, 1)
+    end
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- third slice): pair the CASH readout with a small coin icon, mirroring
     -- the shield icon paired with the hull status line below. The coin sits
