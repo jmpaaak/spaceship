@@ -2409,6 +2409,47 @@ local function testShopTitleIconSprite()
     end
 end
 
+-- Destroyed-phase panel title is still bare centered printf text
+-- (ship_destroyed_title) while EARTH SHOP title already has a
+-- ComfyUI storefront. Same file-existence + always-set-path pattern
+-- as testShopTitleIconSprite, plus Lua cracked-hull fallback
+-- geometry (even-length, spans cy, horizontally symmetric).
+-- Graphics-gated destroyedTitleIconImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run()
+-- stays under Lua's 60-upvalue cap.
+local function testDestroyedTitleIconSprite()
+    local path = "assets/effects/destroyed_title.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated destroyed-title icon sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.destroyedTitleIconImagePath == path,
+        "PlayScene must load assets/effects/destroyed_title.png into self.destroyedTitleIconImagePath")
+    assert(play.destroyedTitleIconSize == 24 and play.destroyedTitleIconGap == 8)
+    local points = play.destroyedTitleIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "destroyed-title silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "destroyed-title icon must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "destroyed-title outline must be horizontally symmetric around cx")
+    end
+end
+
 -- SAMPLES HUD readout is still bare gold text (hud_samples) while
 -- DIST/CASH/HULL/STEER/BEST already have ComfyUI icons. Same
 -- file-existence + always-set-path pattern as testBestIconSprite,
@@ -2481,6 +2522,7 @@ local function testCanvasLayoutScale()
     testFloatingDamageIconSprite()
     testMessageBannerIconSprite()
     testShopTitleIconSprite()
+    testDestroyedTitleIconSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows

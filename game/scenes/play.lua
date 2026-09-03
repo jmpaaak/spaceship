@@ -629,6 +629,34 @@ end
 M.shopTitleIconSize = 24
 M.shopTitleIconGap = 8
 
+-- Destroyed-phase panel title icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn ship_destroyed_title printf with a
+-- small cracked-hull silhouette, mirroring the EARTH SHOP storefront.
+-- Drawn as a flat hexagon (even-length {x,y,...} list, no
+-- love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.destroyedTitleIconPoints(cx, cy, size)
+    local w = size * 0.4
+    local mid = size * 0.2
+    local peak = size * 0.5
+    local bottom = size * 0.45
+    return {
+        cx, cy - peak,
+        cx + w, cy - mid,
+        cx + w, cy + mid,
+        cx, cy + bottom,
+        cx - w, cy + mid,
+        cx - w, cy - mid,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- cracked hull's right edge and the SHIP DESTROYED title's
+-- left edge. Matches the EARTH SHOP storefront because both
+-- sit next to always-drawn panel titles.
+M.destroyedTitleIconSize = 24
+M.destroyedTitleIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1841,6 +1869,22 @@ function M.new(options)
             shopTitleIconImage = img
         end
     end
+    -- assets/effects/destroyed_title.png is the ComfyUI-generated
+    -- destroyed-phase panel title cracked hull
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as shopTitleIconImagePath.
+    -- :draw() scales it to M.destroyedTitleIconSize instead of
+    -- M.destroyedTitleIconPoints, and falls back to that cracked-hull
+    -- hexagon when the image failed to load.
+    local destroyedTitleIconImagePath = "assets/effects/destroyed_title.png"
+    local destroyedTitleIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedTitleIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedTitleIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1959,6 +2003,8 @@ function M.new(options)
         messageBannerIconImagePath = messageBannerIconImagePath,
         shopTitleIconImage = shopTitleIconImage,
         shopTitleIconImagePath = shopTitleIconImagePath,
+        destroyedTitleIconImage = destroyedTitleIconImage,
+        destroyedTitleIconImagePath = destroyedTitleIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4129,7 +4175,27 @@ function M:draw()
         local row = 712
         local rowStep = 44
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf(i18n.t("ship_destroyed_title"), fullX, row, fullW, "center")
+        local destroyedTitle = i18n.t("ship_destroyed_title")
+        local destroyedTitleFont = love.graphics.getFont()
+        local destroyedTitleWidth = destroyedTitleFont:getWidth(destroyedTitle)
+        local destroyedTitleIconSpan = M.destroyedTitleIconSize + M.destroyedTitleIconGap
+        local destroyedTitleStartX = viewport.width / 2 - (destroyedTitleIconSpan + destroyedTitleWidth) / 2
+        local destroyedTitleIconCenterX = destroyedTitleStartX + M.destroyedTitleIconSize / 2
+        local destroyedTitleIconCenterY = row + destroyedTitleFont:getHeight() / 2
+        if self.destroyedTitleIconImage then
+            local iw, ih = self.destroyedTitleIconImage:getDimensions()
+            local scale = M.destroyedTitleIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.destroyedTitleIconImage, destroyedTitleIconCenterX, destroyedTitleIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: coral cracked-hull hexagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.55, 0.45)
+            love.graphics.polygon("fill",
+                M.destroyedTitleIconPoints(destroyedTitleIconCenterX, destroyedTitleIconCenterY, M.destroyedTitleIconSize))
+        end
+        love.graphics.setColor(1, 0.55, 0.45)
+        love.graphics.print(destroyedTitle, destroyedTitleStartX + destroyedTitleIconSpan, row)
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(i18n.t("lost_total_line",
