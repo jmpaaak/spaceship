@@ -497,6 +497,27 @@ end
 M.sampleValueIconSize = 24
 M.sampleValueIconGap = 8
 
+-- Planet approach RISK/LETHAL icon (icon-based HUD simplification
+-- follow-on): pair the red/amber risk_lethal/risk_normal readout with
+-- a small warning-triangle silhouette, mirroring the SAMPLE $N
+-- crystal. Drawn as a flat triangle polygon (even-length {x,y,...}
+-- list, no love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.riskIconPoints(cx, cy, size)
+    local r = size * 0.5
+    return {
+        cx, cy - r,
+        cx + r * 0.87, cy + r * 0.5,
+        cx - r * 0.87, cy + r * 0.5,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the warning
+-- triangle's right edge and the RISK/LETHAL text's left edge.
+-- Matches the SAMPLE $N crystal because both sit next to planets.
+M.riskIconSize = 24
+M.riskIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1629,6 +1650,22 @@ function M.new(options)
             sampleValueIconImage = img
         end
     end
+    -- assets/effects/planet_risk.png is the ComfyUI-generated planet
+    -- approach RISK/LETHAL warning triangle
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as sampleValueIconImagePath.
+    -- :draw() scales it to M.riskIconSize instead of M.riskIconPoints,
+    -- and falls back to that warning-triangle polygon when the image
+    -- failed to load.
+    local riskIconImagePath = "assets/effects/planet_risk.png"
+    local riskIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, riskIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            riskIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1737,6 +1774,8 @@ function M.new(options)
         earthIconImagePath = earthIconImagePath,
         sampleValueIconImage = sampleValueIconImage,
         sampleValueIconImagePath = sampleValueIconImagePath,
+        riskIconImage = riskIconImage,
+        riskIconImagePath = riskIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3276,13 +3315,34 @@ function M:draw()
                 else
                     previewY = math.max(72, y - planet.radius - 12)
                 end
+                local riskTextWidth = font:getWidth(risk.label)
+                local riskIconSpan = M.riskIconSize + M.riskIconGap
+                local riskLabelX = clampLabelX(x, riskIconSpan + riskTextWidth, viewport.width)
+                local riskIconCenterX = riskLabelX + M.riskIconSize / 2
+                local riskIconCenterY = previewY + font:getHeight() / 2
+                if self.riskIconImage then
+                    local iw, ih = self.riskIconImage:getDimensions()
+                    local scale = M.riskIconSize / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.draw(self.riskIconImage, riskIconCenterX, riskIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    -- Fallback: warning triangle, used only when the
+                    -- ComfyUI-generated sprite failed to load. Tinted
+                    -- red for lethal, amber for normal risk.
+                    if risk.lethal then
+                        love.graphics.setColor(1, 0.3, 0.25)
+                    else
+                        love.graphics.setColor(1, 0.8, 0.25)
+                    end
+                    love.graphics.polygon("fill",
+                        M.riskIconPoints(riskIconCenterX, riskIconCenterY, M.riskIconSize))
+                end
                 if risk.lethal then
                     love.graphics.setColor(1, 0.3, 0.25)
                 else
                     love.graphics.setColor(1, 0.8, 0.25)
                 end
-                love.graphics.print(risk.label,
-                    clampLabelX(x, font:getWidth(risk.label), viewport.width), previewY)
+                love.graphics.print(risk.label, riskLabelX + riskIconSpan, previewY)
             end
         end
     end

@@ -1658,5 +1658,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.sampleValueIconImage for planet SAMPLE  Lua hexagon crystal"
+  },
+  {
+    "path": "assets/effects/planet_risk.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "d4a256a6-6808-4266-bb8c-25499885ab93",
+    "prompt": "pixel art, 16-bit, small amber warning triangle HUD icon sprite, simple hazard alert triangle, isolated planet collision-risk HUD icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904149,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T19:52:46Z",
+    "sha256": "5cd3ba0714d360e14275c5204fdcac541e42a38713e46a294405a52d3b264b55",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.riskIconImage for planet RISK/LETHAL Lua warning triangle"
   }
 ]
