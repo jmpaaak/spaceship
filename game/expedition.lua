@@ -740,8 +740,11 @@ function M.damage(run, amount)
         -- run instead of triggering the full meta wipe. run.insuranceUsed
         -- tracks whether this run's single save has already been spent, so
         -- a second lethal hit destroys normally even with insurance gear
-        -- still equipped.
-        if not run.insuranceUsed and gearModule.hasInsurance(run.equippedGear or {}) then
+        -- still equipped. combinedGearList(run) unions equippedGear +
+        -- equippedEngineParts so an ENGINE-slot insurance part (e.g.
+        -- engine_escape_pod_thruster) saves a run exactly like a hull one,
+        -- matching every other category-agnostic effect in this file.
+        if not run.insuranceUsed and gearModule.hasInsurance(combinedGearList(run)) then
             run.insuranceUsed = true
             run.durability = 1
             return false

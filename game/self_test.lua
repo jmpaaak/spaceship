@@ -1624,6 +1624,39 @@ local function testGearPropulsionRunWiring()
         "launching a new expedition must refill remaining boost charges back to the equipped boostChargeCount total")
 end
 
+-- Item 14(D) category-agnostic content-coverage follow-up: this lane's own
+-- audit pattern (documented in docs/GEAR_SCHEMA.md and
+-- testEngineCardsHaveCategoryAgnosticEffectCoverage) treats insurance as one
+-- of the effect types "hull/engine 어느 슬롯이든 효과가 실제로 반영되도록
+-- 설계된" -- combinedGearList(run) already unions equippedGear +
+-- equippedEngineParts for every other category-agnostic wrapper in this
+-- file (chainTrigger, rerollBonus, detectionRadius, autoCollect,
+-- shopDiscount, sellMultiplier, streakMultiplier, luck). M.damage's
+-- insurance check was the one holdout still reading run.equippedGear (hull
+-- only) directly, so a bundled engine card carrying `insurance`
+-- (engine_escape_pod_thruster) was silently unable to grant the "파괴 시 1회
+-- 한정 정산 없이 생존" save even though the schema/docs describe insurance
+-- as category-agnostic -- an engine-only loadout could never survive a
+-- lethal hit via gear, unlike every other category-agnostic effect.
+local function testGearInsuranceCategoryAgnosticWiring()
+    local expedition = require("game.expedition")
+    local enginePool = gear.loadEngineParts()
+    local escapePod = gear.findById(enginePool, "engine_escape_pod_thruster")
+    assert(escapePod, "fixture engine card 'engine_escape_pod_thruster' must exist in the bundled pool")
+
+    local engineInsuredRun = expedition.new({ durability = 2, money = 40 })
+    assert(expedition.equipGear(engineInsuredRun, "engine", escapePod))
+    expedition.launch(engineInsuredRun)
+    engineInsuredRun.durability = 1
+
+    local destroyedFirstHit = expedition.damage(engineInsuredRun, 5)
+    assert(destroyedFirstHit == false,
+        "an equipped ENGINE-slot insurance part must prevent destruction on the first lethal hit, same as a hull one")
+    assert(engineInsuredRun.phase == "ascending", "an insured survival must keep the run in its current phase")
+    assert(engineInsuredRun.durability > 0, "an insured survival must restore at least 1 durability")
+    assert(engineInsuredRun.money == 40, "an insured survival must NOT trigger the meta wipe")
+end
+
 -- Next slice within item 14: (D) insurance / (F) shopDiscount were only
 -- pure gear.lua conversion functions (M.hasInsurance/M.effectiveShopPrice)
 -- until now -- never actually consumed by a run's destroy()/shop-purchase
@@ -4295,6 +4328,7 @@ function M.run()
     testGearRunWiring()
     testGearPropulsionRunWiring()
     testGearSurvivalAndEconomyWiring()
+    testGearInsuranceCategoryAgnosticWiring()
     testGearOfferRolling()
     testGearRunEffectWiring()
     testGearCollisionRadiusRunWiring()

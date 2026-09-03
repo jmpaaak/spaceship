@@ -1300,3 +1300,36 @@ preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). `git stat
 ## Archived from STATUS.md (2026-09-03 16:48)
 
 ## [gear 레인] 항목10/14 콘텐츠 커버리지 심화 감사 — engine_parts.json 9종이 엔진 슬롯에서 완전히 죽은 콘텐츠였음을 발견·수정 (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 17:08)
+
+
+## [gear 레인] 항목12/14 에디션 스코프 콘텐츠 커버리지 감사 — 카드x에디션 조합의 "표시는 되지만 수치는 그대로"인 gap 발견·수정 (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 17:11)
+
+preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). `git status --short`가 이전 사이클이 남긴 uncommitted 항목12 후속(에디션 스코프 콘텐츠 커버리지 테스트 + `engine_singularity_drive`에 `sampleSellValue` 효과 추가)을 보고해 그대로 검증·마무리했다.
+
+## Archived from STATUS.md (2026-09-03 17:14)
+
+- 감사 질문: 항목12의 에디션 배율(`gear.editionEffects[id].scope`)은 `scope == "all"`이 아니면 카드 effects 중 그 타입과 일치하는 항목만 곱연산한다. 그렇다면 어떤 카드가 `editions` 후보 풀에 non-"all"-scope 에디션(예: `crystallized`, scope `sampleSellValue`)을 나열하면서도 정작 자신은 그 타입의 effect를 하나도 갖지 않는 경우가 있는가? 있다면 그 조합이 실제로 롤되었을 때 에디션 배지/아이콘은 표시되지만 수치는 무편집 카드와 완전히 동일한 "표시만 되는 죽은 조합"이 된다 — 이 레인이 반복 발견해온 "문서화된 메커니즘인데 실제 소비자가 없음" 패턴을 카드x에디션 조합 단위로 한 단계 더 깊게 적용한 감사다.
+- TDD: `game/self_test.lua`에 신규 `testGearEditionScopeContentCoverage()`를 추가했다(RED 확인: `engine_singularity_drive:crystallized`가 유일한 dead combo로 보고되며 실패 — 이 카드가 `crystallized`(scope `sampleSellValue`)를 editions 후보로 나열하면서도 `sampleSellValue` 타입 effect가 없었음).
+- `game/data/engine_parts.json`의 `engine_singularity_drive`에 `{ "type": "sampleSellValue", "value": 3 }` effect를 추가해(기존 climbSpeed/money/fuelEfficiency는 그대로, 밸런스상 순수 추가) 해당 조합이 실제로 수치 영향을 갖도록 닫았다.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`loop/loop.sh`(레인 인프라 carryover, 게임 코드 아님) 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 전혀 건드리지 않았다.
+- 다음 사이클 다음 슬라이스: 이로써 항목12(A)(B) 두 축(등급/에디션)의 스코프 커버리지까지 카드x에디션 조합 단위로 감사·클린 상태를 확인했다. 다음은 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 실제 UI 소비 지점(다른 레인 담당)과의 통합 확인, 또는 이 레인이 반복해온 "문서-코드 정합성 감사" 패턴을 항목9(시너지 엔진)의 다른 미검증 축(예: 3개 이상 카드 간 태그 중첩 시너지 배율 곱연산 정확성)에 재적용.
+
+## Archived from STATUS.md (2026-09-03 17:17)
+
+## [gear 레인] 항목13/12 웹 에디터 에디션 미리보기 기능 구현 + 선체 부품 슬롯 스코프 감사 (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 17:21)
+
+preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작. 직전 슬라이스에서 다음 슬라이스 후보로 명시했던 두 가지 잔여 작업을 모두 처리했다.
+
+## Archived from STATUS.md (2026-09-03 17:24)
+
+1. **웹 에디터 에디션 미리보기 (항목 13/12 잔여):**
+   - `tools/gear-editor/editor.js`와 `index.html`에 에디션 효과 미리보기(`updateEditionPreview`) 기능을 구현했다.
+   - `M.editionEffects`와 동일한 변환 로직(`EDITION_EFFECTS`)을 에디터에 이식하여, 사용자가 카드 폼에서 `editions`를 입력하거나 `effects` 목록을 수정할 때마다 하단에 각 에디션(irradiated, crystallized, quantum_flawed, refined)이 적용되었을 때의 최종 수치(multiplier 적용, drawback 추가, synergyBonusAdd 표시 등)를 실시간으로 미리보기할 수 있게 했다.
+   - 이를 통해 화이트리스트 동기화만 검증되던 상태에서 벗어나, 항목 13의 "수치 미리보기" 요건을 완전히 만족시켰다.
