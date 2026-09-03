@@ -877,6 +877,21 @@ function M.new(options)
             joystickPadImage = img
         end
     end
+    -- assets/effects/joystick_knob.png is the ComfyUI-generated virtual
+    -- joystick thumbstick cap (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated-image pattern as joystickPadImagePath.
+    -- drawJoystickStick() scales it to joystick.visualKnobRadius * 2 instead
+    -- of a love.graphics.circle fill, and falls back to that circle when
+    -- the image failed to load.
+    local joystickKnobImagePath = "assets/effects/joystick_knob.png"
+    local joystickKnobImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, joystickKnobImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            joystickKnobImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -909,6 +924,8 @@ function M.new(options)
         minimapDiscImagePath = minimapDiscImagePath,
         joystickPadImage = joystickPadImage,
         joystickPadImagePath = joystickPadImagePath,
+        joystickKnobImage = joystickKnobImage,
+        joystickKnobImagePath = joystickKnobImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -1941,8 +1958,17 @@ function M:drawJoystickStick()
         love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha)
         love.graphics.circle("line", ox, oy, radius)
     end
-    love.graphics.setColor(0.9, 0.95, 1, joystick.visualKnobAlpha)
-    love.graphics.circle("fill", kx, ky, knob)
+    if self.joystickKnobImage then
+        local iw, ih = self.joystickKnobImage:getDimensions()
+        local scale = (knob * 2) / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, joystick.visualKnobAlpha)
+        love.graphics.draw(self.joystickKnobImage, kx, ky, 0, scale, scale, iw / 2, ih / 2)
+    else
+        -- Fallback: pale disc, used only when the ComfyUI-generated
+        -- sprite failed to load.
+        love.graphics.setColor(0.9, 0.95, 1, joystick.visualKnobAlpha)
+        love.graphics.circle("fill", kx, ky, knob)
+    end
 end
 
 -- Circular galaxy chart (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3).

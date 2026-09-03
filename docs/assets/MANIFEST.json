@@ -708,5 +708,30 @@
     "width": 64,
     "height": 64,
     "qa": "joystick pad sprite wired into PlayScene joystickPadImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/joystick_knob.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "23297d33-e7c2-4b09-9bae-9a0fc706615c",
+    "prompt": "pixel art, 16-bit, small circular virtual joystick knob sprite, bright pale cyan-white analog stick cap with soft highlight, isolated circular HUD joystick thumbstick icon, solid white background, no text, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904111,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:06:48Z",
+    "sha256": "d396f19cf779b1b59ca8c3211860e2dc3af4f413beda633447104ac6f5980b02",
+    "width": 64,
+    "height": 64,
+    "qa": "joystick knob sprite wired into PlayScene joystickKnobImage; pipeline PNG signature/decode gate"
   }
 ]

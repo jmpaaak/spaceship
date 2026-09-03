@@ -1486,6 +1486,20 @@ local function testJoystickPadSprite()
         "PlayScene must load assets/effects/joystick_pad.png into self.joystickPadImagePath")
 end
 
+-- Virtual joystick knob is still a Lua circle fill. Same
+-- file-existence + always-set-path pattern as testJoystickPadSprite.
+-- Graphics-gated joystickKnobImage cannot be asserted under GAME_HEADLESS=1.
+local function testJoystickKnobSprite()
+    local path = "assets/effects/joystick_knob.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated joystick knob sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.joystickKnobImagePath == path,
+        "PlayScene must load assets/effects/joystick_knob.png into self.joystickKnobImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3362,6 +3376,7 @@ function M.run()
     testPlanetShadowSprite()
     testMinimapDiscSprite()
     testJoystickPadSprite()
+    testJoystickKnobSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")
