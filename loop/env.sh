@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 HERMES_BIN="${HERMES_BIN:-/Users/jm/.hermes/hermes-agent/venv/bin/hermes}"
-PROVIDER="${PROVIDER:-openai-codex}"
-MODEL="${MODEL:-gpt-5.6-sol}"
+PROVIDER="${PROVIDER:-xai-oauth}"
+MODEL="${MODEL:-grok-4.6}"
 REASONING="${REASONING:-high}"
 FALLBACK_AGY_BIN="${FALLBACK_AGY_BIN:-/Users/jm/.local/bin/agy}"
 FALLBACK_MODEL="${FALLBACK_MODEL:-gemini-3.1-pro-high}"

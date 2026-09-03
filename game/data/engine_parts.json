@@ -156,6 +156,7 @@
       "rarity": "legendary",
       "tags": ["void", "altitude", "speed", "economy"],
       "editions": ["quantum_flawed", "refined"],
+      "galaxyExclusive": true,
       "effects": [
         { "type": "climbSpeed", "value": 12 },
         { "type": "speed", "value": 6 },

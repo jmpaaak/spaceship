@@ -1,13 +1,16 @@
 # STATUS
-## [gear 레인] 항목10(b) boostCharge 소비 배선 — 미장착 시 안전 거부, 재발사 시 리필 (완료, 2026-09-03)
+## [gear 레인] 항목7 획득 경로 3원화 — engine_parts.json 은하 고유 콘텐츠 gap 발견·수정 (완료, 2026-09-03)
 
-- `game/expedition.lua`에 신규 `run.boostsUsed`(`M.new`에서 0 초기화, `M.launch`에서 `run.insuranceUsed`/`run.rerollsUsed`와 함께 0으로 리셋)와 두 함수를 추가했다: `M.boostsRemaining(run)`(현재 `M.boostChargeCount(run)`에서 `run.boostsUsed`를 뺀 값, 0 미만 방지 — 장비 재장착 시 즉시 상한 상승, `rerollsRemaining`과 동일 계약)와 `M.spendBoost(run)`(성공 시 `true`+카운터 증가, 잔여 없으면 예외 없이 `false, 에러메시지` 반환 — `M.spendReroll`/`M.sellGear`/`M.equipGear`와 동일한 원자적 거부 패턴).
-- `game/self_test.lua`의 `testGearPropulsionRunWiring` 확장 검증: `engine_emergency_boost_pod`(boostCharge +2) 장착 run이 2에서 시작해 두 번의 `spendBoost`로 0까지 소진, 세 번째는 안전하게 거부(음수 방지), 미장착 run은 0에서 시작하고 거부도 정상 동작, 재발사(`M.launch`) 시 현재 장착 총합으로 리필됨을 확인.
-- `docs/GEAR_SCHEMA.md`에 "Item 10(b)/14(G) `boostCharge` consumption wiring (follow-up slice)" 섹션을 신규 추가했다.
-- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
-- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
-- 실제 게임플레이 소비 지점(탭-투-부스트 버튼 등, `M.spendBoost`를 실제로 호출해 추력/고도 버스트를 적용하는 것)은 여전히 이 레인 스코프 밖(`play.lua` 담당).
-- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화) 순수 데이터 계층 준비, 또는 이 레인이 완료한 순서 밖의 잔여 작업(실제 UI 소비 지점은 대부분 play.lua/world.lua 담당이라 다른 레인 소관) 검토.
+preflight READY(엔진 테스트/패키지 PASS, git diff clean)로 시작. `git status --short`가 이전 사이클이 남긴 uncommitted 항목7 순수-데이터 슬라이스(`M.shopPlanet`/`M.earthShopPool`/`M.exploreHub`/`M.galaxySpecificGear`, GREEN 확인됨)를 보고해 그대로 커밋·푸시부터 완료한 뒤, 같은 항목7의 후속 gap을 감사해 처리했다.
+
+- 감사 질문: "항목7의 은하-고유(galaxyExclusive) 확정 드롭이 hull/engine 두 카드 풀 모두에서 실제로 동작하는가?" 항목7 원문("범용(은하 특정적이지 않은) 일반 등급 장비 부품은 지구 EARTH SHOP에서도 구매 가능 — 특정 은하 고유의 희귀 장비는 지구에서 판매하지 않는다")과 항목10(c)("획득 경로는 항목 7의 3원화 구조를 그대로 재사용하되, 엔진 부품 전용 카드 풀로 별도 관리한다")를 근거로, `game/data/engine_parts.json`을 Python으로 직접 감사한 결과 `galaxyExclusive: true` 카드가 0건이었다 — 직전 슬라이스가 `hull_combo_matrix` 단 1장에만 이 속성을 시범 적용하고 엔진 풀 전체를 감사하지 않은 것이 원인. `M.exploreHub(run, galaxyId, enginePool)`을 호출하면 항상 조용히 전체 풀로 폴백해, 엔진 부품만 장착한 플레이어는 은하 고유 엔진 보상을 영원히 받을 수 없고 지구 상점 엔진 풀도 아무것도 걸러지지 않는 죽은 콘텐츠였다.
+- TDD: `game/self_test.lua`에 신규 `testGearGalaxyExclusiveEnginePoolWiring()`을 먼저 추가했다(RED 확인: `the bundled engine_parts.json pool must contain at least one galaxyExclusive card`). 엔진 풀의 Earth-shop 필터링, `galaxySpecificGear`가 은하-고유 카드를 우선 선택함, `exploreHub`의 확정 드롭·1회성 소진을 회귀 검증하고, 마지막으로 hull/engine 두 풀이 `run.hubExplored`를 갤럭시 ID로 공유함(한 풀로 탐험을 마치면 다른 풀로도 재탐험 불가 — 항목8의 "체크포인트 탐사는 은하당 1회" 설계와 일치)을 확인한다.
+- `game/data/engine_parts.json`의 기존 legendary 카드 `engine_singularity_drive`(void/altitude/speed/economy 태그, 밸런스 수치 변경 없음)에 `galaxyExclusive: true`만 추가해 GREEN 전환.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/STATUS.md`/`docs/feedback/INBOX.md`/`docs/GEAR_SCHEMA.md`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`도 전혀 건드리지 않았다.
+- 이 슬라이스 이전에 커밋한 항목7 순수-데이터 슬라이스(`world.shopPlanet`/`gear.earthShopPool`/`gear.galaxySpecificGear`/`expedition.exploreHub`)는 커밋 `b1e3f92`로 `spaceship-gear`에 이미 push됨.
+- 실제 UI 배선(상점 행성 접근 팝업, 은하 허브 탐험 프롬프트, 지구 상점 화면에서 필터링된 풀 사용)은 여전히 이 레인 스코프 밖(`play.lua`/`world.lua` 담당).
+- 다음 사이클 다음 슬라이스: 항목15(귀환/비행중 슬롯머신 폐지 + 지구 상점 전용 슬롯머신 은하별 오즈)의 순수 함수/데이터 계층 준비, 또는 이 레인이 완료한 항목13→9→10→12→14의 남은 잔여 gap(문서-코드 정합성 감사 패턴) 재검증.
 
 ## [gear 레인] 항목10/14 콘텐츠 커버리지 심화 감사 — engine_parts.json 9종이 엔진 슬롯에서 완전히 죽은 콘텐츠였음을 발견·수정 (완료, 2026-09-03)
 

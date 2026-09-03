@@ -1173,3 +1173,23 @@ data the Lua loader would reject.
 ### Item 7: Galaxy-exclusive gear (shop/hub logic)
 
 Added `galaxyExclusive` boolean to the `gear.lua` schema. Gears marked as such are omitted from `gear.earthShopPool` and instead guaranteed to drop exactly once per run when players visit a specific galaxy's hub planet via `expedition.exploreHub(run, galaxyId, pool)`. A deterministic shop planet per galaxy is also generated via `world.shopPlanet(galaxy)`.
+
+### Item 7 follow-up: engine pool had zero `galaxyExclusive` content
+
+The first item-7 slice only marked one hull card (`hull_combo_matrix`) as
+`galaxyExclusive`, leaving `game/data/engine_parts.json` with 0 such cards.
+`expedition.exploreHub(run, galaxyId, enginePool)` silently fell back to
+the full (non-exclusive) engine pool in that case, so a player exploring a
+galaxy hub could never receive an engine-exclusive reward and the Earth
+shop's engine pool never excluded anything -- the guaranteed-drop mechanic
+was effectively hull-only despite item 10(c) requiring the engine pool
+reuse the same 3-way acquisition structure. Fixed by marking the existing
+legendary `engine_singularity_drive` card `galaxyExclusive: true` (no
+balance change, pure metadata addition). `run.hubExplored` is confirmed
+shared by galaxy id across both hull and engine pools (exploring a hub
+once locks out re-exploration via either pool, matching item 8's
+one-settlement-per-checkpoint design), so calling `exploreHub` with the
+hull pool after already exploring with the engine pool (or vice versa)
+correctly returns `nil`. `game/self_test.lua`'s
+`testGearGalaxyExclusiveEnginePoolWiring()` covers this.
+

@@ -1234,3 +1234,15 @@
 - `git status --short`가 `game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 이번 슬라이스가 건드릴 필요 없었던 `game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`/`tools/gear-editor/editor.js`도 전혀 건드리지 않았다.
 - `docs/feedback/INBOX.md`의 항목 13 하위(항목14 앞)에 처리 상황을 append했다.
 - 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 웹 에디터가 에디션별 `M.editionEffects` 수치 변환(예: crystallized의 sampleSellValue x2)을 카드 폼에서 실제로 미리보기하는지 감사(현재는 화이트리스트 동기화만 검증됨, 수치 미리보기 자체는 미구현으로 보임).
+
+## Archived from STATUS.md (2026-09-03 16:16)
+
+## [gear 레인] 항목10(b) boostCharge 소비 배선 — 미장착 시 안전 거부, 재발사 시 리필 (완료, 2026-09-03)
+
+- `game/expedition.lua`에 신규 `run.boostsUsed`(`M.new`에서 0 초기화, `M.launch`에서 `run.insuranceUsed`/`run.rerollsUsed`와 함께 0으로 리셋)와 두 함수를 추가했다: `M.boostsRemaining(run)`(현재 `M.boostChargeCount(run)`에서 `run.boostsUsed`를 뺀 값, 0 미만 방지 — 장비 재장착 시 즉시 상한 상승, `rerollsRemaining`과 동일 계약)와 `M.spendBoost(run)`(성공 시 `true`+카운터 증가, 잔여 없으면 예외 없이 `false, 에러메시지` 반환 — `M.spendReroll`/`M.sellGear`/`M.equipGear`와 동일한 원자적 거부 패턴).
+- `game/self_test.lua`의 `testGearPropulsionRunWiring` 확장 검증: `engine_emergency_boost_pod`(boostCharge +2) 장착 run이 2에서 시작해 두 번의 `spendBoost`로 0까지 소진, 세 번째는 안전하게 거부(음수 방지), 미장착 run은 0에서 시작하고 거부도 정상 동작, 재발사(`M.launch`) 시 현재 장착 총합으로 리필됨을 확인.
+- `docs/GEAR_SCHEMA.md`에 "Item 10(b)/14(G) `boostCharge` consumption wiring (follow-up slice)" 섹션을 신규 추가했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- 실제 게임플레이 소비 지점(탭-투-부스트 버튼 등, `M.spendBoost`를 실제로 호출해 추력/고도 버스트를 적용하는 것)은 여전히 이 레인 스코프 밖(`play.lua` 담당).
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화) 순수 데이터 계층 준비, 또는 이 레인이 완료한 순서 밖의 잔여 작업(실제 UI 소비 지점은 대부분 play.lua/world.lua 담당이라 다른 레인 소관) 검토.
