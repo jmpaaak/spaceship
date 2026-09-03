@@ -189,6 +189,136 @@
         { "type": "fuelEfficiency", "value": 25 },
         { "type": "money", "value": 1 }
       ]
+    },
+    {
+      "id": "engine_probability_core",
+      "name": "Probability Core",
+      "nameKo": "확률 코어",
+      "icon": "◔",
+      "rarity": "rare",
+      "tags": ["control", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "luck", "value": 8 },
+        { "type": "steeringResponsiveness", "value": 6 }
+      ]
+    },
+    {
+      "id": "engine_echo_thruster",
+      "name": "Echo Thruster",
+      "nameKo": "메아리 추진기",
+      "icon": "◕",
+      "rarity": "rare",
+      "tags": ["speed", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "chainTrigger", "value": 1 },
+        { "type": "fuelEfficiency", "value": 10 }
+      ]
+    },
+    {
+      "id": "engine_haggler_valve",
+      "name": "Haggler Valve",
+      "nameKo": "흥정꾼 밸브",
+      "icon": "◖",
+      "rarity": "uncommon",
+      "tags": ["economy", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "rerollBonus", "value": 1 },
+        { "type": "steeringResponsiveness", "value": 5 }
+      ]
+    },
+    {
+      "id": "engine_slim_nacelle",
+      "name": "Slim Nacelle",
+      "nameKo": "슬림 나셀",
+      "icon": "◗",
+      "rarity": "common",
+      "tags": ["defense", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "collisionRadius", "value": 12 },
+        { "type": "speed", "value": 2 }
+      ]
+    },
+    {
+      "id": "engine_deep_scan_pod",
+      "name": "Deep Scan Pod",
+      "nameKo": "심층 스캔 포드",
+      "icon": "◘",
+      "rarity": "uncommon",
+      "tags": ["control", "altitude"],
+      "editions": [],
+      "effects": [
+        { "type": "detectionRadius", "value": 20 },
+        { "type": "fuelEfficiency", "value": 8 }
+      ]
+    },
+    {
+      "id": "engine_magnet_intake",
+      "name": "Magnet Intake",
+      "nameKo": "자력 흡입구",
+      "icon": "◙",
+      "rarity": "rare",
+      "tags": ["economy", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "autoCollect", "value": 1 },
+        { "type": "steeringResponsiveness", "value": 6 }
+      ]
+    },
+    {
+      "id": "engine_escape_pod_thruster",
+      "name": "Escape Pod Thruster",
+      "nameKo": "탈출 포드 추진기",
+      "icon": "◚",
+      "rarity": "rare",
+      "tags": ["defense", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "insurance", "value": 1 },
+        { "type": "speed", "value": 3 }
+      ]
+    },
+    {
+      "id": "engine_freelancer_manifold",
+      "name": "Freelancer Manifold",
+      "nameKo": "프리랜서 매니폴드",
+      "icon": "◛",
+      "rarity": "uncommon",
+      "tags": ["economy", "control"],
+      "editions": [],
+      "effects": [
+        { "type": "shopDiscount", "value": 15 },
+        { "type": "fuelEfficiency", "value": 10 }
+      ]
+    },
+    {
+      "id": "engine_market_thruster",
+      "name": "Market Thruster",
+      "nameKo": "시장 추진기",
+      "icon": "◜",
+      "rarity": "uncommon",
+      "tags": ["economy", "speed"],
+      "editions": [],
+      "effects": [
+        { "type": "sellMultiplier", "value": 20 },
+        { "type": "speed", "value": 3 }
+      ]
+    },
+    {
+      "id": "engine_momentum_stabilizer",
+      "name": "Momentum Stabilizer",
+      "nameKo": "관성 안정기",
+      "icon": "◝",
+      "rarity": "rare",
+      "tags": ["control", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "streakMultiplier", "value": 8 },
+        { "type": "steeringResponsiveness", "value": 8 }
+      ]
     }
   ]
 }

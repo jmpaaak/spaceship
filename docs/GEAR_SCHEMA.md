@@ -1082,5 +1082,56 @@ awarded value once per chain-trigger point.
   `play.lua`/`i18n.lua`/`world.lua`/`game/gear.lua`/`game/engine_parts.lua`
   untouched (`git status --short` confirms).
 
+## Item 10/14 category-agnostic content-coverage gap — engine pool gains its first cards for 10 hull/engine-agnostic effect types
+
+This lane's recurring "문서-코드 정합성 감사" pattern applied one level
+further than the two existing content-coverage tests
+(`testGearEffectTypeContentCoverage`, `testEngineCardsHaveNonHullOnlyEffect`)
+had checked. `docs/GEAR_SCHEMA.md`/`docs/STATUS.md` document 10 effect
+types as **category-agnostic** — `luck`, `chainTrigger`, `rerollBonus`,
+`collisionRadius`, `detectionRadius`, `autoCollect`, `insurance`,
+`shopDiscount`, `sellMultiplier`, `streakMultiplier` — meaning their
+run-level wiring (mostly via `expedition.lua`'s `combinedGearList(run)`
+helper, which sums `run.equippedGear` + `run.equippedEngineParts`
+unconditionally) explicitly reads BOTH slot categories. A direct Python
+audit of the bundled `game/data/engine_parts.json` (14 cards, pre-slice)
+found that all 10 of these types had zero cards using them — every single
+bundled card carrying one of these types lived only in `hull_parts.json`.
+This meant a player who equipped only engine gear (item 10's independent
+slot category) could never actually encounter luck/chain-retrigger/free
+rerolls/reduced collision radius/wider detection/auto-collect/insurance/
+shop discounts/sell multipliers/streak multipliers in real play, even
+though every one of their run wrappers reads the engine slot list too —
+schema-legal but practically dead content for that slot.
+
+- TDD: `game/self_test.lua`'s new `testEngineCardsHaveCategoryAgnosticEffectCoverage()`
+  audits the loaded engine pool directly and asserts every one of the 10
+  category-agnostic types appears on at least one bundled engine card. RED
+  confirmed first (`missing: luck, chainTrigger, rerollBonus,
+  collisionRadius, detectionRadius, autoCollect, insurance, shopDiscount,
+  sellMultiplier, streakMultiplier`), then closed by data.
+- `game/data/engine_parts.json` gains 10 new cards (14 -> 24), one per
+  missing type, each pairing its category-agnostic effect with a
+  hull-safe/engine-appropriate secondary effect (mostly `steeringResponsiveness`/
+  `fuelEfficiency`/`speed`, all already-established (G)/(A) engine-legal
+  types) so every new card also independently satisfies
+  `testEngineCardsHaveNonHullOnlyEffect`'s "not entirely hull-only" rule:
+  `engine_probability_core` (luck), `engine_echo_thruster` (chainTrigger),
+  `engine_haggler_valve` (rerollBonus), `engine_slim_nacelle`
+  (collisionRadius), `engine_deep_scan_pod` (detectionRadius),
+  `engine_magnet_intake` (autoCollect), `engine_escape_pod_thruster`
+  (insurance), `engine_freelancer_manifold` (shopDiscount),
+  `engine_market_thruster` (sellMultiplier), `engine_momentum_stabilizer`
+  (streakMultiplier). Tag conventions (economy/control/defense/speed/altitude)
+  reused from the existing pool so the item 9 tag-synergy engine treats them
+  identically to any other card.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN
+  (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`,
+  `ASSET_MANIFEST_OK`).
+- Changed files: `game/data/engine_parts.json`/`game/self_test.lua`/
+  `docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` only —
+  `play.lua`/`i18n.lua`/`world.lua`/`game/gear.lua`/`game/engine_parts.lua`/
+  `game/expedition.lua` untouched (`git status --short` confirms).
+
 
 

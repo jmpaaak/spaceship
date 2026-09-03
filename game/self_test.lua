@@ -1176,6 +1176,53 @@ local function testEngineCardsHaveNonHullOnlyEffect()
         table.concat(deadCards, ", "))
 end
 
+-- Item 10/14 content-coverage gap audit, one level further (this lane's
+-- recurring "문서-코드 정합성 감사" pattern applied to a direction the
+-- prior two coverage tests never checked). testGearEffectTypeContentCoverage
+-- only requires each of gear.knownEffectTypes to appear SOMEWHERE across
+-- the hull+engine pools combined; testEngineCardsHaveNonHullOnlyEffect only
+-- requires each bundled engine card to have at least one non-hull-only
+-- effect. Neither test catches a category-agnostic (B/C/D/E/F) effect type
+-- -- one whose run-level wiring explicitly reads BOTH slot lists via
+-- expedition.lua's combinedGearList(run) (luck, chainTrigger, rerollBonus,
+-- collisionRadius, detectionRadius, autoCollect, insurance, shopDiscount,
+-- sellMultiplier, streakMultiplier are all documented as hull/engine
+-- category-agnostic, unlike the five (A) hull-only types) -- being usable
+-- from hull gear ONLY, with zero bundled engine cards ever carrying it.
+-- An audit of the actual `game/data/engine_parts.json` (14 cards) finds
+-- exactly this: every one of these 10 category-agnostic types has at least
+-- one bundled hull card (per testGearEffectTypeContentCoverage) but not a
+-- single bundled engine card, meaning a player who equips only engine gear
+-- can never encounter luck/chainTrigger/rerollBonus/collisionRadius/
+-- detectionRadius/autoCollect/insurance/shopDiscount/sellMultiplier/
+-- streakMultiplier in actual play even though every one of their run
+-- wrappers reads the engine slot list too.
+local function testEngineCardsHaveCategoryAgnosticEffectCoverage()
+    local categoryAgnosticTypes = {
+        "luck", "chainTrigger", "rerollBonus", "collisionRadius",
+        "detectionRadius", "autoCollect", "insurance", "shopDiscount",
+        "sellMultiplier", "streakMultiplier",
+    }
+    local enginePool = gear.loadEngineParts()
+    local seen = {}
+    for _, part in ipairs(enginePool) do
+        for _, effect in ipairs(part.effects) do
+            seen[effect.type] = true
+        end
+    end
+    local missing = {}
+    for _, t in ipairs(categoryAgnosticTypes) do
+        if not seen[t] then
+            missing[#missing + 1] = t
+        end
+    end
+    assert(#missing == 0,
+        "engine_parts.json must contain at least one bundled card for each hull/engine " ..
+        "category-agnostic effect type, otherwise an engine-only loadout can never encounter " ..
+        "it even though its run wiring reads both slot lists; missing: " ..
+        table.concat(missing, ", "))
+end
+
 -- Minimal game wiring for items 9/10/13 ("최소한의 로더 호출 추가는 예외로
 -- 허용"): expedition.lua now owns a run.gearLoadout (hull + engine slot
 -- lists via engine_parts.lua) and applies the item 9 climbSpeed synergy
@@ -3888,6 +3935,7 @@ function M.run()
     testEnginePropulsionSpecialization()
     testGearEffectTypeContentCoverage()
     testEngineCardsHaveNonHullOnlyEffect()
+    testEngineCardsHaveCategoryAgnosticEffectCoverage()
     testGearRunWiring()
     testGearPropulsionRunWiring()
     testGearSurvivalAndEconomyWiring()

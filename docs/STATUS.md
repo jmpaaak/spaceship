@@ -624,4 +624,16 @@ preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --
 - `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`도 전혀 건드리지 않았다.
 - 다음 사이클 다음 슬라이스: 이로써 레인이 지정받은 5개 항목(13→9→10→12→14)의 문서상 명시적 "카운트만 있고 소비자 없음" 유형 gap은 모두 닫힌 것으로 보인다 — 다음은 항목7(획득 경로 3원화 — 상점 행성 좌표 생성 등 순수 함수/데이터 계층에서 준비 가능한 부분) 순수 데이터 계층 준비, 또는 이 레인이 완료한 순서 밖의 잔여 작업(실제 UI 소비 지점은 대부분 play.lua/world.lua/minimap.lua 담당이라 다른 레인 소관) 검토를 권장한다.
 
+## [gear 레인] 항목10/14 카테고리 무관 효과 콘텐츠 커버리지 — engine_parts.json에 10개 타입 최초 카드 추가 (완료, 2026-09-03)
+
+이 레인이 지정받은 항목13→9→10→12→14가 모두 1차 완료되고 여러 후속 gap 슬라이스(직전 chainTrigger 소비 배선 포함)까지 닫힌 상태에서, 기존 콘텐츠 커버리지 테스트 두 종(`testGearEffectTypeContentCoverage`: 두 풀 합쳐 모든 타입이 최소 1회 등장, `testEngineCardsHaveNonHullOnlyEffect`: 모든 엔진 카드가 최소 1개 non-hull-only 효과 보유)보다 한 단계 더 깊은 감사를 수행했다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- 감사 질문: "카테고리 무관(hull/engine 어느 슬롯이든 효과가 실제로 반영되도록 설계된) 효과 타입 10종(luck/chainTrigger/rerollBonus/collisionRadius/detectionRadius/autoCollect/insurance/shopDiscount/sellMultiplier/streakMultiplier — 대부분 `expedition.lua`의 `combinedGearList(run)` 헬퍼가 hull+engine 두 목록을 무조건 합산해 소비)가 실제로 엔진 슬롯 카드에서도 등장하는가?" Python으로 `game/data/engine_parts.json`(14종)을 직접 감사한 결과 10종 전부 0건 — 이 타입들을 쓰는 번들 카드는 전부 `hull_parts.json`에만 존재해, 엔진 부품만 장착한 플레이어는 이 10가지 효과 중 어느 것도 실제 플레이에서 마주칠 수 없었다(런 배선 함수 자체는 이미 두 슬롯 모두를 읽도록 설계돼 있었으나 콘텐츠가 없어 죽어있던 gap).
+- TDD: `game/self_test.lua`에 신규 `testEngineCardsHaveCategoryAgnosticEffectCoverage()`를 먼저 추가했다(RED 확인: `missing: luck, chainTrigger, rerollBonus, collisionRadius, detectionRadius, autoCollect, insurance, shopDiscount, sellMultiplier, streakMultiplier` 전체 나열 실패).
+- `game/data/engine_parts.json`에 10종 신규 카드를 추가했다(14종 → 24종, 누락 타입당 1장): `engine_probability_core`(luck), `engine_echo_thruster`(chainTrigger), `engine_haggler_valve`(rerollBonus), `engine_slim_nacelle`(collisionRadius), `engine_deep_scan_pod`(detectionRadius), `engine_magnet_intake`(autoCollect), `engine_escape_pod_thruster`(insurance), `engine_freelancer_manifold`(shopDiscount), `engine_market_thruster`(sellMultiplier), `engine_momentum_stabilizer`(streakMultiplier). 각 카드는 새 카테고리 무관 효과 옆에 항상 (G) `steeringResponsiveness`/`fuelEfficiency` 또는 (A) `speed` 같은 이미 엔진-합법으로 확립된 보조 효과를 함께 부여해, 신규 카드도 `testEngineCardsHaveNonHullOnlyEffect`의 "non-hull-only 효과 최소 1개" 규칙을 독립적으로 만족한다. 태그 관례(economy/control/defense/speed/altitude)를 그대로 재사용해 항목9의 시너지 엔진과 완전히 호환된다.
+- `docs/GEAR_SCHEMA.md`에 "Item 10/14 category-agnostic content-coverage gap" 섹션을 신규 추가했다.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`도 전혀 건드리지 않았다(순수 데이터+테스트 슬라이스).
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 다시 적용해 항목9/10/12/13/14의 남은 잔여 gap(예: 시너지 엔진의 다른 에디션 상호작용, 슬롯 교체 루프 실사용 UI는 다른 레인 담당) 재검증.
+
 
