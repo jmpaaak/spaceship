@@ -37,6 +37,12 @@ OFFICIAL_SOURCE_PREFIXES = (
     "https://www.aetherai.com/",
     "https://api.aetherforgeai.com/",
     "https://api.aetherai.com/",
+    # 2026-09-03: ComfyUI is an equally official generation path
+    # (user-approved, human-gate removed). Originally a local instance;
+    # moved to a remote GPU server on 2026-09-03 -- keep both URLs so
+    # already-recorded manifest entries stay valid.
+    "http://127.0.0.1:8188/",
+    "http://222.238.86.132:8188/",
 )
 
 

@@ -50,7 +50,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## AetherAI-only asset rule
 
-- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI or official API.
+- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI or official API, or the remote GPU ComfyUI pipeline (`http://222.238.86.132:8188`, workflow IDs `7a3eb820-f17d-47ce-a337-da2358c2a0d5` / `5c257929-dff5-4ef4-bd1e-2c99dbbf3dee`).
 - Never crawl, scrape, macro, or automate the AetherAI website.
 - Never generate final art with Python/Pillow, Lua, another image model, or hand-authored raster scripts.
 - Until an official export and receipt exist, simple Lua shapes may remain only as visibly documented `DEV PLACEHOLDER` gameplay geometry. Do not call them final assets or visual QA.
