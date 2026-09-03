@@ -1959,6 +1959,46 @@ local function testScoutShipSprite()
         "PlayScene must load assets/ship/ship_scout.png into self.scoutShipImagePath")
 end
 
+-- DIST HUD readout is still bare text (hud_distance) while CASH/HULL/STEER
+-- already have ComfyUI icons. Same file-existence + always-set-path
+-- pattern as testScoutShipSprite, plus Lua diamond fallback geometry
+-- (even-length, spans cy, horizontally symmetric) so headless tests can
+-- pin the silhouette. Graphics-gated distanceIconImage cannot be
+-- asserted under GAME_HEADLESS=1. Invoked from testCanvasLayoutScale
+-- so M.run() stays under Lua's 60-upvalue cap.
+local function testDistanceIconSprite()
+    local path = "assets/effects/hud_distance.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated DIST HUD icon sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.distanceIconImagePath == path,
+        "PlayScene must load assets/effects/hud_distance.png into self.distanceIconImagePath")
+    assert(play.distanceIconSize == 32 and play.distanceIconGap == 16)
+    local points = play.distanceIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "distance silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "distance icon must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "distance outline must be horizontally symmetric around cx")
+    end
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1979,6 +2019,7 @@ local function testCanvasLayoutScale()
     testShipSilhouetteSprite()
     testLaunchRocketSprite()
     testScoutShipSprite()
+    testDistanceIconSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows

@@ -310,6 +310,27 @@ end
 M.speedIconSize = 32
 M.speedIconGap = 16
 
+-- DIST HUD icon (icon-based HUD simplification follow-on): pair the
+-- "DIST %04d" / "거리 %04d" readout with a small nav-diamond silhouette,
+-- mirroring coin/shield/speed. Drawn as a flat 4-point diamond (even-length
+-- {x,y,...} list, no love.graphics calls) so headless tests can pin
+-- geometry: horizontally symmetric around cx, spans above and below cy.
+function M.distanceIconPoints(cx, cy, size)
+    local r = size * 0.5
+    return {
+        cx, cy - r,
+        cx + r, cy,
+        cx, cy + r,
+        cx - r, cy,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the diamond icon's
+-- right edge and the DIST text's left edge, mirroring
+-- M.cashIconSize/cashIconGap.
+M.distanceIconSize = 32
+M.distanceIconGap = 16
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1341,6 +1362,20 @@ function M.new(options)
             scoutShipImage = img
         end
     end
+    -- assets/effects/hud_distance.png is the ComfyUI-generated DIST HUD
+    -- nav-diamond (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as scoutShipImagePath. :draw() scales
+    -- it to M.distanceIconSize instead of M.distanceIconPoints, and falls
+    -- back to that diamond polygon when the image failed to load.
+    local distanceIconImagePath = "assets/effects/hud_distance.png"
+    local distanceIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, distanceIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            distanceIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1435,6 +1470,8 @@ function M.new(options)
         launchRocketImagePath = launchRocketImagePath,
         scoutShipImage = scoutShipImage,
         scoutShipImagePath = scoutShipImagePath,
+        distanceIconImage = distanceIconImage,
+        distanceIconImagePath = distanceIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3103,7 +3140,23 @@ function M:draw()
         hudY = hudY + 40
         love.graphics.setColor(0.7, 0.9, 1)
     end
-    love.graphics.print(hud.distance, 20, hudY)
+    local distIconCenterX = 20 + M.distanceIconSize / 2
+    local distIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
+    if self.distanceIconImage then
+        local iw, ih = self.distanceIconImage:getDimensions()
+        local scale = M.distanceIconSize / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(self.distanceIconImage, distIconCenterX, distIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+    else
+        -- Fallback: cyan nav diamond, used only when the ComfyUI-generated
+        -- sprite failed to load.
+        love.graphics.setColor(0.7, 0.9, 1)
+        love.graphics.polygon("fill",
+            M.distanceIconPoints(distIconCenterX, distIconCenterY, M.distanceIconSize))
+    end
+    local distTextX = 20 + M.distanceIconSize + M.distanceIconGap
+    love.graphics.setColor(0.7, 0.9, 1)
+    love.graphics.print(hud.distance, distTextX, hudY)
     -- docs/feedback/INBOX.md 국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 항목 (2):
     -- draw a punch-scaled, color-emphasized overlay of the DIST text
     -- whenever a new all-time best altitude was just set (self.distancePunch
@@ -3114,7 +3167,7 @@ function M:draw()
         local scale = distancePunchScale(self.distancePunch, distancePunchDuration)
         local fadeProgress = self.distancePunch / distancePunchDuration
         love.graphics.push()
-        love.graphics.translate(20, hudY)
+        love.graphics.translate(distTextX, hudY)
         love.graphics.scale(scale, scale)
         love.graphics.setColor(1, 0.85, 0.25, fadeProgress)
         love.graphics.print(hud.distance, 0, 0)
@@ -3129,7 +3182,7 @@ function M:draw()
     -- 8px small font) with the CASH text shifted right of the coin's
     -- footprint so nothing overlaps.
     local distanceWidth = love.graphics.getFont():getWidth(hud.distance)
-    local cashIconCenterX = 20 + distanceWidth + 32 + M.cashIconSize / 2
+    local cashIconCenterX = distTextX + distanceWidth + 32 + M.cashIconSize / 2
     local cashIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
     if self.cashIconImage then
         local iw, ih = self.cashIconImage:getDimensions()
@@ -3145,7 +3198,7 @@ function M:draw()
     end
     love.graphics.setColor(0.7, 0.9, 1)
     love.graphics.print(hud.cash,
-        20 + distanceWidth + 32 + M.cashIconSize + M.cashIconGap, hudY)
+        distTextX + distanceWidth + 32 + M.cashIconSize + M.cashIconGap, hudY)
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- second slice): pair the hull-durability status text with a small
     -- shield icon drawn just to its left, then shift the text right by
