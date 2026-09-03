@@ -919,6 +919,32 @@ end
 M.yieldStatusIconSize = 24
 M.yieldStatusIconGap = 8
 
+-- EARTH SHOP shipStatus icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn shipStatus printf
+-- ("SHORT $n" / "LEFT $n" / "OWNED") with a small ship-coin
+-- diamond, mirroring yieldStatus. Shop-row drawShopIcon sits in
+-- the margin and does not replace this label. Drawn as a
+-- flat diamond (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.shipStatusIconPoints(cx, cy, size)
+    local w = size * 0.42
+    local h = size * 0.5
+    return {
+        cx, cy - h,
+        cx + w, cy,
+        cx, cy + h,
+        cx - w, cy,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- ship-coin diamond's right edge and the shipStatus
+-- label's left edge. Matches yieldStatus because both sit
+-- next to always-drawn shop labels.
+M.shipStatusIconSize = 24
+M.shipStatusIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2326,6 +2352,22 @@ function M.new(options)
             yieldStatusIconImage = img
         end
     end
+    -- assets/effects/shop_ship_status.png is the ComfyUI-generated
+    -- EARTH SHOP shipStatus ship-coin diamond
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as yieldStatusIconImagePath.
+    -- :draw() scales it to M.shipStatusIconSize instead of
+    -- M.shipStatusIconPoints, and falls back to that ship-coin
+    -- diamond when the image failed to load.
+    local shipStatusIconImagePath = "assets/effects/shop_ship_status.png"
+    local shipStatusIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shipStatusIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shipStatusIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2464,6 +2506,8 @@ function M.new(options)
         steeringStatusIconImagePath = steeringStatusIconImagePath,
         yieldStatusIconImage = yieldStatusIconImage,
         yieldStatusIconImagePath = yieldStatusIconImagePath,
+        shipStatusIconImage = shipStatusIconImage,
+        shipStatusIconImagePath = shipStatusIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4729,7 +4773,27 @@ function M:draw()
         love.graphics.print(yieldStatusLabel, yieldStatusStartX + yieldStatusIconSpan, row)
         love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
             nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.shipStatus, shopColumnRightX, row, shopColumnRightW, "center")
+        local shipStatusLabel = nextLaunch.shipStatus
+        local shipStatusFont = love.graphics.getFont()
+        local shipStatusWidth = shipStatusFont:getWidth(shipStatusLabel)
+        local shipStatusIconSpan = M.shipStatusIconSize + M.shipStatusIconGap
+        local shipStatusStartX = shopColumnRightX + (shopColumnRightW - (shipStatusIconSpan + shipStatusWidth)) / 2
+        local shipStatusIconCenterX = shipStatusStartX + M.shipStatusIconSize / 2
+        local shipStatusIconCenterY = row + shipStatusFont:getHeight() / 2
+        if self.shipStatusIconImage then
+            local iw, ih = self.shipStatusIconImage:getDimensions()
+            local scale = M.shipStatusIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.shipStatusIconImage, shipStatusIconCenterX, shipStatusIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan ship-coin diamond, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.shipStatusIconPoints(shipStatusIconCenterX, shipStatusIconCenterY, M.shipStatusIconSize))
+        end
+        love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
+            nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
+        love.graphics.print(shipStatusLabel, shipStatusStartX + shipStatusIconSpan, row)
         row = row + rowStep
 
         love.graphics.setColor(0.4, 0.85, 1)

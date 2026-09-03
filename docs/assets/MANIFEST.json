@@ -2033,5 +2033,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.yieldStatusIconImage for yieldStatus; Lua crystal-coin hexagon fallback"
+  },
+  {
+    "path": "assets/effects/shop_ship_status.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "7926aadb-00b3-437c-9d56-47539c38e610",
+    "prompt": "pixel art, 16-bit, small cyan diamond ship-coin HUD icon sprite, simple diamond coin silhouette, isolated EARTH SHOP scout ship affordability HUD icon, solid white background, no letters, no numbers, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904164,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T20:59:57Z",
+    "sha256": "7b2b1e6154ef935a1adc6aafb47dcba3169a5cb2bf9a4baa8f661c00ffa01b12",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shipStatusIconImage for shipStatus; Lua ship-coin diamond fallback"
   }
 ]
