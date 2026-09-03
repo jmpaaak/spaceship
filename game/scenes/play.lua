@@ -906,6 +906,20 @@ function M.new(options)
             cashIconImage = img
         end
     end
+    -- assets/effects/hud_shield.png is the ComfyUI-generated hull-durability
+    -- HUD shield (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as cashIconImagePath. draw() scales it
+    -- to M.hullIconSize instead of M.shieldIconPoints, and falls back to
+    -- that pentagon polygon when the image failed to load.
+    local hullIconImagePath = "assets/effects/hud_shield.png"
+    local hullIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, hullIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            hullIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -942,6 +956,8 @@ function M.new(options)
         joystickKnobImagePath = joystickKnobImagePath,
         cashIconImage = cashIconImage,
         cashIconImagePath = cashIconImagePath,
+        hullIconImage = hullIconImage,
+        hullIconImagePath = hullIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2470,9 +2486,18 @@ function M:draw()
     local function drawStatusWithShield(y)
         local iconCenterX = 20 + M.hullIconSize / 2
         local iconCenterY = y + M.hullIconSize / 2
-        love.graphics.setColor(0.6, 0.85, 1)
-        love.graphics.polygon("fill",
-            M.shieldIconPoints(iconCenterX, iconCenterY, M.hullIconSize))
+        if self.hullIconImage then
+            local iw, ih = self.hullIconImage:getDimensions()
+            local scale = M.hullIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.hullIconImage, iconCenterX, iconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan shield pentagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.6, 0.85, 1)
+            love.graphics.polygon("fill",
+                M.shieldIconPoints(iconCenterX, iconCenterY, M.hullIconSize))
+        end
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.print(hud.status, 20 + M.hullIconSize + M.hullIconGap, y)
     end

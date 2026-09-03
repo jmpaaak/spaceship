@@ -758,5 +758,30 @@
     "width": 64,
     "height": 64,
     "qa": "HUD cash coin sprite wired into PlayScene cashIconImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/hud_shield.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "962223fd-7b20-4192-bc0a-218577407f6f",
+    "prompt": "pixel art, 16-bit, small kite shield HUD icon sprite, flat top pointed bottom heater shield, cyan-blue metallic armor plate, isolated hull durability icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904113,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:13:53Z",
+    "sha256": "c58bbf1184c56c81712cc70c6191832cccafb5da6893521d2eb519c837659878",
+    "width": 64,
+    "height": 64,
+    "qa": "HUD hull shield sprite wired into PlayScene hullIconImage; pipeline PNG signature/decode gate"
   }
 ]

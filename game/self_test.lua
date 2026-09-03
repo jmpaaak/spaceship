@@ -1514,6 +1514,20 @@ local function testCashIconSprite()
         "PlayScene must load assets/effects/hud_coin.png into self.cashIconImagePath")
 end
 
+-- HUD hull durability shield is still a Lua pentagon polygon. Same
+-- file-existence + always-set-path pattern as testCashIconSprite.
+-- Graphics-gated hullIconImage cannot be asserted under GAME_HEADLESS=1.
+local function testHullIconSprite()
+    local path = "assets/effects/hud_shield.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated HUD shield sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.hullIconImagePath == path,
+        "PlayScene must load assets/effects/hud_shield.png into self.hullIconImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3392,6 +3406,7 @@ function M.run()
     testJoystickPadSprite()
     testJoystickKnobSprite()
     testCashIconSprite()
+    testHullIconSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")
