@@ -692,6 +692,53 @@ local function testEarthShopSlotUiWiring()
     assert(flightScene.expedition.money == 100, "'m' key must be a no-op outside the settlement phase")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 15(a) UI wiring: the additive
+-- expedition.returnToEarth(run) engine entry point (prior slice) must
+-- actually be reachable from real play via an explicit ascending-phase
+-- "return" action, rather than only being exercised directly by
+-- game/self_test.lua's testReturnToEarth(). This is purely additive next
+-- to the existing beginReturn/"returning"-phase path (untouched), which is
+-- why it lives on its own key ("r") instead of replacing "space"/"up"/"w".
+local function testReturnToEarthUiWiring()
+    local expedition = require("game.expedition")
+
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scene.expedition.phase = "ascending"
+    scene.expedition.pendingSampleValue = 40
+    scene.expedition.pendingSlotReward = 10
+    scene.expedition.maxAltitude = 250
+    scene.expedition.bestAltitude = 250
+    scene:keypressed("r")
+    assert(scene.expedition.phase == "settlement",
+        "'r' while ascending must immediately settle the run at Earth via returnToEarth")
+    assert(scene.expedition.money == 50,
+        "returnToEarth via 'r' must pay out pending sample + slot reward: "
+            .. tostring(scene.expedition.money))
+    assert(scene.message:find("SETTLED"),
+        "settling via 'r' must surface the same settled_message as the old returning path: "
+            .. tostring(scene.message))
+
+    -- 'r' must be a no-op outside the ascending phase (e.g. launch, or
+    -- already-returning via the still-intact beginReturn path).
+    local launchScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    launchScene.expedition.phase = "launch"
+    launchScene:keypressed("r")
+    assert(launchScene.expedition.phase == "launch", "'r' must not act outside the ascending phase")
+
+    local returningScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    assert(expedition.launch(returningScene.expedition))
+    assert(expedition.beginReturn(returningScene.expedition))
+    returningScene:keypressed("r")
+    assert(returningScene.expedition.phase == "returning",
+        "'r' must not interfere with the existing beginReturn/returning-phase path")
+end
+
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
 -- (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3). Own top-level function
 -- for the same 200-local limit as testJoystick.
@@ -2811,6 +2858,7 @@ function M.run()
     testGalaxyStructure()
     testGearAndCheckpointSettlement()
     testReturnToEarth()
+    testReturnToEarthUiWiring()
     testEarthShopSlotMachine()
     testCheckpointAndShopDocking()
     testEarthShopSlotUiWiring()

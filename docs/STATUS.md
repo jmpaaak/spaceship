@@ -1,5 +1,17 @@
 # STATUS
 
+## 항목 15(a) 두 번째 단계 — ascending 페이즈에 "r" 키로 즉시-귀환(`returnToEarth`) UI 연결 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md`의 econ 레인 스코프 순서(항목7→8→11→15) 중 항목 15의 남은 부분 (a) — `beginReturn`/returning 페이즈/in-flight `slotSpin`·`useSlot` 폐지, 체크포인트/지구 도달 시 즉시 정산으로의 구조 전환 — 의 두 번째 슬라이스를 처리했다. preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.
+
+- 직전 슬라이스가 순수 추가로 `game/expedition.lua`에 `M.returnToEarth(run)`(ascending 페이즈에서만 동작, 기존 `settle()` 재사용해 즉시 settlement로 전환)을 엔진 API로만 만들어두었으나, 어디서도 호출되지 않아 실제 플레이로 접근 불가능한 상태였다. 이번 슬라이스에서 `game/scenes/play.lua`의 `M:keypressed`에 ascending 페이즈 전용 신규 `"r"` 키 분기를 추가해 이 엔진 API를 실제로 연결했다 — 성공 시 `self:persistBestAltitude()`(기존 returning-phase 진입 시 호출하던 것과 동일한 베스트 고도 영속화 부수효과)를 호출한 뒤 기존 `settled_message` i18n 문구(신규 문구 추가 없음, 기존 `returning`→`settlement` 전환 경로가 쓰던 것과 동일 포맷)로 정산 결과를 안내한다.
+- **순수 추가(additive)다.** 기존 `M.beginReturn`/`"returning"` 페이즈/`M.useSlot`/`space`·`up`·`w` 키의 기존 동작(`returning` 페이즈에서의 슬롯 스핀 트리거 포함)은 전혀 건드리지 않았다 — `"r"` 키는 ascending 페이즈에서만 반응하는 완전히 새로운 분기이며, `beginReturn`으로 이미 `returning` 페이즈에 들어간 run에는 아무 영향이 없다(회귀 테스트로 확인).
+- `game/self_test.lua`에 신규 `testReturnToEarthUiWiring()`을 추가했다 — ascending에서 `keypressed("r")`이 실제로 `expedition.returnToEarth`를 호출해 phase가 곧장 `settlement`로 전환되고 pending sample+slot 보상이 money로 정산됨, `settled_message`가 표시됨을 검증하고, launch 페이즈에서는 완전 no-op, 이미 `beginReturn`으로 `returning` 페이즈에 들어간 run에는 `"r"`이 아무 영향도 주지 않음(기존 경로 보존)을 회귀 검증한다. RED 확인: 구현 전 `scene.expedition.phase == "settlement"` 단언이 실패(`"r"` 키가 처리되지 않아 phase가 `"ascending"`으로 그대로 남음)함을 실제로 재현한 뒤 구현 → GREEN 전환 확인.
+- `main.lua`에 신규 `GAME_CAPTURE_PHASE=return-to-earth` 개발 하네스를 추가하고 실제 LÖVE 런타임 캡처(1080×1920, ko 로케일)를 vision으로 확인했다 — "거리 0000 자금 $75", "정산 +$75  잔액 $75"(pendingSampleValue 60 + pendingSlotReward 15 = 75가 정확히 반영됨), "지구 상점" 화면이 크래시나 에러 텍스트 없이 정상 렌더링됨을 확인했다.
+- `GAME_HEADLESS=1 GAME_UNIT=1 love .`, `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `docs/feedback/INBOX.md` 처리대기 항목 15 하위에 이번 슬라이스 진행 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 항목 15(a)의 마지막 남은 부분 — 이제 `"r"` 키로 즉시 귀환이 실제 플레이에서 가능해졌으므로, 옛 `beginReturn`/`"returning"` 페이즈/`useSlot`/`slotSpin` 및 관련 UI(조이스틱 하강 렌더, 슬롯 릴 애니메이션, `returnControls` 터치 밴드, `main.lua`의 `GAME_CAPTURE_PHASE=returning-*` 하네스들)를 실제로 제거하는 것 — `game/scenes/play.lua`의 returning 페이즈 UI/터치/키 입력 전반을 광범위하게 재작성해야 하는 큰 작업이라 메인 레인과의 조율이 여전히 필요하다.
+
 ## 항목 15(a) 첫 단계 — ascending 페이즈에서 즉시 정산하는 신규 엔진 진입점 `M.returnToEarth(run)` 추가 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md`의 econ 레인 스코프 순서(항목7→8→11→15) 중 항목 15의 남은 부분 (a) — `beginReturn`/returning 페이즈/in-flight `slotSpin`·`useSlot` 폐지, 체크포인트/지구 도달 시 즉시 정산으로의 구조 전환 — 의 첫 슬라이스를 처리했다. preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.

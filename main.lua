@@ -157,6 +157,20 @@ function love.load()
         scene.expedition.slotOpportunities = 3
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
+    elseif capturePhase == "return-to-earth" then
+        -- Real-runtime capture for the item-15(a) UI-wiring slice: the new
+        -- "r" key immediately settles the run at Earth from the ascending
+        -- phase via expedition.returnToEarth, without ever entering the
+        -- old beginReturn/"returning" phase. Confirms the settlement
+        -- screen renders normally when reached this way.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.phase = "ascending"
+        scene.expedition.maxAltitude = 450
+        scene.expedition.bestAltitude = 450
+        scene.expedition.pendingSampleValue = 60
+        scene.expedition.pendingSlotReward = 15
+        scene:keypressed("r")
     elseif capturePhase == "returning-repair" then
         -- Real-runtime capture for the new repair-voucher slot reward
         -- (docs/GAME_DESIGN.md 귀환 슬롯: 수리권). Forces a completed

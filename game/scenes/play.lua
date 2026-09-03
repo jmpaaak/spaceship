@@ -1433,6 +1433,20 @@ function M:keypressed(key)
         end
         return
     end
+    -- docs/feedback/INBOX.md 처리대기 항목 15(a) UI wiring: the previously
+    -- purely-additive engine entry point expedition.returnToEarth(run) is
+    -- now reachable from real play via an explicit "r" key while ascending
+    -- -- an immediate-settlement return-to-Earth action distinct from the
+    -- still-intact beginReturn/"returning"-phase path (unmodified, still
+    -- reachable via "space"/"up"/"w" below when not ascending). This is
+    -- additive only: no existing returning-phase behavior changes.
+    if self.expedition.phase == "ascending" and key == "r" then
+        if expedition.returnToEarth(self.expedition) then
+            self:persistBestAltitude()
+            self.message = i18n.t("settled_message", self.expedition.lastSettlement, self.expedition.money)
+        end
+        return
+    end
     if key == "space" or key == "return" or key == "up" or key == "w" then
         if self.expedition.phase == "returning" and not self.slotSpin and expedition.useSlot(self.expedition) then
             self:beginSlotSpin()
