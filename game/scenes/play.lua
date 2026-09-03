@@ -212,6 +212,29 @@ end
 M.launchIconSize = 56
 M.launchIconGap = 48
 
+-- docs/feedback/INBOX.md "UI 대개편 6건" item 5: the launch rocket polygon
+-- (orange/yellow, reads as a crude arrow) is gated off. Named flag, same
+-- pattern as M.showSpecimenStrip / M.showDevPlaceholder, so a later cycle
+-- can restore the icon without re-threading draw(). The remaining cue is
+-- the TAP TO LAUNCH / "탭하여 발사" line itself: smaller than the scene
+-- small font, dark translucent gray, with a restrained sine wobble and
+-- fade pulse instead of a bright static prompt.
+M.showLaunchRocketIcon = false
+M.launchPromptFontSize = 24
+M.launchPromptRgb = {0.42, 0.44, 0.48}
+M.launchPromptWobblePx = 2.5
+
+function M.launchPromptAlpha(time)
+    local t = time or 0
+    return 0.40 + 0.12 * math.sin(t * 2.2)
+end
+
+function M.launchPromptOffset(time)
+    local t = time or 0
+    local amp = M.launchPromptWobblePx
+    return math.sin(t * 1.7) * amp, math.sin(t * 1.1 + 1.3) * amp * 0.6
+end
+
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- second slice): pair the hull-durability readout (the "H%d/%d" segment of
 -- hud.status) with a small shield silhouette so durability reads as an
@@ -2538,14 +2561,26 @@ function M:draw()
     love.graphics.setColor(0.85, 0.9, 1)
     local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 200 or viewport.height - 120
     if self.expedition.phase == "launch" then
-        -- docs/feedback/INBOX.md UI/HUD item 3: pair the TAP TO LAUNCH
-        -- action with a small rocket icon above it instead of bare text.
-        love.graphics.setColor(1, 0.75, 0.25)
-        love.graphics.polygon("fill", M.rocketIconPoints(
-            viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
-        love.graphics.setColor(0.85, 0.9, 1)
+        -- docs/feedback/INBOX.md "UI 대개편 6건" item 5: drop the crude
+        -- yellow rocket/arrow, then draw a smaller dark translucent-gray
+        -- prompt with a restrained sine wobble + fade pulse.
+        if M.showLaunchRocketIcon then
+            love.graphics.setColor(1, 0.75, 0.25)
+            love.graphics.polygon("fill", M.rocketIconPoints(
+                viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
+        end
+        local ox, oy = M.launchPromptOffset(self.time)
+        local alpha = M.launchPromptAlpha(self.time)
+        local rgb = M.launchPromptRgb
+        self.launchPromptFont = self.launchPromptFont or fonts.get(M.launchPromptFontSize)
+        local previousPromptFont = love.graphics.getFont()
+        love.graphics.setFont(self.launchPromptFont)
+        love.graphics.setColor(rgb[1], rgb[2], rgb[3], alpha)
+        love.graphics.printf(self.message, 16 + ox, messageY + oy, viewport.width - 32, "center")
+        love.graphics.setFont(previousPromptFont)
+    else
+        love.graphics.printf(self.message, 16, messageY, viewport.width - 32, "center")
     end
-    love.graphics.printf(self.message, 16, messageY, viewport.width - 32, "center")
     if self.newSpecimenBanner then
         local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
         love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)

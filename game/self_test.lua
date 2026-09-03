@@ -796,6 +796,49 @@ local function testLaunchRocketIcon()
         "first vertex must be the centered nose tip at the icon's topmost y")
 end
 
+-- docs/feedback/INBOX.md "UI 대개편 6건" item 5: the launch rocket icon /
+-- yellow arrow reads as crude. Gate it off and leave only a smaller, darker
+-- translucent-gray "TAP TO LAUNCH"/"탭하여 발사" line with a restrained
+-- sine wobble + fade pulse. Pure helpers so this stays headless-testable.
+local function testLaunchPromptCue()
+    local PlayScene = require("game.scenes.play")
+    assert(PlayScene.showLaunchRocketIcon == false,
+        "launch rocket/arrow icon should stay hidden (docs/feedback UI overhaul item 5)")
+    assert(PlayScene.launchPromptFontSize ~= nil
+            and PlayScene.launchPromptFontSize < PlayScene.smallFontSize,
+        "launch prompt text must be smaller than the scene small font")
+    assert(PlayScene.launchPromptFontSize < PlayScene.hudFontSize,
+        "launch prompt text must be smaller than the HUD font")
+    local rgb = PlayScene.launchPromptRgb
+    assert(type(rgb) == "table" and #rgb >= 3,
+        "launchPromptRgb must be an {r,g,b} table")
+    for i = 1, 3 do
+        assert(rgb[i] > 0 and rgb[i] < 0.6,
+            "launch prompt color must be a dark gray, not bright/yellow")
+    end
+    local spread = math.max(rgb[1], rgb[2], rgb[3]) - math.min(rgb[1], rgb[2], rgb[3])
+    assert(spread < 0.12, "launch prompt color must be gray (low chroma), not yellow")
+
+    local a0 = PlayScene.launchPromptAlpha(0)
+    local a1 = PlayScene.launchPromptAlpha(0.8)
+    local a2 = PlayScene.launchPromptAlpha(0)
+    assert(a0 == a2, "launchPromptAlpha must be deterministic")
+    assert(a0 > 0.2 and a0 < 0.75, "launchPromptAlpha(0) out of restrained translucent range")
+    assert(a1 > 0.2 and a1 < 0.75, "launchPromptAlpha(0.8) out of restrained translucent range")
+    assert(a0 ~= a1, "launchPromptAlpha must pulse over time")
+    assert(a0 < 1 and a1 < 1, "launch prompt must stay translucent")
+
+    local x0, y0 = PlayScene.launchPromptOffset(0)
+    local x1, y1 = PlayScene.launchPromptOffset(0.7)
+    local x2, y2 = PlayScene.launchPromptOffset(0)
+    assert(x0 == x2 and y0 == y2, "launchPromptOffset must be deterministic")
+    assert(math.abs(x0) <= 6 and math.abs(y0) <= 6,
+        "launchPromptOffset(0) wobble must stay a few pixels")
+    assert(math.abs(x1) <= 6 and math.abs(y1) <= 6,
+        "launchPromptOffset(0.7) wobble must stay a few pixels")
+    assert(x0 ~= x1 or y0 ~= y1, "launchPromptOffset must wobble over time")
+end
+
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- second slice): the hull-durability status segment gets a small shield
 -- icon paired with it. Pure-geometry regression test mirroring
@@ -3017,6 +3060,7 @@ function M.run()
     testDebris()
     testBackgroundStars()
     testLaunchRocketIcon()
+    testLaunchPromptCue()
     testHullShieldIcon()
     testCashCoinIcon()
     testSteerSpeedIcon()
