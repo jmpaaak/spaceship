@@ -742,6 +742,33 @@ end
 M.steeringActionIconSize = 24
 M.steeringActionIconGap = 8
 
+-- EARTH SHOP yield compact-action icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- yield_action_compact printf with a small sample-crystal
+-- diamond silhouette, mirroring steering_action_compact.
+-- Shop-row drawShopIcon sits in the margin and does not
+-- replace this label. Drawn as a flat diamond (even-length
+-- {x,y,...} list, no love.graphics calls) so headless tests
+-- can pin geometry: horizontally symmetric around cx, spans
+-- above and below cy.
+function M.yieldActionIconPoints(cx, cy, size)
+    local w = size * 0.4
+    local h = size * 0.5
+    return {
+        cx, cy - h,
+        cx + w, cy,
+        cx, cy + h,
+        cx - w, cy,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- sample-crystal's right edge and the yield compact action
+-- label's left edge. Matches steering compact action because
+-- both sit next to always-drawn shop action labels.
+M.yieldActionIconSize = 24
+M.yieldActionIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -2018,6 +2045,22 @@ function M.new(options)
             steeringActionIconImage = img
         end
     end
+    -- assets/effects/shop_yield_action.png is the ComfyUI-generated
+    -- EARTH SHOP yield compact-action sample crystal
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as steeringActionIconImagePath.
+    -- :draw() scales it to M.yieldActionIconSize instead of
+    -- M.yieldActionIconPoints, and falls back to that sample-crystal
+    -- diamond when the image failed to load.
+    local yieldActionIconImagePath = "assets/effects/shop_yield_action.png"
+    local yieldActionIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, yieldActionIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            yieldActionIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2144,6 +2187,8 @@ function M.new(options)
         hullActionIconImagePath = hullActionIconImagePath,
         steeringActionIconImage = steeringActionIconImage,
         steeringActionIconImagePath = steeringActionIconImagePath,
+        yieldActionIconImage = yieldActionIconImage,
+        yieldActionIconImagePath = yieldActionIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4296,9 +4341,28 @@ function M:draw()
         row = 864
         rowStep = 32
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.yieldActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        local yieldActionLabel = nextLaunch.yieldActionCompact
+        local yieldActionFont = love.graphics.getFont()
+        local yieldActionWidth = yieldActionFont:getWidth(yieldActionLabel)
+        local yieldActionIconSpan = M.yieldActionIconSize + M.yieldActionIconGap
+        local yieldActionStartX = shopColumnLeftX + (shopColumnLeftW - (yieldActionIconSpan + yieldActionWidth)) / 2
+        local yieldActionIconCenterX = yieldActionStartX + M.yieldActionIconSize / 2
+        local yieldActionIconCenterY = row + yieldActionFont:getHeight() / 2
+        if self.yieldActionIconImage then
+            local iw, ih = self.yieldActionIconImage:getDimensions()
+            local scale = M.yieldActionIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.yieldActionIconImage, yieldActionIconCenterX, yieldActionIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan sample-crystal diamond, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.yieldActionIconPoints(yieldActionIconCenterX, yieldActionIconCenterY, M.yieldActionIconSize))
+        end
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.print(yieldActionLabel, yieldActionStartX + yieldActionIconSpan, row)
         love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
-        self:drawShopIcon("yield", shopColumnLeftX, row)
         self:drawShopIcon("ship", shopColumnRightX, row)
         row = row + rowStep
         
