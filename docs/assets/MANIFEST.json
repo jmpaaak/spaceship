@@ -1708,5 +1708,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.floatingSampleIconImage for floating sample-pickup +; Lua plus-badge fallback"
+  },
+  {
+    "path": "assets/effects/floating_damage.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "956ebee3-ed19-42b5-b97f-991284302deb",
+    "prompt": "pixel art, 16-bit, small red minus-sign badge HUD icon sprite, simple minus in diamond, isolated hull-damage HUD icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904151,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T20:01:23Z",
+    "sha256": "b88fa46ad780c5a60eeaa2d1586067893fe657b10717a0aa4caf991295794ad2",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.floatingDamageIconImage for floating damage -; Lua minus-badge fallback"
   }
 ]

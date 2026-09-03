@@ -549,6 +549,29 @@ end
 M.floatingSampleIconSize = 24
 M.floatingSampleIconGap = 8
 
+-- Floating damage "-N" icon (icon-based HUD simplification
+-- follow-on): pair the red floating_damage_text readout with a
+-- small minus-badge silhouette, mirroring the sample-pickup plus.
+-- Drawn as a flat minus polygon (even-length {x,y,...} list, no
+-- love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.floatingDamageIconPoints(cx, cy, size)
+    local r = size * 0.5
+    local arm = size * 0.18
+    return {
+        cx - r, cy - arm,
+        cx + r, cy - arm,
+        cx + r, cy + arm,
+        cx - r, cy + arm,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the minus-badge's
+-- right edge and the "-N" text's left edge. Matches the sample
+-- plus-badge because both are in-world floating value labels.
+M.floatingDamageIconSize = 24
+M.floatingDamageIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1713,6 +1736,22 @@ function M.new(options)
             floatingSampleIconImage = img
         end
     end
+    -- assets/effects/floating_damage.png is the ComfyUI-generated
+    -- floating damage "-N" minus-badge
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as floatingSampleIconImagePath.
+    -- :draw() scales it to M.floatingDamageIconSize instead of
+    -- M.floatingDamageIconPoints, and falls back to that minus-badge
+    -- polygon when the image failed to load.
+    local floatingDamageIconImagePath = "assets/effects/floating_damage.png"
+    local floatingDamageIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, floatingDamageIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            floatingDamageIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1825,6 +1864,8 @@ function M.new(options)
         riskIconImagePath = riskIconImagePath,
         floatingSampleIconImage = floatingSampleIconImage,
         floatingSampleIconImagePath = floatingSampleIconImagePath,
+        floatingDamageIconImage = floatingDamageIconImage,
+        floatingDamageIconImagePath = floatingDamageIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3451,12 +3492,29 @@ function M:draw()
                 end
                 love.graphics.setColor(0.45, 1, 0.6, alpha)
                 love.graphics.print(ft.text, startX + iconSpan, textY)
-            else
-                if ft.kind == "damage" then
-                    love.graphics.setColor(1, 0.35, 0.3, alpha)
+            elseif ft.kind == "damage" then
+                local font = love.graphics.getFont()
+                local textWidth = font:getWidth(ft.text)
+                local iconSpan = M.floatingDamageIconSize + M.floatingDamageIconGap
+                local startX = fx - (iconSpan + textWidth) / 2
+                local iconCenterX = startX + M.floatingDamageIconSize / 2
+                local iconCenterY = textY + font:getHeight() / 2
+                if self.floatingDamageIconImage then
+                    local iw, ih = self.floatingDamageIconImage:getDimensions()
+                    local scale = M.floatingDamageIconSize / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, alpha)
+                    love.graphics.draw(self.floatingDamageIconImage, iconCenterX, iconCenterY, 0, scale, scale, iw / 2, ih / 2)
                 else
-                    love.graphics.setColor(0.45, 1, 0.6, alpha)
+                    -- Fallback: red minus-badge, used only when the
+                    -- ComfyUI-generated sprite failed to load.
+                    love.graphics.setColor(1, 0.35, 0.3, alpha)
+                    love.graphics.polygon("fill",
+                        M.floatingDamageIconPoints(iconCenterX, iconCenterY, M.floatingDamageIconSize))
                 end
+                love.graphics.setColor(1, 0.35, 0.3, alpha)
+                love.graphics.print(ft.text, startX + iconSpan, textY)
+            else
+                love.graphics.setColor(0.45, 1, 0.6, alpha)
                 love.graphics.printf(ft.text, fx - M.floatingTextBoxHalfWidth,
                     textY, M.floatingTextBoxHalfWidth * 2, "center")
             end
