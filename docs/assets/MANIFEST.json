@@ -2133,5 +2133,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.yieldPreviewIconImage for yieldPreview; Lua faceted sample-crystal fallback"
+  },
+  {
+    "path": "assets/effects/shop_ship_preview.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "45c7f10d-619a-40ed-ae94-5d778391e05e",
+    "prompt": "pixel art, 16-bit, small cyan arrowhead scout-hull HUD icon sprite, simple notched dart spaceship silhouette, isolated EARTH SHOP ship preview HUD icon, solid white background, no letters, no numbers, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904168,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T21:15:51Z",
+    "sha256": "56d6e82905f5cd278cf914df1c4268ab12f0e4eaa26630be55559fe92bb45df9",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shipPreviewIconImage for shipPreviewCompact; Lua arrowhead scout-hull fallback"
   }
 ]

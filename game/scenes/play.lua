@@ -1035,6 +1035,39 @@ end
 M.yieldPreviewIconSize = 24
 M.yieldPreviewIconGap = 8
 
+-- EARTH SHOP shipPreviewCompact icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- shipPreviewCompact printf ("SHIP Hn" after switch) with a
+-- small arrowhead scout-hull, mirroring yieldPreview.
+-- Shop-row drawShopIcon sits in the margin and does not
+-- replace this label. Drawn as a flat notched dart
+-- (even-length {x,y,...} list, no love.graphics calls) so
+-- headless tests can pin geometry: horizontally symmetric
+-- around cx, spans above and below cy.
+function M.shipPreviewIconPoints(cx, cy, size)
+    local w = size * 0.42
+    local top = size * 0.5
+    local waist = size * 0.08
+    local bottom = size * 0.5
+    local notch = size * 0.18
+    return {
+        cx, cy - top,
+        cx + w, cy + waist,
+        cx + w * 0.4, cy + bottom,
+        cx, cy + bottom - notch,
+        cx - w * 0.4, cy + bottom,
+        cx - w, cy + waist,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- arrowhead scout-hull's right edge and the
+-- shipPreviewCompact label's left edge. Matches
+-- yieldPreview because both sit next to always-drawn shop
+-- labels.
+M.shipPreviewIconSize = 24
+M.shipPreviewIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2506,6 +2539,22 @@ function M.new(options)
             yieldPreviewIconImage = img
         end
     end
+    -- assets/effects/shop_ship_preview.png is the ComfyUI-generated
+    -- EARTH SHOP shipPreviewCompact arrowhead scout-hull
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as yieldPreviewIconImagePath.
+    -- :draw() scales it to M.shipPreviewIconSize instead of
+    -- M.shipPreviewIconPoints, and falls back to that notched
+    -- dart when the image failed to load.
+    local shipPreviewIconImagePath = "assets/effects/shop_ship_preview.png"
+    local shipPreviewIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shipPreviewIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shipPreviewIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2652,6 +2701,8 @@ function M.new(options)
         steeringPreviewIconImagePath = steeringPreviewIconImagePath,
         yieldPreviewIconImage = yieldPreviewIconImage,
         yieldPreviewIconImagePath = yieldPreviewIconImagePath,
+        shipPreviewIconImage = shipPreviewIconImage,
+        shipPreviewIconImagePath = shipPreviewIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5000,7 +5051,26 @@ function M:draw()
         end
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.print(yieldPreviewLabel, yieldPreviewStartX + yieldPreviewIconSpan, row)
-        love.graphics.printf(nextLaunch.shipPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        local shipPreviewLabel = nextLaunch.shipPreviewCompact
+        local shipPreviewFont = love.graphics.getFont()
+        local shipPreviewWidth = shipPreviewFont:getWidth(shipPreviewLabel)
+        local shipPreviewIconSpan = M.shipPreviewIconSize + M.shipPreviewIconGap
+        local shipPreviewStartX = shopColumnRightX + (shopColumnRightW - (shipPreviewIconSpan + shipPreviewWidth)) / 2
+        local shipPreviewIconCenterX = shipPreviewStartX + M.shipPreviewIconSize / 2
+        local shipPreviewIconCenterY = row + shipPreviewFont:getHeight() / 2
+        if self.shipPreviewIconImage then
+            local iw, ih = self.shipPreviewIconImage:getDimensions()
+            local scale = M.shipPreviewIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.shipPreviewIconImage, shipPreviewIconCenterX, shipPreviewIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan arrowhead scout-hull, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.shipPreviewIconPoints(shipPreviewIconCenterX, shipPreviewIconCenterY, M.shipPreviewIconSize))
+        end
+        love.graphics.setColor(0.4, 0.85, 1)
+        love.graphics.print(shipPreviewLabel, shipPreviewStartX + shipPreviewIconSpan, row)
         row = row + rowStep
         
         love.graphics.setColor(0.75, 0.9, 1)
