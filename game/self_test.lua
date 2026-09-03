@@ -1203,6 +1203,35 @@ local function testFuelUpgradeMessagingRemoved()
     i18n.setLocale(savedLocale)
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 11(c): "연료 소진 관련 잔재 UI/문구 전면
+-- 제거" and item 15's already-completed removal of the in-flight return
+-- phase / slot machine (beginReturn/useSlot/spinSlot/slotFuelBonus/etc.)
+-- left several i18n string templates behind that no game/scenes/play.lua
+-- call site references anymore -- pure dead strings implying flight is
+-- still fuel-gated ("NEXT LAUNCH FUEL +%d", "NEW BEST! FUEL +%d") or that
+-- the old in-flight slot machine still exists ("SPINNING...",
+-- "WIN +$%d REPAIR +%d", "WIN +$%d FUEL +%d", "WIN +$%d SAMPLE +$%d",
+-- "WIN +$%d PENDING $%d", "SPINS (%d) $%d"). Verified via grep across every
+-- .lua file in this repo that none of these keys are referenced outside
+-- their own game/i18n.lua definitions.
+local function testDeadFuelAndSlotMessagingRemoved()
+    local i18n = require("game.i18n")
+    local savedLocale = i18n.getLocale()
+    local deadKeys = {
+        "fuel_bonus_line", "newbest_fuel_combined", "spinning_label",
+        "win_repair_line", "win_fuel_line", "win_sample_line",
+        "win_pending_line", "spins_settlement_line",
+    }
+    for _, locale in ipairs({ "en", "ko" }) do
+        i18n.setLocale(locale)
+        for _, key in ipairs(deadKeys) do
+            local ok = pcall(i18n.t, key)
+            assert(not ok, key .. " must be removed from the " .. locale .. " locale")
+        end
+    end
+    i18n.setLocale(savedLocale)
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -2494,6 +2523,7 @@ function M.run()
     testSteerSpeedIcon()
     testFuelUpgradeHiddenFromShop()
     testFuelUpgradeMessagingRemoved()
+    testDeadFuelAndSlotMessagingRemoved()
 
     print("SPACESHIP_UNIT_OK")
 end

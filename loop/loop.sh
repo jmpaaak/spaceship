@@ -86,6 +86,14 @@ while :; do
       "${ROOT_DIR}" "${PROVIDER}" "${MODEL}" "${MAX_TURNS}" "${RUN_BUDGET_SECONDS}"
   } | tee -a "${log_file}"
 
+  # Token-opt is first: compact STATUS.md before preflight/prompt so the
+  # agent never ingests an unbounded history. compact_status.py no-ops if
+  # the file is already small or was written in the last 45s (live edit).
+  COMPACT_STATUS="${HOME}/.hermes/scripts/compact_status.py"
+  if [[ -f "${COMPACT_STATUS}" ]]; then
+    /usr/bin/python3 "${COMPACT_STATUS}" "${ROOT_DIR}/docs/STATUS.md" 2>&1 | tee -a "${log_file}" || true
+  fi
+
   preflight_report="$(LOOP_ROOT="${ROOT_DIR}" /usr/bin/python3 "${PREFLIGHT}" 2>&1)"
   preflight_status=$?
   printf '%s\n' "${preflight_report}" | tee -a "${log_file}"
@@ -123,7 +131,7 @@ while :; do
     -- \
     "${HERMES_BIN}" chat --oneshot -Q \
     --provider "${PROVIDER}" --model "${MODEL}" --reasoning "${REASONING}" \
-    --toolsets terminal,file,vision --ignore-rules --yolo --source tool \
+    --toolsets terminal,file --ignore-rules --yolo --source tool \
     --in "${ROOT_DIR}" --max-turns "${MAX_TURNS}" \
     --run-budget "${RUN_BUDGET_SECONDS}" --query-file "${prompt_file}" \
     2>&1 | tee "${agent_output}" | tee -a "${log_file}"
