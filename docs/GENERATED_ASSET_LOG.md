@@ -38,3 +38,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-04T01:33:00+0900 | assets/debris/asteroid.png | ComfyUI-generated 64x64 drifting asteroid hazard sprite (seed 20260904101), wired into PlayScene as self.debrisImages.asteroid, replaces the Lua circle placeholder
 2026-09-04T01:34:00+0900 | assets/debris/can.png | ComfyUI-generated 64x64 drifting soda-can junk sprite (seed 20260904102), wired into PlayScene as self.debrisImages.can, replaces the Lua rectangle placeholder
 2026-09-04T01:35:00+0900 | assets/debris/scrap.png | ComfyUI-generated 64x64 drifting rusty scrap sprite (seed 20260904103), wired into PlayScene as self.debrisImages.scrap, replaces the Lua triangle placeholder
+2026-09-04T01:39:32+0900 | assets/effects/planet_twinkle.png | ComfyUI-generated 64x64 planet-approach twinkle sprite (seed 20260904104), wired into PlayScene as self.planetTwinkleImage, replaces orbiting love.graphics.circle dots around undiscovered planets

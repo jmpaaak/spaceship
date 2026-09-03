@@ -781,6 +781,22 @@ function M.new(options)
             end
         end
     end
+    -- assets/effects/planet_twinkle.png is the ComfyUI-generated planet-
+    -- approach twinkle sprite (docs/GENERATED_ASSET_LOG.md). Same always-
+    -- set-path / graphics-gated-image pattern as sampleEffectImagePath:
+    -- planetTwinkleImagePath is always set so engine-hosted tests can
+    -- verify wiring under GAME_HEADLESS=1, and planetTwinkleImage holds
+    -- the drawable :draw() uses instead of love.graphics.circle dots
+    -- orbiting undiscovered planets.
+    local planetTwinkleImagePath = "assets/effects/planet_twinkle.png"
+    local planetTwinkleImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, planetTwinkleImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            planetTwinkleImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -799,6 +815,8 @@ function M.new(options)
         shopIconImagePaths = shopIconImagePaths,
         debrisImages = debrisImages,
         debrisImagePaths = debrisImagePaths,
+        planetTwinkleImage = planetTwinkleImage,
+        planetTwinkleImagePath = planetTwinkleImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2053,7 +2071,13 @@ function M:draw()
                     local py = y + math.sin(angle) * sparkleRadius
                     local alpha = math.max(0, math.min(1, sparkleAlpha(tier, self.time, seed)))
                     love.graphics.setColor(math.min(1, sr + 0.2), math.min(1, sg + 0.2), math.min(1, sb + 0.2), alpha)
-                    love.graphics.circle("fill", px, py, 1.2)
+                    if self.planetTwinkleImage then
+                        local iw, ih = self.planetTwinkleImage:getDimensions()
+                        local scale = 4 / math.max(iw, ih)
+                        love.graphics.draw(self.planetTwinkleImage, px, py, 0, scale, scale, iw / 2, ih / 2)
+                    else
+                        love.graphics.circle("fill", px, py, 1.2)
+                    end
                 end
             end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)

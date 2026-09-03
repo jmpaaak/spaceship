@@ -533,5 +533,30 @@
     "width": 64,
     "height": 64,
     "qa": "debris scrap sprite wired into PlayScene debrisImages.scrap; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/planet_twinkle.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "4f72091d-a3f0-41dd-8cf5-62e595fb9458",
+    "prompt": "pixel art, 16-bit, small four-pointed star twinkle sparkle sprite, bright white core with cyan rim flare, isolated icon, solid white background, no text, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904104,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:39:15Z",
+    "sha256": "560011fbe0501f9b094736ada37fb2f0905214683d768f39cd26f4c236d88088",
+    "width": 64,
+    "height": 64,
+    "qa": "planet approach twinkle sprite wired into PlayScene planetTwinkleImage; pipeline PNG signature/decode gate"
   }
 ]
