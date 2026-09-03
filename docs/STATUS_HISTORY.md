@@ -1351,3 +1351,8 @@ preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --
 - `make verify LOVE=/Users/jm/.local/bin/love` 전체(GREEN: `SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`)와 `git diff --check`(clean) 모두 통과 확인.
 - `git status --short`가 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`game/expedition.lua`/`game/self_test.lua`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 건드리지 않았다.
 - 다음 사이클 다음 슬라이스: preflight가 다시 READY로 돌아온 뒤, 항목7(획득 경로 3원화) 순수 데이터 계층/획득 확률 구조 준비를 이어간다.
+
+## Archived from STATUS.md (2026-09-03 17:41)
+
+
+## [gear 레인] 항목13 웹 에디터 EFFECT_VALUE_MIN/MAX 동기화 회귀 가드 추가 (완료, 2026-09-03)

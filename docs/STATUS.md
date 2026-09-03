@@ -1,7 +1,4 @@
 # STATUS
-
-## [gear 레인] 항목13 웹 에디터 EFFECT_VALUE_MIN/MAX 동기화 회귀 가드 추가 (완료, 2026-09-03)
-
 preflight READY(엔진 테스트/패키지 PASS, git diff clean)로 시작했으나 `git status --short`가 이전 사이클이 남긴 uncommitted 변경(`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`game/self_test.lua`)을 보고했다. 워크플로우 3항("Preserve and finish prior-cycle work; do not overwrite it")에 따라 이 미완료 슬라이스를 완주해 커밋하는 것을 이번 사이클의 작업으로 채택했다.
 
 - 감사 배경: `tools/gear-editor/editor.js` 헤더 주석이 오래전부터 "Validation rules here intentionally mirror game/gear.lua's loader exactly (same known effect types, known rarities, and effect value range)"라고 문서화해왔다. 기존 `testGearEditorEditionAndRaritySync()`는 KNOWN_EDITIONS/KNOWN_RARITIES 동기화를, `testGearEffectSchemaExpansion()`은 EFFECT_TYPE_GROUPS/`M.knownEffectTypes` 동기화를 이미 회귀 검증했지만, 세 번째로 문서화된 "effect value range"(`EFFECT_VALUE_MIN`/`EFFECT_VALUE_MAX` vs `gear.effectValueMin`/`gear.effectValueMax`) 축에는 동일한 회귀 검증이 없었다 — 문서상 보장일 뿐 코드가 확인한 적이 없어, 향후 `gear.lua`의 범위(-100..100)가 리밸런스되면 에디터가 조용히 실제 게임 로더와 어긋난 값을 승인/거부할 수 있는 gap이었다.
