@@ -337,6 +337,12 @@ function M.new(options)
         -- have already been spent via M.spendReroll. Reset on M.launch,
         -- same per-expedition-resource lifecycle as insuranceUsed.
         rerollsUsed = 0,
+        -- Item 10(b)/14(G) boostCharge consumption: how many of this
+        -- expedition's emergency-boost charges (M.boostChargeCount's
+        -- floored equipped total) have already been spent via
+        -- M.spendBoost. Reset on M.launch, same per-expedition-resource
+        -- lifecycle as insuranceUsed/rerollsUsed.
+        boostsUsed = 0,
     }
     run.gearLoadout = enginePartsModule.newLoadout()
     run.equippedGear = run.gearLoadout.hull
@@ -415,6 +421,7 @@ function M.launch(run)
         run.durability = run.maxDurability
         run.insuranceUsed = false
         run.rerollsUsed = 0
+        run.boostsUsed = 0
         run.returnDistance = 0
         run.slotOpportunities = 0
         run.slotSpins = 0
@@ -691,6 +698,40 @@ end
 -- exposes the count so that future wiring has a single source of truth.
 function M.boostChargeCount(run)
     return gearModule.boostChargeCount(run.equippedEngineParts or {})
+end
+
+-- Item 10(b)/14(G) boostCharge consumption wiring: boostChargeCount(run)
+-- above has always been a pure re-derived total (equipped engine parts'
+-- boostCharge effects summed and floored), which -- exactly like
+-- rerollCount(run) before M.spendReroll existed -- is meaningless as a
+-- per-expedition resource on its own, since nothing could ever actually
+-- SPEND a "긴급 부스트/1회성 소모 아이템" charge and see the pool deplete.
+-- run.boostsUsed tracks how many of the CURRENT expedition's boost
+-- charges have already been spent; M.boostsRemaining(run) is the live
+-- boostChargeCount(run) minus that counter (never negative), so
+-- re-equipping more boostCharge gear mid-run raises the ceiling
+-- immediately, matching rerollsRemaining's exact contract.
+-- M.launch resets run.boostsUsed to 0 alongside run.insuranceUsed/
+-- run.rerollsUsed.
+function M.boostsRemaining(run)
+    local remaining = M.boostChargeCount(run) - (run.boostsUsed or 0)
+    if remaining < 0 then remaining = 0 end
+    return remaining
+end
+
+-- Spends one emergency boost charge if any remain. Returns true on
+-- success, or false, error-message (never throws) if none remain -- same
+-- "atomic, reject-don't-partial-apply" contract as M.spendReroll/
+-- M.sellGear/M.equipGear. Actual gameplay effect of spending a boost
+-- (a tap-to-boost thrust/altitude burst) remains out of this lane's scope
+-- (play.lua) per loop/PROMPT.md -- this establishes the single
+-- run-level source of truth a future consumer will read from.
+function M.spendBoost(run)
+    if M.boostsRemaining(run) <= 0 then
+        return false, "no boost charges remaining"
+    end
+    run.boostsUsed = (run.boostsUsed or 0) + 1
+    return true
 end
 
 -- Item 14 (C)/(E) run wiring: gear.chainTriggerCount/rerollCount/

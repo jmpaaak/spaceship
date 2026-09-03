@@ -863,4 +863,43 @@ content); any shop/checkpoint UI that visually surfaces the gear-boosted
 sample value to the player before it's earned (`play.lua`, out of this
 lane's scope).
 
+### Item 10(b)/14(G) `boostCharge` consumption wiring (follow-up slice)
+
+`M.boostChargeCount(run)` (item 10(b)/14(G)) had existed since its own
+wiring slice as a pure re-derived total — the equipped engine parts'
+`boostCharge` effects summed and floored — but exactly like
+`rerollCount(run)` before `M.spendReroll` closed that gap, a "how many
+emergency boost charges do I have" COUNT is meaningless as a
+per-expedition resource unless something can actually SPEND one and see
+the pool deplete. This was the last documented-but-never-actually-spent
+(C)-shaped resource in the (G) propulsion category (mirroring `insurance`
+being a one-shot boolean and `rerollBonus` being a depleting counter,
+both already closed).
+
+- `game/expedition.lua`'s new `run.boostsUsed` field (initialized to `0`
+  in `M.new`, reset to `0` in `M.launch` alongside `run.insuranceUsed`/
+  `run.rerollsUsed`) tracks how many of the CURRENT expedition's boost
+  charges have already been spent.
+- `M.boostsRemaining(run)` returns the live `M.boostChargeCount(run)`
+  minus `run.boostsUsed` (floored at zero) — re-equipping more
+  `boostCharge` gear mid-run immediately raises the ceiling, identical to
+  `rerollsRemaining`'s contract.
+- `M.spendBoost(run)` returns `true` and decrements the remaining count by
+  spending one charge, or `false, error-message` (never throws) if none
+  remain — same atomic reject-don't-partial-apply shape as
+  `M.spendReroll`/`M.sellGear`/`M.equipGear`.
+
+`game/self_test.lua`'s `testGearPropulsionRunWiring` gained a new
+consumption block regression-checking: a run with `engine_emergency_boost_pod`
+equipped (`boostCharge +2`) starts with 2 remaining boosts; two successful
+`spendBoost` calls drain it to zero; a third refuses cleanly without going
+negative; an unequipped run starts at zero remaining and its `spendBoost`
+call also refuses cleanly; and re-launching the expedition refills
+`boostsRemaining` back to the current equipped total.
+
+Still deferred (out of this lane's scope per `loop/PROMPT.md` — requires
+`game/scenes/play.lua` UI): an actual tap-to-boost button/gameplay effect
+that calls `M.spendBoost` and applies a real thrust/altitude burst while
+flying.
+
 

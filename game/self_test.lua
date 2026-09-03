@@ -1237,6 +1237,45 @@ local function testGearPropulsionRunWiring()
     -- Sanity: none of these engine-part effects leak into the independent
     -- hull gear list (item 10's slot-independence guarantee still holds).
     assert(#boostRun.equippedGear == 0, "engine part effects must not touch the hull gear list")
+
+    -- Item 10(b)/14(G) boostCharge CONSUMPTION gap: until this slice,
+    -- boostChargeCount(run) was only ever a pure re-derived total (like
+    -- rerollCount was before M.spendReroll existed) -- nothing could
+    -- actually SPEND a "긴급 부스트/1회성 소모 아이템" charge and see the
+    -- pool deplete, mirroring the exact gap item 14(C)'s rerollBonus had
+    -- before M.rerollsRemaining/M.spendReroll closed it. A fresh run with
+    -- the boost pod equipped must start with 2 remaining boosts (matching
+    -- the equipped total), spending must decrement a per-expedition
+    -- counter down to zero then refuse further spends (never negative,
+    -- never throws), and re-launching must refill back to the current
+    -- equipped total (same lifecycle as insuranceUsed/rerollsUsed).
+    assert(expedition.boostsRemaining(boostRun) == 2,
+        "a run with boostChargeCount == 2 must start with 2 remaining boost charges")
+    local bOk1 = expedition.spendBoost(boostRun)
+    assert(bOk1 == true, "spendBoost must succeed while boost charges remain")
+    assert(expedition.boostsRemaining(boostRun) == 1,
+        "spending one boost must decrement the remaining count by exactly one")
+    local bOk2 = expedition.spendBoost(boostRun)
+    assert(bOk2 == true, "spendBoost must succeed for the last remaining boost charge")
+    assert(expedition.boostsRemaining(boostRun) == 0,
+        "boostsRemaining must reach exactly zero once every boost charge is spent")
+    local bOk3, bErr3 = expedition.spendBoost(boostRun)
+    assert(bOk3 == false and type(bErr3) == "string",
+        "spendBoost must refuse (false + message), not go negative, once boosts are exhausted")
+    assert(expedition.boostsRemaining(boostRun) == 0,
+        "a refused spendBoost call must not further decrement the remaining count")
+
+    local bareBoostRun = expedition.new()
+    assert(expedition.boostsRemaining(bareBoostRun) == 0,
+        "an unequipped run must have zero remaining boost charges")
+    local bareOk, bareErr = expedition.spendBoost(bareBoostRun)
+    assert(bareOk == false and type(bareErr) == "string",
+        "spendBoost must refuse (false + message) when no boost charges remain")
+
+    boostRun.phase = "settlement"
+    assert(expedition.launch(boostRun))
+    assert(expedition.boostsRemaining(boostRun) == 2,
+        "launching a new expedition must refill remaining boost charges back to the equipped boostChargeCount total")
 end
 
 -- Next slice within item 14: (D) insurance / (F) shopDiscount were only

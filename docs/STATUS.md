@@ -540,3 +540,17 @@
 - `docs/GEAR_SCHEMA.md`에 "Item 12: `irradiated` edition synergy-bonus wiring" 섹션을 신규 추가했다.
 - `docs/feedback/INBOX.md`의 항목 12 하위에 처리 상황을 append했다.
 - 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화) 순수 데이터 계층 준비, 또는 이 레인이 완료한 순서 밖의 잔여 작업(실제 UI 소비 지점은 대부분 play.lua/world.lua 담당이라 다른 레인 소관) 검토.
+
+## [gear 레인] 항목10(b)/14(G) boostCharge 소비 배선 — rerollBonus와 동일한 마지막 잔여 gap 처리 (완료, 2026-09-03)
+
+이 레인(`spaceship-gear` 브랜치)이 지정받은 항목13→9→10→12→14가 모두 1차 완료된 상태에서, `M.boostChargeCount(run)`(항목10(b)/14(G))가 여전히 순수 재계산 총합으로만 존재하고 실제로 "쓸" 수 있는 소비 메커니즘이 없었다는 gap을 감사로 발견했다 — 항목14(C) `rerollBonus`가 `M.spendReroll`/`run.rerollsUsed`로 이미 닫은 것과 정확히 동일한 패턴의 마지막 잔여였다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- TDD: `game/self_test.lua`의 `testGearPropulsionRunWiring`에 소비 검증 블록을 먼저 추가했다(RED 확인: `attempt to call field 'boostsRemaining' (a nil value)` 에러로 실패).
+- `game/expedition.lua`에 신규 `run.boostsUsed`(`M.new`에서 0 초기화, `M.launch`에서 `run.insuranceUsed`/`run.rerollsUsed`와 함께 0으로 리셋)와 두 함수를 추가했다: `M.boostsRemaining(run)`(현재 `M.boostChargeCount(run)`에서 `run.boostsUsed`를 뺀 값, 0 미만 방지 — 장비 재장착 시 즉시 상한 상승, `rerollsRemaining`과 동일 계약)와 `M.spendBoost(run)`(성공 시 `true`+카운터 증가, 잔여 없으면 예외 없이 `false, 에러메시지` 반환 — `M.spendReroll`/`M.sellGear`/`M.equipGear`와 동일한 원자적 거부 패턴).
+- `game/self_test.lua`의 `testGearPropulsionRunWiring` 확장 검증: `engine_emergency_boost_pod`(boostCharge +2) 장착 run이 2에서 시작해 두 번의 `spendBoost`로 0까지 소진, 세 번째는 안전하게 거부(음수 방지), 미장착 run은 0에서 시작하고 거부도 정상 동작, 재발사(`M.launch`) 시 현재 장착 총합으로 리필됨을 확인.
+- `docs/GEAR_SCHEMA.md`에 "Item 10(b)/14(G) `boostCharge` consumption wiring (follow-up slice)" 섹션을 신규 추가했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- 실제 게임플레이 소비 지점(탭-투-부스트 버튼 등, `M.spendBoost`를 실제로 호출해 추력/고도 버스트를 적용하는 것)은 여전히 이 레인 스코프 밖(`play.lua` 담당).
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화) 순수 데이터 계층 준비, 또는 이 레인이 완료한 순서 밖의 잔여 작업(실제 UI 소비 지점은 대부분 play.lua/world.lua 담당이라 다른 레인 소관) 검토.
+
