@@ -1943,6 +1943,22 @@ local function testLaunchRocketSprite()
         "PlayScene must load assets/effects/launch_rocket.png into self.launchRocketImagePath")
 end
 
+-- SCOUT is a second purchasable hull (EARTH SHOP) but still draws the
+-- STARTER sprite. Same file-existence + always-set-path pattern as
+-- testLaunchRocketSprite. Graphics-gated scoutShipImage cannot be
+-- asserted under GAME_HEADLESS=1. Invoked from testCanvasLayoutScale
+-- so M.run() stays under Lua's 60-upvalue cap.
+local function testScoutShipSprite()
+    local path = "assets/ship/ship_scout.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated scout ship sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.scoutShipImagePath == path,
+        "PlayScene must load assets/ship/ship_scout.png into self.scoutShipImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1962,6 +1978,7 @@ local function testCanvasLayoutScale()
     testStarPointSprite()
     testShipSilhouetteSprite()
     testLaunchRocketSprite()
+    testScoutShipSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows

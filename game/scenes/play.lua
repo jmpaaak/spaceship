@@ -1327,6 +1327,20 @@ function M.new(options)
             launchRocketImage = img
         end
     end
+    -- assets/ship/ship_scout.png is the ComfyUI-generated SCOUT hull
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path / graphics-gated
+    -- image pattern as launchRocketImagePath. :draw() uses it when
+    -- selectedShipId == "scout" instead of ship_default.png, and falls
+    -- back to shipImage / shipSilhouetteImage / the Lua triangle.
+    local scoutShipImagePath = "assets/ship/ship_scout.png"
+    local scoutShipImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, scoutShipImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            scoutShipImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1419,6 +1433,8 @@ function M.new(options)
         shipSilhouetteImagePath = shipSilhouetteImagePath,
         launchRocketImage = launchRocketImage,
         launchRocketImagePath = launchRocketImagePath,
+        scoutShipImage = scoutShipImage,
+        scoutShipImagePath = scoutShipImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3027,15 +3043,20 @@ function M:draw()
         love.graphics.scale(punchScale, punchScale)
     end
     love.graphics.setColor(0.8, 0.95, 1)
-    if self.shipImage then
-        local iw, ih = self.shipImage:getWidth(), self.shipImage:getHeight()
+    local hullImage = self.shipImage
+    if self.expedition.selectedShipId == "scout" and self.scoutShipImage then
+        hullImage = self.scoutShipImage
+    end
+    if hullImage then
+        local iw, ih = hullImage:getWidth(), hullImage:getHeight()
         -- ComfyUI-generated 64x64 sprite (docs/GENERATED_ASSET_LOG.md);
         -- drawn at a 64px logical footprint (old 16px x4) so it stays the
         -- same relative size on the 720x1280 canvas and is no longer
-        -- downscaled from the 64x64 original.
+        -- downscaled from the 64x64 original. SCOUT uses ship_scout.png
+        -- so the purchased hull is visually distinct from STARTER.
         local targetSize = 64
         local scale = targetSize / math.max(iw, ih)
-        love.graphics.draw(self.shipImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
+        love.graphics.draw(hullImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
     elseif self.shipSilhouetteImage then
         local iw, ih = self.shipSilhouetteImage:getWidth(), self.shipSilhouetteImage:getHeight()
         local targetSize = 64

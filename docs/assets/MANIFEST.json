@@ -1458,5 +1458,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.launchRocketImage for launch TAP-TO-LAUNCH rocket Lua polygon"
+  },
+  {
+    "path": "assets/ship/ship_scout.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "d308a62f-1ae4-483e-af03-416ab878952e",
+    "prompt": "pixel art, 16-bit, small top-down scout spaceship sprite, sleek needle-thin hull, amber and copper accent stripes, twin side-mounted engines, pointed nose, solid white background, no text, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904141,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T19:15:05Z",
+    "sha256": "4b5a038e1d7031bb58b7096e0346ccff5664b44d9c26d97441341326bbc28adf",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.scoutShipImage for selectedShipId=scout"
   }
 ]
