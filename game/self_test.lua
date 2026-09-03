@@ -1830,6 +1830,22 @@ local function testSlotSpinButtonSprite()
         "PlayScene must load assets/effects/slot_spin_button.png into self.slotSpinButtonImagePath")
 end
 
+-- New-specimen banner box is still a Lua fill rectangle. Same
+-- file-existence + always-set-path pattern as testSlotSpinButtonSprite.
+-- Graphics-gated specimenBannerImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run() stays
+-- under Lua's 60-upvalue cap.
+local function testSpecimenBannerSprite()
+    local path = "assets/effects/specimen_banner.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated specimen banner sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.specimenBannerImagePath == path,
+        "PlayScene must load assets/effects/specimen_banner.png into self.specimenBannerImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1842,6 +1858,7 @@ local function testCanvasLayoutScale()
     testDestroyedPanelSprite()
     testSlotResultPanelSprite()
     testSlotSpinButtonSprite()
+    testSpecimenBannerSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows

@@ -1223,6 +1223,21 @@ function M.new(options)
             slotSpinButtonImage = img
         end
     end
+    -- assets/effects/specimen_banner.png is the ComfyUI-generated
+    -- new-specimen discovery banner panel (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- slotSpinButtonImagePath. :draw() stretches it across the banner
+    -- box instead of the Lua fill rectangle, and falls back to that
+    -- rectangle when the image failed to load.
+    local specimenBannerImagePath = "assets/effects/specimen_banner.png"
+    local specimenBannerImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, specimenBannerImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            specimenBannerImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1301,6 +1316,8 @@ function M.new(options)
         slotResultPanelImagePath = slotResultPanelImagePath,
         slotSpinButtonImage = slotSpinButtonImage,
         slotSpinButtonImagePath = slotSpinButtonImagePath,
+        specimenBannerImage = specimenBannerImage,
+        specimenBannerImagePath = specimenBannerImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3364,8 +3381,15 @@ function M:draw()
     end
     if self.newSpecimenBanner then
         local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
-        love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)
-        love.graphics.rectangle("fill", 48, 240, viewport.width - 96, 64)
+        if self.specimenBannerImage then
+            local iw, ih = self.specimenBannerImage:getDimensions()
+            love.graphics.setColor(1, 1, 1, 0.85 * alpha)
+            love.graphics.draw(self.specimenBannerImage, 48, 240, 0,
+                (viewport.width - 96) / iw, 64 / ih)
+        else
+            love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)
+            love.graphics.rectangle("fill", 48, 240, viewport.width - 96, 64)
+        end
         love.graphics.setColor(1, 0.85, 0.3, alpha)
         love.graphics.printf(self.newSpecimenBanner, 48, 256, viewport.width - 96, "center")
     end
