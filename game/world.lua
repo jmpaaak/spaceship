@@ -1,3 +1,5 @@
+local i18n = require("game.i18n")
+
 local M = {
     sectorSize = 192,
 }
@@ -32,11 +34,15 @@ local galaxyExistenceThreshold = 0.72
 
 -- Deterministically returns the galaxy occupying grid cell (gx, gy), or
 -- nil if that cell is empty deep space.
+--
+-- docs/feedback/INBOX.md 국제화 누락 항목: galaxy tables carry only the
+-- language-neutral identifier/coordinates now, never a hardcoded display
+-- string. Call sites resolve the localized label at render time via
+-- M.galaxyName(galaxy) -> i18n.t(...).
 function M.galaxy(gx, gy)
     if gx == 0 and gy == 0 then
         return {
             id = "milkyway",
-            name = "SOLAR SYSTEM",
             x = 0,
             y = 0,
             radius = M.galaxyCellSize * 0.9,
@@ -54,13 +60,25 @@ function M.galaxy(gx, gy)
         + (hash(gx, gy, 530) - 0.5) * M.galaxyCellSize * 0.5
     return {
         id = string.format("galaxy:%d:%d", gx, gy),
-        name = string.format("GALAXY %d-%d", gx, gy),
         x = cx,
         y = cy,
         radius = radius,
         gx = gx,
         gy = gy,
     }
+end
+
+-- Localized display name for a galaxy table returned by M.galaxy()/
+-- M.galaxyContaining()/M.nearbyGalaxies(). Pure aside from reading the
+-- current i18n locale; the home solar system uses a fixed label and every
+-- other galaxy uses its grid coordinates in a "GALAXY %d-%d" template, both
+-- resolved through game/i18n.lua so locale switches (en/ko) apply here too.
+function M.galaxyName(galaxy)
+    if not galaxy then return nil end
+    if galaxy.id == "milkyway" then
+        return i18n.t("galaxy_home")
+    end
+    return i18n.t("galaxy_named", galaxy.gx, galaxy.gy)
 end
 
 -- Deterministic per-galaxy background tint (docs/feedback/INBOX.md item 1

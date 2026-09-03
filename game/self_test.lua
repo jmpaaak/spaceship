@@ -242,6 +242,21 @@ local function testGalaxyStructure()
     -- Earth (0,0) so existing near-origin gameplay is unaffected.
     local home = world.galaxy(0, 0)
     assert(home and home.id == "milkyway" and home.x == 0 and home.y == 0 and home.radius > 0)
+    assert(home.name == nil,
+        "galaxy tables must not carry a hardcoded display string (docs/feedback/INBOX.md i18n gap)")
+
+    -- docs/feedback/INBOX.md 국제화 누락 항목: galaxy display names must be
+    -- resolved through i18n.t(), not hardcoded, so switching locale changes
+    -- the label without touching game/world.lua.
+    local i18n = require("game.i18n")
+    local prevLocale = i18n.getLocale()
+    i18n.setLocale("en")
+    assert(world.galaxyName(home) == "SOLAR SYSTEM")
+    i18n.setLocale("ko")
+    assert(world.galaxyName(home) == "태양계" or world.galaxyName(home) == i18n.t("galaxy_home"),
+        "ko galaxy_home must resolve through i18n, not a hardcoded English string")
+    i18n.setLocale(prevLocale)
+    assert(world.galaxyName(nil) == nil)
 
     -- Deterministic: the same cell must always return the same galaxy (or
     -- consistently nil), mirroring world.planets' existing determinism

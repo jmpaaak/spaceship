@@ -30,6 +30,12 @@ locales.en = {
     hud_status = "H%d/%d %-6s S%02d",
     hud_status_no_slots = "H%d/%d %-6s",
     forecast_line = "REACH %d  SLOTS %d",
+    -- docs/feedback/INBOX.md 국제화 누락 항목: game/world.lua's M.galaxy()
+    -- used to hardcode "SOLAR SYSTEM"/"GALAXY %d-%d" directly, bypassing
+    -- i18n entirely. Galaxy display names are now resolved at render time
+    -- via world.galaxyName(galaxy) -> i18n.t(...) using these keys.
+    galaxy_home = "SOLAR SYSTEM",
+    galaxy_named = "GALAXY %d-%d",
     loadout_ship = "SHIP %s",
     stats_line = "HULL %d",
     -- docs/feedback/INBOX.md item 11(c): the fuel-upgrade UI purchase row
@@ -154,6 +160,8 @@ locales.ko = {
     hud_status = "H%d/%d %-6s S%02d",
     hud_status_no_slots = "H%d/%d %-6s",
     forecast_line = "도달예상 %d  슬롯 %d",
+    galaxy_home = "태양계",
+    galaxy_named = "은하 %d-%d",
     loadout_ship = "함선 %s",
     stats_line = "선체 %d",
     upgrades_line = "선체 LV.%d",

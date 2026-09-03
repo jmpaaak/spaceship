@@ -102,7 +102,7 @@ function M.view(shipX, shipY)
         local mx, my, inside = M.project(galaxy.x, galaxy.y, shipX, shipY)
         galaxies[#galaxies + 1] = {
             id = galaxy.id,
-            name = galaxy.name,
+            name = world.galaxyName(galaxy),
             x = mx,
             y = my,
             inside = inside,
@@ -111,7 +111,7 @@ function M.view(shipX, shipY)
         local scaled = galaxy.radius * M.mapRadius / M.viewRadius
         rings[#rings + 1] = {
             id = galaxy.id,
-            name = galaxy.name,
+            name = world.galaxyName(galaxy),
             x = mx,
             y = my,
             radius = math.max(2, math.min(scaled, M.mapRadius)),
@@ -144,7 +144,7 @@ function M.view(shipX, shipY)
         sun = { x = earthX, y = earthY, inside = earthInside },
         galaxies = galaxies,
         rings = rings,
-        galaxyName = containing and containing.name or nil,
+        galaxyName = containing and world.galaxyName(containing) or nil,
         beyond = beyond,
         distanceBeyond = beyond and (distEarth - M.chartRadius) or 0,
         returnDx = returnDx,
