@@ -1,4 +1,16 @@
 # STATUS
+preflight FAIL(`engine tests and package: PASS`, `git diff` 검사: `docs/STATUS_HISTORY.md` 1127/1137/1147행에 leftover conflict marker)를 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
+
+- 세션 시작 `git status --short`에서 `work-econ` 브랜치가 진행 중인 merge 상태(`docs/STATUS.md`/`docs/feedback/INBOX.md` UU unmerged, `docs/STATUS_HISTORY.md` modified)였음을 확인했다 — 직전 사이클이 `git merge origin/spaceship-econ`을 시작했으나 `docs/STATUS_HISTORY.md`의 conflict marker(`<<<<<<< HEAD` / `=======` / `>>>>>>> origin/spaceship-econ`, 1127/1137/1147행)를 해소하지 않고 merge를 미완료 상태로 남긴 것이 원인이었다.
+- `docs/STATUS_HISTORY.md`의 세 marker 지점을 확인한 결과 두 쪽(HEAD의 "세션 시작 시 남아있던 미커밋 항목 11(a) 최종 슬라이스" 절과 origin/spaceship-econ의 "문서 정리 — 항목7/8/11/15 처리대기 항목을 처리완료로 이동" 절)이 서로 충돌하지 않는 별개의 사이클 기록이었으므로 두 내용을 모두 보존하고 marker 세 줄만 제거했다(내용 손실 없음).
+- `docs/STATUS.md`/`docs/feedback/INBOX.md`는 이미 내용상 conflict marker 없이 정리되어 있었음을 `grep`으로 확인 — merge 도구가 자동 병합했으나 `git add`로 resolve 완료 처리만 누락된 상태였다. 세 파일 모두 `git add` 후 `git commit`으로 merge를 완결했다(커밋 `6197585`).
+- `git grep -n "^<<<<<<<\|^=======$\|^>>>>>>>"` 저장소 전체 재검색으로 leftover marker가 더 없음을 확인했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `git push origin work-econ:spaceship-econ` 완료(`a2932d2..6197585`), `origin/spaceship-econ` fetch로 반영 확인, `git status --short`가 완전히 clean함을 확인했다.
+- 이번 슬라이스는 preflight가 지목한 정확한 실패(conflict marker) 진단·제거 및 merge 완결만 수행했다(신규 게임 로직/UI 변경 없음). econ 레인 스코프(항목7→8→11→15)는 이미 전부 완료 상태이며 이번 merge로도 그 결론은 변하지 않는다.
+- 다음 사이클: `loop/PROMPT.md`가 이 레인에 새 스코프를 지정하기 전까지는 착수할 신규 코드 작업이 없다. preflight READY 확인 후 대기하거나, 사용자/운영자의 다음 지시를 따른다.
+
+## (이전 사이클 기록)
 preflight READY(`engine tests and package` PASS, `git diff` clean)를 확인했다. `git status --short`가 clean함(이전 사이클의 미커밋 작업 없음)을 확인한 뒤, `docs/feedback/INBOX.md`의 이 레인 스코프 순서(항목7→8→11→15)에서 유일하게 남아있던 항목 11의 잔여 부분 — (c) "코드 전반의 죽은 연료 소모 로직/필드 정리" — 를 마저 처리했다.
 
 - `game/expedition.lua`/`game/ship.lua`의 죽은 연료 필드·함수는 이전 사이클들이 이미 전부 제거했지만, `game/i18n.lua`에 그 시절 문구 8개(en/ko 각각, 총 16줄)가 저장소 어디서도 참조되지 않는 죽은 문자열로 남아있음을 발견했다: `fuel_bonus_line`("NEXT LAUNCH FUEL +%d"/"다음발사 연료 +%d"), `newbest_fuel_combined`("NEW BEST! FUEL +%d"/"신기록! 연료+%d"), `spinning_label`/`win_repair_line`/`win_fuel_line`/`win_sample_line`/`win_pending_line`/`spins_settlement_line`(옛 in-flight 슬롯머신 릴 스핀/결과 문구).
