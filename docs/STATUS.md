@@ -1,5 +1,9 @@
 # STATUS
 
+## 재확인 사이클 — 레인 스코프(항목7→8→11→15) 여전히 소진 상태, 신규 변경 없음 (2026-09-03)
+
+preflight READY(engine tests and package PASS, git diff clean)를 확인한 뒤 `git status --short`로 미커밋 diff가 없음을 확인했다. `git log`/`git diff`로 로컬 HEAD(`b16326f`)가 `origin/spaceship-econ`과 완전히 동일함을 재확인했다. `loop/PROMPT.md`가 이 레인에 지정한 순서(항목7→8→11→15)를 `docs/feedback/INBOX.md`의 `## 처리 완료` 섹션과 코드(`grep beginReturn/useSlot/buyFuelUpgrade/fuelUpgradeLevel/run.fuel game/expedition.lua game/scenes/play.lua`)로 재검증했다 — 항목7(a/b/c)/8/11(b)(c)/15(a)(b)(c) 전부 코드에서 제거·완결되어 있고, 남은 항목11(a)는 이전 사이클이 이미 명시적으로 "econ 스코프 밖(메인 레인이 소유한 `play.lua` 텍스트 프레이밍 작업)"으로 이관 문서화해뒀다. `GAME_HEADLESS=1 GAME_UNIT=1 love .`(`SPACESHIP_UNIT_OK`/`SPACESHIP_SMOKE_OK`), `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 재실행해 GREEN을 재확인했다. 이 레인이 착수할 수 있는 신규 코드 변경은 없다 — `loop/PROMPT.md` 갱신(다른 pending 항목으로 스코프 재배정) 또는 사용자 확인이 있을 때까지 이 레인 스코프 밖 항목(9/10/12/13/14 등, gear 레인 소유이거나 메인 레인 텍스트 영역)을 임의로 착수하지 않는다.
+
 ## 항목7→8→11→15 INBOX 정리(pending→done 표시) + 이전 사이클 미커밋 작업 커밋 (완료, 2026-09-03)
 
 이번 사이클 시작 시 `git status --short`에 이전 사이클이 남긴 미커밋 diff(`docs/STATUS.md`/`docs/feedback/INBOX.md`/`game/expedition.lua`/`game/i18n.lua`/`game/scenes/play.lua`/`game/self_test.lua`/`main.lua`)가 있었다 — 검토 결과 이는 직전 사이클이 항목 15(a)를 완결하며 남긴 GREEN 상태의 완결된 작업(아래 15(a) 완료 로그 참고)이었다. `make test` 재확인(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `tools.test_verify_asset_manifest` 9건 모두 GREEN)으로 코드 상태가 여전히 정상임을 검증했다.
