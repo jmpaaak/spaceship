@@ -310,6 +310,14 @@ end
 M.speedIconSize = 32
 M.speedIconGap = 16
 
+-- docs/feedback/INBOX.md UI/HUD item 3 leftover: PLANET-triple still
+-- banks a next-launch fuel bonus in the engine, but launch consumes it
+-- as a no-op (no run.fuel). Named flag, same pattern as
+-- M.showLaunchRocketIcon, gates the leftover "NEXT LAUNCH FUEL" /
+-- "WIN +$N FUEL +N" copy so players are not told fuel is a reward.
+-- Econ item 15 owns any later redefinition of that bonus.
+M.showFuelBonusText = false
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -981,9 +989,24 @@ function M:loadoutLines()
 end
 
 function M:summaryFuelBonusLine()
+    if not M.showFuelBonusText then return nil end
     local bonus = self.expedition.bankedFuelBonus or 0
     if bonus <= 0 then return nil end
     return i18n.t("fuel_bonus_line", bonus)
+end
+
+-- Pure helper for the returning-phase slot result WIN line so tests can
+-- pin the copy without drawing. Fuel-bonus wins fall through to the
+-- pending-money line while showFuelBonusText is false.
+function M.slotWinLine(run)
+    if run.lastSlotRepair and run.lastSlotRepair > 0 then
+        return i18n.t("win_repair_line", run.lastSlotReward, run.lastSlotRepair)
+    elseif M.showFuelBonusText and run.lastSlotFuelBonus and run.lastSlotFuelBonus > 0 then
+        return i18n.t("win_fuel_line", run.lastSlotReward, run.lastSlotFuelBonus)
+    elseif run.lastSlotSampleBonus and run.lastSlotSampleBonus > 0 then
+        return i18n.t("win_sample_line", run.lastSlotReward, run.lastSlotSampleBonus)
+    end
+    return i18n.t("win_pending_line", run.lastSlotReward, run.pendingSlotReward)
 end
 
 local function purchaseStatus(money, cost)
@@ -1324,7 +1347,7 @@ function M:update(dt)
                     self.slotSpin.reward,
                     self.slotSpin.repair,
                     self.slotSpin.opportunitiesAfter)
-            elseif self.slotSpin.fuelBonus and self.slotSpin.fuelBonus > 0 then
+            elseif M.showFuelBonusText and self.slotSpin.fuelBonus and self.slotSpin.fuelBonus > 0 then
                 self.message = i18n.t("slot_result_fuel",
                     table.concat(self.slotSpin.symbols, " "),
                     self.slotSpin.reward,
@@ -2471,23 +2494,7 @@ function M:draw()
             love.graphics.rectangle("fill", 72, 840, 576, 136)
             self:drawSlotReel(self.expedition.lastSlotSymbols, 80, 864, 560)
             love.graphics.setColor(1, 0.8, 0.3)
-            if self.expedition.lastSlotRepair and self.expedition.lastSlotRepair > 0 then
-                love.graphics.printf(i18n.t("win_repair_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotRepair), 80, 924, 560, "center")
-            elseif self.expedition.lastSlotFuelBonus and self.expedition.lastSlotFuelBonus > 0 then
-                love.graphics.printf(i18n.t("win_fuel_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotFuelBonus), 80, 924, 560, "center")
-            elseif self.expedition.lastSlotSampleBonus and self.expedition.lastSlotSampleBonus > 0 then
-                love.graphics.printf(i18n.t("win_sample_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotSampleBonus), 80, 924, 560, "center")
-            else
-                love.graphics.printf(i18n.t("win_pending_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.pendingSlotReward), 80, 924, 560, "center")
-            end
+            love.graphics.printf(M.slotWinLine(self.expedition), 80, 924, 560, "center")
         end
         love.graphics.setFont(previousOddsFont)
         local slotButton = self:slotButtonState()

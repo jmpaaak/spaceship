@@ -979,6 +979,53 @@ local function testPeakDistLine()
         "old ko peak_alt_line key must be removed")
 end
 
+-- docs/feedback/INBOX.md UI/HUD item 3 leftover + STATUS next slice:
+-- bankedFuelBonus is consumed as a no-op at launch (no run.fuel field),
+-- but settlement/returning still advertise "NEXT LAUNCH FUEL +N" /
+-- "WIN +$N FUEL +N". Hide that copy. Engine bonus fields stay (econ
+-- item 15 owns any later redefinition of the PLANET-triple reward).
+local function testFuelBonusTextHidden()
+    assert(PlayScene.showFuelBonusText == false,
+        "showFuelBonusText must gate leftover fuel-reward copy off")
+
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scene.expedition.bankedFuelBonus = 15
+    assert(scene:summaryFuelBonusLine() == nil,
+        "settlement must not summarize a no-op next-launch fuel bonus")
+
+    local rolls = { 6, 6, 6 }
+    local nextRoll = 0
+    local fuelScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    fuelScene.expedition.slotRandom = function()
+        nextRoll = nextRoll + 1
+        return rolls[nextRoll]
+    end
+    fuelScene.expedition.phase = "returning"
+    fuelScene.expedition.altitude = 500
+    fuelScene.expedition.slotOpportunities = 1
+    fuelScene:keypressed("up")
+    fuelScene:update(fuelScene.slotSpin.duration + 0.01)
+    assert(fuelScene.message == "PLANET PLANET PLANET +$40  0 LEFT",
+        "planet-triple slot message must drop FUEL framing: " .. tostring(fuelScene.message))
+    assert(not tostring(fuelScene.message):find("FUEL"),
+        "slot completion must not mention FUEL")
+
+    fuelScene.expedition.lastSlotFuelBonus = 15
+    fuelScene.expedition.lastSlotReward = 40
+    fuelScene.expedition.pendingSlotReward = 40
+    fuelScene.expedition.lastSlotRepair = 0
+    fuelScene.expedition.lastSlotSampleBonus = 0
+    local winLine = PlayScene.slotWinLine(fuelScene.expedition)
+    assert(winLine == "WIN +$40  PENDING $40",
+        "fuel-bonus WIN line must fall through to pending money: " .. tostring(winLine))
+    assert(not winLine:find("FUEL"),
+        "slot WIN line must not mention FUEL: " .. tostring(winLine))
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -2990,13 +3037,11 @@ function M.run()
     fuelBonusMessageScene.expedition.slotOpportunities = 1
     fuelBonusMessageScene:keypressed("up")
     fuelBonusMessageScene:update(fuelBonusMessageScene.slotSpin.duration + 0.01)
-    assert(fuelBonusMessageScene.message == "PLANET PLANET PLANET +$40 FUEL +15  0 LEFT",
-        "slot spin completion message must include the fuel bonus: " .. tostring(fuelBonusMessageScene.message))
+    assert(fuelBonusMessageScene.message == "PLANET PLANET PLANET +$40  0 LEFT",
+        "slot spin completion must drop no-op FUEL framing: " .. tostring(fuelBonusMessageScene.message))
 
-    -- The EARTH SHOP summary card (settlement phase) must surface a
-    -- banked next-expedition fuel bonus so the player can see the reward
-    -- they earned before relaunching, mirroring how SAMPLES/SPINS/PEAK
-    -- ALT/NEW BEST already summarize other settlement outcomes.
+    -- The EARTH SHOP summary card hides the banked next-expedition fuel
+    -- bonus while launch consumes it as a no-op (no run.fuel field).
     local fuelBonusSummaryScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
@@ -3004,9 +3049,8 @@ function M.run()
     assert(fuelBonusSummaryScene:summaryFuelBonusLine() == nil,
         "no fuel bonus banked must show no summary line")
     fuelBonusSummaryScene.expedition.bankedFuelBonus = 15
-    assert(fuelBonusSummaryScene:summaryFuelBonusLine() == "NEXT LAUNCH FUEL +15",
-        "banked fuel bonus must be summarized as NEXT LAUNCH FUEL +N: "
-            .. tostring(fuelBonusSummaryScene:summaryFuelBonusLine()))
+    assert(fuelBonusSummaryScene:summaryFuelBonusLine() == nil,
+        "banked fuel bonus must stay hidden on the settlement card while it is a no-op")
 
     -- Real LOVE runtime capture (GAME_CAPTURE_PHASE=ascending-damage-text,
     -- 1440x2560) showed the green "+$N" sample floating text and the red
@@ -3131,6 +3175,7 @@ function M.run()
     testCashCoinIcon()
     testSteerSpeedIcon()
     testPeakDistLine()
+    testFuelBonusTextHidden()
     testLaunchForecastRemoved()
     testFuelUpgradeHiddenFromShop()
     testFuelUpgradeMessagingRemoved()
