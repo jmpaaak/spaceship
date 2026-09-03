@@ -967,11 +967,6 @@ function M:hudLines()
     }
 end
 
-local function launchForecastLine(run, maxFuel)
-    local forecastAltitude, forecastSlots = expedition.launchForecast(run, maxFuel)
-    return i18n.t("forecast_line", math.floor(forecastAltitude), forecastSlots)
-end
-
 function M:loadoutLines()
     local run = self.expedition
     return {
@@ -991,7 +986,6 @@ function M:loadoutLines()
         -- docs/feedback/INBOX.md UI 대개편 6건 item 2: the "HULL LV.n" line
         -- is dropped entirely -- hull durability will be shown persistently
         -- top-left (item 3's card layout) instead of duplicated here.
-        forecast = launchForecastLine(run),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
     }
 end
@@ -1067,7 +1061,6 @@ function M:shopLoadoutLines()
         stats = i18n.t("stats_line", run.maxDurability),
         -- docs/feedback/INBOX.md UI 대개편 6건 item 2: "HULL LV.n" dropped
         -- (see M:loadoutLines() above for rationale).
-        forecast = launchForecastLine(run),
         scoutTradeoff = self.scoutTradeoffLines(run),
         shipAction = shipAction,
         shipActionCompact = shipActionCompact,
@@ -1077,7 +1070,6 @@ function M:shopLoadoutLines()
             string.upper(previewShipId), previewDurability),
         shipPreviewCompact = i18n.t("ship_preview_compact",
             string.upper(previewShipId), previewDurability),
-        shipPreviewForecast = launchForecastLine(run),
         hullAction = i18n.t("hull_action_line",
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
@@ -1088,7 +1080,6 @@ function M:shopLoadoutLines()
             run.maxDurability + run.durabilityUpgradeAmount),
         hullPreviewCompact = i18n.t("hull_preview_compact",
             run.maxDurability + run.durabilityUpgradeAmount),
-        hullPreviewForecast = launchForecastLine(run),
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
         yieldAction = i18n.t("yield_action_line",
@@ -1635,7 +1626,7 @@ function M:keypressed(key)
                 "hull_upgraded_message",
                 self.expedition.durabilityUpgradeLevel,
                 self.expedition.maxDurability,
-                launchForecastLine(self.expedition), self.expedition.money)
+                self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.durabilityUpgradeCost, i18n.t("item_hull_upgrade"))
@@ -1675,7 +1666,7 @@ function M:keypressed(key)
                 self.message = i18n.t(
                     "scout_purchased_message",
                     self.expedition.maxDurability,
-                    launchForecastLine(self.expedition), self.expedition.money)
+                    self.expedition.money)
             else
                 self.message = purchaseShortfallMessage(self.expedition.money,
                     self.expedition.scoutShipCost, i18n.t("item_scout"))
@@ -1684,8 +1675,7 @@ function M:keypressed(key)
             local shipId = self.expedition.selectedShipId == "scout" and "starter" or "scout"
             expedition.selectShip(self.expedition, shipId)
             self.message = i18n.t("ship_selected_message",
-                string.upper(shipId), self.expedition.maxDurability,
-                launchForecastLine(self.expedition))
+                string.upper(shipId), self.expedition.maxDurability)
         end
         return
     end

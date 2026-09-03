@@ -2027,7 +2027,7 @@ function M.run()
     assert(shopScene.expedition.durabilityUpgradeLevel == 1 and shopScene.expedition.maxDurability == 4)
     assert(shopScene.expedition.money == 10)
     assert(shopScene.message
-        == "HULL UPGRADED  LV.1  HULL 4  REACH 600  SLOTS 6  BALANCE $10")
+        == "HULL UPGRADED  LV.1  HULL 4  BALANCE $10")
     shopScene.expedition.money = shopScene.expedition.sampleYieldUpgradeCost + 15
     shopScene:keypressed("y")
     assert(shopScene.expedition.sampleYieldUpgradeLevel == 1)
@@ -2043,11 +2043,10 @@ function M.run()
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
     assert(shopScene.expedition.money == 20)
     -- docs/feedback/INBOX.md item 11(b): with the fuel-tank shop upgrade
-    -- removed, the scout's REACH forecast here reflects its base+bonus
     -- fuel alone (100 base + 40 scout bonus = 140 fuel), not a previously
     -- purchased fuel tank.
     assert(shopScene.message
-        == "SCOUT PURCHASED AND SELECTED  HULL 3  REACH 840  SLOTS 9  BALANCE $20")
+        == "SCOUT PURCHASED AND SELECTED  HULL 3  BALANCE $20")
 
     local scoutFuelMessageScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -2074,7 +2073,7 @@ function M.run()
         and scoutHullMessageScene.expedition.maxDurability == 3)
     assert(scoutHullMessageScene.expedition.money == 20)
     assert(scoutHullMessageScene.message
-        == "HULL UPGRADED  LV.1  HULL 3  REACH 840  SLOTS 9  BALANCE $20")
+        == "HULL UPGRADED  LV.1  HULL 3  BALANCE $20")
 
     local repeatedUpgradeMessageScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -2087,7 +2086,7 @@ function M.run()
     repeatedUpgradeMessageScene:keypressed("h")
     assert(repeatedUpgradeMessageScene.expedition.durabilityUpgradeLevel == 2)
     assert(repeatedUpgradeMessageScene.message
-        == "HULL UPGRADED  LV.2  HULL 5  REACH 600  SLOTS 6  BALANCE $100")
+        == "HULL UPGRADED  LV.2  HULL 5  BALANCE $100")
 
     local shortfallScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -2216,7 +2215,6 @@ function M.run()
     assert(starterLoadout.stats == "HULL 3")
     assert(starterLoadout.upgrades == nil,
         "docs/feedback/INBOX.md UI 대개편 6건 item 2: HULL LV.n line removed, durability shown top-left instead")
-    assert(starterLoadout.forecast == "REACH 600  SLOTS 6")
     assert(starterLoadout.steering == "STEER SPEED 55")
     loadoutScene.expedition.phase = "settlement"
     loadoutScene.expedition.money = loadoutScene.expedition.durabilityUpgradeCost
@@ -2229,7 +2227,6 @@ function M.run()
     assert(upgradedLoadout.ship == "SHIP SCOUT")
     assert(upgradedLoadout.stats == "HULL 3")
     assert(upgradedLoadout.upgrades == nil)
-    assert(upgradedLoadout.forecast == "REACH 840  SLOTS 9")
     assert(upgradedLoadout.steering == "STEER SPEED 70")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
@@ -2250,18 +2247,17 @@ function M.run()
     assert(starterNextLaunch.ship == "NEXT STARTER")
     assert(starterNextLaunch.stats == "HULL 3")
     assert(starterNextLaunch.upgrades == nil)
-    assert(starterNextLaunch.forecast == "REACH 600  SLOTS 6")
     assert(starterNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +40 FUEL")
     assert(starterNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
     assert(starterNextLaunch.shipAction == "BUY SCOUT $125")
     assert(starterNextLaunch.shipPreview == "SCOUT HULL 2")
-    assert(starterNextLaunch.shipPreviewForecast == "REACH 600  SLOTS 6")
+    assert(starterNextLaunch.shipPreviewForecast == nil)
     assert(starterNextLaunch.fuelAction == nil)
     assert(starterNextLaunch.fuelPreviewForecast == nil)
     assert(starterNextLaunch.fuelStatus == nil)
     assert(starterNextLaunch.hullAction == "T/H HULL LV.0>1 $75")
     assert(starterNextLaunch.hullPreview == "HULL 4")
-    assert(starterNextLaunch.hullPreviewForecast == "REACH 600  SLOTS 6")
+    assert(starterNextLaunch.hullPreviewForecast == nil)
     assert(starterNextLaunch.hullStatus == "SHORT $75" and not starterNextLaunch.hullAffordable)
     assert(starterNextLaunch.shipStatus == "SHORT $125" and not starterNextLaunch.shipAffordable)
     assert(starterNextLaunch.yieldAction == "T/Y YIELD LV.0>1 $60")
@@ -2310,13 +2306,12 @@ function M.run()
     local fueledNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(fueledNextLaunch.stats == "HULL 3")
     assert(fueledNextLaunch.upgrades == nil)
-    assert(fueledNextLaunch.forecast == "REACH 600  SLOTS 6")
     assert(fueledNextLaunch.fuelAction == nil)
     assert(fueledNextLaunch.hullAction == "T/H HULL LV.0>1 $75")
-    assert(fueledNextLaunch.shipPreviewForecast == "REACH 600  SLOTS 6")
+    assert(fueledNextLaunch.shipPreviewForecast == nil)
     assert(fueledNextLaunch.fuelPreviewForecast == nil)
     assert(fueledNextLaunch.hullPreview == "HULL 4")
-    assert(fueledNextLaunch.hullPreviewForecast == "REACH 600  SLOTS 6")
+    assert(fueledNextLaunch.hullPreviewForecast == nil)
     nextLaunchScene:keypressed("h")
     local reinforcedNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(reinforcedNextLaunch.stats == "HULL 4")
@@ -2333,13 +2328,12 @@ function M.run()
     assert(scoutNextLaunch.ship == "NEXT SCOUT")
     assert(scoutNextLaunch.stats == "HULL 3")
     assert(scoutNextLaunch.upgrades == nil)
-    assert(scoutNextLaunch.forecast == "REACH 840  SLOTS 9")
-    assert(scoutNextLaunch.shipPreviewForecast == "REACH 840  SLOTS 9")
+    assert(scoutNextLaunch.shipPreviewForecast == nil)
     assert(scoutNextLaunch.fuelAction == nil)
     assert(scoutNextLaunch.fuelPreviewForecast == nil)
     assert(scoutNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
     assert(scoutNextLaunch.hullPreview == "HULL 4")
-    assert(scoutNextLaunch.hullPreviewForecast == "REACH 840  SLOTS 9")
+    assert(scoutNextLaunch.hullPreviewForecast == nil)
     assert(scoutNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +40 FUEL")
     assert(scoutNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
     assert(scoutNextLaunch.shipAction == "SELECT STARTER")
@@ -2352,14 +2346,13 @@ function M.run()
     assert(reselectedNextLaunch.fuelPreviewForecast == nil)
     assert(reselectedNextLaunch.shipAction == "SELECT SCOUT")
     -- docs/feedback/INBOX.md item 11(b): with the fuel-tank shop upgrade
-    -- removed, these REACH forecasts reflect each ship's base+bonus fuel
     -- alone (starter 100, scout 140), never a previously purchased tank.
     assert(nextLaunchScene.message
-        == "STARTER SELECTED  HULL 4  REACH 600  SLOTS 6")
+        == "STARTER SELECTED  HULL 4")
     nextLaunchScene:touchpressed("ship", 540, 1016)
     assert(nextLaunchScene.expedition.selectedShipId == "scout")
     assert(nextLaunchScene.message
-        == "SCOUT SELECTED  HULL 3  REACH 840  SLOTS 9")
+        == "SCOUT SELECTED  HULL 3")
     assert(nextLaunchScene:shopLoadoutLines().shipAction == "SELECT STARTER")
 
     local destroyedRun = expedition.new({
