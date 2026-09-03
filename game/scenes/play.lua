@@ -675,9 +675,13 @@ end
 -- docs/feedback/INBOX.md 처리대기 항목 11(a): calls the renamed
 -- expedition.rangeForecast (formerly launchForecast) -- see that
 -- function's comment in game/expedition.lua for why the fuel-framed name
--- was dropped. i18n's "forecast_line" text (REACH/도달예상) is unchanged
--- (that wording lives in the main lane's text-ownership territory).
-local function launchForecastLine(run, capacity)
+-- was dropped. This local wrapper's own name is renamed to match (it is
+-- a private play.lua identifier, not user-visible text, so this is a
+-- minimal structural change within econ lane scope -- i18n's
+-- "forecast_line" wording, REACH/도달예상, is unchanged and remains the
+-- main lane's text-ownership territory). This closes out the last open
+-- part of item 11(a) noted in docs/feedback/INBOX.md's 처리 완료 section.
+local function rangeForecastLine(run, capacity)
     local forecastAltitude, forecastSlots = expedition.rangeForecast(run, capacity)
     return i18n.t("forecast_line", math.floor(forecastAltitude), forecastSlots)
 end
@@ -699,7 +703,7 @@ function M:loadoutLines()
         shipLabel = string.upper(run.selectedShipId),
         stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line", run.durabilityUpgradeLevel),
-        forecast = launchForecastLine(run),
+        forecast = rangeForecastLine(run),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
         odds = self:slotOddsLine(),
     }
@@ -769,7 +773,7 @@ function M:shopLoadoutLines()
         ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
         stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line", run.durabilityUpgradeLevel),
-        forecast = launchForecastLine(run),
+        forecast = rangeForecastLine(run),
         scoutTradeoff = self.scoutTradeoffLines(run),
         shipAction = shipAction,
         shipActionCompact = shipActionCompact,
@@ -779,7 +783,7 @@ function M:shopLoadoutLines()
             string.upper(previewShipId), previewDurability),
         shipPreviewCompact = i18n.t("ship_preview_compact",
             string.upper(previewShipId), previewDurability),
-        shipPreviewForecast = launchForecastLine(run),
+        shipPreviewForecast = rangeForecastLine(run),
         hullAction = i18n.t("hull_action_line",
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
@@ -790,7 +794,7 @@ function M:shopLoadoutLines()
             run.maxDurability + run.durabilityUpgradeAmount),
         hullPreviewCompact = i18n.t("hull_preview_compact",
             run.maxDurability + run.durabilityUpgradeAmount),
-        hullPreviewForecast = launchForecastLine(run),
+        hullPreviewForecast = rangeForecastLine(run),
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
         yieldAction = i18n.t("yield_action_line",
@@ -1225,7 +1229,7 @@ function M:keypressed(key)
                 "hull_upgraded_message",
                 self.expedition.durabilityUpgradeLevel,
                 self.expedition.maxDurability,
-                launchForecastLine(self.expedition), self.expedition.money)
+                rangeForecastLine(self.expedition), self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.durabilityUpgradeCost, i18n.t("item_hull_upgrade"))
@@ -1265,7 +1269,7 @@ function M:keypressed(key)
                 self.message = i18n.t(
                     "scout_purchased_message",
                     self.expedition.maxDurability,
-                    launchForecastLine(self.expedition), self.expedition.money)
+                    rangeForecastLine(self.expedition), self.expedition.money)
             else
                 self.message = purchaseShortfallMessage(self.expedition.money,
                     self.expedition.scoutShipCost, i18n.t("item_scout"))
@@ -1275,7 +1279,7 @@ function M:keypressed(key)
             expedition.selectShip(self.expedition, shipId)
             self.message = i18n.t("ship_selected_message",
                 string.upper(shipId), self.expedition.maxDurability,
-                launchForecastLine(self.expedition))
+                rangeForecastLine(self.expedition))
         end
         return
     end
