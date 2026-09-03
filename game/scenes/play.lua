@@ -1157,6 +1157,34 @@ end
 M.destroyedNextShipIconSize = 24
 M.destroyedNextShipIconGap = 8
 
+-- Destroyed-phase tap_start_over icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- tap_start_over printf ("TAP: START OVER" after meta wipe)
+-- with a small restart-loop hexagon, mirroring next_ship_line.
+-- Drawn as a flat hexagon (even-length {x,y,...} list, no
+-- love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.destroyedTapStartOverIconPoints(cx, cy, size)
+    local w = size * 0.43
+    local peak = size * 0.5
+    local mid = size * 0.25
+    return {
+        cx, cy - peak,
+        cx + w, cy - mid,
+        cx + w, cy + mid,
+        cx, cy + peak,
+        cx - w, cy + mid,
+        cx - w, cy - mid,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- restart-loop hexagon's right edge and the tap_start_over
+-- label's left edge. Matches destroyedNextShip because both
+-- sit next to gold destroyed-phase labels.
+M.destroyedTapStartOverIconSize = 24
+M.destroyedTapStartOverIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2692,6 +2720,22 @@ function M.new(options)
             destroyedNextShipIconImage = img
         end
     end
+    -- assets/effects/destroyed_tap_start_over.png is the ComfyUI-generated
+    -- destroyed-phase tap_start_over restart-loop hexagon
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as destroyedNextShipIconImagePath.
+    -- :draw() scales it to M.destroyedTapStartOverIconSize instead of
+    -- M.destroyedTapStartOverIconPoints, and falls back to that hexagon
+    -- when the image failed to load.
+    local destroyedTapStartOverIconImagePath = "assets/effects/destroyed_tap_start_over.png"
+    local destroyedTapStartOverIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedTapStartOverIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedTapStartOverIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2846,6 +2890,8 @@ function M.new(options)
         loadoutShipIconImagePath = loadoutShipIconImagePath,
         destroyedNextShipIconImage = destroyedNextShipIconImage,
         destroyedNextShipIconImagePath = destroyedNextShipIconImagePath,
+        destroyedTapStartOverIconImage = destroyedTapStartOverIconImage,
+        destroyedTapStartOverIconImagePath = destroyedTapStartOverIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5383,7 +5429,27 @@ function M:draw()
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.print(destroyedNextShipLabel, destroyedNextShipStartX + destroyedNextShipIconSpan, row)
         row = row + rowStep
-        love.graphics.printf(i18n.t("tap_start_over"), fullX, row, fullW, "center")
+        local destroyedTapStartOverLabel = i18n.t("tap_start_over")
+        local destroyedTapStartOverFont = love.graphics.getFont()
+        local destroyedTapStartOverWidth = destroyedTapStartOverFont:getWidth(destroyedTapStartOverLabel)
+        local destroyedTapStartOverIconSpan = M.destroyedTapStartOverIconSize + M.destroyedTapStartOverIconGap
+        local destroyedTapStartOverStartX = fullX + (fullW - (destroyedTapStartOverIconSpan + destroyedTapStartOverWidth)) / 2
+        local destroyedTapStartOverIconCenterX = destroyedTapStartOverStartX + M.destroyedTapStartOverIconSize / 2
+        local destroyedTapStartOverIconCenterY = row + destroyedTapStartOverFont:getHeight() / 2
+        if self.destroyedTapStartOverIconImage then
+            local iw, ih = self.destroyedTapStartOverIconImage:getDimensions()
+            local scale = M.destroyedTapStartOverIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.destroyedTapStartOverIconImage, destroyedTapStartOverIconCenterX, destroyedTapStartOverIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: gold restart-loop hexagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.polygon("fill",
+                M.destroyedTapStartOverIconPoints(destroyedTapStartOverIconCenterX, destroyedTapStartOverIconCenterY, M.destroyedTapStartOverIconSize))
+        end
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.print(destroyedTapStartOverLabel, destroyedTapStartOverStartX + destroyedTapStartOverIconSpan, row)
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()
