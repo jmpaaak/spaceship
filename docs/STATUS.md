@@ -1,5 +1,18 @@
 # STATUS
 
+## 항목 7(c) UI 연결 — EARTH SHOP 범용 장비 구매 경로를 "n" 키로 실제 플레이에 연결 (완료, 2026-09-03)
+
+`docs/feedback/INBOX.md`의 econ 레인 스코프 순서(항목7→8→11→15) 중 항목 7의 마지막 남은 부분 (c) — 지구 EARTH SHOP에서 범용(은하 비특정) 장비 부품 구매 — 를 처리했다. preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short`에서 이전 사이클이 남긴 미커밋 diff(`game/expedition.lua`/`game/i18n.lua`/`game/scenes/play.lua`/`game/self_test.lua`)를 발견 — 검토 결과 그대로 완결된 7(c) 슬라이스였으므로 덮어쓰지 않고 이어서 완결/커밋했다.
+
+- 이전 슬라이스가 `game/expedition.lua`에 `M.genericGearCatalog`/`M.buyEarthGear(run, gearId)`를 순수 엔진 API로 이미 추가해두었으나(항목 7 첫 슬라이스), `game/scenes/play.lua`가 이를 전혀 호출하지 않아 EARTH SHOP에서 범용 부품을 구매할 방법이 실제 플레이에는 없었다 — 상점 행성 구매(7-a, "b" 키)와 체크포인트 확정 드롭(7-b)만 접근 가능했다.
+- `game/expedition.lua`에 신규 `M.nextBuyableEarthGear(run)`을 추가했다 — `run.ownedGear`에 없는 `genericGearCatalog`의 첫 항목을 카탈로그 순서대로 반환하고, 모두 보유 시 `nil`을 반환한다. 카드별 개별 UI(항목 9/13의 몫)가 아직 없는 상태에서 "다음 미보유 범용 부품 구매"라는 단일 액션으로 카탈로그 전체를 순회 구매할 수 있게 하는 최소 설계다.
+- `game/scenes/play.lua`의 `M:keypressed`에 settlement 페이즈 전용 신규 `"n"` 키 분기를 추가했다 — 후보가 있으면 `expedition.buyEarthGear`를 호출해 `earth_gear_bought_message`로 결과를 안내하고, 자금 부족 시 기존 HULL/YIELD/STEERING/SCOUT/SLOT 구매 키들과 동일한 `purchaseShortfallMessage` 패턴(신규 `item_earth_gear` 문구)을 재사용하며, 모두 보유 시 `all_earth_gear_owned_message`로 안내한다. `game/i18n.lua`에 `earth_gear_bought_message`/`item_earth_gear`/`all_earth_gear_owned_message`(en/ko)를 추가했다. 레인 스코프 규칙(play.lua 텍스트/HUD 세부는 메인 레인 담당)에 따라 새 시각 레이아웃(카드 그리드 등)은 추가하지 않고 키 입력 분기와 필수 메시지 문구만 최소 추가했다.
+- `game/self_test.lua`에 신규 `testEarthGearShopUiWiring()`을 추가했다 — settlement에서 "n"이 첫 미보유 범용 부품을 구매함(자금 차감+ownedGear 반영+구매 메시지), 재입력 시 다음 미보유 부품으로 넘어감(중복 구매 없음), 전량 보유 시 "ALL EARTH GEAR OWNED" 메시지, 자금 부족 시 차감 없이 shortfall 메시지, settlement 이외 페이즈(ascending)에서는 완전 no-op임을 회귀 검증한다. `game/self_test.lua:2926`의 `M.run()` 목록에 이 함수 호출을 추가로 등록했다.
+- `GAME_HEADLESS=1 GAME_UNIT=1 love .`, `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- 이로써 항목 7(a/b/c) 전체가 엔진+UI 연결까지 완료되었다. 항목 8도 이전 슬라이스에서 엔진+UI 연결까지 완료된 상태다.
+- `docs/feedback/INBOX.md` 처리대기 항목 7 하위에 이번 슬라이스 진행 상황을 append했다.
+- 다음 사이클 다음 슬라이스: econ 레인 순서상 항목 11의 남은 (a) — `launchForecastLine`/`forecast_line`의 연료 기반 프레이밍 텍스트 재정의는 메인 레인 조율이 필요한 play.lua 텍스트 영역이라 이 레인에서 직접 처리하기보다 스코프 재확인이 필요하다. 항목 11의 (b)/(c) 엔진 레벨 정리는 이미 완료 상태이므로, 실질적으로 econ 레인의 다음 작업은 항목 15(a)의 마지막 남은 부분 — 옛 `beginReturn`/`"returning"` 페이즈/`useSlot`/`slotSpin` 및 관련 UI(조이스틱 하강 렌더, 슬롯 릴 애니메이션, `returnControls` 터치 밴드, `GAME_CAPTURE_PHASE=returning-*` 하네스)를 실제로 제거하는 것 — 로 넘어가는 것이 유력하다. `game/scenes/play.lua`의 returning 페이즈 UI/터치/키 입력 전반을 광범위하게 재작성해야 하는 큰 작업이라 메인 레인과의 조율이 여전히 필요하다.
+
 ## 항목 15(a) 두 번째 단계 — ascending 페이즈에 "r" 키로 즉시-귀환(`returnToEarth`) UI 연결 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md`의 econ 레인 스코프 순서(항목7→8→11→15) 중 항목 15의 남은 부분 (a) — `beginReturn`/returning 페이즈/in-flight `slotSpin`·`useSlot` 폐지, 체크포인트/지구 도달 시 즉시 정산으로의 구조 전환 — 의 두 번째 슬라이스를 처리했다. preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.

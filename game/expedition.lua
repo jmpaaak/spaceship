@@ -195,6 +195,25 @@ function M.buyEarthGear(run, gearId)
     return false
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 7-c UI wiring: M.buyEarthGear(run,
+-- gearId) above has existed as a pure engine API since the first item-7
+-- slice, but game/scenes/play.lua never called it -- the EARTH SHOP could
+-- only sell nothing at all, leaving the whole generic-catalog purchase
+-- path (7-c) unreachable from real play. M.nextBuyableEarthGear(run) picks
+-- the first genericGearCatalog entry the run doesn't already own (in
+-- catalog order), so a single UI action ("buy next generic part") can
+-- drive the whole catalog without needing per-item UI/keys yet -- that
+-- richer per-card shop layout is the (still out-of-scope-for-this-lane)
+-- item 9/13 gear UI work. Returns nil once every generic part is owned.
+function M.nextBuyableEarthGear(run)
+    if not run then return nil end
+    local owned = run.ownedGear or {}
+    for _, entry in ipairs(M.genericGearCatalog) do
+        if not owned[entry.id] then return entry end
+    end
+    return nil
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 7-a: a galaxy's 상점 행성 sells that
 -- same galaxy's unique gear part for money -- a paid alternative to the
 -- guaranteed-but-unpaid checkpoint drop (7-b) for players who reach the

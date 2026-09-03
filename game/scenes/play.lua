@@ -1433,6 +1433,29 @@ function M:keypressed(key)
         end
         return
     end
+    -- docs/feedback/INBOX.md 처리대기 항목 7-c UI wiring: EARTH SHOP already
+    -- sells that galaxy's gear at a shop planet (7-a, "b" key above) and
+    -- grants checkpoint drops for free (7-b), but the third acquisition
+    -- path -- buying a generic (non-galaxy-specific) part at the EARTH
+    -- SHOP itself -- had a complete engine API (expedition.buyEarthGear)
+    -- that was never called from play.lua, leaving 7-c entirely
+    -- unreachable in real play. "n" ("next generic part") buys whichever
+    -- genericGearCatalog entry the run doesn't already own, in catalog
+    -- order -- a minimal single-key wiring rather than a full per-card
+    -- shop row layout (that richer UI is item 9/13's territory, out of
+    -- this lane's scope for play.lua).
+    if self.expedition.phase == "settlement" and key == "n" then
+        local candidate = expedition.nextBuyableEarthGear(self.expedition)
+        if not candidate then
+            self.message = i18n.t("all_earth_gear_owned_message", self.expedition.money)
+        elseif expedition.buyEarthGear(self.expedition, candidate.id) then
+            self.message = i18n.t("earth_gear_bought_message", candidate.name, self.expedition.money)
+        else
+            self.message = purchaseShortfallMessage(self.expedition.money,
+                candidate.cost, i18n.t("item_earth_gear"))
+        end
+        return
+    end
     -- docs/feedback/INBOX.md 처리대기 항목 15(a) UI wiring: the previously
     -- purely-additive engine entry point expedition.returnToEarth(run) is
     -- now reachable from real play via an explicit "r" key while ascending

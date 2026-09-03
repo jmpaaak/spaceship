@@ -656,6 +656,68 @@ end
 -- PlayScene:keypressed, since the engine-only entry point added by a prior
 -- slice was not yet reachable from real play. Own top-level function for
 -- the same 200-local limit as testJoystick.
+-- docs/feedback/INBOX.md 처리대기 항목 7-c UI wiring: EARTH SHOP's generic
+-- gear purchase path (expedition.buyEarthGear/nextBuyableEarthGear) had a
+-- complete engine API since the first item-7 slice but was never called
+-- from PlayScene:keypressed, leaving it unreachable from real play (only
+-- the galaxy-unique shop-planet purchase, "b", and checkpoint drops were
+-- wired). Own top-level function for the same 200-local limit as
+-- testJoystick.
+local function testEarthGearShopUiWiring()
+    local expedition = require("game.expedition")
+
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scene.expedition.phase = "settlement"
+    scene.expedition.money = 1000
+    local firstGeneric = expedition.genericGearCatalog[1]
+    scene:keypressed("n")
+    assert(scene.expedition.ownedGear[firstGeneric.id],
+        "settlement 'n' key must buy the first unowned generic EARTH SHOP gear part")
+    assert(scene.expedition.money == 1000 - firstGeneric.cost)
+    assert(scene.message:find("EARTH GEAR BOUGHT"), "purchase message must confirm the bought item: " .. tostring(scene.message))
+
+    -- Pressing "n" again buys the next unowned generic part, not the same one.
+    local secondGeneric = expedition.genericGearCatalog[2]
+    scene:keypressed("n")
+    assert(scene.expedition.ownedGear[secondGeneric.id],
+        "second 'n' press must buy the next unowned generic part, skipping the already-owned first one")
+
+    -- Once every generic part is owned, "n" reports that state instead of
+    -- silently no-op'ing or erroring.
+    for _, entry in ipairs(expedition.genericGearCatalog) do
+        scene.expedition.ownedGear[entry.id] = true
+    end
+    scene:keypressed("n")
+    assert(scene.message:find("ALL EARTH GEAR OWNED"), "message must report all generic gear owned: " .. tostring(scene.message))
+
+    -- Insufficient funds surfaces the same shortfall messaging pattern used
+    -- by the other settlement purchase keys, rather than silently no-op'ing.
+    local poorScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    poorScene.expedition.phase = "settlement"
+    poorScene.expedition.money = expedition.genericGearCatalog[1].cost - 1
+    poorScene:keypressed("n")
+    assert(not poorScene.expedition.ownedGear[expedition.genericGearCatalog[1].id],
+        "insufficient funds must not grant the gear")
+    assert(poorScene.expedition.money == expedition.genericGearCatalog[1].cost - 1,
+        "insufficient funds must not deduct any money")
+    assert(poorScene.message:find("EARTH GEAR"), "shortfall message must name the earth gear item: " .. tostring(poorScene.message))
+
+    -- Wrong phase (e.g. ascending) must not buy at all.
+    local flightScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    flightScene.expedition.phase = "ascending"
+    flightScene.expedition.money = 1000
+    flightScene:keypressed("n")
+    assert(not flightScene.expedition.ownedGear or not flightScene.expedition.ownedGear[expedition.genericGearCatalog[1].id],
+        "'n' key must be a no-op outside the settlement phase")
+    assert(flightScene.expedition.money == 1000, "'n' key must not deduct money outside the settlement phase")
+end
+
 local function testEarthShopSlotUiWiring()
     local expedition = require("game.expedition")
 
@@ -2861,6 +2923,7 @@ function M.run()
     testReturnToEarthUiWiring()
     testEarthShopSlotMachine()
     testCheckpointAndShopDocking()
+    testEarthGearShopUiWiring()
     testEarthShopSlotUiWiring()
     testMinimap()
     testDebris()
