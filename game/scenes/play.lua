@@ -359,6 +359,32 @@ end
 M.bestIconSize = 32
 M.bestIconGap = 16
 
+-- SAMPLES HUD icon (icon-based HUD simplification follow-on): pair the
+-- "SAMPLES %02d  AT RISK $%d" / "표본 %02d  위험 $%d" readout with a
+-- small specimen-vial silhouette, mirroring coin/shield/speed/distance/
+-- best. Drawn as a flat flask polygon (even-length {x,y,...} list, no
+-- love.graphics calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.samplesIconPoints(cx, cy, size)
+    local r = size * 0.5
+    return {
+        cx - r * 0.22, cy - r,
+        cx + r * 0.22, cy - r,
+        cx + r * 0.22, cy - r * 0.45,
+        cx + r * 0.70, cy - r * 0.25,
+        cx + r * 0.70, cy + r,
+        cx - r * 0.70, cy + r,
+        cx - r * 0.70, cy - r * 0.25,
+        cx - r * 0.22, cy - r * 0.45,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the vial icon's
+-- right edge and the SAMPLES text's left edge, mirroring
+-- M.bestIconSize/bestIconGap.
+M.samplesIconSize = 32
+M.samplesIconGap = 16
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1418,6 +1444,20 @@ function M.new(options)
             bestIconImage = img
         end
     end
+    -- assets/effects/hud_samples.png is the ComfyUI-generated SAMPLES HUD
+    -- specimen vial (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as bestIconImagePath. :draw() scales
+    -- it to M.samplesIconSize instead of M.samplesIconPoints, and falls
+    -- back to that flask polygon when the image failed to load.
+    local samplesIconImagePath = "assets/effects/hud_samples.png"
+    local samplesIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, samplesIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            samplesIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1516,6 +1556,8 @@ function M.new(options)
         distanceIconImagePath = distanceIconImagePath,
         bestIconImage = bestIconImage,
         bestIconImagePath = bestIconImagePath,
+        samplesIconImage = samplesIconImage,
+        samplesIconImagePath = samplesIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3270,8 +3312,25 @@ function M:draw()
         -- pushes the fuel/hull/slot status line away from the DIST/CASH
         -- line so the two rows read as visually unrelated numbers rather
         -- than "fuel gauge gates distance" (docs/feedback/INBOX.md item 2).
+        -- Pair the SAMPLES readout with a small vial icon, mirroring the
+        -- PERSONAL BEST trophy / DIST diamond pattern.
+        local samplesY = 64 + galaxyShift
+        local samplesIconCenterX = 20 + M.samplesIconSize / 2
+        local samplesIconCenterY = samplesY + (love.graphics.getFont():getHeight() / 2)
+        if self.samplesIconImage then
+            local iw, ih = self.samplesIconImage:getDimensions()
+            local scale = M.samplesIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.samplesIconImage, samplesIconCenterX, samplesIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: amber specimen vial, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.polygon("fill",
+                M.samplesIconPoints(samplesIconCenterX, samplesIconCenterY, M.samplesIconSize))
+        end
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.samples, 20, 64 + galaxyShift)
+        love.graphics.print(hud.samples, 20 + M.samplesIconSize + M.samplesIconGap, samplesY)
         drawStatusWithShield(120 + M.hudPrimaryStatusGap + galaxyShift)
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
