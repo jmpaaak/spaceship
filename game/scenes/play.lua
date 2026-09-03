@@ -1022,18 +1022,25 @@ end
 -- "GAINS <label> <value>" / "LOSSES <label> <value>" numeric format the
 -- planet-style-editor tool uses for its GAINS/LOSSES rows, so future
 -- per-planet-style risk/reward can reuse the same on-screen convention.
--- Returned as two short lines (rather than one combined line) because the
+-- Returned as short lines (rather than one combined line) because the
 -- combined string measures 176px at the shop's small font, wider than the
 -- 148px full-width shop column (measured via GAME_FONTPROBE=1) and would
 -- wrap and overlap the next row.
+-- Fuel-labeled gains are omitted from the UI: fuel no longer constrains
+-- flight, so "+40 FUEL" is leftover advertising. expedition.shipTradeoff
+-- itself is left unchanged (econ / item 10 owns engine redefinition).
 function M.scoutTradeoffLines(run)
     local tradeoff = expedition.shipTradeoff(run, "scout")
+    local lines = {}
     local gain = tradeoff.gains[1]
+    if gain and string.upper(tostring(gain.label)) ~= "FUEL" then
+        lines[#lines + 1] = i18n.t("scout_gains_line", gain.value, gain.label)
+    end
     local loss = tradeoff.losses[1]
-    return {
-        i18n.t("scout_gains_line", gain.value, gain.label),
-        i18n.t("scout_losses_line", loss.value, loss.label),
-    }
+    if loss then
+        lines[#lines + 1] = i18n.t("scout_losses_line", loss.value, loss.label)
+    end
+    return lines
 end
 
 function M:shopLoadoutLines()
@@ -2403,10 +2410,10 @@ function M:draw()
         row = row + rowStep
         
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.scoutTradeoff[1], fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
-        row = row + rowStep
+        for _, tradeoffLine in ipairs(nextLaunch.scoutTradeoff) do
+            love.graphics.printf(tradeoffLine, fullX, row, fullW, "center")
+            row = row + rowStep
+        end
 
         
         row = 1056

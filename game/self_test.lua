@@ -1026,6 +1026,36 @@ local function testFuelBonusTextHidden()
         "slot WIN line must not mention FUEL: " .. tostring(winLine))
 end
 
+-- STATUS next slice / UI/HUD item 3 leftover: EARTH SHOP still advertises
+-- "SCOUT GAINS +40 FUEL" even though fuel no longer constrains flight.
+-- Hide that gain copy in PlayScene. Leave expedition.shipTradeoff alone
+-- (econ / item 10 owns any later engine redefinition of scoutFuelBonus).
+local function testScoutFuelGainHidden()
+    local run = expedition.new()
+    local engineTradeoff = expedition.shipTradeoff(run, "scout")
+    assert(engineTradeoff.gains[1] and engineTradeoff.gains[1].label == "FUEL",
+        "engine scout tradeoff must keep its FUEL gain field for econ/item 10")
+    assert(engineTradeoff.losses[1] and engineTradeoff.losses[1].label == "HULL",
+        "engine scout hull loss must stay")
+
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scene.expedition.phase = "settlement"
+    local lines = PlayScene.scoutTradeoffLines(scene.expedition)
+    local joined = table.concat(lines, " | ")
+    assert(not joined:find("FUEL"),
+        "EARTH SHOP scout tradeoff must not advertise FUEL: " .. joined)
+    assert(#lines == 1, "only the still-real hull loss should remain: " .. joined)
+    assert(lines[1] == "LOSSES -1 HULL",
+        "hull-loss line must stay visible: " .. tostring(lines[1]))
+
+    local shop = scene:shopLoadoutLines()
+    assert(shop.scoutTradeoff[1] == "LOSSES -1 HULL")
+    assert(shop.scoutTradeoff[2] == nil)
+    assert(not table.concat(shop.scoutTradeoff, " "):find("FUEL"))
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -2352,8 +2382,8 @@ function M.run()
     assert(starterNextLaunch.ship == "NEXT STARTER")
     assert(starterNextLaunch.stats == "HULL 3")
     assert(starterNextLaunch.upgrades == nil)
-    assert(starterNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +40 FUEL")
-    assert(starterNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
+    assert(starterNextLaunch.scoutTradeoff[1] == "LOSSES -1 HULL")
+    assert(starterNextLaunch.scoutTradeoff[2] == nil)
     assert(starterNextLaunch.shipAction == "BUY SCOUT $125")
     assert(starterNextLaunch.shipPreview == "SCOUT HULL 2")
     assert(starterNextLaunch.shipPreviewForecast == nil)
@@ -2439,8 +2469,8 @@ function M.run()
     assert(scoutNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
     assert(scoutNextLaunch.hullPreview == "HULL 4")
     assert(scoutNextLaunch.hullPreviewForecast == nil)
-    assert(scoutNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +40 FUEL")
-    assert(scoutNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
+    assert(scoutNextLaunch.scoutTradeoff[1] == "LOSSES -1 HULL")
+    assert(scoutNextLaunch.scoutTradeoff[2] == nil)
     assert(scoutNextLaunch.shipAction == "SELECT STARTER")
     assert(scoutNextLaunch.shipStatus == "OWNED" and scoutNextLaunch.shipAffordable)
     nextLaunchScene:keypressed("v")
@@ -3176,6 +3206,7 @@ function M.run()
     testSteerSpeedIcon()
     testPeakDistLine()
     testFuelBonusTextHidden()
+    testScoutFuelGainHidden()
     testLaunchForecastRemoved()
     testFuelUpgradeHiddenFromShop()
     testFuelUpgradeMessagingRemoved()
