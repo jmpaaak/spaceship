@@ -1677,6 +1677,21 @@ local function testMinimapSpiralArmSprite()
         "PlayScene must load assets/effects/minimap_spiral_star.png into self.spiralArmImagePath")
 end
 
+-- Minimap solar-system orbit rings are still Lua line circles (radii
+-- 4/7/11). Same file-existence + always-set-path pattern as
+-- testMinimapSpiralArmSprite. Graphics-gated orbitRingImage cannot
+-- be asserted under GAME_HEADLESS=1.
+local function testMinimapOrbitRingSprite()
+    local path = "assets/effects/minimap_orbit_ring.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated minimap orbit-ring sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.orbitRingImagePath == path,
+        "PlayScene must load assets/effects/minimap_orbit_ring.png into self.orbitRingImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3566,6 +3581,7 @@ function M.run()
     testMinimapGalaxyPlainSprite()
     testMinimapEarthReturnSprite()
     testMinimapSpiralArmSprite()
+    testMinimapOrbitRingSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

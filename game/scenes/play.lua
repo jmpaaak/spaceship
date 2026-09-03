@@ -1075,6 +1075,21 @@ function M.new(options)
             spiralArmImage = img
         end
     end
+    -- assets/effects/minimap_orbit_ring.png is the ComfyUI-generated
+    -- solar-system orbit ring (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- spiralArmImagePath. drawMinimap() scales it to 2 * ring.radius
+    -- for kind=="orbit" rings and falls back to the Lua line circle
+    -- when the image failed to load.
+    local orbitRingImagePath = "assets/effects/minimap_orbit_ring.png"
+    local orbitRingImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, orbitRingImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            orbitRingImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1133,6 +1148,8 @@ function M.new(options)
         earthReturnMarkerImagePath = earthReturnMarkerImagePath,
         spiralArmImage = spiralArmImage,
         spiralArmImagePath = spiralArmImagePath,
+        orbitRingImage = orbitRingImage,
+        orbitRingImagePath = orbitRingImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2208,8 +2225,20 @@ function M:drawMinimap()
     end
     for _, ring in ipairs(view.rings or {}) do
         if ring.kind == "orbit" then
-            love.graphics.setColor(0.85, 0.7, 0.25, 0.55)
-            love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+            if self.orbitRingImage then
+                local iw, ih = self.orbitRingImage:getDimensions()
+                local drawSize = ring.radius * 2
+                local scale = drawSize / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 0.55)
+                love.graphics.draw(
+                    self.orbitRingImage,
+                    cx + ring.x, cy + ring.y, 0, scale, scale, iw / 2, ih / 2)
+            else
+                -- Fallback: gold line circle, used only when the
+                -- ComfyUI-generated sprite failed to load.
+                love.graphics.setColor(0.85, 0.7, 0.25, 0.55)
+                love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+            end
         elseif ring.inside ~= false then
             if ring.id == "milkyway" then
                 love.graphics.setColor(0.3, 0.55, 0.95, 0.55)

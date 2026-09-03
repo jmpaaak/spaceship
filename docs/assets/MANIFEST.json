@@ -1033,5 +1033,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap spiral-arm star sprite wired into PlayScene spiralArmImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_orbit_ring.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "12835692-c851-4966-945e-6864df5b5e73",
+    "prompt": "pixel art, 16-bit, thin gold circular orbit ring HUD icon sprite, hollow gold ring outline, isolated minimap solar-system orbit marker, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904124,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:59:41Z",
+    "sha256": "859d36a9462022d0b333d4c309d246610ed01b85b7c2eb411e2a9d8c2f7969ba",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap orbit-ring sprite wired into PlayScene orbitRingImage; pipeline PNG signature/decode gate"
   }
 ]
