@@ -1,13 +1,4 @@
 # STATUS
-preflight READY(엔진 테스트/패키지 PASS, git diff clean)로 시작했으나 `git status --short`가 이전 사이클이 남긴 uncommitted 변경(`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`game/self_test.lua`)을 보고했다. 워크플로우 3항("Preserve and finish prior-cycle work; do not overwrite it")에 따라 이 미완료 슬라이스를 완주해 커밋하는 것을 이번 사이클의 작업으로 채택했다.
-
-- 감사 배경: `tools/gear-editor/editor.js` 헤더 주석이 오래전부터 "Validation rules here intentionally mirror game/gear.lua's loader exactly (same known effect types, known rarities, and effect value range)"라고 문서화해왔다. 기존 `testGearEditorEditionAndRaritySync()`는 KNOWN_EDITIONS/KNOWN_RARITIES 동기화를, `testGearEffectSchemaExpansion()`은 EFFECT_TYPE_GROUPS/`M.knownEffectTypes` 동기화를 이미 회귀 검증했지만, 세 번째로 문서화된 "effect value range"(`EFFECT_VALUE_MIN`/`EFFECT_VALUE_MAX` vs `gear.effectValueMin`/`gear.effectValueMax`) 축에는 동일한 회귀 검증이 없었다 — 문서상 보장일 뿐 코드가 확인한 적이 없어, 향후 `gear.lua`의 범위(-100..100)가 리밸런스되면 에디터가 조용히 실제 게임 로더와 어긋난 값을 승인/거부할 수 있는 gap이었다.
-- TDD: `game/self_test.lua`에 신규 `testGearEditorEffectValueRangeSync()`를 추가해 `editor.js`의 `EFFECT_VALUE_MIN`/`EFFECT_VALUE_MAX` 리터럴을 `gear.effectValueMin`/`gear.effectValueMax`와 대조 검증한다(불일치 시 어떤 값이 기대되는지 명시하는 에러 메시지 포함).
-- 감사 결과 `editor.js`는 이미 `EFFECT_VALUE_MIN = -100`/`EFFECT_VALUE_MAX = 100`로 `gear.lua`와 정확히 일치하는 클린 상태였다(직전 사이클이 이미 값을 맞춰 두었을 뿐 회귀 가드만 없었음) — 추가 구현 수정 없이 신규 테스트가 즉시 GREEN으로 통과했다. `M.run()`에 새 테스트를 등록했다.
-- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
-- `git status --short`가 `game/self_test.lua`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 건드리지 않았다.
-- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 다시 적용해 항목9/10/12/13/14의 남은 잔여 gap 재검증.
-
 2. **hull_parts.json 슬롯 스코프 콘텐츠 커버리지 (항목 10/14 후속):**
    - 직전 사이클들에서 `engine_parts.json`에 수행했던 "슬롯 스코프 내 완전 무효 카드" 감사를 `game/data/hull_parts.json`(34종)에도 동일하게 적용했다.
    - `game/self_test.lua`에 신규 `testHullCardsHaveNonEngineOnlyEffect()`를 추가해, 선체 카드가 오직 (G) 엔진 전용 타입(`fuelEfficiency`, `steeringResponsiveness`, `boostCharge`)만으로 구성되어 선체 슬롯에서 완전히 무효가 되는 경우가 있는지 검증했다.
