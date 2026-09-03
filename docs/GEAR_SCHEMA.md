@@ -1039,4 +1039,48 @@ than into a per-frame/per-sample function.
   50`, expected 65), GREEN after.
 - `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN.
 
+## Item 14(C) `chainTrigger` consumption gap — `collectSample` closes the last "count exists but nothing consumes it" gap
+
+`expedition.chainTriggerCount(run)` (see "Item 14 (C)/(E) run wiring"
+above) had existed only as a stateless re-derived count since that
+follow-up slice — no code path ever actually re-triggered anything with
+it, matching the exact same pattern this lane already found and closed for
+`rerollBonus` (`M.spendReroll`) and `boostCharge` (`M.spendBoost`). Item
+14's own description frames `chainTrigger` as "특정 조건마다 다른 장착
+카드 효과 재발동, 발라트로 Blueprint/Brainstorm 컨셉" (re-activating
+another equipped card's effect on a condition) — the concrete payoff wired
+here is the simplest faithful reading available within this lane's scope
+(no UI/event-selection layer): re-applying the current sample collection's
+awarded value once per chain-trigger point.
+
+- `game/expedition.lua`'s `M.collectSample(run, value, hueKey)` now reads
+  `M.chainTriggerCount(run)` (category-agnostic — both hull and engine
+  slots count, same as `rerollBonus`/`detectionRadius`/`autoCollect`) after
+  computing the yield/streak/hull-sample-bonus-adjusted `awarded` value, and
+  multiplies it by `(1 + retriggers)` when `retriggers > 0` — i.e. 1 base
+  application plus N retriggers, e.g. a `chainTrigger +1` card doubles the
+  awarded value. This does **not** create additional collection events:
+  `run.sampleCount` and the streak-family bookkeeping still advance exactly
+  once per `collectSample` call, only the final awarded amount scales.
+- `M.collectSample` now returns a 4th value, `retriggers` (the exact count
+  applied), so tests/future UI can display how many times a collection was
+  chain-retriggered without recomputing `chainTriggerCount` separately.
+- `game/self_test.lua`'s new `testGearChainTriggerConsumptionWiring()`
+  regression-checks: an unequipped run's awarded value and reported
+  retrigger count are unchanged (100, 0 retriggers); a `chainTrigger +1`
+  hull card doubles the awarded value (100 -> 200, 1 retrigger reported)
+  without inflating `sampleCount` past 1; the same card equipped in the
+  ENGINE slot doubles the value too (category-agnostic, matching
+  `combinedGearList`'s existing (C)/(E) design). RED confirmed before the
+  fix (`got nil` for the unequipped retrigger count, since `collectSample`
+  didn't return a 4th value yet), GREEN after.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN
+  (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`,
+  `ASSET_MANIFEST_OK`).
+- Changed files: `game/expedition.lua`/`game/self_test.lua`/
+  `docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` only —
+  `play.lua`/`i18n.lua`/`world.lua`/`game/gear.lua`/`game/engine_parts.lua`
+  untouched (`git status --short` confirms).
+
+
 

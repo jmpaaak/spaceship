@@ -708,9 +708,22 @@ function M.collectSample(run, value, hueKey)
     -- being folded into the multiplier chain itself.
     local awarded = math.floor(value * M.sampleYieldMultiplier(run) * streakMultiplier + 0.5)
         + M.effectiveSampleBonus(run)
+    -- Item 14(C) chainTrigger consumption gap: M.chainTriggerCount(run) had
+    -- existed only as a stateless re-derived count since the (C)/(E) run
+    -- wiring slice -- nothing ever actually consumed it. Per item 14's own
+    -- description ("특정 조건마다 다른 장착 카드 효과 재발동, 발라트로
+    -- Blueprint/Brainstorm 컨셉"), the concrete payoff wired here is
+    -- re-applying this same sample collection's awarded value once per
+    -- chainTrigger point (1 base application + N retriggers), without
+    -- creating additional collection events (sampleCount/streak state
+    -- still advance exactly once per collectSample call).
+    local retriggers = M.chainTriggerCount(run)
+    if retriggers > 0 then
+        awarded = awarded * (1 + retriggers)
+    end
     run.sampleCount = run.sampleCount + 1
     run.pendingSampleValue = run.pendingSampleValue + awarded
-    return true, awarded, streakMultiplier
+    return true, awarded, streakMultiplier, retriggers
 end
 
 function M.damage(run, amount)

@@ -611,3 +611,17 @@
 - `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
 - 다음 사이클 다음 슬라이스: `game/data/hull_parts.json`(34종)에 대해서도 동일한 "슬롯 스코프 내 완전 무효 카드" 감사를 수행(hull은 (C)/(E)/(D) 카테고리 무관 타입이 많아 훨씬 적은 카드가 걸릴 것으로 예상되나 확인되지 않음), 또는 항목7(획득 경로 3원화) 순수 데이터 계층 준비.
 
+## [gear 레인] 항목14(C) chainTrigger 소비 배선 — rerollBonus/boostCharge와 동일한 "카운트는 있지만 아무도 쓰지 않는" 마지막 잔여 처리 (완료, 2026-09-03)
+
+preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작. 직전 슬라이스가 `game/data/hull_parts.json`(34종)에 대해 항목10/14의 "슬롯 스코프 내 완전 무효 카드" 감사를 다음 후보로 명시했으나, Python으로 실제 감사한 결과 hull_parts.json은 이미 (G) 엔진 전용 타입을 전혀 쓰지 않고 hull-only 5종 타입만으로 구성된 카드가 하나도 없어(0건) 이 감사는 클린 상태였다. 대신 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 항목14 (C) `chainTrigger`에 다시 적용해 새 gap을 찾아 처리했다.
+
+- 감사 결과: `expedition.chainTriggerCount(run)`(항목14 (C)/(E) run wiring 슬라이스에서 추가)는 장착 부품의 `chainTrigger` 총합을 재계산해 노출하는 순수 파생값으로만 존재했고, 이 카운트를 실제로 "소비"해 무언가를 재발동시키는 코드 경로가 단 하나도 없었다 — 이 레인이 이미 `rerollBonus`(`M.spendReroll`/`run.rerollsUsed`)와 `boostCharge`(`M.spendBoost`/`run.boostsUsed`)에서 발견·처리한 것과 정확히 동일한 패턴의 마지막 잔여였다.
+- TDD: `game/self_test.lua`에 신규 `testGearChainTriggerConsumptionWiring()`을 먼저 추가했다(RED 확인: `an unequipped run must report zero chain retriggers, got nil` — `collectSample`이 아직 4번째 반환값을 주지 않아 실패).
+- `game/expedition.lua`의 `M.collectSample(run, value, hueKey)`가 기존 yield/streak/hull-sample-bonus 계산 이후 `M.chainTriggerCount(run)`(카테고리 무관, hull/engine 둘 다 합산 — rerollBonus/detectionRadius/autoCollect와 동일 설계)을 읽어 `awarded = awarded * (1 + retriggers)`로 재적용하도록 확장했다(`chainTrigger +1` 카드 = 1회 기본 적용 + 1회 재발동 = 2배). 표본 채집 이벤트 자체는 중복 생성되지 않는다 — `run.sampleCount`/스트릭 계열 상태는 여전히 호출당 정확히 1회만 증가한다. `M.collectSample`이 이제 4번째 반환값으로 실제 적용된 재발동 횟수(`retriggers`)를 노출해 향후 UI/테스트가 재계산 없이 바로 표시할 수 있다.
+- `testGearChainTriggerConsumptionWiring()`이 미장착 baseline(awarded=100, retriggers=0), hull `chainTrigger +1` 카드 장착 시 awarded=200/retriggers=1/sampleCount는 여전히 1, 동일 카드를 엔진 슬롯에 장착해도 동일하게 배가(카테고리 무관 재확인)를 회귀 검증한다(RED 확인 후 GREEN).
+- `docs/GEAR_SCHEMA.md`에 "Item 14(C) `chainTrigger` consumption gap" 섹션을 신규 추가했다.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`도 전혀 건드리지 않았다.
+- 다음 사이클 다음 슬라이스: 이로써 레인이 지정받은 5개 항목(13→9→10→12→14)의 문서상 명시적 "카운트만 있고 소비자 없음" 유형 gap은 모두 닫힌 것으로 보인다 — 다음은 항목7(획득 경로 3원화 — 상점 행성 좌표 생성 등 순수 함수/데이터 계층에서 준비 가능한 부분) 순수 데이터 계층 준비, 또는 이 레인이 완료한 순서 밖의 잔여 작업(실제 UI 소비 지점은 대부분 play.lua/world.lua/minimap.lua 담당이라 다른 레인 소관) 검토를 권장한다.
+
+
