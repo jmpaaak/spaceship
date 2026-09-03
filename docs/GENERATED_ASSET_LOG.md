@@ -21,3 +21,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
   is treating as the final, runtime-applied art for their slot.
 
 <!-- New entries append below this line. Do not remove existing lines. -->
+2026-09-03T17:10:00+0900 | assets/ship/ship_default.png | ComfyUI-generated 64x64 top-down ship sprite, wired into PlayScene as self.shipImage (drawn at ~16px footprint)

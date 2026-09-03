@@ -990,3 +990,23 @@
 - `git diff --check` 재실행으로 EOF 경고가 사라졌음을 확인(출력 없음 = clean).
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`). 이 슬라이스는 공백/EOF 정규화와 기존 작업의 커밋일 뿐 신규 게임 로직 변경이 없어 런타임 캡처는 필요하지 않았다.
 - 다음 사이클 다음 슬라이스: 위 297번째 줄(이전 사이클 기록)에서 이미 식별된 항목 11의 남은 부분(a: `launchForecastLine` 재정의, c: 활성 연료 필드 재설계) 중 하나, 또는 3번 항목(속도/스피드미터 아이콘화 재검토), 또는 6번(표본 도감 정리 + 슬롯 6개를 함선 장비 카드 UI로 전환)으로 진행.
+
+## Archived from STATUS.md (2026-09-03 16:54)
+
+## preflight FAIL 수정: 미해결 병합 충돌 마커(docs/assets/MANIFEST.json, docs/feedback/INBOX.md) 제거 (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 16:58)
+
+preflight가 `engine tests and package: FAIL`(`tools/verify_asset_manifest.py`가 `docs/assets/MANIFEST.json`을 JSON으로 파싱하다 `json.decoder.JSONDecodeError`)와 `git diff check: FAIL`(두 파일에 남은 `<<<<<<<`/`=======`/`>>>>>>>` 리터럴 충돌 마커)을 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
+
+## Archived from STATUS.md (2026-09-03 17:01)
+
+- `git status --short`로 세션 시작 시 `docs/assets/MANIFEST.json`/`docs/feedback/INBOX.md`가 `UU`(양쪽 모두 수정, 미해결 병합 충돌) 상태임을 확인했다. `git stash list`에 `stash@{0}: On main: cycle-wip`가 남아 있어, 이전 사이클이 `git stash pop` 도중 충돌을 만나고 충돌 마커를 그대로 커밋하지 않은 채(즉 미해결 상태로) 세션을 종료했음을 파악했다.
+- `docs/assets/MANIFEST.json`: `Updated upstream` 쪽(ComfyUI 스모크 테스트 우주선 항목 1개)과 `Stashed changes` 쪽(AetherAI 표본 스프라이트 9개 항목)이 서로 다른 배열 원소였으므로 — 즉 실제 값 충돌이 아니라 두 커밋이 서로 다른 신규 원소를 배열에 추가한 것 — 두 세트를 모두 보존해 단일 유효 JSON 배열(우주선 1개 + 표본 9개 = 총 10개 원소)로 합쳤다.
+- `docs/feedback/INBOX.md`: `Updated upstream` 쪽(항목 7건, human-gate 제거/ComfyUI 파이프라인/미니맵 나선/국제화+HUD/UI 대개편/은하이름/우주선 추진 방향)과 `Stashed changes` 쪽(생성 에셋 LLM 비전 검토 제외 1건)도 서로 다른 신규 pending 항목이었으므로 둘 다 `## 처리 대기` 아래에 보존하고 마커만 제거했다. 어느 쪽 항목 내용도 삭제/수정하지 않았다.
+- `git add`로 두 파일의 충돌 해결 상태를 스테이징한 뒤, 스태시 전체가 이미(위 두 파일 포함, 다른 8개 파일은 원래 순수 fast-forward로 이미 적용돼 있었음) 작업트리에 반영돼 있음을 `git stash show -p --stat`로 확인하고 `git stash drop`으로 정리했다(스태시 재적용 시도 없음 — 이미 다 반영된 상태였으므로 pop이 아니라 drop).
+- `python3 tools/verify_asset_manifest.py` 단독 재실행으로 `ASSET_MANIFEST_OK`를, `git diff --check` 재실행으로 출력 없음(clean)을 확인해 preflight가 보고한 두 실패가 모두 재현되지 않음을 확인했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 전체 재실행 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`, `tools.test_verify_asset_manifest` 9건 OK).
+- `assets/sprites/specimens/*.png`(9개, 이전 사이클이 이미 생성해 두었던 AetherAI free-asset 표본 스프라이트, MANIFEST 항목과 매칭)는 `git status`상 `??`(untracked)였으나 `game/self_test.lua`의 `testSpecimenSprites()`가 이 파일들의 실존을 검증하고 있었고 `make verify`가 GREEN이었으므로 이번 커밋에 함께 추가했다.
+- 이번 슬라이스는 preflight 실패 원인(미해결 병합 충돌) 진단·제거만 수행했다(신규 게임 로직/텍스트 변경 없음 — 다만 두 문서 파일의 병합 결과 및 이전 사이클의 표본 스프라이트 자산은 이번 커밋에 처음 포함됨). 화면 렌더가 바뀌는 코드 변경이 없으므로 실제 LÖVE 런타임 캡처는 필요하지 않았다.
+- 다음 사이클 다음 슬라이스: `docs/feedback/INBOX.md` 처리 대기 최상단 항목(AetherAI human-gate 제거/ComfyUI 실작업 진행)부터 이어서 진행 — 인프라(comfyui_asset_pipeline.py, verify_asset_manifest.py의 OFFICIAL_SOURCE_PREFIXES)는 이미 있으나 우주선/행성/이펙트/아이콘 실제 프로덕션 에셋 생성·배선은 아직. 또는 INBOX 최상단의 미니맵 은하나선/국제화+HUD 약자 정리/UI 대개편 6건 중 하나로 진행. econ/gear 레인 소유 항목(7/8/9/10/11/12/13/14/15)은 건드리지 않는다.

@@ -572,8 +572,25 @@ function M.new(options)
     if love.graphics then
         love.graphics.setFont(fonts.get(14))
     end
+    -- assets/ship/ship_default.png is the ComfyUI-generated ship sprite
+    -- (docs/GENERATED_ASSET_LOG.md). shipImagePath is always recorded (even
+    -- under GAME_HEADLESS=1, where conf.lua disables the graphics module
+    -- entirely and no love.graphics.Image can be constructed) so
+    -- engine-hosted tests can verify the wiring; shipImage is the actual
+    -- drawable Image object used by :draw() whenever graphics are enabled.
+    local shipImagePath = "assets/ship/ship_default.png"
+    local shipImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shipImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shipImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
+        shipImage = shipImage,
+        shipImagePath = shipImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
@@ -1831,7 +1848,18 @@ function M:draw()
         love.graphics.scale(punchScale, punchScale)
     end
     love.graphics.setColor(0.8, 0.95, 1)
-    love.graphics.polygon("fill", 0, -7, -5, 6, 0, 3, 5, 6)
+    if self.shipImage then
+        local iw, ih = self.shipImage:getWidth(), self.shipImage:getHeight()
+        -- ComfyUI-generated 64x64 sprite (docs/GENERATED_ASSET_LOG.md);
+        -- scaled to roughly the same footprint as the previous polygon
+        -- silhouette (~14px tall) so runtime placement/collision reads
+        -- unchanged at the 180x320 internal canvas scale.
+        local targetSize = 16
+        local scale = targetSize / math.max(iw, ih)
+        love.graphics.draw(self.shipImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
+    else
+        love.graphics.polygon("fill", 0, -7, -5, 6, 0, 3, 5, 6)
+    end
     if self.expedition.phase == "ascending" then
         love.graphics.setColor(1, 0.55, 0.15)
         love.graphics.polygon("fill", -2, 5, 0, 11, 2, 5)

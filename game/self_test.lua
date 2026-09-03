@@ -948,6 +948,27 @@ local function testSpecimenSprites()
     end
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목: ComfyUI로 실제 에셋 작업 진행 --
+-- the ComfyUI-generated ship_default.png (see docs/GENERATED_ASSET_LOG.md)
+-- must actually be wired into the running PlayScene as the ship's visual,
+-- not just sit unused under assets/. Verify the file exists AND that
+-- PlayScene.new() records it as self.shipImagePath (the load target
+-- shipImage:draw() actually uses whenever love.graphics is available).
+-- shipImage itself cannot be asserted here: conf.lua turns the graphics
+-- module fully off under GAME_HEADLESS=1 (this engine-hosted test's own
+-- runtime), so love.graphics.newImage never exists and shipImage always
+-- stays nil in this process regardless of wiring correctness.
+local function testShipSprite()
+    local path = "assets/ship/ship_default.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated ship sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.shipImagePath == path,
+        "PlayScene must load assets/ship/ship_default.png into self.shipImagePath")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -2663,6 +2684,7 @@ function M.run()
     testFuelUpgradeHiddenFromShop()
     testFuelUpgradeMessagingRemoved()
     testSpecimenSprites()
+    testShipSprite()
 
     print("SPACESHIP_UNIT_OK")
 end

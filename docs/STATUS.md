@@ -1,17 +1,15 @@
 # STATUS
-## preflight FAIL 수정: 미해결 병합 충돌 마커(docs/assets/MANIFEST.json, docs/feedback/INBOX.md) 제거 (완료, 2026-09-03)
+## 우주선 스프라이트(assets/ship/ship_default.png) 실배선 완료 확정 + manifest QA 노트 갱신 (완료, 2026-09-03)
 
-preflight가 `engine tests and package: FAIL`(`tools/verify_asset_manifest.py`가 `docs/assets/MANIFEST.json`을 JSON으로 파싱하다 `json.decoder.JSONDecodeError`)와 `git diff check: FAIL`(두 파일에 남은 `<<<<<<<`/`=======`/`>>>>>>>` 리터럴 충돌 마커)을 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
+preflight READY(`engine tests and package: PASS`, `git diff check: PASS`). 세션 시작 `git status --short`로 이전 사이클이 남긴 미커밋 diff(`docs/GENERATED_ASSET_LOG.md`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`docs/assets/MANIFEST.json`/`docs/feedback/INBOX.md`/`game/scenes/play.lua`/`game/self_test.lua` 수정 + `assets/ship/ship_default.png` untracked)을 확인했다 — 이는 INBOX 처리대기 최상단 두 항목(AetherAI human-gate 제거 / ComfyUI 실작업 진행)의 우주선 슬라이스를 이미 완결한 작업으로, `make verify LOVE=/Users/jm/.local/bin/love`가 그대로 GREEN이었으므로 덮어쓰지 않고 이어서 마무리했다.
 
-- `git status --short`로 세션 시작 시 `docs/assets/MANIFEST.json`/`docs/feedback/INBOX.md`가 `UU`(양쪽 모두 수정, 미해결 병합 충돌) 상태임을 확인했다. `git stash list`에 `stash@{0}: On main: cycle-wip`가 남아 있어, 이전 사이클이 `git stash pop` 도중 충돌을 만나고 충돌 마커를 그대로 커밋하지 않은 채(즉 미해결 상태로) 세션을 종료했음을 파악했다.
-- `docs/assets/MANIFEST.json`: `Updated upstream` 쪽(ComfyUI 스모크 테스트 우주선 항목 1개)과 `Stashed changes` 쪽(AetherAI 표본 스프라이트 9개 항목)이 서로 다른 배열 원소였으므로 — 즉 실제 값 충돌이 아니라 두 커밋이 서로 다른 신규 원소를 배열에 추가한 것 — 두 세트를 모두 보존해 단일 유효 JSON 배열(우주선 1개 + 표본 9개 = 총 10개 원소)로 합쳤다.
-- `docs/feedback/INBOX.md`: `Updated upstream` 쪽(항목 7건, human-gate 제거/ComfyUI 파이프라인/미니맵 나선/국제화+HUD/UI 대개편/은하이름/우주선 추진 방향)과 `Stashed changes` 쪽(생성 에셋 LLM 비전 검토 제외 1건)도 서로 다른 신규 pending 항목이었으므로 둘 다 `## 처리 대기` 아래에 보존하고 마커만 제거했다. 어느 쪽 항목 내용도 삭제/수정하지 않았다.
-- `git add`로 두 파일의 충돌 해결 상태를 스테이징한 뒤, 스태시 전체가 이미(위 두 파일 포함, 다른 8개 파일은 원래 순수 fast-forward로 이미 적용돼 있었음) 작업트리에 반영돼 있음을 `git stash show -p --stat`로 확인하고 `git stash drop`으로 정리했다(스태시 재적용 시도 없음 — 이미 다 반영된 상태였으므로 pop이 아니라 drop).
-- `python3 tools/verify_asset_manifest.py` 단독 재실행으로 `ASSET_MANIFEST_OK`를, `git diff --check` 재실행으로 출력 없음(clean)을 확인해 preflight가 보고한 두 실패가 모두 재현되지 않음을 확인했다.
-- `make verify LOVE=/Users/jm/.local/bin/love` 전체 재실행 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`, `tools.test_verify_asset_manifest` 9건 OK).
-- `assets/sprites/specimens/*.png`(9개, 이전 사이클이 이미 생성해 두었던 AetherAI free-asset 표본 스프라이트, MANIFEST 항목과 매칭)는 `git status`상 `??`(untracked)였으나 `game/self_test.lua`의 `testSpecimenSprites()`가 이 파일들의 실존을 검증하고 있었고 `make verify`가 GREEN이었으므로 이번 커밋에 함께 추가했다.
-- 이번 슬라이스는 preflight 실패 원인(미해결 병합 충돌) 진단·제거만 수행했다(신규 게임 로직/텍스트 변경 없음 — 다만 두 문서 파일의 병합 결과 및 이전 사이클의 표본 스프라이트 자산은 이번 커밋에 처음 포함됨). 화면 렌더가 바뀌는 코드 변경이 없으므로 실제 LÖVE 런타임 캡처는 필요하지 않았다.
-- 다음 사이클 다음 슬라이스: `docs/feedback/INBOX.md` 처리 대기 최상단 항목(AetherAI human-gate 제거/ComfyUI 실작업 진행)부터 이어서 진행 — 인프라(comfyui_asset_pipeline.py, verify_asset_manifest.py의 OFFICIAL_SOURCE_PREFIXES)는 이미 있으나 우주선/행성/이펙트/아이콘 실제 프로덕션 에셋 생성·배선은 아직. 또는 INBOX 최상단의 미니맵 은하나선/국제화+HUD 약자 정리/UI 대개편 6건 중 하나로 진행. econ/gear 레인 소유 항목(7/8/9/10/11/12/13/14/15)은 건드리지 않는다.
+- 검증한 실배선 내용: `game/scenes/play.lua`의 `PlayScene.new()`가 ComfyUI 생성 스프라이트 `assets/ship/ship_default.png`(64×64, seed 20260903, workflow `7a3eb820-...`)를 `self.shipImagePath`(항상 기록)/`self.shipImage`(`love.graphics.newImage` 성공 시에만)로 로드하고, `:draw()`가 로드 성공 시 16px footprint로 실제 렌더하며 실패 시에만 기존 폴리곤 실루엣으로 폴백한다. `game/self_test.lua`의 `testShipSprite()`가 파일 실존 + `shipImagePath` 배선을 회귀 검증(GAME_HEADLESS=1에서는 `love.graphics`가 꺼져 `shipImage` 자체는 검증 불가하다는 점을 주석으로 명시).
+- `docs/assets/MANIFEST.json`의 우주선 항목 `qa` 필드가 여전히 `"pending runtime QA at 1864x860 scale"`(옛 human-gate/비전-QA 전제 문구)로 남아있었다 — 처리대기 항목 "생성 에셋 LLM 비전 검토 제외"(2026-09-03, 최우선)가 이번 사이클부터 비전/런타임 캡처 QA 자체를 명시적으로 생략하도록 정책을 바꿨으므로, 대기 중인 비전 QA를 수행하는 대신 이 필드를 실제 배선 사실(어디서 로드/렌더되는지, 어떤 회귀 테스트가 지키는지)과 비전 QA를 의도적으로 생략한 정책 근거로 갱신했다 — 더 이상 존재하지 않는 검토 절차를 "pending"으로 잘못 표시해두지 않기 위함이다.
+- `docs/assets/MANIFEST.json` 나머지 표본 스프라이트 9개 항목의 `prompt` 필드에 이전 사이클이 남긴 이스케이프된 유니코드(`\u2192`)가 리터럴 화살표(`→`) 문자로 정규화되어 있던 diff(코드 변경 아님, 이전 편집 도구의 자동 정규화로 추정)도 함께 이번 커밋에 포함했다 — 값 자체는 동일(→)하므로 기능적 변경 없음.
+- `assets/ship/ship_default.png`(untracked였던 실제 PNG 바이너리)를 git에 추가했다 — `docs/assets/MANIFEST.json`/`docs/GENERATED_ASSET_LOG.md`가 이미 이 경로를 최종 배선 자산으로 기록하고 있었으므로 추적하지 않으면 다음 클론/배포에서 파일이 누락된다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:59`, `ASSET_MANIFEST_OK`, `tools.test_verify_asset_manifest` 9건 OK).
+- `docs/feedback/INBOX.md`: 처리대기 최상단 "ComfyUI로 실제 에셋 작업 진행" 항목은 우주선 슬라이스가 이미 완료 표시돼 있고 이번 사이클은 그 완료 상태를 확정·보강했을 뿐 새 슬라이스(행성/이펙트/슬롯 심볼/상점 아이콘/배경)를 착수하지 않았으므로 처리대기에 그대로 둔다(항목 전체가 완료된 게 아니라 우주선 하나만 완료).
+- 다음 사이클 다음 슬라이스: `tools/comfyui_asset_pipeline.py`로 행성(planet) 텍스처를 생성해 `game/scenes/play.lua`의 행성 렌더 경로에 실배선(현재는 Lua 도형 렌더링만 존재) — INBOX 처리대기 항목 2 "남은 부분"의 다음 항목. 또는 최상단 항목들(미니맵 은하나선, 국제화+HUD 정리, UI 대개편 6건) 중 econ/gear 레인이 소유하지 않은 슬라이스로 진행.
 
 ## 항목 6 첫 슬라이스 — 슬롯 6개를 함선 장비 카드 6종으로 재해석하는 game/gear.lua 카탈로그 추가 (완료, 2026-09-03)
 
