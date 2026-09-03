@@ -1358,5 +1358,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shopTouchRowImage for EARTH SHOP settlementTouchRows bands"
+  },
+  {
+    "path": "assets/effects/planet_rim.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "a87a7eaf-2833-4d2d-8017-45d14d32659f",
+    "prompt": "pixel art, 16-bit, thin cyan circular planet rim outline sprite, hollow ring only, isolated game UI planet border, solid white background, no letters, no numbers, no planet fill, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904137,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:52:49Z",
+    "sha256": "98872e95e363735593eb2500ad77bf798217f3db48d99a9ce200011ffd0b7244",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.planetRimImage for planet circle-line rims"
   }
 ]

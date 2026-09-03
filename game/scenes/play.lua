@@ -1268,6 +1268,21 @@ function M.new(options)
             shopTouchRowImage = img
         end
     end
+    -- assets/effects/planet_rim.png is the ComfyUI-generated planet
+    -- discovery rim ring (docs/GENERATED_ASSET_LOG.md). Same always-set-path
+    -- / graphics-gated image pattern as shopTouchRowImagePath. :draw()
+    -- scales it to 2 * (planet.radius + 2/3) instead of love.graphics.circle
+    -- "line" rims, and falls back to those line circles when the image
+    -- failed to load.
+    local planetRimImagePath = "assets/effects/planet_rim.png"
+    local planetRimImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, planetRimImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            planetRimImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1352,6 +1367,8 @@ function M.new(options)
         settlementSummaryPanelImagePath = settlementSummaryPanelImagePath,
         shopTouchRowImage = shopTouchRowImage,
         shopTouchRowImagePath = shopTouchRowImagePath,
+        planetRimImage = planetRimImage,
+        planetRimImagePath = planetRimImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2803,8 +2820,16 @@ function M:draw()
                 love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
             end
             if not self.discovered[planet.id] then
-                love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
-                love.graphics.circle("line", x, y, planet.radius + 3)
+                local tierR, tierG, tierB = sampleTierColor(world.sampleTier(planet))
+                love.graphics.setColor(tierR, tierG, tierB)
+                if self.planetRimImage then
+                    local iw, ih = self.planetRimImage:getDimensions()
+                    local rimRadius = planet.radius + 3
+                    local scale = (rimRadius * 2) / math.max(iw, ih)
+                    love.graphics.draw(self.planetRimImage, x, y, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    love.graphics.circle("line", x, y, planet.radius + 3)
+                end
                 -- Balatro-style twinkle: a handful of small points orbiting
                 -- just outside the rim glow, each with its own phase so the
                 -- shimmer isn't perfectly synchronized across points.
@@ -2832,7 +2857,14 @@ function M:draw()
                 end
             end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
-            love.graphics.circle("line", x, y, planet.radius + 2)
+            if self.planetRimImage then
+                local iw, ih = self.planetRimImage:getDimensions()
+                local rimRadius = planet.radius + 2
+                local scale = (rimRadius * 2) / math.max(iw, ih)
+                love.graphics.draw(self.planetRimImage, x, y, 0, scale, scale, iw / 2, ih / 2)
+            else
+                love.graphics.circle("line", x, y, planet.radius + 2)
+            end
             local risk = self:approachWarning(planet, y, shipScreenY)
             if risk then
                 local font = love.graphics.getFont()
