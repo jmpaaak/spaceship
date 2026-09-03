@@ -494,3 +494,17 @@
 - `git status --short`가 `game/data/hull_parts.json`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 전혀 건드리지 않았다(순수 데이터 + 테스트 슬라이스).
 - 이로써 항목14의 A~G 전 효과 타입이 (1) 스키마 등록, (2) run-level 소비 함수, (3) 실제 번들 카드에서의 사용, 세 층위 모두를 갖춘 상태가 되었다.
 - 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점/체크포인트 UI는 다른 레인 담당이라 순수 함수/데이터 계층에서 준비 가능한 부분만) 검토, 또는 신규 카드들의 실제 게임플레이 소비 지점(collisionRadius/detectionRadius를 minimap.lua/충돌판정에 연결 등, `play.lua`/`world.lua`/`minimap.lua` 담당이라 다른 레인 소관)은 이 레인 스코프 밖으로 명시.
+
+## [gear 레인] 항목12 irradiated 에디션 시너지 보너스 배선 — 문서화만 되고 실제로는 죽어있던 핵심 효과를 살림 (완료, 2026-09-03)
+
+이 레인(`spaceship-gear` 브랜치)이 지정받은 항목13→9→10→12→14가 모두 1차 완료된 상태에서, 항목12 "irradiated" 에디션의 문서(`⚠️ 방사능처리(Irradiated) — 시너지 태그 매칭 시 보너스 추가 증폭`)와 실제 코드 사이의 gap을 감사로 발견했다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- 감사 결과: `gear.editionSynergyBonusAdd(editionId)`(irradiated → +0.05, 그 외 → 0)가 item 12 슬라이스 때부터 순수 함수로 존재했으나, item 9의 실제 시너지 엔진 `gear.tagSynergyMultiplier(parts)`가 파트의 `edition` 필드를 단 한 번도 읽지 않았다 — 모든 공유 태그 쌍이 에디션과 무관하게 정확히 `M.synergyBonusPerSharedPair`(0.15)만 받고 있어서, irradiated 카드를 장착해도 일반 카드와 배율이 완전히 동일했다. irradiated 에디션이 사용자에게 문서화된 유일한 고유 메커니즘(시너지 증폭)이 실질적으로 죽은 콘텐츠였다(`applyEditionEffects`의 범용 "all"-scope 배율만 작동, 시너지 증폭 자체는 미작동).
+- `game/gear.lua`의 `M.tagSynergyMultiplier(parts)`를 수정해, 공유 태그를 갖는 모든 쌍에 대해 `M.synergyBonusPerSharedPair` 위에 `M.editionSynergyBonusAdd(a.edition) + M.editionSynergyBonusAdd(b.edition)`을 추가로 더하도록 했다 — 쌍의 양쪽이 각자 독립적으로 자신의 에디션 보너스를 기여하므로, 같은 태그를 공유하는 irradiated 카드 2장은 두 기여분 모두 누적된다. 에디션이 없는(또는 irradiated가 아닌) 파트는 두 호출 모두 0을 반환해 기존 동작을 완전히 보존하며(순수 상위호환), 태그가 전혀 겹치지 않는 쌍은 여전히 시너지 기여가 전혀 없다(에디션이 없던 시너지를 만들어내지 않음).
+- `game/self_test.lua`의 신규 `testGearIrradiatedSynergyBonusWiring()`이 다음을 회귀 검증한다: irradiated 카드가 포함된 공유 태그 쌍의 배율이 동일 쌍(에디션 없음)보다 반드시 더 큼, 그 차이가 정확히 `gear.editionSynergyBonusAdd("irradiated")`와 일치, 태그가 전혀 겹치지 않으면 irradiated 카드가 있어도 배율이 정확히 1(시너지 없음), 같은 태그를 공유하는 irradiated 카드 2장은 두 기여분 모두 누적됨(RED 확인: 수정 전 `boosted=1.15`가 `baseline=1.15`와 동일해 실패, 수정 후 GREEN).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/gear.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 전혀 건드리지 않았다(`tagSynergyMultiplier`는 이미 `expedition.effectiveClimbSpeed`가 소비하고 있어 별도 run 배선이 불필요했다).
+- 번들된 `hull_reactive_hull`/`hull_quantum_alloy`(선체), `engine_fusion_core`/`engine_singularity_drive`(엔진) 카드가 이미 `irradiated`를 후보 에디션으로 갖고 있어, 이 보너스는 기존 item 12 드롭 RNG 경로(`gear.rollEdition`/`expedition.rollGearOffer`)를 통해 신규 콘텐츠 추가 없이도 바로 도달 가능하다.
+- `docs/GEAR_SCHEMA.md`에 "Item 12: `irradiated` edition synergy-bonus wiring" 섹션을 신규 추가했다.
+- `docs/feedback/INBOX.md`의 항목 12 하위에 처리 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화) 순수 데이터 계층 준비, 또는 이 레인이 완료한 순서 밖의 잔여 작업(실제 UI 소비 지점은 대부분 play.lua/world.lua 담당이라 다른 레인 소관) 검토.

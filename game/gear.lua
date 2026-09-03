@@ -269,7 +269,7 @@ end
 -- 1.0, i.e. no bonus). A single part, or a set of parts with no tag overlap
 -- at all, returns exactly 1 (no synergy).
 function M.tagSynergyMultiplier(parts)
-    local sharedPairs = 0
+    local multiplier = 1
     for i = 1, #parts do
         for j = i + 1, #parts do
             local a, b = parts[i], parts[j]
@@ -283,10 +283,21 @@ function M.tagSynergyMultiplier(parts)
                 end
                 if shared then break end
             end
-            if shared then sharedPairs = sharedPairs + 1 end
+            if shared then
+                -- Item 12's "irradiated" edition ("시너지 태그 매칭 시 보너스
+                -- 추가 증폭"): each side of a shared-tag pair that carries the
+                -- irradiated edition adds its own extra bonus on top of the
+                -- flat per-pair amount, so an irradiated part amplifies every
+                -- synergy pair it participates in (two irradiated parts
+                -- sharing a tag stack both contributions). Non-irradiated
+                -- parts (or any other/no edition) add exactly zero here, so
+                -- this is a pure superset of the pre-item-12 behavior.
+                multiplier = multiplier + M.synergyBonusPerSharedPair
+                    + M.editionSynergyBonusAdd(a.edition) + M.editionSynergyBonusAdd(b.edition)
+            end
         end
     end
-    return 1 + sharedPairs * M.synergyBonusPerSharedPair
+    return multiplier
 end
 
 -- Combines aggregateEffects and tagSynergyMultiplier into the final totals

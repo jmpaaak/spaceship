@@ -668,6 +668,52 @@ metadata across items 9/10/12/13/14 in this lane's scope.
   `play.lua`/`i18n.lua`/`world.lua` were not touched, matching this
   lane's scope in `loop/PROMPT.md`.
 
+### Item 12: `irradiated` edition synergy-bonus wiring — the edition's headline effect was previously dead
+
+Item 12's "irradiated" edition text ("⚠️ 방사능처리(Irradiated) — 시너지 태그
+매칭 시 보너스 추가 증폭") describes an edition whose entire point is
+amplifying item 9's tag-synergy engine. `gear.editionSynergyBonusAdd(editionId)`
+(a pure conversion returning `+0.05` for `irradiated`, `0` otherwise) has
+existed since the item 12 slice, but auditing `gear.tagSynergyMultiplier`
+found it never read a part's `edition` field at all — every shared-tag pair
+got exactly the flat `M.synergyBonusPerSharedPair` regardless of edition, so
+equipping an irradiated card produced an identical multiplier to an
+un-edition'd one. The edition's one documented unique mechanical effect was
+unreachable dead code from the player's perspective (only its unrelated
+`applyEditionEffects` multiplier scope, shared with every "all"-scope
+edition, ever did anything).
+
+- `game/gear.lua`'s `M.tagSynergyMultiplier(parts)` now adds
+  `M.editionSynergyBonusAdd(a.edition) + M.editionSynergyBonusAdd(b.edition)`
+  on top of `M.synergyBonusPerSharedPair` for every shared-tag pair found —
+  each side of the pair contributes its own edition bonus independently, so
+  two irradiated parts sharing a tag stack both contributions. Pairs with no
+  edition present behave exactly as before (both calls return `0`). Pairs
+  with no shared tag still contribute nothing at all — editions amplify
+  existing synergy, they never manufacture synergy between unrelated tags.
+- `game/self_test.lua`'s new `testGearIrradiatedSynergyBonusWiring()`
+  regression-checks: an irradiated part in a shared-tag pair produces a
+  strictly higher multiplier than the same pair without the edition, the
+  delta over baseline equals exactly `gear.editionSynergyBonusAdd("irradiated")`,
+  an irradiated part with no tag overlap at all still yields a `1` (no
+  synergy) multiplier, and two irradiated parts sharing a tag stack both
+  bonus contributions on top of the flat per-pair amount (RED confirmed:
+  `boosted=1.15` identical to `baseline=1.15` before the fix, GREEN after).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` both GREEN
+  (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`,
+  `ASSET_MANIFEST_OK`).
+- Changed files: `game/gear.lua`, `game/self_test.lua`, this doc,
+  `docs/STATUS.md`, `docs/feedback/INBOX.md`. `git status --short` confirms
+  `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`/`engine_parts.lua` were
+  not touched — this slice is a pure synergy-engine fix + regression test,
+  no run-state wiring needed since `tagSynergyMultiplier` is already
+  consumed by `expedition.effectiveClimbSpeed`.
+- Bundled hull cards `hull_reactive_hull`/`hull_quantum_alloy` (and engine
+  cards `engine_fusion_core`/`engine_singularity_drive`) already list
+  `irradiated` as a candidate edition, so this bonus is reachable through
+  the existing item 12 drop-RNG path (`gear.rollEdition`/
+  `expedition.rollGearOffer`) without any new content needed.
+
 ### Item 14: effect-type content coverage — every A~G type now has a real card
 
 Prior slices gave every effect type (A~G) a *run-level consumer function*
