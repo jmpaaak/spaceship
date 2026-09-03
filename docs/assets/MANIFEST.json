@@ -833,5 +833,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap checkpoint star sprite wired into PlayScene checkpointStarImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_checkpoint_arrow.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "8f730c28-a518-4100-8c48-fca220172367",
+    "prompt": "pixel art, 16-bit, small magenta arrow HUD icon sprite, sharp chevron arrow pointing up, magenta-purple metallic waypoint direction marker, isolated minimap off-chart checkpoint arrow icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904116,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:25:26Z",
+    "sha256": "7a7576ae59ce033407a199ef5c3c21b00b3cbb509018d008f67d2a9b1bd7587f",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap checkpoint arrow sprite wired into PlayScene checkpointArrowImage; pipeline PNG signature/decode gate"
   }
 ]

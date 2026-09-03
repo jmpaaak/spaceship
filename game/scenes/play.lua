@@ -949,6 +949,22 @@ function M.new(options)
             checkpointStarImage = img
         end
     end
+    -- assets/effects/minimap_checkpoint_arrow.png is the ComfyUI-generated
+    -- off-chart checkpoint direction arrow (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- checkpointStarImagePath. drawMinimap() scales it to
+    -- 2 * minimap.markerCheckpointTipRadius, rotates it toward the nearest
+    -- off-chart checkpoint, and falls back to the Lua circle+triangle
+    -- polygon when the image failed to load.
+    local checkpointArrowImagePath = "assets/effects/minimap_checkpoint_arrow.png"
+    local checkpointArrowImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, checkpointArrowImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            checkpointArrowImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -991,6 +1007,8 @@ function M.new(options)
         speedIconImagePath = speedIconImagePath,
         checkpointStarImage = checkpointStarImage,
         checkpointStarImagePath = checkpointStarImagePath,
+        checkpointArrowImage = checkpointArrowImage,
+        checkpointArrowImagePath = checkpointArrowImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2157,17 +2175,30 @@ function M:drawMinimap()
         -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct
         -- magenta from the orange Earth-return marker above, and offset
         -- slightly inward on the rim so the two never overlap when both
-        -- are showing at once.
-        love.graphics.setColor(0.85, 0.35, 0.95)
+        -- are showing at once. ComfyUI sprite replaces the Lua
+        -- circle+triangle; rotation points the up-facing arrow toward
+        -- the checkpoint (sprite default is up / -y).
         local rim = size / 2 - 9
         local tipX = cx + view.checkpointDx * rim
         local tipY = cy + view.checkpointDy * rim
-        love.graphics.circle("fill", tipX, tipY, minimap.markerCheckpointTipRadius)
-        local perpX, perpY = -view.checkpointDy, view.checkpointDx
-        love.graphics.polygon("fill",
-            tipX + view.checkpointDx * 3, tipY + view.checkpointDy * 3,
-            tipX - view.checkpointDx * 1.5 + perpX * 1.6, tipY - view.checkpointDy * 1.5 + perpY * 1.6,
-            tipX - view.checkpointDx * 1.5 - perpX * 1.6, tipY - view.checkpointDy * 1.5 - perpY * 1.6)
+        if self.checkpointArrowImage then
+            local iw, ih = self.checkpointArrowImage:getDimensions()
+            local drawSize = minimap.markerCheckpointTipRadius * 2
+            local scale = drawSize / math.max(iw, ih)
+            local rotation = math.atan2(view.checkpointDx, -view.checkpointDy)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(
+                self.checkpointArrowImage,
+                tipX, tipY, rotation, scale, scale, iw / 2, ih / 2)
+        else
+            love.graphics.setColor(0.85, 0.35, 0.95)
+            love.graphics.circle("fill", tipX, tipY, minimap.markerCheckpointTipRadius)
+            local perpX, perpY = -view.checkpointDy, view.checkpointDx
+            love.graphics.polygon("fill",
+                tipX + view.checkpointDx * 3, tipY + view.checkpointDy * 3,
+                tipX - view.checkpointDx * 1.5 + perpX * 1.6, tipY - view.checkpointDy * 1.5 + perpY * 1.6,
+                tipX - view.checkpointDx * 1.5 - perpX * 1.6, tipY - view.checkpointDy * 1.5 - perpY * 1.6)
+        end
     end
 end
 

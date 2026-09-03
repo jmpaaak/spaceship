@@ -1557,6 +1557,21 @@ local function testCheckpointStarSprite()
         "PlayScene must load assets/effects/minimap_checkpoint_star.png into self.checkpointStarImagePath")
 end
 
+-- Off-chart checkpoint direction marker is still a Lua circle+triangle
+-- polygon. Same file-existence + always-set-path pattern as
+-- testCheckpointStarSprite. Graphics-gated checkpointArrowImage cannot
+-- be asserted under GAME_HEADLESS=1.
+local function testCheckpointArrowSprite()
+    local path = "assets/effects/minimap_checkpoint_arrow.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated minimap checkpoint arrow sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.checkpointArrowImagePath == path,
+        "PlayScene must load assets/effects/minimap_checkpoint_arrow.png into self.checkpointArrowImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3438,6 +3453,7 @@ function M.run()
     testHullIconSprite()
     testSpeedIconSprite()
     testCheckpointStarSprite()
+    testCheckpointArrowSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")
