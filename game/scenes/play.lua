@@ -1214,6 +1214,36 @@ end
 M.destroyedLostTotalIconSize = 24
 M.destroyedLostTotalIconGap = 8
 
+-- Destroyed-phase samples_settlement_line icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- samples_settlement_line printf ("SAMPLES (n) $N" of wiped
+-- unbanked samples) with a small hexagonal sample-crystal,
+-- mirroring lost_total_line. Drawn as a flat hexagon
+-- (even-length {x,y,...} list, no love.graphics calls) so
+-- headless tests can pin geometry: horizontally symmetric
+-- around cx, spans above and below cy.
+function M.destroyedSamplesSettlementIconPoints(cx, cy, size)
+    local peak = size * 0.5
+    local w = size * 0.32
+    local mid = size * 0.22
+    return {
+        cx, cy - peak,
+        cx + w, cy - mid,
+        cx + w, cy + mid,
+        cx, cy + peak,
+        cx - w, cy + mid,
+        cx - w, cy - mid,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- hexagonal sample-crystal's right edge and the
+-- samples_settlement_line label's left edge. Matches
+-- destroyedLostTotal because both sit next to destroyed-phase
+-- summary labels.
+M.destroyedSamplesSettlementIconSize = 24
+M.destroyedSamplesSettlementIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2781,6 +2811,22 @@ function M.new(options)
             destroyedLostTotalIconImage = img
         end
     end
+    -- assets/effects/destroyed_samples_settlement.png is the ComfyUI-generated
+    -- destroyed-phase samples_settlement_line hexagonal sample-crystal
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as destroyedLostTotalIconImagePath.
+    -- :draw() scales it to M.destroyedSamplesSettlementIconSize instead of
+    -- M.destroyedSamplesSettlementIconPoints, and falls back to that hexagon
+    -- when the image failed to load.
+    local destroyedSamplesSettlementIconImagePath = "assets/effects/destroyed_samples_settlement.png"
+    local destroyedSamplesSettlementIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedSamplesSettlementIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedSamplesSettlementIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2939,6 +2985,8 @@ function M.new(options)
         destroyedTapStartOverIconImagePath = destroyedTapStartOverIconImagePath,
         destroyedLostTotalIconImage = destroyedLostTotalIconImage,
         destroyedLostTotalIconImagePath = destroyedLostTotalIconImagePath,
+        destroyedSamplesSettlementIconImage = destroyedSamplesSettlementIconImage,
+        destroyedSamplesSettlementIconImagePath = destroyedSamplesSettlementIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5452,9 +5500,28 @@ function M:draw()
         love.graphics.print(destroyedLostTotalLabel, destroyedLostTotalStartX + destroyedLostTotalIconSpan, row)
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(i18n.t("samples_settlement_line",
-            self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
-            fullX, row, fullW, "center")
+        local destroyedSamplesSettlementLabel = i18n.t("samples_settlement_line",
+            self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0)
+        local destroyedSamplesSettlementFont = love.graphics.getFont()
+        local destroyedSamplesSettlementWidth = destroyedSamplesSettlementFont:getWidth(destroyedSamplesSettlementLabel)
+        local destroyedSamplesSettlementIconSpan = M.destroyedSamplesSettlementIconSize + M.destroyedSamplesSettlementIconGap
+        local destroyedSamplesSettlementStartX = fullX + (fullW - (destroyedSamplesSettlementIconSpan + destroyedSamplesSettlementWidth)) / 2
+        local destroyedSamplesSettlementIconCenterX = destroyedSamplesSettlementStartX + M.destroyedSamplesSettlementIconSize / 2
+        local destroyedSamplesSettlementIconCenterY = row + destroyedSamplesSettlementFont:getHeight() / 2
+        if self.destroyedSamplesSettlementIconImage then
+            local iw, ih = self.destroyedSamplesSettlementIconImage:getDimensions()
+            local scale = M.destroyedSamplesSettlementIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.destroyedSamplesSettlementIconImage, destroyedSamplesSettlementIconCenterX, destroyedSamplesSettlementIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan hexagonal sample-crystal, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.destroyedSamplesSettlementIconPoints(destroyedSamplesSettlementIconCenterX, destroyedSamplesSettlementIconCenterY, M.destroyedSamplesSettlementIconSize))
+        end
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.print(destroyedSamplesSettlementLabel, destroyedSamplesSettlementStartX + destroyedSamplesSettlementIconSpan, row)
         row = row + rowStep
         love.graphics.printf(i18n.t("spins_settlement_line",
             self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0),
