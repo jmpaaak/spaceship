@@ -1,4 +1,14 @@
 # STATUS
+- (2026-09-03, Gemini fallback cycle) preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short` clean.
+- `docs/feedback/INBOX.md`를 검토한 결과, `## 처리 완료`에 이미 "항목 7/8/15 — econ 레인 스코프 완결"로 상세히 기록되어 완전히 끝난 항목들임에도 불구하고, `## 처리 대기` 섹션에 항목 7, 8, 11, 15가 "완료됨, `## 처리 완료` 참고"라는 포인터 텍스트 형태로 여전히 남아있었다.
+- 2026-09-03에 추가된 토큰 최적화 규칙에 따라, 매 사이클마다 토큰 낭비를 막기 위해 `## 처리 대기` 섹션에서 이 4개의 stale 포인터 라인(번호 7/8/11/15)을 삭제했다. 실제 완료 증거는 `## 처리 완료` 섹션에 그대로 보존되어 있으므로 내용 손실은 없다.
+- 코드 변경 없음(`game/*.lua` 무변경). 이 레인이 착수 가능한 새 스코프 지시가 `loop/PROMPT.md`에 없으므로 `docs/feedback/INBOX.md` 정리(포인터 4줄 삭제)만 커밋 대상이다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 재실행 — 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:46`, `ASSET_MANIFEST_OK`).
+- 다음 사이클: `loop/PROMPT.md`가 이 레인에 새 스코프를 지정하기 전까지는 착수할 신규 코드 작업이 없다. preflight READY 확인 후 대기하거나, 사용자/운영자의 다음 지시를 따른다.
+
+> 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
+
+
 ## (신규 사이클, 2026-09-03) 스코프 4항목(7/8/11/15) 완료 상태 재확인 — 코드 변경 없음
 preflight READY(`engine tests and package` PASS, `git diff` clean) 확인. 이번 사이클의 `PENDING_FEEDBACK` 목록(생성 에셋 LLM 비전 검토 제외/AetherAI human-gate 제거/미니맵 은하나선/국제화+발라트로 연출+HUD 약자 등)은 모두 `loop/PROMPT.md` line 10이 정의한 이 레인 스코프(항목7→8→11→15) 밖이며, 다른 레인(main/gear) 또는 아직 미배정 항목이므로 econ 레인은 착수하지 않는다. `game/expedition.lua`/`game/scenes/play.lua`/`main.lua`/`game/self_test.lua`를 `beginReturn|useSlot|slotSpin|returnControls|slotButtonState|\"returning\"|launchForecast` 패턴으로 재검색 — 실제 코드 참조 0건(주석/회귀 테스트만), `M.rangeForecast`(항목11a)도 여전히 정상 사용 중임을 확인했다. `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:46`, `ASSET_MANIFEST_OK`). 코드 diff 없음 — 이전 사이클이 남긴 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`의 아카이브 정리(오래된 항목을 히스토리로 이동)만 이번 커밋에 함께 반영한다. 다음 사이클: `loop/PROMPT.md`가 이 레인에 새 스코프를 지정할 때까지 이 상태를 매 사이클 재조사하지 않는다(토큰 최적화 규칙).
 
