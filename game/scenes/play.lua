@@ -801,6 +801,36 @@ end
 M.shipActionIconSize = 24
 M.shipActionIconGap = 8
 
+-- EARTH SHOP nextLaunch.stats icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- stats_line printf ("HULL n") with a small hull-plate
+-- hexagon, mirroring shipActionCompact. Shop-row
+-- drawShopIcon sits in the margin and does not replace
+-- this label. Drawn as a flat stretched hexagon
+-- (even-length {x,y,...} list, no love.graphics calls)
+-- so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.statsIconPoints(cx, cy, size)
+    local w = size * 0.5
+    local h = size * 0.28
+    local notch = size * 0.18
+    return {
+        cx - w + notch, cy - h,
+        cx + w - notch, cy - h,
+        cx + w, cy,
+        cx + w - notch, cy + h,
+        cx - w + notch, cy + h,
+        cx - w, cy,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- hull-plate's right edge and the stats_line label's
+-- left edge. Matches ship compact action because both
+-- sit next to always-drawn shop labels.
+M.statsIconSize = 24
+M.statsIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -2109,6 +2139,22 @@ function M.new(options)
             shipActionIconImage = img
         end
     end
+    -- assets/effects/shop_stats.png is the ComfyUI-generated
+    -- EARTH SHOP nextLaunch.stats hull-plate
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as shipActionIconImagePath.
+    -- :draw() scales it to M.statsIconSize instead of
+    -- M.statsIconPoints, and falls back to that hull-plate
+    -- hexagon when the image failed to load.
+    local statsIconImagePath = "assets/effects/shop_stats.png"
+    local statsIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, statsIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            statsIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2239,6 +2285,8 @@ function M.new(options)
         yieldActionIconImagePath = yieldActionIconImagePath,
         shipActionIconImage = shipActionIconImage,
         shipActionIconImagePath = shipActionIconImagePath,
+        statsIconImage = statsIconImage,
+        statsIconImagePath = statsIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4461,7 +4509,27 @@ function M:draw()
         love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
+        local statsLabel = nextLaunch.stats
+        local statsFont = love.graphics.getFont()
+        local statsWidth = statsFont:getWidth(statsLabel)
+        local statsIconSpan = M.statsIconSize + M.statsIconGap
+        local statsStartX = fullX + (fullW - (statsIconSpan + statsWidth)) / 2
+        local statsIconCenterX = statsStartX + M.statsIconSize / 2
+        local statsIconCenterY = row + statsFont:getHeight() / 2
+        if self.statsIconImage then
+            local iw, ih = self.statsIconImage:getDimensions()
+            local scale = M.statsIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.statsIconImage, statsIconCenterX, statsIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan hull-plate hexagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.statsIconPoints(statsIconCenterX, statsIconCenterY, M.statsIconSize))
+        end
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.print(statsLabel, statsStartX + statsIconSpan, row)
         row = row + rowStep
 
         love.graphics.setColor(0.75, 0.9, 1)
