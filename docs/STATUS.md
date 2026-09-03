@@ -1,7 +1,7 @@
 # STATUS
-- 이 레인 스코프 순서(항목7→8→11→15) 4항목 모두 `docs/feedback/INBOX.md`의 `## 처리 완료`에 이미 있음을 재확인했다 (Gemini fallback cycle).
+- 이 레인 스코프 순서(항목7→8→11→15) 4항목 모두 `docs/feedback/INBOX.md`의 `## 처리 완료`에 이미 있음을 재확인했다 (Gemini 3.1 Pro cycle).
 - `game/expedition.lua`/`game/scenes/play.lua`/`main.lua`/`game/self_test.lua`를 `beginReturn|useSlot|slotSpin|returnControls|slotButtonState` 패턴으로 재검색 — 실제 코드 참조 0건, 부재를 검증하는 주석/회귀 테스트만 존재함을 재확인했다.
-- `make verify LOVE=/Users/jm/.local/bin/love` 재실행 — 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- `make verify LOVE=/Users/jm/.local/bin/love` 재실행 — 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:46`, `ASSET_MANIFEST_OK`).
 - 코드 변경 없음 — 착수할 신규 스코프 지시가 `loop/PROMPT.md`에 없다. `docs/feedback/INBOX.md`도 4항목 모두 이미 완료 상태라 append할 신규 내용이 없다.
 - 다음 사이클: `loop/PROMPT.md`가 이 레인에 새 스코프를 지정하기 전까지는 착수할 신규 코드 작업이 없다. preflight READY 확인 후 대기하거나, 사용자/운영자의 다음 지시를 따른다.
 
