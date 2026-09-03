@@ -1068,6 +1068,36 @@ end
 M.shipPreviewIconSize = 24
 M.shipPreviewIconGap = 8
 
+-- EARTH SHOP nextLaunch.ship icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- nextLaunch.ship printf ("NEXT STARTER" / "NEXT SCOUT")
+-- with a small hangar-roof pentagon, mirroring
+-- shipPreviewCompact. Shop-row drawShopIcon sits in the
+-- margin and does not replace this label. Drawn as a
+-- flat house-pentagon (even-length {x,y,...} list, no
+-- love.graphics calls) so headless tests can pin geometry:
+-- horizontally symmetric around cx, spans above and below cy.
+function M.nextShipIconPoints(cx, cy, size)
+    local w = size * 0.42
+    local top = size * 0.5
+    local eave = size * 0.12
+    local bottom = size * 0.5
+    return {
+        cx, cy - top,
+        cx + w, cy - eave,
+        cx + w, cy + bottom,
+        cx - w, cy + bottom,
+        cx - w, cy - eave,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- hangar-roof's right edge and the nextLaunch.ship
+-- label's left edge. Matches shipPreview because both
+-- sit next to always-drawn shop labels.
+M.nextShipIconSize = 24
+M.nextShipIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2555,6 +2585,22 @@ function M.new(options)
             shipPreviewIconImage = img
         end
     end
+    -- assets/effects/shop_next_ship.png is the ComfyUI-generated
+    -- EARTH SHOP nextLaunch.ship hangar-roof pentagon
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as shipPreviewIconImagePath.
+    -- :draw() scales it to M.nextShipIconSize instead of
+    -- M.nextShipIconPoints, and falls back to that house
+    -- pentagon when the image failed to load.
+    local nextShipIconImagePath = "assets/effects/shop_next_ship.png"
+    local nextShipIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, nextShipIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            nextShipIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2703,6 +2749,8 @@ function M.new(options)
         yieldPreviewIconImagePath = yieldPreviewIconImagePath,
         shipPreviewIconImage = shipPreviewIconImage,
         shipPreviewIconImagePath = shipPreviewIconImagePath,
+        nextShipIconImage = nextShipIconImage,
+        nextShipIconImagePath = nextShipIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5082,8 +5130,27 @@ function M:draw()
         
         row = 1056
         rowStep = 32
+        local nextShipLabel = nextLaunch.ship
+        local nextShipFont = love.graphics.getFont()
+        local nextShipWidth = nextShipFont:getWidth(nextShipLabel)
+        local nextShipIconSpan = M.nextShipIconSize + M.nextShipIconGap
+        local nextShipStartX = fullX + (fullW - (nextShipIconSpan + nextShipWidth)) / 2
+        local nextShipIconCenterX = nextShipStartX + M.nextShipIconSize / 2
+        local nextShipIconCenterY = row + nextShipFont:getHeight() / 2
+        if self.nextShipIconImage then
+            local iw, ih = self.nextShipIconImage:getDimensions()
+            local scale = M.nextShipIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.nextShipIconImage, nextShipIconCenterX, nextShipIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: gold hangar-roof pentagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.polygon("fill",
+                M.nextShipIconPoints(nextShipIconCenterX, nextShipIconCenterY, M.nextShipIconSize))
+        end
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
+        love.graphics.print(nextShipLabel, nextShipStartX + nextShipIconSpan, row)
         row = row + rowStep
         self:drawStatsIconLabel(nextLaunch.stats, fullX, row, fullW, 0.75, 0.9, 1)
         row = row + rowStep
