@@ -1233,5 +1233,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.destroyedPanelImage for the destroyed-phase summary card"
+  },
+  {
+    "path": "assets/effects/slot_result_panel.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "b598868c-f880-42cd-b1fe-f149d74811a9",
+    "prompt": "pixel art, 16-bit, entire frame filled edge to edge with a dark navy glass UI slot-machine result card panel texture for a vertical space roguelite returning-phase reel box, subtle cyan edge highlight and faint scanlines, metallic UI chrome bezel, no empty margin, no white background, no circle, no icon, no text, no watermark, game UI asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904132,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:31:50Z",
+    "sha256": "2db16c84c3b86f700fff635f09f19ef9fbd400fa9dbc820e2c8942d8933f4a5e",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.slotResultPanelImage for the returning-phase slot result box"
   }
 ]

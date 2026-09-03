@@ -1193,6 +1193,21 @@ function M.new(options)
             destroyedPanelImage = img
         end
     end
+    -- assets/effects/slot_result_panel.png is the ComfyUI-generated
+    -- returning-phase slot result card panel (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- destroyedPanelImagePath. :draw() stretches it across the slot
+    -- result box instead of the Lua fill rectangle, and falls back to
+    -- that rectangle when the image failed to load.
+    local slotResultPanelImagePath = "assets/effects/slot_result_panel.png"
+    local slotResultPanelImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, slotResultPanelImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            slotResultPanelImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1267,6 +1282,8 @@ function M.new(options)
         shopPanelImagePath = shopPanelImagePath,
         destroyedPanelImage = destroyedPanelImage,
         destroyedPanelImagePath = destroyedPanelImagePath,
+        slotResultPanelImage = slotResultPanelImage,
+        slotResultPanelImagePath = slotResultPanelImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3244,14 +3261,28 @@ function M:draw()
         -- (8px, measured max 108px symbol row / 103px WIN row) already
         -- used for the ODDS line above fits both rows without wrapping.
         if self.slotSpin then
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 72, 840, 576, 136)
+            if self.slotResultPanelImage then
+                local iw, ih = self.slotResultPanelImage:getDimensions()
+                love.graphics.setColor(1, 1, 1, 0.9)
+                love.graphics.draw(self.slotResultPanelImage, 72, 840, 0,
+                    576 / iw, 136 / ih)
+            else
+                love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
+                love.graphics.rectangle("fill", 72, 840, 576, 136)
+            end
             self:drawSlotReel(self:currentSlotReels(), 80, 864, 560)
             love.graphics.setColor(1, 0.8, 0.3)
             love.graphics.printf(i18n.t("spinning_label"), 80, 924, 560, "center")
         elseif self.expedition.lastSlotSymbols then
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 72, 840, 576, 136)
+            if self.slotResultPanelImage then
+                local iw, ih = self.slotResultPanelImage:getDimensions()
+                love.graphics.setColor(1, 1, 1, 0.9)
+                love.graphics.draw(self.slotResultPanelImage, 72, 840, 0,
+                    576 / iw, 136 / ih)
+            else
+                love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
+                love.graphics.rectangle("fill", 72, 840, 576, 136)
+            end
             self:drawSlotReel(self.expedition.lastSlotSymbols, 80, 864, 560)
             love.graphics.setColor(1, 0.8, 0.3)
             love.graphics.printf(M.slotWinLine(self.expedition), 80, 924, 560, "center")
