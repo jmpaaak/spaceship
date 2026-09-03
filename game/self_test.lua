@@ -3128,6 +3128,56 @@ local function testGearGalaxyExclusiveEnginePoolWiring()
     local offer2 = expedition.exploreHub(run, "galaxy:3:4", enginePool)
     assert(offer2 == nil, "exploreHub must return nil on subsequent visits to the same hub in the same run")
 
+    -- Item 7 follow-up gap #2: item 7(b)'s promise is "해당 은하계 *특유의*
+    -- 고유 장비 부품" (each galaxy's OWN distinctive exclusive gear), but
+    -- both bundled pools had exactly ONE galaxyExclusive card each
+    -- (hull_combo_matrix, engine_singularity_drive). M.galaxySpecificGear
+    -- always narrows to the galaxyExclusive candidate subset first, so with
+    -- only one candidate EVERY galaxy's hub-exploration reward and shop-
+    -- planet-exclusive-card slot resolves to that exact same single card
+    -- regardless of hash -- there is no actual per-galaxy variety, just one
+    -- reused reward wearing item 7's "galaxy-specific" label. This asserts
+    -- each bundled pool carries at least 3 galaxyExclusive cards AND that
+    -- galaxySpecificGear actually returns more than one distinct card
+    -- across a spread of galaxy ids (proving real, not just theoretical,
+    -- variety) -- exactly the same "documented vs actually exercised" gap
+    -- pattern this lane has repeatedly found and closed elsewhere.
+    local function testGalaxyExclusiveVarietyLocal()
+        local hullPool = gear.loadHullParts()
+        local enginePool = gear.loadEngineParts()
+
+        local function countExclusive(pool)
+            local n = 0
+            for _, part in ipairs(pool) do
+                if part.galaxyExclusive then n = n + 1 end
+            end
+            return n
+        end
+        assert(countExclusive(hullPool) >= 3,
+            "hull_parts.json must carry at least 3 galaxyExclusive cards for real per-galaxy variety")
+        assert(countExclusive(enginePool) >= 3,
+            "engine_parts.json must carry at least 3 galaxyExclusive cards for real per-galaxy variety")
+
+        local function distinctIdsAcrossGalaxies(pool)
+            local seen = {}
+            local count = 0
+            for i = 1, 12 do
+                local id = string.format("galaxy:%d:%d", i * 7, i * 13)
+                local part = gear.galaxySpecificGear(pool, id)
+                if not seen[part.id] then
+                    seen[part.id] = true
+                    count = count + 1
+                end
+            end
+            return count
+        end
+        assert(distinctIdsAcrossGalaxies(hullPool) > 1,
+            "galaxySpecificGear must return more than one distinct hull card across different galaxy ids")
+        assert(distinctIdsAcrossGalaxies(enginePool) > 1,
+            "galaxySpecificGear must return more than one distinct engine card across different galaxy ids")
+    end
+    testGalaxyExclusiveVarietyLocal()
+
     -- hull and engine hub-exploration tracking must share run.hubExplored
     -- keyed by galaxyId (not by category), matching item 8's single
     -- checkpoint-settlement trigger design -- a second exploreHub call for

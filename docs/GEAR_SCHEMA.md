@@ -1364,3 +1364,36 @@ card that can roll it.
   engine fixture 3→2 plus fuelEfficiency 10→20 / unequip restores 3 /
   live `engine_singularity_drive` with the edition 3→2.
 
+### Item 7 follow-up #2: galaxy-exclusive pools had no real per-galaxy variety
+
+The item-7-follow-up slice above closed the "engine pool has zero
+galaxyExclusive content" gap by marking exactly one existing engine card
+(`engine_singularity_drive`) `galaxyExclusive: true`, matching the hull
+pool's single exclusive card (`hull_combo_matrix`) from the original item 7
+slice. A deeper audit found that with only ONE galaxyExclusive candidate per
+pool, `gear.galaxySpecificGear(pool, galaxyId)` — which narrows to the
+galaxyExclusive subset first, then hashes `galaxyId` to pick an index within
+that subset — always resolves to the exact same single card regardless of
+which galaxy's hub a player explores or which galaxy's shop planet they
+visit. Item 7(b)'s wording explicitly promises "해당 은하계 특유의 고유 장비
+부품" (gear distinctive to THAT galaxy specifically); a single shared reward
+across every galaxy satisfies the schema/wiring but not the actual per-
+galaxy variety the feature exists to deliver — the same "documented and
+wired, but not actually exercised as intended" pattern this lane has
+repeatedly found and closed elsewhere in items 9/10/12/14.
+
+Fixed by adding two more `galaxyExclusive: true` legendary cards to each
+pool (hull: `hull_nebula_forge`, `hull_starforge_relic`; engine:
+`engine_void_forge_drive`, `engine_stellar_matrix_core` — three total per
+pool now), each with distinct effects/tags/editions so they read as
+genuinely different rewards, not palette swaps. `game/self_test.lua`'s
+`testGearGalaxyExclusiveEnginePoolWiring()` now also asserts (via a local
+`testGalaxyExclusiveVarietyLocal` helper) that each bundled pool carries at
+least 3 galaxyExclusive cards AND that `galaxySpecificGear` actually returns
+more than one distinct card id across a spread of 12 different galaxy ids —
+proving real distribution, not just a larger theoretical candidate count
+that could still hash-collide to one id in practice. `M.galaxySpecificGear`
+itself is unchanged (no code fix needed — this was purely a content-density
+gap, the hashing/selection logic was already correct once given more than
+one candidate to choose from).
+

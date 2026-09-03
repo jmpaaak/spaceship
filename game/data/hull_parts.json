@@ -420,6 +420,34 @@
       "effects": [
         { "type": "autoCollect", "value": 1 }
       ]
+    },
+    {
+      "id": "hull_nebula_forge",
+      "name": "Nebula Forge",
+      "nameKo": "성운 단조기",
+      "icon": "◈",
+      "rarity": "legendary",
+      "tags": ["void", "altitude", "defense"],
+      "editions": ["irradiated"],
+      "effects": [
+        { "type": "climbSpeed", "value": 5 },
+        { "type": "hullDurability", "value": 2 }
+      ],
+      "galaxyExclusive": true
+    },
+    {
+      "id": "hull_starforge_relic",
+      "name": "Starforge Relic",
+      "nameKo": "성단 유물",
+      "icon": "✦",
+      "rarity": "legendary",
+      "tags": ["azure", "economy", "control"],
+      "editions": ["crystallized"],
+      "effects": [
+        { "type": "sampleSellValue", "value": 6 },
+        { "type": "luck", "value": 10 }
+      ],
+      "galaxyExclusive": true
     }
   ]
 }

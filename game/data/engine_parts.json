@@ -321,6 +321,34 @@
         { "type": "streakMultiplier", "value": 8 },
         { "type": "steeringResponsiveness", "value": 8 }
       ]
+    },
+    {
+      "id": "engine_void_forge_drive",
+      "name": "Void Forge Drive",
+      "nameKo": "공허 단조 드라이브",
+      "icon": "◎",
+      "rarity": "legendary",
+      "tags": ["void", "altitude", "control"],
+      "editions": ["quantum_flawed"],
+      "galaxyExclusive": true,
+      "effects": [
+        { "type": "climbSpeed", "value": 9 },
+        { "type": "fuelEfficiency", "value": 15 }
+      ]
+    },
+    {
+      "id": "engine_stellar_matrix_core",
+      "name": "Stellar Matrix Core",
+      "nameKo": "항성 매트릭스 코어",
+      "icon": "◈",
+      "rarity": "legendary",
+      "tags": ["ember", "speed", "economy"],
+      "editions": ["refined"],
+      "galaxyExclusive": true,
+      "effects": [
+        { "type": "speed", "value": 7 },
+        { "type": "boostCharge", "value": 1 }
+      ]
     }
   ]
 }
