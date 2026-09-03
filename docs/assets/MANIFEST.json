@@ -2108,5 +2108,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.steeringPreviewIconImage for steeringPreviewCompact; Lua 4-point gyro-star fallback"
+  },
+  {
+    "path": "assets/effects/shop_yield_preview.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "61f0a9e6-3510-4e23-952d-e9b3e153de78",
+    "prompt": "pixel art, 16-bit, small cyan faceted sample-crystal HUD icon sprite, simple cut-gem hexagon silhouette, isolated EARTH SHOP yield preview HUD icon, solid white background, no letters, no numbers, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904167,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T21:11:47Z",
+    "sha256": "610429e90bc8b94bd4bef314fadc6b4d272849aaeb218930ed4df38d5cf463a8",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.yieldPreviewIconImage for yieldPreview; Lua faceted sample-crystal fallback"
   }
 ]

@@ -1005,6 +1005,36 @@ end
 M.steeringPreviewIconSize = 24
 M.steeringPreviewIconGap = 8
 
+-- EARTH SHOP yieldPreview icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn yieldPreview printf
+-- ("YIELD xn" after upgrade) with a small faceted sample
+-- crystal, mirroring steeringPreviewCompact. Shop-row
+-- drawShopIcon sits in the margin and does not replace this
+-- label. Drawn as a flat cut-gem hexagon (even-length
+-- {x,y,...} list, no love.graphics calls) so headless tests
+-- can pin geometry: horizontally symmetric around cx, spans
+-- above and below cy.
+function M.yieldPreviewIconPoints(cx, cy, size)
+    local w = size * 0.42
+    local h = size * 0.5
+    local top = size * 0.22
+    return {
+        cx - top, cy - h,
+        cx + top, cy - h,
+        cx + w, cy,
+        cx + top, cy + h,
+        cx - top, cy + h,
+        cx - w, cy,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- faceted crystal's right edge and the yieldPreview
+-- label's left edge. Matches steeringPreview because both
+-- sit next to always-drawn shop labels.
+M.yieldPreviewIconSize = 24
+M.yieldPreviewIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2460,6 +2490,22 @@ function M.new(options)
             steeringPreviewIconImage = img
         end
     end
+    -- assets/effects/shop_yield_preview.png is the ComfyUI-generated
+    -- EARTH SHOP yieldPreview faceted sample-crystal
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as steeringPreviewIconImagePath.
+    -- :draw() scales it to M.yieldPreviewIconSize instead of
+    -- M.yieldPreviewIconPoints, and falls back to that cut-gem
+    -- hexagon when the image failed to load.
+    local yieldPreviewIconImagePath = "assets/effects/shop_yield_preview.png"
+    local yieldPreviewIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, yieldPreviewIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            yieldPreviewIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2604,6 +2650,8 @@ function M.new(options)
         hullPreviewIconImagePath = hullPreviewIconImagePath,
         steeringPreviewIconImage = steeringPreviewIconImage,
         steeringPreviewIconImagePath = steeringPreviewIconImagePath,
+        yieldPreviewIconImage = yieldPreviewIconImage,
+        yieldPreviewIconImagePath = yieldPreviewIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4932,7 +4980,26 @@ function M:draw()
         row = row + rowStep
 
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.yieldPreview, shopColumnLeftX, row, shopColumnLeftW, "center")
+        local yieldPreviewLabel = nextLaunch.yieldPreview
+        local yieldPreviewFont = love.graphics.getFont()
+        local yieldPreviewWidth = yieldPreviewFont:getWidth(yieldPreviewLabel)
+        local yieldPreviewIconSpan = M.yieldPreviewIconSize + M.yieldPreviewIconGap
+        local yieldPreviewStartX = shopColumnLeftX + (shopColumnLeftW - (yieldPreviewIconSpan + yieldPreviewWidth)) / 2
+        local yieldPreviewIconCenterX = yieldPreviewStartX + M.yieldPreviewIconSize / 2
+        local yieldPreviewIconCenterY = row + yieldPreviewFont:getHeight() / 2
+        if self.yieldPreviewIconImage then
+            local iw, ih = self.yieldPreviewIconImage:getDimensions()
+            local scale = M.yieldPreviewIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.yieldPreviewIconImage, yieldPreviewIconCenterX, yieldPreviewIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan faceted sample-crystal, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.yieldPreviewIconPoints(yieldPreviewIconCenterX, yieldPreviewIconCenterY, M.yieldPreviewIconSize))
+        end
+        love.graphics.setColor(0.4, 0.85, 1)
+        love.graphics.print(yieldPreviewLabel, yieldPreviewStartX + yieldPreviewIconSpan, row)
         love.graphics.printf(nextLaunch.shipPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
         
