@@ -37,6 +37,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 5. Use test-driven development: add a failing engine-hosted test, observe RED, implement, then run focused GREEN tests.
 6. Run `make verify LOVE=/Users/jm/.local/bin/love` before a checkpoint commit.
 7. Update `docs/STATUS.md` with verified facts for this cycle only (do not rewrite old history) and the exact next slice. Commit owned changes with a specific message. Push only after tests pass and the worktree is clean.
+8. Token-optimization rule (2026-09-03): whenever this cycle judges a pending item in `docs/feedback/INBOX.md` fully done (or fully human-gated — nothing left that code/assets/tests can do until the user approves/logs in/etc.), move it out of `## 처리 대기` into `## 처리 완료` immediately, in the same commit, with the completion evidence (or a "human-gated: still waiting on <specific user action>" note). Do not leave a finished/blocked item sitting in the pending section only to re-confirm "still human-gated, no change" again next cycle — every cycle after this one, and the human's periodic progress report, has to re-read whatever stays in `## 처리 대기`, so leaving stale entries there wastes tokens on every future cycle.
 
 ## Non-negotiable game rules
 
@@ -50,12 +51,13 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## AetherAI-only asset rule
 
-- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI or official API.
+- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI/API or the local ComfyUI pipeline (`http://127.0.0.1:8188`, workflow IDs `7a3eb820-f17d-47ce-a337-da2358c2a0d5` / `5c257929-dff5-4ef4-bd1e-2c99dbbf3dee`).
 - Never crawl, scrape, macro, or automate the AetherAI website.
 - Never generate final art with Python/Pillow, Lua, another image model, or hand-authored raster scripts.
-- Until an official export and receipt exist, simple Lua shapes may remain only as visibly documented `DEV PLACEHOLDER` gameplay geometry. Do not call them final assets or visual QA.
-- Do not invent provenance. Official imports require source/terms URL, generation/asset ID, prompt/model/style/settings, timestamp, original SHA-256, dimensions, and runtime QA.
-- If login/export is unavailable, mark art human-gated and continue non-asset gameplay, tests, persistence, balancing, touch input, packaging, and UI layout work.
+- 2026-09-03 update: the user human-gate on final art (waiting for manual AetherAI login/export) is removed. The loop may drive the ComfyUI HTTP API (`/prompt`, `/history`, `/view`) directly and self-judge quality (matches the object's intended silhouette/readability, no artifacts, runtime-legible at actual `1864×860` scale) instead of waiting on a manual approval. AetherAI import remains available whenever credentials appear; ComfyUI is an equally official path, not a fallback that needs later re-approval.
+- 2026-09-03 update (generated asset reporting): the moment an AetherAI/ComfyUI asset is applied as final/runtime art (not a candidate), append one line to `docs/GENERATED_ASSET_LOG.md` in the same commit: `YYYY-MM-DDTHH:MM:SS+0900 | <repo-relative/path.png> | <one-line description>`. The 10-minute progress-report cron watches this file for new lines and forwards the actual image to the user. The path must be a real tracked file at that commit (no `.tmp/` or gitignored paths). Do not log candidates/superseded/QA-only art — only what the loop treats as final.
+- Do not invent provenance. Official imports/generations require source/terms URL (AetherAI) or workflow path/prompt/seed/sampler settings (ComfyUI), generation/asset ID or output SHA-256, timestamp, dimensions, and runtime QA in the asset manifest — this is a quality record, not an approval gate.
+- Report applied asset files/manifest paths back to the user (STATUS.md) instead of asking for approval.
 
 ## Safety and scope
 

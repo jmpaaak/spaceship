@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "path": "assets/ship/ship_default_test.png",
+    "source_url": "http://127.0.0.1:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://127.0.0.1:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "72eb817f-57d7-46b8-a187-2e4ff7aa678d",
+    "prompt": "pixel art, 16-bit, small top-down spaceship sprite, sleek silver hull with blue accent stripe, engine thrusters at rear, solid white background, no text, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 12345,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 256,
+      "height": 256,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T02:06:53Z",
+    "sha256": "f61a00f0891e79643c1ce7e53fc481472bc11d8a7fb69937105951fcd888436f",
+    "width": 256,
+    "height": 256,
+    "qa": "pipeline smoke test 2026-09-03: visually verified plausible top-down spaceship silhouette; NOT yet wired into game/scenes/play.lua runtime"
+  }
+]
