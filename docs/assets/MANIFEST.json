@@ -633,5 +633,30 @@
     "width": 64,
     "height": 64,
     "qa": "planet rim glow sprite wired into PlayScene planetGlowImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/planet_shadow.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "bcb9ecef-35c1-425d-aac5-422684e3b175",
+    "prompt": "pixel art, 16-bit, small circular drop shadow sprite, soft dark gray radial blob fading to edges, isolated oval shadow icon, solid white background, no text, no planet, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904108,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:54:40Z",
+    "sha256": "9cd2659dfd943263b85dabf41c8a3f8d353f553043db38b915773d888a58530a",
+    "width": 64,
+    "height": 64,
+    "qa": "planet drop shadow sprite wired into PlayScene planetShadowImage; pipeline PNG signature/decode gate"
   }
 ]

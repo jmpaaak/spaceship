@@ -835,6 +835,20 @@ function M.new(options)
             planetGlowImage = img
         end
     end
+    -- assets/effects/planet_shadow.png is the ComfyUI-generated planet
+    -- drop shadow (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated-image pattern as planetGlowImagePath. :draw() tints
+    -- and scales it per-planet instead of a love.graphics.circle fill,
+    -- and falls back to that circle when the image failed to load.
+    local planetShadowImagePath = "assets/effects/planet_shadow.png"
+    local planetShadowImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, planetShadowImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            planetShadowImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -861,6 +875,8 @@ function M.new(options)
         thrustEffectImagePath = thrustEffectImagePath,
         planetGlowImage = planetGlowImage,
         planetGlowImagePath = planetGlowImagePath,
+        planetShadowImage = planetShadowImage,
+        planetShadowImagePath = planetShadowImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2108,8 +2124,18 @@ function M:draw()
             -- Soft drop shadow: a low-alpha dark circle offset toward the
             -- lower-right, opposite the highlight, so planets read as
             -- slightly raised cards instead of flat painted circles.
+            -- ComfyUI sprite when loaded; Lua circle is load-failure fallback.
+            local shadowX = x + planet.radius * 0.22
+            local shadowY = y + planet.radius * 0.22
+            local shadowRadius = planet.radius * 1.02
             love.graphics.setColor(0, 0, 0, 0.25)
-            love.graphics.circle("fill", x + planet.radius * 0.22, y + planet.radius * 0.22, planet.radius * 1.02)
+            if self.planetShadowImage then
+                local iw, ih = self.planetShadowImage:getDimensions()
+                local scale = (shadowRadius * 2) / math.max(iw, ih)
+                love.graphics.draw(self.planetShadowImage, shadowX, shadowY, 0, scale, scale, iw / 2, ih / 2)
+            else
+                love.graphics.circle("fill", shadowX, shadowY, shadowRadius)
+            end
             -- docs/feedback/INBOX.md 처리대기 항목 "ComfyUI로 실제 에셋 작업
             -- 진행" (planet slice): render the ComfyUI-generated neutral-tone
             -- sprite (assets/planet/planet_generic.png) tinted by the
