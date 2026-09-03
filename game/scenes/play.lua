@@ -1439,35 +1439,21 @@ function M:update(dt)
         if thrusting and self.rcsCooldown == 0
             and (math.abs(bank) > 0.12 or math.abs(lift) > 0.12) then
             self.rcsCooldown = 0.045
-            if math.abs(bank) > 0.12 then
-                local side = bank > 0 and -1 or 1
-                self.particles[#self.particles + 1] = {
-                    x = self.ship.x + side * 6,
-                    y = self.ship.y + 3,
-                    vx = side * (16 + math.random() * 10),
-                    vy = 6 + math.random() * 10,
-                    timer = rcsPuffDuration,
-                    maxTimer = rcsPuffDuration,
-                    r = 0.7,
-                    g = 0.88,
-                    b = 1,
-                }
-            end
-            if math.abs(lift) > 0.12 then
-                -- Opposite vertical jet: stick-down puffs above, stick-up below.
-                local vside = lift > 0 and -1 or 1
-                self.particles[#self.particles + 1] = {
-                    x = self.ship.x + (math.random() * 4 - 2),
-                    y = self.ship.y + vside * 6,
-                    vx = (math.random() * 8 - 4),
-                    vy = vside * (16 + math.random() * 10),
-                    timer = rcsPuffDuration,
-                    maxTimer = rcsPuffDuration,
-                    r = 0.7,
-                    g = 0.88,
-                    b = 1,
-                }
-            end
+            local mag = math.sqrt(bank * bank + lift * lift)
+            local dirX = bank / mag
+            local dirY = lift / mag
+            
+            self.particles[#self.particles + 1] = {
+                x = self.ship.x - dirX * 6 + (math.random() * 4 - 2),
+                y = self.ship.y - dirY * 6 + (math.random() * 4 - 2),
+                vx = -dirX * (16 + math.random() * 10) + (math.random() * 8 - 4),
+                vy = -dirY * (16 + math.random() * 10) + (math.random() * 8 - 4),
+                timer = rcsPuffDuration,
+                maxTimer = rcsPuffDuration,
+                r = 0.7,
+                g = 0.88,
+                b = 1,
+            }
         end
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then

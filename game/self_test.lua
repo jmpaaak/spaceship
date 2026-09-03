@@ -258,6 +258,19 @@ local function testGalaxyStructure()
     i18n.setLocale(prevLocale)
     assert(world.galaxyName(nil) == nil)
 
+    -- Deterministic real galaxy names (docs/feedback/INBOX.md)
+    -- The name must depend deterministically on gx, gy, and exhaust combinations using suffixes.
+    local name1 = world.galaxyName(41, -17)
+    local name2 = world.galaxyName(41, -17)
+    assert(name1 == name2, "galaxyName must be deterministic for the same coordinates")
+    
+    local nameOther = world.galaxyName(42, -17)
+    assert(name1 ~= nameOther, "different coordinates should likely yield different names")
+    
+    local dummyGalaxy = { gx = 41, gy = -17 }
+    assert(world.galaxyName(dummyGalaxy) == name1, "passing the galaxy table should yield the same name as passing gx, gy")
+
+
     -- Deterministic: the same cell must always return the same galaxy (or
     -- consistently nil), mirroring world.planets' existing determinism
     -- guarantee.
@@ -1302,9 +1315,22 @@ function M.run()
     assert(ship.y < 0, "thrust must move the ship regardless of any fuel state")
     assert(ship.fuel == nil,
         "ship must not carry a dead fuel field; flight is fuel-unconstrained")
-    local before = ship.angle
-    shipModule.update(ship, 1, { right = true })
-    assert(ship.angle > before)
+    -- Omnidirectional thrust test (docs/feedback/INBOX.md)
+    do
+        local function thrustMagnitude(input)
+            local s = shipModule.new()
+            shipModule.update(s, 1, input)
+            return math.sqrt(s.vx * s.vx + s.vy * s.vy)
+        end
+        
+        local rightMag = thrustMagnitude({ right = true })
+        assert(rightMag > 0)
+        assert(math.abs(rightMag - thrustMagnitude({ left = true })) < 1e-5, "thrust magnitude must be equal for all directions")
+        assert(math.abs(rightMag - thrustMagnitude({ up = true })) < 1e-5, "thrust magnitude must be equal for all directions")
+        assert(math.abs(rightMag - thrustMagnitude({ down = true })) < 1e-5, "thrust magnitude must be equal for all directions")
+        assert(math.abs(rightMag - thrustMagnitude({ right = true, up = true })) < 1e-5, "diagonal thrust must be normalized to same magnitude")
+    end
+
 
     -- docs/feedback/INBOX.md item 11(c): fuel is no longer a flight
     -- constraint anywhere in the game (game/expedition.lua's

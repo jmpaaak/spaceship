@@ -73,12 +73,34 @@ end
 -- current i18n locale; the home solar system uses a fixed label and every
 -- other galaxy uses its grid coordinates in a "GALAXY %d-%d" template, both
 -- resolved through game/i18n.lua so locale switches (en/ko) apply here too.
-function M.galaxyName(galaxy)
-    if not galaxy then return nil end
-    if galaxy.id == "milkyway" then
+function M.galaxyName(galaxy_or_gx, gy)
+    local gx, gy_val, id
+    if type(galaxy_or_gx) == "table" then
+        gx = galaxy_or_gx.gx
+        gy_val = galaxy_or_gx.gy
+        id = galaxy_or_gx.id
+    else
+        gx = galaxy_or_gx
+        gy_val = gy
+        if gx == 0 and gy_val == 0 then id = "milkyway" end
+    end
+    if not gx then return nil end
+
+    if id == "milkyway" then
         return i18n.t("galaxy_home")
     end
-    return i18n.t("galaxy_named", galaxy.gx, galaxy.gy)
+
+    local names = i18n.t("galaxy_names")
+    local suffixes = i18n.t("galaxy_suffixes")
+
+    -- 1000000 is large enough to cover many combinations
+    local h = math.floor(hash(gx, gy_val, 700) * 1000000)
+    local nameIndex = (h % #names) + 1
+    local suffixIndex = (math.floor(h / #names) % #suffixes) + 1
+
+    local name = names[nameIndex]
+    local suffix = suffixes[suffixIndex]
+    return i18n.t("galaxy_named", name, suffix)
 end
 
 -- Deterministic per-galaxy background tint (docs/feedback/INBOX.md item 1
