@@ -1707,6 +1707,21 @@ local function testMinimapGalaxyRingSprite()
         "PlayScene must load assets/effects/minimap_galaxy_ring.png into self.galaxyRingImagePath")
 end
 
+-- Galaxy hub/checkpoint planets still reuse the generic planet sprite
+-- (planet_generic.png). Same file-existence + always-set-path pattern as
+-- testMinimapGalaxyRingSprite. Graphics-gated hubPlanetImage cannot
+-- be asserted under GAME_HEADLESS=1.
+local function testHubPlanetSprite()
+    local path = "assets/planet/planet_hub.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated hub/checkpoint planet sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.hubPlanetImagePath == path,
+        "PlayScene must load assets/planet/planet_hub.png into self.hubPlanetImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3598,6 +3613,7 @@ function M.run()
     testMinimapSpiralArmSprite()
     testMinimapOrbitRingSprite()
     testMinimapGalaxyRingSprite()
+    testHubPlanetSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

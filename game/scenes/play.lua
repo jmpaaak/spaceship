@@ -1104,6 +1104,21 @@ function M.new(options)
             galaxyRingImage = img
         end
     end
+    -- assets/planet/planet_hub.png is the ComfyUI-generated galaxy
+    -- hub/checkpoint planet (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- galaxyRingImagePath. :draw() uses it for planet.hub landmarks
+    -- instead of planet_generic.png, and falls back to planetImage
+    -- (then the Lua circle) when the image failed to load.
+    local hubPlanetImagePath = "assets/planet/planet_hub.png"
+    local hubPlanetImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, hubPlanetImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            hubPlanetImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1166,6 +1181,8 @@ function M.new(options)
         orbitRingImagePath = orbitRingImagePath,
         galaxyRingImage = galaxyRingImage,
         galaxyRingImagePath = galaxyRingImagePath,
+        hubPlanetImage = hubPlanetImage,
+        hubPlanetImagePath = hubPlanetImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2591,15 +2608,21 @@ function M:draw()
             -- 진행" (planet slice): render the ComfyUI-generated neutral-tone
             -- sprite (assets/planet/planet_generic.png) tinted by the
             -- existing planetColor(hue) lookup instead of a flat filled
-            -- circle, so per-planet hue variety is preserved. Falls back to
-            -- the previous flat gradient-circle rendering whenever the
-            -- image failed to load (e.g. missing file/graphics disabled).
+            -- circle, so per-planet hue variety is preserved. Hub/checkpoint
+            -- planets use planet_hub.png so they read as a distinct landmark.
+            -- Falls back to planetImage, then the previous flat
+            -- gradient-circle rendering whenever the image failed to load
+            -- (e.g. missing file/graphics disabled).
             local baseR, baseG, baseB = planetColor(planet.hue)
-            if self.planetImage then
-                local iw, ih = self.planetImage:getWidth(), self.planetImage:getHeight()
+            local planetSprite = self.planetImage
+            if planet.hub and self.hubPlanetImage then
+                planetSprite = self.hubPlanetImage
+            end
+            if planetSprite then
+                local iw, ih = planetSprite:getWidth(), planetSprite:getHeight()
                 local scale = (planet.radius * 2) / math.max(iw, ih)
                 love.graphics.setColor(baseR, baseG, baseB)
-                love.graphics.draw(self.planetImage, x, y, 0, scale, scale, iw / 2, ih / 2)
+                love.graphics.draw(planetSprite, x, y, 0, scale, scale, iw / 2, ih / 2)
             else
                 love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
                 love.graphics.circle("fill", x, y, planet.radius)
