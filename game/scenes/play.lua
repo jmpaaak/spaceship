@@ -310,14 +310,6 @@ end
 M.speedIconSize = 32
 M.speedIconGap = 16
 
--- docs/feedback/INBOX.md UI/HUD item 3 leftover: PLANET-triple still
--- banks a next-launch fuel bonus in the engine, but launch consumes it
--- as a no-op (no run.fuel). Named flag, same pattern as
--- M.showLaunchRocketIcon, gates the leftover "NEXT LAUNCH FUEL" /
--- "WIN +$N FUEL +N" copy so players are not told fuel is a reward.
--- Econ item 15 owns any later redefinition of that bonus.
-M.showFuelBonusText = false
-
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -988,16 +980,9 @@ function M:loadoutLines()
     }
 end
 
-function M:summaryFuelBonusLine()
-    -- Keys fuel_bonus_line / newbest_fuel_combined were deleted. The
-    -- PLANET-triple engine bonus still exists (econ item 15), but UI
-    -- never advertises it as fuel.
-    return nil
-end
-
 -- Pure helper for the returning-phase slot result WIN line so tests can
--- pin the copy without drawing. Fuel-bonus wins fall through to the
--- pending-money line while showFuelBonusText is false.
+-- pin the copy without drawing. Fuel-bonus wins use the pending-money
+-- line; leftover fuel-reward copy keys are gone.
 function M.slotWinLine(run)
     if run.lastSlotRepair and run.lastSlotRepair > 0 then
         return i18n.t("win_repair_line", run.lastSlotReward, run.lastSlotRepair)
@@ -2316,15 +2301,12 @@ function M:draw()
         end
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf(i18n.t("earth_shop_title"), 64, 296, viewport.width - 128, "center")
-        local fuelBonusLine = self:summaryFuelBonusLine()
-        -- Fuel-bonus copy keys were deleted. NEW BEST! is the only extra
-        -- settlement summary line; a combined "NEW BEST! FUEL +N" row
-        -- cannot return because newbest_fuel_combined is gone.
+        -- NEW BEST! is the only extra settlement summary line. Dead
+        -- fuel-bonus copy (NEXT LAUNCH FUEL) was removed; econ item 15
+        -- owns any later redefinition of bankedFuelBonus.
         local summaryExtraLine
         if self.expedition.lastNewBest then
             summaryExtraLine = i18n.t("newbest_label")
-        elseif fuelBonusLine then
-            summaryExtraLine = fuelBonusLine
         end
         love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
         love.graphics.rectangle("fill", 72, 352, viewport.width - 144, 184)

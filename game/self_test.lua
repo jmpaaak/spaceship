@@ -988,8 +988,10 @@ end
 -- PLANET-triple reward).
 local function testFuelBonusTextHidden()
     local i18n = require("game.i18n")
-    assert(PlayScene.showFuelBonusText == false,
-        "showFuelBonusText must gate leftover fuel-reward copy off")
+    assert(PlayScene.showFuelBonusText == nil,
+        "dead showFuelBonusText gate must be removed, not left false")
+    assert(PlayScene.summaryFuelBonusLine == nil,
+        "dead summaryFuelBonusLine helper must be removed")
     local leftoverFuelKeys = {
         "fuel_bonus_line",
         "win_fuel_line",
@@ -1007,8 +1009,8 @@ local function testFuelBonusTextHidden()
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     scene.expedition.bankedFuelBonus = 15
-    assert(scene:summaryFuelBonusLine() == nil,
-        "settlement must not summarize a no-op next-launch fuel bonus")
+    assert(scene.summaryFuelBonusLine == nil,
+        "settlement must not expose a fuel-bonus summary helper")
 
     local rolls = { 6, 6, 6 }
     local nextRoll = 0
@@ -3091,11 +3093,11 @@ function M.run()
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     fuelBonusSummaryScene.expedition.bankedFuelBonus = 0
-    assert(fuelBonusSummaryScene:summaryFuelBonusLine() == nil,
-        "no fuel bonus banked must show no summary line")
+    assert(PlayScene.summaryFuelBonusLine == nil,
+        "no fuel bonus banked must show no summary helper")
     fuelBonusSummaryScene.expedition.bankedFuelBonus = 15
-    assert(fuelBonusSummaryScene:summaryFuelBonusLine() == nil,
-        "banked fuel bonus must stay hidden on the settlement card while it is a no-op")
+    assert(fuelBonusSummaryScene.summaryFuelBonusLine == nil,
+        "banked fuel bonus must not expose a settlement summary helper")
 
     -- Real LOVE runtime capture (GAME_CAPTURE_PHASE=ascending-damage-text,
     -- 1440x2560) showed the green "+$N" sample floating text and the red
