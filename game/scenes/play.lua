@@ -859,6 +859,37 @@ end
 M.hullStatusIconSize = 24
 M.hullStatusIconGap = 8
 
+-- EARTH SHOP steeringStatus icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn steeringStatus printf
+-- ("SHORT $n" / "LEFT $n") with a small gyro-coin octagon,
+-- mirroring hullStatus. Shop-row drawShopIcon sits in
+-- the margin and does not replace this label. Drawn as a
+-- flat octagon (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.steeringStatusIconPoints(cx, cy, size)
+    local w = size * 0.5
+    local h = size * 0.5
+    local inner = size * 0.2
+    return {
+        cx - inner, cy - h,
+        cx + inner, cy - h,
+        cx + w, cy - inner,
+        cx + w, cy + inner,
+        cx + inner, cy + h,
+        cx - inner, cy + h,
+        cx - w, cy + inner,
+        cx - w, cy - inner,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- gyro-coin octagon's right edge and the steeringStatus
+-- label's left edge. Matches hullStatus because both sit
+-- next to always-drawn shop labels.
+M.steeringStatusIconSize = 24
+M.steeringStatusIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2234,6 +2265,22 @@ function M.new(options)
             hullStatusIconImage = img
         end
     end
+    -- assets/effects/shop_steering_status.png is the ComfyUI-generated
+    -- EARTH SHOP steeringStatus gyro-coin octagon
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as hullStatusIconImagePath.
+    -- :draw() scales it to M.steeringStatusIconSize instead of
+    -- M.steeringStatusIconPoints, and falls back to that gyro-coin
+    -- octagon when the image failed to load.
+    local steeringStatusIconImagePath = "assets/effects/shop_steering_status.png"
+    local steeringStatusIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, steeringStatusIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            steeringStatusIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2368,6 +2415,8 @@ function M.new(options)
         statsIconImagePath = statsIconImagePath,
         hullStatusIconImage = hullStatusIconImage,
         hullStatusIconImagePath = hullStatusIconImagePath,
+        steeringStatusIconImage = steeringStatusIconImage,
+        steeringStatusIconImagePath = steeringStatusIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4531,7 +4580,27 @@ function M:draw()
         love.graphics.print(hullStatusLabel, hullStatusStartX + hullStatusIconSpan, row)
         love.graphics.setColor(nextLaunch.steeringAffordable and 0.45 or 1,
             nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.steeringStatus, shopColumnRightX, row, shopColumnRightW, "center")
+        local steeringStatusLabel = nextLaunch.steeringStatus
+        local steeringStatusFont = love.graphics.getFont()
+        local steeringStatusWidth = steeringStatusFont:getWidth(steeringStatusLabel)
+        local steeringStatusIconSpan = M.steeringStatusIconSize + M.steeringStatusIconGap
+        local steeringStatusStartX = shopColumnRightX + (shopColumnRightW - (steeringStatusIconSpan + steeringStatusWidth)) / 2
+        local steeringStatusIconCenterX = steeringStatusStartX + M.steeringStatusIconSize / 2
+        local steeringStatusIconCenterY = row + steeringStatusFont:getHeight() / 2
+        if self.steeringStatusIconImage then
+            local iw, ih = self.steeringStatusIconImage:getDimensions()
+            local scale = M.steeringStatusIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.steeringStatusIconImage, steeringStatusIconCenterX, steeringStatusIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan gyro-coin octagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.steeringStatusIconPoints(steeringStatusIconCenterX, steeringStatusIconCenterY, M.steeringStatusIconSize))
+        end
+        love.graphics.setColor(nextLaunch.steeringAffordable and 0.45 or 1,
+            nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
+        love.graphics.print(steeringStatusLabel, steeringStatusStartX + steeringStatusIconSpan, row)
         row = row + rowStep
         
         love.graphics.setColor(0.4, 0.85, 1)
