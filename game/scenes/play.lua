@@ -1178,6 +1178,21 @@ function M.new(options)
             shopPanelImage = img
         end
     end
+    -- assets/effects/destroyed_panel.png is the ComfyUI-generated
+    -- destroyed-phase summary card panel (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- shopPanelImagePath. :draw() stretches it across the destroyed
+    -- summary box instead of the Lua fill rectangle, and falls back to
+    -- that rectangle when the image failed to load.
+    local destroyedPanelImagePath = "assets/effects/destroyed_panel.png"
+    local destroyedPanelImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedPanelImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedPanelImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1250,6 +1265,8 @@ function M.new(options)
         loadoutPanelImagePath = loadoutPanelImagePath,
         shopPanelImage = shopPanelImage,
         shopPanelImagePath = shopPanelImagePath,
+        destroyedPanelImage = destroyedPanelImage,
+        destroyedPanelImagePath = destroyedPanelImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3159,8 +3176,15 @@ function M:draw()
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
-        love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-        love.graphics.rectangle("fill", 48, 696, viewport.width - 96, 536)
+        if self.destroyedPanelImage then
+            local iw, ih = self.destroyedPanelImage:getDimensions()
+            love.graphics.setColor(1, 1, 1, 0.94)
+            love.graphics.draw(self.destroyedPanelImage, 48, 696, 0,
+                (viewport.width - 96) / iw, 536 / ih)
+        else
+            love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
+            love.graphics.rectangle("fill", 48, 696, viewport.width - 96, 536)
+        end
         self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)

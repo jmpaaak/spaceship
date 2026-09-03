@@ -1782,6 +1782,22 @@ local function testShopPanelSprite()
         "PlayScene must load assets/effects/shop_panel.png into self.shopPanelImagePath")
 end
 
+-- Destroyed-phase summary card is still a Lua fill rectangle. Same
+-- file-existence + always-set-path pattern as testShopPanelSprite.
+-- Graphics-gated destroyedPanelImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run() stays
+-- under Lua's 60-upvalue cap.
+local function testDestroyedPanelSprite()
+    local path = "assets/effects/destroyed_panel.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated destroyed panel sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.destroyedPanelImagePath == path,
+        "PlayScene must load assets/effects/destroyed_panel.png into self.destroyedPanelImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1791,6 +1807,7 @@ local function testCanvasLayoutScale()
     testHudPanelSprite()
     testLoadoutPanelSprite()
     testShopPanelSprite()
+    testDestroyedPanelSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows

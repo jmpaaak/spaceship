@@ -1208,5 +1208,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shopPanelImage for the EARTH SHOP card"
+  },
+  {
+    "path": "assets/effects/destroyed_panel.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "cc83a608-3872-4571-bcc6-fb26ac6d4e9a",
+    "prompt": "pixel art, 16-bit, entire frame filled edge to edge with a dark maroon glass UI card panel texture for a vertical space roguelite ship-destroyed summary card, subtle crimson edge highlight and faint scanlines, metallic UI chrome bezel, no empty margin, no white background, no circle, no icon, no text, no watermark, game UI asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904131,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:28:26Z",
+    "sha256": "7098f7884726d0519ed97655789e1613275b88968df20ea3a17d071faaea0431",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.destroyedPanelImage for the destroyed-phase summary card"
   }
 ]
