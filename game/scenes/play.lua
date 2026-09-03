@@ -308,6 +308,13 @@ M.devPlaceholderAlpha = 0.4
 -- 720×1280 (integer-scale 1 is now a 720×1280 window, not 180×320).
 M.smallFontSize = 32
 M.hudFontSize = 56
+
+-- docs/feedback/INBOX.md "내부 해상도를 발라트로 수준으로 상향" — remaining
+-- decorative px: the floating "+$N"/"-N" sample/damage text box was still
+-- the old 180x320-era 30px half-width / 10px vertical offset. ×4 so it
+-- keeps the same screen fraction on the 720x1280 canvas.
+M.floatingTextBoxHalfWidth = 120
+M.floatingTextBoxTopOffset = 40
 -- Launch-screen Earth disc (world origin, screen y = earthCenterY - cameraY).
 M.earthCenterY = 300
 M.earthRadius = 232
@@ -1608,13 +1615,13 @@ function M:drawMinimap()
     end
     if view.sun then
         love.graphics.setColor(1, 0.85, 0.25)
-        love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, 2.6)
+        love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, minimap.markerSunRadius)
     end
     for _, galaxy in ipairs(view.galaxies) do
         if galaxy.inside then
             if galaxy.id == "milkyway" then
                 love.graphics.setColor(0.25, 0.55, 1)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius)
             elseif galaxy.hub then
                 -- Checkpoint galaxy: bigger dot plus a shimmering ring so it
                 -- reads as distinct from an ordinary galaxy on the chart
@@ -1622,25 +1629,25 @@ function M:drawMinimap()
                 -- self.time for a "sparkling" beacon feel.
                 local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
                 love.graphics.setColor(0.9, 0.75, 0.3)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius)
                 love.graphics.setColor(1, 0.95, 0.6, pulse)
-                love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
+                love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRingRadius)
             else
                 love.graphics.setColor(0.9, 0.75, 0.3)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius)
             end
         end
     end
     love.graphics.setColor(0.3, 0.85, 1)
-    love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, 2)
+    love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius)
     love.graphics.setColor(1, 1, 1)
-    love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, 1.7)
+    love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, minimap.markerPlayerFillRadius)
     love.graphics.setColor(1, 1, 1, 0.9)
-    love.graphics.circle("line", cx + view.player.x, cy + view.player.y, 2.4)
+    love.graphics.circle("line", cx + view.player.x, cy + view.player.y, minimap.markerPlayerLineRadius)
     if view.beyond then
         love.graphics.setColor(1, 0.55, 0.3)
         local rim = size / 2 - 5
-        love.graphics.circle("fill", cx + view.returnDx * rim, cy + view.returnDy * rim, 2.2)
+        love.graphics.circle("fill", cx + view.returnDx * rim, cy + view.returnDy * rim, minimap.markerBeyondRadius)
         local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
@@ -1671,7 +1678,7 @@ function M:drawMinimap()
         local rim = size / 2 - 9
         local tipX = cx + view.checkpointDx * rim
         local tipY = cy + view.checkpointDy * rim
-        love.graphics.circle("fill", tipX, tipY, 1.8)
+        love.graphics.circle("fill", tipX, tipY, minimap.markerCheckpointTipRadius)
         local perpX, perpY = -view.checkpointDy, view.checkpointDx
         love.graphics.polygon("fill",
             tipX + view.checkpointDx * 3, tipY + view.checkpointDy * 3,
@@ -1848,7 +1855,8 @@ function M:draw()
             else
                 love.graphics.setColor(0.45, 1, 0.6, alpha)
             end
-            love.graphics.printf(ft.text, fx - 30, fy - 10, 60, "center")
+            love.graphics.printf(ft.text, fx - M.floatingTextBoxHalfWidth,
+                fy - M.floatingTextBoxTopOffset, M.floatingTextBoxHalfWidth * 2, "center")
         end
     end
     for _, particle in ipairs(self.particles) do

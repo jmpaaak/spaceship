@@ -21,6 +21,23 @@ M.mapRadius = M.size / 2 - M.inset
 -- handful of neighboring galaxies fit as distinct dots.
 M.viewRadius = world.galaxyCellSize * 2.5
 
+-- docs/feedback/INBOX.md "내부 해상도를 발라트로 수준으로 상향" — remaining
+-- decorative px: the small marker dot/ring radii drawn on the minimap
+-- chart (sun, galaxy dots, Earth, player, beyond-chart arrow, checkpoint
+-- arrow) were still the old 180x320-era pixel sizes. ×4 so they keep the
+-- same screen fraction on the 720x1280 canvas / M.size (which was already
+-- scaled 48 -> 192, i.e. also ×4).
+M.markerSunRadius = 10.4
+M.markerGalaxyHomeRadius = 8.8
+M.markerGalaxyHubRadius = 9.2
+M.markerGalaxyHubRingRadius = 16
+M.markerGalaxyPlainRadius = 6
+M.markerEarthRadius = 8
+M.markerPlayerFillRadius = 6.8
+M.markerPlayerLineRadius = 9.6
+M.markerBeyondRadius = 8.8
+M.markerCheckpointTipRadius = 7.2
+
 -- Reference "known universe" circle around Earth. This is NOT a collision
 -- wall -- ships may fly arbitrarily far. Past this radius the minimap
 -- switches to the beyond-chart readout (distance + return bearing).

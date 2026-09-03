@@ -1038,6 +1038,19 @@ local function testCanvasLayoutScale()
     assert(PlayScene.shopStatusColumnX == 464 and PlayScene.shopStatusColumnW == 208)
     assert(PlayScene.shopColumnLeftX == 64 and PlayScene.shopColumnLeftW == 272)
     assert(PlayScene.shopColumnRightX == 352 and PlayScene.shopColumnRightW == 272)
+    -- Remaining decorative px flagged by the previous slice's "남은 작업"
+    -- note: the floating "+$N"/"-N" text box and the minimap's small marker
+    -- dot/ring radii were still the old 180x320-era pixel sizes. ×4 them so
+    -- they keep the same screen fraction on the 720x1280 canvas.
+    assert(PlayScene.floatingTextBoxHalfWidth == 120 and PlayScene.floatingTextBoxTopOffset == 40)
+    assert(minimap.markerSunRadius == 10.4)
+    assert(minimap.markerGalaxyHomeRadius == 8.8)
+    assert(minimap.markerGalaxyHubRadius == 9.2 and minimap.markerGalaxyHubRingRadius == 16)
+    assert(minimap.markerGalaxyPlainRadius == 6)
+    assert(minimap.markerEarthRadius == 8)
+    assert(minimap.markerPlayerFillRadius == 6.8 and minimap.markerPlayerLineRadius == 9.6)
+    assert(minimap.markerBeyondRadius == 8.8)
+    assert(minimap.markerCheckpointTipRadius == 7.2)
 end
 
 function M.run()

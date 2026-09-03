@@ -1085,3 +1085,11 @@ preflight READY(engine tests/package PASS, git diff clean)로 시작. `git statu
 ## Archived from STATUS.md (2026-09-03 20:20)
 
 ## 내부 해상도 720×1280 상향 — HUD/터치/미니맵/조이스틱/폰트/상점/지구/로드아웃 ×4 (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 20:26)
+
+## 깨진 우주선/행성 스프라이트 재생성 (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 20:29)
+
+preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 버그 항목 「깨진 우주선/행성 스프라이트 재생성」을 처리했다.
