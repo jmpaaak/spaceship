@@ -983,4 +983,33 @@ of those 7 cards had zero effect on actual in-flight steering, another
   after.
 - `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN.
 
+## Item 9/14 (A) `money` run-state gap — `settle(run)` closes the last (A) additive gap
+
+`money` was the last of the original five (A) additive effect types
+(speed/sampleSellValue/money/climbSpeed/hullDurability) to still be dead
+content: `gearModule.equippedTotals(...).money` has been computed since
+item 14's first slice, and `hull_parts.json`/`engine_parts.json` have
+carried `money` cards since item 9's expansion, but no run-state function
+ever read that total. Unlike its (A) siblings (which are per-tick rates or
+per-sample bonuses), `money` reads as a flat expedition-completion payout,
+so it is wired into `settle(run)` — the single place a run's `money`
+balance is credited after a completed expedition returns to Earth — rather
+than into a per-frame/per-sample function.
+
+- New `game/expedition.lua` `M.equippedHullMoneyBonus(run)` reads
+  `gearModule.equippedTotals(run.equippedGear or {}).money` — hull-only,
+  matching climbSpeed/sampleSellValue/hullDurability/speed's hull-scoped
+  design (item 9 calls these the "선체(조커형)" combo payoff stats).
+- `settle(run)` now adds this bonus into the settlement `payout` alongside
+  `lastSampleSettlement`/`lastSlotSettlement`, so it is credited to
+  `run.money` and reflected in `run.lastSettlement` exactly once per
+  completed expedition.
+- `game/self_test.lua`'s new `testGearMoneyRunWiring()` regression-checks:
+  an unequipped run's settlement payout equals the unmodified pending
+  sample+slot value (40+10=50), a `money +15` hull card raises the payout
+  to exactly 65, and the same effect on an ENGINE-slot card is correctly
+  ignored (hull-only scope, still 50). RED confirmed before the fix (`got
+  50`, expected 65), GREEN after.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN.
+
 

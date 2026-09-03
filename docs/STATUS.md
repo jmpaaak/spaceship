@@ -1,4 +1,19 @@
 # STATUS
+## [gear 레인] 항목9/14 (A) `money` gap — 5개 (A) 가산형 중 마지막 잔여였던 설정금 정산 보너스를 배선 (완료, 2026-09-03)
+
+레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료 상태였고, 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 이번 사이클에도 다시 적용했다. 항목14의 원 (A) 5종(speed/sampleSellValue/money/climbSpeed/hullDurability) 중 speed(직전 사이클)/climbSpeed/sampleSellValue/hullDurability는 이미 run에 배선됐지만, `money`(선체 부품의 소지금 직접 증감 기여)는 `hull_parts.json`에 3종, `engine_parts.json`에도 다수 카드가 실재함에도 `gearModule.equippedTotals(...).money`를 읽는 run 함수가 단 하나도 없어 조금도 실제 소지금에 반영되지 않는 죽은 콘텐츠였다 — 항목14의 5개 (A) 가산형 전체 중 유일하게 남아있던 마지막 gap이었다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- TDD: `game/self_test.lua`에 신규 `testGearMoneyRunWiring()`을 먼저 추가했다(RED 확인: "a money +15 hull card must raise the settlement payout from 50 to 65 ... got 50" 실패).
+- `game/expedition.lua`에 신규 `M.equippedHullMoneyBonus(run)`(`gearModule.equippedTotals(run.equippedGear or {}).money` 읽기, hull 전용 — climbSpeed/sampleSellValue/hullDurability/speed와 동일하게 항목9가 "선체(조커형)" 콤보 페이오프로 명시한 스코프)를 추가했다.
+- `money`는 다른 (A) 형제들(틱당 비율 또는 표본당 보너스)과 달리 원정 완료 시 1회 지급되는 정산 보너스로 자연스럽게 읽혀, 매 프레임/매 표본 함수가 아니라 `settle(run)`(원정이 지구로 복귀해 정산되는 유일한 지점)에 배선했다 — `payout = lastSampleSettlement + lastSlotSettlement + M.equippedHullMoneyBonus(run)`.
+- `testGearMoneyRunWiring()` 회귀 검증: 미장착 run은 표본+슬롯 pending 값 그대로 정산(40+10=50), `money +15` 선체 카드 장착 시 정확히 65로 정산, 동일 카드를 엔진 슬롯에 장착하면 hull 전용 스코프대로 제외되어 50 그대로 유지.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `docs/GEAR_SCHEMA.md`에 "Item 9/14 (A) `money` run-state gap — `settle(run)` closes the last (A) additive gap" 섹션을 신규 추가했다.
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 9 하위에 처리 상황을 append했다.
+- **이로써 항목14의 (A) 가산형 5종(speed/sampleSellValue/money/climbSpeed/hullDurability) 전체가 실제 run 상태에 배선되어, 지금까지 이 레인이 발견한 "스키마 등록만 되고 죽어있던" (A) 카테고리 잔여 gap이 모두 닫혔다.**
+- 다음 사이클 다음 슬라이스: 이 감사 패턴을 (B)~(G) 카테고리 각 효과 타입에도 재적용해 다른 잔여 gap이 남아있는지 재검증(예: 엔진 부품 쪽 (A) 카드들이 hull과 동일한 스코프 설계 의도를 만족하는지, 엔진 전용 `money`/`climbSpeed` 카드가 있다면 그 스코프가 문서화된 설계와 일치하는지 확인), 또는 항목7(획득 경로 3원화) 순수 함수 계층 검토.
+
 ## [gear 레인] 항목9/14 (A) `speed` gap — 선체 `speed` 카드 7종이 조종 속도에 반영되지 않던 것을 발견·배선 (완료, 2026-09-03)
 
 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료 상태였고, 직전 사이클이 `hullDurability` gap을 처리하며 "이 감사 패턴을 다른 (A) 가산형 잔여에도 계속 적용" 하도록 다음 슬라이스로 명시했다. 이번 사이클에서 그 잔여를 찾아 처리했다: 항목14의 원 (A) 5종(speed/sampleSellValue/money/climbSpeed/hullDurability) 중 climbSpeed/sampleSellValue/hullDurability는 이미 run에 배선됐지만, `speed`(선체 부품의 조종/기동 속도 기여, 엔진 부품의 퍼센트형 `steeringResponsiveness`(G)와는 별개)는 `hull_parts.json`에 7종 카드가 실재함에도 `M.steeringSpeed(run)`을 포함한 어떤 run 함수도 `equippedTotals(...).speed`를 읽지 않아 조종 속도에 조금도 반영되지 않는 죽은 콘텐츠였다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.

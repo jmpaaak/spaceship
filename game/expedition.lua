@@ -200,10 +200,24 @@ function M.beginReturn(run)
     return true
 end
 
+-- Item 9/14 (A) `money` gap: the last of the original five (A) additive
+-- effect types (speed/sampleSellValue/money/climbSpeed/hullDurability) to
+-- go unread by any run function -- gear.equippedTotals has summed a part's
+-- flat `money` effect since item 14's first slice, and hull_parts.json has
+-- carried `money` cards (hull_reserve_tank +2 more) since item 9's
+-- expansion, but nothing ever added that total to run.money. Kept hull-only
+-- (matching climbSpeed/sampleSellValue/hullDurability/speed's hull-scoped
+-- design, since item 9 calls these the "선체(조커형)" combo payoff stats)
+-- and applied once per settlement (a flat bonus, not a per-sample/per-tick
+-- rate like its (A) siblings) rather than per-sample.
+function M.equippedHullMoneyBonus(run)
+    return gearModule.equippedTotals(run.equippedGear or {}).money or 0
+end
+
 local function settle(run)
     run.lastSampleSettlement = run.pendingSampleValue
     run.lastSlotSettlement = run.pendingSlotReward
-    local payout = run.lastSampleSettlement + run.lastSlotSettlement
+    local payout = run.lastSampleSettlement + run.lastSlotSettlement + M.equippedHullMoneyBonus(run)
     run.money = run.money + payout
     run.lastSettlement = payout
     run.lastSampleCount = run.sampleCount
