@@ -1163,6 +1163,21 @@ function M.new(options)
             loadoutPanelImage = img
         end
     end
+    -- assets/effects/shop_panel.png is the ComfyUI-generated EARTH SHOP
+    -- card panel (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as loadoutPanelImagePath. :draw()
+    -- stretches it across the settlement shop box instead of the Lua fill
+    -- rectangle, and falls back to that rectangle when the image failed
+    -- to load.
+    local shopPanelImagePath = "assets/effects/shop_panel.png"
+    local shopPanelImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shopPanelImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shopPanelImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1233,6 +1248,8 @@ function M.new(options)
         hudPanelImagePath = hudPanelImagePath,
         loadoutPanelImage = loadoutPanelImage,
         loadoutPanelImagePath = loadoutPanelImagePath,
+        shopPanelImage = shopPanelImage,
+        shopPanelImagePath = shopPanelImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3028,8 +3045,15 @@ function M:draw()
         -- scale 1), not just the previous 34px minimum.
         self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousFont = love.graphics.getFont()
-        love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
-        love.graphics.rectangle("fill", 48, 280, viewport.width - 96, 1000)
+        if self.shopPanelImage then
+            local iw, ih = self.shopPanelImage:getDimensions()
+            love.graphics.setColor(1, 1, 1, 0.94)
+            love.graphics.draw(self.shopPanelImage, 48, 280, 0,
+                (viewport.width - 96) / iw, 1000 / ih)
+        else
+            love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
+            love.graphics.rectangle("fill", 48, 280, viewport.width - 96, 1000)
+        end
         -- Faint alternating background bands behind each tappable
         -- settlementTouchRows entry. Drawn before any text so it never
         -- overlaps or obscures the already real-capture-verified printf

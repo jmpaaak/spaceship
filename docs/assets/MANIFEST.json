@@ -1183,5 +1183,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.loadoutPanelImage for the launch LOADOUT card"
+  },
+  {
+    "path": "assets/effects/shop_panel.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "34e61be0-bfd9-4e15-b446-1d0f3de02af8",
+    "prompt": "pixel art, 16-bit, entire frame filled edge to edge with a dark navy glass UI shop card panel texture for a vertical space roguelite earth market screen, subtle gold edge highlight and faint scanlines, metallic UI chrome bezel, no empty margin, no white background, no circle, no icon, no text, no watermark, game UI asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904130,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:24:37Z",
+    "sha256": "b0cf438b00351cbda5321b7fd2c362c816bfaff1d6ed70a6327458edf9ffe152",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shopPanelImage for the EARTH SHOP card"
   }
 ]
