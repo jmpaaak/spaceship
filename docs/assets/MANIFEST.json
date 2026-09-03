@@ -783,5 +783,30 @@
     "width": 64,
     "height": 64,
     "qa": "HUD hull shield sprite wired into PlayScene hullIconImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/hud_speed.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "8f370fce-d335-418d-8712-ff1a330fdc23",
+    "prompt": "pixel art, 16-bit, small speedometer HUD icon sprite, semicircular analog gauge dial with a needle pointing up-right, cyan-green metallic instrument, isolated steering speed icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904114,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:17:41Z",
+    "sha256": "2f467d69d812602e0cf25c0b5a177984bd14b9d4fd352d293820f8beed496868",
+    "width": 64,
+    "height": 64,
+    "qa": "HUD speedometer sprite wired into PlayScene speedIconImage; pipeline PNG signature/decode gate"
   }
 ]

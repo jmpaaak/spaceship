@@ -920,6 +920,20 @@ function M.new(options)
             hullIconImage = img
         end
     end
+    -- assets/effects/hud_speed.png is the ComfyUI-generated STEER SPEED HUD
+    -- speedometer (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as hullIconImagePath. draw() scales it
+    -- to M.speedIconSize instead of M.speedIconPoints, and falls back to
+    -- that semicircle+needle polygon when the image failed to load.
+    local speedIconImagePath = "assets/effects/hud_speed.png"
+    local speedIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, speedIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            speedIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -958,6 +972,8 @@ function M.new(options)
         cashIconImagePath = cashIconImagePath,
         hullIconImage = hullIconImage,
         hullIconImagePath = hullIconImagePath,
+        speedIconImage = speedIconImage,
+        speedIconImagePath = speedIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2568,8 +2584,17 @@ function M:draw()
         local steeringTextX = 64 + (viewport.width - 128 - steeringTextWidth) / 2
         local speedIconCenterX = steeringTextX - M.speedIconGap - M.speedIconSize / 2
         local speedIconCenterY = row + love.graphics.getFont():getHeight() / 2
-        love.graphics.polygon("fill",
-            M.speedIconPoints(speedIconCenterX, speedIconCenterY, M.speedIconSize))
+        if self.speedIconImage then
+            local iw, ih = self.speedIconImage:getDimensions()
+            local scale = M.speedIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.speedIconImage, speedIconCenterX, speedIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: mint speedometer polygon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.speedIconPoints(speedIconCenterX, speedIconCenterY, M.speedIconSize))
+        end
         love.graphics.setColor(0.6, 1, 0.85)
         love.graphics.printf(loadout.steering, 64, row, viewport.width - 128, "center")
         love.graphics.setFont(previousLaunchFont)

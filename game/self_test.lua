@@ -1528,6 +1528,20 @@ local function testHullIconSprite()
         "PlayScene must load assets/effects/hud_shield.png into self.hullIconImagePath")
 end
 
+-- HUD steering-speed meter is still a Lua semicircle+needle polygon. Same
+-- file-existence + always-set-path pattern as testHullIconSprite.
+-- Graphics-gated speedIconImage cannot be asserted under GAME_HEADLESS=1.
+local function testSpeedIconSprite()
+    local path = "assets/effects/hud_speed.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated HUD speedometer sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.speedIconImagePath == path,
+        "PlayScene must load assets/effects/hud_speed.png into self.speedIconImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3407,6 +3421,7 @@ function M.run()
     testJoystickKnobSprite()
     testCashIconSprite()
     testHullIconSprite()
+    testSpeedIconSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")
