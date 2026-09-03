@@ -981,6 +981,22 @@ function M.new(options)
             playerMarkerImage = img
         end
     end
+    -- assets/effects/minimap_sun.png is the ComfyUI-generated
+    -- sun waypoint marker (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- playerMarkerImagePath. drawMinimap() scales it to
+    -- 2 * minimap.markerSunRadius instead of the Lua filled
+    -- circle, and falls back to that circle when the image
+    -- failed to load.
+    local sunMarkerImagePath = "assets/effects/minimap_sun.png"
+    local sunMarkerImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, sunMarkerImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            sunMarkerImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1027,6 +1043,8 @@ function M.new(options)
         checkpointArrowImagePath = checkpointArrowImagePath,
         playerMarkerImage = playerMarkerImage,
         playerMarkerImagePath = playerMarkerImagePath,
+        sunMarkerImage = sunMarkerImage,
+        sunMarkerImagePath = sunMarkerImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2127,8 +2145,20 @@ function M:drawMinimap()
         end
     end
     if view.sun then
-        love.graphics.setColor(1, 0.85, 0.25)
-        love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, minimap.markerSunRadius)
+        if self.sunMarkerImage then
+            local iw, ih = self.sunMarkerImage:getDimensions()
+            local drawSize = minimap.markerSunRadius * 2
+            local scale = drawSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(
+                self.sunMarkerImage,
+                cx + view.sun.x, cy + view.sun.y, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: gold filled circle, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.85, 0.25)
+            love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, minimap.markerSunRadius)
+        end
     end
     for _, galaxy in ipairs(view.galaxies) do
         if galaxy.inside then

@@ -883,5 +883,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap player marker sprite wired into PlayScene playerMarkerImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_sun.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "662cbeb7-361f-480d-aad1-f80bfb7259d2",
+    "prompt": "pixel art, 16-bit, small golden yellow sun HUD icon sprite, bright yellow-orange solar disc with tiny corona rays, isolated minimap sun marker, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904118,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:35:50Z",
+    "sha256": "6f0f56b7473536ddb24b30624696ac9c011ff43d951eed6ef35d0fea7efc65de",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap sun marker sprite wired into PlayScene sunMarkerImage; pipeline PNG signature/decode gate"
   }
 ]
