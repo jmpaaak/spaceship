@@ -1,34 +1,19 @@
 # STATUS
 
-preflight PASS 진입 및 이번 사이클 작업 완료.
+docs: INBOX 항목 7/8 처리 완료로 이동 (token-optimization rule).
 
-- Settlement-phase (EARTH SHOP return summary card) `peak_dist_line` and
-  `newbest_label` were the last two bare `printf` calls in the settlement
-  summary block after all other labels had received icons.
-  - `game/self_test.lua`: added `testSettlementPeakDistIconSprite()` and
-    `testSettlementNewBestIconSprite()` (file-existence + always-set-path +
-    Lua fallback geometry assertions). Both called from `testCanvasLayoutScale`
-    (RED 확인 후 GREEN).
-  - `game/scenes/play.lua`: `M.settlementPeakDistIconPoints` (mountain-peak,
-    4 verts, identical shape to `destroyedPeakDistIconPoints`),
-    `M.settlementNewBestIconPoints` (8-point diamond star, 8 verts, identical
-    to `destroyedNewBestIconPoints`), corresponding `IconSize = 24` /
-    `IconGap = 8`; `self.settlementPeakDistIconImage(Path)` and
-    `self.settlementNewBestIconImage(Path)` loaded in `new()` (reusing
-    `assets/effects/destroyed_peak_dist.png` and `destroyed_new_best.png`
-    sprites — identical visual intent, no new ComfyUI generation needed).
-    Draw block replaces bare `printf` with centered icon+label pair matching
-    the destroyed-phase pattern.
-- `GAME_HEADLESS=1 GAME_UNIT=1 love .` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`).
-- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`,
-  `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:160`, `ASSET_MANIFEST_OK`).
-- INBOX 처리 대기 항목 6은 gear, 7/8/11/15는 econ, 9/10/12/13/14는 gear.
-  이번 사이클에서 다른 레인 항목은 건드리지 않음.
+- INBOX 처리 대기에서 항목 7(함선 장비 획득 경로 3원화)과 항목 8(행성 탐사
+  보상은 표본만, 정산은 체크포인트에서만)을 처리 완료 섹션으로 이동했다.
+  두 항목 모두 econ 레인이 2026-09-03에 엔진+UI 연결까지 완료하고 GREEN을
+  확인했으며, 다음 사이클이 re-read해도 할 일이 남아있지 않다.
+- 코드 변경 없음 — INBOX.md 문서 정리 전용 커밋.
+- `make verify LOVE=/Users/jm/.local/bin/love` 는 직전 커밋(cadbd82)에서
+  GREEN이 확인된 상태이며 이번 커밋은 코드/테스트 변경 없음.
+- 처리 대기에 남은 항목: 6(gear), 9/10/12/13/14(gear), 15(econ).
+  main 레인이 단독 착수 가능한 항목 없음 — 다음 사이클은 econ/gear 레인
+  완료 후 연동 가능한 새 요청이 INBOX에 들어올 때까지 대기.
 
 ## Next Slice
-- All settlement-phase and destroyed-phase summary printfs now have icons.
-  No remaining bare printf surfaces in either block.
-- 처리 대기 항목 모두 econ(7/8/11/15) 또는 gear(6/9/10/12/13/14) 레인 소유.
-  main 레인이 단독 착수 가능한 표면은 소진됨 — 다음 사이클은 econ/gear 레인
-  완료 후 연동 가능한 새 요청이 INBOX에 들어올 때까지 대기하거나, STATUS.md
-  확인 후 새 요청을 처리한다.
+- main 레인 단독 착수 가능한 INBOX 항목 소진.
+  다음 사이클: 새 사용자 피드백 또는 econ/gear 완료 후 연동 작업.
+
