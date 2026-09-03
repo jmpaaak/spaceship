@@ -601,6 +601,34 @@ end
 M.messageBannerIconSize = 24
 M.messageBannerIconGap = 8
 
+-- EARTH SHOP panel title icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn earth_shop_title printf with a
+-- small storefront-awning silhouette, mirroring the collision
+-- message burst-star. Drawn as a flat pentagon (even-length
+-- {x,y,...} list, no love.graphics calls) so headless tests can
+-- pin geometry: horizontally symmetric around cx, spans above
+-- and below cy.
+function M.shopTitleIconPoints(cx, cy, size)
+    local w = size * 0.45
+    local peak = size * 0.5
+    local eaves = size * 0.1
+    local bottom = size * 0.45
+    return {
+        cx, cy - peak,
+        cx + w, cy - eaves,
+        cx + w, cy + bottom,
+        cx - w, cy + bottom,
+        cx - w, cy - eaves,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- storefront's right edge and the EARTH SHOP title's left edge.
+-- Matches the message-banner burst-star because both sit next
+-- to always-drawn panel/banner titles.
+M.shopTitleIconSize = 24
+M.shopTitleIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1797,6 +1825,22 @@ function M.new(options)
             messageBannerIconImage = img
         end
     end
+    -- assets/effects/shop_title.png is the ComfyUI-generated
+    -- EARTH SHOP panel title storefront
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as messageBannerIconImagePath.
+    -- :draw() scales it to M.shopTitleIconSize instead of
+    -- M.shopTitleIconPoints, and falls back to that storefront
+    -- pentagon when the image failed to load.
+    local shopTitleIconImagePath = "assets/effects/shop_title.png"
+    local shopTitleIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shopTitleIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shopTitleIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1913,6 +1957,8 @@ function M.new(options)
         floatingDamageIconImagePath = floatingDamageIconImagePath,
         messageBannerIconImage = messageBannerIconImage,
         messageBannerIconImagePath = messageBannerIconImagePath,
+        shopTitleIconImage = shopTitleIconImage,
+        shopTitleIconImagePath = shopTitleIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3945,7 +3991,27 @@ function M:draw()
             end
         end
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf(i18n.t("earth_shop_title"), 64, 296, viewport.width - 128, "center")
+        local shopTitle = i18n.t("earth_shop_title")
+        local shopTitleFont = love.graphics.getFont()
+        local shopTitleWidth = shopTitleFont:getWidth(shopTitle)
+        local shopTitleIconSpan = M.shopTitleIconSize + M.shopTitleIconGap
+        local shopTitleStartX = viewport.width / 2 - (shopTitleIconSpan + shopTitleWidth) / 2
+        local shopTitleIconCenterX = shopTitleStartX + M.shopTitleIconSize / 2
+        local shopTitleIconCenterY = 296 + shopTitleFont:getHeight() / 2
+        if self.shopTitleIconImage then
+            local iw, ih = self.shopTitleIconImage:getDimensions()
+            local scale = M.shopTitleIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.shopTitleIconImage, shopTitleIconCenterX, shopTitleIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan storefront awning, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.7, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.shopTitleIconPoints(shopTitleIconCenterX, shopTitleIconCenterY, M.shopTitleIconSize))
+        end
+        love.graphics.setColor(0.7, 0.9, 1)
+        love.graphics.print(shopTitle, shopTitleStartX + shopTitleIconSpan, 296)
         -- NEW BEST! is the only extra settlement summary line. Dead
         -- fuel-bonus copy (NEXT LAUNCH FUEL) was removed; econ item 15
         -- owns any later redefinition of bankedFuelBonus.

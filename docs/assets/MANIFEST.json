@@ -1758,5 +1758,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.messageBannerIconImage for collision/message banners; Lua burst-star fallback"
+  },
+  {
+    "path": "assets/effects/shop_title.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "4c41dcdd-0f4d-4ce6-89a9-6ef7ca331a14",
+    "prompt": "pixel art, 16-bit, small cyan storefront shop-sign HUD icon sprite, simple peaked awning market stall, isolated EARTH SHOP title HUD icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904153,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T20:10:08Z",
+    "sha256": "6cf0ac08825e7bcde8683cde5857b99e3ce3a2245332ecb622a0a2657c784b7f",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shopTitleIconImage for EARTH SHOP title; Lua storefront-awning fallback"
   }
 ]
