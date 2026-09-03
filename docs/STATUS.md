@@ -1,25 +1,13 @@
 # STATUS
 
-## 2026-09-03 사이클 — 재확인만, 신규 코드 변경 없음(스코프 4항목 전부 완결 유지)
+## 2026-09-03 신규 사이클 — 재확인만, 신규 코드 변경 없음(스코프 4항목 전부 완결 유지)
 
-preflight READY(`engine tests and package` PASS, `git diff` clean)를 확인했다. 세션 시작 `git status --short`가 clean했고, `work-econ`가 `origin/spaceship-econ`을 추적하며 완전히 fast-forward(새 원격 커밋 없음)임을 확인했다.
+preflight READY(`engine tests and package` PASS, `git diff` clean)를 확인했다. 세션 시작 시 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`에 직전 사이클이 남긴 미커밋 압축(STATUS.md 옛 항목을 STATUS_HISTORY.md로 이동, 내용 손실 없음)이 있었고, 그대로 보존했다.
 
-- 이 레인 스코프 순서(항목7→8→11→15) 4항목 모두 `docs/feedback/INBOX.md`의 `## 처리 완료`로 이미 이동되어 있음을 확인했다.
-- `game/expedition.lua`/`game/scenes/play.lua`/`main.lua`/`game/self_test.lua`를 `beginReturn|useSlot|slotSpin|returnControls|slotButtonState|"returning"` 정규식으로 전체 재검색 — 실제 코드 참조는 0건이고, 오직 부재를 검증하는 주석(`game/expedition.lua` 4줄)과 회귀 테스트 단언(`assert(expedition.beginReturn == nil, ...)`, `assert(expedition.useSlot == nil, ...)`)만 남아있음을 재확인했다.
-- `make verify LOVE=/Users/jm/.local/bin/love`를 재실행해 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`)임을 확인했다.
-- 코드 변경 없음 — 재확인할 대상이 이미 전부 완결 상태였고 새로 발견된 불일치가 없었다. `docs/feedback/INBOX.md`의 항목 7/8/15 완료 노트에 이번 사이클 재확인 기록만 append했다.
-- 다음 사이클: `loop/PROMPT.md`가 이 레인에 새 스코프를 지정하기 전까지는 착수할 신규 코드 작업이 없다. preflight READY 확인 후 대기하거나, 사용자/운영자의 다음 지시를 따른다.
-
-## (이전 사이클 기록)
-preflight FAIL(`engine tests and package: PASS`, `git diff` 검사: `docs/STATUS_HISTORY.md` 1127/1137/1147행에 leftover conflict marker)를 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
-
-- 세션 시작 `git status --short`에서 `work-econ` 브랜치가 진행 중인 merge 상태(`docs/STATUS.md`/`docs/feedback/INBOX.md` UU unmerged, `docs/STATUS_HISTORY.md` modified)였음을 확인했다 — 직전 사이클이 `git merge origin/spaceship-econ`을 시작했으나 `docs/STATUS_HISTORY.md`의 conflict marker(`<<<<<<< HEAD` / `=======` / `>>>>>>> origin/spaceship-econ`, 1127/1137/1147행)를 해소하지 않고 merge를 미완료 상태로 남긴 것이 원인이었다.
-- `docs/STATUS_HISTORY.md`의 세 marker 지점을 확인한 결과 두 쪽(HEAD의 "세션 시작 시 남아있던 미커밋 항목 11(a) 최종 슬라이스" 절과 origin/spaceship-econ의 "문서 정리 — 항목7/8/11/15 처리대기 항목을 처리완료로 이동" 절)이 서로 충돌하지 않는 별개의 사이클 기록이었으므로 두 내용을 모두 보존하고 marker 세 줄만 제거했다(내용 손실 없음).
-- `docs/STATUS.md`/`docs/feedback/INBOX.md`는 이미 내용상 conflict marker 없이 정리되어 있었음을 `grep`으로 확인 — merge 도구가 자동 병합했으나 `git add`로 resolve 완료 처리만 누락된 상태였다. 세 파일 모두 `git add` 후 `git commit`으로 merge를 완결했다(커밋 `6197585`).
-- `git grep -n "^<<<<<<<\|^=======$\|^>>>>>>>"` 저장소 전체 재검색으로 leftover marker가 더 없음을 확인했다.
-- `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
-- `git push origin work-econ:spaceship-econ` 완료(`a2932d2..6197585`), `origin/spaceship-econ` fetch로 반영 확인, `git status --short`가 완전히 clean함을 확인했다.
-- 이번 슬라이스는 preflight가 지목한 정확한 실패(conflict marker) 진단·제거 및 merge 완결만 수행했다(신규 게임 로직/UI 변경 없음). econ 레인 스코프(항목7→8→11→15)는 이미 전부 완료 상태이며 이번 merge로도 그 결론은 변하지 않는다.
+- 이 레인 스코프 순서(항목7→8→11→15) 4항목 모두 `docs/feedback/INBOX.md`의 `## 처리 완료`에 이미 있음을 재확인했다.
+- `game/expedition.lua`/`game/scenes/play.lua`/`main.lua`/`game/self_test.lua`를 `beginReturn|useSlot|slotSpin|returnControls|slotButtonState` 패턴으로 재검색 — 실제 코드 참조 0건, 부재를 검증하는 주석/회귀 테스트만 존재함을 재확인했다.
+- `make verify LOVE=/Users/jm/.local/bin/love` 재실행 — 전체 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `tools.test_verify_asset_manifest` 9건, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`).
+- 코드 변경 없음 — 착수할 신규 스코프 지시가 `loop/PROMPT.md`에 없다. `docs/feedback/INBOX.md`도 4항목 모두 이미 완료 상태라 append할 신규 내용이 없다.
 - 다음 사이클: `loop/PROMPT.md`가 이 레인에 새 스코프를 지정하기 전까지는 착수할 신규 코드 작업이 없다. preflight READY 확인 후 대기하거나, 사용자/운영자의 다음 지시를 따른다.
 
 ## (이전 사이클 기록)
