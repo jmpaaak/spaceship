@@ -1688,6 +1688,79 @@ local function testGearHullDurabilityRunWiring()
             .. tostring(stackedRun.maxDurability))
 end
 
+-- Item 9/14 (A) gap audit continued: `hullDurability` (previous slice) and
+-- `sampleSellValue`/`sellMultiplier` (slice before that) were both found to
+-- be validated-and-loaded but never actually READ by any run-state
+-- function -- this lane's recurring "문서-코드 정합성 감사" pattern. The
+-- original item 14 (A) list has five additive types
+-- (speed/sampleSellValue/money/climbSpeed/hullDurability); climbSpeed,
+-- sampleSellValue and hullDurability are now all wired, but `speed` (a hull
+-- card's contribution to the ship's steering/maneuvering rate, distinct
+-- from engine parts' percentage-based `steeringResponsiveness` (G)) has
+-- never been read by `M.steeringSpeed(run)` -- every bundled `speed` hull
+-- card (7 of them per docs/GEAR_SCHEMA.md/hull_parts.json) is equippable
+-- but has zero effect on actual in-flight steering. This test closes that
+-- gap the same way hullDurability closed its own: hull-scoped (matching
+-- climbSpeed/sampleSellValue/hullDurability's hull-only design), additive
+-- on top of the existing base+upgrade formula, stacking with (not
+-- replacing) the engine-part percentage multiplier already applied.
+local function testGearHullSpeedRunWiring()
+    local expedition = require("game.expedition")
+
+    -- No gear equipped: steeringSpeed must equal the unmodified pre-wiring
+    -- base+upgrade formula (regression baseline).
+    local bareRun = expedition.new({ baseSteeringSpeed = 55, steeringUpgradeLevel = 0 })
+    local baseline = expedition.steeringSpeed(bareRun)
+    assert(baseline == 55,
+        "an unequipped fresh run's steeringSpeed must equal baseSteeringSpeed 55, got "
+            .. tostring(baseline))
+
+    -- Equipping a hull card with a `speed` effect must raise steeringSpeed
+    -- by exactly that additive amount.
+    local speedCard = {
+        id = "hull-speed-fixture", name = "Thruster Fins", nameKo = "Thruster Fins", icon = "*",
+        rarity = "common", tags = {}, editions = {},
+        effects = { { type = "speed", value = 8 } },
+    }
+    local run = expedition.new({ baseSteeringSpeed = 55, steeringUpgradeLevel = 0 })
+    assert(expedition.equipGear(run, "hull", speedCard))
+    local boosted = expedition.steeringSpeed(run)
+    assert(boosted == 63,
+        "equipping a speed +8 hull card must raise steeringSpeed from 55 to 63, got "
+            .. tostring(boosted))
+
+    -- Sanity: an ENGINE-slot card carrying `speed` must NOT count -- item 9
+    -- scopes this additive stat to hull parts (unlike the engine-only (G)
+    -- `steeringResponsiveness` percentage effect it stacks alongside).
+    local engineRun = expedition.new({ baseSteeringSpeed = 55, steeringUpgradeLevel = 0 })
+    local engineSpeedCard = {
+        id = "engine-speed-fixture", name = "EngineSpeed", nameKo = "EngineSpeed", icon = "*",
+        rarity = "common", tags = {}, editions = {},
+        effects = { { type = "speed", value = 8 } },
+    }
+    assert(expedition.equipGear(engineRun, "engine", engineSpeedCard))
+    local engineResult = expedition.steeringSpeed(engineRun)
+    assert(engineResult == 55,
+        "speed effects on an engine-slot part must NOT count toward steeringSpeed "
+            .. "(item 9 scopes this stat to hull gear), got " .. tostring(engineResult))
+
+    -- Must stack additively with the existing engine-part percentage
+    -- multiplier (gear.effectiveSteeringRate), not replace it: base 55 +
+    -- hull speed 8 = 63, then engine steeringResponsiveness +50% -> 94.5.
+    local stackedRun = expedition.new({ baseSteeringSpeed = 55, steeringUpgradeLevel = 0 })
+    assert(expedition.equipGear(stackedRun, "hull", speedCard))
+    local steeringPercentCard = {
+        id = "engine-steering-fixture", name = "SteerBoost", nameKo = "SteerBoost", icon = "*",
+        rarity = "common", tags = {}, editions = {},
+        effects = { { type = "steeringResponsiveness", value = 50 } },
+    }
+    assert(expedition.equipGear(stackedRun, "engine", steeringPercentCard))
+    local stacked = expedition.steeringSpeed(stackedRun)
+    assert(math.abs(stacked - 94.5) < 0.001,
+        "hull speed (+8, additive) and engine steeringResponsiveness (+50%, multiplicative) "
+            .. "must both apply, expected 94.5, got " .. tostring(stacked))
+end
+
 -- Item 14(B) streakMultiplier wiring: docs/GEAR_SCHEMA.md and item 14's
 -- own text named this as "defined in the schema... but its consumer...
 -- lives in gameplay code" -- a gap this test closes by verifying an
@@ -3649,6 +3722,7 @@ function M.run()
     testGearRunEffectWiring()
     testGearCollisionRadiusRunWiring()
     testGearHullDurabilityRunWiring()
+    testGearHullSpeedRunWiring()
     testGearStreakMultiplierWiring()
     testGearSlotSwapEconomyWiring()
     testGearNoSlotCostEditionWiring()

@@ -544,12 +544,31 @@ end
 -- steering speed applied while ascending/returning (game/scenes/play.lua),
 -- giving players a way to spend money on better planet-collision avoidance
 -- rather than capacity or money yield.
+-- Item 9/14 (A) gap audit: `speed` was still one of the original five
+-- additive (A) effect types (docs/GEAR_SCHEMA.md) whose bundled hull cards
+-- (7 of them) were equippable but had zero read-side effect on any run
+-- value -- exactly the pattern already found and closed for hullDurability
+-- (M.equippedHullDurabilityBonus above) and sampleSellValue/sellMultiplier
+-- (M.effectiveSampleBonus below). This wrapper is hull-only (matching
+-- climbSpeed/sampleSellValue/hullDurability's hull-scoped design, since
+-- item 9 calls these the "선체(조커형)" combo payoff stats) and returns the
+-- additive steeringSpeed bonus contributed by equipped hull gear.
+function M.equippedHullSpeedBonus(run)
+    return gearModule.equippedTotals(run.equippedGear or {}).speed or 0
+end
+
 -- Item 10(b)/14(G) wiring: engine-part steeringResponsiveness effects
 -- multiply the upgrade-derived base steering speed (gear.effectiveSteeringRate
 -- is a pure percentage-increase conversion; no equipped engine parts with
 -- steeringResponsiveness leaves this identical to the pre-wiring formula).
+-- The hull `speed` additive bonus (M.equippedHullSpeedBonus, above) is
+-- added to the base+upgrade rate BEFORE the engine percentage multiplier is
+-- applied, so hull speed cards and engine steeringResponsiveness cards
+-- stack (additive-then-multiplicative), matching every other gear category
+-- combination in this run-state layer.
 function M.steeringSpeed(run)
     local baseRate = run.baseSteeringSpeed + run.steeringUpgradeLevel * run.steeringUpgradeAmount
+        + M.equippedHullSpeedBonus(run)
     return gearModule.effectiveSteeringRate(baseRate, run.equippedEngineParts or {})
 end
 

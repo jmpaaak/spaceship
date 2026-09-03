@@ -952,4 +952,35 @@ category was dead content for the entire lifetime of this lane's work.
   sum correctly on top of base).
 - `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN.
 
+### Item 9/14 (A) `speed` run-state gap — `M.steeringSpeed` closes it
+
+The previous slice found and closed the `hullDurability` run-state gap and
+noted this audit pattern might still apply to other (A) additive types. It
+did: `speed` (a hull card's contribution to the ship's steering/maneuvering
+rate) was validated and loaded by `game/gear.lua` since item 9's original
+card-pool expansion, and 7 bundled hull cards use it, but no run-state
+function ever read `gearModule.equippedTotals(...).speed` — equipping any
+of those 7 cards had zero effect on actual in-flight steering, another
+"validated, loaded, never READ" gap.
+
+- New `game/expedition.lua` `M.equippedHullSpeedBonus(run)` reads
+  `gearModule.equippedTotals(run.equippedGear or {}).speed` — hull-only,
+  matching climbSpeed/sampleSellValue/hullDurability's hull-scoped design
+  (item 9 calls these the "선체(조커형)" combo payoff stats; `speed` sits in
+  the same (A) category as `climbSpeed`/`hullDurability`).
+- `M.steeringSpeed(run)` now adds this bonus to the existing
+  `baseSteeringSpeed + steeringUpgradeLevel*steeringUpgradeAmount` sum
+  BEFORE applying the engine-part `steeringResponsiveness` percentage
+  multiplier (`gearModule.effectiveSteeringRate`) — additive-then-
+  multiplicative, so hull `speed` cards and engine `steeringResponsiveness`
+  cards stack instead of one overriding the other.
+- `game/self_test.lua`'s new `testGearHullSpeedRunWiring()` regression-
+  checks: an unequipped run's steeringSpeed matches the pre-wiring baseline
+  exactly, a `speed +8` hull card raises it by exactly 8, the same effect on
+  an ENGINE-slot card is correctly ignored (hull-only scope), and hull
+  `speed` + engine `steeringResponsiveness` stack correctly (55+8=63, then
+  ×1.5 = 94.5). RED confirmed before the fix (`got 55`, expected 63), GREEN
+  after.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` both GREEN.
+
 

@@ -1,4 +1,18 @@
 # STATUS
+## [gear 레인] 항목9/14 (A) `speed` gap — 선체 `speed` 카드 7종이 조종 속도에 반영되지 않던 것을 발견·배선 (완료, 2026-09-03)
+
+레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료 상태였고, 직전 사이클이 `hullDurability` gap을 처리하며 "이 감사 패턴을 다른 (A) 가산형 잔여에도 계속 적용" 하도록 다음 슬라이스로 명시했다. 이번 사이클에서 그 잔여를 찾아 처리했다: 항목14의 원 (A) 5종(speed/sampleSellValue/money/climbSpeed/hullDurability) 중 climbSpeed/sampleSellValue/hullDurability는 이미 run에 배선됐지만, `speed`(선체 부품의 조종/기동 속도 기여, 엔진 부품의 퍼센트형 `steeringResponsiveness`(G)와는 별개)는 `hull_parts.json`에 7종 카드가 실재함에도 `M.steeringSpeed(run)`을 포함한 어떤 run 함수도 `equippedTotals(...).speed`를 읽지 않아 조종 속도에 조금도 반영되지 않는 죽은 콘텐츠였다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+- TDD: `game/self_test.lua`에 신규 `testGearHullSpeedRunWiring()`을 먼저 추가했다(RED 확인: "equipping a speed +8 hull card must raise steeringSpeed from 55 to 63 ... got 55" 실패).
+- `game/expedition.lua`에 신규 `M.equippedHullSpeedBonus(run)`(`gearModule.equippedTotals(run.equippedGear or {}).speed` 읽기, hull 전용 — climbSpeed/sampleSellValue/hullDurability와 동일하게 항목9가 "선체(조커형)" 콤보 페이오프로 명시한 스코프)를 추가했다.
+- `M.steeringSpeed(run)`이 기존 `baseSteeringSpeed + steeringUpgradeLevel*steeringUpgradeAmount` 합에 이 보너스를 먼저 가산한 뒤, 기존처럼 엔진 부품의 `steeringResponsiveness` 퍼센트 배율(`gearModule.effectiveSteeringRate`)을 곱연산으로 적용하도록 변경했다 — 가산 후 곱연산이라 선체 `speed` 카드와 엔진 `steeringResponsiveness` 카드가 서로를 대체하지 않고 함께 누적된다.
+- `testGearHullSpeedRunWiring()` 회귀 검증: 미장착 run은 기존 공식 그대로(55), `speed +8` 선체 카드 장착 시 정확히 63으로 상승, 동일 카드를 엔진 슬롯에 장착하면 hull 전용 스코프대로 제외되어 55 그대로 유지, 선체 `speed`(+8)와 엔진 `steeringResponsiveness`(+50%)가 함께 있으면 55+8=63 다음 ×1.5=94.5로 정확히 계산됨(가산-후-곱연산 순서 검증).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `docs/GEAR_SCHEMA.md`에 "Item 9/14 (A) `speed` run-state gap — `M.steeringSpeed` closes it" 섹션을 신규 추가했다.
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 9 하위에 처리 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 이 감사 패턴을 항목9/10/12/13/14에 계속 적용해 다른 잔여 gap이 남아있는지 재검증(예: 엔진 부품 쪽 (A) `money`/`climbSpeed`/`speed` 카드가 hull과 동일하게 실제 소비되는지, 또는 항목7 획득 경로 3원화의 순수 함수 계층 검토).
+
 ## [gear 레인] 항목9/14 (A) hullDurability gap — 9종 카드가 실제로는 죽은 콘텐츠였던 것을 발견·배선 (완료, 2026-09-03)
 
 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료 상태였으나, 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 이번 사이클에도 다시 적용해 새 gap을 찾아 처리했다. `gear.equippedTotals`가 항목14 첫 슬라이스 때부터 (A) `hullDurability` 효과를 가산 합산해왔고, `hull_parts.json`에는 항목9의 24종 확장 이후 `hullDurability` 카드가 9종(`hull_scrap_plate`, `hull_titan_frame` 등) 실재했지만, `run.maxDurability`를 계산하는 유일한 지점인 `refreshShipStats(run)`가 이 총합을 전혀 읽지 않아 이 9종 카드를 장착해도 선체 최대 내구도가 조금도 달라지지 않았다 — 항목9가 명시한 "부품 조합이 실제 스탯에 배가 효과"의 (A) 가산형 카테고리 중 하나가 이 레인의 전체 작업 기간 동안 조용히 죽어있던 콘텐츠였다(이전 사이클들이 이미 sampleSellValue/sellMultiplier, irradiated 시너지, noSlotCost, boostCharge 소비에서 동일한 패턴의 gap을 발견·처리한 것과 완전히 같은 유형). preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
