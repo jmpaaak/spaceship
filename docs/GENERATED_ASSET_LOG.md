@@ -46,3 +46,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-04T01:58:58+0900 | assets/effects/minimap_disc.png | ComfyUI-generated 64x64 minimap chart disc sprite (seed 20260904109), wired into PlayScene as self.minimapDiscImage, replaces the Lua circle fill+line galaxy chart background
 2026-09-04T02:03:31+0900 | assets/effects/joystick_pad.png | ComfyUI-generated 64x64 virtual joystick pad sprite (seed 20260904110), wired into PlayScene as self.joystickPadImage, replaces the Lua circle fill+line analog-stick base
 2026-09-04T02:07:10+0900 | assets/effects/joystick_knob.png | ComfyUI-generated 64x64 virtual joystick knob sprite (seed 20260904111), wired into PlayScene as self.joystickKnobImage, replaces the Lua circle analog-stick cap
+2026-09-04T02:10:46+0900 | assets/effects/hud_coin.png | ComfyUI-generated 64x64 HUD cash coin sprite (seed 20260904112), wired into PlayScene as self.cashIconImage, replaces the Lua octagon CASH icon

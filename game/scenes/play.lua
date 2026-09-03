@@ -892,6 +892,20 @@ function M.new(options)
             joystickKnobImage = img
         end
     end
+    -- assets/effects/hud_coin.png is the ComfyUI-generated CASH HUD coin
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path / graphics-gated
+    -- image pattern as joystickKnobImagePath. draw() scales it to
+    -- M.cashIconSize instead of M.coinIconPoints, and falls back to that
+    -- octagon polygon when the image failed to load.
+    local cashIconImagePath = "assets/effects/hud_coin.png"
+    local cashIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, cashIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            cashIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -926,6 +940,8 @@ function M.new(options)
         joystickPadImagePath = joystickPadImagePath,
         joystickKnobImage = joystickKnobImage,
         joystickKnobImagePath = joystickKnobImagePath,
+        cashIconImage = cashIconImage,
+        cashIconImagePath = cashIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2432,9 +2448,18 @@ function M:draw()
     local distanceWidth = love.graphics.getFont():getWidth(hud.distance)
     local cashIconCenterX = 20 + distanceWidth + 32 + M.cashIconSize / 2
     local cashIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
-    love.graphics.setColor(1, 0.85, 0.3)
-    love.graphics.polygon("fill",
-        M.coinIconPoints(cashIconCenterX, cashIconCenterY, M.cashIconSize))
+    if self.cashIconImage then
+        local iw, ih = self.cashIconImage:getDimensions()
+        local scale = M.cashIconSize / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(self.cashIconImage, cashIconCenterX, cashIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+    else
+        -- Fallback: gold octagon, used only when the ComfyUI-generated
+        -- sprite failed to load.
+        love.graphics.setColor(1, 0.85, 0.3)
+        love.graphics.polygon("fill",
+            M.coinIconPoints(cashIconCenterX, cashIconCenterY, M.cashIconSize))
+    end
     love.graphics.setColor(0.7, 0.9, 1)
     love.graphics.print(hud.cash,
         20 + distanceWidth + 32 + M.cashIconSize + M.cashIconGap, hudY)

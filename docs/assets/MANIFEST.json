@@ -733,5 +733,30 @@
     "width": 64,
     "height": 64,
     "qa": "joystick knob sprite wired into PlayScene joystickKnobImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/hud_coin.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "cbf25405-9077-43de-a575-a01a248e082e",
+    "prompt": "pixel art, 16-bit, small circular gold coin HUD icon sprite, shiny gold coin with simple star stamp in the center, isolated cash currency icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904112,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:10:36Z",
+    "sha256": "2b8f54eff2603145b3d68e1a507b31b5633f41808a4a264e9c00f51ca621adff",
+    "width": 64,
+    "height": 64,
+    "qa": "HUD cash coin sprite wired into PlayScene cashIconImage; pipeline PNG signature/decode gate"
   }
 ]
