@@ -769,6 +769,38 @@ end
 M.yieldActionIconSize = 24
 M.yieldActionIconGap = 8
 
+-- EARTH SHOP ship compact-action icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- shipActionCompact printf with a small ship-dart
+-- silhouette, mirroring yield_action_compact. Shop-row
+-- drawShopIcon sits in the margin and does not replace
+-- this label. Drawn as a flat dart (even-length {x,y,...}
+-- list, no love.graphics calls) so headless tests can pin
+-- geometry: horizontally symmetric around cx, spans above
+-- and below cy.
+function M.shipActionIconPoints(cx, cy, size)
+    local w = size * 0.28
+    local fin = size * 0.45
+    local top = size * 0.5
+    local mid = size * 0.1
+    local bottom = size * 0.5
+    return {
+        cx, cy - top,
+        cx + w, cy + mid,
+        cx + fin, cy + bottom,
+        cx, cy + mid,
+        cx - fin, cy + bottom,
+        cx - w, cy + mid,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- ship-dart's right edge and the ship compact action
+-- label's left edge. Matches yield compact action because
+-- both sit next to always-drawn shop action labels.
+M.shipActionIconSize = 24
+M.shipActionIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -2061,6 +2093,22 @@ function M.new(options)
             yieldActionIconImage = img
         end
     end
+    -- assets/effects/shop_ship_action.png is the ComfyUI-generated
+    -- EARTH SHOP ship compact-action dart
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as yieldActionIconImagePath.
+    -- :draw() scales it to M.shipActionIconSize instead of
+    -- M.shipActionIconPoints, and falls back to that ship-dart
+    -- polygon when the image failed to load.
+    local shipActionIconImagePath = "assets/effects/shop_ship_action.png"
+    local shipActionIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shipActionIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shipActionIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2189,6 +2237,8 @@ function M.new(options)
         steeringActionIconImagePath = steeringActionIconImagePath,
         yieldActionIconImage = yieldActionIconImage,
         yieldActionIconImagePath = yieldActionIconImagePath,
+        shipActionIconImage = shipActionIconImage,
+        shipActionIconImagePath = shipActionIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4362,8 +4412,27 @@ function M:draw()
         end
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.print(yieldActionLabel, yieldActionStartX + yieldActionIconSpan, row)
-        love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
-        self:drawShopIcon("ship", shopColumnRightX, row)
+        local shipActionLabel = nextLaunch.shipActionCompact
+        local shipActionFont = love.graphics.getFont()
+        local shipActionWidth = shipActionFont:getWidth(shipActionLabel)
+        local shipActionIconSpan = M.shipActionIconSize + M.shipActionIconGap
+        local shipActionStartX = shopColumnRightX + (shopColumnRightW - (shipActionIconSpan + shipActionWidth)) / 2
+        local shipActionIconCenterX = shipActionStartX + M.shipActionIconSize / 2
+        local shipActionIconCenterY = row + shipActionFont:getHeight() / 2
+        if self.shipActionIconImage then
+            local iw, ih = self.shipActionIconImage:getDimensions()
+            local scale = M.shipActionIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.shipActionIconImage, shipActionIconCenterX, shipActionIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan ship dart, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.shipActionIconPoints(shipActionIconCenterX, shipActionIconCenterY, M.shipActionIconSize))
+        end
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.print(shipActionLabel, shipActionStartX + shipActionIconSpan, row)
         row = row + rowStep
         
         love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
