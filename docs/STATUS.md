@@ -1,63 +1,11 @@
 # STATUS
-preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). 이 레인이 지정받은 항목13→9→10→12→14의 문서-코드 정합성 감사를 다시 적용해 새 gap을 찾아 처리했다.
-
-- 감사 질문: 카테고리 무관으로 문서화된 (B) `sellMultiplier`가 엔진 슬롯에서도 실제 표본 보너스를 배율하는가? `testEngineCardsHaveCategoryAgnosticEffectCoverage`와 번들 `engine_market_thruster`(sellMultiplier +20)는 이미 엔진 풀에 콘텐츠를 넣었지만, `M.effectiveSampleBonus(run)`은 계속 `gear.equippedTotals(run.equippedGear)`만 읽어 엔진 배율이 조용히 버려졌다. (A) `sampleSellValue`는 항목9 선체(조커형) 스코프라 엔진 슬롯에서 가산되면 안 되고, (B) 배율만 hull+engine 합산이어야 한다.
-- TDD: `game/self_test.lua`에 신규 `testGearSellMultiplierEngineSlotWiring()`을 먼저 추가했다(RED: `engine-slot sellMultiplier +50% must scale hull sampleSellValue 10 to 15, got 10`).
-- `game/expedition.lua`의 `M.effectiveSampleBonus(run)`이 hull `sampleSellValue` 가산 총합(`gear.aggregateEffects(run.equippedGear)`)에 hull+engine `sellMultiplier`(`gear.totalEffect(combinedGearList(run), "sellMultiplier")`)를 가산-후-곱연산 1회로 적용하도록 고쳤다. 엔진 전용 배율 카드만 있으면 가산 총합 0이라 보너스는 0(배율이 가산을 발명하지 않음). 엔진 슬롯 `sampleSellValue`는 계속 제외.
-- `testGearSellMultiplierEngineSlotWiring()`이 미장착 0 / hull 가산만 +10 / hull 가산+엔진 배율 +15 / collectSample 115 / 엔진 배율만 0 / hull 배율 회귀 +15 / 엔진 sampleSellValue 0을 검증한다(RED 확인 후 GREEN).
-- `docs/GEAR_SCHEMA.md`에 해당 섹션을 추가하고 이전 "Still deferred: engine-slot sellMultiplier cards" 문구를 정정했다.
+- 감사 질문: 항목12 에디션 변환(`crystallized` sampleSellValue x2, `quantum_flawed` 전체 x2 + hullDurability -1, `refined` 전체 x0.5)이 장착 후 실제 run 스탯에 반영되는가? `rollGearOffer`는 오퍼 테이블에 `applyEditionEffects`를 이미 적용했지만, `M.equipGear`는 받은 카드를 그대로 슬롯에 넣어 상점/허브 UI가 풀 원본에 `edition` id만 찍으면 변환 수치가 버려졌다.
+- TDD: `game/self_test.lua`에 신규 `testGearEquippedEditionEffectsRunWiring()`을 먼저 추가했다(RED: `equipping a crystallized card (raw sampleSellValue 5) must yield sample bonus 10, got 5`).
+- `game/expedition.lua`의 `materializeEdition`이 입력 카드를 얕은 복사한 뒤 `gear.applyEditionEffects`를 한 번 적용하고 `editionApplied`로 이중 적용을 막는다. `M.equipGear`는 이 사본을 슬롯에 넣는다. `rollGearOffer`도 변환된 오퍼에 `editionApplied`를 찍어 상점 UI가 오퍼를 그대로 장착해도 수치가 두 배가 되지 않는다. 입력 카드는 변형하지 않는다.
+- 테스트가 crystallized 5→10 / 무에디션 baseline 5 / quantum_flawed maxDurability 3→6(더블+drawback) / refined climbSpeed 8→4 / 엔진 슬롯 sampleSellValue 스코프 0 / 이미 변환된 오퍼 멱등 10 유지를 검증한다(RED 후 GREEN).
+- 같은 사이클에서 이전 미커밋이던 `testGearEditorEditionEffectPreviewSync`의 drawback/synergyBonusAdd/noSlotCost 필드 동기화·미리보기 소비 가드도 함께 GREEN.
 - `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
-- 변경 파일은 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md`(및 이전 사이클이 남긴 STATUS 아카이브) — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`는 건드리지 않았다.
-- 다음 슬라이스: 항목13→9→10→12→14 잔여 gap 재감사, 또는 실제 UI 소비 지점(`play.lua`/`minimap.lua`, 다른 레인).
+- 변경 파일은 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md`/`docs/STATUS_HISTORY.md` — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`는 건드리지 않았다.
+- 다음 슬라이스: 항목13→9→10→12→14 잔여 gap 재감사, 또는 실제 UI 소비 지점(`play.lua`가 `rollGearOffer` 결과를 `equipGear`에 넘기는 상점/허브 화면 — 다른 레인).
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
-
-- 감사 결과: `expedition.chainTriggerCount(run)`(항목14 (C)/(E) run wiring 슬라이스에서 추가)는 장착 부품의 `chainTrigger` 총합을 재계산해 노출하는 순수 파생값으로만 존재했고, 이 카운트를 실제로 "소비"해 무언가를 재발동시키는 코드 경로가 단 하나도 없었다 — 이 레인이 이미 `rerollBonus`(`M.spendReroll`/`run.rerollsUsed`)와 `boostCharge`(`M.spendBoost`/`run.boostsUsed`)에서 발견·처리한 것과 정확히 동일한 패턴의 마지막 잔여였다.
-- TDD: `game/self_test.lua`에 신규 `testGearChainTriggerConsumptionWiring()`을 먼저 추가했다(RED 확인: `an unequipped run must report zero chain retriggers, got nil` — `collectSample`이 아직 4번째 반환값을 주지 않아 실패).
-- `game/expedition.lua`의 `M.collectSample(run, value, hueKey)`가 기존 yield/streak/hull-sample-bonus 계산 이후 `M.chainTriggerCount(run)`(카테고리 무관, hull/engine 둘 다 합산 — rerollBonus/detectionRadius/autoCollect와 동일 설계)을 읽어 `awarded = awarded * (1 + retriggers)`로 재적용하도록 확장했다(`chainTrigger +1` 카드 = 1회 기본 적용 + 1회 재발동 = 2배). 표본 채집 이벤트 자체는 중복 생성되지 않는다 — `run.sampleCount`/스트릭 계열 상태는 여전히 호출당 정확히 1회만 증가한다. `M.collectSample`이 이제 4번째 반환값으로 실제 적용된 재발동 횟수(`retriggers`)를 노출해 향후 UI/테스트가 재계산 없이 바로 표시할 수 있다.
-- `testGearChainTriggerConsumptionWiring()`이 미장착 baseline(awarded=100, retriggers=0), hull `chainTrigger +1` 카드 장착 시 awarded=200/retriggers=1/sampleCount는 여전히 1, 동일 카드를 엔진 슬롯에 장착해도 동일하게 배가(카테고리 무관 재확인)를 회귀 검증한다(RED 확인 후 GREEN).
-- `docs/GEAR_SCHEMA.md`에 "Item 14(C) `chainTrigger` consumption gap" 섹션을 신규 추가했다.
-- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
-- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`도 전혀 건드리지 않았다.
-- 다음 사이클 다음 슬라이스: 이로써 레인이 지정받은 5개 항목(13→9→10→12→14)의 문서상 명시적 "카운트만 있고 소비자 없음" 유형 gap은 모두 닫힌 것으로 보인다 — 다음은 항목7(획득 경로 3원화 — 상점 행성 좌표 생성 등 순수 함수/데이터 계층에서 준비 가능한 부분) 순수 데이터 계층 준비, 또는 이 레인이 완료한 순서 밖의 잔여 작업(실제 UI 소비 지점은 대부분 play.lua/world.lua/minimap.lua 담당이라 다른 레인 소관) 검토를 권장한다.
-
-## [gear 레인] 항목10/14 카테고리 무관 효과 콘텐츠 커버리지 — engine_parts.json에 10개 타입 최초 카드 추가 (완료, 2026-09-03)
-
-이 레인이 지정받은 항목13→9→10→12→14가 모두 1차 완료되고 여러 후속 gap 슬라이스(직전 chainTrigger 소비 배선 포함)까지 닫힌 상태에서, 기존 콘텐츠 커버리지 테스트 두 종(`testGearEffectTypeContentCoverage`: 두 풀 합쳐 모든 타입이 최소 1회 등장, `testEngineCardsHaveNonHullOnlyEffect`: 모든 엔진 카드가 최소 1개 non-hull-only 효과 보유)보다 한 단계 더 깊은 감사를 수행했다. preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
-
-- 감사 질문: "카테고리 무관(hull/engine 어느 슬롯이든 효과가 실제로 반영되도록 설계된) 효과 타입 10종(luck/chainTrigger/rerollBonus/collisionRadius/detectionRadius/autoCollect/insurance/shopDiscount/sellMultiplier/streakMultiplier — 대부분 `expedition.lua`의 `combinedGearList(run)` 헬퍼가 hull+engine 두 목록을 무조건 합산해 소비)가 실제로 엔진 슬롯 카드에서도 등장하는가?" Python으로 `game/data/engine_parts.json`(14종)을 직접 감사한 결과 10종 전부 0건 — 이 타입들을 쓰는 번들 카드는 전부 `hull_parts.json`에만 존재해, 엔진 부품만 장착한 플레이어는 이 10가지 효과 중 어느 것도 실제 플레이에서 마주칠 수 없었다(런 배선 함수 자체는 이미 두 슬롯 모두를 읽도록 설계돼 있었으나 콘텐츠가 없어 죽어있던 gap).
-- TDD: `game/self_test.lua`에 신규 `testEngineCardsHaveCategoryAgnosticEffectCoverage()`를 먼저 추가했다(RED 확인: `missing: luck, chainTrigger, rerollBonus, collisionRadius, detectionRadius, autoCollect, insurance, shopDiscount, sellMultiplier, streakMultiplier` 전체 나열 실패).
-- `game/data/engine_parts.json`에 10종 신규 카드를 추가했다(14종 → 24종, 누락 타입당 1장): `engine_probability_core`(luck), `engine_echo_thruster`(chainTrigger), `engine_haggler_valve`(rerollBonus), `engine_slim_nacelle`(collisionRadius), `engine_deep_scan_pod`(detectionRadius), `engine_magnet_intake`(autoCollect), `engine_escape_pod_thruster`(insurance), `engine_freelancer_manifold`(shopDiscount), `engine_market_thruster`(sellMultiplier), `engine_momentum_stabilizer`(streakMultiplier). 각 카드는 새 카테고리 무관 효과 옆에 항상 (G) `steeringResponsiveness`/`fuelEfficiency` 또는 (A) `speed` 같은 이미 엔진-합법으로 확립된 보조 효과를 함께 부여해, 신규 카드도 `testEngineCardsHaveNonHullOnlyEffect`의 "non-hull-only 효과 최소 1개" 규칙을 독립적으로 만족한다. 태그 관례(economy/control/defense/speed/altitude)를 그대로 재사용해 항목9의 시너지 엔진과 완전히 호환된다.
-- `docs/GEAR_SCHEMA.md`에 "Item 10/14 category-agnostic content-coverage gap" 섹션을 신규 추가했다.
-- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
-- `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`/`game/expedition.lua`도 전혀 건드리지 않았다(순수 데이터+테스트 슬라이스).
-- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 순수 함수/데이터 계층 준비, 또는 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 다시 적용해 항목9/10/12/13/14의 남은 잔여 gap(예: 시너지 엔진의 다른 에디션 상호작용, 슬롯 교체 루프 실사용 UI는 다른 레인 담당) 재검증.
-
-> 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
-
-## [gear 레인] 항목3 스피드미터 아이콘 간소화 추가 완료 (2026-09-03)
-
-- 이전 사이클들이 로켓/방패/동전 아이콘을 완료한 데 이어, 마지막 남은 속도(조종속도/엔진속도) 정보를 스피드미터 아이콘으로 간소화했다.
-- `game/scenes/play.lua`에 `M.speedIconPoints(cx, cy, size)` 헬퍼를 추가해 하단은 평면이고 우측 상단으로 바늘 모양이 파인(negative space) 게이지 형태의 폴리곤을 구현했다.
-- `M.drawCenteredIconText` 헬퍼를 도입하여 LAUNCH LOADOUT의 `loadout.steering`과 EARTH SHOP의 `nextLaunch.steeringPreviewCompact` 문자열을 그릴 때 스피드미터 아이콘과 문자열이 함께 중앙 정렬되도록 했다.
-- `game/i18n.lua`의 관련 문자열("STEER SPEED %d", "조종속도 %d", "SPD %d", "속도 %d")을 모두 "%d"로 대폭 축소해 아이콘만으로 직관적으로 이해할 수 있게 했다.
-- `game/self_test.lua`에 `testSpeedometerIcon()`을 추가해 폴리곤의 기하학적 형태를 회귀 검증하고, 기존 "STEER SPEED" 텍스트에 의존하던 테스트 단언문들도 새 숫자로 갱신했다.
-- `make test`와 `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN 확인. `git diff` clean. 항목 3의 HUD 간소화 작업이 모두 완료되었다.
-
-## [gear 레인] 항목6 장착 장비 카드 UI 완료 및 도감 UI 제거 (2026-09-03)
-
-- 이전 `gear` 레인에서 백엔드 로직이 완성된 함선 부품 장비 시스템(슬롯 이원화 포함)을 실제 발사 화면(LAUNCH LOADOUT UI)에 시각적으로 배선했다. 이는 사용자의 "UI/HUD 대대적 정리 6개 항목" 중 마지막 남은 항목 6 ("표본 9종 도감 정리 + 슬롯 6개를 개성 있는 함선 장비 카드 UI로 전환")을 완전히 충족한다.
-- `game/scenes/play.lua`에서 기존 장식용 요소였던 "SPECIMENS 9/9" 표본 도감 스트립 렌더링 함수(`drawSpecimenStrip`, `specimenProgress`)를 완전히 제거해 화면 공간을 확보했다. (표본 획득 배너 등 실제 기능 관련 상태인 `collectedSpecimens` 로직은 유지).
-- 그 자리에 `M.drawGearSlots`를 신규 추가해 발라트로 조커 카드 형태의 장비 슬롯 렌더링을 구현했다. 선체 장비 슬롯 6개와 엔진 장비 슬롯 3개를 한 줄에 모두 그려 넣고, 각 카드의 등급(rarity)에 따라 색상(회색/녹색/파란색/주황색)을 달리 표시하며, 에디션(edition)이 있는 경우 추가 노란색 테두리로 강조한다. 각 카드 아이콘에는 이전에 구현된 `shieldIconPoints`(선체)와 `rocketIconPoints`(엔진)를 조합해 시각적 개성을 부여했다.
-- `game/i18n.lua`에 `equipped_gear_label` ("EQUIPPED GEAR", "장착 장비")을 추가해 명확한 캡션을 달았다.
-- `game/self_test.lua`에서 더 이상 존재하지 않는 `specimenProgress` 단언문을 제거해 회귀 테스트 정합성을 맞췄다.
-- `make test`와 `make verify` 모두 GREEN 확인 완료. 이로써 사용자 요청 "UI/HUD 대대적 정리 6개 항목" 작업이 100% 완료되었다.
-
-## [gear 레인] 항목7 장비 획득 경로 3원화 데이터 계층 준비 완료 (2026-09-03)
-
-- `docs/feedback/INBOX.md`의 "항목 7 (함선 장비 획득 경로 3원화)" 중 백엔드 데이터 계층과 결정론적 생성 로직을 `spaceship-gear` 레인 내에서 우선 구현했다.
-- `game/world.lua`에 결정론적 `M.shopPlanet(galaxy)` 생성 함수를 추가하여 은하마다 고유한 좌표에 상점 행성이 단 하나씩 생성되도록 보장했다.
-- `game/gear.lua`의 스키마에 `galaxyExclusive` (은하 고유 장비) 부울 필드를 추가하고, `M.earthShopPool` 함수를 통해 이 속성이 켜진 장비는 지구 상점 풀에서 제외되도록 필터링 로직을 구축했다.
-- `game/expedition.lua`에 `M.exploreHub(run, galaxyId, pool)`을 신설하여, 각 은하계의 중심 체크포인트 행성을 최초 탐사 시 `run.hubExplored`를 마킹하고 해당 은하계 특유의 고유 장비를 확률 굴림 없이 확정 지급(1개)하도록 구현했다.
-- `game/data/hull_parts.json`의 특정 부품에 `galaxyExclusive = true` 속성을 시범 적용한 뒤, `game/self_test.lua`에 지구 상점 필터링과 은하 중심 확정 드롭을 검증하는 회귀 테스트(`testGearGalaxyExclusiveWiring`, `testGalaxyStructure` 보완)를 작성하여 TDD RED/GREEN 사이클을 완료했다.
-- 실제 UI 배선(행성 접근 시 팝업 및 인벤토리 지급 처리 등)은 이후 다른 레인이나 슬라이스에서 담당할 수 있도록 순수 함수 기반 인프라를 마련해 둔 상태다.

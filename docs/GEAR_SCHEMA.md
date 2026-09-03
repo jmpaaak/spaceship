@@ -1247,3 +1247,23 @@ hub-drop-only without hunting later item-7 notes. `game/self_test.lua`'s
 `testGearSchemaDocumentsGalaxyExclusive()` locks the Card-shape section
 (example JSON + table row + Earth-shop / hub-drop notes).
 
+### Item 12 follow-up: equipped edition transforms actually change run stats
+
+`rollGearOffer` already ran `gear.applyEditionEffects` onto the *offer*
+table, and irradiated synergy / refined `noSlotCost` already read
+`part.edition` — but `M.equipGear` stored whatever it was handed as-is.
+A shop/hub UI that stamps a rolled `edition` onto the JSON pool card
+(effects still at file values) then fed untransformed numbers into
+`effectiveSampleBonus` / `effectiveClimbSpeed` / `refreshShipStats`.
+Item 12's "같은 부품이라도 뽑기마다 다르게 느껴지는" farming loop was
+dead for crystallized (sampleSellValue x2), quantum_flawed (all x2 +
+hullDurability -1 drawback), and refined (all x0.5).
+
+`M.equipGear` now materializes the edition once onto a shallow copy
+(`editionApplied` gates a second pass so a `rollGearOffer` result is not
+double-applied). The input card is never mutated. Engine-slot
+crystallized still does not invent hull-scoped `sampleSellValue`.
+`testGearEquippedEditionEffectsRunWiring` covers crystallized 5→10,
+quantum_flawed maxDurability 3→6, refined climbSpeed 8→4, engine-slot
+scope, already-transformed idempotence, and input non-mutation.
+

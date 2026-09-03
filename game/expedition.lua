@@ -398,8 +398,28 @@ end
 -- too, since M.launch only refills durability on a RE-launch (settlement/
 -- destroyed -> ascending) -- matching M.new's invariant that a fresh,
 -- never-yet-launched run always starts with durability == maxDurability.
+-- Item 12 farming payoff: a rolled `edition` on an otherwise-raw pool card
+-- (JSON effects still at their file values) must actually change the
+-- numbers run wrappers consume. rollGearOffer already produces a
+-- transformed offer, but shop/hub UI — and any caller that only stamps
+-- `edition` onto the pool card — historically fed untransformed effects
+-- into climbSpeed / sampleSellValue / hullDurability. Materialize the
+-- edition here, once, onto a shallow copy so (a) the input card is never
+-- mutated (same contract as gear.applyEditionEffects) and (b) already-
+-- transformed offers (rollGearOffer / a previous equip) are not doubled
+-- (gated by `editionApplied`).
+local function materializeEdition(part)
+    if type(part) ~= "table" then return part end
+    if not part.edition or part.editionApplied then return part end
+    local copy = {}
+    for k, v in pairs(part) do copy[k] = v end
+    copy.effects = gearModule.applyEditionEffects(part, part.edition)
+    copy.editionApplied = true
+    return copy
+end
+
 function M.equipGear(run, category, part)
-    local ok, err = enginePartsModule.equip(run.gearLoadout, category, part)
+    local ok, err = enginePartsModule.equip(run.gearLoadout, category, materializeEdition(part))
     if not ok then return false, err end
     if category == "hull" then
         run.equippedGear = run.gearLoadout.hull
@@ -956,6 +976,10 @@ function M.rollGearOffer(run, pool, rolls)
         tags = part.tags,
         edition = edition,
         effects = effects,
+        -- editionApplied gates M.equipGear's materializeEdition so a
+        -- shop/hub UI that equips this offer as-is does not double-apply
+        -- crystallized / quantum_flawed / refined.
+        editionApplied = edition ~= nil,
     }
 end
 

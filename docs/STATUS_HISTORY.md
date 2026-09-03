@@ -1395,3 +1395,13 @@ preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --
 
 
 ## [gear 레인] 항목10/14 (B) sellMultiplier 엔진 슬롯 배선 — engine_market_thruster가 표본 보너스를 실제로 배율하도록 (완료, 2026-09-03)
+
+## Archived from STATUS.md (2026-09-03 19:11)
+
+preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). 이 레인이 지정받은 항목13→9→10→12→14의 문서-코드 정합성 감사를 다시 적용해 새 gap을 찾아 처리했다.
+
+## Archived from STATUS.md (2026-09-03, sellMultiplier engine-slot wiring)
+
+- 감사 질문: 카테고리 무관으로 문서화된 (B) `sellMultiplier`가 엔진 슬롯에서도 실제 표본 보너스를 배율하는가? `testEngineCardsHaveCategoryAgnosticEffectCoverage`와 번들 `engine_market_thruster`(sellMultiplier +20)는 이미 엔진 풀에 콘텐츠를 넣었지만, `M.effectiveSampleBonus(run)`은 계속 `gear.equippedTotals(run.equippedGear)`만 읽어 엔진 배율이 조용히 버려졌다. (A) `sampleSellValue`는 항목9 선체(조커형) 스코프라 엔진 슬롯에서 가산되면 안 되고, (B) 배율만 hull+engine 합산이어야 한다.
+- TDD: `game/self_test.lua`에 신규 `testGearSellMultiplierEngineSlotWiring()`을 먼저 추가했다(RED: `engine-slot sellMultiplier +50% must scale hull sampleSellValue 10 to 15, got 10`).
+- `game/expedition.lua`의 `M.effectiveSampleBonus(run)`이 hull `sampleSellValue` 가산 총합(`gear.aggregateEffects(run.equippedGear)`)에 hull+engine `sellMultiplier`(`gear.totalEffect(combinedGearList(run), "sellMultiplier")`)를 가산-후-곱연산 1회로 적용하도록 고쳤다. 엔진 전용 배율 카드만 있으면 가산 총합 0이라 보너스는 0(배율이 가산을 발명하지 않음). 엔진 슬롯 `sampleSellValue`는 계속 제외.
