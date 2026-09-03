@@ -445,6 +445,33 @@ end
 M.returnIconSize = 32
 M.returnIconGap = 16
 
+-- Returning-phase EARTH-distance HUD icon (icon-based HUD
+-- simplification follow-on): pair the cyan hud_earth readout with a
+-- small globe silhouette, mirroring
+-- coin/shield/speed/distance/best/samples/galaxy/return. Drawn as a
+-- flat octagon polygon (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally symmetric
+-- around cx, spans above and below cy.
+function M.earthIconPoints(cx, cy, size)
+    local r = size * 0.5
+    return {
+        cx, cy - r,
+        cx + r * 0.72, cy - r * 0.72,
+        cx + r, cy,
+        cx + r * 0.72, cy + r * 0.72,
+        cx, cy + r,
+        cx - r * 0.72, cy + r * 0.72,
+        cx - r, cy,
+        cx - r * 0.72, cy - r * 0.72,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the earth globe's
+-- right edge and the EARTH IN text's left edge, mirroring
+-- M.returnIconSize/returnIconGap.
+M.earthIconSize = 32
+M.earthIconGap = 16
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1547,6 +1574,21 @@ function M.new(options)
             returnIconImage = img
         end
     end
+    -- assets/effects/hud_earth.png is the ComfyUI-generated EARTH
+    -- distance HUD globe (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- returnIconImagePath. :draw() scales it to M.earthIconSize instead
+    -- of M.earthIconPoints, and falls back to that octagon globe
+    -- polygon when the image failed to load.
+    local earthIconImagePath = "assets/effects/hud_earth.png"
+    local earthIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, earthIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            earthIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1651,6 +1693,8 @@ function M.new(options)
         galaxyIconImagePath = galaxyIconImagePath,
         returnIconImage = returnIconImage,
         returnIconImagePath = returnIconImagePath,
+        earthIconImage = earthIconImage,
+        earthIconImagePath = earthIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3440,8 +3484,23 @@ function M:draw()
         love.graphics.print(hud.samples, 20 + M.samplesIconSize + M.samplesIconGap, samplesY)
         drawStatusWithShield(120 + M.hudPrimaryStatusGap + galaxyShift)
         if hud.earth then
+            local earthY = 172 + M.hudPrimaryStatusGap + galaxyShift
+            local earthIconCenterX = 20 + M.earthIconSize / 2
+            local earthIconCenterY = earthY + (love.graphics.getFont():getHeight() / 2)
+            if self.earthIconImage then
+                local iw, ih = self.earthIconImage:getDimensions()
+                local scale = M.earthIconSize / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.draw(self.earthIconImage, earthIconCenterX, earthIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+            else
+                -- Fallback: cyan globe octagon, used only when the
+                -- ComfyUI-generated sprite failed to load.
+                love.graphics.setColor(0.4, 0.85, 1)
+                love.graphics.polygon("fill",
+                    M.earthIconPoints(earthIconCenterX, earthIconCenterY, M.earthIconSize))
+            end
             love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.print(hud.earth, 20, 172 + M.hudPrimaryStatusGap + galaxyShift)
+            love.graphics.print(hud.earth, 20 + M.earthIconSize + M.earthIconGap, earthY)
             local returnY = 220 + M.hudPrimaryStatusGap + galaxyShift
             local returnIconCenterX = 20 + M.returnIconSize / 2
             local returnIconCenterY = returnY + (love.graphics.getFont():getHeight() / 2)

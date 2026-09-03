@@ -2120,6 +2120,47 @@ local function testReturnIconSprite()
     end
 end
 
+-- Returning-phase EARTH-distance HUD readout is still bare cyan text
+-- (hud_earth / hud.earth) while DIST/CASH/HULL/STEER/BEST/SAMPLES/galaxy
+-- /RETURN already have ComfyUI icons. Same file-existence + always-set-path
+-- pattern as testReturnIconSprite, plus Lua globe fallback geometry
+-- (even-length, spans cy, horizontally symmetric).
+-- Graphics-gated earthIconImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run() stays
+-- under Lua's 60-upvalue cap.
+local function testEarthIconSprite()
+    local path = "assets/effects/hud_earth.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated EARTH HUD icon sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.earthIconImagePath == path,
+        "PlayScene must load assets/effects/hud_earth.png into self.earthIconImagePath")
+    assert(play.earthIconSize == 32 and play.earthIconGap == 16)
+    local points = play.earthIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "earth silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "earth icon must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "earth outline must be horizontally symmetric around cx")
+    end
+end
+
 -- SAMPLES HUD readout is still bare gold text (hud_samples) while
 -- DIST/CASH/HULL/STEER/BEST already have ComfyUI icons. Same
 -- file-existence + always-set-path pattern as testBestIconSprite,
@@ -2185,6 +2226,7 @@ local function testCanvasLayoutScale()
     testSamplesIconSprite()
     testGalaxyIconSprite()
     testReturnIconSprite()
+    testEarthIconSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows
