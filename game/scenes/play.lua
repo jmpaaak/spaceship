@@ -849,6 +849,20 @@ function M.new(options)
             planetShadowImage = img
         end
     end
+    -- assets/effects/minimap_disc.png is the ComfyUI-generated circular
+    -- galaxy-chart disc (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated-image pattern as planetShadowImagePath. drawMinimap()
+    -- scales it to minimap.size instead of a love.graphics.circle fill+line,
+    -- and falls back to those circles when the image failed to load.
+    local minimapDiscImagePath = "assets/effects/minimap_disc.png"
+    local minimapDiscImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, minimapDiscImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            minimapDiscImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -877,6 +891,8 @@ function M.new(options)
         planetGlowImagePath = planetGlowImagePath,
         planetShadowImage = planetShadowImage,
         planetShadowImagePath = planetShadowImagePath,
+        minimapDiscImage = minimapDiscImage,
+        minimapDiscImagePath = minimapDiscImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -1919,10 +1935,19 @@ function M:drawMinimap()
     local size = minimap.size
     local cx = viewport.width - size / 2 - 3
     local cy = hudHeight + size / 2 + 2
-    love.graphics.setColor(0.02, 0.04, 0.1, 1)
-    love.graphics.circle("fill", cx, cy, size / 2)
-    love.graphics.setColor(0.35, 0.55, 0.8, 1)
-    love.graphics.circle("line", cx, cy, size / 2)
+    if self.minimapDiscImage then
+        local iw, ih = self.minimapDiscImage:getDimensions()
+        local scale = size / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(self.minimapDiscImage, cx, cy, 0, scale, scale, iw / 2, ih / 2)
+    else
+        -- Fallback: flat navy disc + cyan rim, used only when the
+        -- ComfyUI-generated sprite failed to load.
+        love.graphics.setColor(0.02, 0.04, 0.1, 1)
+        love.graphics.circle("fill", cx, cy, size / 2)
+        love.graphics.setColor(0.35, 0.55, 0.8, 1)
+        love.graphics.circle("line", cx, cy, size / 2)
+    end
     for _, ring in ipairs(view.rings or {}) do
         if ring.kind == "orbit" then
             love.graphics.setColor(0.85, 0.7, 0.25, 0.55)

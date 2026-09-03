@@ -658,5 +658,30 @@
     "width": 64,
     "height": 64,
     "qa": "planet drop shadow sprite wired into PlayScene planetShadowImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_disc.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "3b8f3d35-fbf7-454c-8d14-5f67a5be86ff",
+    "prompt": "pixel art, 16-bit, small circular radar minimap disc sprite, dark navy circular chart with thin cyan rim, isolated circular HUD radar background icon, solid white background, no text, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904109,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T16:58:52Z",
+    "sha256": "4e7f5ade4c3fe6516a90b98ace12339f4648d4e633a77803c8a6335f31554576",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap chart disc sprite wired into PlayScene minimapDiscImage; pipeline PNG signature/decode gate"
   }
 ]
