@@ -772,14 +772,22 @@ end
 -- the former, 1 of the latter, per docs/GEAR_SCHEMA.md's item 14 content
 -- coverage audit) was equippable but had zero effect on actual money
 -- earned. This wrapper is the single source of truth for "how much extra
--- money per sample does the currently equipped hull gear grant" -- kept
--- hull-only (unlike the category-agnostic (C)/(E) wrappers) because item
--- 9 explicitly scopes sampleSellValue/sellMultiplier to hull ("조합이
--- 시너지"의 대상은 선체 조커형 부품), matching climbSpeed's synergy scope
--- immediately above.
+-- money per sample does the currently equipped hull gear grant".
+--
+-- Item 10/14 (B) follow-up: sampleSellValue stays hull-only (item 9
+-- scopes the (A) additive payoff to hull "조커형" parts, matching
+-- climbSpeed/money/speed/hullDurability), but sellMultiplier is
+-- category-agnostic — testEngineCardsHaveCategoryAgnosticEffectCoverage
+-- and the bundled engine_market_thruster card exist specifically so an
+-- engine-slot (B) multiplier scales the hull (A) total. Combining the two
+-- via equippedTotals(run.equippedGear) silently dropped engine
+-- sellMultiplier; this recomputes the same additive-then-multiply once
+-- across hull sampleSellValue + hull/engine sellMultiplier.
 function M.effectiveSampleBonus(run)
-    local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
-    return gearTotals.sampleSellValue or 0
+    local hullAdditive = gearModule.aggregateEffects(run.equippedGear or {}).sampleSellValue or 0
+    if hullAdditive == 0 then return 0 end
+    local sellMult = gearModule.totalEffect(combinedGearList(run), "sellMultiplier")
+    return hullAdditive * (1 + sellMult / 100)
 end
 
 -- Item 10(b)/14(G) wiring: how many one-shot emergency boost charges the

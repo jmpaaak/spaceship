@@ -885,12 +885,43 @@ additive-then-multiply math verified separately in
 100)` call with that gear equipped awards exactly `115` (base
 `100 * 1.0 * 1.0` floored, plus the flat `+15` gear bonus).
 
-Still deferred: `sellMultiplier`/`sampleSellValue` engine-slot cards (the
-bundled `engine_parts.json` pool currently has none of either type — this
-slice only fixes the hull-side consumer gap that already had bundled
-content); any shop/checkpoint UI that visually surfaces the gear-boosted
-sample value to the player before it's earned (`play.lua`, out of this
-lane's scope).
+Still deferred at the time of that slice: engine-slot
+`sellMultiplier`/`sampleSellValue` cards (the bundled `engine_parts.json`
+pool then had none of either type). A later item-10/14 coverage slice
+added `engine_market_thruster` (`sellMultiplier +20`) and
+`engine_fusion_core`/`engine_singularity_drive` (`sampleSellValue`), but
+`M.effectiveSampleBonus` still read hull-only `equippedTotals` — see the
+follow-up section immediately below. Shop/checkpoint UI that visually
+surfaces the gear-boosted sample value remains out of this lane's scope
+(`play.lua`).
+
+### Item 10/14 (B) `sellMultiplier` engine-slot wiring
+
+The category-agnostic coverage slice (`testEngineCardsHaveCategoryAgnosticEffectCoverage`)
+and bundled `engine_market_thruster` put a live `sellMultiplier` card on
+the engine pool, but `M.effectiveSampleBonus(run)` still called
+`gear.equippedTotals(run.equippedGear or {})` — hull list only — so an
+engine-slot (B) multiplier never scaled the hull (A) `sampleSellValue`
+total. That left `engine_market_thruster` as schema-legal dead content
+for its documented run consumer, the same class of gap this lane closed
+for insurance/engine-slot category-agnostic types.
+
+- (A) `sampleSellValue` stays hull-only (item 9 scopes the additive
+  payoff to hull "조커형" parts, matching climbSpeed/money/speed/
+  hullDurability). An engine-slot `sampleSellValue` card still does not
+  count.
+- (B) `sellMultiplier` is category-agnostic: hull + engine via
+  `combinedGearList(run)`. `M.effectiveSampleBonus` now does
+  `hullAdditive * (1 + combinedSellMultiplier / 100)` — the same
+  additive-then-multiply order `gear.equippedTotals` already used, just
+  with the (B) total drawn from both slot lists. A sellMultiplier-only
+  engine card with no hull `sampleSellValue` still yields `0` (the
+  multiplier does not invent an additive base).
+
+`game/self_test.lua`'s `testGearSellMultiplierEngineSlotWiring` covers
+unequipped 0, hull additive +10, hull additive + engine +50% = 15,
+`collectSample` 115, engine-only multiplier 0, hull-slot multiplier
+regression +15, and engine-slot `sampleSellValue` remaining 0.
 
 ### Item 10(b)/14(G) `boostCharge` consumption wiring (follow-up slice)
 

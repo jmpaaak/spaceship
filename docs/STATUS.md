@@ -1,16 +1,16 @@
 # STATUS
-2. **hull_parts.json 슬롯 스코프 콘텐츠 커버리지 (항목 10/14 후속):**
-   - 직전 사이클들에서 `engine_parts.json`에 수행했던 "슬롯 스코프 내 완전 무효 카드" 감사를 `game/data/hull_parts.json`(34종)에도 동일하게 적용했다.
-   - `game/self_test.lua`에 신규 `testHullCardsHaveNonEngineOnlyEffect()`를 추가해, 선체 카드가 오직 (G) 엔진 전용 타입(`fuelEfficiency`, `steeringResponsiveness`, `boostCharge`)만으로 구성되어 선체 슬롯에서 완전히 무효가 되는 경우가 있는지 검증했다.
-   - 예상대로 0건(클린)임이 확인되어 추가 카드 수정 없이 GREEN 통과. 이로써 두 슬롯 풀의 스코프 커버리지 감사가 모두 완료되었다.
+preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). 이 레인이 지정받은 항목13→9→10→12→14의 문서-코드 정합성 감사를 다시 적용해 새 gap을 찾아 처리했다.
 
-- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
-- `git status --short`가 `tools/gear-editor/editor.js`, `tools/gear-editor/index.html`, `tools/gear-editor/editor.css`, `game/self_test.lua` 파일만 수정으로 보고함 — 레인 스코프가 금지한 게임 코어 시스템(`play.lua`, `world.lua`, `expedition.lua`)은 전혀 건드리지 않았다.
-- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화) 순수 데이터 계층/획득 확률 구조 준비.
+- 감사 질문: 카테고리 무관으로 문서화된 (B) `sellMultiplier`가 엔진 슬롯에서도 실제 표본 보너스를 배율하는가? `testEngineCardsHaveCategoryAgnosticEffectCoverage`와 번들 `engine_market_thruster`(sellMultiplier +20)는 이미 엔진 풀에 콘텐츠를 넣었지만, `M.effectiveSampleBonus(run)`은 계속 `gear.equippedTotals(run.equippedGear)`만 읽어 엔진 배율이 조용히 버려졌다. (A) `sampleSellValue`는 항목9 선체(조커형) 스코프라 엔진 슬롯에서 가산되면 안 되고, (B) 배율만 hull+engine 합산이어야 한다.
+- TDD: `game/self_test.lua`에 신규 `testGearSellMultiplierEngineSlotWiring()`을 먼저 추가했다(RED: `engine-slot sellMultiplier +50% must scale hull sampleSellValue 10 to 15, got 10`).
+- `game/expedition.lua`의 `M.effectiveSampleBonus(run)`이 hull `sampleSellValue` 가산 총합(`gear.aggregateEffects(run.equippedGear)`)에 hull+engine `sellMultiplier`(`gear.totalEffect(combinedGearList(run), "sellMultiplier")`)를 가산-후-곱연산 1회로 적용하도록 고쳤다. 엔진 전용 배율 카드만 있으면 가산 총합 0이라 보너스는 0(배율이 가산을 발명하지 않음). 엔진 슬롯 `sampleSellValue`는 계속 제외.
+- `testGearSellMultiplierEngineSlotWiring()`이 미장착 0 / hull 가산만 +10 / hull 가산+엔진 배율 +15 / collectSample 115 / 엔진 배율만 0 / hull 배율 회귀 +15 / 엔진 sampleSellValue 0을 검증한다(RED 확인 후 GREEN).
+- `docs/GEAR_SCHEMA.md`에 해당 섹션을 추가하고 이전 "Still deferred: engine-slot sellMultiplier cards" 문구를 정정했다.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- 변경 파일은 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md`(및 이전 사이클이 남긴 STATUS 아카이브) — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`, 그리고 `game/gear.lua`/`game/engine_parts.lua`는 건드리지 않았다.
+- 다음 슬라이스: 항목13→9→10→12→14 잔여 gap 재감사, 또는 실제 UI 소비 지점(`play.lua`/`minimap.lua`, 다른 레인).
 
-## [gear 레인] 항목14(C) chainTrigger 소비 배선 — rerollBonus/boostCharge와 동일한 "카운트는 있지만 아무도 쓰지 않는" 마지막 잔여 처리 (완료, 2026-09-03)
-
-preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작. 직전 슬라이스가 `game/data/hull_parts.json`(34종)에 대해 항목10/14의 "슬롯 스코프 내 완전 무효 카드" 감사를 다음 후보로 명시했으나, Python으로 실제 감사한 결과 hull_parts.json은 이미 (G) 엔진 전용 타입을 전혀 쓰지 않고 hull-only 5종 타입만으로 구성된 카드가 하나도 없어(0건) 이 감사는 클린 상태였다. 대신 이 레인이 반복 적용해온 "문서-코드 정합성 감사" 패턴을 항목14 (C) `chainTrigger`에 다시 적용해 새 gap을 찾아 처리했다.
+> 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
 
 - 감사 결과: `expedition.chainTriggerCount(run)`(항목14 (C)/(E) run wiring 슬라이스에서 추가)는 장착 부품의 `chainTrigger` 총합을 재계산해 노출하는 순수 파생값으로만 존재했고, 이 카운트를 실제로 "소비"해 무언가를 재발동시키는 코드 경로가 단 하나도 없었다 — 이 레인이 이미 `rerollBonus`(`M.spendReroll`/`run.rerollsUsed`)와 `boostCharge`(`M.spendBoost`/`run.boostsUsed`)에서 발견·처리한 것과 정확히 동일한 패턴의 마지막 잔여였다.
 - TDD: `game/self_test.lua`에 신규 `testGearChainTriggerConsumptionWiring()`을 먼저 추가했다(RED 확인: `an unequipped run must report zero chain retriggers, got nil` — `collectSample`이 아직 4번째 반환값을 주지 않아 실패).
