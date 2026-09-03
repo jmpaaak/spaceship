@@ -331,6 +331,34 @@ end
 M.distanceIconSize = 32
 M.distanceIconGap = 16
 
+-- PERSONAL BEST HUD icon (icon-based HUD simplification follow-on): pair
+-- the "PERSONAL BEST %04d" / "최고기록 %04d" readout with a small trophy
+-- silhouette, mirroring coin/shield/speed/distance. Drawn as a flat cup
+-- polygon (even-length {x,y,...} list, no love.graphics calls) so
+-- headless tests can pin geometry: horizontally symmetric around cx,
+-- spans above and below cy.
+function M.bestIconPoints(cx, cy, size)
+    local r = size * 0.5
+    return {
+        cx - r * 0.70, cy - r,
+        cx + r * 0.70, cy - r,
+        cx + r * 0.55, cy - r * 0.15,
+        cx + r * 0.18, cy + r * 0.15,
+        cx + r * 0.45, cy + r * 0.35,
+        cx + r * 0.45, cy + r,
+        cx - r * 0.45, cy + r,
+        cx - r * 0.45, cy + r * 0.35,
+        cx - r * 0.18, cy + r * 0.15,
+        cx - r * 0.55, cy - r * 0.15,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the trophy icon's
+-- right edge and the BEST text's left edge, mirroring
+-- M.distanceIconSize/distanceIconGap.
+M.bestIconSize = 32
+M.bestIconGap = 16
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1376,6 +1404,20 @@ function M.new(options)
             distanceIconImage = img
         end
     end
+    -- assets/effects/hud_best.png is the ComfyUI-generated PERSONAL BEST
+    -- HUD trophy (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as distanceIconImagePath. :draw()
+    -- scales it to M.bestIconSize instead of M.bestIconPoints, and falls
+    -- back to that trophy polygon when the image failed to load.
+    local bestIconImagePath = "assets/effects/hud_best.png"
+    local bestIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, bestIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            bestIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1472,6 +1514,8 @@ function M.new(options)
         scoutShipImagePath = scoutShipImagePath,
         distanceIconImage = distanceIconImage,
         distanceIconImagePath = distanceIconImagePath,
+        bestIconImage = bestIconImage,
+        bestIconImagePath = bestIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3236,8 +3280,23 @@ function M:draw()
         end
     elseif hud.best then
         drawStatusWithShield((isLaunchHud and 52 or 72) + galaxyShift)
+        local bestY = (isLaunchHud and 88 or 120) + galaxyShift
+        local bestIconCenterX = 20 + M.bestIconSize / 2
+        local bestIconCenterY = bestY + (love.graphics.getFont():getHeight() / 2)
+        if self.bestIconImage then
+            local iw, ih = self.bestIconImage:getDimensions()
+            local scale = M.bestIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.bestIconImage, bestIconCenterX, bestIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: gold trophy cup, used only when the ComfyUI-generated
+            -- sprite failed to load.
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.polygon("fill",
+                M.bestIconPoints(bestIconCenterX, bestIconCenterY, M.bestIconSize))
+        end
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.best, 20, (isLaunchHud and 88 or 120) + galaxyShift)
+        love.graphics.print(hud.best, 20 + M.bestIconSize + M.bestIconGap, bestY)
     else
         drawStatusWithShield(72 + galaxyShift)
     end
