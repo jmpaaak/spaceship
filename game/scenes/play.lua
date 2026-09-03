@@ -1126,6 +1126,37 @@ end
 M.loadoutShipIconSize = 24
 M.loadoutShipIconGap = 8
 
+-- Destroyed-phase next_ship_line icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- next_ship_line printf ("NEXT STARTER" after meta wipe)
+-- with a small restart-hull dart, mirroring loadout.ship.
+-- Drawn as a flat notched dart (even-length {x,y,...}
+-- list, no love.graphics calls) so headless tests can pin
+-- geometry: horizontally symmetric around cx, spans above
+-- and below cy.
+function M.destroyedNextShipIconPoints(cx, cy, size)
+    local w = size * 0.4
+    local peak = size * 0.5
+    local waist = size * 0.08
+    local bottom = size * 0.5
+    local notch = size * 0.18
+    return {
+        cx, cy - peak,
+        cx + w, cy + waist,
+        cx + w * 0.4, cy + bottom,
+        cx, cy + bottom - notch,
+        cx - w * 0.4, cy + bottom,
+        cx - w, cy + waist,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- restart-hull dart's right edge and the next_ship_line
+-- label's left edge. Matches loadoutShip because both sit
+-- next to gold ship-name labels.
+M.destroyedNextShipIconSize = 24
+M.destroyedNextShipIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2645,6 +2676,22 @@ function M.new(options)
             loadoutShipIconImage = img
         end
     end
+    -- assets/effects/destroyed_next_ship.png is the ComfyUI-generated
+    -- destroyed-phase next_ship_line restart-hull dart
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as loadoutShipIconImagePath.
+    -- :draw() scales it to M.destroyedNextShipIconSize instead of
+    -- M.destroyedNextShipIconPoints, and falls back to that notched
+    -- dart when the image failed to load.
+    local destroyedNextShipIconImagePath = "assets/effects/destroyed_next_ship.png"
+    local destroyedNextShipIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, destroyedNextShipIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            destroyedNextShipIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2797,6 +2844,8 @@ function M.new(options)
         nextShipIconImagePath = nextShipIconImagePath,
         loadoutShipIconImage = loadoutShipIconImage,
         loadoutShipIconImagePath = loadoutShipIconImagePath,
+        destroyedNextShipIconImage = destroyedNextShipIconImage,
+        destroyedNextShipIconImagePath = destroyedNextShipIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -5312,7 +5361,27 @@ function M:draw()
         love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(i18n.t("next_ship_line", loadout.shipLabel), fullX, row, fullW, "center")
+        local destroyedNextShipLabel = i18n.t("next_ship_line", loadout.shipLabel)
+        local destroyedNextShipFont = love.graphics.getFont()
+        local destroyedNextShipWidth = destroyedNextShipFont:getWidth(destroyedNextShipLabel)
+        local destroyedNextShipIconSpan = M.destroyedNextShipIconSize + M.destroyedNextShipIconGap
+        local destroyedNextShipStartX = fullX + (fullW - (destroyedNextShipIconSpan + destroyedNextShipWidth)) / 2
+        local destroyedNextShipIconCenterX = destroyedNextShipStartX + M.destroyedNextShipIconSize / 2
+        local destroyedNextShipIconCenterY = row + destroyedNextShipFont:getHeight() / 2
+        if self.destroyedNextShipIconImage then
+            local iw, ih = self.destroyedNextShipIconImage:getDimensions()
+            local scale = M.destroyedNextShipIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.destroyedNextShipIconImage, destroyedNextShipIconCenterX, destroyedNextShipIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: gold restart-hull dart, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.polygon("fill",
+                M.destroyedNextShipIconPoints(destroyedNextShipIconCenterX, destroyedNextShipIconCenterY, M.destroyedNextShipIconSize))
+        end
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.print(destroyedNextShipLabel, destroyedNextShipStartX + destroyedNextShipIconSpan, row)
         row = row + rowStep
         love.graphics.printf(i18n.t("tap_start_over"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
