@@ -1333,5 +1333,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.settlementSummaryPanelImage for the EARTH SHOP settlement summary inner box"
+  },
+  {
+    "path": "assets/effects/shop_touch_row.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "b7f08e99-08a9-407e-b830-7d02c7585b87",
+    "prompt": "pixel art, 16-bit, entire frame filled edge to edge with a dark navy glass UI row-band texture for a vertical space roguelite Earth shop tappable purchase row highlight, faint scanlines and thin metallic chrome edge, no empty margin, no white background, no circle, no icon, no text, no watermark, game UI asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904136,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:47:23Z",
+    "sha256": "ad2781710ebb077c774bbf2780487fe79389e8e9b51142bd695f4bad4d652a91",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shopTouchRowImage for EARTH SHOP settlementTouchRows bands"
   }
 ]

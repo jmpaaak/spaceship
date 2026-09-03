@@ -1253,6 +1253,21 @@ function M.new(options)
             settlementSummaryPanelImage = img
         end
     end
+    -- assets/effects/shop_touch_row.png is the ComfyUI-generated EARTH SHOP
+    -- tappable settlementTouchRows band (docs/GENERATED_ASSET_LOG.md). Same
+    -- always-set-path / graphics-gated image pattern as
+    -- settlementSummaryPanelImagePath. :draw() stretches it across each
+    -- settlementTouchRows band instead of the Lua fill rectangle, and
+    -- falls back to that rectangle when the image failed to load.
+    local shopTouchRowImagePath = "assets/effects/shop_touch_row.png"
+    local shopTouchRowImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, shopTouchRowImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            shopTouchRowImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1335,6 +1350,8 @@ function M.new(options)
         specimenBannerImagePath = specimenBannerImagePath,
         settlementSummaryPanelImage = settlementSummaryPanelImage,
         settlementSummaryPanelImagePath = settlementSummaryPanelImagePath,
+        shopTouchRowImage = shopTouchRowImage,
+        shopTouchRowImagePath = shopTouchRowImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3145,8 +3162,16 @@ function M:draw()
         -- calls below; purely a visual affordance for which rows respond
         -- to touch (see settlementRowBackgroundColor comment above).
         for index, touchRow in ipairs(settlementTouchRows) do
-            love.graphics.setColor(M.settlementRowBackgroundColor(index))
-            love.graphics.rectangle("fill", 48, touchRow.top, viewport.width - 96, touchRow.bottom - touchRow.top)
+            local rowColor = M.settlementRowBackgroundColor(index)
+            if self.shopTouchRowImage then
+                local iw, ih = self.shopTouchRowImage:getDimensions()
+                love.graphics.setColor(1, 1, 1, rowColor[4] or 0.35)
+                love.graphics.draw(self.shopTouchRowImage, 48, touchRow.top, 0,
+                    (viewport.width - 96) / iw, (touchRow.bottom - touchRow.top) / ih)
+            else
+                love.graphics.setColor(rowColor)
+                love.graphics.rectangle("fill", 48, touchRow.top, viewport.width - 96, touchRow.bottom - touchRow.top)
+            end
         end
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf(i18n.t("earth_shop_title"), 64, 296, viewport.width - 128, "center")
