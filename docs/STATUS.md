@@ -1,5 +1,15 @@
 # STATUS
 
+## 항목 15(a) 회귀 안전망 — keypressed 경로에서 옛 returning 페이즈에 진입 불가함을 테스트로 고정 (완료, 2026-09-03)
+
+preflight READY(엔진 테스트 PASS, git diff clean)를 확인한 뒤 `git status --short`로 세션 시작 시 미커밋 diff가 없음을 확인했다. econ 레인 스코프 순서(항목7→8→11→15)상 항목 7·8·11은 이미 이전 사이클들에서 엔진+UI 연결까지 완료되었고, 항목 15도 (b)/(c)(EARTH SHOP 슬롯머신 엔진+UI)와 (a)의 첫 두 단계(`M.returnToEarth` 엔진 API + `\"r\"` 키 UI 연결)까지 완료된 상태였다. 이번 사이클은 항목 15(a)의 마지막 남은 작업(옛 `beginReturn`/`\"returning\"` 페이즈/`useSlot`/`slotSpin` 및 관련 UI 제거)에 착수하기 전에, 먼저 그 제거가 실제로 안전한지(플레이어가 실제 입력으로 그 옛 경로에 여전히 도달할 수 있는지)를 코드 조사로 검증했다.
+
+- `game/scenes/play.lua`의 `M:keypressed` 전체를 검색한 결과, 실제 플레이 키 입력 경로 중 `expedition.beginReturn`을 호출하는 곳이 단 한 곳도 없음을 확인했다(`grep beginReturn` 결과는 주석 1건뿐). `expedition.useSlot`을 호출하는 유일한 지점(`\"space\"`/`\"return\"`/`\"up\"`/`\"w\"` 키 분기)도 `self.expedition.phase == \"returning\"`일 때만 도달하는데, 그 phase로 진입시키는 실제 플레이 경로 자체가 이미 없다 — 즉 옛 `beginReturn`/`\"returning\"`/`useSlot`/`slotSpin` 전체 서브시스템은 이미 **실제 플레이에서 도달 불가능한 죽은 경로**이고, 유일하게 이를 실행하는 것은 `game/self_test.lua`(직접 `expedition.beginReturn(run)` 호출 또는 `run.phase = \"returning\"` 수동 대입)와 `main.lua`의 `GAME_CAPTURE_PHASE=returning-*` 캡처 하네스뿐이다.
+- 이 사실이 향후 슬라이스가 안전하게 옛 경로를 삭제할 수 있는 근거이므로, 이를 회귀 테스트로 고정했다. `game/self_test.lua`의 `testReturnToEarthUiWiring()` 안에 신규 `testReturningPhaseUnreachableFromKeypressed()`를 추가했다 — ascending 페이즈에서 `keypressed`가 받아들이는 모든 실제 키(`space`/`return`/`up`/`w`/`down`/`s`/`left`/`right`/`a`/`d`/`r`/`b`/`n`/`g`/`y`/`h`)를 순서대로 눌러도 `expedition.phase`가 절대 `\"returning\"`으로 바뀌지 않음을 검증한다. 기존 코드가 이미 이 불변조건을 만족하므로 RED 없이 곧바로 GREEN(사전 조사로 이미 사실임을 확인한 상태에서 그 사실을 코드로 고정하는 성격의 테스트 — 향후 누군가 실수로 `keypressed`에 `beginReturn` 호출을 재도입하면 이 테스트가 즉시 RED가 되어 잡아낸다).
+- `GAME_HEADLESS=1 GAME_UNIT=1 love .`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`). 신규 게임 로직/화면 변경이 없는 안전망 테스트 슬라이스라 런타임 캡처는 필요하지 않았다.
+- `docs/feedback/INBOX.md` 처리대기 항목 15 하위에 이번 슬라이스 진행 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 이제 옛 `beginReturn`/`\"returning\"` 페이즈/`useSlot`/`slotSpin`이 실제 플레이에서 도달 불가능함이 테스트로 고정되었으므로, 다음 슬라이스는 이를 실제로 제거하는 작업 — `game/scenes/play.lua`의 returning 페이즈 렌더/터치(`returnControls`, `beginSlotSpin`/`currentSlotReels`/`slotButtonState`/`slotOddsLine`)와 `game/expedition.lua`의 `M.beginReturn`/`M.useSlot`/`spinSlot`/`slotRepairVoucher`/`slotFuelBonus`/`slotSampleBonus`, `main.lua`의 `GAME_CAPTURE_PHASE=returning-*` 하네스, `game/self_test.lua`의 대응 테스트들을 함께 삭제하는 것 — 을 목표로 한다. 규모가 크므로(여러 파일에 걸친 광범위한 삭제) 한 슬라이스에 안전하게 나눠 진행하고, `run.pendingSlotReward`/`bankedFuelBonus` 등 settle()이 여전히 참조하는 필드는 유지해야 한다(오직 in-flight 진입/스핀 UI만 제거, settlement 정산 자체의 슬롯 보상 개념은 항목 15(b)/(c)가 EARTH SHOP으로 이미 대체함).
+
 ## 항목 7(c) UI 연결 — EARTH SHOP 범용 장비 구매 경로를 "n" 키로 실제 플레이에 연결 (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md`의 econ 레인 스코프 순서(항목7→8→11→15) 중 항목 7의 마지막 남은 부분 (c) — 지구 EARTH SHOP에서 범용(은하 비특정) 장비 부품 구매 — 를 처리했다. preflight READY(`engine tests and package` PASS, `git diff` clean), 세션 시작 `git status --short`에서 이전 사이클이 남긴 미커밋 diff(`game/expedition.lua`/`game/i18n.lua`/`game/scenes/play.lua`/`game/self_test.lua`)를 발견 — 검토 결과 그대로 완결된 7(c) 슬라이스였으므로 덮어쓰지 않고 이어서 완결/커밋했다.

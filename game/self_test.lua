@@ -791,6 +791,36 @@ local function testReturnToEarthUiWiring()
     launchScene:keypressed("r")
     assert(launchScene.expedition.phase == "launch", "'r' must not act outside the ascending phase")
 
+    -- docs/feedback/INBOX.md 처리대기 항목 15(a): confirm the invariant that
+    -- lets a future slice safely delete the old beginReturn/"returning"-
+    -- phase/useSlot in-flight slot machine from game/scenes/play.lua --
+    -- real player input (keypressed) must never itself drive the run into
+    -- the "returning" phase; only test/capture harnesses that call
+    -- expedition.beginReturn directly (or set run.phase manually) can. If
+    -- this ever regresses (e.g. a future edit re-adds a keypressed call
+    -- site that reaches expedition.beginReturn), this test goes RED before
+    -- any real player could hit the old path.
+    local function testReturningPhaseUnreachableFromKeypressed()
+        local ascendKeys = {
+            "space", "return", "up", "w", "down", "s", "left", "right", "a", "d",
+            "r", "b", "n", "g", "y", "h",
+        }
+        local scene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        scene.expedition.phase = "ascending"
+        scene.expedition.altitude = 50
+        scene.expedition.maxAltitude = 50
+        for _, key in ipairs(ascendKeys) do
+            scene:keypressed(key)
+            assert(scene.expedition.phase ~= "returning",
+                "keypressed(\"" .. key .. "\") must never drive phase into the old "
+                    .. "in-flight \"returning\" state -- item 15(a) requires real play "
+                    .. "to only reach settlement via 'r'/returnToEarth")
+        end
+    end
+    testReturningPhaseUnreachableFromKeypressed()
+
     local returningScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
