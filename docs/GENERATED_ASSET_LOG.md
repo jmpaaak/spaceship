@@ -23,3 +23,5 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 <!-- New entries append below this line. Do not remove existing lines. -->
 2026-09-03T17:10:00+0900 | assets/ship/ship_default.png | ComfyUI-generated 64x64 top-down ship sprite, wired into PlayScene as self.shipImage (drawn at ~16px footprint)
 2026-09-03T17:06:36+0900 | assets/planet/planet_generic.png | ComfyUI-generated 64x64 neutral-tone planet sprite, wired into PlayScene as self.planetImage (tinted per-planet by existing hue color, replaces flat gradient circle)
+2026-09-03T20:35:00+0900 | assets/ship/ship_default.png | Regenerated (seed 20260903137) after remote ComfyUI host instability corrupted the prior file; single-connected-component silhouette verified via flood-fill pixel analysis
+2026-09-03T20:37:00+0900 | assets/planet/planet_generic.png | Regenerated (seed 20260903241) after remote ComfyUI host instability corrupted the prior file; single-connected disc silhouette verified via flood-fill pixel analysis

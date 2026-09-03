@@ -163,12 +163,12 @@
     "path": "assets/ship/ship_default.png",
     "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
     "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
-    "asset_id": "88572ca9-2c6f-4b7c-a603-ed5eb5ca3d0f",
+    "asset_id": "d7435f81-01ba-45fa-a7c9-97f1bf6d6ee9",
     "prompt": "pixel art, 16-bit, small top-down spaceship sprite for a vertical space roguelite, sleek silver hull with cyan accent stripe, nose pointing up, twin engine thrusters at rear, crisp clean silhouette, solid white background, no text, no watermark, game asset, masterpiece",
     "model": "Juggernaut-XL_v9.safetensors",
     "style": "RW_pixelart_XL_v1.safetensors",
     "settings": {
-      "seed": 20260903,
+      "seed": 20260903137,
       "steps": 30,
       "cfg": 7,
       "sampler": "dpmpp_2m",
@@ -178,22 +178,22 @@
       "height": 64,
       "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
     },
-    "downloaded_at": "2026-09-03T07:57:12Z",
-    "sha256": "344b510eb68178f1199e65569e61f8afaf88275a1d0b819c0089b8b81f6c96c9",
+    "downloaded_at": "2026-09-03T11:22:53Z",
+    "sha256": "62d6d66ae588507c82fbd35168f13a3f2fd67ce161bfc9788e69d93d7940286d",
     "width": 64,
     "height": 64,
-    "qa": "wired into PlayScene.shipImage/shipImagePath and rendered at 16px footprint (game/scenes/play.lua); regression-checked by game/self_test.lua testShipSprite(); vision/runtime-capture QA intentionally skipped per docs/feedback/INBOX.md item 생성 에셋 LLM 비전 검토 제외 (2026-09-03)"
+    "qa": "regen after remote host instability corrupted the prior file (docs/feedback/INBOX.md 깨진 우주선/행성 스프라이트 재생성)"
   },
   {
     "path": "assets/planet/planet_generic.png",
     "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
     "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
-    "asset_id": "968ae1fe-6cb1-4f87-b9fa-672b66f0e01e",
+    "asset_id": "e2bb113a-587d-49e3-b4a5-ce2561078cc6",
     "prompt": "pixel art, 16-bit, small round alien planet sprite for a vertical space roguelite, cratered rocky surface with subtle color bands, soft top-down lighting, grayscale/neutral tone so game code can tint it per biome, crisp clean circular silhouette, solid white background, no text, no watermark, no rings, game asset, masterpiece",
     "model": "Juggernaut-XL_v9.safetensors",
     "style": "RW_pixelart_XL_v1.safetensors",
     "settings": {
-      "seed": 20260903,
+      "seed": 20260903241,
       "steps": 30,
       "cfg": 7,
       "sampler": "dpmpp_2m",
@@ -203,10 +203,10 @@
       "height": 64,
       "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
     },
-    "downloaded_at": "2026-09-03T08:05:33Z",
-    "sha256": "6b159332445c814453d895451a4f812843d9b3467ef9da208f5cd9a769ca8f24",
+    "downloaded_at": "2026-09-03T11:23:45Z",
+    "sha256": "e73ae1607da0d4a190d68f8ed7af1624412846fea4a6efd510b723ba1ae0fb06",
     "width": 64,
     "height": 64,
-    "qa": "wired into PlayScene.planetImage/planetImagePath and rendered tinted-per-hue via planetColor(hue) in the nearbyPlanets draw loop (game/scenes/play.lua), replacing the flat gradient-circle fallback (kept as a fallback when the image fails to load); regression-checked by game/self_test.lua testPlanetSprite(); vision/runtime-capture QA intentionally skipped per docs/feedback/INBOX.md item 생성 에셋 LLM 비전 검토 제외 (2026-09-03)"
+    "qa": "regen after remote host instability corrupted the prior file (docs/feedback/INBOX.md 깨진 우주선/행성 스프라이트 재생성)"
   }
 ]

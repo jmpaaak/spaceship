@@ -1,5 +1,17 @@
 # STATUS
-## 내부 해상도 720×1280 상향 — HUD/터치/미니맵/조이스틱/폰트/상점/지구/로드아웃 ×4 (완료, 2026-09-03)
+## 깨진 우주선/행성 스프라이트 재생성 (완료, 2026-09-03)
+
+preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 버그 항목 「깨진 우주선/행성 스프라이트 재생성」을 처리했다.
+
+- `curl -s http://222.238.86.132:8188/system_stats`로 원격 ComfyUI 호스트 정상 응답 확인(RX 6800 워커, `comfyui_version 0.34.0`).
+- `tools/comfyui_asset_pipeline.py`로 `assets/ship/ship_default.png`(seed `20260903137`), `assets/planet/planet_generic.png`(seed `20260903241`)를 재생성. 도구의 PNG 서명/디코드/단색 검증 통과(exit 0).
+- 결정적 픽셀 분석(비전 모델 대신, 「생성 에셋 LLM 비전 검토 제외」 정책 준수)으로 실루엣 여부를 판정: 흰 배경(RGB>200) 바깥 전경 flood-fill 연결요소 — 우주선 단일 덩어리(3165px, 1개 컴포넌트), 행성 단일 원반 덩어리(3926px)+무시가능한 잡티 3개. 순수 노이즈였다면 수백 개의 흩어진 컴포넌트로 나뉘었을 것이므로 이전 깨진 파일과 명확히 구분됨. 양자화 색상 버킷 200+개, 주요 색상 영역 10~12개로 다중 색상 영역 실재 확인.
+- `docs/assets/MANIFEST.json` 자동 갱신(신규 sha256 `62d6d66a...`/`e73ae160...`). `docs/GENERATED_ASSET_LOG.md`에 재생성 사실 append-only로 2줄 추가(기존 줄 보존).
+- `game/scenes/play.lua`의 로드 경로(`shipImagePath`/`planetImagePath`, 파일명 불변)는 이미 배선되어 있어 코드 변경 없음 — 파일 교체만으로 반영.
+- `GAME_HEADLESS=1 GAME_UNIT=1 love .`(`SPACESHIP_UNIT_OK`/`SPACESHIP_SMOKE_OK`), `make verify LOVE=/Users/jm/.local/bin/love`(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:64`, `ASSET_MANIFEST_OK`) 모두 GREEN.
+- `docs/feedback/INBOX.md`에서 이 항목을 처리 대기 → 처리 완료로 이동(토큰 최적화 규칙 준수).
+
+다음 사이클 다음 슬라이스: 남은 최우선 항목 「내부 해상도를 발라트로 수준으로 상향」의 남은 부분(행성 등 기타 스프라이트 논리 크기/미니맵 마커 점 반경·플로팅 텍스트 박스 등 남은 장식 px), 또는 「국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리」의 남은 (2)/(3). econ/gear 레인 소유 항목(7/8/11/15, 13/9/10/12/14)과 `game/gear.lua`는 건드리지 않는다.
 
 preflight READY. INBOX 최우선 해상도 항목의 두 번째 슬라이스: 720×1280 캔버스에 남아 있던 180×320 절대 픽셀 레이아웃을 ×4 했다.
 

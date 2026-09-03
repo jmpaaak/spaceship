@@ -1081,3 +1081,7 @@ preflight READY(engine tests/package PASS, git diff clean)로 시작. `git statu
 - `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:61`, `ASSET_MANIFEST_OK`).
 - `docs/feedback/INBOX.md`의 해당 처리대기 항목 아래에 이번 슬라이스 완료 로그를 append했다(항목 자체는 (2)(3)이 남아 있으므로 처리대기에 그대로 유지, 완료된 (1) 부분만 하위 로그로 기록).
 - 다음 사이클 다음 슬라이스: 같은 항목의 (2) 발라트로식 점수 펀치 연출(`run.bestAltitude` 갱신 시 카운트업/스케일 펀치, `PlayScene.rollupAmount` 패턴 재사용) 또는 (3) `hud_status`(`\"H%d/%d %-6s S%02d\"`)의 `H%d/%d` 약자를 읽기 쉬운 라벨로 교체(항목 UI 대개편의 좌상단 내구도 상시 표시와 통합 검토 포함).
+
+## Archived from STATUS.md (2026-09-03 20:20)
+
+## 내부 해상도 720×1280 상향 — HUD/터치/미니맵/조이스틱/폰트/상점/지구/로드아웃 ×4 (완료, 2026-09-03)
