@@ -37,6 +37,10 @@ OFFICIAL_SOURCE_PREFIXES = (
     "https://www.aetherai.com/",
     "https://api.aetherforgeai.com/",
     "https://api.aetherai.com/",
+    # 2026-09-03: local ComfyUI is an equally official generation path
+    # (user-approved, human-gate removed) -- its manifest terms_url
+    # records the local instance + workflow id instead of a public URL.
+    "http://127.0.0.1:8188/",
 )
 
 
