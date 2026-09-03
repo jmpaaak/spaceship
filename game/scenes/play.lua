@@ -831,6 +831,34 @@ end
 M.statsIconSize = 24
 M.statsIconGap = 8
 
+-- EARTH SHOP hullStatus icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn hullStatus printf
+-- ("SHORT $n" / "LEFT $n") with a small coin hexagon,
+-- mirroring nextLaunch.stats. Shop-row drawShopIcon sits in
+-- the margin and does not replace this label. Drawn as a
+-- flat hexagon (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.hullStatusIconPoints(cx, cy, size)
+    local w = size * 0.45
+    local h = size * 0.5
+    return {
+        cx, cy - h,
+        cx + w, cy - h * 0.5,
+        cx + w, cy + h * 0.5,
+        cx, cy + h,
+        cx - w, cy + h * 0.5,
+        cx - w, cy - h * 0.5,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- coin-hexagon's right edge and the hullStatus label's
+-- left edge. Matches stats_line because both sit next
+-- to always-drawn shop labels.
+M.hullStatusIconSize = 24
+M.hullStatusIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2190,6 +2218,22 @@ function M.new(options)
             statsIconImage = img
         end
     end
+    -- assets/effects/shop_hull_status.png is the ComfyUI-generated
+    -- EARTH SHOP hullStatus coin hexagon
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as statsIconImagePath.
+    -- :draw() scales it to M.hullStatusIconSize instead of
+    -- M.hullStatusIconPoints, and falls back to that coin
+    -- hexagon when the image failed to load.
+    local hullStatusIconImagePath = "assets/effects/shop_hull_status.png"
+    local hullStatusIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, hullStatusIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            hullStatusIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2322,6 +2366,8 @@ function M.new(options)
         shipActionIconImagePath = shipActionIconImagePath,
         statsIconImage = statsIconImage,
         statsIconImagePath = statsIconImagePath,
+        hullStatusIconImage = hullStatusIconImage,
+        hullStatusIconImagePath = hullStatusIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4462,7 +4508,27 @@ function M:draw()
         
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
             nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.hullStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
+        local hullStatusLabel = nextLaunch.hullStatus
+        local hullStatusFont = love.graphics.getFont()
+        local hullStatusWidth = hullStatusFont:getWidth(hullStatusLabel)
+        local hullStatusIconSpan = M.hullStatusIconSize + M.hullStatusIconGap
+        local hullStatusStartX = shopColumnLeftX + (shopColumnLeftW - (hullStatusIconSpan + hullStatusWidth)) / 2
+        local hullStatusIconCenterX = hullStatusStartX + M.hullStatusIconSize / 2
+        local hullStatusIconCenterY = row + hullStatusFont:getHeight() / 2
+        if self.hullStatusIconImage then
+            local iw, ih = self.hullStatusIconImage:getDimensions()
+            local scale = M.hullStatusIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.hullStatusIconImage, hullStatusIconCenterX, hullStatusIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan coin hexagon, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.hullStatusIconPoints(hullStatusIconCenterX, hullStatusIconCenterY, M.hullStatusIconSize))
+        end
+        love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
+            nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
+        love.graphics.print(hullStatusLabel, hullStatusStartX + hullStatusIconSpan, row)
         love.graphics.setColor(nextLaunch.steeringAffordable and 0.45 or 1,
             nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
         love.graphics.printf(nextLaunch.steeringStatus, shopColumnRightX, row, shopColumnRightW, "center")
