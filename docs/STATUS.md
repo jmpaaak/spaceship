@@ -1,17 +1,4 @@
 # STATUS
-
-## 세션 시작 시 남아있던 미커밋 항목 11(a) 최종 슬라이스 검증 및 커밋 — 레인 스코프(7→8→11→15) 4개 항목 전부 완료 확인 (2026-09-03)
-
-preflight READY(`engine tests and package` PASS, `git diff` clean이라고 보고되었으나, 실제 `git status --short`에는 `docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`game/expedition.lua`/`game/scenes/play.lua`/`game/self_test.lua` 5개 파일에 이전 사이클의 미커밋 diff가 존재했다). 검토 결과 이는 항목 11(a) — `M.launchForecast(run, maxFuel)`을 `M.rangeForecast(run, capacity)`로 리네이밍(옛 이름/파라미터가 "이 연료가 다하면 위험" 프레이밍을 내포해 alias 없이 완전 삭제)하고 `game/scenes/play.lua`의 `launchForecastLine` 호출부를 갱신한 여섯 번째(최종) 슬라이스로, 이미 `game/self_test.lua`에 `expedition.launchForecast == nil` / `expedition.rangeForecast`가 동일 계산값(altitude 600, slots 6)을 반환함을 검증하는 회귀 테스트까지 포함된 완결 상태였다. `docs/feedback/INBOX.md`에도 이미 이 슬라이스가 "✅ 2026-09-03(여섯 번째 슬라이스, 최종 완결)"로 기록되어 있어 중복 작업이 아님을 확인했다.
-
-- `GAME_HEADLESS=1 GAME_UNIT=1 love .`, `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:43`, `ASSET_MANIFEST_OK`) 재확인 후 그대로 커밋했다 — 코드 변경 없이 이전 사이클 결과를 이어받아 검증·커밋만 수행.
-- `docs/feedback/INBOX.md`를 재확인한 결과 이 레인(econ) 스코프 순서(항목7→8→11→15) 4개 항목이 모두 `✅ 완료(econ 레인, 2026-09-03)` 마커로 표시되어 있음을 재확인했다: 항목7(a/b/c 장비 획득 경로 3원화), 항목8(체크포인트 정산), 항목11(a/b/c 연료 잔재 전면 제거, 이번 커밋으로 (a) 최종 슬라이스까지 반영), 항목15(a/b/c 귀환/비행중 슬롯머신 폐지 + 지구상점 전용 슬롯머신).
-- **레인 스코프 소진 확인(재확인):** `loop/PROMPT.md`가 이 레인에 지정한 4개 항목이 전부 완료되어 이 레인이 자체적으로 착수할 다음 슬라이스가 없다. 다음 사이클은 `loop/PROMPT.md` 갱신(다른 pending 항목으로 스코프 재배정) 또는 사용자 확인을 대기해야 하며, 레인 스코프 밖 항목(9/10/12/13/14 등, gear 레인 등 다른 레인 소유)을 임의로 착수하지 않는다.
-- `docs/feedback/INBOX.md`는 이미 항목 7/8/11/15가 완료 표시되어 있어 이번 사이클에서 추가로 append할 새 항목 상태 변경이 없었다(진행상황 로그는 이전 사이클이 이미 기록 완료).
-- 병합 메모: 원격 `spaceship-econ`에 이미 푸시되어 있던 항목 11(c) i18n 잔재 정리(아래 절 참고)와 병합했다 — 두 작업 모두 항목 11(a)/(b)/(c) 전체 완료라는 동일 결론에 도달했으며 서로 코드 충돌이 없었다.
-
-## 항목 11(c) 잔여 정리 — 죽은 i18n 연료/슬롯머신 문구 8종 삭제 (완료, 2026-09-03)
-
 preflight READY(`engine tests and package` PASS, `git diff` clean)를 확인했다. `git status --short`가 clean함(이전 사이클의 미커밋 작업 없음)을 확인한 뒤, `docs/feedback/INBOX.md`의 이 레인 스코프 순서(항목7→8→11→15)에서 유일하게 남아있던 항목 11의 잔여 부분 — (c) "코드 전반의 죽은 연료 소모 로직/필드 정리" — 를 마저 처리했다.
 
 - `game/expedition.lua`/`game/ship.lua`의 죽은 연료 필드·함수는 이전 사이클들이 이미 전부 제거했지만, `game/i18n.lua`에 그 시절 문구 8개(en/ko 각각, 총 16줄)가 저장소 어디서도 참조되지 않는 죽은 문자열로 남아있음을 발견했다: `fuel_bonus_line`("NEXT LAUNCH FUEL +%d"/"다음발사 연료 +%d"), `newbest_fuel_combined`("NEW BEST! FUEL +%d"/"신기록! 연료+%d"), `spinning_label`/`win_repair_line`/`win_fuel_line`/`win_sample_line`/`win_pending_line`/`spins_settlement_line`(옛 in-flight 슬롯머신 릴 스핀/결과 문구).

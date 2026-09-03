@@ -41,10 +41,9 @@ if (( RUN_BUDGET_SECONDS < 1 )); then
   printf 'RUN_BUDGET_SECONDS must be at least 1\n' >&2
   exit 2
 fi
-if (( RUN_BUDGET_SECONDS >= MAX_IDLE_SECONDS )); then
-  printf 'RUN_BUDGET_SECONDS must be less than MAX_IDLE_SECONDS\n' >&2
-  exit 2
-fi
+# RUN_BUDGET is total wall-clock for a cycle. MAX_IDLE is "no stdout
+# for this many seconds" — they are independent. A silent/rate-limited
+# primary should be detected quickly and retried on the fallback model.
 
 mkdir -p "${LOG_DIR}"
 if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
@@ -165,7 +164,9 @@ while :; do
   printf '===== cycle %d end %s status=%d =====\n' \
     "${cycle}" "${finished_at}" "${agent_status}" | tee -a "${log_file}"
 
-  if (( agent_status != 0 )); then
+  if (( agent_status == 124 )); then
+    printf 'Primary went silent (idle timeout); fallback was attempted if Codex. Continuing next cycle.\n' | tee -a "${log_file}"
+  elif (( agent_status != 0 )); then
     printf 'Agent cycle failed with status=%d; propagating failure.\n' \
       "${agent_status}" | tee -a "${log_file}"
     exit "${agent_status}"
