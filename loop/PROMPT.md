@@ -51,12 +51,12 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## AetherAI-only asset rule
 
-- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI or official API.
+- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI/API or the local ComfyUI pipeline (`http://127.0.0.1:8188`, workflow IDs `7a3eb820-f17d-47ce-a337-da2358c2a0d5` / `5c257929-dff5-4ef4-bd1e-2c99dbbf3dee`).
 - Never crawl, scrape, macro, or automate the AetherAI website.
 - Never generate final art with Python/Pillow, Lua, another image model, or hand-authored raster scripts.
-- Until an official export and receipt exist, simple Lua shapes may remain only as visibly documented `DEV PLACEHOLDER` gameplay geometry. Do not call them final assets or visual QA.
-- Do not invent provenance. Official imports require source/terms URL, generation/asset ID, prompt/model/style/settings, timestamp, original SHA-256, dimensions, and runtime QA.
-- If login/export is unavailable, mark art human-gated and continue non-asset gameplay, tests, persistence, balancing, touch input, packaging, and UI layout work.
+- 2026-09-03 update: the user human-gate on final art (waiting for manual AetherAI login/export) is removed. The loop may drive the ComfyUI HTTP API (`/prompt`, `/history`, `/view`) directly and self-judge quality (matches the object's intended silhouette/readability, no artifacts, runtime-legible at actual `1864×860` scale) instead of waiting on a manual approval. AetherAI import remains available whenever credentials appear; ComfyUI is an equally official path, not a fallback that needs later re-approval.
+- Do not invent provenance. Official imports/generations require source/terms URL (AetherAI) or workflow path/prompt/seed/sampler settings (ComfyUI), generation/asset ID or output SHA-256, timestamp, dimensions, and runtime QA in the asset manifest — this is a quality record, not an approval gate.
+- Report applied asset files/manifest paths back to the user (STATUS.md) instead of asking for approval.
 
 ## Safety and scope
 
