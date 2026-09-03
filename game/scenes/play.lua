@@ -945,6 +945,35 @@ end
 M.shipStatusIconSize = 24
 M.shipStatusIconGap = 8
 
+-- EARTH SHOP hullPreviewCompact icon (icon-based HUD simplification
+-- follow-on): pair the always-drawn hullPreviewCompact printf
+-- ("HULL n" after upgrade) with a small layered hull-plate,
+-- mirroring hullStatus. Shop-row drawShopIcon sits in the margin
+-- and does not replace this label. Drawn as a flat house-plate
+-- (even-length {x,y,...} list, no love.graphics calls) so
+-- headless tests can pin geometry: horizontally symmetric around
+-- cx, spans above and below cy.
+function M.hullPreviewIconPoints(cx, cy, size)
+    local w = size * 0.48
+    local h = size * 0.5
+    local roof = size * 0.18
+    return {
+        cx - w * 0.45, cy - h,
+        cx + w * 0.45, cy - h,
+        cx + w, cy - h + roof,
+        cx + w, cy + h,
+        cx - w, cy + h,
+        cx - w, cy - h + roof,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- layered hull-plate's right edge and the hullPreviewCompact
+-- label's left edge. Matches hullStatus because both sit
+-- next to always-drawn shop labels.
+M.hullPreviewIconSize = 24
+M.hullPreviewIconGap = 8
+
 -- LAUNCH LOADOUT loadout.stats was still a bare centered
 -- printf after EARTH SHOP nextLaunch.stats got the hull-plate
 -- icon. Named flag + shared layout helper so both surfaces
@@ -2368,6 +2397,22 @@ function M.new(options)
             shipStatusIconImage = img
         end
     end
+    -- assets/effects/shop_hull_preview.png is the ComfyUI-generated
+    -- EARTH SHOP hullPreviewCompact layered hull-plate
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as shipStatusIconImagePath.
+    -- :draw() scales it to M.hullPreviewIconSize instead of
+    -- M.hullPreviewIconPoints, and falls back to that house-plate
+    -- polygon when the image failed to load.
+    local hullPreviewIconImagePath = "assets/effects/shop_hull_preview.png"
+    local hullPreviewIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, hullPreviewIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            hullPreviewIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2508,6 +2553,8 @@ function M.new(options)
         yieldStatusIconImagePath = yieldStatusIconImagePath,
         shipStatusIconImage = shipStatusIconImage,
         shipStatusIconImagePath = shipStatusIconImagePath,
+        hullPreviewIconImage = hullPreviewIconImage,
+        hullPreviewIconImagePath = hullPreviewIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4695,7 +4742,26 @@ function M:draw()
         row = row + rowStep
         
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.hullPreviewCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        local hullPreviewLabel = nextLaunch.hullPreviewCompact
+        local hullPreviewFont = love.graphics.getFont()
+        local hullPreviewWidth = hullPreviewFont:getWidth(hullPreviewLabel)
+        local hullPreviewIconSpan = M.hullPreviewIconSize + M.hullPreviewIconGap
+        local hullPreviewStartX = shopColumnLeftX + (shopColumnLeftW - (hullPreviewIconSpan + hullPreviewWidth)) / 2
+        local hullPreviewIconCenterX = hullPreviewStartX + M.hullPreviewIconSize / 2
+        local hullPreviewIconCenterY = row + hullPreviewFont:getHeight() / 2
+        if self.hullPreviewIconImage then
+            local iw, ih = self.hullPreviewIconImage:getDimensions()
+            local scale = M.hullPreviewIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.hullPreviewIconImage, hullPreviewIconCenterX, hullPreviewIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan layered hull-plate, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.polygon("fill",
+                M.hullPreviewIconPoints(hullPreviewIconCenterX, hullPreviewIconCenterY, M.hullPreviewIconSize))
+        end
+        love.graphics.setColor(0.4, 0.85, 1)
+        love.graphics.print(hullPreviewLabel, hullPreviewStartX + hullPreviewIconSpan, row)
         love.graphics.printf(nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
 
