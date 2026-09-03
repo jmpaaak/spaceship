@@ -1419,6 +1419,11 @@ local function testGearRunEffectWiring()
         "an unequipped run's detection radius must equal the unmodified base radius")
     assert(expedition.autoCollectEnabled(bareRun) == false,
         "an unequipped run must not have auto-collect enabled")
+    assert(expedition.rerollsRemaining(bareRun) == 0,
+        "an unequipped run must have zero remaining free rerolls")
+    local spent, err = expedition.spendReroll(bareRun)
+    assert(spent == false and type(err) == "string",
+        "spendReroll must refuse (false + message) when no free rerolls remain")
 
     -- Equip one hull card carrying all four (C)/(E) effect types at once
     -- and confirm the run-level wrappers combine gearModule's pure
@@ -1445,6 +1450,39 @@ local function testGearRunEffectWiring()
         "detectionRadius +50%% of base 20 must resolve to 30 through the run wrapper")
     assert(expedition.autoCollectEnabled(run) == true,
         "a positive autoCollect effect must enable auto-collect through the run wrapper")
+
+    -- rerollBonus (item 14(C)) has, until this slice, only ever exposed a
+    -- pure COUNT (rerollCount) with no run-state consumer -- unlike its (C)
+    -- sibling luck (spent via gear.totalLuckBonus feeding rollRarity/
+    -- rollEdition) or insurance (a one-shot boolean gate consumed by
+    -- M.damage), a "free reroll count" is meaningless unless something can
+    -- actually SPEND one. M.rerollsRemaining(run)/M.spendReroll(run) close
+    -- that last (C) consumption gap: spending decrements a per-expedition
+    -- counter (not the raw equipped total, which is re-derived from gear
+    -- and would never deplete) down to zero, then refuses further spends.
+    assert(expedition.rerollsRemaining(run) == 2,
+        "a run with rerollBonus == 2 (floored) must start with 2 remaining free rerolls")
+    local ok1 = expedition.spendReroll(run)
+    assert(ok1 == true, "spendReroll must succeed while rerolls remain")
+    assert(expedition.rerollsRemaining(run) == 1,
+        "spending one reroll must decrement the remaining count by exactly one")
+    local ok2 = expedition.spendReroll(run)
+    assert(ok2 == true, "spendReroll must succeed for the last remaining reroll")
+    assert(expedition.rerollsRemaining(run) == 0,
+        "rerollsRemaining must reach exactly zero once every free reroll is spent")
+    local ok3, err3 = expedition.spendReroll(run)
+    assert(ok3 == false and type(err3) == "string",
+        "spendReroll must refuse (false + message), not go negative, once rerolls are exhausted")
+    assert(expedition.rerollsRemaining(run) == 0,
+        "a refused spendReroll call must not further decrement the remaining count")
+
+    -- Re-launching a fresh expedition must refill the remaining-reroll
+    -- counter back up to the current equipped total (same "per-expedition
+    -- resource" shape as run.insuranceUsed being reset on M.launch).
+    run.phase = "settlement"
+    assert(expedition.launch(run))
+    assert(expedition.rerollsRemaining(run) == 2,
+        "launching a new expedition must refill remaining rerolls back to the equipped rerollBonus total")
 
     -- Engine-slot equips must feed the same wrappers too (item 10: hull and
     -- engine are independent slot lists, but both should count toward these

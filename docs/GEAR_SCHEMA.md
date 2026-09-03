@@ -332,11 +332,14 @@ quantity that category controls:
   cards give `+50%` total, never `+56.25%` compounding). This ordering is
   the concrete mechanism behind item 9's "조합이 곱연산으로 폭발" design
   goal for the sell-value axis (climbSpeed already had its own synergy
-  multiplier from item 9). `streakMultiplier` is defined in the schema
-  (recognized effect type, validated range) but its consumer — the
-  "동일 계열 연속 채집 배율" streak-tracking logic itself — lives in
-  gameplay code (`game/expedition.lua`) outside this lane's current scope,
-  so `game/gear.lua` does not yet convert it into a run-state multiplier.
+  multiplier from item 9). `streakMultiplier` is likewise defined in the
+  schema (recognized effect type, validated range) and — as of the
+  "Item 14(B) streakMultiplier run wiring" follow-up slice below — has a
+  real run-state consumer: `game/gear.lua`'s `M.effectiveStreakBonusPerStep`
+  converts it into a per-step percentage-point bonus that
+  `game/expedition.lua`'s `M.streakBonusPerStep`/`M.streakMultiplier` apply
+  to actual consecutive-collection streaks (see that section for the full
+  contract; this paragraph only describes the raw schema shape).
 - **(C) trigger/probability** — `M.chainTriggerCount(parts)` and
   `M.rerollCount(parts)` sum the relevant effect type and floor to a
   non-negative integer count (a fractional trigger/reroll doesn't make
@@ -750,5 +753,64 @@ encounter these mechanics in actual play no matter what they equipped.
   confirms `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`
   were not touched — this slice was pure data + a new regression test.
 
+### Item 14(C) rerollBonus consumption wiring — M.rerollsRemaining / M.spendReroll (follow-up slice)
+
+The "Item 14 (C)/(E) run wiring" section above closed the gap where
+`chainTrigger`/`rerollBonus`/`detectionRadius`/`autoCollect` had no
+run-facing wrapper at all, but left one asymmetry unaddressed:
+`M.rerollCount(run)` (and its sibling wrappers) are pure re-derived
+totals recomputed fresh from currently-equipped gear every call — fine
+for `chainTriggerCount`/`detectionRadius`/`autoCollectEnabled`, which are
+genuinely stateless per-tick modifiers, but meaningless for `rerollBonus`
+specifically: a "free reroll count" only means something as a
+per-expedition **resource that depletes when spent**, the same way
+`insurance` is a one-shot boolean (`run.insuranceUsed`) rather than a pure
+function of equipped gear. Until this slice, nothing could ever actually
+spend a free reroll — the count existed but had no consumption path,
+making `rerollBonus` dead content even though its schema/run-wiring
+layers were both nominally "done".
+
+- New `run.rerollsUsed` field (defaults to `0` in `M.new`) tracks how many
+  of the current expedition's free rerolls have already been spent — same
+  lifecycle shape as `run.insuranceUsed`: reset to `0` on `M.launch`'s
+  relaunch branch and on the full meta-wipe `destroy(run)` path.
+- New `M.rerollsRemaining(run)` returns `M.rerollCount(run) -
+  run.rerollsUsed`, clamped to never go negative. Because
+  `M.rerollCount(run)` is still the live equipped-gear total, gaining more
+  `rerollBonus` gear mid-expedition immediately raises the remaining
+  ceiling with no extra bookkeeping needed.
+- New `M.spendReroll(run)` — atomic, non-throwing: returns `true` and
+  increments `run.rerollsUsed` by one if `rerollsRemaining(run) > 0`,
+  otherwise returns `false, "no free rerolls remaining"` and leaves state
+  unchanged (same "reject, don't partial-apply" contract as
+  `M.equipGear`/`M.sellGear`).
+- `game/self_test.lua`'s `testGearRunEffectWiring` (extended, not new)
+  regression-checks: an unequipped run has `rerollsRemaining == 0` and
+  `spendReroll` refuses immediately; a run with an equipped `rerollBonus`
+  card (floored total 2) starts at `rerollsRemaining == 2`, two successive
+  `spendReroll` calls succeed and drain it to `0` one at a time, a third
+  call is refused (`false` + message) without going negative, and
+  relaunching the same run (`M.launch`) refills `rerollsRemaining` back up
+  to the equipped total (RED confirmed:
+  `attempt to call field 'rerollsRemaining' (a nil value)` before
+  implementation).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` both GREEN
+  (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3,
+  `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- Changed files: `game/expedition.lua`, `game/self_test.lua`, this doc,
+  `docs/STATUS.md`, `docs/feedback/INBOX.md`. `git status --short`
+  confirms `play.lua`/`i18n.lua`/`world.lua`/`game/gear.lua`/
+  `game/engine_parts.lua` were not touched.
+- This slice also fixed a stale contradiction in the "(B) multiplicative"
+  paragraph earlier in this doc, which still claimed `streakMultiplier`
+  had no run-state consumer even though the later "Item 14(B)
+  streakMultiplier run wiring" section (added in a prior slice) already
+  documents it as wired — the earlier paragraph now cross-references that
+  section instead of repeating the outdated claim.
+- Still deferred: the actual shop/checkpoint UI affordance that would let
+  a player tap "free reroll" and call `M.spendReroll` (`play.lua`, out of
+  this lane's scope) — this slice only establishes the run-level
+  spend/remaining state a future consumer will read from and mutate,
+  same posture as every other item 14 (C)/(E) wrapper before it.
 
 

@@ -249,6 +249,7 @@ local function destroy(run)
     run.equippedGear = run.gearLoadout.hull
     run.equippedEngineParts = run.gearLoadout.engine
     run.insuranceUsed = false
+    run.rerollsUsed = 0
 end
 
 function M.new(options)
@@ -331,6 +332,11 @@ function M.new(options)
         -- Item 14(D) insurance: whether this run's one-time "파괴 시 1회
         -- 한정 정산 없이 생존" save has already been consumed by M.damage.
         insuranceUsed = false,
+        -- Item 14(C) rerollBonus consumption: how many of this expedition's
+        -- free rerolls (gearModule.rerollCount's floored equipped total)
+        -- have already been spent via M.spendReroll. Reset on M.launch,
+        -- same per-expedition-resource lifecycle as insuranceUsed.
+        rerollsUsed = 0,
     }
     run.gearLoadout = enginePartsModule.newLoadout()
     run.equippedGear = run.gearLoadout.hull
@@ -408,6 +414,7 @@ function M.launch(run)
         run.bankedFuelBonus = 0
         run.durability = run.maxDurability
         run.insuranceUsed = false
+        run.rerollsUsed = 0
         run.returnDistance = 0
         run.slotOpportunities = 0
         run.slotSpins = 0
@@ -677,6 +684,36 @@ end
 
 function M.rerollCount(run)
     return gearModule.rerollCount(combinedGearList(run))
+end
+
+-- Item 14(C) rerollBonus consumption wiring: rerollCount(run) above has
+-- always been a pure re-derived total (equipped-gear rerollBonus effects
+-- summed and floored), which is meaningless as a per-expedition resource
+-- on its own -- nothing could ever actually SPEND a "free reroll" and see
+-- the pool deplete, the same gap rerollBonus's (C) sibling `luck` never had
+-- (luck feeds rollRarity/rollEdition directly, no spend/deplete semantics
+-- needed) and `insurance` closed via a one-shot boolean (run.insuranceUsed).
+-- run.rerollsUsed tracks how many of the CURRENT expedition's free rerolls
+-- have already been spent; M.rerollsRemaining(run) is the live
+-- rerollCount(run) minus that counter (never negative), so re-equipping
+-- more rerollBonus gear mid-run raises the ceiling immediately without any
+-- extra bookkeeping. M.launch resets run.rerollsUsed to 0 alongside
+-- run.insuranceUsed, matching the "resets once per expedition" contract.
+function M.rerollsRemaining(run)
+    local remaining = M.rerollCount(run) - (run.rerollsUsed or 0)
+    if remaining < 0 then remaining = 0 end
+    return remaining
+end
+
+-- Spends one free reroll if any remain. Returns true on success, or
+-- false, error-message (never throws) if none remain -- same "atomic,
+-- reject-don't-partial-apply" contract as M.sellGear/M.equipGear.
+function M.spendReroll(run)
+    if M.rerollsRemaining(run) <= 0 then
+        return false, "no free rerolls remaining"
+    end
+    run.rerollsUsed = (run.rerollsUsed or 0) + 1
+    return true
 end
 
 function M.detectionRadius(run, baseRadius)

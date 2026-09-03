@@ -1,4 +1,21 @@
 # STATUS
+## [spaceship-gear 레인] 항목14(C) `rerollBonus` 소비 배선 — `M.rerollsRemaining`/`M.spendReroll` (완료, 2026-09-03)
+
+이 레인(`spaceship-gear` 브랜치)이 지정받은 항목13→9→10→12→14가 모두 1차 완료된 상태에서, 항목14 (C) `rerollBonus`가 문서상 "run-level 소비자 있음"으로 기록돼 있었으나 실제로는 `M.rerollCount(run)`이라는 매 호출마다 재계산되는 순수 파생값만 존재하고, 실제로 리롤을 "쓰고" 잔여량이 줄어드는 소비 경로가 전혀 없었던 gap을 감사로 발견해 처리했다. 이는 같은 (C)/(E) 계열의 `chainTrigger`/`detectionRadius`/`autoCollect`(상태 없는 매 틱 수정자로 정상)와 달리, "무료 리롤"은 개념상 소비되어 고갈되는 자원이어야 하는데 그 소비 메커니즘 자체가 없었다는 뜻이다(같은 (D) 카테고리의 `insurance`가 `run.insuranceUsed`라는 1회성 boolean으로 실제 소비되는 것과 대비됨). preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
+
+- TDD로 `game/self_test.lua`의 기존 `testGearRunEffectWiring()`을 확장했다(RED 확인: `attempt to call field 'rerollsRemaining' (a nil value)`).
+- `game/expedition.lua`에 신규 `run.rerollsUsed`(현재 원정에서 이미 소비한 리롤 수, `M.new`에서 0 초기화)를 추가하고 `M.launch`의 재발사 분기와 전체 메타 초기화 `destroy(run)` 양쪽에서 0으로 리셋하도록 배선했다(`run.insuranceUsed`와 완전히 동일한 생명주기).
+- 신규 `M.rerollsRemaining(run)` — `M.rerollCount(run) - run.rerollsUsed`, 0 미만으로 내려가지 않도록 클램프. `M.rerollCount(run)`이 여전히 장착 부품 기준 실시간 총합이므로, 원정 중 리롤 부품을 추가 장착하면 잔여 한도가 즉시 올라간다(별도 재계산 로직 불필요).
+- 신규 `M.spendReroll(run)` — 원자적, 예외 없음: 잔여 리롤이 있으면 `true` + `run.rerollsUsed` 1 증가, 없으면 `false, "no free rerolls remaining"` + 상태 불변(`M.equipGear`/`M.sellGear`와 동일한 "부분 적용 없음" 계약).
+- `testGearRunEffectWiring()`이 다음을 회귀 검증한다: 미장착 run은 `rerollsRemaining == 0`이고 `spendReroll`이 즉시 거부됨, `rerollBonus` 카드(floored 총합 2) 장착 run은 `rerollsRemaining == 2`로 시작해 두 번의 연속 `spendReroll` 성공 후 정확히 0으로 고갈됨, 세 번째 호출은 `false` + 에러 메시지로 거부되며 상태를 더 감소시키지 않음, 같은 run을 재발사(`M.launch`)하면 잔여가 장착 총합(2)으로 다시 채워짐.
+- 감사 과정에서 `docs/GEAR_SCHEMA.md`의 "(B) multiplicative" 단락이 여전히 `streakMultiplier`를 "run-state 소비자 없음"으로 서술해, 이후 슬라이스("Item 14(B) streakMultiplier run wiring")의 실제 완료 상태와 모순되던 stale 문서를 함께 정정했다(코드 변경 없음, 순수 문서 정확성 수정 — 후속 섹션을 가리키도록 교차 참조로 교체).
+- `docs/GEAR_SCHEMA.md`에 "Item 14(C) rerollBonus consumption wiring — M.rerollsRemaining / M.spendReroll" 섹션을 신규 추가했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/expedition.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md`/`docs/STATUS.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`와, 이번 슬라이스가 건드릴 필요 없었던 `game/gear.lua`/`game/engine_parts.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 14 하위(항목15 앞)에 처리 상황을 여섯 번째 슬라이스로 append했다.
+- 여전히 미착수: 실제 상점 UI에서 "무료 리롤" 버튼이 `M.spendReroll`을 호출하는 지점(`play.lua` 담당, 레인 스코프 밖).
+- 다음 사이클 다음 슬라이스: 항목7(획득 경로 3원화 — 상점 행성 좌표 생성 등 순수 함수/데이터 계층에서 준비 가능한 부분)의 순수 함수 계층 검토, 또는 이 레인이 완료한 항목13→9→10→12→14 순서 밖의 잔여 작업 재검토(문서-코드 정합성 감사 패턴이 이번에도 실제 gap을 찾아냈으므로, 다음 슬라이스도 각 STATUS.md/GEAR_SCHEMA.md "완료" 주장을 코드로 재검증하는 방식이 유효할 수 있음).
+
 ## [spaceship-gear 레인] 항목14(D) `collisionRadius` 마지막 run-level gap 배선 (완료, 2026-09-03)
 
 `docs/GEAR_SCHEMA.md`가 "항목14의 (A)~(F) 전 카테고리가 최소 1개 run-level 배선을 갖는다"고 여러 차례 명시했으나, 실제로 코드를 확인해보니 (D) 카테고리의 `collisionRadius`(`gear.effectiveCollisionRadius`)만 유일하게 `game/expedition.lua`에 run 래퍼가 없는 상태였다 — 같은 (D)의 `insurance`는 이미 `M.damage`에 배선됐고, (C)/(E)의 `chainTrigger`/`rerollBonus`/`detectionRadius`/`autoCollect`는 이전 슬라이스에서 배선됐으나 `collisionRadius`만 문서의 낙관적 서술과 달리 실제로는 빠져 있었다. 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료된 상태였고, 이번 사이클은 문서가 반복적으로 "전 카테고리 완료"라 주장했던 것을 코드로 직접 검증해 발견한 이 실제 gap을 닫았다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
