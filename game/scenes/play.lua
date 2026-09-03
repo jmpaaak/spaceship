@@ -48,58 +48,46 @@ local function shortestAngleDelta(from, to)
 end
 M.shortestAngleDelta = shortestAngleDelta
 
--- Returning-phase LEFT/RIGHT/SPIN touch band. Was a 24px-tall row
--- (254-278), which only clears ~24pt at the smallest supported window
--- (integer scale 1, 1x device pixel ratio) -- well under the iOS/Android
--- ~44pt accessibility minimum PlayScene.settlementTouchRows was already
--- fixed to meet (see game/self_test.lua's canvasPixelsToPoints check).
--- Widened to a 44 canvas px band (244-288). The slot-reel result box above
--- was shrunk from 36px to 34px tall (210-244) so it stops exactly where
--- this band starts, and the message text below still starts at
--- viewport.height - 30 == 290, 2px clear of this band's bottom (288).
+-- Returning-phase LEFT/RIGHT/SPIN touch band. Old 180×320 values
+-- (244-288, 44 canvas px) ×4 for the 720×1280 canvas so the band stays
+-- at the same screen fraction and still clears the 44pt bar (176 canvas
+-- px at integer scale 1). Slot-reel box and message y are scaled with it.
 local returnControls = {
-    top = 244,
-    bottom = 288,
-    leftMaxX = 55,
-    slotMinX = 60,
-    slotMaxX = 120,
-    rightMinX = 125,
+    top = 976,
+    bottom = 1152,
+    leftMaxX = 220,
+    slotMinX = 240,
+    slotMaxX = 480,
+    rightMinX = 500,
 }
 M.returnControls = returnControls
 
--- Settlement (EARTH SHOP) touch rows, top-to-bottom. Each row's height is a
--- Actual finger touch target on the device, not just a text layout band.
--- Evenly split across the 140-320 canvas range (180px / 4 = 45px each) so
--- every row clears the 44pt accessibility minimum (see
--- game/self_test.lua's canvasPixelsToPoints check) at the smallest
--- supported window (integer scale 1, 1x device pixel ratio), superseding
--- the previous 150-320/42px rows that only cleared the lower 34px bar.
--- The settlement panel's summary-card font/spacing was shrunk to free the
--- extra 10px of vertical room this needed. See game/self_test.lua for the
--- device-scale check.
+-- Settlement (EARTH SHOP) touch rows, top-to-bottom. Old 180×320 bands
+-- (188-232 / 232-276 / 276-320, half-width 90) ×4 onto 720×1280 so the
+-- shop stays pinned to the canvas bottom and each band still clears the
+-- 44pt accessibility minimum (176 canvas px at integer scale 1).
 -- docs/feedback/INBOX.md item 11(b): the fuel-tank upgrade purchase was
 -- removed from EARTH SHOP because fuel no longer constrains flight, so
 -- buying more tank capacity implied a safety that does not exist. The
 -- remaining four actions (HULL, STEERING, YIELD, SHIP) plus RELAUNCH
--- still occupy four 44px bands. HULL/STEERING share one row and
--- YIELD/SHIP share the next, matching the previous split-column pattern
--- so no fifth 36px-tall row is needed.
+-- still occupy three stacked bands. HULL/STEERING share one row and
+-- YIELD/SHIP share the next.
 local settlementTouchRows = {
     {
-        top = 188, bottom = 232,
+        top = 752, bottom = 928,
         columns = {
-            { key = "hull", left = 0, right = 90 },
-            { key = "steering", left = 90, right = 180 },
+            { key = "hull", left = 0, right = 360 },
+            { key = "steering", left = 360, right = 720 },
         },
     },
     {
-        top = 232, bottom = 276,
+        top = 928, bottom = 1104,
         columns = {
-            { key = "yield", left = 0, right = 90 },
-            { key = "ship", left = 90, right = 180 },
+            { key = "yield", left = 0, right = 360 },
+            { key = "ship", left = 360, right = 720 },
         },
     },
-    { key = "relaunch", top = 276, bottom = 320 },
+    { key = "relaunch", top = 1104, bottom = 1280 },
 }
 M.settlementTouchRows = settlementTouchRows
 
@@ -122,7 +110,7 @@ M.destroyedTouchArea = destroyedTouchArea
 -- settlementTouchRows were widened to meet. Widened to match
 -- returnControls exactly (244-288, 44 canvas px) for visual consistency,
 -- even though it does not gate touch acceptance.
-local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
+local ascendControls = { top = 976, bottom = 1152, leftMaxX = 324, rightMinX = 396 }
 M.ascendControls = ascendControls
 
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
@@ -153,15 +141,15 @@ M.launchTouchArea = launchTouchArea
 -- the same small font inside a background box extended all the way to
 -- the canvas bottom (viewport.height) so the Earth disc can no longer
 -- show through below the box.
-M.launchHudHeight = 32
+M.launchHudHeight = 128
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
 -- at the world origin, radius 58) tops out at y=202, two pixels above the
 -- box's previous 204px top -- a real LÖVE runtime capture showed a faint
 -- blue crescent peeking out just above the LAUNCH LOADOUT card. Raised the
 -- box top to 202 so it fully covers the disc's topmost extent.
-M.launchLoadoutBoxTop = 202
-M.launchLoadoutRowStep = 10
+M.launchLoadoutBoxTop = 808
+M.launchLoadoutRowStep = 40
 
 -- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
 -- panel caption itself was flagged for removal during the "remove
@@ -203,8 +191,8 @@ end
 
 -- Icon diameter and the vertical gap between the icon's center and the
 -- message text's top edge, both in internal-canvas pixels.
-M.launchIconSize = 14
-M.launchIconGap = 12
+M.launchIconSize = 56
+M.launchIconGap = 48
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- second slice): pair the hull-durability readout (the "H%d/%d" segment of
@@ -231,8 +219,8 @@ end
 -- right edge and the status text's left edge, both in internal-canvas
 -- pixels. The status text draw x shifts right by this much whenever the
 -- icon is drawn so the icon never overlaps the "H%d/%d ..." text.
-M.hullIconSize = 8
-M.hullIconGap = 4
+M.hullIconSize = 32
+M.hullIconGap = 16
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- third slice): a small coin icon paired with the CASH readout, mirroring
@@ -259,8 +247,8 @@ end
 
 -- Icon footprint (px) + gap (px) reserved between the coin icon's right
 -- edge and the CASH text's left edge, mirroring M.hullIconSize/hullIconGap.
-M.cashIconSize = 8
-M.cashIconGap = 4
+M.cashIconSize = 32
+M.cashIconGap = 16
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- fourth/final slice): pair the LAUNCH LOADOUT steering-speed readout
@@ -288,8 +276,8 @@ end
 -- Icon footprint (px) + gap (px) reserved between the speedometer icon's
 -- right edge and the STEER SPEED text's left edge, mirroring
 -- M.hullIconSize/hullIconGap and M.cashIconSize/cashIconGap.
-M.speedIconSize = 8
-M.speedIconGap = 4
+M.speedIconSize = 32
+M.speedIconGap = 16
 
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
@@ -299,14 +287,14 @@ M.speedIconGap = 4
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below, and this extra
 -- gap is inserted between the DIST/CASH line and the fuel/status line
 -- during ascending/returning so the two numbers read as visually unrelated.
-M.hudPrimaryStatusGap = 6
+M.hudPrimaryStatusGap = 24
 
 -- docs/feedback/INBOX.md UI/HUD item 5: the small C%/P%/S%/AVG$ slot-odds
 -- line drawn above the minimap during the returning phase needs its own
 -- reserved vertical space in the HUD box; without it the line collided
 -- with the RETURN %%/s-left text right above it (confirmed via a real
 -- LÖVE runtime capture, GAME_CAPTURE_PHASE=returning-odds).
-M.hudOddsLineHeight = 10
+M.hudOddsLineHeight = 40
 
 -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
 -- footer text is a permanent dev-only disclaimer (kept until real AetherAI
@@ -314,8 +302,15 @@ M.hudOddsLineHeight = 10
 -- watermark instead of competing with the message line above it. Smaller
 -- font + lower alpha than the default text keeps it legible but visually
 -- de-emphasized.
-M.devPlaceholderFontSize = 7
+M.devPlaceholderFontSize = 28
 M.devPlaceholderAlpha = 0.4
+-- Scene fonts: old 8/14 ×4 so text keeps the same screen fraction on
+-- 720×1280 (integer-scale 1 is now a 720×1280 window, not 180×320).
+M.smallFontSize = 32
+M.hudFontSize = 56
+-- Launch-screen Earth disc (world origin, screen y = earthCenterY - cameraY).
+M.earthCenterY = 300
+M.earthRadius = 232
 
 -- Shared HUD background-box height so the minimap placement (drawMinimap)
 -- and the actual text draw (draw) never disagree about how tall the top
@@ -325,15 +320,15 @@ function M.hudHeight(phase, hud, galaxyShift)
         return M.launchHudHeight + galaxyShift
     end
     if hud.returnProgress then
-        return 70 + M.hudPrimaryStatusGap + M.hudOddsLineHeight + galaxyShift
+        return 280 + M.hudPrimaryStatusGap + M.hudOddsLineHeight + galaxyShift
     end
     if hud.samples then
-        return 46 + M.hudPrimaryStatusGap + galaxyShift
+        return 184 + M.hudPrimaryStatusGap + galaxyShift
     end
     if hud.best then
-        return 46 + galaxyShift
+        return 184 + galaxyShift
     end
-    return 34 + galaxyShift
+    return 136 + galaxyShift
 end
 
 local function planetColor(hue)
@@ -492,8 +487,8 @@ local slotSpinDuration = slotReelStagger * 3
 -- (viewport.width - 24 wide from x=12), so the two columns are sized to
 -- exactly cover their measured worst case within that inner width with
 -- no wasted margin: action 16..116 (100px), status 116..168 (52px).
-local shopActionColumnX, shopActionColumnW = 16, 100
-local shopStatusColumnX, shopStatusColumnW = 116, 52
+local shopActionColumnX, shopActionColumnW = 64, 400
+local shopStatusColumnX, shopStatusColumnW = 464, 208
 M.shopActionColumnX = shopActionColumnX
 M.shopActionColumnW = shopActionColumnW
 M.shopStatusColumnX = shopStatusColumnX
@@ -518,8 +513,8 @@ M.shopStatusColumnW = shopStatusColumnW
 -- full-width preview/forecast lines below each shared row are left
 -- untouched (they are advisory text, not the tap target itself, and were
 -- already verified not to overlap).
-local shopColumnLeftX, shopColumnLeftW = 16, 68
-local shopColumnRightX, shopColumnRightW = 88, 68
+local shopColumnLeftX, shopColumnLeftW = 64, 272
+local shopColumnRightX, shopColumnRightW = 352, 272
 M.shopColumnLeftX = shopColumnLeftX
 M.shopColumnLeftW = shopColumnLeftW
 M.shopColumnRightX = shopColumnRightX
@@ -570,7 +565,7 @@ function M.new(options)
     local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
     local specimenStore = options.collectionStore or collectionStore.new()
     if love.graphics then
-        love.graphics.setFont(fonts.get(14))
+        love.graphics.setFont(fonts.get(M.hudFontSize))
     end
     -- assets/ship/ship_default.png is the ComfyUI-generated ship sprite
     -- (docs/GENERATED_ASSET_LOG.md). shipImagePath is always recorded (even
@@ -672,17 +667,17 @@ end
 -- the title screen without competing with any HUD or loadout text.
 function M:drawSpecimenStrip(y)
     local catalog = world.specimenCatalog()
-    local box = 8
-    local gap = 3
+    local box = 32
+    local gap = 12
     local totalWidth = #catalog * box + (#catalog - 1) * gap
     local startX = math.floor((viewport.width - totalWidth) / 2)
-    self.tinyFont = self.tinyFont or fonts.get(7)
+    self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
     local previousFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)
     local found = self:specimenProgress()
     love.graphics.setColor(0.55, 0.65, 0.85, 0.9)
     love.graphics.printf(i18n.t("specimens_count_label", found, #catalog),
-        0, y - 10, viewport.width, "center")
+        0, y - 40, viewport.width, "center")
     for i, entry in ipairs(catalog) do
         local x = startX + (i - 1) * (box + gap)
         local sprite = self.specimenImages and self.specimenImages[entry.id]
@@ -1588,7 +1583,7 @@ function M:drawMinimap()
         return
     end
     local hud = self:hudLines()
-    local galaxyShift = hud.galaxy and 10 or 0
+    local galaxyShift = hud.galaxy and 40 or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
     local view = minimap.view(self.ship.x, self.ship.y)
     local size = minimap.size
@@ -1656,7 +1651,7 @@ function M:drawMinimap()
         -- HUD text. It is small supplementary context (expected slot value),
         -- not primary flight info, so it is now drawn as a small right-
         -- aligned line directly above the minimap chart instead.
-        self.smallFont = self.smallFont or fonts.get(8)
+        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousOddsFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(0.6, 0.8, 1)
@@ -1664,7 +1659,7 @@ function M:drawMinimap()
         -- so the localized Korean odds string (wider than its English
         -- equivalent at this small font) stays on one line instead of
         -- wrapping down into the minimap circle below it.
-        love.graphics.printf(self:slotOddsLine(), 4, hudHeight - 9, viewport.width - 8, "right")
+        love.graphics.printf(self:slotOddsLine(), 16, hudHeight - 36, viewport.width - 32, "right")
         love.graphics.setFont(previousOddsFont)
     end
     if view.checkpointBeyond then
@@ -1723,13 +1718,13 @@ function M:draw()
             end
         end
     end
-    local earthX, earthY = math.floor(-cameraX), math.floor(75 - cameraY)
-    if earthY < viewport.height + 64 then
+    local earthX, earthY = math.floor(-cameraX), math.floor(M.earthCenterY - cameraY)
+    if earthY < viewport.height + M.earthRadius + 24 then
         love.graphics.setColor(0.15, 0.45, 0.9)
-        love.graphics.circle("fill", earthX, earthY, 58)
+        love.graphics.circle("fill", earthX, earthY, M.earthRadius)
         love.graphics.setColor(0.25, 0.8, 0.45)
-        love.graphics.circle("fill", earthX - 18, earthY - 18, 15)
-        love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
+        love.graphics.circle("fill", earthX - 72, earthY - 72, 60)
+        love.graphics.circle("fill", earthX + 84, earthY - 20, 48)
     end
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
         local x, y = math.floor(planet.x - cameraX), math.floor(planet.y - cameraY)
@@ -1886,35 +1881,35 @@ function M:draw()
         local scale = targetSize / math.max(iw, ih)
         love.graphics.draw(self.shipImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
     else
-        love.graphics.polygon("fill", 0, -7, -5, 6, 0, 3, 5, 6)
+        love.graphics.polygon("fill", 0, -28, -20, 24, 0, 12, 20, 24)
     end
     if self.expedition.phase == "ascending" then
         love.graphics.setColor(1, 0.55, 0.15)
-        love.graphics.polygon("fill", -2, 5, 0, 11, 2, 5)
+        love.graphics.polygon("fill", -8, 20, 0, 44, 8, 20)
     end
     love.graphics.pop()
 
     local hud = self:hudLines()
     local isLaunchHud = self.expedition.phase == "launch"
-    local galaxyShift = hud.galaxy and 10 or 0
+    local galaxyShift = hud.galaxy and 40 or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
     love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
     love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
     local previousHudFont
     if isLaunchHud then
-        self.smallFont = self.smallFont or fonts.get(8)
+        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         previousHudFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
     end
     love.graphics.setColor(0.7, 0.9, 1)
-    local hudY = 4
+    local hudY = 16
     if hud.galaxy then
         love.graphics.setColor(1, 0.85, 0.4)
-        love.graphics.print(hud.galaxy, 5, hudY)
-        hudY = hudY + 10
+        love.graphics.print(hud.galaxy, 20, hudY)
+        hudY = hudY + 40
         love.graphics.setColor(0.7, 0.9, 1)
     end
-    love.graphics.print(hud.distance, 5, hudY)
+    love.graphics.print(hud.distance, 20, hudY)
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- third slice): pair the CASH readout with a small coin icon, mirroring
     -- the shield icon paired with the hull status line below. The coin sits
@@ -1923,26 +1918,26 @@ function M:draw()
     -- 8px small font) with the CASH text shifted right of the coin's
     -- footprint so nothing overlaps.
     local distanceWidth = love.graphics.getFont():getWidth(hud.distance)
-    local cashIconCenterX = 5 + distanceWidth + 8 + M.cashIconSize / 2
+    local cashIconCenterX = 20 + distanceWidth + 32 + M.cashIconSize / 2
     local cashIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
     love.graphics.setColor(1, 0.85, 0.3)
     love.graphics.polygon("fill",
         M.coinIconPoints(cashIconCenterX, cashIconCenterY, M.cashIconSize))
     love.graphics.setColor(0.7, 0.9, 1)
     love.graphics.print(hud.cash,
-        5 + distanceWidth + 8 + M.cashIconSize + M.cashIconGap, hudY)
+        20 + distanceWidth + 32 + M.cashIconSize + M.cashIconGap, hudY)
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- second slice): pair the hull-durability status text with a small
     -- shield icon drawn just to its left, then shift the text right by
     -- the icon's footprint so it never overlaps the shield.
     local function drawStatusWithShield(y)
-        local iconCenterX = 5 + M.hullIconSize / 2
+        local iconCenterX = 20 + M.hullIconSize / 2
         local iconCenterY = y + M.hullIconSize / 2
         love.graphics.setColor(0.6, 0.85, 1)
         love.graphics.polygon("fill",
             M.shieldIconPoints(iconCenterX, iconCenterY, M.hullIconSize))
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, y)
+        love.graphics.print(hud.status, 20 + M.hullIconSize + M.hullIconGap, y)
     end
     if hud.samples then
         -- Extra vertical gap (M.hudPrimaryStatusGap) below the samples line
@@ -1950,19 +1945,19 @@ function M:draw()
         -- line so the two rows read as visually unrelated numbers rather
         -- than "fuel gauge gates distance" (docs/feedback/INBOX.md item 2).
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.samples, 5, 16 + galaxyShift)
-        drawStatusWithShield(30 + M.hudPrimaryStatusGap + galaxyShift)
+        love.graphics.print(hud.samples, 20, 64 + galaxyShift)
+        drawStatusWithShield(120 + M.hudPrimaryStatusGap + galaxyShift)
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.print(hud.earth, 5, 43 + M.hudPrimaryStatusGap + galaxyShift)
-            love.graphics.print(hud.returnProgress, 5, 55 + M.hudPrimaryStatusGap + galaxyShift)
+            love.graphics.print(hud.earth, 20, 172 + M.hudPrimaryStatusGap + galaxyShift)
+            love.graphics.print(hud.returnProgress, 20, 220 + M.hudPrimaryStatusGap + galaxyShift)
         end
     elseif hud.best then
-        drawStatusWithShield((isLaunchHud and 13 or 18) + galaxyShift)
+        drawStatusWithShield((isLaunchHud and 52 or 72) + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.best, 5, (isLaunchHud and 22 or 30) + galaxyShift)
+        love.graphics.print(hud.best, 20, (isLaunchHud and 88 or 120) + galaxyShift)
     else
-        drawStatusWithShield(18 + galaxyShift)
+        drawStatusWithShield(72 + galaxyShift)
     end
     if isLaunchHud then
         love.graphics.setFont(previousHudFont)
@@ -1973,16 +1968,10 @@ function M:draw()
         -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so
         -- it never competes with loadout numbers or the TAP TO LAUNCH
         -- message below the panel.
-        self:drawSpecimenStrip(184)
+        self:drawSpecimenStrip(736)
         local loadout = self:loadoutLines()
-        -- The card box now extends all the way to the canvas bottom
-        -- (viewport.height) instead of stopping at y=294: a real LÖVE
-        -- runtime capture showed the Earth disc drawn behind the scene
-        -- (radius 58, extending to y=318 for a ship at the world origin)
-        -- peeking out below the old box, directly behind the TAP TO
-        -- LAUNCH message and DEV PLACEHOLDER footer text.
         love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, M.launchLoadoutBoxTop, viewport.width - 24,
+        love.graphics.rectangle("fill", 48, M.launchLoadoutBoxTop, viewport.width - 96,
             viewport.height - M.launchLoadoutBoxTop)
         -- Every LOADOUT line now uses the small 8px scene-cached font
         -- (previously the default 14px font) so the text sizes relative
@@ -1990,29 +1979,29 @@ function M:draw()
         -- above it, with a tightened row step so six lines fit in the
         -- freed vertical space without overlapping each other or the
         -- TAP TO LAUNCH message drawn separately below.
-        self.smallFont = self.smallFont or fonts.get(8)
+        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousLaunchFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
-        local row = M.launchLoadoutBoxTop + 4
+        local row = M.launchLoadoutBoxTop + 16
         local rowStep = M.launchLoadoutRowStep
         if M.showLaunchLoadoutTitle then
             love.graphics.setColor(0.7, 0.9, 1)
-            love.graphics.printf(i18n.t("launch_loadout_title"), 16, row, viewport.width - 32, "center")
+            love.graphics.printf(i18n.t("launch_loadout_title"), 64, row, viewport.width - 128, "center")
             row = row + rowStep
         end
         if loadout.ship then
             love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(loadout.ship, 16, row, viewport.width - 32, "center")
+            love.graphics.printf(loadout.ship, 64, row, viewport.width - 128, "center")
             row = row + rowStep
         end
         love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(loadout.stats, 16, row, viewport.width - 32, "center")
+        love.graphics.printf(loadout.stats, 64, row, viewport.width - 128, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, 16, row, viewport.width - 32, "center")
+        love.graphics.printf(loadout.upgrades, 64, row, viewport.width - 128, "center")
         row = row + rowStep
         love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(loadout.forecast, 16, row, viewport.width - 32, "center")
+        love.graphics.printf(loadout.forecast, 64, row, viewport.width - 128, "center")
         row = row + rowStep
         love.graphics.setColor(0.6, 1, 0.85)
         -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD
@@ -2022,16 +2011,16 @@ function M:draw()
         -- is centered via printf, so the icon is measured against the
         -- text's rendered width and placed immediately left of it.
         local steeringTextWidth = love.graphics.getFont():getWidth(loadout.steering)
-        local steeringTextX = 16 + (viewport.width - 32 - steeringTextWidth) / 2
+        local steeringTextX = 64 + (viewport.width - 128 - steeringTextWidth) / 2
         local speedIconCenterX = steeringTextX - M.speedIconGap - M.speedIconSize / 2
         local speedIconCenterY = row + love.graphics.getFont():getHeight() / 2
         love.graphics.polygon("fill",
             M.speedIconPoints(speedIconCenterX, speedIconCenterY, M.speedIconSize))
         love.graphics.setColor(0.6, 1, 0.85)
-        love.graphics.printf(loadout.steering, 16, row, viewport.width - 32, "center")
+        love.graphics.printf(loadout.steering, 64, row, viewport.width - 128, "center")
         row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(loadout.odds, 16, row, viewport.width - 32, "center")
+        love.graphics.printf(loadout.odds, 64, row, viewport.width - 128, "center")
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
         -- The summary card is drawn with the same scene-cached small font as
@@ -2041,10 +2030,10 @@ function M:draw()
         -- row to the 44pt real-device accessibility minimum (see
         -- game/self_test.lua) at the smallest supported window (integer
         -- scale 1), not just the previous 34px minimum.
-        self.smallFont = self.smallFont or fonts.get(8)
+        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousFont = love.graphics.getFont()
         love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
-        love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
+        love.graphics.rectangle("fill", 48, 280, viewport.width - 96, 1000)
         -- Faint alternating background bands behind each tappable
         -- settlementTouchRows entry. Drawn before any text so it never
         -- overlaps or obscures the already real-capture-verified printf
@@ -2052,10 +2041,10 @@ function M:draw()
         -- to touch (see settlementRowBackgroundColor comment above).
         for index, touchRow in ipairs(settlementTouchRows) do
             love.graphics.setColor(M.settlementRowBackgroundColor(index))
-            love.graphics.rectangle("fill", 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top)
+            love.graphics.rectangle("fill", 48, touchRow.top, viewport.width - 96, touchRow.bottom - touchRow.top)
         end
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf(i18n.t("earth_shop_title"), 16, 74, viewport.width - 32, "center")
+        love.graphics.printf(i18n.t("earth_shop_title"), 64, 296, viewport.width - 128, "center")
         local fuelBonusLine = self:summaryFuelBonusLine()
         -- The previously-verified capture (build/spaceship-runtime-preview-
         -- settlement-newbest-*.png) fit exactly one extra summary line
@@ -2076,27 +2065,27 @@ function M:draw()
             summaryExtraLine = fuelBonusLine
         end
         love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
-        love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
+        love.graphics.rectangle("fill", 72, 352, viewport.width - 144, 184)
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 88, 364, viewport.width - 176, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 100, viewport.width - 44, "center")
-        love.graphics.printf(i18n.t("spins_settlement_line", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 22, 109, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 88, 400, viewport.width - 176, "center")
+        love.graphics.printf(i18n.t("spins_settlement_line", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 88, 436, viewport.width - 176, "center")
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 22, 118, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 88, 472, viewport.width - 176, "center")
         if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf(summaryExtraLine, 22, 127, viewport.width - 44, "center")
+            love.graphics.printf(summaryExtraLine, 88, 508, viewport.width - 176, "center")
         end
         local nextLaunch = self:shopLoadoutLines()
-        local fullX, fullW = 16, viewport.width - 32
+        local fullX, fullW = 64, viewport.width - 128
         -- HULL and STEERING occupy the first remaining shop band after the
         -- fuel-tank purchase row was removed (docs/feedback/INBOX.md item
-        -- 11(b)). Keep the previously-verified y=180 start so the compact
-        -- HULL/STEERING columns stay inside their 44px touch band.
-        local row = 180
-        local rowStep = 8
+        -- 11(b)). y=720 is the old y=180 ×4 so compact columns stay inside
+        -- the ×4 176px touch band.
+        local row = 720
+        local rowStep = 32
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
@@ -2119,8 +2108,8 @@ function M:draw()
         love.graphics.printf(nextLaunch.hullPreviewForecast, fullX, row, fullW, "center")
 
         -- YIELD and SHIP
-        row = 216
-        rowStep = 8
+        row = 864
+        rowStep = 32
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.yieldActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
@@ -2148,8 +2137,8 @@ function M:draw()
         love.graphics.setColor(0.45, 1, 0.6)
         love.graphics.printf(nextLaunch.shipPreviewForecast, fullX, row, fullW, "center")
         
-        row = 264
-        rowStep = 8
+        row = 1056
+        rowStep = 32
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
         row = row + rowStep
@@ -2170,13 +2159,13 @@ function M:draw()
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
         love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-        love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 134)
-        self.smallFont = self.smallFont or fonts.get(8)
+        love.graphics.rectangle("fill", 48, 696, viewport.width - 96, 536)
+        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
-        local fullX, fullW = 16, viewport.width - 32
-        local row = 178
-        local rowStep = 11
+        local fullX, fullW = 64, viewport.width - 128
+        local row = 712
+        local rowStep = 44
         love.graphics.setColor(1, 0.55, 0.45)
         love.graphics.printf(i18n.t("ship_destroyed_title"), fullX, row, fullW, "center")
         row = row + rowStep
@@ -2217,7 +2206,7 @@ function M:draw()
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()
     elseif self.expedition.phase == "returning" then
-        self.smallFont = self.smallFont or fonts.get(8)
+        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousOddsFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
@@ -2234,46 +2223,46 @@ function M:draw()
         -- used for the ODDS line above fits both rows without wrapping.
         if self.slotSpin then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 18, 210, 144, 34)
+            love.graphics.rectangle("fill", 72, 840, 576, 136)
             love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(table.concat(self:currentSlotReels(), "  "), 20, 216, 140, "center")
+            love.graphics.printf(table.concat(self:currentSlotReels(), "  "), 80, 864, 560, "center")
             love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(i18n.t("spinning_label"), 20, 231, 140, "center")
+            love.graphics.printf(i18n.t("spinning_label"), 80, 924, 560, "center")
         elseif self.expedition.lastSlotSymbols then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 18, 210, 144, 34)
+            love.graphics.rectangle("fill", 72, 840, 576, 136)
             love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 20, 216, 140, "center")
+            love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 80, 864, 560, "center")
             love.graphics.setColor(1, 0.8, 0.3)
             if self.expedition.lastSlotRepair and self.expedition.lastSlotRepair > 0 then
                 love.graphics.printf(i18n.t("win_repair_line",
                     self.expedition.lastSlotReward,
-                    self.expedition.lastSlotRepair), 20, 231, 140, "center")
+                    self.expedition.lastSlotRepair), 80, 924, 560, "center")
             elseif self.expedition.lastSlotFuelBonus and self.expedition.lastSlotFuelBonus > 0 then
                 love.graphics.printf(i18n.t("win_fuel_line",
                     self.expedition.lastSlotReward,
-                    self.expedition.lastSlotFuelBonus), 20, 231, 140, "center")
+                    self.expedition.lastSlotFuelBonus), 80, 924, 560, "center")
             elseif self.expedition.lastSlotSampleBonus and self.expedition.lastSlotSampleBonus > 0 then
                 love.graphics.printf(i18n.t("win_sample_line",
                     self.expedition.lastSlotReward,
-                    self.expedition.lastSlotSampleBonus), 20, 231, 140, "center")
+                    self.expedition.lastSlotSampleBonus), 80, 924, 560, "center")
             else
                 love.graphics.printf(i18n.t("win_pending_line",
                     self.expedition.lastSlotReward,
-                    self.expedition.pendingSlotReward), 20, 231, 140, "center")
+                    self.expedition.pendingSlotReward), 80, 924, 560, "center")
             end
         end
         love.graphics.setFont(previousOddsFont)
         local slotButton = self:slotButtonState()
         local returnBandHeight = returnControls.bottom - returnControls.top
-        local returnLabelY = returnControls.top + math.floor((returnBandHeight - 10) / 2)
+        local returnLabelY = returnControls.top + math.floor((returnBandHeight - 40) / 2)
         if slotButton.enabled then
             love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
         else
             love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
         end
-        love.graphics.rectangle("fill", 60, returnControls.top, 60, returnBandHeight)
-        self.smallFont = self.smallFont or fonts.get(8)
+        love.graphics.rectangle("fill", returnControls.slotMinX, returnControls.top, returnControls.slotMaxX - returnControls.slotMinX, returnBandHeight)
+        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
         local previousReturnButtonFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         if slotButton.enabled then
@@ -2281,12 +2270,12 @@ function M:draw()
         else
             love.graphics.setColor(0.55, 0.58, 0.65)
         end
-        love.graphics.printf(slotButton.compactLabel, 60, returnLabelY, 60, "center")
+        love.graphics.printf(slotButton.compactLabel, returnControls.slotMinX, returnLabelY, returnControls.slotMaxX - returnControls.slotMinX, "center")
         love.graphics.setFont(previousReturnButtonFont)
         self:drawJoystickStick()
     end
     love.graphics.setColor(0.85, 0.9, 1)
-    local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 50 or viewport.height - 30
+    local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 200 or viewport.height - 120
     if self.expedition.phase == "launch" then
         -- docs/feedback/INBOX.md UI/HUD item 3: pair the TAP TO LAUNCH
         -- action with a small rocket icon above it instead of bare text.
@@ -2295,19 +2284,19 @@ function M:draw()
             viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
         love.graphics.setColor(0.85, 0.9, 1)
     end
-    love.graphics.printf(self.message, 4, messageY, viewport.width - 8, "center")
+    love.graphics.printf(self.message, 16, messageY, viewport.width - 32, "center")
     if self.newSpecimenBanner then
         local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
         love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)
-        love.graphics.rectangle("fill", 12, 60, viewport.width - 24, 16)
+        love.graphics.rectangle("fill", 48, 240, viewport.width - 96, 64)
         love.graphics.setColor(1, 0.85, 0.3, alpha)
-        love.graphics.printf(self.newSpecimenBanner, 12, 64, viewport.width - 24, "center")
+        love.graphics.printf(self.newSpecimenBanner, 48, 256, viewport.width - 96, "center")
     end
     self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
     local previousFooterFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)
     love.graphics.setColor(1, 0.65, 0.2, M.devPlaceholderAlpha)
-    love.graphics.printf(i18n.t("dev_placeholder"), 4, viewport.height - 11, viewport.width - 8, "center")
+    love.graphics.printf(i18n.t("dev_placeholder"), 16, viewport.height - 44, viewport.width - 32, "center")
     love.graphics.setFont(previousFooterFont)
 end
 

@@ -1001,6 +1001,45 @@ local function testPlanetSprite()
         "PlayScene must load assets/planet/planet_generic.png into self.planetImagePath")
 end
 
+-- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
+-- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
+-- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
+-- so they keep the same screen fraction on 720×1280. Own top-level function
+-- because M.run() is already at Lua's 200-local cap.
+local function testCanvasLayoutScale()
+    local joystick = require("game.joystick")
+    local minimap = require("game.minimap")
+    local rows = PlayScene.settlementTouchRows
+    assert(rows[1].top == 752 and rows[1].bottom == 928)
+    assert(rows[1].columns[1].left == 0 and rows[1].columns[1].right == 360)
+    assert(rows[1].columns[2].left == 360 and rows[1].columns[2].right == 720)
+    assert(rows[2].top == 928 and rows[2].bottom == 1104)
+    assert(rows[3].key == "relaunch" and rows[3].top == 1104 and rows[3].bottom == 1280)
+    local rc = PlayScene.returnControls
+    assert(rc.top == 976 and rc.bottom == 1152)
+    assert(rc.leftMaxX == 220 and rc.slotMinX == 240 and rc.slotMaxX == 480 and rc.rightMinX == 500)
+    local ac = PlayScene.ascendControls
+    assert(ac.top == 976 and ac.bottom == 1152)
+    assert(ac.leftMaxX == 324 and ac.rightMinX == 396)
+    assert(minimap.size == 192 and minimap.inset == 16)
+    assert(joystick.deadzone == 24 and joystick.maxRadius == 160)
+    assert(joystick.visualRadius == 56 and joystick.visualKnobRadius == 12)
+    assert(PlayScene.launchHudHeight == 128)
+    assert(PlayScene.launchLoadoutBoxTop == 808)
+    assert(PlayScene.launchLoadoutRowStep == 40)
+    assert(PlayScene.earthCenterY == 300 and PlayScene.earthRadius == 232)
+    assert(PlayScene.smallFontSize == 32 and PlayScene.hudFontSize == 56)
+    assert(PlayScene.devPlaceholderFontSize == 28)
+    assert(PlayScene.hudPrimaryStatusGap == 24)
+    assert(PlayScene.hudOddsLineHeight == 40)
+    assert(PlayScene.launchIconSize == 56 and PlayScene.launchIconGap == 48)
+    assert(PlayScene.hullIconSize == 32 and PlayScene.cashIconSize == 32 and PlayScene.speedIconSize == 32)
+    assert(PlayScene.shopActionColumnX == 64 and PlayScene.shopActionColumnW == 400)
+    assert(PlayScene.shopStatusColumnX == 464 and PlayScene.shopStatusColumnW == 208)
+    assert(PlayScene.shopColumnLeftX == 64 and PlayScene.shopColumnLeftW == 272)
+    assert(PlayScene.shopColumnRightX == 352 and PlayScene.shopColumnRightW == 272)
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향":
@@ -1295,7 +1334,7 @@ function M.run()
     assert(PlayScene.hudOddsLineHeight and PlayScene.hudOddsLineHeight > 0,
         "PlayScene.hudOddsLineHeight must exist and reserve room for the slot-odds line")
     assert(PlayScene.hudHeight("returning", returningHud, 0)
-        == 70 + PlayScene.hudPrimaryStatusGap + PlayScene.hudOddsLineHeight,
+        == 280 + PlayScene.hudPrimaryStatusGap + PlayScene.hudOddsLineHeight,
         "returning HUD band height must grow by hudOddsLineHeight to fit the slot-odds line above the minimap")
 
     -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
@@ -1303,7 +1342,7 @@ function M.run()
     -- must render smaller and dimmer than ordinary HUD text instead of
     -- competing with the message line above it (real LÖVE runtime capture
     -- previously showed it at full 14px default font and 0.85 alpha).
-    assert(PlayScene.devPlaceholderFontSize and PlayScene.devPlaceholderFontSize < 14,
+    assert(PlayScene.devPlaceholderFontSize and PlayScene.devPlaceholderFontSize < PlayScene.hudFontSize,
         "devPlaceholderFontSize must exist and be smaller than the default HUD font size")
     assert(PlayScene.devPlaceholderAlpha and PlayScene.devPlaceholderAlpha < 0.85,
         "devPlaceholderAlpha must exist and be dimmer than the previous 0.85 opacity")
@@ -1352,7 +1391,7 @@ function M.run()
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
     assert(PlayScene.hudHeight("ascending", ascendingHud, 0)
-        == 46 + PlayScene.hudPrimaryStatusGap,
+        == 184 + PlayScene.hudPrimaryStatusGap,
         "ascending HUD band height must grow by hudPrimaryStatusGap to fit the added gap")
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
@@ -1700,7 +1739,7 @@ function M.run()
     assert(shopScene.message == string.format("NEED $%d MORE FOR SAMPLE YIELD UPGRADE",
         shopScene.expedition.sampleYieldUpgradeCost))
     shopScene.expedition.money = shopScene.expedition.scoutShipCost + 20
-    shopScene:touchpressed("ship", 90, 244)
+    shopScene:touchpressed("ship", 540, 1016)
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
     assert(shopScene.expedition.money == 20)
     -- docs/feedback/INBOX.md item 11(b): with the fuel-tank shop upgrade
@@ -1758,7 +1797,7 @@ function M.run()
     shortfallScene:keypressed("h")
     assert(shortfallScene.expedition.durabilityUpgradeLevel == 0)
     assert(shortfallScene.message == "NEED $55 MORE FOR HULL UPGRADE")
-    shortfallScene:touchpressed("ship", 90, 244)
+    shortfallScene:touchpressed("ship", 540, 1016)
     assert(not shortfallScene.expedition.ownedShips.scout)
     assert(shortfallScene.message == "NEED $105 MORE FOR SCOUT")
 
@@ -1797,7 +1836,7 @@ function M.run()
     world.nearbyPlanets = function() return {} end
     local idleReturnSteering = touchScene:steeringButtonState()
     assert(not idleReturnSteering.leftActive and not idleReturnSteering.rightActive)
-    touchScene:touchpressed("return-left", 20, 266)
+    touchScene:touchpressed("return-left", 80, 1064)
     local leftReturnSteering = touchScene:steeringButtonState()
     assert(leftReturnSteering.leftActive and not leftReturnSteering.rightActive)
     assert(touchScene.expedition.slotSpins == 0 and touchScene.expedition.slotOpportunities == 2)
@@ -1808,12 +1847,12 @@ function M.run()
     assert(not releasedReturnSteering.leftActive and not releasedReturnSteering.rightActive)
     touchScene:update(1)
     assert(touchScene.ship.x == returnStartX - 55)
-    touchScene:touchpressed("slot", 90, 266)
+    touchScene:touchpressed("slot", 360, 1064)
     assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 1)
     local returnSteeredX = touchScene.ship.x
     touchScene:update(1)
     assert(touchScene.ship.x == returnSteeredX)
-    touchScene:touchpressed("return-right", 640, 266)
+    touchScene:touchpressed("return-right", 640, 1064)
     local rightReturnSteering = touchScene:steeringButtonState()
     assert(not rightReturnSteering.leftActive and rightReturnSteering.rightActive)
     assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 1)
@@ -1832,7 +1871,7 @@ function M.run()
     local avoidablePlanet = { id = "return-avoid", x = 0, y = -455, radius = 7 }
     nearbyPlanets = world.nearbyPlanets
     world.nearbyPlanets = function() return { avoidablePlanet } end
-    returnAvoidanceScene:touchpressed("avoid-left", 20, 266)
+    returnAvoidanceScene:touchpressed("avoid-left", 80, 1064)
     returnAvoidanceScene:update(1)
     world.nearbyPlanets = nearbyPlanets
     assert(returnAvoidanceScene.ship.x == -55)
@@ -1843,24 +1882,24 @@ function M.run()
     assert(touchScene.message == "STAR STAR STAR +$75  1 LEFT")
     local readySlotButton = touchScene:slotButtonState()
     assert(readySlotButton.enabled and readySlotButton.label == "TAP: SLOT SPIN  1 LEFT")
-    touchScene:touchpressed("last-slot", 90, 266)
+    touchScene:touchpressed("last-slot", 360, 1064)
     assert(touchScene.expedition.slotSpins == 2 and touchScene.expedition.slotOpportunities == 0)
     local spinningSlotButton = touchScene:slotButtonState()
     assert(not spinningSlotButton.enabled and spinningSlotButton.label == "SLOT SPINNING...")
     touchScene:update(1)
     local emptySlotButton = touchScene:slotButtonState()
     assert(not emptySlotButton.enabled and emptySlotButton.label == "NO SLOT CHANCES")
-    touchScene:touchpressed("empty-slot", 90, 266)
+    touchScene:touchpressed("empty-slot", 360, 1064)
     assert(touchScene.expedition.slotSpins == 2 and touchScene.expedition.slotOpportunities == 0)
     touchScene.expedition.phase = "settlement"
     touchScene.expedition.money = touchScene.expedition.durabilityUpgradeCost
         + touchScene.expedition.scoutShipCost
-    touchScene:touchpressed("hull", 45, 208)
-    touchScene:touchpressed("ship", 90, 244)
+    touchScene:touchpressed("hull", 180, 832)
+    touchScene:touchpressed("ship", 540, 1016)
     assert(touchScene.expedition.fuelUpgradeLevel == nil)
     assert(touchScene.expedition.durabilityUpgradeLevel == 1)
     assert(touchScene.expedition.ownedShips.scout and touchScene.expedition.selectedShipId == "scout")
-    touchScene:touchpressed("relaunch", 90, 300)
+    touchScene:touchpressed("relaunch", 360, 1200)
     assert(touchScene.expedition.phase == "ascending")
 
     local loadoutScene = PlayScene.new({
@@ -2016,7 +2055,7 @@ function M.run()
     -- alone (starter 100, scout 140), never a previously purchased tank.
     assert(nextLaunchScene.message
         == "STARTER SELECTED  HULL 4  REACH 600  SLOTS 6")
-    nextLaunchScene:touchpressed("ship", 90, 244)
+    nextLaunchScene:touchpressed("ship", 540, 1016)
     assert(nextLaunchScene.expedition.selectedShipId == "scout")
     assert(nextLaunchScene.message
         == "SCOUT SELECTED  HULL 3  REACH 840  SLOTS 9")
@@ -2316,7 +2355,7 @@ function M.run()
     assert(not edgeRightSteering.leftActive and edgeRightSteering.rightActive,
         "returning band bottom edge did not register right steering")
     returnEdgeScene:touchreleased("edge-right")
-    returnEdgeScene:touchpressed("edge-slot", 90, returnControls.top)
+    returnEdgeScene:touchpressed("edge-slot", math.floor((returnControls.slotMinX + returnControls.slotMaxX) / 2), returnControls.top)
     assert(returnEdgeScene.expedition.slotSpins == 1 and returnEdgeScene.expedition.slotOpportunities == 1,
         "returning band top edge did not register slot spin at slot x range")
     world.nearbyPlanets = edgeNearbyPlanets
@@ -2387,8 +2426,8 @@ function M.run()
     -- so the disc can never render above the box again.
     local shipScreenY = math.floor(viewport.height * 0.58)
     local cameraY = 0 - shipScreenY
-    local earthY = math.floor(75 - cameraY)
-    local earthTopY = earthY - 58
+    local earthY = math.floor(PlayScene.earthCenterY - cameraY)
+    local earthTopY = earthY - PlayScene.earthRadius
     assert(PlayScene.launchLoadoutBoxTop <= earthTopY,
         "launch loadout box top (" .. PlayScene.launchLoadoutBoxTop ..
         ") does not fully cover the Earth disc's top edge (" .. earthTopY .. ")")
@@ -2724,6 +2763,7 @@ function M.run()
     testSpecimenSprites()
     testShipSprite()
     testPlanetSprite()
+    testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")
 end

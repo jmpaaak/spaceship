@@ -16,18 +16,18 @@ local M = {}
 -- dragged" (magnitude 0) so a simple tap-and-hold can fall back to the
 -- legacy binary steering behavior instead of jittering on tiny finger
 -- movement.
-M.deadzone = 6
+M.deadzone = 24
 
 -- Drag distance (canvas px) at which the joystick reads full magnitude
 -- (1.0). Input reach stays large so a finger/mouse can steer without
 -- precision; the *drawn* disc is much smaller (visualRadius).
-M.maxRadius = 40
+M.maxRadius = 160
 
--- On-screen stick size/alpha. The old disc used maxRadius (40px) at
--- ~0.35/0.9 alpha and read as a huge opaque overlay on the 720x1280
+-- On-screen stick size/alpha. The old disc used maxRadius (160px after ×4)
+-- at ~0.35/0.9 alpha and read as a huge opaque overlay on the 720x1280
 -- canvas. Keep input math on maxRadius; only the draw uses these.
-M.visualRadius = 14
-M.visualKnobRadius = 3
+M.visualRadius = 56
+M.visualKnobRadius = 12
 M.visualFillAlpha = 0.12
 M.visualLineAlpha = 0.28
 M.visualKnobAlpha = 0.4

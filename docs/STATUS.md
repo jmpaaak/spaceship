@@ -1,4 +1,16 @@
 # STATUS
+## 내부 해상도 720×1280 상향 — HUD/터치/미니맵/조이스틱/폰트/상점/지구/로드아웃 ×4 (완료, 2026-09-03)
+
+preflight READY. INBOX 최우선 해상도 항목의 두 번째 슬라이스: 720×1280 캔버스에 남아 있던 180×320 절대 픽셀 레이아웃을 ×4 했다.
+
+- TDD: `game/self_test.lua`에 `testCanvasLayoutScale()`을 먼저 추가해 RED(`assertion failed` at settlementTouchRows 752/928)를 확인한 뒤 구현.
+- 터치: `settlementTouchRows` 752–1280(반폭 360), `returnControls` 976–1152 / slot 240–480, `ascendControls` 동일 밴드. 회귀 탭 `90,244`/`90,266` 등을 새 히트박스 안으로 옮김.
+- 비주얼: `minimap.size` 48→192, 조이스틱 24/160/56, HUD 높이 280/184/136, 폰트 32/56/28, 아이콘 ×4, 상점 컬럼 ×4, 지구 `earthCenterY=300`/`earthRadius=232`, 로드아웃 박스 top 808, 상점/파괴/슬롯 패널 좌표 ×4.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:64`, `ASSET_MANIFEST_OK`).
+- 항목은 행성 스프라이트 재생성/논리 크기와 일부 장식 px가 남아 `docs/feedback/INBOX.md` 처리대기에 유지.
+
+다음 사이클 다음 슬라이스: 행성(및 깨진 우주선) 스프라이트 ComfyUI 재생성 또는 논리 크기 상향. 미니맵 마커 점 반경·플로팅 텍스트 박스는 남은 장식 px. econ/gear 레인 소유 항목과 `game/gear.lua`는 건드리지 않는다.
+
 ## 내부 해상도 720×1280 상향 — viewport+conf+회귀 단언 (완료, 2026-09-03)
 
 preflight READY(engine tests/package PASS, git diff check PASS). 세션 시작 시 `docs/GAME_DESIGN.md`/`loop/PROMPT.md`/`docs/feedback/INBOX.md`/`loop/env.sh`에 이전 사이클의 미커밋 문서 작업이 이미 있었다(해상도 비협상 규칙 문구를 `720×1280`으로 바꿔 둔 상태, env idle timeout 600s). 이 작업을 보존하고, INBOX 최우선 항목 「내부 해상도를 발라트로 수준으로 상향」의 첫 슬라이스(viewport+conf+회귀 테스트 단언)를 구현했다.
