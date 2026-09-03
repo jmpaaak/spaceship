@@ -192,6 +192,20 @@ local function testManeuverFuel()
         "dead no-op maneuverFuel API must be removed, not kept as a shim")
     assert(expedition.burnManeuverFuel == nil,
         "dead no-op burnManeuverFuel API must be removed, not kept as a shim")
+    -- docs/feedback/INBOX.md 처리대기 항목 11(a): M.launchForecast (and its
+    -- "maxFuel" parameter name) framed the REACH/SLOTS estimate as
+    -- "how far this fuel tank carries you" -- misleading since fuel does
+    -- not constrain flight. It was renamed to M.rangeForecast(run,
+    -- capacity); the old fuel-framed name must not survive even as an
+    -- alias, and the renamed function must compute the identical value.
+    assert(expedition.launchForecast == nil,
+        "fuel-framed launchForecast name must not exist (item 11a rename)")
+    assert(type(expedition.rangeForecast) == "function",
+        "rangeForecast must exist as the renamed replacement")
+    local forecastRun = expedition.new({ fuelBurnRate = 5, climbSpeed = 30, slotDistance = 100 })
+    local altitude, slots = expedition.rangeForecast(forecastRun)
+    assert(altitude == 600 and slots == 6,
+        "rangeForecast must compute the same value the old launchForecast did")
     -- docs/feedback/INBOX.md 항목 11(c): run.fuel was a dead state field --
     -- only ever written (by M.launch/M.destroy), never read by any flight
     -- decision (altitude ticks by climbSpeed unconditionally). It must not

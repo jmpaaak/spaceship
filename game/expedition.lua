@@ -285,10 +285,23 @@ local function slotCount(distance, slotDistance)
     return math.ceil(distance / slotDistance)
 end
 
-function M.launchForecast(run, maxFuel)
-    local forecastFuel = maxFuel or run.maxFuel
-    if forecastFuel <= 0 or run.fuelBurnRate <= 0 or run.climbSpeed <= 0 then return 0, 0 end
-    local altitude = forecastFuel / run.fuelBurnRate * run.climbSpeed
+-- docs/feedback/INBOX.md 처리대기 항목 11(a): this used to be named
+-- M.launchForecast(run, maxFuel), and its lone parameter was literally
+-- called "maxFuel" -- both names framed the reported distance/slot
+-- estimate as "how far this fuel tank will carry you", which implies fuel
+-- running out is what stops the climb. Fuel has not constrained flight
+-- for several cycles now (altitude ticks by climbSpeed unconditionally,
+-- see M.update below) -- the underlying arithmetic still uses run.maxFuel
+-- as an equipment capacity budget (SCOUT's ship bonus, previously a
+-- fuel-tank shop upgrade) that scales the estimate, but nothing about it
+-- is actually about running out of fuel mid-flight. Renamed to
+-- M.rangeForecast(run, capacity) with a capacity-budget framing instead;
+-- M.launchForecast is intentionally left undefined (not kept as an alias)
+-- so no fuel-framed name survives anywhere in the public API surface.
+function M.rangeForecast(run, capacity)
+    local forecastCapacity = capacity or run.maxFuel
+    if forecastCapacity <= 0 or run.fuelBurnRate <= 0 or run.climbSpeed <= 0 then return 0, 0 end
+    local altitude = forecastCapacity / run.fuelBurnRate * run.climbSpeed
     return altitude, slotCount(altitude, run.slotDistance)
 end
 

@@ -672,8 +672,13 @@ function M:hudLines()
     }
 end
 
-local function launchForecastLine(run, maxFuel)
-    local forecastAltitude, forecastSlots = expedition.launchForecast(run, maxFuel)
+-- docs/feedback/INBOX.md 처리대기 항목 11(a): calls the renamed
+-- expedition.rangeForecast (formerly launchForecast) -- see that
+-- function's comment in game/expedition.lua for why the fuel-framed name
+-- was dropped. i18n's "forecast_line" text (REACH/도달예상) is unchanged
+-- (that wording lives in the main lane's text-ownership territory).
+local function launchForecastLine(run, capacity)
+    local forecastAltitude, forecastSlots = expedition.rangeForecast(run, capacity)
     return i18n.t("forecast_line", math.floor(forecastAltitude), forecastSlots)
 end
 
