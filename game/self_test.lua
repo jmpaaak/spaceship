@@ -1632,10 +1632,17 @@ function M.run()
     riskScene.expedition.returnSpeed = 45
     riskScene.expedition.sampleCount = 3
     riskScene.expedition.pendingSampleValue = 95
+    -- Returning is the only phase where slot chances are live, so the
+    -- S%02d segment must still appear there (docs/feedback/INBOX.md
+    -- UI/HUD item 4 follow-up: hide S00 dead weight everywhere else).
+    riskScene.expedition.slotOpportunities = 3
     local returningHud = riskScene:hudLines()
     assert(returningHud.samples == "SAMPLES 03  AT RISK $95")
     assert(returningHud.earth == "EARTH IN 725")
     assert(returningHud.returnProgress == "RETURN 28%  17s LEFT")
+    assert(returningHud.status == "HULL 3/3 RETURN S03",
+        "returning-phase status must keep the live slot count: "
+        .. tostring(returningHud.status))
     -- docs/feedback/INBOX.md UI/HUD item 5: the small slot-odds line drawn
     -- above the minimap during the returning phase needs its own reserved
     -- vertical space in the HUD box (PlayScene.hudOddsLineHeight); without
@@ -1667,16 +1674,21 @@ function M.run()
     -- docs/feedback/INBOX.md HUD 약자 정리 항목: "H%d/%d" read as a bare,
     -- unexplained abbreviation in real runtime captures. Spell out "HULL"
     -- (en) / read cleanly in ko via i18n.t rather than a single letter.
-    assert(riskScene:hudLines().status == "HULL 3/3 SETTLE S00",
-        "hud status must use a readable 'HULL' label instead of the bare 'H' abbreviation: "
+    -- docs/feedback/INBOX.md UI/HUD item 4 follow-up: settlement has no
+    -- live slot chances (they were spent or wiped on the return), so
+    -- "SETTLE S00" is the same dead-weight forecast launch used to show.
+    assert(riskScene:hudLines().status == "HULL 3/3 SETTLE",
+        "hud status must use a readable 'HULL' label and omit the always-zero slot forecast: "
         .. tostring(riskScene:hudLines().status))
     assert(not riskScene:hudLines().status:find("F%d"),
         "hud status must not show a misleading fuel-cap readout")
-    -- docs/feedback/INBOX.md UI/HUD item 4: during the launch phase the
+    assert(not riskScene:hudLines().status:find("S%d%d"),
+        "settlement-phase status must not show a slot count segment")
+    -- docs/feedback/INBOX.md UI/HUD item 4: during launch/ascending the
     -- slot forecast (S%02d) is always 0 because no return trip has
-    -- happened yet, so "LAUNCH S00" reads as confusing dead weight. Drop
-    -- the slot segment for the launch phase only; every other phase
-    -- (including SETTLE, asserted above) keeps showing it.
+    -- happened yet, so "LAUNCH S00"/"ASCEND S00" reads as confusing dead
+    -- weight. Drop the slot segment for every phase except returning,
+    -- where the count is live.
     riskScene.expedition.phase = "launch"
     assert(riskScene:hudLines().status == "HULL 3/3 LAUNCH",
         "launch-phase status must omit the always-zero slot forecast: "
@@ -1685,6 +1697,11 @@ function M.run()
         "launch-phase status must not show a slot count segment")
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
+    assert(ascendingHud.status == "HULL 3/3 ASCEND",
+        "ascending-phase status must omit the always-zero slot forecast: "
+        .. tostring(ascendingHud.status))
+    assert(not ascendingHud.status:find("S%d%d"),
+        "ascending-phase status must not show a slot count segment")
     assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")
     -- "고도(ALT)" -> "거리(DIST)" relabel (docs/feedback/INBOX.md item 2,
     -- 2026-09-03): the user misread the ALT/CASH line + adjacent fuel
