@@ -74,8 +74,6 @@ function love.load()
         run.bestAltitude = 400
         run.sampleCount = 2
         run.pendingSampleValue = 80
-        run.slotSpins = 1
-        run.pendingSlotReward = 75
         require("game.expedition").damage(run, run.durability)
     elseif capturePhase == "settlement-newbest" then
         local run = scenes.current.expedition
@@ -88,16 +86,11 @@ function love.load()
         run.lastAltitude = 400
         run.lastNewBest = true
         run.sampleCount = 0
-        run.slotSpins = 0
         run.pendingSampleValue = 0
-        run.pendingSlotReward = 0
         run.lastSampleCount = 2
         run.lastSampleSettlement = 80
-        run.lastSlotSpinsCount = 1
-        run.lastSlotSettlement = 75
-        run.lastSettlement = 155
-        run.money = 155
-        run.bankedFuelBonus = 15
+        run.lastSettlement = 80
+        run.money = 80
     elseif capturePhase == "ascending-wide-warning" then
         local scene = scenes.current
         require("game.expedition").launch(scene.expedition)
@@ -148,15 +141,6 @@ function love.load()
         world.sampleValue = function() return 999 end
         world.sampleTier = function() return "epic" end
         scene:update(0)
-    elseif capturePhase == "returning-odds" then
-        local scene = scenes.current
-        require("game.expedition").launch(scene.expedition)
-        scene.expedition.phase = "returning"
-        scene.expedition.altitude = 500
-        scene.expedition.returnDistance = 500
-        scene.expedition.slotOpportunities = 3
-        local world = require("game.world")
-        world.nearbyPlanets = function() return {} end
     elseif capturePhase == "return-to-earth" then
         -- Real-runtime capture for the item-15(a) UI-wiring slice: the new
         -- "r" key immediately settles the run at Earth from the ascending
@@ -169,26 +153,7 @@ function love.load()
         scene.expedition.maxAltitude = 450
         scene.expedition.bestAltitude = 450
         scene.expedition.pendingSampleValue = 60
-        scene.expedition.pendingSlotReward = 15
         scene:keypressed("r")
-    elseif capturePhase == "returning-repair" then
-        -- Real-runtime capture for the new repair-voucher slot reward
-        -- (docs/GAME_DESIGN.md 귀환 슬롯: 수리권). Forces a completed
-        -- STAR-STAR-STAR spin result so the WIN +$N REPAIR +N message
-        -- renders in the slot result box.
-        local scene = scenes.current
-        require("game.expedition").launch(scene.expedition)
-        scene.expedition.phase = "returning"
-        scene.expedition.altitude = 500
-        scene.expedition.returnDistance = 500
-        scene.expedition.durability = 1
-        scene.expedition.slotOpportunities = 2
-        scene.expedition.lastSlotSymbols = { "STAR", "STAR", "STAR" }
-        scene.expedition.lastSlotReward = 75
-        scene.expedition.lastSlotRepair = 1
-        scene.expedition.durability = 2
-        local world = require("game.world")
-        world.nearbyPlanets = function() return {} end
     elseif capturePhase == "settlement-shortfunds" then
         -- Real-runtime capture for the "남은 다음 슬라이스 후보 (1)" item in
         -- docs/STATUS.md: verify the SHORT $N status branch (as opposed to
@@ -202,8 +167,6 @@ function love.load()
         run.lastSettlement = 0
         run.lastSampleCount = 0
         run.lastSampleSettlement = 0
-        run.lastSlotSpinsCount = 0
-        run.lastSlotSettlement = 0
         run.lastAltitude = 0
         run.lastNewBest = false
     elseif capturePhase == "ascending-streak" then
@@ -266,40 +229,6 @@ function love.load()
             return { { id = "damage-text-test", x = 0, y = -500, radius = 7, hue = 0.1 } }
         end
         world.collisionDamage = function() return 2 end
-    elseif capturePhase == "returning-fuelbonus" then
-        -- Real-runtime capture for the new next-expedition fuel-bonus slot
-        -- reward (docs/GAME_DESIGN.md 귀환 슬롯: 다음 원정 연료 보너스).
-        -- Forces a completed PLANET-PLANET-PLANET spin result so the
-        -- WIN +$N FUEL +N message renders in the slot result box.
-        local scene = scenes.current
-        require("game.expedition").launch(scene.expedition)
-        scene.expedition.phase = "returning"
-        scene.expedition.altitude = 500
-        scene.expedition.returnDistance = 500
-        scene.expedition.slotOpportunities = 2
-        scene.expedition.lastSlotSymbols = { "PLANET", "PLANET", "PLANET" }
-        scene.expedition.lastSlotReward = 40
-        scene.expedition.lastSlotFuelBonus = 15
-        scene.expedition.pendingFuelBonus = 15
-        local world = require("game.world")
-        world.nearbyPlanets = function() return {} end
-    elseif capturePhase == "returning-samplebonus" then
-        -- Real-runtime capture for the new sample-value slot reward
-        -- (docs/GAME_DESIGN.md 귀환 슬롯: 표본 보너스). Forces a completed
-        -- COMET-COMET-COMET spin result so the WIN +$N SAMPLE +$N message
-        -- renders in the slot result box.
-        local scene = scenes.current
-        require("game.expedition").launch(scene.expedition)
-        scene.expedition.phase = "returning"
-        scene.expedition.altitude = 500
-        scene.expedition.returnDistance = 500
-        scene.expedition.slotOpportunities = 2
-        scene.expedition.lastSlotSymbols = { "COMET", "COMET", "COMET" }
-        scene.expedition.lastSlotReward = 40
-        scene.expedition.lastSlotSampleBonus = 25
-        scene.expedition.pendingSampleValue = 25
-        local world = require("game.world")
-        world.nearbyPlanets = function() return {} end
     elseif capturePhase == "ascending-joystick-diagonal" then
         -- Real-runtime capture for the new omnidirectional joystick
         -- movement (docs/GAME_DESIGN.md 이동 방식 개선 항목 1). Simulates a
@@ -383,15 +312,11 @@ function love.load()
         scene.expedition.altitude = 5
         scene:update(0.001) -- collect the sample near-instantly
         world.nearbyPlanets = function() return {} end
-        expeditionModule.beginReturn(scene.expedition)
-        while scene.expedition.phase == "returning" and scene.expedition.slotOpportunities > 0 do
-            scene:keypressed("space") -- spin every offered slot
-            scene:update(1) -- let the slot-spin animation resolve before the
-            -- next keypress, otherwise self.slotSpin never clears and
-            -- keypressed's "not self.slotSpin" guard blocks all further
-            -- spins forever (infinite loop / hang).
-        end
-        scene:update(1000) -- finish the return -> settlement
+        -- docs/feedback/INBOX.md 처리대기 항목 15(a): the old beginReturn/
+        -- "returning" phase and in-flight slot machine are fully removed --
+        -- returning to Earth now settles immediately via the "r" key
+        -- (expedition.returnToEarth), with no travel-down/slot-spin loop.
+        scene:keypressed("r") -- return to Earth -> settlement
         expeditionModule.buyDurabilityUpgrade(scene.expedition) -- shop upgrade with settled money
         scene:keypressed("space") -- relaunch
     elseif capturePhase == "checkpoint-dock" then

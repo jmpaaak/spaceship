@@ -205,10 +205,12 @@ local function testManeuverFuel()
     assert(run.phase == "ascending", "ascent must not auto-return when fuel is unconstrained")
     assert(run.altitude > 0)
 
-    expedition.beginReturn(run)
-    assert(run.phase == "returning")
-    assert(run.returnDistance == run.maxAltitude)
-    assert(run.slotOpportunities >= 1)
+    -- docs/feedback/INBOX.md 처리대기 항목 15(a): the manually-declared
+    -- beginReturn/"returning" phase and in-flight slot machine
+    -- (useSlot/slotSpin) have been fully removed -- expedition.beginReturn
+    -- and expedition.useSlot must not exist at all.
+    assert(expedition.beginReturn == nil, "expedition.beginReturn must not exist (item 15a removal)")
+    assert(expedition.useSlot == nil, "expedition.useSlot must not exist (item 15a removal)")
 
     local idleScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -464,12 +466,11 @@ local function testReturnToEarth()
     run.altitude = 250
     run.maxAltitude = 250
     run.pendingSampleValue = 60
-    run.pendingSlotReward = 10
     assert(expedition.returnToEarth(run), "returnToEarth must succeed from the ascending phase")
     assert(run.phase == "settlement", "returnToEarth must settle immediately, skipping the returning phase")
-    assert(run.money == 70, "returnToEarth must pay out pending sample + slot reward, like the old returning-phase settle")
-    assert(run.pendingSampleValue == 0 and run.pendingSlotReward == 0)
-    assert(run.lastSettlement == 70)
+    assert(run.money == 60, "returnToEarth must pay out pending sample value, like the old returning-phase settle")
+    assert(run.pendingSampleValue == 0)
+    assert(run.lastSettlement == 60)
     assert(run.lastAltitude == 250)
 
     -- Only valid from the ascending phase -- launch/settlement/destroyed/
@@ -758,77 +759,34 @@ end
 -- expedition.returnToEarth(run) engine entry point (prior slice) must
 -- actually be reachable from real play via an explicit ascending-phase
 -- "return" action, rather than only being exercised directly by
--- game/self_test.lua's testReturnToEarth(). This is purely additive next
--- to the existing beginReturn/"returning"-phase path (untouched), which is
--- why it lives on its own key ("r") instead of replacing "space"/"up"/"w".
+-- game/self_test.lua's testReturnToEarth(). The old beginReturn/"returning"
+-- phase and in-flight slot machine have since been fully removed (item
+-- 15a completion), so "r" is now the sole return-to-Earth action.
 local function testReturnToEarthUiWiring()
-    local expedition = require("game.expedition")
-
     local scene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     scene.expedition.phase = "ascending"
     scene.expedition.pendingSampleValue = 40
-    scene.expedition.pendingSlotReward = 10
     scene.expedition.maxAltitude = 250
     scene.expedition.bestAltitude = 250
     scene:keypressed("r")
     assert(scene.expedition.phase == "settlement",
         "'r' while ascending must immediately settle the run at Earth via returnToEarth")
-    assert(scene.expedition.money == 50,
-        "returnToEarth via 'r' must pay out pending sample + slot reward: "
+    assert(scene.expedition.money == 40,
+        "returnToEarth via 'r' must pay out pending sample value: "
             .. tostring(scene.expedition.money))
     assert(scene.message:find("SETTLED"),
         "settling via 'r' must surface the same settled_message as the old returning path: "
             .. tostring(scene.message))
 
-    -- 'r' must be a no-op outside the ascending phase (e.g. launch, or
-    -- already-returning via the still-intact beginReturn path).
+    -- 'r' must be a no-op outside the ascending phase (e.g. launch).
     local launchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     launchScene.expedition.phase = "launch"
     launchScene:keypressed("r")
     assert(launchScene.expedition.phase == "launch", "'r' must not act outside the ascending phase")
-
-    -- docs/feedback/INBOX.md 처리대기 항목 15(a): confirm the invariant that
-    -- lets a future slice safely delete the old beginReturn/"returning"-
-    -- phase/useSlot in-flight slot machine from game/scenes/play.lua --
-    -- real player input (keypressed) must never itself drive the run into
-    -- the "returning" phase; only test/capture harnesses that call
-    -- expedition.beginReturn directly (or set run.phase manually) can. If
-    -- this ever regresses (e.g. a future edit re-adds a keypressed call
-    -- site that reaches expedition.beginReturn), this test goes RED before
-    -- any real player could hit the old path.
-    local function testReturningPhaseUnreachableFromKeypressed()
-        local ascendKeys = {
-            "space", "return", "up", "w", "down", "s", "left", "right", "a", "d",
-            "r", "b", "n", "g", "y", "h",
-        }
-        local scene = PlayScene.new({
-            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        })
-        scene.expedition.phase = "ascending"
-        scene.expedition.altitude = 50
-        scene.expedition.maxAltitude = 50
-        for _, key in ipairs(ascendKeys) do
-            scene:keypressed(key)
-            assert(scene.expedition.phase ~= "returning",
-                "keypressed(\"" .. key .. "\") must never drive phase into the old "
-                    .. "in-flight \"returning\" state -- item 15(a) requires real play "
-                    .. "to only reach settlement via 'r'/returnToEarth")
-        end
-    end
-    testReturningPhaseUnreachableFromKeypressed()
-
-    local returningScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    assert(expedition.launch(returningScene.expedition))
-    assert(expedition.beginReturn(returningScene.expedition))
-    returningScene:keypressed("r")
-    assert(returningScene.expedition.phase == "returning",
-        "'r' must not interfere with the existing beginReturn/returning-phase path")
 end
 
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
@@ -1503,38 +1461,17 @@ function M.run()
         "collisionRisk sampleValue/sampleLabel must apply the SAMPLE YIELD multiplier ("
             .. tostring(yieldWarning.sampleValue) .. " " .. tostring(yieldWarning.sampleLabel) .. ")")
     riskScene.expedition.sampleYieldUpgradeLevel = 0
-    riskScene.expedition.phase = "returning"
-    local returningPlanet = { id = "return-warning", y = -500 }
-    local returningWarning = riskScene:approachWarning(returningPlanet, 205, 185)
-    assert(returningWarning.damage == 2 and not returningWarning.lethal
-        and returningWarning.label == "RISK -2")
-    assert(returningWarning.sampleValue == nil and returningWarning.sampleLabel == nil)
-    local returningLethalWarning = riskScene:approachWarning({ y = -1000 }, 205, 185)
-    assert(returningLethalWarning.damage == 3 and returningLethalWarning.lethal
-        and returningLethalWarning.label == "LETHAL -3")
-    assert(riskScene:approachWarning(returningPlanet, 165, 185) == nil)
-    riskScene.collided[returningPlanet.id] = true
-    assert(riskScene:approachWarning(returningPlanet, 205, 185) == nil)
-    riskScene.expedition.altitude = 725
-    riskScene.expedition.returnDistance = 1000
-    riskScene.expedition.returnSpeed = 45
+    -- docs/feedback/INBOX.md 처리대기 항목 15(a): the manually-declared
+    -- beginReturn/"returning" phase, its approachWarning sample-preview
+    -- suppression, and the in-flight slot-odds HUD line have all been
+    -- fully removed -- approachWarning only ever fires during "ascending"
+    -- now (asserted below via collisionRisk's own phase gate), and there
+    -- is no more "returning" phase to test HUD earn/returnProgress
+    -- fields for (hudLines() no longer produces them in any phase).
+    assert(riskScene:approachWarning({ id = "no-returning-phase", y = -500 }, 165, 185) ~= nil,
+        "approachWarning must still fire during ascending")
     riskScene.expedition.sampleCount = 3
     riskScene.expedition.pendingSampleValue = 95
-    local returningHud = riskScene:hudLines()
-    assert(returningHud.samples == "SAMPLES 03  AT RISK $95")
-    assert(returningHud.earth == "EARTH IN 725")
-    assert(returningHud.returnProgress == "RETURN 28%  17s LEFT")
-    -- docs/feedback/INBOX.md UI/HUD item 5: the small slot-odds line drawn
-    -- above the minimap during the returning phase needs its own reserved
-    -- vertical space in the HUD box (PlayScene.hudOddsLineHeight); without
-    -- it, that line visually collided with the RETURN %%/s-left text right
-    -- above it (confirmed via a real LÖVE runtime capture,
-    -- GAME_CAPTURE_PHASE=returning-odds).
-    assert(PlayScene.hudOddsLineHeight and PlayScene.hudOddsLineHeight > 0,
-        "PlayScene.hudOddsLineHeight must exist and reserve room for the slot-odds line")
-    assert(PlayScene.hudHeight("returning", returningHud, 0)
-        == 70 + PlayScene.hudPrimaryStatusGap + PlayScene.hudOddsLineHeight,
-        "returning HUD band height must grow by hudOddsLineHeight to fit the slot-odds line above the minimap")
 
     -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
     -- footer is a permanent dev-only disclaimer, not gameplay info, so it
@@ -1545,14 +1482,12 @@ function M.run()
         "devPlaceholderFontSize must exist and be smaller than the default HUD font size")
     assert(PlayScene.devPlaceholderAlpha and PlayScene.devPlaceholderAlpha < 0.85,
         "devPlaceholderAlpha must exist and be dimmer than the previous 0.85 opacity")
-    riskScene.expedition.altitude = 250
-    assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
     riskScene.expedition.phase = "settlement"
     -- Fuel is no longer a flight constraint (game/expedition.lua's
     -- M.maneuverFuel/M.burnManeuverFuel are no-ops), so the HUD status line
     -- no longer shows a "F%03d" fuel readout that implied a fuel cap still
     -- gated flight (docs/feedback/INBOX.md UI/HUD item 3).
-    assert(riskScene:hudLines().status == "H3/3 SETTLE S00")
+    assert(riskScene:hudLines().status == "H3/3 SETTLE")
     assert(not riskScene:hudLines().status:find("F%d"),
         "hud status must not show a misleading fuel-cap readout")
     -- docs/feedback/INBOX.md UI/HUD item 4: during the launch phase the
@@ -1631,18 +1566,21 @@ function M.run()
     assert(expedition.buyShip(returnCollisionScene.expedition, "scout"))
     assert(expedition.selectShip(returnCollisionScene.expedition, "scout"))
     assert(expedition.launch(returnCollisionScene.expedition))
-    returnCollisionScene.expedition.phase = "returning"
+    -- docs/feedback/INBOX.md 처리대기 항목 15(a): the manually-declared
+    -- "returning" phase no longer exists -- destruction is exercised here
+    -- during "ascending" (the only phase a lethal collision can now
+    -- happen in) instead.
     returnCollisionScene.expedition.altitude = 500
-    returnCollisionScene.expedition.returnDistance = 500
     returnCollisionScene.expedition.durability = 2
     returnCollisionScene.expedition.sampleCount = 2
     returnCollisionScene.expedition.pendingSampleValue = 80
-    returnCollisionScene.expedition.slotOpportunities = 3
-    returnCollisionScene.expedition.slotSpins = 1
-    returnCollisionScene.expedition.pendingSlotReward = 75
-    returnCollisionScene.expedition.lastSlotSymbols = { "STAR", "STAR", "STAR" }
-    returnCollisionScene.expedition.lastSlotReward = 75
     returnCollisionScene.ship.y = -500
+    -- Mark the planet already-discovered so this update only exercises the
+    -- collision/damage path below, not the ascending-phase sample-pickup
+    -- branch (both are keyed off the same proximity check now that this
+    -- collision happens during "ascending" instead of the removed
+    -- "returning" phase -- see comment above).
+    returnCollisionScene.discovered["return-collision"] = true
     nearbyPlanets = world.nearbyPlanets
     world.nearbyPlanets = function()
         return { { id = "return-collision", x = 0, y = -500, radius = 7 } }
@@ -1652,33 +1590,22 @@ function M.run()
     local wipedReturn = returnCollisionScene.expedition
     assert(wipedReturn.phase == "destroyed" and wipedReturn.durability == 0)
     assert(wipedReturn.money == 0 and wipedReturn.sampleCount == 0
-        and wipedReturn.pendingSampleValue == 0 and wipedReturn.pendingSlotReward == 0)
-    assert(wipedReturn.slotOpportunities == 0 and wipedReturn.slotSpins == 0
-        and wipedReturn.lastSlotSymbols == nil and wipedReturn.lastSlotReward == 0)
+        and wipedReturn.pendingSampleValue == 0)
     assert(wipedReturn.durabilityUpgradeLevel == 0)
     assert(wipedReturn.selectedShipId == "starter" and not wipedReturn.ownedShips.scout)
     assert(wipedReturn.bestAltitude == 750)
     assert(returnCollisionScene.message == "SHIP DESTROYED  BEST 750  META RESET")
     assert(wipedReturn.lastLostSampleCount == 2 and wipedReturn.lastLostSampleValue == 80)
-    assert(wipedReturn.lastLostSlotSpinsCount == 1 and wipedReturn.lastLostSlotValue == 75)
     assert(expedition.launch(wipedReturn))
     assert(wipedReturn.lastLostSampleCount == 0 and wipedReturn.lastLostSampleValue == 0)
-    assert(wipedReturn.lastLostSlotSpinsCount == 0 and wipedReturn.lastLostSlotValue == 0)
 
-    local basicSlotRolls = { 1, 6, 10, 6, 10, 1 }
-    local nextBasicSlotRoll = 0
     local run = expedition.new({
         fuel = 2,
         fuelBurnRate = 1,
         climbSpeed = 60,
-        returnSpeed = 50,
         slotDistance = 100,
-        slotRandom = function()
-            nextBasicSlotRoll = nextBasicSlotRoll + 1
-            return basicSlotRolls[nextBasicSlotRoll]
-        end,
     })
-    assert(run.phase == "launch" and run.altitude == 0 and run.slotOpportunities == 0)
+    assert(run.phase == "launch" and run.altitude == 0)
     assert(expedition.launch(run) and run.phase == "ascending")
     expedition.update(run, 1)
     assert(run.phase == "ascending" and run.fuel == nil and run.altitude == 60)
@@ -1686,72 +1613,24 @@ function M.run()
     assert(run.sampleCount == 1 and run.pendingSampleValue == 75 and run.money == 0)
     expedition.update(run, 1)
     assert(run.phase == "ascending" and run.fuel == nil and run.altitude == 120)
-    assert(expedition.beginReturn(run))
-    assert(run.phase == "returning" and run.altitude == 120)
-    assert(run.maxAltitude == 120 and run.returnDistance == 120 and run.slotOpportunities == 2)
-    assert(expedition.useSlot(run) and run.slotOpportunities == 1 and run.slotSpins == 1)
-    assert(expedition.useSlot(run) and run.slotOpportunities == 0 and run.slotSpins == 2)
-    assert(not expedition.useSlot(run) and run.slotOpportunities == 0 and run.slotSpins == 2)
-    expedition.update(run, 1)
-    assert(run.phase == "returning" and run.altitude == 70)
-    expedition.update(run, 2)
+    -- docs/feedback/INBOX.md 처리대기 항목 15(a): returnToEarth is the sole
+    -- return-to-Earth entry point now (beginReturn/"returning"/useSlot
+    -- fully removed) -- it settles immediately from "ascending".
+    assert(expedition.returnToEarth(run))
     assert(run.phase == "settlement" and run.altitude == 0)
-    assert(run.money == 85 and run.lastSettlement == 85)
-    assert(run.lastSampleSettlement == 75 and run.lastSlotSettlement == 10)
-    assert(run.sampleCount == 0 and run.pendingSampleValue == 0 and run.pendingSlotReward == 0)
-    assert(run.lastSampleCount == 1 and run.lastSlotSpinsCount == 2)
+    assert(run.money == 75 and run.lastSettlement == 75)
+    assert(run.lastSampleSettlement == 75)
+    assert(run.sampleCount == 0 and run.pendingSampleValue == 0)
+    assert(run.lastSampleCount == 1)
     assert(run.lastAltitude == 120)
     assert(run.lastNewBest == true)
     expedition.update(run, 1)
-    assert(run.money == 85 and run.lastSettlement == 85)
-    assert(run.lastSampleSettlement == 75 and run.lastSlotSettlement == 10)
+    assert(run.money == 75 and run.lastSettlement == 75)
+    assert(run.lastSampleSettlement == 75)
     assert(run.lastAltitude == 120)
     assert(run.lastNewBest == true)
-    assert(expedition.launch(run) and run.lastSampleCount == 0 and run.lastSlotSpinsCount == 0)
+    assert(expedition.launch(run) and run.lastSampleCount == 0)
     assert(run.lastAltitude == 0)
-
-    local lowerRun = expedition.new({ bestAltitude = 500 })
-    lowerRun.phase = "returning"
-    lowerRun.altitude = 5
-    lowerRun.maxAltitude = 300
-    lowerRun.returnSpeed = 10
-    expedition.update(lowerRun, 1)
-    assert(lowerRun.phase == "settlement" and lowerRun.lastAltitude == 300)
-    assert(lowerRun.lastNewBest == false)
-    assert(lowerRun.bestAltitude == 500)
-
-    local slotRolls = { 10, 10, 10, 1, 1, 6, 10, 10, 10 }
-    local nextSlotRoll = 0
-    local slotRun = expedition.new({
-        returnSpeed = 100,
-        slotRandom = function()
-            nextSlotRoll = nextSlotRoll + 1
-            return slotRolls[nextSlotRoll]
-        end,
-    })
-    slotRun.phase = "returning"
-    slotRun.altitude = 10
-    slotRun.slotOpportunities = 2
-    slotRun.pendingSampleValue = 40
-    assert(expedition.useSlot(slotRun))
-    assert(table.concat(slotRun.lastSlotSymbols, "-") == "STAR-STAR-STAR")
-    assert(slotRun.lastSlotReward == 75 and slotRun.pendingSlotReward == 75)
-    assert(expedition.useSlot(slotRun))
-    assert(table.concat(slotRun.lastSlotSymbols, "-") == "COMET-COMET-PLANET")
-    assert(slotRun.lastSlotReward == 15 and slotRun.pendingSlotReward == 90)
-    expedition.update(slotRun, 1)
-    assert(slotRun.phase == "settlement" and slotRun.money == 130 and slotRun.lastSettlement == 130)
-    assert(slotRun.lastSampleSettlement == 40 and slotRun.lastSlotSettlement == 90)
-    assert(slotRun.pendingSlotReward == 0 and slotRun.lastSlotReward == 15)
-    assert(expedition.launch(slotRun))
-    assert(slotRun.lastSampleSettlement == 0 and slotRun.lastSlotSettlement == 0)
-    slotRun.phase = "returning"
-    slotRun.slotOpportunities = 1
-    assert(expedition.useSlot(slotRun) and slotRun.pendingSlotReward == 75)
-    assert(expedition.damage(slotRun, slotRun.durability))
-    assert(slotRun.phase == "destroyed" and slotRun.money == 0 and slotRun.pendingSlotReward == 0)
-    assert(slotRun.lastSampleSettlement == 0 and slotRun.lastSlotSettlement == 0)
-    assert(slotRun.lastSlotSymbols == nil and slotRun.lastSlotReward == 0)
 
     -- docs/feedback/INBOX.md item 11(b): the fuel-tank shop upgrade
     -- (buyFuelUpgrade/fuelUpgradeLevel/fuelUpgradeCost/fuelUpgradeAmount)
@@ -2024,72 +1903,6 @@ function M.run()
     assert(touchScene.ship.x > xBeforeRight,
         "holding right must still increase ship.x while main thrust follows heading")
     touchScene:touchreleased("steer-right")
-    touchScene.expedition.phase = "returning"
-    touchScene.expedition.altitude = 500
-    touchScene.expedition.returnDistance = 500
-    touchScene.expedition.returnSpeed = 0
-    touchScene.expedition.slotOpportunities = 2
-    touchScene.expedition.slotRandom = function() return 10 end
-    local returnStartX = touchScene.ship.x
-    nearbyPlanets = world.nearbyPlanets
-    world.nearbyPlanets = function() return {} end
-    local idleReturnSteering = touchScene:steeringButtonState()
-    assert(not idleReturnSteering.leftActive and not idleReturnSteering.rightActive)
-    touchScene:touchpressed("return-left", 20, 266)
-    local leftReturnSteering = touchScene:steeringButtonState()
-    assert(leftReturnSteering.leftActive and not leftReturnSteering.rightActive)
-    assert(touchScene.expedition.slotSpins == 0 and touchScene.expedition.slotOpportunities == 2)
-    touchScene:update(1)
-    assert(touchScene.ship.x == returnStartX - 55)
-    touchScene:touchreleased("return-left")
-    local releasedReturnSteering = touchScene:steeringButtonState()
-    assert(not releasedReturnSteering.leftActive and not releasedReturnSteering.rightActive)
-    touchScene:update(1)
-    assert(touchScene.ship.x == returnStartX - 55)
-    touchScene:touchpressed("slot", 90, 266)
-    assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 1)
-    local returnSteeredX = touchScene.ship.x
-    touchScene:update(1)
-    assert(touchScene.ship.x == returnSteeredX)
-    touchScene:touchpressed("return-right", 160, 266)
-    local rightReturnSteering = touchScene:steeringButtonState()
-    assert(not rightReturnSteering.leftActive and rightReturnSteering.rightActive)
-    assert(touchScene.expedition.slotSpins == 1 and touchScene.expedition.slotOpportunities == 1)
-    touchScene:update(1)
-    assert(touchScene.ship.x == returnSteeredX + 55)
-    touchScene:touchreleased("return-right")
-    world.nearbyPlanets = nearbyPlanets
-
-    local returnAvoidanceScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    returnAvoidanceScene.expedition.phase = "returning"
-    returnAvoidanceScene.expedition.altitude = 500
-    returnAvoidanceScene.expedition.returnDistance = 500
-    returnAvoidanceScene.ship.y = -500
-    local avoidablePlanet = { id = "return-avoid", x = 0, y = -455, radius = 7 }
-    nearbyPlanets = world.nearbyPlanets
-    world.nearbyPlanets = function() return { avoidablePlanet } end
-    returnAvoidanceScene:touchpressed("avoid-left", 20, 266)
-    returnAvoidanceScene:update(1)
-    world.nearbyPlanets = nearbyPlanets
-    assert(returnAvoidanceScene.ship.x == -55)
-    assert(returnAvoidanceScene.expedition.durability == 3)
-    assert(not returnAvoidanceScene.collided[avoidablePlanet.id])
-
-    assert(table.concat(touchScene.expedition.lastSlotSymbols, " ") == "STAR STAR STAR")
-    assert(touchScene.message == "STAR STAR STAR +$75  1 LEFT")
-    local readySlotButton = touchScene:slotButtonState()
-    assert(readySlotButton.enabled and readySlotButton.label == "TAP: SLOT SPIN  1 LEFT")
-    touchScene:touchpressed("last-slot", 90, 266)
-    assert(touchScene.expedition.slotSpins == 2 and touchScene.expedition.slotOpportunities == 0)
-    local spinningSlotButton = touchScene:slotButtonState()
-    assert(not spinningSlotButton.enabled and spinningSlotButton.label == "SLOT SPINNING...")
-    touchScene:update(1)
-    local emptySlotButton = touchScene:slotButtonState()
-    assert(not emptySlotButton.enabled and emptySlotButton.label == "NO SLOT CHANCES")
-    touchScene:touchpressed("empty-slot", 90, 266)
-    assert(touchScene.expedition.slotSpins == 2 and touchScene.expedition.slotOpportunities == 0)
     touchScene.expedition.phase = "settlement"
     touchScene.expedition.money = touchScene.expedition.durabilityUpgradeCost
         + touchScene.expedition.scoutShipCost
@@ -2284,7 +2097,6 @@ function M.run()
     assert(destroyedRun.durabilityUpgradeLevel == 0 and destroyedRun.maxDurability == destroyedRun.baseDurability)
     assert(destroyedRun.bestAltitude == 80)
     assert(destroyedRun.lastLostSampleCount == 1 and destroyedRun.lastLostSampleValue == 70)
-    assert(destroyedRun.lastLostSlotSpinsCount == 0 and destroyedRun.lastLostSlotValue == 0)
     assert(destroyedRun.lastLostAltitude == 80)
     assert(destroyedRun.lastLostNewBest == true)
     assert(expedition.launch(destroyedRun) and destroyedRun.phase == "ascending")
@@ -2362,9 +2174,12 @@ function M.run()
     persistedScene.expedition.altitude = 60
     persistedScene.expedition.maxAltitude = 60
     persistedScene.expedition.bestAltitude = 60
-    persistedScene.expedition.phase = "returning"
+    -- "returning" as a run phase was removed by item 15(a) (immediate
+    -- settlement replaced it); this just needs any non-launch/settlement
+    -- phase to prove persistBestAltitude doesn't depend on or mutate phase.
+    persistedScene.expedition.phase = "ascending"
     persistedScene:persistBestAltitude()
-    assert(persistedScene.expedition.phase == "returning" and savedBest == 60)
+    assert(persistedScene.expedition.phase == "ascending" and savedBest == 60)
     local restartedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
     assert(restartedScene.expedition.bestAltitude == 60)
     assert(restartedScene:hudLines().best == "PERSONAL BEST 0060")
@@ -2519,46 +2334,6 @@ function M.run()
     assert(rowTouchScene.expedition.ownedShips.scout and rowTouchScene.expedition.selectedShipId == "scout")
     assert(rowTouchScene.expedition.phase == "ascending")
 
-    -- The returning-phase LEFT/RIGHT/SPIN band was a 24px-tall row (only
-    -- ~24pt at the smallest supported window), well under the same 44pt
-    -- accessibility minimum settlementTouchRows was fixed to meet. Verify
-    -- the widened band clears 44pt and that touches at its top/bottom
-    -- edges (not just its vertical center) still register steering and
-    -- slot input.
-    local returnControls = PlayScene.returnControls
-    assert(returnControls.bottom - returnControls.top >= 34,
-        "returning control band is under the 34px minimum")
-    local returnBandPoints = viewport.canvasPixelsToPoints(
-        returnControls.bottom - returnControls.top, 180, 320, 1, false)
-    assert(returnBandPoints >= 44,
-        "returning control band is under the 44pt accessibility minimum at scale 1 (" .. returnBandPoints .. "pt)")
-
-    local returnEdgeScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    returnEdgeScene.expedition.phase = "returning"
-    returnEdgeScene.expedition.altitude = 500
-    returnEdgeScene.expedition.returnDistance = 500
-    returnEdgeScene.expedition.returnSpeed = 0
-    returnEdgeScene.expedition.slotOpportunities = 2
-    returnEdgeScene.expedition.slotRandom = function() return 10 end
-    local edgeNearbyPlanets = world.nearbyPlanets
-    world.nearbyPlanets = function() return {} end
-    returnEdgeScene:touchpressed("edge-left", 20, returnControls.top)
-    local edgeLeftSteering = returnEdgeScene:steeringButtonState()
-    assert(edgeLeftSteering.leftActive and not edgeLeftSteering.rightActive,
-        "returning band top edge did not register left steering")
-    returnEdgeScene:touchreleased("edge-left")
-    returnEdgeScene:touchpressed("edge-right", 160, returnControls.bottom - 1)
-    local edgeRightSteering = returnEdgeScene:steeringButtonState()
-    assert(not edgeRightSteering.leftActive and edgeRightSteering.rightActive,
-        "returning band bottom edge did not register right steering")
-    returnEdgeScene:touchreleased("edge-right")
-    returnEdgeScene:touchpressed("edge-slot", 90, returnControls.top)
-    assert(returnEdgeScene.expedition.slotSpins == 1 and returnEdgeScene.expedition.slotOpportunities == 1,
-        "returning band top edge did not register slot spin at slot x range")
-    world.nearbyPlanets = edgeNearbyPlanets
-
     local destroyedArea = PlayScene.destroyedTouchArea
     assert(destroyedArea.bottom - destroyedArea.top >= 34,
         "destroyed touch area height is under the 34px minimum")
@@ -2660,182 +2435,6 @@ function M.run()
         "ascending tap on the right half must still register right steering")
     ascendEdgeScene:touchreleased("ascend-edge-right")
 
-    -- docs/GAME_DESIGN.md's 귀환 슬롯 section lists repair vouchers
-    -- (수리권) as one of the reward kinds a return slot spin can grant,
-    -- alongside money. Only money payouts existed until now. A STAR-STAR-
-    -- STAR jackpot is the rarest/most valuable combo (10% per reel, 0.1%
-    -- overall), so it also restores 1 durability point (capped at
-    -- run.maxDurability) as its repair-voucher bonus on top of the $75
-    -- money reward. Non-jackpot combos grant no repair.
-    local repairRun = expedition.new({
-        slotRandom = function() return 10 end, -- always STAR (weight cumulative 10)
-    })
-    repairRun.durability = 1
-    repairRun.phase = "returning"
-    repairRun.slotOpportunities = 1
-    assert(expedition.useSlot(repairRun))
-    assert(table.concat(repairRun.lastSlotSymbols, "-") == "STAR-STAR-STAR")
-    assert(repairRun.lastSlotReward == 75 and repairRun.pendingSlotReward == 75)
-    assert(repairRun.durability == 2, "STAR triple must repair 1 durability point")
-    assert(repairRun.lastSlotRepair == 1, "lastSlotRepair must report the actual repair applied")
-
-    local repairAtCapRun = expedition.new({
-        durability = 3,
-        slotRandom = function() return 10 end,
-    })
-    repairAtCapRun.phase = "returning"
-    repairAtCapRun.slotOpportunities = 1
-    assert(expedition.useSlot(repairAtCapRun))
-    assert(repairAtCapRun.durability == 3, "repair must not exceed maxDurability")
-    assert(repairAtCapRun.lastSlotRepair == 0, "no repair should be reported once durability is already full")
-
-    local noRepairRolls = { 1, 6, 10 } -- COMET-PLANET-STAR, no match, no repair
-    local nextNoRepairRoll = 0
-    local noRepairRun = expedition.new({
-        slotRandom = function()
-            nextNoRepairRoll = nextNoRepairRoll + 1
-            return noRepairRolls[nextNoRepairRoll]
-        end,
-    })
-    noRepairRun.durability = 1
-    noRepairRun.phase = "returning"
-    noRepairRun.slotOpportunities = 1
-    assert(expedition.useSlot(noRepairRun))
-    assert(noRepairRun.durability == 1, "non-jackpot combos must not repair durability")
-    assert(noRepairRun.lastSlotRepair == 0)
-
-    -- relaunch and destruction must reset the repair receipt like the
-    -- other last-spin fields (lastSlotReward, lastSlotSymbols).
-    repairRun.phase = "settlement"
-    assert(expedition.launch(repairRun))
-    assert(repairRun.lastSlotRepair == 0, "relaunch must clear the previous spin's repair receipt")
-    repairRun.phase = "returning"
-    repairRun.slotOpportunities = 1
-    repairRun.durability = 1
-    assert(expedition.useSlot(repairRun))
-    assert(repairRun.lastSlotRepair == 1)
-    assert(expedition.damage(repairRun, repairRun.durability))
-    assert(repairRun.phase == "destroyed" and repairRun.lastSlotRepair == 0,
-        "destruction must clear the repair receipt like other pending/last-spin fields")
-
-    -- The returning-phase slot result message should surface the repair
-    -- bonus so players can see it landed, alongside the existing money
-    -- win/pending text.
-    local repairMessageRolls = { 10, 10, 10 }
-    local nextRepairMessageRoll = 0
-    local repairMessageScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    repairMessageScene.expedition.slotRandom = function()
-        nextRepairMessageRoll = nextRepairMessageRoll + 1
-        return repairMessageRolls[nextRepairMessageRoll]
-    end
-    repairMessageScene.expedition.phase = "returning"
-    repairMessageScene.expedition.altitude = 500
-    repairMessageScene.expedition.durability = 1
-    repairMessageScene.expedition.slotOpportunities = 1
-    repairMessageScene:keypressed("up")
-    repairMessageScene:update(repairMessageScene.slotSpin.duration + 0.01)
-    assert(repairMessageScene.message == "STAR STAR STAR +$75 REPAIR +1  0 LEFT",
-        "slot spin completion message must include the repair bonus: " .. tostring(repairMessageScene.message))
-
-    -- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "다음 원정 연료
-    -- 보너스" (next-expedition fuel bonus) as one of the reward kinds a
-    -- return slot spin can grant. Only money and repair vouchers existed
-    -- until now. A PLANET-PLANET-PLANET triple (40% per reel, 6.4%
-    -- overall -- rarer than any generic triple's $40 payout but more
-    -- common than the STAR jackpot) grants a fuel bonus that is banked at
-    -- safe settlement and applied to the *next* expedition's starting
-    -- fuel (not the current one, since the ship has already exhausted its
-    -- fuel by the time it is returning).
-    local fuelBonusRun = expedition.new({
-        slotRandom = function() return 6 end, -- PLANET (cumulative 6..9)
-    })
-    fuelBonusRun.phase = "returning"
-    fuelBonusRun.slotOpportunities = 1
-    assert(expedition.useSlot(fuelBonusRun))
-    assert(table.concat(fuelBonusRun.lastSlotSymbols, "-") == "PLANET-PLANET-PLANET")
-    assert(fuelBonusRun.lastSlotReward == 40 and fuelBonusRun.pendingSlotReward == 40)
-    assert(fuelBonusRun.lastSlotFuelBonus == 15, "PLANET triple must grant a 15 fuel bonus")
-    assert(fuelBonusRun.pendingFuelBonus == 15, "fuel bonus must accumulate as pending until settlement")
-    assert(fuelBonusRun.bankedFuelBonus == 0, "fuel bonus must not be banked before safe settlement")
-
-    -- Non-jackpot, non-PLANET-triple combos grant no fuel bonus.
-    assert(noRepairRun.lastSlotFuelBonus == 0)
-    assert((noRepairRun.pendingFuelBonus or 0) == 0)
-
-    -- Safe settlement banks the pending fuel bonus for the next launch and
-    -- clears the pending counter; the current settlement's fuel is
-    -- untouched (it only applies at the *next* M.launch).
-    fuelBonusRun.altitude = 1
-    expedition.update(fuelBonusRun, 1) -- drives altitude to 0 and calls settle()
-    assert(fuelBonusRun.phase == "settlement")
-    assert(fuelBonusRun.bankedFuelBonus == 15, "safe settlement must bank the pending fuel bonus")
-    assert(fuelBonusRun.pendingFuelBonus == 0, "pending fuel bonus must clear once banked")
-
-    -- The next launch clears the banked bonus (no fuel field exists to
-    -- apply it to any more -- see docs/feedback/INBOX.md 항목 11(c)/15).
-    assert(expedition.launch(fuelBonusRun))
-    assert(fuelBonusRun.fuel == nil,
-        "launch must never resurrect a dead fuel field even with a banked bonus")
-    assert(fuelBonusRun.bankedFuelBonus == 0, "banked fuel bonus must be consumed by the launch it funds")
-
-    -- A second launch (no new bonus earned) must not carry over a bonus.
-    fuelBonusRun.phase = "settlement"
-    assert(expedition.launch(fuelBonusRun))
-    assert(fuelBonusRun.fuel == nil,
-        "launches must never carry a fuel field, banked bonus or not")
-
-    -- Destruction forfeits any pending/banked fuel bonus like the other
-    -- pending rewards (samples, slot money, repair).
-    local destroyedFuelBonusRun = expedition.new({
-        slotRandom = function() return 6 end,
-    })
-    destroyedFuelBonusRun.phase = "returning"
-    destroyedFuelBonusRun.slotOpportunities = 1
-    assert(expedition.useSlot(destroyedFuelBonusRun))
-    assert(destroyedFuelBonusRun.pendingFuelBonus == 15)
-    assert(expedition.damage(destroyedFuelBonusRun, destroyedFuelBonusRun.durability))
-    assert(destroyedFuelBonusRun.phase == "destroyed")
-    assert(destroyedFuelBonusRun.pendingFuelBonus == 0, "destruction must forfeit the pending fuel bonus")
-    assert(destroyedFuelBonusRun.bankedFuelBonus == 0, "destruction must forfeit any banked fuel bonus too")
-    assert(destroyedFuelBonusRun.lastSlotFuelBonus == 0, "destruction must clear the last-spin fuel bonus receipt")
-
-    -- The returning-phase slot result message should surface the fuel
-    -- bonus alongside money/repair, and the launch message should surface
-    -- the banked bonus actually applied to the new expedition.
-    local fuelBonusMessageRolls = { 6, 6, 6 }
-    local nextFuelBonusMessageRoll = 0
-    local fuelBonusMessageScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    fuelBonusMessageScene.expedition.slotRandom = function()
-        nextFuelBonusMessageRoll = nextFuelBonusMessageRoll + 1
-        return fuelBonusMessageRolls[nextFuelBonusMessageRoll]
-    end
-    fuelBonusMessageScene.expedition.phase = "returning"
-    fuelBonusMessageScene.expedition.altitude = 500
-    fuelBonusMessageScene.expedition.slotOpportunities = 1
-    fuelBonusMessageScene:keypressed("up")
-    fuelBonusMessageScene:update(fuelBonusMessageScene.slotSpin.duration + 0.01)
-    assert(fuelBonusMessageScene.message == "PLANET PLANET PLANET +$40 FUEL +15  0 LEFT",
-        "slot spin completion message must include the fuel bonus: " .. tostring(fuelBonusMessageScene.message))
-
-    -- The EARTH SHOP summary card (settlement phase) must surface a
-    -- banked next-expedition fuel bonus so the player can see the reward
-    -- they earned before relaunching, mirroring how SAMPLES/SPINS/PEAK
-    -- ALT/NEW BEST already summarize other settlement outcomes.
-    local fuelBonusSummaryScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    fuelBonusSummaryScene.expedition.bankedFuelBonus = 0
-    assert(fuelBonusSummaryScene:summaryFuelBonusLine() == nil,
-        "no fuel bonus banked must show no summary line")
-    fuelBonusSummaryScene.expedition.bankedFuelBonus = 15
-    assert(fuelBonusSummaryScene:summaryFuelBonusLine() == "NEXT LAUNCH FUEL +15",
-        "banked fuel bonus must be summarized as NEXT LAUNCH FUEL +N: "
-            .. tostring(fuelBonusSummaryScene:summaryFuelBonusLine()))
-
     -- Real LOVE runtime capture (GAME_CAPTURE_PHASE=ascending-damage-text,
     -- 1440x2560) showed the green "+$N" sample floating text and the red
     -- "-N" damage floating text spawning at the exact same screen point
@@ -2873,75 +2472,6 @@ function M.run()
         "sample and damage floating texts spawned in the same frame must be"
             .. " horizontally separated by at least the 60px text box width ("
             .. tostring(overlapSample.x) .. " vs " .. tostring(overlapDamage.x) .. ")")
-
-    -- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "표본 보너스"
-    -- (sample bonus) as one of the four slot reward kinds, alongside money
-    -- multiples, repair vouchers and the fuel bonus above. It was the only
-    -- one of the four still unimplemented. A COMET-COMET-COMET triple (50%
-    -- per reel, 12.5% overall -- the most common triple, since COMET is the
-    -- common filler symbol) grants a flat sample-value bonus. Unlike the
-    -- fuel bonus, this stacks directly into the current expedition's
-    -- pendingSampleValue immediately (it does not need to wait for the next
-    -- launch, since sample value can still help the expedition that is
-    -- already returning).
-    local sampleBonusRun = expedition.new({
-        slotRandom = function() return 1 end, -- COMET (cumulative 1..5)
-    })
-    sampleBonusRun.phase = "returning"
-    sampleBonusRun.slotOpportunities = 1
-    assert(expedition.useSlot(sampleBonusRun))
-    assert(table.concat(sampleBonusRun.lastSlotSymbols, "-") == "COMET-COMET-COMET")
-    assert(sampleBonusRun.lastSlotReward == 40 and sampleBonusRun.pendingSlotReward == 40)
-    assert(sampleBonusRun.lastSlotSampleBonus == 25, "COMET triple must grant a 25 sample bonus")
-    assert(sampleBonusRun.pendingSampleValue == 25,
-        "sample bonus must accumulate into pendingSampleValue immediately")
-
-    -- Non-jackpot, non-COMET-triple combos grant no sample bonus.
-    assert(noRepairRun.lastSlotSampleBonus == 0)
-
-    -- Safe settlement confirms the accumulated sample bonus as part of the
-    -- normal sample settlement, same as any other pending sample value.
-    sampleBonusRun.altitude = 1
-    expedition.update(sampleBonusRun, 1) -- drives altitude to 0 and calls settle()
-    assert(sampleBonusRun.phase == "settlement")
-    assert(sampleBonusRun.lastSampleSettlement == 25,
-        "safe settlement must confirm the slot sample bonus as sample settlement")
-
-    -- Destruction forfeits the pending sample bonus like any other pending
-    -- sample value.
-    local destroyedSampleBonusRun = expedition.new({
-        slotRandom = function() return 1 end,
-    })
-    destroyedSampleBonusRun.phase = "returning"
-    destroyedSampleBonusRun.slotOpportunities = 1
-    assert(expedition.useSlot(destroyedSampleBonusRun))
-    assert(destroyedSampleBonusRun.pendingSampleValue == 25)
-    assert(expedition.damage(destroyedSampleBonusRun, destroyedSampleBonusRun.durability))
-    assert(destroyedSampleBonusRun.phase == "destroyed")
-    assert(destroyedSampleBonusRun.lastLostSampleValue == 25,
-        "destruction must report the forfeited sample bonus as lost sample value")
-    assert(destroyedSampleBonusRun.lastSlotSampleBonus == 0,
-        "destruction must clear the last-spin sample bonus receipt")
-
-    -- The returning-phase slot result message should surface the sample
-    -- bonus alongside money/repair/fuel.
-    local sampleBonusMessageRolls = { 1, 1, 1 }
-    local nextSampleBonusMessageRoll = 0
-    local sampleBonusMessageScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    sampleBonusMessageScene.expedition.slotRandom = function()
-        nextSampleBonusMessageRoll = nextSampleBonusMessageRoll + 1
-        return sampleBonusMessageRolls[nextSampleBonusMessageRoll]
-    end
-    sampleBonusMessageScene.expedition.phase = "returning"
-    sampleBonusMessageScene.expedition.altitude = 500
-    sampleBonusMessageScene.expedition.slotOpportunities = 1
-    sampleBonusMessageScene:keypressed("up")
-    sampleBonusMessageScene:update(sampleBonusMessageScene.slotSpin.duration + 0.01)
-    assert(sampleBonusMessageScene.message == "COMET COMET COMET +$40 SAMPLE +$25  0 LEFT",
-        "slot spin completion message must include the sample bonus: "
-            .. tostring(sampleBonusMessageScene.message))
 
     -- Omnidirectional joystick movement (docs/GAME_DESIGN.md 이동 방식 개선
     -- 항목 1, "조이스틱을 통해 전방향으로 이동 가능함").

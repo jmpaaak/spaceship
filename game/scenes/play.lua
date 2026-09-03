@@ -48,25 +48,6 @@ local function shortestAngleDelta(from, to)
 end
 M.shortestAngleDelta = shortestAngleDelta
 
--- Returning-phase LEFT/RIGHT/SPIN touch band. Was a 24px-tall row
--- (254-278), which only clears ~24pt at the smallest supported window
--- (integer scale 1, 1x device pixel ratio) -- well under the iOS/Android
--- ~44pt accessibility minimum PlayScene.settlementTouchRows was already
--- fixed to meet (see game/self_test.lua's canvasPixelsToPoints check).
--- Widened to a 44 canvas px band (244-288). The slot-reel result box above
--- was shrunk from 36px to 34px tall (210-244) so it stops exactly where
--- this band starts, and the message text below still starts at
--- viewport.height - 30 == 290, 2px clear of this band's bottom (288).
-local returnControls = {
-    top = 244,
-    bottom = 288,
-    leftMaxX = 55,
-    slotMinX = 60,
-    slotMaxX = 120,
-    rightMinX = 125,
-}
-M.returnControls = returnControls
-
 -- Settlement (EARTH SHOP) touch rows, top-to-bottom. Each row's height is a
 -- Actual finger touch target on the device, not just a text layout band.
 -- Evenly split across the 140-320 canvas range (180px / 4 = 45px each) so
@@ -118,10 +99,10 @@ M.destroyedTouchArea = destroyedTouchArea
 -- 44pt accessibility minimum. This constant only documents/tests the
 -- *visual* button box drawn on screen, which was a 24px-tall row
 -- (254-278, only ~24pt at the smallest supported window, integer scale 1,
--- 1x device pixel ratio) -- under the same 44pt bar returnControls and
--- settlementTouchRows were widened to meet. Widened to match
--- returnControls exactly (244-288, 44 canvas px) for visual consistency,
--- even though it does not gate touch acceptance.
+-- 1x device pixel ratio) -- under the same 44pt bar the removed in-flight
+-- returning-phase controls and settlementTouchRows were widened to meet.
+-- Widened to a 44 canvas px band (244-288) for visual consistency, even
+-- though it does not gate touch acceptance.
 local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
 M.ascendControls = ascendControls
 
@@ -301,13 +282,6 @@ M.speedIconGap = 4
 -- during ascending/returning so the two numbers read as visually unrelated.
 M.hudPrimaryStatusGap = 6
 
--- docs/feedback/INBOX.md UI/HUD item 5: the small C%/P%/S%/AVG$ slot-odds
--- line drawn above the minimap during the returning phase needs its own
--- reserved vertical space in the HUD box; without it the line collided
--- with the RETURN %%/s-left text right above it (confirmed via a real
--- LÖVE runtime capture, GAME_CAPTURE_PHASE=returning-odds).
-M.hudOddsLineHeight = 10
-
 -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
 -- footer text is a permanent dev-only disclaimer (kept until real AetherAI
 -- assets land), not gameplay information, so it should read as a quiet
@@ -323,9 +297,6 @@ M.devPlaceholderAlpha = 0.4
 function M.hudHeight(phase, hud, galaxyShift)
     if phase == "launch" then
         return M.launchHudHeight + galaxyShift
-    end
-    if hud.returnProgress then
-        return 70 + M.hudPrimaryStatusGap + M.hudOddsLineHeight + galaxyShift
     end
     if hud.samples then
         return 46 + M.hudPrimaryStatusGap + galaxyShift
@@ -476,9 +447,6 @@ local function rollupAmount(awarded, elapsed, duration)
 end
 M.rollupAmount = rollupAmount
 
-local slotReelStagger = 0.15
-local slotSpinDuration = slotReelStagger * 3
-
 -- EARTH SHOP action/status two-column layout for the fuel/hull/steering/
 -- yield/ship rows. Measured with a real LÖVE font probe
 -- (GAME_FONTPROBE=1 love .) against the small scene-cached font
@@ -569,7 +537,6 @@ function M.new(options)
         shipPunch = 0,
         shipShake = 0,
         shipShakeMagnitude = sampleTierShakeMultiplier("common"),
-        slotSpin = nil,
         touches = {},
         verticalOffset = 0,
         rcsCooldown = 0,
@@ -656,7 +623,7 @@ end
 
 function M:collisionRisk(planet)
     local phase = self.expedition.phase
-    if phase ~= "ascending" and phase ~= "returning" then return nil end
+    if phase ~= "ascending" then return nil end
     local damage = world.collisionDamage(planet)
     local lethal = damage >= self.expedition.durability
     local risk = {
@@ -664,11 +631,9 @@ function M:collisionRisk(planet)
         lethal = lethal,
         label = string.format(lethal and i18n.t("risk_lethal") or i18n.t("risk_normal"), damage),
     }
-    if phase == "ascending" then
-        local baseValue = world.sampleValue(planet)
-        risk.sampleValue = math.floor(baseValue * expedition.sampleYieldMultiplier(self.expedition) + 0.5)
-        risk.sampleLabel = string.format(i18n.t("sample_value_label"), risk.sampleValue)
-    end
+    local baseValue = world.sampleValue(planet)
+    risk.sampleValue = math.floor(baseValue * expedition.sampleYieldMultiplier(self.expedition) + 0.5)
+    risk.sampleLabel = string.format(i18n.t("sample_value_label"), risk.sampleValue)
     return risk
 end
 
@@ -676,7 +641,6 @@ function M:approachWarning(planet, planetScreenY, shipScreenY)
     if planet.id and self.collided[planet.id] then return nil end
     local phase = self.expedition.phase
     local approaching = phase == "ascending" and planetScreenY >= 40 and planetScreenY < shipScreenY
-        or phase == "returning" and planetScreenY > shipScreenY and planetScreenY < viewport.height
     if not approaching then return nil end
     return self:collisionRisk(planet)
 end
@@ -685,20 +649,8 @@ function M:hudLines()
     local run = self.expedition
     local samples
     local best
-    local earth
-    local returnProgress
-    if run.phase == "ascending" or run.phase == "returning" then
+    if run.phase == "ascending" then
         samples = i18n.t("hud_samples", run.sampleCount, run.pendingSampleValue)
-        if run.phase == "returning" then
-            earth = i18n.t("hud_earth", math.ceil(run.altitude))
-            local progress = 1
-            if run.returnDistance > 0 then
-                progress = math.max(0, math.min(1, 1 - run.altitude / run.returnDistance))
-            end
-            local secondsLeft = run.returnSpeed > 0 and math.ceil(run.altitude / run.returnSpeed) or 0
-            returnProgress = i18n.t("hud_return_progress",
-                math.floor(progress * 100 + 0.5), secondsLeft)
-        end
     elseif run.phase == "launch" or run.phase == "settlement" then
         best = i18n.t("hud_personal_best", math.floor(run.bestAltitude))
     end
@@ -707,18 +659,14 @@ function M:hudLines()
         cash = i18n.t("hud_cash", run.money),
         samples = samples,
         best = best,
-        earth = earth,
-        returnProgress = returnProgress,
-        -- docs/feedback/INBOX.md UI/HUD item 4: the launch phase's slot
-        -- forecast (S%02d) is always 0 because no return trip has
-        -- happened yet ("LAUNCH S00" read as confusing dead weight), so
-        -- drop that segment for launch only; every other phase keeps it.
-        status = run.phase == "launch"
-            and i18n.t("hud_status_no_slots", run.durability,
-                run.maxDurability, i18n.phaseAbbrev(run.phase))
-            or i18n.t("hud_status", run.durability,
-                run.maxDurability, i18n.phaseAbbrev(run.phase), run.slotOpportunities),
-        galaxy = (run.phase == "ascending" or run.phase == "returning" or run.phase == "launch")
+        -- docs/feedback/INBOX.md 처리대기 항목 15(a): the in-flight
+        -- returning-phase slot machine (and its S%02d "slots left"
+        -- forecast) has been fully removed -- there is no longer any
+        -- run-time "slot opportunities" state, so every phase now uses
+        -- the no-slots status format (still shows HULL/phase).
+        status = i18n.t("hud_status_no_slots", run.durability,
+            run.maxDurability, i18n.phaseAbbrev(run.phase)),
+        galaxy = (run.phase == "ascending" or run.phase == "launch")
             and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name
             or nil,
     }
@@ -750,12 +698,6 @@ function M:loadoutLines()
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
         odds = self:slotOddsLine(),
     }
-end
-
-function M:summaryFuelBonusLine()
-    local bonus = self.expedition.bankedFuelBonus or 0
-    if bonus <= 0 then return nil end
-    return i18n.t("fuel_bonus_line", bonus)
 end
 
 local function purchaseStatus(money, cost)
@@ -877,53 +819,6 @@ function M:slotOddsLine()
         ev)
 end
 
-function M:slotButtonState()
-    local chances = self.expedition.slotOpportunities
-    if self.slotSpin then
-        return { enabled = false, label = i18n.t("slot_spinning_label"), compactLabel = i18n.t("spinning_compact") }
-    end
-    if self.expedition.phase ~= "returning" or chances <= 0 then
-        return { enabled = false, label = i18n.t("no_slot_chances_label"), compactLabel = i18n.t("no_slots_compact") }
-    end
-    return {
-        enabled = true,
-        label = i18n.t("slot_spin_prompt", chances),
-        compactLabel = i18n.t("spin_compact_label", chances),
-    }
-end
-
-function M:beginSlotSpin()
-    self.slotSpin = {
-        elapsed = 0,
-        reelStagger = slotReelStagger,
-        duration = slotSpinDuration,
-        symbols = self.expedition.lastSlotSymbols,
-        reward = self.expedition.lastSlotReward,
-        repair = self.expedition.lastSlotRepair,
-        fuelBonus = self.expedition.lastSlotFuelBonus,
-        sampleBonus = self.expedition.lastSlotSampleBonus,
-        opportunitiesAfter = self.expedition.slotOpportunities,
-    }
-    self.message = i18n.t("slot_spinning_label")
-end
-
-function M:currentSlotReels()
-    if not self.slotSpin then
-        return self.expedition.lastSlotSymbols
-    end
-    local reels = {}
-    for i = 1, 3 do
-        local stopTime = i * self.slotSpin.reelStagger
-        if self.slotSpin.elapsed >= stopTime then
-            reels[i] = self.slotSpin.symbols[i]
-        else
-            local cycle = math.floor(self.slotSpin.elapsed * 12) + i
-            reels[i] = expedition.slotSymbols[(cycle % #expedition.slotSymbols) + 1]
-        end
-    end
-    return reels
-end
-
 function M:steeringButtonState()
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
@@ -980,7 +875,7 @@ end
 function M:pollDesktopMouse()
     if os.getenv("GAME_UNIT") == "1" then return end
     if not love.mouse or not love.mouse.isDown then return end
-    if self.expedition.phase ~= "ascending" and self.expedition.phase ~= "returning"
+    if self.expedition.phase ~= "ascending"
         and self.expedition.phase ~= "launch" then
         return
     end
@@ -1050,37 +945,7 @@ function M:update(dt)
             self.newSpecimenBanner = nil
         end
     end
-    if self.slotSpin then
-        self.slotSpin.elapsed = self.slotSpin.elapsed + dt
-        if self.slotSpin.elapsed >= self.slotSpin.duration then
-            if self.slotSpin.repair and self.slotSpin.repair > 0 then
-                self.message = i18n.t("slot_result_repair",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.repair,
-                    self.slotSpin.opportunitiesAfter)
-            elseif self.slotSpin.fuelBonus and self.slotSpin.fuelBonus > 0 then
-                self.message = i18n.t("slot_result_fuel",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.fuelBonus,
-                    self.slotSpin.opportunitiesAfter)
-            elseif self.slotSpin.sampleBonus and self.slotSpin.sampleBonus > 0 then
-                self.message = i18n.t("slot_result_sample",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.sampleBonus,
-                    self.slotSpin.opportunitiesAfter)
-            else
-                self.message = i18n.t("slot_result_plain",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.opportunitiesAfter)
-            end
-            self.slotSpin = nil
-        end
-    end
-    if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
+    if self.expedition.phase == "ascending" then
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
         local startOffset = self.verticalOffset
         local thrustAngle = self.ship.angle
@@ -1146,9 +1011,6 @@ function M:update(dt)
         else
             expedition.update(self.expedition, dt)
         end
-        if self.expedition.phase == "returning" then
-            self.ship.y = -self.expedition.altitude + self.verticalOffset
-        end
         self.rcsCooldown = math.max(0, (self.rcsCooldown or 0) - dt)
         local bank = self.steerBank or 0
         local lift = self.steerLift or 0
@@ -1186,13 +1048,10 @@ function M:update(dt)
             end
         end
     end
-    if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
-        self:persistBestAltitude()
-        self.message = i18n.t("returning_message", self.expedition.slotOpportunities)
-    elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
+    if previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
         self.message = i18n.t("settled_message", self.expedition.lastSettlement, self.expedition.money)
     end
-    if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
+    if self.expedition.phase == "ascending" then
         -- docs/feedback/INBOX.md 처리대기 항목 7-a: re-derive shop-planet
         -- docking fresh each update from actual proximity rather than only
         -- clearing it when the same planet reappears in the (radius-1)
@@ -1327,19 +1186,19 @@ function M:update(dt)
             end
         end
     end
-    if self.expedition.phase ~= "ascending" and self.expedition.phase ~= "returning" then
+    if self.expedition.phase ~= "ascending" then
         self.touches = {}
     end
 end
 
 function M:keypressed(key)
     -- docs/feedback/INBOX.md 처리대기 항목 7-a: while docked at a galaxy's
-    -- 상점 행성 (mid-expedition, ascending or returning), "b" buys that
+    -- 상점 행성 (mid-expedition, ascending), "b" buys that
     -- galaxy's unique gear part for money -- a paid alternative to the
     -- free checkpoint drop (7-b) for players who reach the shop before the
     -- hub. Placed first since this action is available outside the
     -- settlement-only purchase keys below.
-    if (self.expedition.phase == "ascending" or self.expedition.phase == "returning")
+    if self.expedition.phase == "ascending"
         and self.dockedShopPlanetId and key == "b" then
         local bought, gearId = expedition.buyShopGear(self.expedition, self.dockedShopGalaxyId)
         if bought then
@@ -1471,24 +1330,20 @@ function M:keypressed(key)
         return
     end
     if key == "space" or key == "return" or key == "up" or key == "w" then
-        if self.expedition.phase == "returning" and not self.slotSpin and expedition.useSlot(self.expedition) then
-            self:beginSlotSpin()
-        else
-            local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
-            if expedition.launch(self.expedition) then
-                if relaunching then
-                    self.ship.x = 0
-                    self.ship.y = 0
-                    self.verticalOffset = 0
-                    self.discovered = {}
-                    self.collided = {}
-                    self.discoveredCount = 0
-                    self.floatingTexts = {}
-                    self.dockedShopPlanetId = nil
-                    self.dockedShopGalaxyId = nil
-                end
-                self.message = i18n.t("ascending_message")
+        local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
+        if expedition.launch(self.expedition) then
+            if relaunching then
+                self.ship.x = 0
+                self.ship.y = 0
+                self.verticalOffset = 0
+                self.discovered = {}
+                self.collided = {}
+                self.discoveredCount = 0
+                self.floatingTexts = {}
+                self.dockedShopPlanetId = nil
+                self.dockedShopGalaxyId = nil
             end
+            self.message = i18n.t("ascending_message")
         end
     end
 end
@@ -1496,15 +1351,6 @@ end
 function M:touchpressed(id, x, y)
     if self.expedition.phase == "ascending" then
         self.touches[id] = { x = x, y = y, originX = x, originY = y }
-        return
-    end
-    if self.expedition.phase == "returning" then
-        local inControlRow = y >= returnControls.top and y <= returnControls.bottom
-        if inControlRow and x >= returnControls.slotMinX and x <= returnControls.slotMaxX then
-            self:keypressed("space")
-        elseif inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
-            self.touches[id] = { x = x, y = y, originX = x, originY = y }
-        end
         return
     end
     if self.expedition.phase == "settlement" then
@@ -1640,24 +1486,6 @@ function M:drawMinimap()
         love.graphics.circle("fill", cx + view.returnDx * rim, cy + view.returnDy * rim, 2.2)
         local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
-    end
-    if self.expedition.phase == "returning" then
-        -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
-        -- readout used to be a full-width standalone line during the
-        -- returning phase, competing for attention with the DIST/CASH/fuel
-        -- HUD text. It is small supplementary context (expected slot value),
-        -- not primary flight info, so it is now drawn as a small right-
-        -- aligned line directly above the minimap chart instead.
-        self.smallFont = self.smallFont or fonts.get(8)
-        local previousOddsFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        love.graphics.setColor(0.6, 0.8, 1)
-        -- Full canvas width (rather than the narrow size+4 minimap column)
-        -- so the localized Korean odds string (wider than its English
-        -- equivalent at this small font) stays on one line instead of
-        -- wrapping down into the minimap circle below it.
-        love.graphics.printf(self:slotOddsLine(), 4, hudHeight - 9, viewport.width - 8, "right")
-        love.graphics.setFont(previousOddsFont)
     end
     if view.checkpointBeyond then
         -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct
@@ -1922,11 +1750,6 @@ function M:draw()
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.print(hud.samples, 5, 16 + galaxyShift)
         drawStatusWithShield(30 + M.hudPrimaryStatusGap + galaxyShift)
-        if hud.earth then
-            love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.print(hud.earth, 5, 43 + M.hudPrimaryStatusGap + galaxyShift)
-            love.graphics.print(hud.returnProgress, 5, 55 + M.hudPrimaryStatusGap + galaxyShift)
-        end
     elseif hud.best then
         drawStatusWithShield((isLaunchHud and 13 or 18) + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
@@ -2026,24 +1849,14 @@ function M:draw()
         end
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf(i18n.t("earth_shop_title"), 16, 74, viewport.width - 32, "center")
-        local fuelBonusLine = self:summaryFuelBonusLine()
-        -- The previously-verified capture (build/spaceship-runtime-preview-
-        -- settlement-newbest-*.png) fit exactly one extra summary line
-        -- (NEW BEST!) at y=127 with shop rows starting unshifted at
-        -- row=140 and the last shop line (TAP: RELAUNCH) landing just
-        -- above the y=307 DEV PLACEHOLDER footer. A second real capture
-        -- of both NEW BEST! and the new NEXT LAUNCH FUEL bonus stacked as
-        -- separate lines pushed TAP: RELAUNCH into the footer (found and
-        -- reverted in this slice; see docs/STATUS.md). To keep the
-        -- verified-safe unshifted baseline, when both are present they
-        -- share a single combined line instead of adding a second row.
+        -- docs/feedback/INBOX.md 처리대기 항목 15(a): the slot-machine
+        -- PLANET-triple fuel bonus this summary line used to also report
+        -- (self:summaryFuelBonusLine/bankedFuelBonus) was removed along
+        -- with the in-flight slot machine and its fuel-bonus reward kind
+        -- -- only the NEW BEST! summary line remains here now.
         local summaryExtraLine
-        if self.expedition.lastNewBest and fuelBonusLine then
-            summaryExtraLine = i18n.t("newbest_fuel_combined", self.expedition.bankedFuelBonus)
-        elseif self.expedition.lastNewBest then
+        if self.expedition.lastNewBest then
             summaryExtraLine = i18n.t("newbest_label")
-        elseif fuelBonusLine then
-            summaryExtraLine = fuelBonusLine
         end
         love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
         love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
@@ -2051,10 +1864,13 @@ function M:draw()
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
         love.graphics.setColor(0.75, 0.9, 1)
+        -- docs/feedback/INBOX.md 처리대기 항목 15(a): the in-flight slot
+        -- machine (and its per-run spins/settlement bookkeeping) is fully
+        -- removed, so the settlement summary card no longer has a SPINS
+        -- line to show -- only the samples line remains here.
         love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 100, viewport.width - 44, "center")
-        love.graphics.printf(i18n.t("spins_settlement_line", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 22, 109, viewport.width - 44, "center")
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 22, 118, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 22, 109, viewport.width - 44, "center")
         if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
             love.graphics.printf(summaryExtraLine, 22, 127, viewport.width - 44, "center")
@@ -2151,17 +1967,17 @@ function M:draw()
         love.graphics.printf(i18n.t("ship_destroyed_title"), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
+        -- docs/feedback/INBOX.md 처리대기 항목 15(a): the in-flight slot
+        -- machine's per-run "lost slot value" no longer exists (fully
+        -- removed along with slotOpportunities/pendingSlotReward), so the
+        -- lost-total figure is now just the lost sample value.
         love.graphics.printf(i18n.t("lost_total_line",
-            (self.expedition.lastLostSampleValue or 0) + (self.expedition.lastLostSlotValue or 0)),
+            self.expedition.lastLostSampleValue or 0),
             fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(i18n.t("samples_settlement_line",
             self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
-            fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.printf(i18n.t("spins_settlement_line",
-            self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0),
             fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
@@ -2185,74 +2001,6 @@ function M:draw()
         love.graphics.printf(i18n.t("tap_start_over"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
-        self:drawJoystickStick()
-    elseif self.expedition.phase == "returning" then
-        self.smallFont = self.smallFont or fonts.get(8)
-        local previousOddsFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
-        -- line is now drawn above the minimap chart in drawMinimap() instead
-        -- of as a full-width standalone line here.
-        -- The slot result panel's symbol/WIN lines previously used the
-        -- default font (measured 160px for "PLANET  PLANET  PLANET" and
-        -- 155px for "WIN +$40  PENDING $40" via GAME_FONTPROBE) inside a
-        -- 140px-wide printf box, which auto-wrapped the widest strings to
-        -- a second line and collided with the fixed y=231 WIN row below
-        -- (confirmed via a real LÖVE runtime capture,
-        -- GAME_CAPTURE_PHASE=returning-fuelbonus). The same small font
-        -- (8px, measured max 108px symbol row / 103px WIN row) already
-        -- used for the ODDS line above fits both rows without wrapping.
-        if self.slotSpin then
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 18, 210, 144, 34)
-            love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(table.concat(self:currentSlotReels(), "  "), 20, 216, 140, "center")
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(i18n.t("spinning_label"), 20, 231, 140, "center")
-        elseif self.expedition.lastSlotSymbols then
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 18, 210, 144, 34)
-            love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 20, 216, 140, "center")
-            love.graphics.setColor(1, 0.8, 0.3)
-            if self.expedition.lastSlotRepair and self.expedition.lastSlotRepair > 0 then
-                love.graphics.printf(i18n.t("win_repair_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotRepair), 20, 231, 140, "center")
-            elseif self.expedition.lastSlotFuelBonus and self.expedition.lastSlotFuelBonus > 0 then
-                love.graphics.printf(i18n.t("win_fuel_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotFuelBonus), 20, 231, 140, "center")
-            elseif self.expedition.lastSlotSampleBonus and self.expedition.lastSlotSampleBonus > 0 then
-                love.graphics.printf(i18n.t("win_sample_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotSampleBonus), 20, 231, 140, "center")
-            else
-                love.graphics.printf(i18n.t("win_pending_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.pendingSlotReward), 20, 231, 140, "center")
-            end
-        end
-        love.graphics.setFont(previousOddsFont)
-        local slotButton = self:slotButtonState()
-        local returnBandHeight = returnControls.bottom - returnControls.top
-        local returnLabelY = returnControls.top + math.floor((returnBandHeight - 10) / 2)
-        if slotButton.enabled then
-            love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
-        else
-            love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
-        end
-        love.graphics.rectangle("fill", 60, returnControls.top, 60, returnBandHeight)
-        self.smallFont = self.smallFont or fonts.get(8)
-        local previousReturnButtonFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        if slotButton.enabled then
-            love.graphics.setColor(0.85, 0.95, 1)
-        else
-            love.graphics.setColor(0.55, 0.58, 0.65)
-        end
-        love.graphics.printf(slotButton.compactLabel, 60, returnLabelY, 60, "center")
-        love.graphics.setFont(previousReturnButtonFont)
         self:drawJoystickStick()
     end
     love.graphics.setColor(0.85, 0.9, 1)
