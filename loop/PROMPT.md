@@ -37,6 +37,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 5. Use test-driven development: add a failing engine-hosted test, observe RED, implement, then run focused GREEN tests.
 6. Run `make verify LOVE=/Users/jm/.local/bin/love` before a checkpoint commit.
 7. Update `docs/STATUS.md` with verified facts for this cycle only (do not rewrite old history) and the exact next slice. Commit owned changes with a specific message. Push only after tests pass and the worktree is clean.
+8. Token-optimization rule (2026-09-03): whenever this cycle judges a pending item in `docs/feedback/INBOX.md` fully done (or fully human-gated — nothing left that code/assets/tests can do until the user approves/logs in/etc.), move it out of `## 처리 대기` into `## 처리 완료` immediately, in the same commit, with the completion evidence (or a "human-gated: still waiting on <specific user action>" note). Do not leave a finished/blocked item sitting in the pending section only to re-confirm "still human-gated, no change" again next cycle — every cycle after this one, and the human's periodic progress report, has to re-read whatever stays in `## 처리 대기`, so leaving stale entries there wastes tokens on every future cycle.
 
 ## Non-negotiable game rules
 
