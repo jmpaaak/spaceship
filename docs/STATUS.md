@@ -1,30 +1,4 @@
 # STATUS
-## ComfyUI 행성 텍스처(assets/planet/planet_generic.png) 실배선 완료 확정 (완료, 2026-09-03)
-
-preflight READY(`engine tests and package: PASS`, `git diff check: PASS`). 세션 시작 `git status --short`로 이전 사이클이 남긴 미커밋 diff(`docs/GENERATED_ASSET_LOG.md`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`docs/assets/MANIFEST.json`/`game/scenes/play.lua`/`game/self_test.lua` 수정 + `assets/planet/` untracked)를 확인했다 — 이는 INBOX 처리대기 항목 "ComfyUI로 실제 에셋 작업 진행"의 "남은 부분" 중 행성 슬라이스를 이미 완결한 작업으로, `make verify LOVE=/Users/jm/.local/bin/love`가 그대로 GREEN이었으므로 덮어쓰지 않고 이어서 마무리했다.
-
-- 검증한 실배선 내용: `game/scenes/play.lua`의 `PlayScene.new()`가 ComfyUI 생성 스프라이트 `assets/planet/planet_generic.png`(64×64, seed 20260903, workflow `7a3eb820-...`, 중립 회색조)를 `self.planetImagePath`(항상 기록)/`self.planetImage`(`love.graphics.newImage` 성공 시에만)로 로드한다. `:draw()`의 행성 렌더 루프가 기존 `planetColor(hue)` 틴트(`love.graphics.setColor(baseR, baseG, baseB)`)를 유지한 채 이 스프라이트를 `planet.radius*2` 크기로 그리며, 로드 실패 시에만 이전 이중-원 평면 그라디언트 렌더로 폴백한다.
-- `game/self_test.lua`의 `testPlanetSprite()`(신규)가 파일 실존 + `scene.planetImagePath == "assets/planet/planet_generic.png"` 배선을 회귀 검증(GAME_HEADLESS=1에서는 `love.graphics`가 꺼져 `planetImage` 자체는 검증 불가하다는 점을 `testShipSprite()`와 동일한 패턴의 주석으로 명시).
-- `docs/assets/MANIFEST.json`에 행성 항목 provenance(source/terms URL, asset_id, prompt, seed 20260903, sampler dpmpp_2m/karras, sha256 `6b159332...`, qa 필드에 실제 배선 위치·회귀 테스트·비전 QA 의도적 생략 근거)를 기록했다 — `python3 tools/verify_asset_manifest.py` GREEN으로 provenance 형식을 자동 검증했다.
-- `docs/GENERATED_ASSET_LOG.md`에 최종 적용 기록을 append했다: `2026-09-03T17:06:36+0900 | assets/planet/planet_generic.png | ...`.
-- `assets/planet/planet_generic.png`(untracked였던 실제 PNG 바이너리)를 이번 커밋에서 git에 추가했다.
-- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:61`, `ASSET_MANIFEST_OK`, `tools.test_verify_asset_manifest` 9건 OK).
-- `docs/feedback/INBOX.md`: "ComfyUI로 실제 에셋 작업 진행" 항목에 행성 슬라이스 완료 표시를 추가하고 "남은 부분"을 이펙트/슬롯 심볼/상점 아이콘/배경으로 갱신했다(항목 전체는 아직 처리대기 — 우주선+행성만 완료).
-- 다음 사이클 다음 슬라이스: `tools/comfyui_asset_pipeline.py`로 이펙트(effect) 또는 슬롯 심볼 텍스처를 생성해 실배선 — INBOX 처리대기 항목 "ComfyUI로 실제 에셋 작업 진행"의 "남은 부분"의 다음 항목. 또는 최상단 항목들(미니맵 은하나선, 국제화+HUD 정리, UI 대개편 6건) 중 econ/gear 레인이 소유하지 않은 슬라이스로 진행.
-
-## 항목 6 첫 슬라이스 — 슬롯 6개를 함선 장비 카드 6종으로 재해석하는 game/gear.lua 카탈로그 추가 (완료, 2026-09-03)
-
-`docs/feedback/INBOX.md` "UI/HUD 대대적 정리 6개 항목" 중 6번(표본 도감 정리 검토 + 슬롯 6개를 개성 있는 함선 장비 카드 UI로 전환)의 첫 슬라이스를 처리했다. preflight READY(`make test` PASS, `git diff` clean), 세션 시작 `git status --short` clean, 이전 사이클이 남긴 미커밋 작업 없음.
-
-- 귀환 시 `slotOpportunities` 최대치인 "슬롯 6개"가 추상적인 확률 슬롯으로만 표시되고 있어, 사용자가 요청한 "발라트로 조커 카드처럼 이름·아이콘·능력이 있는 6종 함선 장비" 재해석을 위한 데이터 카탈로그부터 착수했다(UI/렌더 변경은 이번 슬라이스 범위 밖).
-- 신규 `game/gear.lua`에 `M.catalog`(정확히 6개 항목, `M.cardCount == 6`)를 추가했다. 사용자 세션 초안의 6종(오버드라이브 코어/강화 장갑판/채집 자석/행운의 주사위/스트릭 증폭기/정밀 자이로)을 모두 담되, 앞의 세 개(오버드라이브 코어=steeringUpgradeLevel, 강화 장갑판=durabilityUpgradeLevel, 채집 자석=sampleYieldUpgradeLevel)는 이미 존재하는 EARTH SHOP 업그레이드 레벨에 `upgradeField`로 매핑했다. 뒤의 세 개(행운의 주사위/스트릭 증폭기/정밀 자이로)는 대응하는 단일 수치 업그레이드가 아직 없어(슬롯 오즈·스트릭 배율·조종 반응성은 지금도 다른 메커니즘이 따로 존재) `upgradeField = nil`로 남겨 "아직 구매 불가"임을 정직하게 표현했다.
-- `M.equipped(run)` 순수 함수가 `upgradeField`를 가진 카드 중 해당 레벨이 0보다 큰 것만 `.level` 필드를 추가한 얕은 사본으로 반환한다. `upgradeField`가 `nil`인 세 카드는 run 상태와 무관하게 항상 결과에서 제외된다.
-- `game/self_test.lua`에 `testGearCatalog()`(신규)을 추가했다 — 카탈로그 크기 6, 레벨 0에서는 미장착, `durabilityUpgradeLevel`/`sampleYieldUpgradeLevel`을 각각 세팅했을 때 해당 카드만 정확한 `.level`로 장착 보고, `steeringUpgradeLevel`까지 세팅하면 3종 모두 장착, 그리고 행운의 주사위/스트릭 증폭기/정밀 자이로는 어떤 레벨 조합에서도 절대 장착되지 않음을 회귀 검증한다(RED 확인: `game.gear` 모듈이 없어 `require` 실패로 재현 → GREEN 전환).
-- 이번 슬라이스는 데이터/엔진 전용이다(신규 UI 렌더/HUD/EARTH SHOP 화면 변경 없음). 화면에 보이는 변화가 없으므로 실제 LÖVE 런타임 캡처는 이번 슬라이스에서 필요하지 않았다.
-- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:44`, `ASSET_MANIFEST_OK`).
-- `docs/feedback/INBOX.md` 6번 항목에 이번 슬라이스 완료 표시 및 구현 요약, 남은 작업(카드 아이콘 UI 노출, 표본 도감 스트립 제거 재검토, 나머지 3종 카드 구매 경로 설계)을 기록했다.
-- 다음 사이클 다음 슬라이스: 6번 항목의 남은 부분(HUD 하단 또는 EARTH SHOP에 `gear.equipped(run)` 아이콘 상시 노출 UI 추가, 표본 도감 스트립 제거 여부 재검토, 행운의 주사위/스트릭 증폭기/정밀 자이로의 실제 구매/장착 경로 설계) 중 하나, 또는 11번 항목의 남은 부분(a: `launchForecastLine` 연료-종속 프레이밍 재정의, c: 활성 연료 필드 재설계) 중 하나로 진행.
-
 ## preflight FAIL 수정: 레인 충돌로 제거된 game/gear.lua를 여전히 require하던 미커밋 game/scenes/play.lua diff 되돌림 (완료, 2026-09-03)
 
 이번 사이클 preflight가 `engine tests and package: FAIL`(`game/scenes/play.lua:11: module 'game.gear' not found`)을 보고했다. 이것이 최우선 과제이므로 다른 작업보다 먼저 이 정확한 실패를 재현하고 수정했다.
