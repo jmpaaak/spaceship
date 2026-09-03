@@ -1283,6 +1283,21 @@ function M.new(options)
             planetRimImage = img
         end
     end
+    -- assets/effects/star_point.png is the ComfyUI-generated playfield
+    -- star sparkle (docs/GENERATED_ASSET_LOG.md). Same always-set-path
+    -- / graphics-gated image pattern as planetRimImagePath. :draw()
+    -- scales it over backgroundStars()/stars() instead of
+    -- love.graphics.points, and falls back to those points when the
+    -- image failed to load.
+    local starPointImagePath = "assets/effects/star_point.png"
+    local starPointImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, starPointImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            starPointImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1369,6 +1384,8 @@ function M.new(options)
         shopTouchRowImagePath = shopTouchRowImagePath,
         planetRimImage = planetRimImage,
         planetRimImagePath = planetRimImagePath,
+        starPointImage = starPointImage,
+        starPointImagePath = starPointImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2716,7 +2733,14 @@ function M:draw()
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
                     local c = 0.12 + star.bright * 0.4
                     love.graphics.setColor(c, c, math.min(1, c + 0.08))
-                    love.graphics.points(x, y)
+                    if self.starPointImage then
+                        local iw, ih = self.starPointImage:getDimensions()
+                        local scale = 2.0 / math.max(iw, ih)
+                        love.graphics.draw(
+                            self.starPointImage, x, y, 0, scale, scale, iw / 2, ih / 2)
+                    else
+                        love.graphics.points(x, y)
+                    end
                 end
             end
         end
@@ -2728,7 +2752,14 @@ function M:draw()
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
                     local c = 0.35 + star.bright * 0.65
                     love.graphics.setColor(c, c, math.min(1, c + 0.1))
-                    love.graphics.points(x, y)
+                    if self.starPointImage then
+                        local iw, ih = self.starPointImage:getDimensions()
+                        local scale = 3.2 / math.max(iw, ih)
+                        love.graphics.draw(
+                            self.starPointImage, x, y, 0, scale, scale, iw / 2, ih / 2)
+                    else
+                        love.graphics.points(x, y)
+                    end
                 end
             end
         end

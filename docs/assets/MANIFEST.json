@@ -1383,5 +1383,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.planetRimImage for planet circle-line rims"
+  },
+  {
+    "path": "assets/effects/star_point.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "51c9f098-2a11-4f02-9d4f-512449b66487",
+    "prompt": "pixel art, 16-bit, tiny white four-point star sparkle sprite, single small star, isolated game UI star point, solid white background, no letters, no numbers, no constellation, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904138,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:57:27Z",
+    "sha256": "7d22bb56ba43d638e5bffa630286e7641e3f8d58a951d0acf6decd898e18e19c",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.starPointImage for playfield star points"
   }
 ]

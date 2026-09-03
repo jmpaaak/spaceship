@@ -1894,6 +1894,22 @@ local function testPlanetRimSprite()
         "PlayScene must load assets/effects/planet_rim.png into self.planetRimImagePath")
 end
 
+-- Playfield background/foreground stars are still Lua points(). Same
+-- file-existence + always-set-path pattern as testPlanetRimSprite.
+-- Graphics-gated starPointImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run() stays
+-- under Lua's 60-upvalue cap.
+local function testStarPointSprite()
+    local path = "assets/effects/star_point.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated star point sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.starPointImagePath == path,
+        "PlayScene must load assets/effects/star_point.png into self.starPointImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1910,6 +1926,7 @@ local function testCanvasLayoutScale()
     testSettlementSummaryPanelSprite()
     testShopTouchRowSprite()
     testPlanetRimSprite()
+    testStarPointSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows
