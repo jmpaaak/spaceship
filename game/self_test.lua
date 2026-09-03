@@ -1662,6 +1662,21 @@ local function testMinimapEarthReturnSprite()
         "PlayScene must load assets/effects/minimap_earth_return.png into self.earthReturnMarkerImagePath")
 end
 
+-- Minimap galaxy spiral-arm points are still Lua filled circles (radius
+-- 1.4). Same file-existence + always-set-path pattern as
+-- testMinimapEarthReturnSprite. Graphics-gated spiralArmImage cannot
+-- be asserted under GAME_HEADLESS=1.
+local function testMinimapSpiralArmSprite()
+    local path = "assets/effects/minimap_spiral_star.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated minimap spiral-arm star sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.spiralArmImagePath == path,
+        "PlayScene must load assets/effects/minimap_spiral_star.png into self.spiralArmImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -3550,6 +3565,7 @@ function M.run()
     testMinimapGalaxyHomeSprite()
     testMinimapGalaxyPlainSprite()
     testMinimapEarthReturnSprite()
+    testMinimapSpiralArmSprite()
     testCanvasLayoutScale()
 
     print("SPACESHIP_UNIT_OK")

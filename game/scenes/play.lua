@@ -1060,6 +1060,21 @@ function M.new(options)
             earthReturnMarkerImage = img
         end
     end
+    -- assets/effects/minimap_spiral_star.png is the ComfyUI-generated
+    -- galaxy spiral-arm point marker (docs/GENERATED_ASSET_LOG.md).
+    -- Same always-set-path / graphics-gated image pattern as
+    -- earthReturnMarkerImagePath. drawMinimap() scales it to 2.8
+    -- (matching the old Lua filled-circle radius 1.4) and falls back
+    -- to that circle when the image failed to load.
+    local spiralArmImagePath = "assets/effects/minimap_spiral_star.png"
+    local spiralArmImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, spiralArmImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            spiralArmImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1116,6 +1131,8 @@ function M.new(options)
         galaxyPlainMarkerImagePath = galaxyPlainMarkerImagePath,
         earthReturnMarkerImage = earthReturnMarkerImage,
         earthReturnMarkerImagePath = earthReturnMarkerImagePath,
+        spiralArmImage = spiralArmImage,
+        spiralArmImagePath = spiralArmImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2208,10 +2225,22 @@ function M:drawMinimap()
     -- crossing into a different galaxy visibly changes the minimap's spiral
     -- shape (view.spiral is recomputed per-galaxy by minimap.view()).
     if view.spiral and #view.spiral > 0 then
-        love.graphics.setColor(0.6, 0.8, 1, 0.55)
         for _, point in ipairs(view.spiral) do
             if point.inside ~= false then
-                love.graphics.circle("fill", cx + point.x, cy + point.y, 1.4)
+                if self.spiralArmImage then
+                    local iw, ih = self.spiralArmImage:getDimensions()
+                    local drawSize = 2.8
+                    local scale = drawSize / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, 0.55)
+                    love.graphics.draw(
+                        self.spiralArmImage,
+                        cx + point.x, cy + point.y, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    -- Fallback: cyan filled circle, used only when the
+                    -- ComfyUI-generated sprite failed to load.
+                    love.graphics.setColor(0.6, 0.8, 1, 0.55)
+                    love.graphics.circle("fill", cx + point.x, cy + point.y, 1.4)
+                end
             end
         end
     end

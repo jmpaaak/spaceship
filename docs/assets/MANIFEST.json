@@ -1008,5 +1008,30 @@
     "width": 64,
     "height": 64,
     "qa": "minimap earth-return marker sprite wired into PlayScene earthReturnMarkerImage; pipeline PNG signature/decode gate"
+  },
+  {
+    "path": "assets/effects/minimap_spiral_star.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "e515b3aa-f4d2-4dfd-99b7-db2d70e77e8c",
+    "prompt": "pixel art, 16-bit, small cyan star HUD icon sprite, tiny pale blue-white star spark, isolated minimap galaxy spiral-arm point marker, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904123,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T17:55:59Z",
+    "sha256": "20bef7cf6ea9957cb13f26a28bc7c0b4463ae45d22f2f663a1f8a3af9dd6eeb1",
+    "width": 64,
+    "height": 64,
+    "qa": "minimap spiral-arm star sprite wired into PlayScene spiralArmImage; pipeline PNG signature/decode gate"
   }
 ]
