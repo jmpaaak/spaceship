@@ -285,9 +285,8 @@ item 13 — see "Card shape" above):
     an extra `{ type = "hullDurability", value = -1 }` drawback effect
     (item 12: "효과가 두 배지만 부작용 하나 동반").
   - `refined` (💠 정제) — halves every effect value; `noSlotCost = true` is
-    reserved metadata for a future no-slot-cost mechanic (item 12's
-    Balatro-negative-style concept) not yet wired into
-    `game/engine_parts.lua` slot bookkeeping this cycle.
+    now honored by `game/engine_parts.lua`'s slot bookkeeping (see "Item
+    12: noSlotCost edition wiring" below).
   - `M.applyEditionEffects(part, editionId)` returns a NEW effects array
     (never mutates the input `part`) with the edition's transform applied;
     `editionId == nil` returns an unchanged copy. An unknown edition id
@@ -598,4 +597,48 @@ Still deferred (out of this lane's scope per `loop/PROMPT.md` — requires
 `game/scenes/play.lua` UI): an actual EARTH SHOP screen surfacing
 `M.sellGear` as a tappable "sell" action per equipped card, and any visual
 sell-value display on the card grid.
+
+### Item 12: `noSlotCost` edition wiring — `refined` cards equip past capacity
+
+Item 12's "refined" edition (`game/gear.lua`'s `M.editionEffects.refined`)
+has carried a `noSlotCost = true` field since the item 12 slice, explicitly
+documented above as "reserved metadata for a future no-slot-cost mechanic
+... not yet wired into `game/engine_parts.lua` slot bookkeeping". This
+slice closes that gap — the last remaining documented-but-unwired piece of
+metadata across items 9/10/12/13/14 in this lane's scope.
+
+- `game/gear.lua`'s new `M.isNoSlotCost(editionId)` is a pure predicate:
+  `true` only for `"refined"` (or any future edition whose
+  `M.editionEffects` entry sets `noSlotCost = true`), `false` for nil/any
+  other edition id.
+- `game/engine_parts.lua` now `require("game.gear")` (one-directional —
+  `gear.lua` does not require `engine_parts.lua` back, so no circular
+  dependency) and uses a new private `occupiedSlotCount(list)` helper that
+  excludes any part whose `part.edition` is `gear.isNoSlotCost`-flagged
+  from the count `M.isFull`/`M.equip` check against `hullSlotCount`/
+  `engineSlotCount`. A `refined` card can therefore be equipped even when
+  its category's normal 6/3 slots are already full — Balatro's "Negative"
+  joker-slot concept item 12 asked for — while every non-`refined` card's
+  behavior (including full rejection at exactly 6/3) is completely
+  unchanged.
+- `game/self_test.lua`'s new `testGearNoSlotCostEditionWiring` regression-
+  checks: `gear.isNoSlotCost`'s truth table (`refined`→true, other
+  editions/nil→false); filling a hull loadout to its normal 6-card
+  capacity still works and reports full exactly as before; a further
+  *normal* card is still rejected once full (baseline unchanged); a
+  `refined`-edition card, however, equips successfully past that same
+  full capacity and is actually appended to the slot list; `isFull`
+  continues to report `true` afterward (unaffected by the extra
+  no-cost card, since the 6 normal cards alone already fill it);
+  unequipping one normal card frees exactly one slot for a new normal
+  card regardless of the refined card's presence; and the engine
+  category's fullness is completely unaffected by hull-side noSlotCost
+  bookkeeping (slot-category independence, item 10, preserved).
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` both GREEN.
+- Changed files: `game/gear.lua`, `game/engine_parts.lua`,
+  `game/self_test.lua`, this doc, `docs/STATUS.md`,
+  `docs/feedback/INBOX.md`. `git status --short` confirms
+  `play.lua`/`i18n.lua`/`world.lua` were not touched, matching this
+  lane's scope in `loop/PROMPT.md`.
+
 

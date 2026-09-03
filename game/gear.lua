@@ -548,6 +548,19 @@ function M.editionSynergyBonusAdd(editionId)
     return (def and def.synergyBonusAdd) or 0
 end
 
+-- Item 12's "refined" edition reserved `noSlotCost = true` metadata (Balatro
+-- Negative-style "슬롯을 소모하지 않음" concept) was, until this slice,
+-- documented but never actually consulted by any slot-tracking code — a
+-- "refined" card equipped exactly like every other card. This pure
+-- predicate is the wiring point: `engine_parts.lua`'s capacity math calls
+-- this to decide whether an equipped part should count toward its
+-- hull/engine slot cap. Returns false for nil/no-edition/any edition other
+-- than one whose `M.editionEffects` entry sets `noSlotCost = true`.
+function M.isNoSlotCost(editionId)
+    local def = editionId and M.editionEffects[editionId]
+    return (def and def.noSlotCost) or false
+end
+
 -- ---------------------------------------------------------------------
 -- Item 10(b): engine-part propulsion specialization. "엔진 부품은...
 -- 추진/기동 계열에 특화된 효과(상승 가속, 연료 효율, 조종 반응성, 긴급

@@ -1,4 +1,18 @@
 # STATUS
+## [spaceship-gear 레인] 항목12 `noSlotCost`(refined 에디션) 슬롯 예외 배선 (완료, 2026-09-03)
+
+`docs/GEAR_SCHEMA.md`/`game/gear.lua`가 항목12 슬라이스 이후 계속 "reserved metadata for a future no-slot-cost mechanic ... not yet wired" 라고 명시해 온 마지막 미배선 항목을 처리했다. 레인이 지정받은 5개 항목(13→9→10→12→14)의 순수 함수/데이터/run 배선 계층이 이전 사이클들에서 이미 1차 완료된 상태였고, 이번 사이클은 `docs/GEAR_SCHEMA.md`가 문서상 명시적으로 남겨둔 "아직 안 됨" 항목 중 유일하게 남아있던 항목12의 `refined` 에디션 `noSlotCost` 플래그를 실제 슬롯 계산에 연결했다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).
+
+- TDD로 `game/self_test.lua`에 `testGearNoSlotCostEditionWiring()`을 먼저 추가했다(RED 확인: `attempt to call field 'isNoSlotCost' (a nil value)` — `game/gear.lua`에 이 변환 함수가 아직 없었음, `game/gear.lua`/`game/engine_parts.lua`를 `git stash`로 되돌려 실제 실패를 재현 확인).
+- `game/gear.lua`의 신규 `M.isNoSlotCost(editionId)` — 순수 함수, `M.editionEffects[editionId].noSlotCost`가 `true`인 경우(현재는 `refined`만 해당)에만 `true`를 반환한다.
+- `game/engine_parts.lua`가 신규로 `game.gear`를 require(단방향 — `gear.lua`는 `engine_parts.lua`를 require하지 않아 순환 의존 없음)하고, 신규 private `occupiedSlotCount(list)` 헬퍼가 `gear.isNoSlotCost(part.edition)`인 카드를 슬롯 점유 카운트에서 제외하도록 `M.isFull`/`M.equip`을 갱신했다 — `refined` 카드는 해당 카테고리(hull 6/engine 3)가 이미 가득 차 있어도 예외적으로 장착 가능해진다(발라트로 네거티브 조커의 "슬롯을 소모하지 않음" 컨셉 실구현). 일반(비-`refined`) 카드의 기존 동작(정확히 6/3에서 거부)은 완전히 그대로 유지된다.
+- `game/self_test.lua`의 `testGearNoSlotCostEditionWiring()`이 다음을 회귀 검증한다: `gear.isNoSlotCost`의 진리표(`refined`→true, 다른 에디션/nil→false), 일반 카드 6장으로 hull 슬롯을 정상적으로 가득 채움(기존 동작 불변), 가득 찬 상태에서 추가 일반 카드는 여전히 거부, `refined` 카드는 가득 찬 상태에서도 장착에 성공하고 실제로 슬롯 리스트에 추가됨, 그 후에도 `isFull`이 여전히 true(일반 카드 6장이 이미 채웠으므로 무관), 일반 카드 1장 해제 시 정확히 1자리만 비어 새 일반 카드로 다시 채울 수 있음, engine 카테고리는 hull 쪽 `noSlotCost` 처리와 완전히 무관하게 유지됨(항목10 슬롯 독립성 보존).
+- `docs/GEAR_SCHEMA.md`에 "Item 12: `noSlotCost` edition wiring" 섹션을 신규 추가하고, 기존 `refined` 에디션 설명의 "reserved metadata ... not yet wired" 문구를 실제 배선 완료로 갱신했다.
+- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/gear.lua`/`game/engine_parts.lua`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/feedback/INBOX.md`/`docs/STATUS.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
+- `docs/feedback/INBOX.md`의 항목 12 하위에 처리 상황을 append했다.
+- 다음 사이클 다음 슬라이스: 이 레인이 지정받은 5개 항목(13/9/10/12/14)의 문서상 명시적 미배선 gap은 이제 모두 닫힌 상태다. 다음은 항목7(획득 경로 3원화 — 상점 행성 좌표 생성 등 순수 함수/데이터 계층에서 준비 가능한 부분) 또는 항목9/10/12/14 각 함수의 실제 게임플레이 소비 UI(상점 화면의 refined 카드 시각적 "슬롯 무점유" 표시 등, `play.lua` 담당이라 이 레인의 최소 로더 호출 예외 범위 밖) 중 우선순위에 따라 선택.
+
 ## [spaceship-gear 레인] 항목9(c) — 슬롯 교체/판매 경제 루프 `M.sellGear` (완료, 2026-09-03)
 
 `docs/feedback/INBOX.md` 항목 9의 마지막 명시적 잔여였던 (c)("슬롯 수(현재 6개)를 장비 장착 한도로 유지하되... 카드 획득... 과 교체가 잦아지는 루프를 설계한다")를 구현했다. 레인이 지정받은 5개 항목(13→9→10→12→14)은 이전 사이클들에서 모두 1차 완료된 상태였고, `docs/GEAR_SCHEMA.md`가 반복해서 "(c) 슬롯 수/교체 루프 설계는 미착수"로 남긴 항목을 이번 사이클에서 닫았다. preflight READY(엔진 테스트/패키지 PASS, `git diff` clean), `git status --short` clean으로 시작(이전 사이클 미완료 작업 없음).

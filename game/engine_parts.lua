@@ -8,9 +8,22 @@
 -- engine equip state can never cross-contaminate or steal each other's
 -- capacity. Card content itself (the engine_parts.json pool) is loaded via
 -- game/gear.lua's generic M.loadPool/M.loadEngineParts, and effect/synergy
--- math is shared with hull parts via gear.aggregateEffects /
+-- engine effect/synergy math is shared with hull parts via gear.aggregateEffects /
 -- gear.tagSynergyMultiplier / gear.equippedTotals (those already operate on
 -- any list of parts, hull or engine, so no duplication is needed here).
+--
+-- Item 12's "refined" edition (game/gear.lua's M.editionEffects table)
+-- reserved a `noSlotCost = true` flag for a Balatro-Negative-style "슬롯을
+-- 소모하지 않음" mechanic that was documented but never actually consulted
+-- by this module's capacity math -- a "refined" card occupied a slot just
+-- like any other. M.isFull/M.equip below now call gear.isNoSlotCost(part
+-- .edition) to exclude such parts from the occupied-slot count, so a
+-- player can equip a refined card "for free" alongside a full loadout of
+-- normal cards. This module still requires game.gear purely for that one
+-- pure predicate -- it performs no love.filesystem I/O of its own and
+-- gear.lua does not require engine_parts back, so no circular dependency.
+local gear = require("game.gear")
+
 local M = {}
 
 -- Slot capacities per category. Hull stays at the existing "슬롯 6개"
@@ -39,18 +52,35 @@ local function slotCountFor(category)
     return M.engineSlotCount
 end
 
+-- Counts how many parts in `list` actually consume a slot -- i.e. excludes
+-- any part carrying the "refined" edition's noSlotCost flag (item 12). A
+-- plain #list would count those cards too, which is wrong once noSlotCost
+-- is honored.
+local function occupiedSlotCount(list)
+    local count = 0
+    for _, part in ipairs(list) do
+        if not gear.isNoSlotCost(part.edition) then
+            count = count + 1
+        end
+    end
+    return count
+end
+
 -- Returns true if the given category's slot list is at capacity. Checking
 -- hull fullness must never be affected by how many engine parts are
 -- equipped, and vice versa — this is the core "서로 슬롯을 잠식하지 않는다"
--- (item 10a) requirement.
+-- (item 10a) requirement. A part with the "refined" edition's noSlotCost
+-- flag (item 12) does not count toward this total (see occupiedSlotCount).
 function M.isFull(loadout, category)
     local list = listFor(loadout, category)
-    return #list >= slotCountFor(category)
+    return occupiedSlotCount(list) >= slotCountFor(category)
 end
 
 -- Equips `part` into `category`'s slot list if there is room and it is not
 -- already equipped there. Returns true, nil on success or false, error on
--- failure (category full or duplicate id) — never mutates on failure.
+-- failure (category full or duplicate id) — never mutates on failure. A
+-- noSlotCost (item 12 "refined" edition) part can still be equipped past
+-- the category's normal capacity, since it isn't counted by M.isFull.
 function M.equip(loadout, category, part)
     local list = listFor(loadout, category)
     if not (type(part) == "table" and type(part.id) == "string" and #part.id > 0) then
@@ -61,8 +91,8 @@ function M.equip(loadout, category, part)
             return false, string.format("engine_parts: '%s' is already equipped in %s", part.id, category)
         end
     end
-    if M.isFull(loadout, category) then
-        return false, string.format("engine_parts: %s slots are full (%d/%d)", category, #list, slotCountFor(category))
+    if not gear.isNoSlotCost(part.edition) and M.isFull(loadout, category) then
+        return false, string.format("engine_parts: %s slots are full (%d/%d)", category, occupiedSlotCount(list), slotCountFor(category))
     end
     list[#list + 1] = part
     return true
