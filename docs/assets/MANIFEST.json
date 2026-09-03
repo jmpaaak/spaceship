@@ -1133,5 +1133,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.shopPlanetImage for planet.shop landmarks"
+  },
+  {
+    "path": "assets/effects/hud_panel.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "8c87c756-f1d2-410f-93c8-d59c32f322c1",
+    "prompt": "pixel art, 16-bit, entire frame filled edge to edge with a dark navy glass HUD status bar panel texture for a vertical space roguelite, subtle cyan edge highlight and faint scanlines, metallic UI chrome, no empty margin, no white background, no circle, no icon, no text, no watermark, game UI asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904128,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T18:15:43Z",
+    "sha256": "382a8e2db2f9de2a868405ddbb5bdbafd5e41391c0d23d2e972b724ecbc4734b",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.hudPanelImage for the top HUD status bar"
   }
 ]

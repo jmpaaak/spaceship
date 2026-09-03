@@ -1134,6 +1134,20 @@ function M.new(options)
             shopPlanetImage = img
         end
     end
+    -- assets/effects/hud_panel.png is the ComfyUI-generated top HUD
+    -- status-bar panel (docs/GENERATED_ASSET_LOG.md). Same always-set-path
+    -- / graphics-gated image pattern as shopPlanetImagePath. :draw()
+    -- stretches it across the HUD band instead of the Lua fill rectangle,
+    -- and falls back to that rectangle when the image failed to load.
+    local hudPanelImagePath = "assets/effects/hud_panel.png"
+    local hudPanelImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, hudPanelImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            hudPanelImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1200,6 +1214,8 @@ function M.new(options)
         hubPlanetImagePath = hubPlanetImagePath,
         shopPlanetImage = shopPlanetImage,
         shopPlanetImagePath = shopPlanetImagePath,
+        hudPanelImage = hudPanelImage,
+        hudPanelImagePath = hudPanelImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -2807,8 +2823,14 @@ function M:draw()
     local isLaunchHud = self.expedition.phase == "launch"
     local galaxyShift = hud.galaxy and 40 or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
-    love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
-    love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
+    if self.hudPanelImage then
+        local iw, ih = self.hudPanelImage:getDimensions()
+        love.graphics.setColor(1, 1, 1, 0.85)
+        love.graphics.draw(self.hudPanelImage, 0, 0, 0, viewport.width / iw, hudHeight / ih)
+    else
+        love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
+        love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
+    end
     local previousHudFont
     if isLaunchHud then
         self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
