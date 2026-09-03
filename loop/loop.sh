@@ -136,7 +136,6 @@ while :; do
   agent_status=${PIPESTATUS[0]}
 
   if (( agent_status != 0 )) && \
-      [[ "${PROVIDER}" == "openai-codex" ]] && \
       /usr/bin/python3 "${SCRIPT_DIR}/classify_provider_failure.py" \
         "${agent_output}" "${agent_status}"; then
     printf 'Codex rate limit confirmed; retrying this fresh cycle with %s.\n' \
