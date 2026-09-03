@@ -685,6 +685,35 @@ end
 M.relaunchIconSize = 24
 M.relaunchIconGap = 8
 
+-- EARTH SHOP hull compact-action icon (icon-based HUD
+-- simplification follow-on): pair the always-drawn
+-- hull_action_compact printf with a small shield-plate
+-- silhouette, mirroring TAP: RELAUNCH. Shop-row drawShopIcon
+-- sits in the margin and does not replace this label. Drawn as
+-- a flat pentagon (even-length {x,y,...} list, no love.graphics
+-- calls) so headless tests can pin geometry: horizontally
+-- symmetric around cx, spans above and below cy.
+function M.hullActionIconPoints(cx, cy, size)
+    local w = size * 0.4
+    local top = size * 0.45
+    local shoulder = size * 0.15
+    local bottom = size * 0.5
+    return {
+        cx - w, cy - top,
+        cx + w, cy - top,
+        cx + w, cy + shoulder,
+        cx, cy + bottom,
+        cx - w, cy + shoulder,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the
+-- shield-plate's right edge and the hull compact action
+-- label's left edge. Matches TAP: RELAUNCH because both sit
+-- next to always-drawn shop action labels.
+M.hullActionIconSize = 24
+M.hullActionIconGap = 8
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1929,6 +1958,22 @@ function M.new(options)
             relaunchIconImage = img
         end
     end
+    -- assets/effects/shop_hull_action.png is the ComfyUI-generated
+    -- EARTH SHOP hull compact-action shield plate
+    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as relaunchIconImagePath.
+    -- :draw() scales it to M.hullActionIconSize instead of
+    -- M.hullActionIconPoints, and falls back to that shield-plate
+    -- pentagon when the image failed to load.
+    local hullActionIconImagePath = "assets/effects/shop_hull_action.png"
+    local hullActionIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, hullActionIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            hullActionIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -2051,6 +2096,8 @@ function M.new(options)
         destroyedTitleIconImagePath = destroyedTitleIconImagePath,
         relaunchIconImage = relaunchIconImage,
         relaunchIconImagePath = relaunchIconImagePath,
+        hullActionIconImage = hullActionIconImage,
+        hullActionIconImagePath = hullActionIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -4141,9 +4188,28 @@ function M:draw()
         local row = 720
         local rowStep = 32
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        local hullActionLabel = nextLaunch.hullActionCompact
+        local hullActionFont = love.graphics.getFont()
+        local hullActionWidth = hullActionFont:getWidth(hullActionLabel)
+        local hullActionIconSpan = M.hullActionIconSize + M.hullActionIconGap
+        local hullActionStartX = shopColumnLeftX + (shopColumnLeftW - (hullActionIconSpan + hullActionWidth)) / 2
+        local hullActionIconCenterX = hullActionStartX + M.hullActionIconSize / 2
+        local hullActionIconCenterY = row + hullActionFont:getHeight() / 2
+        if self.hullActionIconImage then
+            local iw, ih = self.hullActionIconImage:getDimensions()
+            local scale = M.hullActionIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.hullActionIconImage, hullActionIconCenterX, hullActionIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: cyan shield plate, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.polygon("fill",
+                M.hullActionIconPoints(hullActionIconCenterX, hullActionIconCenterY, M.hullActionIconSize))
+        end
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.print(hullActionLabel, hullActionStartX + hullActionIconSpan, row)
         love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
-        self:drawShopIcon("hull", shopColumnLeftX, row)
         self:drawShopIcon("steering", shopColumnRightX, row)
         row = row + rowStep
         
