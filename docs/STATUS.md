@@ -1,27 +1,15 @@
 # STATUS
-## [gear 레인] 항목13 웹 에디터 galaxyExclusive 라운드트립 + Card-shape 스키마 표 명문화 (완료, 2026-09-03)
 
-preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). `git status --short`가 이전 사이클이 남긴 uncommitted 항목13 후속(웹 에디터 `galaxyExclusive` 폼 + Card-shape 스키마 표)을 보고해 그대로 마무리했다.
+## [gear 레인] 항목12/14 에디션 스코프 콘텐츠 커버리지 감사 — 카드x에디션 조합의 "표시는 되지만 수치는 그대로"인 gap 발견·수정 (완료, 2026-09-03)
 
-- 감사 질문 1: 항목7이 JSON에 넣은 `galaxyExclusive`를 항목13 웹 에디터가 Save 시 보존하는가? `gear.validatePart`는 플래그를 복사하지만 `tools/gear-editor/` 폼에는 컨트롤이 없었고 `collectFormPart()`가 필드를 생략해, `hull_combo_matrix`/`engine_singularity_drive`를 열고 다른 필드만 고친 뒤 Save하면 Earth-shop 필터/허브 확정 드롭이 조용히 풀렸다.
-- TDD: `game/self_test.lua`의 `testGearEditorGalaxyExclusiveFieldSync()`가 `index.html`의 `fieldGalaxyExclusive` 체크박스, `collectFormPart` 출력, `openForm` 복원을 소스 텍스트로 잠근다.
-- `tools/gear-editor/index.html`에 Galaxy exclusive 체크박스, `editor.js`의 `openForm`/`collectFormPart`/그리드 라벨, `editor.css` 체크박스 레이아웃을 연결했다.
-- 감사 질문 2 (직전 슬라이스가 명시한 다음 작업): `docs/GEAR_SCHEMA.md` Card-shape 예시 JSON·필드 표가 `galaxyExclusive`를 빠뜨려 스키마만 읽는 작성자가 플래그 존재를 알 수 없었다. 예시 JSON과 표 행에 optional boolean(기본 false, Earth-shop 제외 / hub-drop 전용)을 명문화했다.
-- TDD: `testGearSchemaDocumentsGalaxyExclusive()`가 Card-shape 섹션(Effect shape 이전)에 예시 JSON 키, 표의 `` `galaxyExclusive` ``, Earth-shop/hub 노트가 남아 있는지를 잠근다.
-- `make test` GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, asset-manifest unittest OK).
-- 변경 파일은 `tools/gear-editor/editor.js`/`index.html`/`editor.css`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`docs/feedback/INBOX.md`뿐 — `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua` 미변경.
-- 다음 슬라이스: 항목13→9→10→12→14 잔여 gap 재감사(문서-코드 정합성). 항목15·UI 소비 지점(`play.lua`)은 이 레인 스코프 밖.
+preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). `git status --short`가 이전 사이클이 남긴 uncommitted 항목12 후속(에디션 스코프 콘텐츠 커버리지 테스트 + `engine_singularity_drive`에 `sampleSellValue` 효과 추가)을 보고해 그대로 검증·마무리했다.
 
-## [gear 레인] 항목10/14 콘텐츠 커버리지 심화 감사 — engine_parts.json 9종이 엔진 슬롯에서 완전히 죽은 콘텐츠였음을 발견·수정 (완료, 2026-09-03)
-
-- 감사 질문: "엔진 부품 하나가 실제로 엔진 슬롯에 장착됐을 때 유효한 효과를 최소 1개는 갖는가?" `game/self_test.lua`의 `testGearHullSpeedRunWiring`/`testGearMoneyRunWiring`/`testGearHullDurabilityRunWiring`가 명시적으로 "엔진 슬롯 카드의 speed/money/hullDurability는 절대 반영되지 않는다"고 문서화·검증해왔고, `M.effectiveSampleBonus`/`M.effectiveClimbSpeed`도 hull-only 스코프임을 재확인했다. 이 5개 타입(speed/money/climbSpeed/hullDurability/sampleSellValue)만으로 구성된 엔진 카드는 그 유일한 합법 슬롯(엔진)에 장착해도 게임플레이에 아무 영향이 없는 완전히 죽은 콘텐츠다.
-- Python으로 실제 `game/data/engine_parts.json`(14종)을 감사한 결과, item 10(b) 이전부터 존재하던 원본 엔진 카드 9종(`engine_basic_thruster`, `engine_afterburner`, `engine_fusion_core`, `engine_azure_coolant_jet`, `engine_ember_burst_valve`, `engine_void_phase_thruster`, `engine_solar_sail_flap`, `engine_burst_capacitor`, `engine_singularity_drive`)이 전부 이 상태였다 — item 10(b)가 (G) 추진 특화 효과 카테고리를 도입했을 때 신규 카드 2종에만 반영하고 기존 9종을 감사하지 않았던 것이 원인.
-- TDD: `game/self_test.lua`에 신규 `testEngineCardsHaveNonHullOnlyEffect()`를 먼저 추가했다(RED 확인: assert 실패, 9개 카드 id를 정확히 나열하는 에러 메시지로 실패 재현).
-- `game/data/engine_parts.json`의 9종 카드 각각에 기존 hull-only 효과는 그대로 둔 채(밸런스 변경 없음, 순수 추가) `fuelEfficiency`/`steeringResponsiveness`/`boostCharge`((G) 카테고리) 중 하나를 추가해 각 카드가 엔진 슬롯에서도 최소 1개의 유효 효과를 갖도록 했다.
-- `make test`, `make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:55`, `ASSET_MANIFEST_OK`).
-- `docs/GEAR_SCHEMA.md`에 "Engine card content-coverage gap (item 10/14 follow-up slice)" 섹션을 신규 추가했다.
-- `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/feedback/INBOX.md` 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`는 전혀 건드리지 않았다.
-- 다음 사이클 다음 슬라이스: `game/data/hull_parts.json`(34종)에 대해서도 동일한 "슬롯 스코프 내 완전 무효 카드" 감사를 수행(hull은 (C)/(E)/(D) 카테고리 무관 타입이 많아 훨씬 적은 카드가 걸릴 것으로 예상되나 확인되지 않음), 또는 항목7(획득 경로 3원화) 순수 데이터 계층 준비.
+- 감사 질문: 항목12의 에디션 배율(`gear.editionEffects[id].scope`)은 `scope == "all"`이 아니면 카드 effects 중 그 타입과 일치하는 항목만 곱연산한다. 그렇다면 어떤 카드가 `editions` 후보 풀에 non-"all"-scope 에디션(예: `crystallized`, scope `sampleSellValue`)을 나열하면서도 정작 자신은 그 타입의 effect를 하나도 갖지 않는 경우가 있는가? 있다면 그 조합이 실제로 롤되었을 때 에디션 배지/아이콘은 표시되지만 수치는 무편집 카드와 완전히 동일한 "표시만 되는 죽은 조합"이 된다 — 이 레인이 반복 발견해온 "문서화된 메커니즘인데 실제 소비자가 없음" 패턴을 카드x에디션 조합 단위로 한 단계 더 깊게 적용한 감사다.
+- TDD: `game/self_test.lua`에 신규 `testGearEditionScopeContentCoverage()`를 추가했다(RED 확인: `engine_singularity_drive:crystallized`가 유일한 dead combo로 보고되며 실패 — 이 카드가 `crystallized`(scope `sampleSellValue`)를 editions 후보로 나열하면서도 `sampleSellValue` 타입 effect가 없었음).
+- `game/data/engine_parts.json`의 `engine_singularity_drive`에 `{ "type": "sampleSellValue", "value": 3 }` effect를 추가해(기존 climbSpeed/money/fuelEfficiency는 그대로, 밸런스상 순수 추가) 해당 조합이 실제로 수치 영향을 갖도록 닫았다.
+- `make test`/`make verify LOVE=/Users/jm/.local/bin/love` 모두 GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:58`, `ASSET_MANIFEST_OK`).
+- `git status --short`가 `game/data/engine_parts.json`/`game/self_test.lua`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`loop/loop.sh`(레인 인프라 carryover, 게임 코드 아님) 파일만 수정으로 보고함 — 레인 스코프가 금지한 `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua`는 전혀 건드리지 않았다.
+- 다음 사이클 다음 슬라이스: 이로써 항목12(A)(B) 두 축(등급/에디션)의 스코프 커버리지까지 카드x에디션 조합 단위로 감사·클린 상태를 확인했다. 다음은 항목7(획득 경로 3원화 — 상점 행성 좌표 생성/은하 체크포인트 확정 드롭)의 실제 UI 소비 지점(다른 레인 담당)과의 통합 확인, 또는 이 레인이 반복해온 "문서-코드 정합성 감사" 패턴을 항목9(시너지 엔진)의 다른 미검증 축(예: 3개 이상 카드 간 태그 중첩 시너지 배율 곱연산 정확성)에 재적용.
 
 ## [gear 레인] 항목13/12 웹 에디터 에디션 미리보기 기능 구현 + 선체 부품 슬롯 스코프 감사 (완료, 2026-09-03)
 

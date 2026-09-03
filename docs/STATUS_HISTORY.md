@@ -1281,3 +1281,22 @@ preflight READY(엔진 테스트/패키지 PASS, git diff clean)로 시작. `git
 ## Archived from STATUS.md (2026-09-03 16:39)
 
 이 레인이 지정받은 항목13→9→10→12→14가 모두 1차 완료되고 여러 후속 gap 슬라이스까지 닫힌 상태에서, 기존 `testGearEffectTypeContentCoverage`("모든 효과 타입이 두 풀 어딘가에는 등장하는가")보다 한 단계 더 깊은 감사를 수행했다 — preflight READY(엔진 테스트/패키지 PASS, git diff clean), `git status --short` clean으로 시작.
+
+## Archived from STATUS.md (2026-09-03 16:45)
+
+## [gear 레인] 항목13 웹 에디터 galaxyExclusive 라운드트립 + Card-shape 스키마 표 명문화 (완료, 2026-09-03)
+
+preflight READY(엔진 테스트/패키지 PASS, git diff check PASS). `git status --short`가 이전 사이클이 남긴 uncommitted 항목13 후속(웹 에디터 `galaxyExclusive` 폼 + Card-shape 스키마 표)을 보고해 그대로 마무리했다.
+
+- 감사 질문 1: 항목7이 JSON에 넣은 `galaxyExclusive`를 항목13 웹 에디터가 Save 시 보존하는가? `gear.validatePart`는 플래그를 복사하지만 `tools/gear-editor/` 폼에는 컨트롤이 없었고 `collectFormPart()`가 필드를 생략해, `hull_combo_matrix`/`engine_singularity_drive`를 열고 다른 필드만 고친 뒤 Save하면 Earth-shop 필터/허브 확정 드롭이 조용히 풀렸다.
+- TDD: `game/self_test.lua`의 `testGearEditorGalaxyExclusiveFieldSync()`가 `index.html`의 `fieldGalaxyExclusive` 체크박스, `collectFormPart` 출력, `openForm` 복원을 소스 텍스트로 잠근다.
+- `tools/gear-editor/index.html`에 Galaxy exclusive 체크박스, `editor.js`의 `openForm`/`collectFormPart`/그리드 라벨, `editor.css` 체크박스 레이아웃을 연결했다.
+- 감사 질문 2 (직전 슬라이스가 명시한 다음 작업): `docs/GEAR_SCHEMA.md` Card-shape 예시 JSON·필드 표가 `galaxyExclusive`를 빠뜨려 스키마만 읽는 작성자가 플래그 존재를 알 수 없었다. 예시 JSON과 표 행에 optional boolean(기본 false, Earth-shop 제외 / hub-drop 전용)을 명문화했다.
+- TDD: `testGearSchemaDocumentsGalaxyExclusive()`가 Card-shape 섹션(Effect shape 이전)에 예시 JSON 키, 표의 `` `galaxyExclusive` ``, Earth-shop/hub 노트가 남아 있는지를 잠근다.
+- `make test` GREEN(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, asset-manifest unittest OK).
+- 변경 파일은 `tools/gear-editor/editor.js`/`index.html`/`editor.css`/`game/self_test.lua`/`docs/GEAR_SCHEMA.md`/`docs/STATUS.md`/`docs/STATUS_HISTORY.md`/`docs/feedback/INBOX.md`뿐 — `play.lua`/`i18n.lua`/`world.lua`/`expedition.lua` 미변경.
+- 다음 슬라이스: 항목13→9→10→12→14 잔여 gap 재감사(문서-코드 정합성). 항목15·UI 소비 지점(`play.lua`)은 이 레인 스코프 밖.
+
+## Archived from STATUS.md (2026-09-03 16:48)
+
+## [gear 레인] 항목10/14 콘텐츠 커버리지 심화 감사 — engine_parts.json 9종이 엔진 슬롯에서 완전히 죽은 콘텐츠였음을 발견·수정 (완료, 2026-09-03)

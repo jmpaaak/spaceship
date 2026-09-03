@@ -51,6 +51,7 @@
       "effects": [
         { "type": "climbSpeed", "value": 8 },
         { "type": "money", "value": 5 },
+        { "type": "sampleSellValue", "value": 3 },
         { "type": "fuelEfficiency", "value": 15 }
       ]
     },

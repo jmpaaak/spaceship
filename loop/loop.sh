@@ -129,7 +129,6 @@ while :; do
     --protocol plain \
     -- \
     "${HERMES_BIN}" chat --oneshot -Q \
-    --provider "${PROVIDER}" --model "${MODEL}" --reasoning "${REASONING}" \
     --toolsets terminal,file --ignore-rules --yolo --source tool \
     --in "${ROOT_DIR}" --max-turns "${MAX_TURNS}" \
     --run-budget "${RUN_BUDGET_SECONDS}" --query-file "${prompt_file}" \

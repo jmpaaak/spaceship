@@ -1353,6 +1353,52 @@ local function testEngineCardsHaveNonHullOnlyEffect()
         table.concat(deadCards, ", "))
 end
 
+-- Item 12 gap audit: an edition's transform (gear.applyEditionEffects,
+-- gear.editionEffects) only multiplies effect entries whose `type` matches
+-- the edition's own `scope` (or all entries, if scope == "all"). A card
+-- that lists a non-"all"-scoped edition (e.g. "crystallized", scope
+-- "sampleSellValue") in its `editions` candidate pool but does NOT itself
+-- carry any effect of that scoped type is a documented-but-dead
+-- combination: if that specific card ever rolls that edition via
+-- gear.rollEdition/expedition.rollGearOffer, M.applyEditionEffects runs
+-- its multiply loop over the card's effects and finds nothing to scale --
+-- the player receives an edition-tagged card (UI shows the edition
+-- badge/icon per item 12) whose numbers are byte-for-byte identical to the
+-- unedited card. This is the same "documented mechanism with zero actual
+-- effect for a specific card" class of gap this lane has repeatedly found
+-- and closed for irradiated-synergy/noSlotCost/collisionRadius/etc, just
+-- audited one level deeper: per-card x per-scoped-edition instead of
+-- per-effect-type-globally.
+local function testGearEditionScopeContentCoverage()
+    local pools = { gear.loadHullParts(), gear.loadEngineParts() }
+    local deadCombos = {}
+    for _, pool in ipairs(pools) do
+        for _, part in ipairs(pool) do
+            for _, editionId in ipairs(part.editions or {}) do
+                local def = gear.editionEffects[editionId]
+                assert(def, "part '" .. part.id .. "' references unknown edition '" .. tostring(editionId) .. "'")
+                if def.scope ~= "all" then
+                    local hasScopedEffect = false
+                    for _, effect in ipairs(part.effects) do
+                        if effect.type == def.scope then
+                            hasScopedEffect = true
+                            break
+                        end
+                    end
+                    if not hasScopedEffect then
+                        deadCombos[#deadCombos + 1] = part.id .. ":" .. editionId
+                    end
+                end
+            end
+        end
+    end
+    assert(#deadCombos == 0,
+        "every bundled card x edition combo whose edition has a scoped (non-\"all\") multiplier must " ..
+        "carry at least one effect of that scoped type, otherwise rolling that edition on that card " ..
+        "is a silent no-op (edition badge shown, numbers unchanged); dead combos: " ..
+        table.concat(deadCombos, ", "))
+end
+
 -- Item 10/14 content-coverage gap audit, one level further (this lane's
 -- recurring "문서-코드 정합성 감사" pattern applied to a direction the
 -- prior two coverage tests never checked). testGearEffectTypeContentCoverage
@@ -4243,6 +4289,7 @@ function M.run()
     testEnginePropulsionSpecialization()
     testGearEffectTypeContentCoverage()
     testEngineCardsHaveNonHullOnlyEffect()
+    testGearEditionScopeContentCoverage()
     testHullCardsHaveNonEngineOnlyEffect()
     testEngineCardsHaveCategoryAgnosticEffectCoverage()
     testGearRunWiring()
