@@ -1312,6 +1312,21 @@ function M.new(options)
             shipSilhouetteImage = img
         end
     end
+    -- assets/effects/launch_rocket.png is the ComfyUI-generated TAP-TO-LAUNCH
+    -- rocket icon (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as shipSilhouetteImagePath. :draw() uses
+    -- it instead of the Lua rocketIconPoints polygon when
+    -- showLaunchRocketIcon is true, and falls back to that polygon when
+    -- this image failed to load.
+    local launchRocketImagePath = "assets/effects/launch_rocket.png"
+    local launchRocketImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, launchRocketImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            launchRocketImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1402,6 +1417,8 @@ function M.new(options)
         starPointImagePath = starPointImagePath,
         shipSilhouetteImage = shipSilhouetteImage,
         shipSilhouetteImagePath = shipSilhouetteImagePath,
+        launchRocketImage = launchRocketImage,
+        launchRocketImagePath = launchRocketImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3496,9 +3513,18 @@ function M:draw()
         -- yellow rocket/arrow, then draw a smaller dark translucent-gray
         -- prompt with a restrained sine wobble + fade pulse.
         if M.showLaunchRocketIcon then
-            love.graphics.setColor(1, 0.75, 0.25)
-            love.graphics.polygon("fill", M.rocketIconPoints(
-                viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
+            local rocketX = viewport.width / 2
+            local rocketY = messageY - M.launchIconGap
+            if self.launchRocketImage then
+                local iw, ih = self.launchRocketImage:getDimensions()
+                local scale = M.launchIconSize / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.draw(self.launchRocketImage, rocketX, rocketY, 0, scale, scale, iw / 2, ih / 2)
+            else
+                love.graphics.setColor(1, 0.75, 0.25)
+                love.graphics.polygon("fill", M.rocketIconPoints(
+                    rocketX, rocketY, M.launchIconSize))
+            end
         end
         local ox, oy = M.launchPromptOffset(self.time)
         local alpha = M.launchPromptAlpha(self.time)

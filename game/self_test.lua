@@ -1926,6 +1926,23 @@ local function testShipSilhouetteSprite()
         "PlayScene must load assets/effects/ship_silhouette.png into self.shipSilhouetteImagePath")
 end
 
+-- Launch TAP-TO-LAUNCH rocket icon is still a Lua polygon
+-- (M.rocketIconPoints) when showLaunchRocketIcon is true. Same
+-- file-existence + always-set-path pattern as testShipSilhouetteSprite.
+-- Graphics-gated launchRocketImage cannot be asserted under
+-- GAME_HEADLESS=1. Invoked from testCanvasLayoutScale so M.run() stays
+-- under Lua's 60-upvalue cap.
+local function testLaunchRocketSprite()
+    local path = "assets/effects/launch_rocket.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated launch rocket sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.launchRocketImagePath == path,
+        "PlayScene must load assets/effects/launch_rocket.png into self.launchRocketImagePath")
+end
+
 -- docs/feedback/INBOX.md 처리대기 항목 "내부 해상도를 발라트로 수준으로 상향"
 -- second slice: HUD/touch/minimap/joystick/font/shop/earth/loadout absolute
 -- pixels must be ×4 of the old 180×320 layout (or canvas-ratio equivalent)
@@ -1944,6 +1961,7 @@ local function testCanvasLayoutScale()
     testPlanetRimSprite()
     testStarPointSprite()
     testShipSilhouetteSprite()
+    testLaunchRocketSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows
