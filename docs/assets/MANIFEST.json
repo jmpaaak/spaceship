@@ -1558,5 +1558,30 @@
     "width": 64,
     "height": 64,
     "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.samplesIconImage for SAMPLES HUD Lua vial"
+  },
+  {
+    "path": "assets/effects/hud_galaxy.png",
+    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "asset_id": "d0148111-9181-4748-bc01-b7660a6f4e09",
+    "prompt": "pixel art, 16-bit, small gold eight-pointed star galaxy HUD icon sprite, simple front-view sparkling galaxy star, isolated galaxy name HUD icon, solid white background, no letters, no numbers, no ship, no scene, game asset, masterpiece",
+    "model": "Juggernaut-XL_v9.safetensors",
+    "style": "RW_pixelart_XL_v1.safetensors",
+    "settings": {
+      "seed": 20260904145,
+      "steps": 30,
+      "cfg": 7,
+      "sampler": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 1,
+      "width": 64,
+      "height": 64,
+      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+    },
+    "downloaded_at": "2026-09-03T19:35:43Z",
+    "sha256": "0d3c21d87bc6b5390fadcba87d767401257b66ce300a8fe920e3b945e313354d",
+    "width": 64,
+    "height": 64,
+    "qa": "pipeline PNG signature/decode gate only; no vision QA; wired as PlayScene.galaxyIconImage for galaxy-name HUD Lua 8-point star"
   }
 ]

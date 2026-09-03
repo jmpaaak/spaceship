@@ -385,6 +385,41 @@ end
 M.samplesIconSize = 32
 M.samplesIconGap = 16
 
+-- Galaxy-name HUD icon (icon-based HUD simplification follow-on): pair
+-- the gold galaxy-name readout with a small 8-point star silhouette,
+-- mirroring coin/shield/speed/distance/best/samples. Drawn as a flat
+-- star polygon (even-length {x,y,...} list, no love.graphics calls) so
+-- headless tests can pin geometry: horizontally symmetric around cx,
+-- spans above and below cy.
+function M.galaxyIconPoints(cx, cy, size)
+    local r = size * 0.5
+    local inner = r * 0.38
+    return {
+        cx, cy - r,
+        cx + inner * 0.45, cy - inner,
+        cx + r * 0.72, cy - r * 0.72,
+        cx + inner, cy - inner * 0.45,
+        cx + r, cy,
+        cx + inner, cy + inner * 0.45,
+        cx + r * 0.72, cy + r * 0.72,
+        cx + inner * 0.45, cy + inner,
+        cx, cy + r,
+        cx - inner * 0.45, cy + inner,
+        cx - r * 0.72, cy + r * 0.72,
+        cx - inner, cy + inner * 0.45,
+        cx - r, cy,
+        cx - inner, cy - inner * 0.45,
+        cx - r * 0.72, cy - r * 0.72,
+        cx - inner * 0.45, cy - inner,
+    }
+end
+
+-- Icon footprint (px) + gap (px) reserved between the galaxy star's
+-- right edge and the galaxy-name text's left edge, mirroring
+-- M.samplesIconSize/samplesIconGap.
+M.galaxyIconSize = 32
+M.galaxyIconGap = 16
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -1458,6 +1493,20 @@ function M.new(options)
             samplesIconImage = img
         end
     end
+    -- assets/effects/hud_galaxy.png is the ComfyUI-generated galaxy-name
+    -- HUD star (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
+    -- graphics-gated image pattern as samplesIconImagePath. :draw()
+    -- scales it to M.galaxyIconSize instead of M.galaxyIconPoints, and
+    -- falls back to that 8-point star polygon when the image failed to load.
+    local galaxyIconImagePath = "assets/effects/hud_galaxy.png"
+    local galaxyIconImage = nil
+    if love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, galaxyIconImagePath)
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            galaxyIconImage = img
+        end
+    end
     return setmetatable({
         ship = ship,
         shipImage = shipImage,
@@ -1558,6 +1607,8 @@ function M.new(options)
         bestIconImagePath = bestIconImagePath,
         samplesIconImage = samplesIconImage,
         samplesIconImagePath = samplesIconImagePath,
+        galaxyIconImage = galaxyIconImage,
+        galaxyIconImagePath = galaxyIconImagePath,
         specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         lastKnownBestAltitude = altitudeStore:load(),
@@ -3221,8 +3272,22 @@ function M:draw()
     love.graphics.setColor(0.7, 0.9, 1)
     local hudY = 16
     if hud.galaxy then
+        local galaxyIconCenterX = 20 + M.galaxyIconSize / 2
+        local galaxyIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
+        if self.galaxyIconImage then
+            local iw, ih = self.galaxyIconImage:getDimensions()
+            local scale = M.galaxyIconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(self.galaxyIconImage, galaxyIconCenterX, galaxyIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        else
+            -- Fallback: gold 8-point star, used only when the
+            -- ComfyUI-generated sprite failed to load.
+            love.graphics.setColor(1, 0.85, 0.4)
+            love.graphics.polygon("fill",
+                M.galaxyIconPoints(galaxyIconCenterX, galaxyIconCenterY, M.galaxyIconSize))
+        end
         love.graphics.setColor(1, 0.85, 0.4)
-        love.graphics.print(hud.galaxy, 20, hudY)
+        love.graphics.print(hud.galaxy, 20 + M.galaxyIconSize + M.galaxyIconGap, hudY)
         hudY = hudY + 40
         love.graphics.setColor(0.7, 0.9, 1)
     end

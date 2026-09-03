@@ -2039,6 +2039,46 @@ local function testBestIconSprite()
     end
 end
 
+-- Galaxy-name HUD readout is still bare gold text (hud.galaxy) while
+-- DIST/CASH/HULL/STEER/BEST/SAMPLES already have ComfyUI icons. Same
+-- file-existence + always-set-path pattern as testSamplesIconSprite,
+-- plus Lua 8-point star fallback geometry (even-length, spans cy,
+-- horizontally symmetric). Graphics-gated galaxyIconImage cannot be
+-- asserted under GAME_HEADLESS=1. Invoked from testCanvasLayoutScale
+-- so M.run() stays under Lua's 60-upvalue cap.
+local function testGalaxyIconSprite()
+    local path = "assets/effects/hud_galaxy.png"
+    local info = love.filesystem.getInfo(path, "file")
+    assert(info ~= nil, "missing ComfyUI-generated GALAXY HUD icon sprite at " .. path)
+    assert(info.size > 0)
+    local play = require("game.scenes.play")
+    local scene = play.new()
+    assert(scene.galaxyIconImagePath == path,
+        "PlayScene must load assets/effects/hud_galaxy.png into self.galaxyIconImagePath")
+    assert(play.galaxyIconSize == 32 and play.galaxyIconGap == 16)
+    local points = play.galaxyIconPoints(20, 20, 8)
+    assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
+    assert(#points >= 6, "galaxy silhouette needs at least 3 vertices")
+    local minY, maxY = math.huge, -math.huge
+    for i = 1, #points, 2 do
+        local y = points[i + 1]
+        minY = math.min(minY, y)
+        maxY = math.max(maxY, y)
+    end
+    assert(minY < 20 and maxY > 20, "galaxy icon must span above and below its center")
+    local seen = {}
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        seen[string.format("%.2f,%.2f", x, y)] = true
+    end
+    for i = 1, #points, 2 do
+        local x, y = points[i], points[i + 1]
+        local mirroredKey = string.format("%.2f,%.2f", 40 - x, y)
+        assert(seen[mirroredKey],
+            "galaxy outline must be horizontally symmetric around cx")
+    end
+end
+
 -- SAMPLES HUD readout is still bare gold text (hud_samples) while
 -- DIST/CASH/HULL/STEER/BEST already have ComfyUI icons. Same
 -- file-existence + always-set-path pattern as testBestIconSprite,
@@ -2102,6 +2142,7 @@ local function testCanvasLayoutScale()
     testDistanceIconSprite()
     testBestIconSprite()
     testSamplesIconSprite()
+    testGalaxyIconSprite()
     local joystick = require("game.joystick")
     local minimap = require("game.minimap")
     local rows = PlayScene.settlementTouchRows
