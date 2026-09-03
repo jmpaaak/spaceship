@@ -2659,9 +2659,10 @@ local function testShipActionIconSprite()
     end
 end
 
--- EARTH SHOP nextLaunch.stats (stats_line, "HULL n") is still a
--- bare centered printf while compact action rows already have
--- ComfyUI icons. Same file-existence + always-set-path pattern as
+-- EARTH SHOP nextLaunch.stats (stats_line, "HULL n") already
+-- pairs the hull-plate icon with the label. LAUNCH LOADOUT
+-- loadout.stats is still a bare centered printf. Same
+-- file-existence + always-set-path pattern as
 -- testShipActionIconSprite, plus Lua hull-plate hexagon fallback
 -- geometry (even-length, spans cy, horizontally symmetric).
 -- Graphics-gated statsIconImage cannot be asserted under
@@ -2677,6 +2678,17 @@ local function testStatsIconSprite()
     assert(scene.statsIconImagePath == path,
         "PlayScene must load assets/effects/shop_stats.png into self.statsIconImagePath")
     assert(play.statsIconSize == 24 and play.statsIconGap == 8)
+    assert(play.drawLoadoutStatsIcon == true,
+        "LAUNCH LOADOUT loadout.stats must pair HULL n with the hull-plate icon")
+    assert(type(play.statsIconLabelLayout) == "function",
+        "PlayScene must expose a shared stats icon+label layout helper")
+    local layout = play.statsIconLabelLayout(100, 64, 592)
+    assert(layout.iconSpan == play.statsIconSize + play.statsIconGap)
+    assert(layout.labelX == layout.startX + layout.iconSpan)
+    assert(layout.iconCenterX == layout.startX + play.statsIconSize / 2)
+    local total = layout.iconSpan + 100
+    assert(math.abs(layout.startX - (64 + (592 - total) / 2)) < 0.01,
+        "icon+label pair must stay centered in the loadout/shop box")
     local points = play.statsIconPoints(20, 20, 8)
     assert(#points % 2 == 0, "polygon point list must have paired x,y coordinates")
     assert(#points >= 6, "stats silhouette needs at least 3 vertices")

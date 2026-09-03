@@ -831,6 +831,41 @@ end
 M.statsIconSize = 24
 M.statsIconGap = 8
 
+-- LAUNCH LOADOUT loadout.stats was still a bare centered
+-- printf after EARTH SHOP nextLaunch.stats got the hull-plate
+-- icon. Named flag + shared layout helper so both surfaces
+-- keep the same centered icon+label pair (TDD: testStatsIconSprite).
+M.drawLoadoutStatsIcon = true
+
+function M.statsIconLabelLayout(labelWidth, boxX, boxW)
+    local iconSpan = M.statsIconSize + M.statsIconGap
+    local startX = boxX + (boxW - (iconSpan + labelWidth)) / 2
+    return {
+        iconSpan = iconSpan,
+        startX = startX,
+        iconCenterX = startX + M.statsIconSize / 2,
+        labelX = startX + iconSpan,
+    }
+end
+
+function M:drawStatsIconLabel(label, boxX, row, boxW, labelR, labelG, labelB)
+    local statsFont = love.graphics.getFont()
+    local layout = M.statsIconLabelLayout(statsFont:getWidth(label), boxX, boxW)
+    local statsIconCenterY = row + statsFont:getHeight() / 2
+    if self.statsIconImage then
+        local iw, ih = self.statsIconImage:getDimensions()
+        local scale = M.statsIconSize / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(self.statsIconImage, layout.iconCenterX, statsIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+    else
+        love.graphics.setColor(labelR, labelG, labelB)
+        love.graphics.polygon("fill",
+            M.statsIconPoints(layout.iconCenterX, statsIconCenterY, M.statsIconSize))
+    end
+    love.graphics.setColor(labelR, labelG, labelB)
+    love.graphics.print(label, layout.labelX, row)
+end
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- the user misread the DIST/CASH line as "altitude requires fuel to
 -- increase" because the fuel/status line sat immediately below it. Fuel is
@@ -4253,8 +4288,12 @@ function M:draw()
             love.graphics.printf(loadout.ship, 64, row, viewport.width - 128, "center")
             row = row + rowStep
         end
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(loadout.stats, 64, row, viewport.width - 128, "center")
+        if M.drawLoadoutStatsIcon then
+            self:drawStatsIconLabel(loadout.stats, 64, row, viewport.width - 128, 0.4, 0.85, 1)
+        else
+            love.graphics.setColor(0.4, 0.85, 1)
+            love.graphics.printf(loadout.stats, 64, row, viewport.width - 128, "center")
+        end
         row = row + rowStep
 
         love.graphics.setColor(0.6, 1, 0.85)
@@ -4508,28 +4547,7 @@ function M:draw()
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        local statsLabel = nextLaunch.stats
-        local statsFont = love.graphics.getFont()
-        local statsWidth = statsFont:getWidth(statsLabel)
-        local statsIconSpan = M.statsIconSize + M.statsIconGap
-        local statsStartX = fullX + (fullW - (statsIconSpan + statsWidth)) / 2
-        local statsIconCenterX = statsStartX + M.statsIconSize / 2
-        local statsIconCenterY = row + statsFont:getHeight() / 2
-        if self.statsIconImage then
-            local iw, ih = self.statsIconImage:getDimensions()
-            local scale = M.statsIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.statsIconImage, statsIconCenterX, statsIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan hull-plate hexagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.statsIconPoints(statsIconCenterX, statsIconCenterY, M.statsIconSize))
-        end
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.print(statsLabel, statsStartX + statsIconSpan, row)
+        self:drawStatsIconLabel(nextLaunch.stats, fullX, row, fullW, 0.75, 0.9, 1)
         row = row + rowStep
 
         love.graphics.setColor(0.75, 0.9, 1)
