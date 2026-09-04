@@ -2,6 +2,28 @@
 
 ## 처리 대기
 
+- **[2026-09-05] 잔해(debris) 충돌 즉사 → 고정 1 데미지로 완화 (사용자 확정):**
+  - `play.lua` line 1727: `local damage = self.expedition.durability` (현재 HP = 즉사)
+  - 변경: `local damage = 1` — 행성 충돌 최소값(1)과 동일하지만, 행성은 거리 비례로 올라가므로 초반 외에는 잔해가 항상 가장 낮음.
+  - 분출 파티클·화면 흔들림은 그대로. floating damage text도 정상 표시.
+  - i18n `collision_message` 재사용 (`"충돌! -N HP"`) — 별도 메시지 불필요.
+  - `make verify` GREEN + 커밋: `fix(debris): collision deals 1 damage instead of instant kill`
+
+- **[2026-09-05] RCS 분출 위치에 ship.angle 반영 (선택, 조이스틱 개선):**
+  - 현재 분출 위치가 `ship.x ± 6, ship.y ± 6` 고정 좌표 — 배가 기울어져도 분출이 배 측면에서 나오지 않음.
+  - 개선: 분출 위치를 `ship.angle` 기준 회전 좌표로 계산:
+    ```lua
+    -- 가로 분출: 배 측면 (ship.angle + π/2 방향 ± 6px)
+    local perpX = math.cos(self.ship.angle + math.pi / 2)
+    local perpY = math.sin(self.ship.angle + math.pi / 2)
+    x = self.ship.x + side * perpX * 6
+    y = self.ship.y + side * perpY * 6
+    vx = side * perpX * (16 + math.random()*10)
+    vy = side * perpY * (16 + math.random()*10)
+    ```
+  - 세로 분출도 동일하게 `ship.angle` 기준 앞뒤로 계산.
+  - `make verify` GREEN + 커밋: `fix(rcs): puff position/velocity follow ship.angle`
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-05) **모바일 해상도 최적화 + 별 분산 + 중력장 확대 + 행성 마커 + 은하 공유 특성 (5개 소항목 전부 완료):**
