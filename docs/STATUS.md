@@ -1,5 +1,18 @@
 # STATUS
 
+2026-09-05 — INBOX ComfyUI regen item (0): stop `drawPanelSprite` stretching 64×64 panels to 720px.
+
+- Launch was a full-bleed red/cyan blur because `drawPanelSprite` did `love.graphics.draw(image, x, y, 0, w/iw, h/ih)` so 64×64 RGB HUD/loadout/shop panels filled `viewport.width` (720).
+- `game/scenes/play.lua` now draws panel sprites at native pixel size (`love.graphics.draw(image, x, y)`). Nil image still returns false so callers keep the original rectangle fallback. Dest `w,h` stay in the signature for a later 9-slice/tile path.
+- HUD icons still use `drawHudSpriteOrPoly` `size` (8–14px). Earth diameter stays 116px; ship logical size stays 64px. Unchanged.
+- RED then GREEN: `game/self_test.lua` fake 64×64 image + dest 720×32 now asserts `sx==1, sy==1` (was `sx=11.25 sy=0.5`).
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:169`, `ASSET_MANIFEST_OK`).
+- Launch capture (not committed): `GAME_CAPTURE=1 GAME_CAPTURE_PHASE=launch` → `/Users/jm/Library/Application Support/LOVE/spaceship/spaceship-runtime-preview.png` copied locally to `build/spaceship-runtime-preview-launch-nostretch.png` (gitignored). Downsample 180×320: 82 saturated-red / 122 cyan pixels vs 56165 dark — no full-bleed stretch.
+
+## Next Slice
+
+- INBOX ComfyUI regen group (1) ships: `assets/ship/ship_default.png`, `assets/ship/ship_scout.png`. 64×64 transparent pixel-art top-down silver silhouettes, body ~60% of frame. ComfyUI workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5` via `tools/comfyui_asset_pipeline.py`. Do not start until (0) is on `main`.
+
 2026-09-04 — ComfyUI shop panels and action backgrounds wiring (group 8 of INBOX draw-wiring item).
 
 - Finished wiring `shopEffectImages` in `game/scenes/play.lua` (loaded as Group 8).

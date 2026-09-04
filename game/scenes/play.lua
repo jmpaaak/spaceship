@@ -348,13 +348,15 @@ local function drawFloatingIconSprite(image, cx, cy, size, alpha)
 end
 M.drawFloatingIconSprite = drawFloatingIconSprite
 
--- Draw a panel/overlay sprite stretched to fill the rectangle (x, y, w, h).
--- image: the panel sprite (may be nil -> caller draws its original rectangle).
+-- Draw a panel/overlay sprite at native pixel size (never stretch to fill
+-- dest w/h). Stretching 64x64 RGB panels to viewport.width (720) is what
+-- turned launch into a full-bleed red/cyan blur (INBOX 2026-09-04 regen
+-- item 0). image may be nil -> caller draws its original rectangle.
+-- w, h stay in the signature for callers / a later 9-slice or tile path.
 -- Returns true if drawn, false if image is nil.
-local function drawPanelSprite(image, x, y, w, h)
+local function drawPanelSprite(image, x, y, _w, _h)
     if not image then return false end
-    local iw, ih = image:getDimensions()
-    love.graphics.draw(image, x, y, 0, w / iw, h / ih)
+    love.graphics.draw(image, x, y)
     return true
 end
 M.drawPanelSprite = drawPanelSprite

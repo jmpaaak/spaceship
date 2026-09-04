@@ -6228,6 +6228,38 @@ function M.run()
         local ok, res = pcall(PlayScene.drawPanelSprite, nil, 0, 0, 100, 50)
         assert(ok, "drawPanelSprite(nil,...) must not throw")
         assert(res == false, "drawPanelSprite(nil,...) must return false")
+        -- INBOX 2026-09-04 regen item (0): 64x64 RGB panels must NOT stretch
+        -- to viewport.width (720). Native pixel size only (or later 9-slice/
+        -- tile). Stretching is what turned launch into a full-bleed blur.
+        do
+            local fakeImage = {}
+            function fakeImage:getDimensions()
+                return 64, 64
+            end
+            local captured = nil
+            local previousGraphics = love.graphics
+            love.graphics = {
+                draw = function(_, x, y, r, sx, sy)
+                    captured = {
+                        x = x,
+                        y = y,
+                        r = r or 0,
+                        sx = sx == nil and 1 or sx,
+                        sy = sy == nil and 1 or sy,
+                    }
+                end,
+            }
+            local drawOk, drawRes = pcall(PlayScene.drawPanelSprite, fakeImage, 0, 0, 720, 32)
+            love.graphics = previousGraphics
+            assert(drawOk, "drawPanelSprite(fake 64x64, dest 720x32) must not throw: " .. tostring(drawRes))
+            assert(drawRes == true, "drawPanelSprite with an image must return true")
+            assert(captured ~= nil, "drawPanelSprite must call love.graphics.draw")
+            assert(captured.sx == 1 and captured.sy == 1,
+                "drawPanelSprite must draw at native pixel size, not stretch 64x64 to 720x32 (got sx="
+                    .. tostring(captured.sx) .. " sy=" .. tostring(captured.sy) .. ")")
+            assert(math.abs(captured.sx * 64 - 64) < 1e-9,
+                "drawn width must stay native 64px, not viewport.width")
+        end
         -- scene instance carries the panel image slots
         local scene = PlayScene.new()
         for _, key in ipairs({
