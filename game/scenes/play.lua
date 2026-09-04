@@ -575,6 +575,9 @@ function M.new(options)
         -- Item 15(b): Earth shop slot state. Holds the last earthSlotSpin
         -- result during the settlement phase so draw() can render it.
         earthShopSlotResult = nil,
+        -- Item 7(c): Earth shop gear offer. Rolled once on settlement entry;
+        -- cleared on purchase or relaunch.
+        earthShopGearOffer = nil,
     }, M)
 end
 
@@ -1138,6 +1141,25 @@ function M:update(dt)
         self.message = i18n.t("returning_message")
     elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
         self.message = i18n.t("settled_message", self.expedition.lastSettlement, self.expedition.money)
+        -- Item 7(c): Roll one Earth-shop gear offer on settlement entry.
+        -- Uses gear.earthShopPool to exclude galaxy-exclusive parts (those
+        -- are only obtainable via hub exploration — item 7(b)).
+        if not self.earthShopGearOffer then
+            local gearMod = require("game.gear")
+            local hull = gearMod.loadHullParts() or {}
+            local engine = gearMod.loadEngineParts() or {}
+            local combined = {}
+            for _, p in ipairs(hull) do combined[#combined+1] = p end
+            for _, p in ipairs(engine) do combined[#combined+1] = p end
+            local earthPool = gearMod.earthShopPool(combined)
+            local rolls = {
+                rarity = math.random(),
+                pick = math.random(),
+                editionChance = math.random(),
+                editionPick = math.random(),
+            }
+            self.earthShopGearOffer = expedition.rollGearOffer(self.expedition, earthPool, rolls)
+        end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
@@ -1408,6 +1430,36 @@ function M:keypressed(key)
         end
         return
     end
+    -- Item 7(c): Earth shop gear buy. "b" buys the current gear offer
+    -- (rolled on settlement entry) using expedition.buyGear. Galaxy-exclusive
+    -- parts are never in the earth pool (gear.earthShopPool filtered them),
+    -- so buyGear will always accept the offer at settlement phase.
+    if self.expedition.phase == "settlement" and key == "b" then
+        local offer = self.earthShopGearOffer
+        if offer then
+            local gearMod = require("game.gear")
+            local engine = gearMod.loadEngineParts() or {}
+            local cat = gearMod.findById(engine, offer.id) and "engine" or "hull"
+            local price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
+            local engineParts = require("game.engine_parts")
+            local slotsFull = (cat == "hull" and engineParts.isFull(self.expedition, "hull"))
+                or (cat == "engine" and engineParts.isFull(self.expedition, "engine"))
+            if slotsFull then
+                self.message = i18n.t("earth_gear_full")
+            elseif self.expedition.money < price then
+                self.message = i18n.t("earth_gear_broke", price - self.expedition.money)
+            else
+                local ok, err = expedition.buyGear(self.expedition, cat, offer)
+                if ok then
+                    self.earthShopGearOffer = nil
+                    self.message = i18n.t("earth_gear_bought", offer.name, self.expedition.money)
+                else
+                    self.message = err or "PURCHASE FAILED"
+                end
+            end
+        end
+        return
+    end
     if key == "space" or key == "return" or key == "up" or key == "w" then
         -- Item 15(a): in-flight slot machine removed. Space/return during
         -- returning phase no longer triggers a slot spin. Settlement happens
@@ -1423,6 +1475,7 @@ function M:keypressed(key)
                 self.discoveredCount = 0
                 self.floatingTexts = {}
                 self.earthShopSlotResult = nil
+                self.earthShopGearOffer = nil
             end
             self.message = i18n.t("ascending_message")
         end
@@ -2029,6 +2082,15 @@ function M:draw()
         row = row + rowStep
         row = 236
         rowStep = 10
+        -- Item 7(c): Earth shop gear offer line.
+        if self.earthShopGearOffer then
+            local offer = self.earthShopGearOffer
+            local gearMod = require("game.gear")
+            local price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
+            love.graphics.setColor(0.4, 1, 0.7)
+            love.graphics.printf(i18n.t("earth_gear_offer", offer.name, price), fullX, row, fullW, "center")
+            row = row + rowStep
+        end
         if self.earthShopSlotResult then
             love.graphics.setColor(0.85, 0.95, 1)
             love.graphics.printf(table.concat(self.earthShopSlotResult.symbols, "  "), fullX, row, fullW, "center")

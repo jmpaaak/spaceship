@@ -99,6 +99,11 @@ locales.en = {
     equipped_gear_label = "EQUIPPED GEAR",
     launch_loadout_title = "LAUNCH LOADOUT",
     earth_shop_title = "EARTH SHOP",
+    -- Item 7(c): Earth shop gear purchase UI
+    earth_gear_offer = "GEAR OFFER [B]: %s  $%d",
+    earth_gear_bought = "GEAR ACQUIRED: %s  BALANCE $%d",
+    earth_gear_full = "GEAR SLOTS FULL  SELL EQUIPPED FIRST",
+    earth_gear_broke = "NOT ENOUGH MONEY  NEED $%d MORE",
     newbest_label = "NEW BEST!",
     total_label = "TOTAL $%d",
     samples_settlement_line = "SAMPLES (%d) $%d",
@@ -200,6 +205,11 @@ locales.ko = {
     equipped_gear_label = "장착 장비",
     launch_loadout_title = "발사 장비",
     earth_shop_title = "지구 상점",
+    -- Item 7(c): Earth shop gear purchase UI
+    earth_gear_offer = "장비 제안 [B]: %s  $%d",
+    earth_gear_bought = "장비 획득: %s  잔액 $%d",
+    earth_gear_full = "장비 슬롯 가득  장착 장비 먼저 판매",
+    earth_gear_broke = "잔액 부족  $%d 더 필요",
     newbest_label = "신기록!",
     total_label = "합계 $%d",
     samples_settlement_line = "표본 (%d) $%d",
