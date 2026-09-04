@@ -14,7 +14,16 @@
 
 ## Next Slice
 
-- INBOX group (4): floating text icons — `floating_sample.png`, `floating_damage.png`, `message_banner.png`.
+- INBOX group (5): launch/settle/destroy panels — `launch_rocket.png`, `loadout_panel.png`, `shop_panel.png`, etc.
+
+2026-09-04 — ComfyUI floating text icon wiring (group 4 of INBOX draw-wiring item).
+
+- Added `drawFloatingIconSprite(image, cx, cy, size, alpha)` helper; exported as `M.drawFloatingIconSprite`.
+- 3 floating-text PNGs loaded in `M.new()`: floatingSampleIconImage (floating_sample.png), floatingDamageIconImage (floating_damage.png), messageBannerIconImage (message_banner.png).
+- In `draw()` floating text loop: sample-gain floats (kind != "damage") show cyan plus-badge icon 8px left of +$N label; damage floats show red minus-badge icon 8px left of -N label. Falls back to original centered printf when image is nil.
+- In `draw()` message row (non-launch phases): amber burst-star icon drawn 10px to the left of self.message. Launch phase unchanged (rocket polygon still shown).
+- Regression test: `drawFloatingIconSprite` exported, nil->false no-throw, scene has all 3 image slots.
+- `make verify` GREEN.
 
 2026-09-04 — ComfyUI planet effect wiring (group 3 of INBOX draw-wiring item).
 

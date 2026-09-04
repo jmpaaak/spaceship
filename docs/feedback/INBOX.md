@@ -10,7 +10,7 @@
 
   (3) ✅ **행성 이펙트 — 완료 (2026-09-04):** `planet_glow.png`(glow), `planet_shadow.png`(shadow), `planet_rim.png`(rim), `planet_twinkle.png`(twinkle), `planet_sample.png`(sampleValue), `planet_risk.png`(risk) 6개 PNG를 `M.new()`의 `planetEffectImages` 맵으로 로드. `drawPlanetEffectSprite()` 헬퍼 추가. 행성 루프의 glow rings/drop shadow/rim circle/twinkle sparkle 4개 draw 경로와 sample-value·risk 레이블 아이콘 모두 sprite-or-poly 분기 적용. `make verify` GREEN.
 
-  (4) **플로팅 텍스트 아이콘** — `floating_sample.png`, `floating_damage.png`, `message_banner.png`.
+  (4) ✅ **플로팅 텍스트 아이콘 — 완료 (2026-09-04):** `floating_sample.png`(cyan plus-badge), `floating_damage.png`(red minus-badge), `message_banner.png`(amber burst-star) 3개 PNG를 `M.new()`에서 로드해 `self.floatingSampleIconImage`/`self.floatingDamageIconImage`/`self.messageBannerIconImage`에 저장. `drawFloatingIconSprite()` 헬퍼 추가. draw() 플로팅 텍스트 루프에서 종류별 아이콘을 텍스트 왼쪽에 그리고, 메시지 행(non-launch)에 burst-star 아이콘 추가. `make verify` GREEN.
 
   (5) **런치·정산·파괴 패널** — `launch_rocket.png`, `loadout_panel.png`, `shop_panel.png`, `shop_title.png`, `settlement_summary_panel.png`, `destroyed_panel.png`, `destroyed_title.png`, `slot_result_panel.png`, `relaunch.png` 등.
 
