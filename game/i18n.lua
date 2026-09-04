@@ -27,16 +27,12 @@ locales.en = {
     hud_personal_best = "PERSONAL BEST %04d",
     hud_distance = "DIST %04d",
     hud_cash = "CASH $%d",
-    -- docs/feedback/INBOX.md HUD 약자 정리 항목: the bare "H%d/%d"
-    -- abbreviation read as unexplained noise in real runtime captures.
-    -- Spell out "HULL" so the durability segment is self-explanatory
-    -- without needing to consult a legend.
-    hud_status = "HULL %d/%d %-6s S%02d",
-    hud_status_no_slots = "HULL %d/%d %-6s",
-    -- docs/feedback/INBOX.md 국제화 누락 항목: game/world.lua's M.galaxy()
-    -- used to hardcode "SOLAR SYSTEM"/"GALAXY %d-%d" directly, bypassing
-    -- i18n entirely. Galaxy display names are now resolved at render time
-    -- via world.galaxyName(galaxy) -> i18n.t(...) using these keys.
+    -- Item 11: S%02d (slotOpportunities) removed — item-15 abolished in-flight
+    -- slots so this segment was always "S00" (dead/misleading). hud_status and
+    -- hud_status_no_slots now share the same format; hud_status_no_slots is
+    -- kept as an alias for backward-compatibility with any call sites.
+    hud_status = "H%d/%d %-6s",
+    hud_status_no_slots = "H%d/%d %-6s",
     galaxy_home = "SOLAR SYSTEM",
     galaxy_names = {
         "Andromeda", "Whirlpool", "Triangulum", "Sombrero", "Pinwheel",
@@ -48,14 +44,9 @@ locales.en = {
     galaxy_named = "%s%s",
     loadout_ship = "SHIP %s",
     stats_line = "HULL %d",
-    -- docs/feedback/INBOX.md item 11(c): the fuel-upgrade UI purchase row
-    -- was removed from EARTH SHOP (item 11b) because fuel no longer
-    -- constrains flight, but this line still displayed a "FUEL LV.%d"
-    -- segment that could never advance past 0 through any reachable
-    -- player action (engine-level expedition.buyFuelUpgrade stays only
-    -- for older regression fixtures), permanently misleading. Now shows
-    -- only the still-purchasable hull upgrade level.
-    steer_speed_line = "STEER SPEED %d",
+    upgrades_line = "HULL LV.%d",
+    steer_speed_line = "%d",
+    item_speed_upgrade = "ENGINE UPGRADE",
     purchase_left = "LEFT $%d",
     purchase_short = "SHORT $%d",
     purchase_shortfall_message = "NEED $%d MORE FOR %s",
@@ -79,33 +70,31 @@ locales.en = {
     yield_preview_line = "YIELD x%.2f",
     steering_action_line = "T/G STEER LV.%d>%d $%d",
     steering_action_compact = "G:LV.%d>%d $%d",
-    steering_preview_compact = "SPD %d",
+    steering_preview_compact = "%d",
     -- docs/feedback/INBOX.md UI/HUD item 4: "AVG $" (formerly Korean "평균
     -- $") read as an ambiguous label for the slot machine's expected-value
     -- payout. "EV $" (Expected Value) is the precise statistical term this
     -- number represents and matches common gambling/game UI convention.
-    slot_spinning_label = "SLOT SPINNING...",
-    no_slot_chances_label = "NO SLOT CHANCES",
-    no_slots_compact = "NO SLOTS",
-    slot_spin_prompt = "TAP: SLOT SPIN  %d LEFT",
-    spin_compact_label = "SPIN %d",
-    spinning_compact = "SPINNING",
-    slot_result_repair = "%s +$%d REPAIR +%d  %d LEFT",
-    slot_result_sample = "%s +$%d SAMPLE +$%d  %d LEFT",
-    slot_result_plain = "%s +$%d  %d LEFT",
-    returning_message = "RETURNING  %d SLOT CHANCES",
+    -- Item 15(b): Earth shop slot machine keys
+    -- Item 11/15(a): returning_message no longer references in-flight slot
+    -- opportunities (abolished).
+    returning_message = "RETURNING  DRAG TO STEER",
+    earth_slot_spin_prompt = "TAP: EARTH SLOT SPIN",
+    earth_slot_result = "%s  +$%d",
+    earth_slot_miss = "%s  NO WIN",
     settled_message = "SETTLED +$%d  BALANCE $%d",
     floating_sample_gain = "+$%d",
-    sample_streak_message = "SAMPLE +$%d  STREAK x%.1f",
-    sample_message = "SAMPLE +$%d",
+    floating_hub_settle = "SETTLED: +$%d",
+    floating_hub_gear = "NEW: %s",
+    shop_modal_title = "LOCAL GALAXY SHOP",
+    shop_modal_buy = "[Y] BUY: $%d",
+    shop_modal_skip = "[N] LEAVE",
+    sample_streak_message = "SAMPLE +$%d  STREAK x%.1f  %s",
+    sample_message = "SAMPLE +$%d  %s",
     new_specimen_label = "NEW SPECIMEN: %s",
     floating_damage_text = "-%d",
     ship_destroyed_message = "SHIP DESTROYED  BEST %d  META RESET",
     collision_message = "COLLISION -%d  HULL %d/%d",
-    checkpoint_settled_message = "CHECKPOINT +$%d  BALANCE $%d",
-    checkpoint_gear_message = "CHECKPOINT GEAR: %s",
-    gear_bought_message = "GEAR BOUGHT: %s  BALANCE $%d",
-    item_shop_gear = "SHOP GEAR",
     hull_upgraded_message = "HULL UPGRADED  LV.%d  HULL %d  BALANCE $%d",
     item_hull_upgrade = "HULL UPGRADE",
     yield_upgraded_message = "SAMPLE YIELD UPGRADED  LV.%d  x%.2f  BALANCE $%d",
@@ -116,27 +105,25 @@ locales.en = {
     item_scout = "SCOUT",
     ship_selected_message = "%s SELECTED  HULL %d",
     ascending_message = "ASCENDING  DRAG TO STEER",
-    specimens_count_label = "SPECIMENS %d/%d",
+    equipped_gear_label = "EQUIPPED GEAR",
+    launch_loadout_title = "LAUNCH LOADOUT",
     earth_shop_title = "EARTH SHOP",
+    -- Item 7(c): Earth shop gear purchase UI
+    earth_gear_offer = "GEAR OFFER [B]: %s  $%d",
+    earth_gear_bought = "GEAR ACQUIRED: %s  BALANCE $%d",
+    earth_gear_full = "GEAR SLOTS FULL  SELL EQUIPPED FIRST",
+    earth_gear_broke = "NOT ENOUGH MONEY  NEED $%d MORE",
     newbest_label = "NEW BEST!",
     total_label = "TOTAL $%d",
     samples_settlement_line = "SAMPLES (%d) $%d",
     spins_settlement_line = "SPINS (%d) $%d",
-    peak_dist_line = "PEAK DIST %d",
+    peak_alt_line = "PEAK ALT %d",
     tap_relaunch = "TAP: RELAUNCH",
     ship_destroyed_title = "SHIP DESTROYED",
     lost_total_line = "LOST TOTAL $%d",
     meta_reset_line = "META RESET  BEST %d",
     next_ship_line = "NEXT %s",
     tap_start_over = "TAP: START OVER",
-    hold_left = "HOLD LEFT",
-    hold_right = "HOLD RIGHT",
-    spinning_label = "SPINNING...",
-    win_repair_line = "WIN +$%d  REPAIR +%d",
-    win_sample_line = "WIN +$%d  SAMPLE +$%d",
-    win_pending_line = "WIN +$%d  PENDING $%d",
-    button_left = "LEFT",
-    button_right = "RIGHT",
     minimap_out = "OUT %d",
     dev_placeholder = "DEV PLACEHOLDER",
 }
@@ -160,8 +147,12 @@ locales.ko = {
     hud_personal_best = "최고기록 %04d",
     hud_distance = "거리 %04d",
     hud_cash = "자금 $%d",
-    hud_status = "내구 %d/%d %-6s S%02d",
-    hud_status_no_slots = "내구 %d/%d %-6s",
+    -- Item 11: S%02d (slotOpportunities) removed — item-15 abolished in-flight
+    -- slots so this segment was always "S00" (dead/misleading). hud_status and
+    -- hud_status_no_slots now share the same format; hud_status_no_slots is
+    -- kept as an alias for backward-compatibility with any call sites.
+    hud_status = "H%d/%d %-6s",
+    hud_status_no_slots = "H%d/%d %-6s",
     galaxy_home = "태양계",
     galaxy_names = {
         "안드로메다", "소용돌이", "삼각형자리", "솜브레로", "바람개비",
@@ -173,7 +164,8 @@ locales.ko = {
     galaxy_named = "%s%s",
     loadout_ship = "함선 %s",
     stats_line = "선체 %d",
-    steer_speed_line = "조종속도 %d",
+    upgrades_line = "선체 LV.%d",
+    steer_speed_line = "%d",
     purchase_left = "잔액 $%d",
     purchase_short = "부족 $%d",
     purchase_shortfall_message = "$%d 부족: %s",
@@ -197,29 +189,27 @@ locales.ko = {
     yield_preview_line = "산출 x%.2f",
     steering_action_line = "T/G 조종 LV.%d>%d $%d",
     steering_action_compact = "G:LV.%d>%d $%d",
-    steering_preview_compact = "속도 %d",
-    slot_spinning_label = "슬롯 회전중...",
-    no_slot_chances_label = "슬롯 기회 없음",
-    no_slots_compact = "슬롯없음",
-    slot_spin_prompt = "탭: 슬롯회전  %d회 남음",
-    spin_compact_label = "회전 %d",
-    spinning_compact = "회전중",
-    slot_result_repair = "%s +$%d 수리+%d  %d회",
-    slot_result_sample = "%s +$%d 표본+$%d  %d회",
-    slot_result_plain = "%s +$%d  %d회",
-    returning_message = "귀환중  슬롯 %d회",
+    steering_preview_compact = "%d",
+    -- Item 15(b): Earth shop slot machine keys
+    -- Item 11/15(a): returning_message no longer references in-flight slot
+    -- opportunities (abolished).
+    returning_message = "귀환중  드래그 조종",
+    earth_slot_spin_prompt = "탭: 지구 슬롯 스핀",
+    earth_slot_result = "%s  +$%d",
+    earth_slot_miss = "%s  꽝",
     settled_message = "정산 +$%d  잔액 $%d",
     floating_sample_gain = "+$%d",
-    sample_streak_message = "표본 +$%d  연속 x%.1f",
-    sample_message = "표본 +$%d",
+    floating_hub_settle = "정산완료: +$%d",
+    floating_hub_gear = "획득: %s",
+    shop_modal_title = "지역 은하 상점",
+    shop_modal_buy = "[Y] 구매: $%d",
+    shop_modal_skip = "[N] 떠나기",
+    sample_streak_message = "표본 +$%d  연속 x%.1f  %s",
+    sample_message = "표본 +$%d  %s",
     new_specimen_label = "신규표본: %s",
     floating_damage_text = "-%d",
     ship_destroyed_message = "함선파괴  최고 %d  초기화",
     collision_message = "충돌 -%d  선체 %d/%d",
-    checkpoint_settled_message = "체크포인트 정산 +$%d  잔액 $%d",
-    checkpoint_gear_message = "체크포인트 장비: %s",
-    gear_bought_message = "장비 구매: %s  잔액 $%d",
-    item_shop_gear = "상점 장비",
     hull_upgraded_message = "선체 업그레이드  LV.%d  선체 %d  잔액 $%d",
     item_hull_upgrade = "선체 업그레이드",
     yield_upgraded_message = "표본산출 업그레이드  LV.%d  x%.2f  잔액 $%d",
@@ -230,27 +220,25 @@ locales.ko = {
     item_scout = "정찰선",
     ship_selected_message = "%s 선택  선체 %d",
     ascending_message = "상승중  드래그 조종",
-    specimens_count_label = "표본 %d/%d",
+    equipped_gear_label = "장착 장비",
+    launch_loadout_title = "발사 장비",
     earth_shop_title = "지구 상점",
+    -- Item 7(c): Earth shop gear purchase UI
+    earth_gear_offer = "장비 제안 [B]: %s  $%d",
+    earth_gear_bought = "장비 획득: %s  잔액 $%d",
+    earth_gear_full = "장비 슬롯 가득  장착 장비 먼저 판매",
+    earth_gear_broke = "잔액 부족  $%d 더 필요",
     newbest_label = "신기록!",
     total_label = "합계 $%d",
     samples_settlement_line = "표본 (%d) $%d",
     spins_settlement_line = "회전 (%d) $%d",
-    peak_dist_line = "최고거리 %d",
+    peak_alt_line = "최고고도 %d",
     tap_relaunch = "탭: 재발사",
     ship_destroyed_title = "함선 파괴",
     lost_total_line = "손실합계 $%d",
     meta_reset_line = "초기화  최고 %d",
     next_ship_line = "다음 %s",
     tap_start_over = "탭: 다시시작",
-    hold_left = "좌 유지",
-    hold_right = "우 유지",
-    spinning_label = "회전중...",
-    win_repair_line = "승리 +$%d  수리+%d",
-    win_sample_line = "승리 +$%d  표본+$%d",
-    win_pending_line = "승리 +$%d  대기 $%d",
-    button_left = "좌",
-    button_right = "우",
     minimap_out = "외부 %d",
     dev_placeholder = "개발 임시본",
 }

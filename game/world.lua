@@ -34,15 +34,11 @@ local galaxyExistenceThreshold = 0.72
 
 -- Deterministically returns the galaxy occupying grid cell (gx, gy), or
 -- nil if that cell is empty deep space.
---
--- docs/feedback/INBOX.md 국제화 누락 항목: galaxy tables carry only the
--- language-neutral identifier/coordinates now, never a hardcoded display
--- string. Call sites resolve the localized label at render time via
--- M.galaxyName(galaxy) -> i18n.t(...).
 function M.galaxy(gx, gy)
     if gx == 0 and gy == 0 then
         return {
             id = "milkyway",
+            name = "SOLAR SYSTEM",
             x = 0,
             y = 0,
             radius = M.galaxyCellSize * 0.9,
@@ -60,6 +56,7 @@ function M.galaxy(gx, gy)
         + (hash(gx, gy, 530) - 0.5) * M.galaxyCellSize * 0.5
     return {
         id = string.format("galaxy:%d:%d", gx, gy),
+        name = string.format("GALAXY %d-%d", gx, gy),
         x = cx,
         y = cy,
         radius = radius,
@@ -68,11 +65,6 @@ function M.galaxy(gx, gy)
     }
 end
 
--- Localized display name for a galaxy table returned by M.galaxy()/
--- M.galaxyContaining()/M.nearbyGalaxies(). Pure aside from reading the
--- current i18n locale; the home solar system uses a fixed label and every
--- other galaxy uses its grid coordinates in a "GALAXY %d-%d" template, both
--- resolved through game/i18n.lua so locale switches (en/ko) apply here too.
 function M.galaxyName(galaxy_or_gx, gy)
     local gx, gy_val, id
     if type(galaxy_or_gx) == "table" then
@@ -85,22 +77,18 @@ function M.galaxyName(galaxy_or_gx, gy)
         if gx == 0 and gy_val == 0 then id = "milkyway" end
     end
     if not gx then return nil end
-
     if id == "milkyway" then
         return i18n.t("galaxy_home")
     end
-
     local names = i18n.t("galaxy_names")
     local suffixes = i18n.t("galaxy_suffixes")
-
-    -- 1000000 is large enough to cover many combinations
+    if type(names) ~= "table" or type(suffixes) ~= "table" or #names == 0 or #suffixes == 0 then
+        return string.format("GALAXY %d-%d", gx, gy_val)
+    end
     local h = math.floor(hash(gx, gy_val, 700) * 1000000)
     local nameIndex = (h % #names) + 1
     local suffixIndex = (math.floor(h / #names) % #suffixes) + 1
-
-    local name = names[nameIndex]
-    local suffix = suffixes[suffixIndex]
-    return i18n.t("galaxy_named", name, suffix)
+    return i18n.t("galaxy_named", names[nameIndex], suffixes[suffixIndex])
 end
 
 -- Deterministic per-galaxy background tint (docs/feedback/INBOX.md item 1
@@ -132,16 +120,8 @@ function M.galaxyBackgroundColor(galaxy)
 end
 
 -- Deterministic world-space position of a galaxy's central star (the pivot
--- its spiral arms/orbits wind around) -- docs/feedback/INBOX.md item 1 part
--- 3: the home solar system must spiral around the SUN, not Earth, with
--- Earth relocated to an orbiting planet marker instead of the center. Every
--- other galaxy already spirals/orbits around its own `galaxy.x/y` center
--- (that point IS its star for non-home galaxies), so this keeps milkyway
--- consistent with the same rule instead of special-casing it as "centered
--- on Earth". Earth itself stays fixed at world origin (0, 0) -- all
--- existing altitude/distance-from-Earth gameplay math depends on that --
--- this only moves the SUN to its own nearby point for spiral/orbit
--- rendering purposes.
+-- its spiral arms/orbits wind around). The home solar system spirals around
+-- the SUN, not Earth; Earth stays at world origin for altitude math.
 function M.sunPosition(galaxy)
     if not galaxy then return nil end
     if galaxy.id == "milkyway" then
@@ -173,30 +153,20 @@ function M.hubPlanet(galaxy)
     }
 end
 
--- The galaxy's "상점 행성" (docs/feedback/INBOX.md 처리대기 항목 7-a): a
--- second deterministic per-galaxy landmark, distinct from the center
--- checkpoint/hub planet above, where equipment gear can be bought with
--- money. Uses a disjoint salt range (600s) so its position never
--- coincides with hubPlanet's (540s), offset away from the galaxy center
--- by a deterministic angle/radius fraction so the two landmarks read as
--- clearly separate bodies on the minimap. The home galaxy has no extra
--- shop planet -- Earth's own EARTH SHOP (item 7-c) already fills that
--- role for the solar system, mirroring hubPlanet's Earth-is-the-hub
--- asymmetry.
 function M.shopPlanet(galaxy)
     if not galaxy or galaxy.id == "milkyway" then
         return nil
     end
     local gx, gy = galaxy.gx, galaxy.gy
-    local angle = hash(gx, gy, 610) * math.pi * 2
-    local offset = galaxy.radius * (0.35 + hash(gx, gy, 620) * 0.4)
+    local dx = (hash(gx, gy, 800) - 0.5) * galaxy.radius * 1.2
+    local dy = (hash(gx, gy, 810) - 0.5) * galaxy.radius * 1.2
     return {
         id = "shop:" .. galaxy.id,
-        x = galaxy.x + math.cos(angle) * offset,
-        y = galaxy.y + math.sin(angle) * offset,
-        radius = 12 + math.floor(hash(gx, gy, 630) * 6),
-        hue = hash(gx, gy, 640),
-        shop = true,
+        x = galaxy.x + dx,
+        y = galaxy.y + dy,
+        radius = 14 + math.floor(hash(gx, gy, 820) * 6),
+        hue = hash(gx, gy, 830),
+        isShop = true,
         galaxyId = galaxy.id,
     }
 end

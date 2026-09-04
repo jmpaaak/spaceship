@@ -1,14 +1,11 @@
 # LANE SCOPE — main
 
-This worktree is the main Spaceship autonomous loop
-(`/Users/jm/orca/workspaces/spaceship/main`). Process `docs/feedback/INBOX.md`
-pending items from the top. Do not take over items owned by other lanes:
-
-- econ lane owns items 7 / 8 / 11 / 15
-- gear lane owns items 13 / 9 / 10 / 12 / 14
-
-Everything else — including 「생성 에셋 LLM 비전 검토 제외」 and AetherAI/ComfyUI
-asset work — is this lane. Commit and push to `main` after tests pass.
+This worktree is the only Spaceship autonomous loop
+(`/Users/jm/orca/workspaces/spaceship/main`). `spaceship-gear` was merged
+into `main` on 2026-09-04 (items 7/8/9/10/11/12/13/14/15). Process
+`docs/feedback/INBOX.md` pending items from the top. Commit and push to
+`main` after tests pass. Do not resurrect parallel lanes unless new
+INBOX work is explicitly split.
 
 ---
 

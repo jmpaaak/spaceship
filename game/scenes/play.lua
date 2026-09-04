@@ -15,10 +15,8 @@ M.__index = M
 -- 1, "조이스틱을 통해 전방향으로 이동 가능함"): the ship's horizontal
 -- steering (self.ship.x) already used the full expedition.steeringSpeed
 -- axis. This adds a vertical maneuvering axis (self.verticalOffset) driven
--- by the same joystick's Y component, layered on top of the still-
--- automatic altitude/fuel economy (game/expedition.lua) so a player can
--- dodge/collect in any direction around the auto-advancing flight line
--- without changing the fuel/distance economy itself. Slice 2 (은하계 기반
+-- by the same joystick's Y component so a player can dodge/collect in any
+-- direction around the auto-advancing flight line. Slice 2 (은하계 기반
 -- 우주 구조, per user's agreed plan) will replace the automatic altitude
 -- line with real free-roam position entirely.
 local verticalOffsetLimit = 90
@@ -48,61 +46,74 @@ local function shortestAngleDelta(from, to)
 end
 M.shortestAngleDelta = shortestAngleDelta
 
--- Returning-phase LEFT/RIGHT/SPIN touch band. Old 180×320 values
--- (244-288, 44 canvas px) ×4 for the 720×1280 canvas so the band stays
--- at the same screen fraction and still clears the 44pt bar (176 canvas
--- px at integer scale 1). Slot-reel box and message y are scaled with it.
+-- Returning-phase LEFT/RIGHT touch band. Was a 24px-tall row
+-- (254-278), which only clears ~24pt at the smallest supported window
+-- (integer scale 1, 1x device pixel ratio) -- well under the iOS/Android
+-- ~44pt accessibility minimum PlayScene.settlementTouchRows was already
+-- fixed to meet (see game/self_test.lua's canvasPixelsToPoints check).
+-- Widened to a 44 canvas px band (244-288).
 local returnControls = {
-    top = 976,
-    bottom = 1152,
-    leftMaxX = 220,
-    slotMinX = 240,
-    slotMaxX = 480,
-    rightMinX = 500,
+    top = 244,
+    bottom = 288,
+    leftMaxX = 55,
+    rightMinX = 125,
 }
 M.returnControls = returnControls
 
--- Settlement (EARTH SHOP) touch rows, top-to-bottom. Old 180×320 bands
--- (188-232 / 232-276 / 276-320, half-width 90) ×4 onto 720×1280 so the
--- shop stays pinned to the canvas bottom and each band still clears the
--- 44pt accessibility minimum (176 canvas px at integer scale 1).
--- docs/feedback/INBOX.md item 11(b): the fuel-tank upgrade purchase was
--- removed from EARTH SHOP because fuel no longer constrains flight, so
--- buying more tank capacity implied a safety that does not exist. The
--- remaining four actions (HULL, STEERING, YIELD, SHIP) plus RELAUNCH
--- still occupy three stacked bands. HULL/STEERING share one row and
--- YIELD/SHIP share the next.
+-- Settlement (EARTH SHOP) touch rows, top-to-bottom. Each row's height is a
+-- Actual finger touch target on the device, not just a text layout band.
+-- Evenly split across the 140-320 canvas range (180px / 4 = 45px each) so
+-- every row clears the 44pt accessibility minimum (see
+-- game/self_test.lua's canvasPixelsToPoints check) at the smallest
+-- supported window (integer scale 1, 1x device pixel ratio), superseding
+-- the previous 150-320/42px rows that only cleared the lower 34px bar.
+-- The settlement panel's summary-card font/spacing was shrunk to free the
+-- extra 10px of vertical room this needed. See game/self_test.lua for the
+-- device-scale check.
+-- YIELD and SHIP
+-- share one 44px-tall row, split left/right at x=90 (each half is 90
+-- canvas px wide, far past the 44pt accessibility minimum on the width
+-- axis too), keeping all four rows at the full 44 canvas px band height.
+-- STEERING is the fourth GAME_DESIGN.md meta upgrade axis (see
+-- game/self_test.lua's steeringRun scenario); it reuses the same
+-- column-split pattern by sharing the HULL row (left=HULL, right=STEERING)
+-- instead of adding a fifth 36px-tall row that would fall back under the
+-- 44pt accessibility minimum.
+-- Item 15(b): EARTH SLOT SPIN row added above RELAUNCH. The former full-height
+-- relaunch zone (232-320 = 88px) is split into two 44px rows: SLOT at 232-276
+-- and RELAUNCH at 276-320, both still clearing the 44pt minimum.
 local settlementTouchRows = {
     {
-        top = 752, bottom = 928,
+        top = 144, bottom = 188,
         columns = {
-            { key = "hull", left = 0, right = 360 },
-            { key = "steering", left = 360, right = 720 },
+            { key = "hull", left = 0, right = 90 },
+            { key = "steering", left = 90, right = 180 },
         },
     },
     {
-        top = 928, bottom = 1104,
+        top = 188, bottom = 232,
         columns = {
-            { key = "yield", left = 0, right = 360 },
-            { key = "ship", left = 360, right = 720 },
+            { key = "yield", left = 0, right = 90 },
+            { key = "ship", left = 90, right = 180 },
         },
     },
-    { key = "relaunch", top = 1104, bottom = 1280 },
+    { key = "slot", top = 232, bottom = 276 },
+    { key = "relaunch", top = 276, bottom = 320 },
 }
 M.settlementTouchRows = settlementTouchRows
 
 -- SHIP DESTROYED restart touch target. Unlike EARTH SHOP's four stacked
 -- rows, this phase has a single action (restart), so touchpressed accepts
--- any tap on the full 720x1280 internal canvas rather than a narrow band.
+-- any tap on the full 180x320 internal canvas rather than a narrow band.
 -- Documented and engine-tested explicitly so this stays true if the
 -- destroyed phase ever grows per-row touch targets like settlement did.
-local destroyedTouchArea = { top = 0, bottom = viewport.height, left = 0, right = viewport.width }
+local destroyedTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
 M.destroyedTouchArea = destroyedTouchArea
 
 -- Ascending-phase HOLD LEFT/HOLD RIGHT steering buttons. touchpressed for
 -- this phase already accepts a tap anywhere on the internal canvas (no y
 -- restriction; see the "ascending" branch below), so the *functional*
--- touch target already spans the full 720x1280 canvas -- far beyond the
+-- touch target already spans the full 180x320 canvas -- far beyond the
 -- 44pt accessibility minimum. This constant only documents/tests the
 -- *visual* button box drawn on screen, which was a 24px-tall row
 -- (254-278, only ~24pt at the smallest supported window, integer scale 1,
@@ -110,17 +121,17 @@ M.destroyedTouchArea = destroyedTouchArea
 -- settlementTouchRows were widened to meet. Widened to match
 -- returnControls exactly (244-288, 44 canvas px) for visual consistency,
 -- even though it does not gate touch acceptance.
-local ascendControls = { top = 976, bottom = 1152, leftMaxX = 324, rightMinX = 396 }
+local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
 M.ascendControls = ascendControls
 
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
 -- already accepts any tap on the internal canvas regardless of x/y (see the
 -- "launch" branch below), so the functional touch target has always spanned
--- the full 720x1280 canvas -- far beyond the 44pt accessibility minimum.
+-- the full 180x320 canvas -- far beyond the 44pt accessibility minimum.
 -- Named and exposed to close out the last remaining touch surface that was
 -- accepted unconditionally but never given an explicit constant or
 -- corner-touch regression test, matching destroyedTouchArea's pattern.
-local launchTouchArea = { top = 0, bottom = viewport.height, left = 0, right = viewport.width }
+local launchTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
 M.launchTouchArea = launchTouchArea
 
 -- Launch-screen text size/layout cleanup (docs/feedback 2026-09-02, user
@@ -141,33 +152,25 @@ M.launchTouchArea = launchTouchArea
 -- the same small font inside a background box extended all the way to
 -- the canvas bottom (viewport.height) so the Earth disc can no longer
 -- show through below the box.
-M.launchHudHeight = 128
+M.launchHudHeight = 32
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
 -- at the world origin, radius 58) tops out at y=202, two pixels above the
 -- box's previous 204px top -- a real LÖVE runtime capture showed a faint
 -- blue crescent peeking out just above the LAUNCH LOADOUT card. Raised the
 -- box top to 202 so it fully covers the disc's topmost extent.
-M.launchLoadoutBoxTop = 808
-M.launchLoadoutRowStep = 40
+M.launchLoadoutBoxTop = 202
+M.launchLoadoutRowStep = 10
 
--- docs/feedback/INBOX.md UI 대개편 6건 item 1: the "SPECIMENS n/9" specimen
--- log strip is pure decoration with zero effect on gameplay numbers (user
--- ruling, 2026-09-03) -- gate the launch-screen draw call behind this flag
--- (kept named, not deleted, mirroring M.showLaunchLoadoutTitle above) so a
--- future cycle can revive it cheaply if the collection mechanic gets a
--- real gameplay hook later. The underlying collectionStore/specimenCatalog
--- persistence stays untouched -- only the launch-screen render is removed.
-M.showSpecimenStrip = false
-
--- docs/feedback/INBOX.md "UI 대개편 6건" item 6: the "DEV PLACEHOLDER"
--- footer had already been shrunk/dimmed in an earlier cycle, but the user
--- confirmed (2026-09-03) they want it fully invisible, not just quieter.
--- Named flag follows the same pattern as M.showSpecimenStrip /
--- M.showLaunchLoadoutTitle: the conditional draw call itself is gated off
--- rather than deleting the printf plumbing, so it can be re-enabled for a
--- future dev build without re-threading render code.
-M.showDevPlaceholder = false
+-- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
+-- panel caption itself was flagged for removal during the "remove
+-- unnecessary text" review -- the card's own contents (hull/upgrades/
+-- steering/odds numbers) are self-explanatory once shown inside
+-- an obviously bordered box directly under the Earth disc, so the extra
+-- caption line was pure redundant text eating a row of vertical space.
+-- Kept as a named flag (rather than deleting the printf outright) so a
+-- future cycle can re-enable it cheaply if real-device feedback disagrees.
+M.showLaunchLoadoutTitle = false
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first slice):
 -- the launch phase's "TAP TO LAUNCH"/"탭하여 발사" action was a bare text
@@ -199,31 +202,8 @@ end
 
 -- Icon diameter and the vertical gap between the icon's center and the
 -- message text's top edge, both in internal-canvas pixels.
-M.launchIconSize = 56
-M.launchIconGap = 48
-
--- docs/feedback/INBOX.md "UI 대개편 6건" item 5: the launch rocket polygon
--- (orange/yellow, reads as a crude arrow) is gated off. Named flag, same
--- pattern as M.showSpecimenStrip / M.showDevPlaceholder, so a later cycle
--- can restore the icon without re-threading draw(). The remaining cue is
--- the TAP TO LAUNCH / "탭하여 발사" line itself: smaller than the scene
--- small font, dark translucent gray, with a restrained sine wobble and
--- fade pulse instead of a bright static prompt.
-M.showLaunchRocketIcon = false
-M.launchPromptFontSize = 24
-M.launchPromptRgb = {0.42, 0.44, 0.48}
-M.launchPromptWobblePx = 2.5
-
-function M.launchPromptAlpha(time)
-    local t = time or 0
-    return 0.40 + 0.12 * math.sin(t * 2.2)
-end
-
-function M.launchPromptOffset(time)
-    local t = time or 0
-    local amp = M.launchPromptWobblePx
-    return math.sin(t * 1.7) * amp, math.sin(t * 1.1 + 1.3) * amp * 0.6
-end
+M.launchIconSize = 14
+M.launchIconGap = 12
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- second slice): pair the hull-durability readout (the "H%d/%d" segment of
@@ -250,8 +230,8 @@ end
 -- right edge and the status text's left edge, both in internal-canvas
 -- pixels. The status text draw x shifts right by this much whenever the
 -- icon is drawn so the icon never overlaps the "H%d/%d ..." text.
-M.hullIconSize = 32
-M.hullIconGap = 16
+M.hullIconSize = 8
+M.hullIconGap = 4
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- third slice): a small coin icon paired with the CASH readout, mirroring
@@ -278,1172 +258,57 @@ end
 
 -- Icon footprint (px) + gap (px) reserved between the coin icon's right
 -- edge and the CASH text's left edge, mirroring M.hullIconSize/hullIconGap.
-M.cashIconSize = 32
-M.cashIconGap = 16
+M.cashIconSize = 8
+M.cashIconGap = 4
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
--- fourth/final slice): pair the LAUNCH LOADOUT steering-speed readout
--- (STEER SPEED %d / 조종속도 %d) with a small speedometer silhouette,
--- mirroring shieldIconPoints/coinIconPoints. Drawn as a flat semicircular
--- dial outline with a needle (an even-length {x,y,...} polygon list, no
--- love.graphics calls) so its geometry can be regression tested the same
--- way as the other three icons: horizontally symmetric around cx, spans
--- above and below cy.
+-- final slice): a small speedometer-like gauge icon paired with the steering
+-- speed readout. Drawn as a half-circle base polygon with a negative-space
+-- needle cut out from the bottom.
 function M.speedIconPoints(cx, cy, size)
     local r = size * 0.5
-    local baseY = cy + r * 0.6
+    local rDiag = r * 0.7071
     return {
-        cx - r, baseY,
-        cx - r * 0.7071, baseY - r * 0.7071,
-        cx, baseY - r,
-        cx + r * 0.7071, baseY - r * 0.7071,
-        cx + r, baseY,
-        cx + r * 0.18, baseY,
-        cx, baseY - r * 0.85,
-        cx - r * 0.18, baseY,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the speedometer icon's
--- right edge and the STEER SPEED text's left edge, mirroring
--- M.hullIconSize/hullIconGap and M.cashIconSize/cashIconGap.
-M.speedIconSize = 32
-M.speedIconGap = 16
-
--- DIST HUD icon (icon-based HUD simplification follow-on): pair the
--- "DIST %04d" / "거리 %04d" readout with a small nav-diamond silhouette,
--- mirroring coin/shield/speed. Drawn as a flat 4-point diamond (even-length
--- {x,y,...} list, no love.graphics calls) so headless tests can pin
--- geometry: horizontally symmetric around cx, spans above and below cy.
-function M.distanceIconPoints(cx, cy, size)
-    local r = size * 0.5
-    return {
-        cx, cy - r,
-        cx + r, cy,
-        cx, cy + r,
         cx - r, cy,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the diamond icon's
--- right edge and the DIST text's left edge, mirroring
--- M.cashIconSize/cashIconGap.
-M.distanceIconSize = 32
-M.distanceIconGap = 16
-
--- PERSONAL BEST HUD icon (icon-based HUD simplification follow-on): pair
--- the "PERSONAL BEST %04d" / "최고기록 %04d" readout with a small trophy
--- silhouette, mirroring coin/shield/speed/distance. Drawn as a flat cup
--- polygon (even-length {x,y,...} list, no love.graphics calls) so
--- headless tests can pin geometry: horizontally symmetric around cx,
--- spans above and below cy.
-function M.bestIconPoints(cx, cy, size)
-    local r = size * 0.5
-    return {
-        cx - r * 0.70, cy - r,
-        cx + r * 0.70, cy - r,
-        cx + r * 0.55, cy - r * 0.15,
-        cx + r * 0.18, cy + r * 0.15,
-        cx + r * 0.45, cy + r * 0.35,
-        cx + r * 0.45, cy + r,
-        cx - r * 0.45, cy + r,
-        cx - r * 0.45, cy + r * 0.35,
-        cx - r * 0.18, cy + r * 0.15,
-        cx - r * 0.55, cy - r * 0.15,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the trophy icon's
--- right edge and the BEST text's left edge, mirroring
--- M.distanceIconSize/distanceIconGap.
-M.bestIconSize = 32
-M.bestIconGap = 16
-
--- SAMPLES HUD icon (icon-based HUD simplification follow-on): pair the
--- "SAMPLES %02d  AT RISK $%d" / "표본 %02d  위험 $%d" readout with a
--- small specimen-vial silhouette, mirroring coin/shield/speed/distance/
--- best. Drawn as a flat flask polygon (even-length {x,y,...} list, no
--- love.graphics calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.samplesIconPoints(cx, cy, size)
-    local r = size * 0.5
-    return {
-        cx - r * 0.22, cy - r,
-        cx + r * 0.22, cy - r,
-        cx + r * 0.22, cy - r * 0.45,
-        cx + r * 0.70, cy - r * 0.25,
-        cx + r * 0.70, cy + r,
-        cx - r * 0.70, cy + r,
-        cx - r * 0.70, cy - r * 0.25,
-        cx - r * 0.22, cy - r * 0.45,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the vial icon's
--- right edge and the SAMPLES text's left edge, mirroring
--- M.bestIconSize/bestIconGap.
-M.samplesIconSize = 32
-M.samplesIconGap = 16
-
--- Galaxy-name HUD icon (icon-based HUD simplification follow-on): pair
--- the gold galaxy-name readout with a small 8-point star silhouette,
--- mirroring coin/shield/speed/distance/best/samples. Drawn as a flat
--- star polygon (even-length {x,y,...} list, no love.graphics calls) so
--- headless tests can pin geometry: horizontally symmetric around cx,
--- spans above and below cy.
-function M.galaxyIconPoints(cx, cy, size)
-    local r = size * 0.5
-    local inner = r * 0.38
-    return {
+        cx - rDiag, cy - rDiag,
         cx, cy - r,
-        cx + inner * 0.45, cy - inner,
-        cx + r * 0.72, cy - r * 0.72,
-        cx + inner, cy - inner * 0.45,
+        cx + rDiag, cy - rDiag,
         cx + r, cy,
-        cx + inner, cy + inner * 0.45,
-        cx + r * 0.72, cy + r * 0.72,
-        cx + inner * 0.45, cy + inner,
-        cx, cy + r,
-        cx - inner * 0.45, cy + inner,
-        cx - r * 0.72, cy + r * 0.72,
-        cx - inner, cy + inner * 0.45,
-        cx - r, cy,
-        cx - inner, cy - inner * 0.45,
-        cx - r * 0.72, cy - r * 0.72,
-        cx - inner * 0.45, cy - inner,
+        cx + r * 0.2, cy,
+        cx + r * 0.5, cy - r * 0.5,
+        cx - r * 0.2, cy,
     }
 end
 
--- Icon footprint (px) + gap (px) reserved between the galaxy star's
--- right edge and the galaxy-name text's left edge, mirroring
--- M.samplesIconSize/samplesIconGap.
-M.galaxyIconSize = 32
-M.galaxyIconGap = 16
-
--- Returning-phase RETURN progress HUD icon (icon-based HUD
--- simplification follow-on): pair the cyan hud_return_progress readout
--- with a small downward chevron silhouette, mirroring
--- coin/shield/speed/distance/best/samples/galaxy. Drawn as a flat
--- chevron polygon (even-length {x,y,...} list, no love.graphics calls)
--- so headless tests can pin geometry: horizontally symmetric around cx,
--- spans above and below cy.
-function M.returnIconPoints(cx, cy, size)
-    local r = size * 0.5
-    return {
-        cx - r, cy - r * 0.55,
-        cx, cy + r,
-        cx + r, cy - r * 0.55,
-        cx + r * 0.45, cy - r * 0.55,
-        cx, cy + r * 0.25,
-        cx - r * 0.45, cy - r * 0.55,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the return chevron's
--- right edge and the RETURN text's left edge, mirroring
--- M.galaxyIconSize/galaxyIconGap.
-M.returnIconSize = 32
-M.returnIconGap = 16
-
--- Returning-phase EARTH-distance HUD icon (icon-based HUD
--- simplification follow-on): pair the cyan hud_earth readout with a
--- small globe silhouette, mirroring
--- coin/shield/speed/distance/best/samples/galaxy/return. Drawn as a
--- flat octagon polygon (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally symmetric
--- around cx, spans above and below cy.
-function M.earthIconPoints(cx, cy, size)
-    local r = size * 0.5
-    return {
-        cx, cy - r,
-        cx + r * 0.72, cy - r * 0.72,
-        cx + r, cy,
-        cx + r * 0.72, cy + r * 0.72,
-        cx, cy + r,
-        cx - r * 0.72, cy + r * 0.72,
-        cx - r, cy,
-        cx - r * 0.72, cy - r * 0.72,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the earth globe's
--- right edge and the EARTH IN text's left edge, mirroring
--- M.returnIconSize/returnIconGap.
-M.earthIconSize = 32
-M.earthIconGap = 16
-
--- Planet approach SAMPLE $N icon (icon-based HUD simplification
--- follow-on): pair the cyan sample_value_label readout with a small
--- hexagonal crystal silhouette, mirroring
--- coin/shield/speed/distance/best/samples/galaxy/return/earth. Drawn as
--- a flat hexagon polygon (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally symmetric
--- around cx, spans above and below cy.
-function M.sampleValueIconPoints(cx, cy, size)
-    local r = size * 0.5
-    return {
-        cx, cy - r,
-        cx + r * 0.70, cy - r * 0.35,
-        cx + r * 0.70, cy + r * 0.35,
-        cx, cy + r,
-        cx - r * 0.70, cy + r * 0.35,
-        cx - r * 0.70, cy - r * 0.35,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the crystal's right
--- edge and the SAMPLE $N text's left edge. Smaller than HUD icons
--- because these labels sit next to in-world planets.
-M.sampleValueIconSize = 24
-M.sampleValueIconGap = 8
-
--- Planet approach RISK/LETHAL icon (icon-based HUD simplification
--- follow-on): pair the red/amber risk_lethal/risk_normal readout with
--- a small warning-triangle silhouette, mirroring the SAMPLE $N
--- crystal. Drawn as a flat triangle polygon (even-length {x,y,...}
--- list, no love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.riskIconPoints(cx, cy, size)
-    local r = size * 0.5
-    return {
-        cx, cy - r,
-        cx + r * 0.87, cy + r * 0.5,
-        cx - r * 0.87, cy + r * 0.5,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the warning
--- triangle's right edge and the RISK/LETHAL text's left edge.
--- Matches the SAMPLE $N crystal because both sit next to planets.
-M.riskIconSize = 24
-M.riskIconGap = 8
-
--- Floating sample-pickup "+$N" icon (icon-based HUD simplification
--- follow-on): pair the green floating_sample_gain readout with a
--- small plus-badge silhouette, mirroring the planet-approach SAMPLE
--- $N crystal. Drawn as a flat plus polygon (even-length {x,y,...}
--- list, no love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.floatingSampleIconPoints(cx, cy, size)
-    local r = size * 0.5
-    local arm = size * 0.18
-    return {
-        cx - arm, cy - r,
-        cx + arm, cy - r,
-        cx + arm, cy - arm,
-        cx + r, cy - arm,
-        cx + r, cy + arm,
-        cx + arm, cy + arm,
-        cx + arm, cy + r,
-        cx - arm, cy + r,
-        cx - arm, cy + arm,
-        cx - r, cy + arm,
-        cx - r, cy - arm,
-        cx - arm, cy - arm,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the plus-badge's
--- right edge and the "+$N" text's left edge. Matches the SAMPLE $N
--- crystal because both are in-world sample-value labels.
-M.floatingSampleIconSize = 24
-M.floatingSampleIconGap = 8
-
--- Floating damage "-N" icon (icon-based HUD simplification
--- follow-on): pair the red floating_damage_text readout with a
--- small minus-badge silhouette, mirroring the sample-pickup plus.
--- Drawn as a flat minus polygon (even-length {x,y,...} list, no
--- love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.floatingDamageIconPoints(cx, cy, size)
-    local r = size * 0.5
-    local arm = size * 0.18
-    return {
-        cx - r, cy - arm,
-        cx + r, cy - arm,
-        cx + r, cy + arm,
-        cx - r, cy + arm,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the minus-badge's
--- right edge and the "-N" text's left edge. Matches the sample
--- plus-badge because both are in-world floating value labels.
-M.floatingDamageIconSize = 24
-M.floatingDamageIconGap = 8
-
--- Collision/message banner icon (icon-based HUD simplification
--- follow-on): pair the always-drawn bottom self.message printf
--- (collision_message and other non-launch banners) with a small
--- 8-pointed burst-star silhouette, mirroring the floating damage
--- minus-badge. Drawn as a flat burst polygon (even-length
--- {x,y,...} list, no love.graphics calls) so headless tests can
--- pin geometry: horizontally symmetric around cx, spans above
--- and below cy.
-function M.messageBannerIconPoints(cx, cy, size)
-    local r = size * 0.5
-    local n = size * 0.18
-    return {
-        cx, cy - r,
-        cx + n, cy - n,
-        cx + r, cy,
-        cx + n, cy + n,
-        cx, cy + r,
-        cx - n, cy + n,
-        cx - r, cy,
-        cx - n, cy - n,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the burst-star's
--- right edge and the banner text's left edge. Matches the floating
--- damage minus-badge because both sit next to collision readouts.
-M.messageBannerIconSize = 24
-M.messageBannerIconGap = 8
-
--- EARTH SHOP panel title icon (icon-based HUD simplification
--- follow-on): pair the always-drawn earth_shop_title printf with a
--- small storefront-awning silhouette, mirroring the collision
--- message burst-star. Drawn as a flat pentagon (even-length
--- {x,y,...} list, no love.graphics calls) so headless tests can
--- pin geometry: horizontally symmetric around cx, spans above
--- and below cy.
-function M.shopTitleIconPoints(cx, cy, size)
-    local w = size * 0.45
-    local peak = size * 0.5
-    local eaves = size * 0.1
-    local bottom = size * 0.45
-    return {
-        cx, cy - peak,
-        cx + w, cy - eaves,
-        cx + w, cy + bottom,
-        cx - w, cy + bottom,
-        cx - w, cy - eaves,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- storefront's right edge and the EARTH SHOP title's left edge.
--- Matches the message-banner burst-star because both sit next
--- to always-drawn panel/banner titles.
-M.shopTitleIconSize = 24
-M.shopTitleIconGap = 8
-
--- Destroyed-phase panel title icon (icon-based HUD simplification
--- follow-on): pair the always-drawn ship_destroyed_title printf with a
--- small cracked-hull silhouette, mirroring the EARTH SHOP storefront.
--- Drawn as a flat hexagon (even-length {x,y,...} list, no
--- love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.destroyedTitleIconPoints(cx, cy, size)
-    local w = size * 0.4
-    local mid = size * 0.2
-    local peak = size * 0.5
-    local bottom = size * 0.45
-    return {
-        cx, cy - peak,
-        cx + w, cy - mid,
-        cx + w, cy + mid,
-        cx, cy + bottom,
-        cx - w, cy + mid,
-        cx - w, cy - mid,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- cracked hull's right edge and the SHIP DESTROYED title's
--- left edge. Matches the EARTH SHOP storefront because both
--- sit next to always-drawn panel titles.
-M.destroyedTitleIconSize = 24
-M.destroyedTitleIconGap = 8
-
--- EARTH SHOP TAP: RELAUNCH action icon (icon-based HUD
--- simplification follow-on): pair the always-drawn tap_relaunch
--- printf with a small upward-chevron silhouette, mirroring the
--- EARTH SHOP storefront / destroyed-title cracked hull. Drawn as
--- a flat pentagon (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.relaunchIconPoints(cx, cy, size)
-    local w = size * 0.45
-    local peak = size * 0.5
-    local mid = size * 0.05
-    local bottom = size * 0.45
-    return {
-        cx, cy - peak,
-        cx + w, cy + mid,
-        cx + w * 0.35, cy + bottom,
-        cx - w * 0.35, cy + bottom,
-        cx - w, cy + mid,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- upward chevron's right edge and the TAP: RELAUNCH label's
--- left edge. Matches the EARTH SHOP / destroyed titles because
--- all three sit next to always-drawn shop/settlement labels.
-M.relaunchIconSize = 24
-M.relaunchIconGap = 8
-
--- EARTH SHOP hull compact-action icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- hull_action_compact printf with a small shield-plate
--- silhouette, mirroring TAP: RELAUNCH. Shop-row drawShopIcon
--- sits in the margin and does not replace this label. Drawn as
--- a flat pentagon (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.hullActionIconPoints(cx, cy, size)
-    local w = size * 0.4
-    local top = size * 0.45
-    local shoulder = size * 0.15
-    local bottom = size * 0.5
-    return {
-        cx - w, cy - top,
-        cx + w, cy - top,
-        cx + w, cy + shoulder,
-        cx, cy + bottom,
-        cx - w, cy + shoulder,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- shield-plate's right edge and the hull compact action
--- label's left edge. Matches TAP: RELAUNCH because both sit
--- next to always-drawn shop action labels.
-M.hullActionIconSize = 24
-M.hullActionIconGap = 8
-
--- EARTH SHOP steering compact-action icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- steering_action_compact printf with a small gyro-hexagon
--- silhouette, mirroring hull_action_compact. Shop-row
--- drawShopIcon sits in the margin and does not replace this
--- label. Drawn as a flat hexagon (even-length {x,y,...} list,
--- no love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.steeringActionIconPoints(cx, cy, size)
-    local w = size * 0.45
-    local h = size * 0.5
-    return {
-        cx, cy - h,
-        cx + w, cy - h * 0.5,
-        cx + w, cy + h * 0.5,
-        cx, cy + h,
-        cx - w, cy + h * 0.5,
-        cx - w, cy - h * 0.5,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- gyro-hexagon's right edge and the steering compact action
--- label's left edge. Matches hull compact action because both
--- sit next to always-drawn shop action labels.
-M.steeringActionIconSize = 24
-M.steeringActionIconGap = 8
-
--- EARTH SHOP yield compact-action icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- yield_action_compact printf with a small sample-crystal
--- diamond silhouette, mirroring steering_action_compact.
--- Shop-row drawShopIcon sits in the margin and does not
--- replace this label. Drawn as a flat diamond (even-length
--- {x,y,...} list, no love.graphics calls) so headless tests
--- can pin geometry: horizontally symmetric around cx, spans
--- above and below cy.
-function M.yieldActionIconPoints(cx, cy, size)
-    local w = size * 0.4
-    local h = size * 0.5
-    return {
-        cx, cy - h,
-        cx + w, cy,
-        cx, cy + h,
-        cx - w, cy,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- sample-crystal's right edge and the yield compact action
--- label's left edge. Matches steering compact action because
--- both sit next to always-drawn shop action labels.
-M.yieldActionIconSize = 24
-M.yieldActionIconGap = 8
-
--- EARTH SHOP ship compact-action icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- shipActionCompact printf with a small ship-dart
--- silhouette, mirroring yield_action_compact. Shop-row
--- drawShopIcon sits in the margin and does not replace
--- this label. Drawn as a flat dart (even-length {x,y,...}
--- list, no love.graphics calls) so headless tests can pin
--- geometry: horizontally symmetric around cx, spans above
--- and below cy.
-function M.shipActionIconPoints(cx, cy, size)
-    local w = size * 0.28
-    local fin = size * 0.45
-    local top = size * 0.5
-    local mid = size * 0.1
-    local bottom = size * 0.5
-    return {
-        cx, cy - top,
-        cx + w, cy + mid,
-        cx + fin, cy + bottom,
-        cx, cy + mid,
-        cx - fin, cy + bottom,
-        cx - w, cy + mid,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- ship-dart's right edge and the ship compact action
--- label's left edge. Matches yield compact action because
--- both sit next to always-drawn shop action labels.
-M.shipActionIconSize = 24
-M.shipActionIconGap = 8
-
--- EARTH SHOP nextLaunch.stats icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- stats_line printf ("HULL n") with a small hull-plate
--- hexagon, mirroring shipActionCompact. Shop-row
--- drawShopIcon sits in the margin and does not replace
--- this label. Drawn as a flat stretched hexagon
--- (even-length {x,y,...} list, no love.graphics calls)
--- so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.statsIconPoints(cx, cy, size)
-    local w = size * 0.5
-    local h = size * 0.28
-    local notch = size * 0.18
-    return {
-        cx - w + notch, cy - h,
-        cx + w - notch, cy - h,
-        cx + w, cy,
-        cx + w - notch, cy + h,
-        cx - w + notch, cy + h,
-        cx - w, cy,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- hull-plate's right edge and the stats_line label's
--- left edge. Matches ship compact action because both
--- sit next to always-drawn shop labels.
-M.statsIconSize = 24
-M.statsIconGap = 8
-
--- EARTH SHOP hullStatus icon (icon-based HUD simplification
--- follow-on): pair the always-drawn hullStatus printf
--- ("SHORT $n" / "LEFT $n") with a small coin hexagon,
--- mirroring nextLaunch.stats. Shop-row drawShopIcon sits in
--- the margin and does not replace this label. Drawn as a
--- flat hexagon (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.hullStatusIconPoints(cx, cy, size)
-    local w = size * 0.45
-    local h = size * 0.5
-    return {
-        cx, cy - h,
-        cx + w, cy - h * 0.5,
-        cx + w, cy + h * 0.5,
-        cx, cy + h,
-        cx - w, cy + h * 0.5,
-        cx - w, cy - h * 0.5,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- coin-hexagon's right edge and the hullStatus label's
--- left edge. Matches stats_line because both sit next
--- to always-drawn shop labels.
-M.hullStatusIconSize = 24
-M.hullStatusIconGap = 8
-
--- EARTH SHOP steeringStatus icon (icon-based HUD simplification
--- follow-on): pair the always-drawn steeringStatus printf
--- ("SHORT $n" / "LEFT $n") with a small gyro-coin octagon,
--- mirroring hullStatus. Shop-row drawShopIcon sits in
--- the margin and does not replace this label. Drawn as a
--- flat octagon (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.steeringStatusIconPoints(cx, cy, size)
-    local w = size * 0.5
-    local h = size * 0.5
-    local inner = size * 0.2
-    return {
-        cx - inner, cy - h,
-        cx + inner, cy - h,
-        cx + w, cy - inner,
-        cx + w, cy + inner,
-        cx + inner, cy + h,
-        cx - inner, cy + h,
-        cx - w, cy + inner,
-        cx - w, cy - inner,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- gyro-coin octagon's right edge and the steeringStatus
--- label's left edge. Matches hullStatus because both sit
--- next to always-drawn shop labels.
-M.steeringStatusIconSize = 24
-M.steeringStatusIconGap = 8
-
--- EARTH SHOP yieldStatus icon (icon-based HUD simplification
--- follow-on): pair the always-drawn yieldStatus printf
--- ("SHORT $n" / "LEFT $n") with a small crystal-coin hexagon,
--- mirroring steeringStatus. Shop-row drawShopIcon sits in
--- the margin and does not replace this label. Drawn as a
--- flat pointed hexagon (even-length {x,y,...} list, no
--- love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.yieldStatusIconPoints(cx, cy, size)
-    local w = size * 0.38
-    local h = size * 0.5
-    local waist = size * 0.12
-    return {
-        cx, cy - h,
-        cx + w, cy - waist,
-        cx + w, cy + waist,
-        cx, cy + h,
-        cx - w, cy + waist,
-        cx - w, cy - waist,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- crystal-coin hexagon's right edge and the yieldStatus
--- label's left edge. Matches steeringStatus because both sit
--- next to always-drawn shop labels.
-M.yieldStatusIconSize = 24
-M.yieldStatusIconGap = 8
-
--- EARTH SHOP shipStatus icon (icon-based HUD simplification
--- follow-on): pair the always-drawn shipStatus printf
--- ("SHORT $n" / "LEFT $n" / "OWNED") with a small ship-coin
--- diamond, mirroring yieldStatus. Shop-row drawShopIcon sits in
--- the margin and does not replace this label. Drawn as a
--- flat diamond (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.shipStatusIconPoints(cx, cy, size)
-    local w = size * 0.42
-    local h = size * 0.5
-    return {
-        cx, cy - h,
-        cx + w, cy,
-        cx, cy + h,
-        cx - w, cy,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- ship-coin diamond's right edge and the shipStatus
--- label's left edge. Matches yieldStatus because both sit
--- next to always-drawn shop labels.
-M.shipStatusIconSize = 24
-M.shipStatusIconGap = 8
-
--- EARTH SHOP hullPreviewCompact icon (icon-based HUD simplification
--- follow-on): pair the always-drawn hullPreviewCompact printf
--- ("HULL n" after upgrade) with a small layered hull-plate,
--- mirroring hullStatus. Shop-row drawShopIcon sits in the margin
--- and does not replace this label. Drawn as a flat house-plate
--- (even-length {x,y,...} list, no love.graphics calls) so
--- headless tests can pin geometry: horizontally symmetric around
--- cx, spans above and below cy.
-function M.hullPreviewIconPoints(cx, cy, size)
-    local w = size * 0.48
-    local h = size * 0.5
-    local roof = size * 0.18
-    return {
-        cx - w * 0.45, cy - h,
-        cx + w * 0.45, cy - h,
-        cx + w, cy - h + roof,
-        cx + w, cy + h,
-        cx - w, cy + h,
-        cx - w, cy - h + roof,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- layered hull-plate's right edge and the hullPreviewCompact
--- label's left edge. Matches hullStatus because both sit
--- next to always-drawn shop labels.
-M.hullPreviewIconSize = 24
-M.hullPreviewIconGap = 8
-
--- EARTH SHOP steeringPreviewCompact icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- steeringPreviewCompact printf ("SPD n" after upgrade) with a
--- small 4-point gyro-star, mirroring hullPreviewCompact.
--- Shop-row drawShopIcon sits in the margin and does not replace
--- this label. Drawn as a flat 4-point star (even-length
--- {x,y,...} list, no love.graphics calls) so headless tests can
--- pin geometry: horizontally symmetric around cx, spans above
--- and below cy.
-function M.steeringPreviewIconPoints(cx, cy, size)
-    local outer = size * 0.5
-    local inner = size * 0.18
-    return {
-        cx, cy - outer,
-        cx + inner, cy - inner,
-        cx + outer, cy,
-        cx + inner, cy + inner,
-        cx, cy + outer,
-        cx - inner, cy + inner,
-        cx - outer, cy,
-        cx - inner, cy - inner,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- gyro-star's right edge and the steeringPreviewCompact
--- label's left edge. Matches hullPreview because both sit
--- next to always-drawn shop labels.
-M.steeringPreviewIconSize = 24
-M.steeringPreviewIconGap = 8
-
--- EARTH SHOP yieldPreview icon (icon-based HUD simplification
--- follow-on): pair the always-drawn yieldPreview printf
--- ("YIELD xn" after upgrade) with a small faceted sample
--- crystal, mirroring steeringPreviewCompact. Shop-row
--- drawShopIcon sits in the margin and does not replace this
--- label. Drawn as a flat cut-gem hexagon (even-length
--- {x,y,...} list, no love.graphics calls) so headless tests
--- can pin geometry: horizontally symmetric around cx, spans
--- above and below cy.
-function M.yieldPreviewIconPoints(cx, cy, size)
-    local w = size * 0.42
-    local h = size * 0.5
-    local top = size * 0.22
-    return {
-        cx - top, cy - h,
-        cx + top, cy - h,
-        cx + w, cy,
-        cx + top, cy + h,
-        cx - top, cy + h,
-        cx - w, cy,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- faceted crystal's right edge and the yieldPreview
--- label's left edge. Matches steeringPreview because both
--- sit next to always-drawn shop labels.
-M.yieldPreviewIconSize = 24
-M.yieldPreviewIconGap = 8
-
--- EARTH SHOP shipPreviewCompact icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- shipPreviewCompact printf ("SHIP Hn" after switch) with a
--- small arrowhead scout-hull, mirroring yieldPreview.
--- Shop-row drawShopIcon sits in the margin and does not
--- replace this label. Drawn as a flat notched dart
--- (even-length {x,y,...} list, no love.graphics calls) so
--- headless tests can pin geometry: horizontally symmetric
--- around cx, spans above and below cy.
-function M.shipPreviewIconPoints(cx, cy, size)
-    local w = size * 0.42
-    local top = size * 0.5
-    local waist = size * 0.08
-    local bottom = size * 0.5
-    local notch = size * 0.18
-    return {
-        cx, cy - top,
-        cx + w, cy + waist,
-        cx + w * 0.4, cy + bottom,
-        cx, cy + bottom - notch,
-        cx - w * 0.4, cy + bottom,
-        cx - w, cy + waist,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- arrowhead scout-hull's right edge and the
--- shipPreviewCompact label's left edge. Matches
--- yieldPreview because both sit next to always-drawn shop
--- labels.
-M.shipPreviewIconSize = 24
-M.shipPreviewIconGap = 8
-
--- EARTH SHOP nextLaunch.ship icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- nextLaunch.ship printf ("NEXT STARTER" / "NEXT SCOUT")
--- with a small hangar-roof pentagon, mirroring
--- shipPreviewCompact. Shop-row drawShopIcon sits in the
--- margin and does not replace this label. Drawn as a
--- flat house-pentagon (even-length {x,y,...} list, no
--- love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.nextShipIconPoints(cx, cy, size)
-    local w = size * 0.42
-    local top = size * 0.5
-    local eave = size * 0.12
-    local bottom = size * 0.5
-    return {
-        cx, cy - top,
-        cx + w, cy - eave,
-        cx + w, cy + bottom,
-        cx - w, cy + bottom,
-        cx - w, cy - eave,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- hangar-roof's right edge and the nextLaunch.ship
--- label's left edge. Matches shipPreview because both
--- sit next to always-drawn shop labels.
-M.nextShipIconSize = 24
-M.nextShipIconGap = 8
-
--- LAUNCH LOADOUT loadout.ship icon (icon-based HUD
--- simplification follow-on): pair the selected-hull name
--- (shown once SCOUT is owned) with a small hexagonal
--- nameplate, mirroring nextLaunch.ship. Drawn as a flat
--- hexagon (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.loadoutShipIconPoints(cx, cy, size)
-    local w = size * 0.5
-    local h = size * 0.32
-    local inset = size * 0.22
-    return {
-        cx - w, cy,
-        cx - inset, cy - h,
-        cx + inset, cy - h,
-        cx + w, cy,
-        cx + inset, cy + h,
-        cx - inset, cy + h,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- nameplate's right edge and the loadout.ship label's
--- left edge. Matches nextShip because both sit next to
--- gold ship-name labels.
-M.loadoutShipIconSize = 24
-M.loadoutShipIconGap = 8
-
--- Destroyed-phase next_ship_line icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- next_ship_line printf ("NEXT STARTER" after meta wipe)
--- with a small restart-hull dart, mirroring loadout.ship.
--- Drawn as a flat notched dart (even-length {x,y,...}
--- list, no love.graphics calls) so headless tests can pin
--- geometry: horizontally symmetric around cx, spans above
--- and below cy.
-function M.destroyedNextShipIconPoints(cx, cy, size)
-    local w = size * 0.4
-    local peak = size * 0.5
-    local waist = size * 0.08
-    local bottom = size * 0.5
-    local notch = size * 0.18
-    return {
-        cx, cy - peak,
-        cx + w, cy + waist,
-        cx + w * 0.4, cy + bottom,
-        cx, cy + bottom - notch,
-        cx - w * 0.4, cy + bottom,
-        cx - w, cy + waist,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- restart-hull dart's right edge and the next_ship_line
--- label's left edge. Matches loadoutShip because both sit
--- next to gold ship-name labels.
-M.destroyedNextShipIconSize = 24
-M.destroyedNextShipIconGap = 8
-
--- Destroyed-phase tap_start_over icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- tap_start_over printf ("TAP: START OVER" after meta wipe)
--- with a small restart-loop hexagon, mirroring next_ship_line.
--- Drawn as a flat hexagon (even-length {x,y,...} list, no
--- love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.destroyedTapStartOverIconPoints(cx, cy, size)
-    local w = size * 0.43
-    local peak = size * 0.5
-    local mid = size * 0.25
-    return {
-        cx, cy - peak,
-        cx + w, cy - mid,
-        cx + w, cy + mid,
-        cx, cy + peak,
-        cx - w, cy + mid,
-        cx - w, cy - mid,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- restart-loop hexagon's right edge and the tap_start_over
--- label's left edge. Matches destroyedNextShip because both
--- sit next to gold destroyed-phase labels.
-M.destroyedTapStartOverIconSize = 24
-M.destroyedTapStartOverIconGap = 8
-
--- Destroyed-phase lost_total_line icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- lost_total_line printf ("LOST TOTAL $N" after meta wipe)
--- with a small cracked-coin octagon, mirroring tap_start_over.
--- Drawn as a flat octagon (even-length {x,y,...} list, no
--- love.graphics calls) so headless tests can pin geometry:
--- horizontally symmetric around cx, spans above and below cy.
-function M.destroyedLostTotalIconPoints(cx, cy, size)
-    local outer = size * 0.5
-    local cut = size * 0.22
-    return {
-        cx - cut, cy - outer,
-        cx + cut, cy - outer,
-        cx + outer, cy - cut,
-        cx + outer, cy + cut,
-        cx + cut, cy + outer,
-        cx - cut, cy + outer,
-        cx - outer, cy + cut,
-        cx - outer, cy - cut,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- cracked-coin octagon's right edge and the lost_total_line
--- label's left edge. Matches destroyedTapStartOver because both
--- sit next to gold destroyed-phase labels.
-M.destroyedLostTotalIconSize = 24
-M.destroyedLostTotalIconGap = 8
-
--- Destroyed-phase samples_settlement_line icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- samples_settlement_line printf ("SAMPLES (n) $N" of wiped
--- unbanked samples) with a small hexagonal sample-crystal,
--- mirroring lost_total_line. Drawn as a flat hexagon
--- (even-length {x,y,...} list, no love.graphics calls) so
--- headless tests can pin geometry: horizontally symmetric
--- around cx, spans above and below cy.
-function M.destroyedSamplesSettlementIconPoints(cx, cy, size)
-    local peak = size * 0.5
-    local w = size * 0.32
-    local mid = size * 0.22
-    return {
-        cx, cy - peak,
-        cx + w, cy - mid,
-        cx + w, cy + mid,
-        cx, cy + peak,
-        cx - w, cy + mid,
-        cx - w, cy - mid,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- hexagonal sample-crystal's right edge and the
--- samples_settlement_line label's left edge. Matches
--- destroyedLostTotal because both sit next to destroyed-phase
--- summary labels.
-M.destroyedSamplesSettlementIconSize = 24
-M.destroyedSamplesSettlementIconGap = 8
-
--- Destroyed-phase spins_settlement_line icon (icon-based HUD
--- simplification follow-on): pair the always-drawn
--- spins_settlement_line printf ("SPINS (n) $N" of wiped
--- unbanked slot spins) with a small slot-reel barrel,
--- mirroring samples_settlement_line. Drawn as a flat wide
--- hexagon (even-length {x,y,...} list, no love.graphics
--- calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.destroyedSpinsSettlementIconPoints(cx, cy, size)
-    local peak = size * 0.38
-    local w = size * 0.5
-    local mid = size * 0.18
-    return {
-        cx, cy - peak,
-        cx + w, cy - mid,
-        cx + w, cy + mid,
-        cx, cy + peak,
-        cx - w, cy + mid,
-        cx - w, cy - mid,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the
--- slot-reel barrel's right edge and the
--- spins_settlement_line label's left edge. Matches
--- destroyedSamplesSettlement because both sit next to
--- destroyed-phase summary labels.
-M.destroyedSpinsSettlementIconSize = 24
-M.destroyedSpinsSettlementIconGap = 8
-
--- Destroyed-phase peak_dist_line icon (icon-based HUD simplification
--- follow-on): pair the always-drawn peak_dist_line printf ("PEAK DIST N")
--- with a small mountain-peak silhouette, mirroring spins_settlement_line.
--- Drawn as a symmetric triangle peak (even-length {x,y,...} list, no
--- love.graphics calls) so headless tests can pin geometry: horizontally
--- symmetric around cx, spans above and below cy.
-function M.destroyedPeakDistIconPoints(cx, cy, size)
-    local half = size * 0.5
-    local top  = size * 0.42
-    local bot  = size * 0.22
-    return {
-        cx,        cy - top,
-        cx + half, cy + bot,
-        cx,        cy + bot * 0.4,
-        cx - half, cy + bot,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the mountain-peak's
--- right edge and the peak_dist_line label's left edge.
-M.destroyedPeakDistIconSize = 24
-M.destroyedPeakDistIconGap  = 8
-
--- Destroyed-phase newbest_label icon (icon-based HUD simplification
--- follow-on): pair the conditional newbest_label printf ("NEW BEST!")
--- with a small star-burst silhouette, mirroring peak_dist_line.
--- Drawn as a 4-point diamond star (even-length {x,y,...} list, no
--- love.graphics calls): horizontally symmetric around cx, spans above
--- and below cy.
-function M.destroyedNewBestIconPoints(cx, cy, size)
-    local out = size * 0.50
-    local inn = size * 0.20
-    return {
-        cx,        cy - out,
-        cx + inn,  cy - inn,
-        cx + out,  cy,
-        cx + inn,  cy + inn,
-        cx,        cy + out,
-        cx - inn,  cy + inn,
-        cx - out,  cy,
-        cx - inn,  cy - inn,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the star-burst's
--- right edge and the newbest_label's left edge.
-M.destroyedNewBestIconSize = 24
-M.destroyedNewBestIconGap  = 8
-
--- Destroyed-phase meta_reset_line icon (icon-based HUD simplification
--- follow-on): pair the always-drawn meta_reset_line printf
--- ("META RESET  BEST N") with a small cyclic-arrow silhouette,
--- mirroring newbest_label. Drawn as a symmetric chevron-ring approximation
--- (even-length {x,y,...} list, no love.graphics calls): horizontally
--- symmetric around cx, spans above and below cy.
-function M.destroyedMetaResetIconPoints(cx, cy, size)
-    local r  = size * 0.46
-    local r2 = size * 0.26
-    local t  = size * 0.14
-    return {
-        cx - r,  cy - t,
-        cx,      cy - r,
-        cx + r,  cy - t,
-        cx + r,  cy + t,
-        cx,      cy + r2,
-        cx - r,  cy + t,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the cyclic-arrow's
--- right edge and the meta_reset_line label's left edge.
-M.destroyedMetaResetIconSize = 24
-M.destroyedMetaResetIconGap  = 8
-
-
--- Settlement-phase peak_dist_line icon: same mountain-peak silhouette as
--- destroyedPeakDistIconPoints, reused for the EARTH SHOP return summary card
--- so both surfaces share identical geometry. Drawn via icon+label centered
--- pair instead of bare printf (TDD: testSettlementPeakDistIconSprite).
-function M.settlementPeakDistIconPoints(cx, cy, size)
-    local half = size * 0.5
-    local top  = size * 0.42
-    local bot  = size * 0.22
-    return {
-        cx,        cy - top,
-        cx + half, cy + bot,
-        cx,        cy + bot * 0.4,
-        cx - half, cy + bot,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the mountain-peak's
--- right edge and the settlement peak_dist_line label's left edge.
-M.settlementPeakDistIconSize = 24
-M.settlementPeakDistIconGap  = 8
-
--- Settlement-phase newbest_label icon: same 4-point diamond star silhouette as
--- destroyedNewBestIconPoints, reused for the EARTH SHOP NEW BEST! line
--- so both surfaces share identical geometry (TDD: testSettlementNewBestIconSprite).
-function M.settlementNewBestIconPoints(cx, cy, size)
-    local out = size * 0.50
-    local inn = size * 0.20
-    return {
-        cx,        cy - out,
-        cx + inn,  cy - inn,
-        cx + out,  cy,
-        cx + inn,  cy + inn,
-        cx,        cy + out,
-        cx - inn,  cy + inn,
-        cx - out,  cy,
-        cx - inn,  cy - inn,
-    }
-end
-
--- Icon footprint (px) + gap (px) reserved between the star-burst's
--- right edge and the settlement newbest_label label's left edge.
-M.settlementNewBestIconSize = 24
-M.settlementNewBestIconGap  = 8
-
-
--- printf after EARTH SHOP nextLaunch.stats got the hull-plate
--- icon. Named flag + shared layout helper so both surfaces
--- keep the same centered icon+label pair (TDD: testStatsIconSprite).
-M.drawLoadoutStatsIcon = true
-
-function M.statsIconLabelLayout(labelWidth, boxX, boxW)
-    local iconSpan = M.statsIconSize + M.statsIconGap
-    local startX = boxX + (boxW - (iconSpan + labelWidth)) / 2
-    return {
-        iconSpan = iconSpan,
-        startX = startX,
-        iconCenterX = startX + M.statsIconSize / 2,
-        labelX = startX + iconSpan,
-    }
-end
-
-function M:drawStatsIconLabel(label, boxX, row, boxW, labelR, labelG, labelB)
-    local statsFont = love.graphics.getFont()
-    local layout = M.statsIconLabelLayout(statsFont:getWidth(label), boxX, boxW)
-    local statsIconCenterY = row + statsFont:getHeight() / 2
-    if self.statsIconImage then
-        local iw, ih = self.statsIconImage:getDimensions()
-        local scale = M.statsIconSize / math.max(iw, ih)
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(self.statsIconImage, layout.iconCenterX, statsIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-    else
-        love.graphics.setColor(labelR, labelG, labelB)
-        love.graphics.polygon("fill",
-            M.statsIconPoints(layout.iconCenterX, statsIconCenterY, M.statsIconSize))
-    end
-    love.graphics.setColor(labelR, labelG, labelB)
-    love.graphics.print(label, layout.labelX, row)
+M.speedIconSize = 8
+M.speedIconGap = 4
+
+function M.drawCenteredIconText(iconPointsFn, iconSize, iconGap, text, x, y, w)
+    local font = love.graphics.getFont()
+    local textWidth = font:getWidth(text)
+    local totalWidth = iconSize + iconGap + textWidth
+    local startX = x + w / 2 - totalWidth / 2
+    local iconCenterX = startX + iconSize / 2
+    local iconCenterY = y + font:getHeight() / 2
+    
+    love.graphics.polygon("fill", iconPointsFn(iconCenterX, iconCenterY, iconSize))
+    love.graphics.print(text, startX + iconSize + iconGap, y)
 end
 
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
--- the user misread the DIST/CASH line as "altitude requires fuel to
--- increase" because the fuel/status line sat immediately below it. Fuel is
--- not a flight constraint (game/expedition.lua M.update ticks altitude by
--- climbSpeed unconditionally; see "Fuel is no longer a flight constraint").
--- hud_primary is relabeled ALT->DIST ("고도"->"거리") below, and this extra
--- gap is inserted between the DIST/CASH line and the fuel/status line
--- during ascending/returning so the two numbers read as visually unrelated.
-M.hudPrimaryStatusGap = 24
+-- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
+-- the primary distance/cash row visually separate from secondary status.
+M.hudPrimaryStatusGap = 6
 
--- docs/feedback/INBOX.md UI/HUD item 5: the small C%/P%/S%/AVG$ slot-odds
--- line drawn above the minimap during the returning phase needs its own
--- reserved vertical space in the HUD box; without it the line collided
--- with the RETURN %%/s-left text right above it (confirmed via a real
--- LÖVE runtime capture, GAME_CAPTURE_PHASE=returning-odds).
-M.hudOddsLineHeight = 40
+-- docs/feedback/INBOX.md UI/HUD item 5: the returning-phase slot-odds line
+-- (C%/P%/S%/AVG$ above the minimap) was removed when item-15(a) abolished
+-- in-flight slots. The hudOddsLineHeight that used to reserve 10px for it is
+-- no longer needed; the returning HUD band height is now 70 + hudPrimaryStatusGap
+-- (same as the ascending phase with returnProgress showing).
+-- Constant kept as a zero-read alias for any call site that referenced it,
+-- so old assertions that check "hudOddsLineHeight > 0" will need updating to
+-- reflect item-15(a). See self_test.lua item-15(a) follow-up assertion.
+M.hudOddsLineHeight = 0
 
 -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
 -- footer text is a permanent dev-only disclaimer (kept until real AetherAI
@@ -1451,22 +316,8 @@ M.hudOddsLineHeight = 40
 -- watermark instead of competing with the message line above it. Smaller
 -- font + lower alpha than the default text keeps it legible but visually
 -- de-emphasized.
-M.devPlaceholderFontSize = 28
+M.devPlaceholderFontSize = 7
 M.devPlaceholderAlpha = 0.4
--- Scene fonts: old 8/14 ×4 so text keeps the same screen fraction on
--- 720×1280 (integer-scale 1 is now a 720×1280 window, not 180×320).
-M.smallFontSize = 32
-M.hudFontSize = 56
-
--- docs/feedback/INBOX.md "내부 해상도를 발라트로 수준으로 상향" — remaining
--- decorative px: the floating "+$N"/"-N" sample/damage text box was still
--- the old 180x320-era 30px half-width / 10px vertical offset. ×4 so it
--- keeps the same screen fraction on the 720x1280 canvas.
-M.floatingTextBoxHalfWidth = 120
-M.floatingTextBoxTopOffset = 40
--- Launch-screen Earth disc (world origin, screen y = earthCenterY - cameraY).
-M.earthCenterY = 300
-M.earthRadius = 232
 
 -- Shared HUD background-box height so the minimap placement (drawMinimap)
 -- and the actual text draw (draw) never disagree about how tall the top
@@ -1476,25 +327,15 @@ function M.hudHeight(phase, hud, galaxyShift)
         return M.launchHudHeight + galaxyShift
     end
     if hud.returnProgress then
-        return 280 + M.hudPrimaryStatusGap + M.hudOddsLineHeight + galaxyShift
+        return 70 + M.hudPrimaryStatusGap + galaxyShift
     end
     if hud.samples then
-        return 184 + M.hudPrimaryStatusGap + galaxyShift
+        return 46 + M.hudPrimaryStatusGap + galaxyShift
     end
     if hud.best then
-        return 184 + galaxyShift
+        return 46 + galaxyShift
     end
-    return 136 + galaxyShift
-end
-
--- docs/feedback/INBOX.md UI 대개편 6건 item 4: the small C%/P%/S%/EV$
--- slot-odds readout near the minimap was unclear enough that the user
--- mistook it for coordinates, and lost its meaning once the slot machine
--- moved to the Earth shop (item 15). Replaced by the ship's actual world
--- coordinates in "(x, y)" form. Pure function so it's easy to unit test in
--- isolation from love.graphics.
-function M.shipCoordsLine(x, y)
-    return string.format("(%d, %d)", math.floor(x + 0.5), math.floor(y + 0.5))
+    return 34 + galaxyShift
 end
 
 local function planetColor(hue)
@@ -1589,26 +430,6 @@ local shipShakeDuration = 0.25
 M.shipPunchDuration = shipPunchDuration
 M.shipShakeDuration = shipShakeDuration
 
--- docs/feedback/INBOX.md 국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 항목 (2):
--- Balatro-style score punch for the DIST HUD number, mirroring the
--- sample-pickup ship scale-punch pattern above. Fires whenever
--- run.bestAltitude (the all-time record, not the current-run altitude)
--- increases -- i.e. exactly at the moment a new personal best is set --
--- so the number that is actually a "score" gets the same emphasis
--- Balatro gives a chip/mult scoreboard update.
-local distancePunchDuration = 0.3
-M.distancePunchDuration = distancePunchDuration
-
--- Pure function: given the remaining countdown (distancePunchDuration down
--- to 0, same convention as shipPunch) returns the scale multiplier to draw
--- the DIST text at. 1.0 at rest, up to 1.5x at the instant the punch fires.
-local function distancePunchScale(remaining, duration)
-    if duration <= 0 then return 1 end
-    remaining = math.max(0, math.min(duration, remaining))
-    return 1 + (remaining / duration) * 0.5
-end
-M.distancePunchScale = distancePunchScale
-
 -- Score-proportional screen shake (docs/feedback/INBOX.md 2026-09-02 후속
 -- 확정 사항 #3): the collision shake used to be a fixed magnitude
 -- regardless of what was hit. Scale the shake strength by the tier of the
@@ -1657,10 +478,7 @@ local function rollupAmount(awarded, elapsed, duration)
 end
 M.rollupAmount = rollupAmount
 
-local slotReelStagger = 0.15
-local slotSpinDuration = slotReelStagger * 3
-
--- EARTH SHOP action/status two-column layout for the fuel/hull/steering/
+-- EARTH SHOP action/status two-column layout for the hull/steering/
 -- yield/ship rows. Measured with a real LÖVE font probe
 -- (GAME_FONTPROBE=1 love .) against the small scene-cached font
 -- (love.graphics.newFont(8)): the widest action string
@@ -1673,8 +491,8 @@ local slotSpinDuration = slotReelStagger * 3
 -- (viewport.width - 24 wide from x=12), so the two columns are sized to
 -- exactly cover their measured worst case within that inner width with
 -- no wasted margin: action 16..116 (100px), status 116..168 (52px).
-local shopActionColumnX, shopActionColumnW = 64, 400
-local shopStatusColumnX, shopStatusColumnW = 464, 208
+local shopActionColumnX, shopActionColumnW = 16, 100
+local shopStatusColumnX, shopStatusColumnW = 116, 52
 M.shopActionColumnX = shopActionColumnX
 M.shopActionColumnW = shopActionColumnW
 M.shopStatusColumnX = shopStatusColumnX
@@ -1696,11 +514,11 @@ M.shopStatusColumnW = shopStatusColumnW
 -- half of the shared row, so a row's left half always shows the key whose
 -- touch column is settlementTouchRows[n].columns[1] (left=0,right=90) and
 -- the right half always shows columns[2] (left=90,right=180). The existing
--- full-width preview/forecast lines below each shared row are left
+-- full-width preview lines below each shared row are left
 -- untouched (they are advisory text, not the tap target itself, and were
 -- already verified not to overlap).
-local shopColumnLeftX, shopColumnLeftW = 64, 272
-local shopColumnRightX, shopColumnRightW = 352, 272
+local shopColumnLeftX, shopColumnLeftW = 16, 68
+local shopColumnRightX, shopColumnRightW = 88, 68
 M.shopColumnLeftX = shopColumnLeftX
 M.shopColumnLeftW = shopColumnLeftW
 M.shopColumnRightX = shopColumnRightX
@@ -1725,1508 +543,17 @@ function M.settlementRowBackgroundColor(index)
     return settlementRowBackgroundColors[(index - 1) % #settlementRowBackgroundColors + 1]
 end
 
-local function specimenImagePath(id)
-    return "assets/sprites/specimens/" .. id .. ".png"
-end
-
-local function loadSpecimenImages()
-    local images = {}
-    if not (love and love.graphics and love.graphics.newImage) then
-        return images
-    end
-    for _, entry in ipairs(world.specimenCatalog()) do
-        local path = specimenImagePath(entry.id)
-        local ok, img = pcall(love.graphics.newImage, path)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            images[entry.id] = img
-        end
-    end
-    return images
-end
-
 function M.new(options)
     options = options or {}
     local ship = shipModule.new()
     local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
     local specimenStore = options.collectionStore or collectionStore.new()
     if love.graphics then
-        love.graphics.setFont(fonts.get(M.hudFontSize))
-    end
-    -- assets/ship/ship_default.png is the ComfyUI-generated ship sprite
-    -- (docs/GENERATED_ASSET_LOG.md). shipImagePath is always recorded (even
-    -- under GAME_HEADLESS=1, where conf.lua disables the graphics module
-    -- entirely and no love.graphics.Image can be constructed) so
-    -- engine-hosted tests can verify the wiring; shipImage is the actual
-    -- drawable Image object used by :draw() whenever graphics are enabled.
-    local shipImagePath = "assets/ship/ship_default.png"
-    local shipImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shipImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shipImage = img
-        end
-    end
-    -- assets/planet/planet_generic.png is the ComfyUI-generated neutral-tone
-    -- planet sprite (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated-image pattern as shipImage above; :draw() tints this
-    -- single grayscale sprite per-planet with the existing planetColor()
-    -- hue lookup instead of drawing a flat filled circle, and falls back to
-    -- the flat circle whenever the image failed to load.
-    local planetImagePath = "assets/planet/planet_generic.png"
-    local planetImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, planetImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            planetImage = img
-        end
-    end
-    -- assets/earth/earth_generic.png is the ComfyUI-generated Earth sprite
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated-image pattern as shipImage/planetImage above; :draw()
-    -- draws this sprite instead of the flat ocean-circle + two green-blob
-    -- fills, and falls back to the flat circle whenever the image failed
-    -- to load.
-    local earthImagePath = "assets/earth/earth_generic.png"
-    local earthImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, earthImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            earthImage = img
-        end
-    end
-
-    -- assets/effects/sample_sparkle.png is the ComfyUI-generated sample
-    -- pickup effect sprite (docs/GENERATED_ASSET_LOG.md). draw() tints and
-    -- scales it per-particle instead of drawing a flat love.graphics.circle
-    -- fill, and falls back to the flat circle whenever the image failed to
-    -- load (same fallback pattern as ship/planet/earth above).
-    local sampleEffectImagePath = "assets/effects/sample_sparkle.png"
-    local sampleEffectImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, sampleEffectImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            sampleEffectImage = img
-        end
-    end
-    -- assets/backgrounds/deep_space_tile.png is the ComfyUI-generated deep-
-    -- space nebula backdrop (docs/GENERATED_ASSET_LOG.md). draw() tiles it
-    -- (wrap-repeat quad) as a near-static backdrop layer drawn behind the
-    -- existing backgroundStars()/stars() point layers, and falls back to
-    -- the flat clear color only when the image failed to load (same
-    -- fallback pattern as ship/planet/earth/effect above).
-    local backgroundImagePath = "assets/backgrounds/deep_space_tile.png"
-    local backgroundImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, backgroundImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            pcall(img.setWrap, img, "repeat", "repeat")
-            backgroundImage = img
-        end
-    end
-    -- assets/slot_symbols/{comet,planet,star}.png are the ComfyUI-generated
-    -- returning-phase slot-machine reel icons (docs/GENERATED_ASSET_LOG.md).
-    -- slotSymbolImagePaths is always fully populated (even under
-    -- GAME_HEADLESS=1) so engine-hosted tests can verify the wiring;
-    -- slotSymbolImages holds the actual drawable Image objects :draw() uses
-    -- instead of the plain "COMET  PLANET  STAR" text reel, falling back to
-    -- text whenever an image failed to load (same fallback pattern as
-    -- ship/planet/earth/effect/background above).
-    local slotSymbolImagePaths = {
-        COMET = "assets/slot_symbols/comet.png",
-        PLANET = "assets/slot_symbols/planet.png",
-        STAR = "assets/slot_symbols/star.png",
-    }
-    local slotSymbolImages = {}
-    if love.graphics and love.graphics.newImage then
-        for symbol, path in pairs(slotSymbolImagePaths) do
-            local ok, img = pcall(love.graphics.newImage, path)
-            if ok and img then
-                img:setFilter("nearest", "nearest")
-                slotSymbolImages[symbol] = img
-            end
-        end
-    end
-    -- assets/shop_icons/{hull,steering,yield,ship}.png are the
-    -- ComfyUI-generated EARTH SHOP row icons (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-paths / graphics-gated-images pattern as
-    -- slotSymbolImagePaths/slotSymbolImages above: shopIconImagePaths is
-    -- always fully populated so engine-hosted tests can verify the wiring
-    -- under GAME_HEADLESS=1, and shopIconImages holds the actual drawable
-    -- Image objects used by :draw() (drawn beside each EARTH SHOP row's
-    -- existing compact action text, not replacing any verified text
-    -- placement -- see the comment above settlementRowBackgroundColors on
-    -- why EARTH SHOP text positions are treated as fragile/verified).
-    local shopIconImagePaths = {
-        hull = "assets/shop_icons/hull.png",
-        steering = "assets/shop_icons/steering.png",
-        yield = "assets/shop_icons/yield.png",
-        ship = "assets/shop_icons/ship.png",
-    }
-    local shopIconImages = {}
-    if love.graphics and love.graphics.newImage then
-        for key, path in pairs(shopIconImagePaths) do
-            local ok, img = pcall(love.graphics.newImage, path)
-            if ok and img then
-                img:setFilter("nearest", "nearest")
-                shopIconImages[key] = img
-            end
-        end
-    end
-    -- assets/debris/{asteroid,can,scrap}.png are ComfyUI-generated drifting
-    -- hazard sprites (docs/GENERATED_ASSET_LOG.md). Same always-set-paths /
-    -- graphics-gated-images pattern as shopIconImagePaths: debrisImagePaths
-    -- is always fully populated so engine-hosted tests can verify wiring
-    -- under GAME_HEADLESS=1, and debrisImages holds the drawables :draw()
-    -- uses instead of the Lua rectangle/circle/triangle placeholders.
-    local debrisImagePaths = {
-        asteroid = "assets/debris/asteroid.png",
-        can = "assets/debris/can.png",
-        scrap = "assets/debris/scrap.png",
-    }
-    local debrisImages = {}
-    if love.graphics and love.graphics.newImage then
-        for kind, path in pairs(debrisImagePaths) do
-            local ok, img = pcall(love.graphics.newImage, path)
-            if ok and img then
-                img:setFilter("nearest", "nearest")
-                debrisImages[kind] = img
-            end
-        end
-    end
-    -- assets/effects/planet_twinkle.png is the ComfyUI-generated planet-
-    -- approach twinkle sprite (docs/GENERATED_ASSET_LOG.md). Same always-
-    -- set-path / graphics-gated-image pattern as sampleEffectImagePath:
-    -- planetTwinkleImagePath is always set so engine-hosted tests can
-    -- verify wiring under GAME_HEADLESS=1, and planetTwinkleImage holds
-    -- the drawable :draw() uses instead of love.graphics.circle dots
-    -- orbiting undiscovered planets.
-    local planetTwinkleImagePath = "assets/effects/planet_twinkle.png"
-    local planetTwinkleImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, planetTwinkleImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            planetTwinkleImage = img
-        end
-    end
-    -- assets/effects/collision_spark.png is the ComfyUI-generated collision
-    -- impact burst (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated-image pattern as planetTwinkleImagePath.
-    local collisionEffectImagePath = "assets/effects/collision_spark.png"
-    local collisionEffectImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, collisionEffectImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            collisionEffectImage = img
-        end
-    end
-    -- assets/effects/thrust_plume.png is the ComfyUI-generated RCS/main-
-    -- engine exhaust plume (docs/GENERATED_ASSET_LOG.md). Same always-set-
-    -- path / graphics-gated-image pattern as sampleEffectImagePath.
-    local thrustEffectImagePath = "assets/effects/thrust_plume.png"
-    local thrustEffectImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, thrustEffectImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            thrustEffectImage = img
-        end
-    end
-    -- assets/effects/planet_glow.png is the ComfyUI-generated undiscovered-
-    -- planet rim glow (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated-image pattern as planetTwinkleImagePath. :draw() tints
-    -- and scales it per-planet instead of stacking love.graphics.circle
-    -- fills, and falls back to those circles when the image failed to load.
-    local planetGlowImagePath = "assets/effects/planet_glow.png"
-    local planetGlowImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, planetGlowImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            planetGlowImage = img
-        end
-    end
-    -- assets/effects/planet_shadow.png is the ComfyUI-generated planet
-    -- drop shadow (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated-image pattern as planetGlowImagePath. :draw() tints
-    -- and scales it per-planet instead of a love.graphics.circle fill,
-    -- and falls back to that circle when the image failed to load.
-    local planetShadowImagePath = "assets/effects/planet_shadow.png"
-    local planetShadowImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, planetShadowImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            planetShadowImage = img
-        end
-    end
-    -- assets/effects/minimap_disc.png is the ComfyUI-generated circular
-    -- galaxy-chart disc (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated-image pattern as planetShadowImagePath. drawMinimap()
-    -- scales it to minimap.size instead of a love.graphics.circle fill+line,
-    -- and falls back to those circles when the image failed to load.
-    local minimapDiscImagePath = "assets/effects/minimap_disc.png"
-    local minimapDiscImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, minimapDiscImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            minimapDiscImage = img
-        end
-    end
-    -- assets/effects/joystick_pad.png is the ComfyUI-generated virtual
-    -- joystick pad disc (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated-image pattern as minimapDiscImagePath. drawJoystickStick()
-    -- scales it to joystick.visualRadius * 2 instead of a love.graphics.circle
-    -- fill+line, and falls back to those circles when the image failed to load.
-    local joystickPadImagePath = "assets/effects/joystick_pad.png"
-    local joystickPadImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, joystickPadImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            joystickPadImage = img
-        end
-    end
-    -- assets/effects/joystick_knob.png is the ComfyUI-generated virtual
-    -- joystick thumbstick cap (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated-image pattern as joystickPadImagePath.
-    -- drawJoystickStick() scales it to joystick.visualKnobRadius * 2 instead
-    -- of a love.graphics.circle fill, and falls back to that circle when
-    -- the image failed to load.
-    local joystickKnobImagePath = "assets/effects/joystick_knob.png"
-    local joystickKnobImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, joystickKnobImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            joystickKnobImage = img
-        end
-    end
-    -- assets/effects/hud_coin.png is the ComfyUI-generated CASH HUD coin
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path / graphics-gated
-    -- image pattern as joystickKnobImagePath. draw() scales it to
-    -- M.cashIconSize instead of M.coinIconPoints, and falls back to that
-    -- octagon polygon when the image failed to load.
-    local cashIconImagePath = "assets/effects/hud_coin.png"
-    local cashIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, cashIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            cashIconImage = img
-        end
-    end
-    -- assets/effects/hud_shield.png is the ComfyUI-generated hull-durability
-    -- HUD shield (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as cashIconImagePath. draw() scales it
-    -- to M.hullIconSize instead of M.shieldIconPoints, and falls back to
-    -- that pentagon polygon when the image failed to load.
-    local hullIconImagePath = "assets/effects/hud_shield.png"
-    local hullIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, hullIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            hullIconImage = img
-        end
-    end
-    -- assets/effects/hud_speed.png is the ComfyUI-generated STEER SPEED HUD
-    -- speedometer (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as hullIconImagePath. draw() scales it
-    -- to M.speedIconSize instead of M.speedIconPoints, and falls back to
-    -- that semicircle+needle polygon when the image failed to load.
-    local speedIconImagePath = "assets/effects/hud_speed.png"
-    local speedIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, speedIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            speedIconImage = img
-        end
-    end
-    -- assets/effects/minimap_checkpoint_star.png is the ComfyUI-generated
-    -- checkpoint-galaxy waypoint star (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as speedIconImagePath.
-    -- drawMinimap() scales it to 2 * minimap.markerGalaxyHubRadius instead
-    -- of minimap.starPoints, and falls back to that 5-point polygon when
-    -- the image failed to load.
-    local checkpointStarImagePath = "assets/effects/minimap_checkpoint_star.png"
-    local checkpointStarImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, checkpointStarImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            checkpointStarImage = img
-        end
-    end
-    -- assets/effects/minimap_checkpoint_arrow.png is the ComfyUI-generated
-    -- off-chart checkpoint direction arrow (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- checkpointStarImagePath. drawMinimap() scales it to
-    -- 2 * minimap.markerCheckpointTipRadius, rotates it toward the nearest
-    -- off-chart checkpoint, and falls back to the Lua circle+triangle
-    -- polygon when the image failed to load.
-    local checkpointArrowImagePath = "assets/effects/minimap_checkpoint_arrow.png"
-    local checkpointArrowImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, checkpointArrowImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            checkpointArrowImage = img
-        end
-    end
-    -- assets/effects/minimap_player.png is the ComfyUI-generated
-    -- you-are-here player location marker (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- checkpointArrowImagePath. drawMinimap() scales it to
-    -- 2 * minimap.markerPlayerLineRadius instead of the Lua filled
-    -- circle + outline, and falls back to those circles when the
-    -- image failed to load.
-    local playerMarkerImagePath = "assets/effects/minimap_player.png"
-    local playerMarkerImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, playerMarkerImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            playerMarkerImage = img
-        end
-    end
-    -- assets/effects/minimap_sun.png is the ComfyUI-generated
-    -- sun waypoint marker (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- playerMarkerImagePath. drawMinimap() scales it to
-    -- 2 * minimap.markerSunRadius instead of the Lua filled
-    -- circle, and falls back to that circle when the image
-    -- failed to load.
-    local sunMarkerImagePath = "assets/effects/minimap_sun.png"
-    local sunMarkerImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, sunMarkerImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            sunMarkerImage = img
-        end
-    end
-    -- assets/effects/minimap_earth.png is the ComfyUI-generated
-    -- Earth waypoint marker (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- sunMarkerImagePath. drawMinimap() scales it to
-    -- 2 * minimap.markerEarthRadius instead of the Lua filled
-    -- circle, and falls back to that circle when the image
-    -- failed to load.
-    local earthMarkerImagePath = "assets/effects/minimap_earth.png"
-    local earthMarkerImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, earthMarkerImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            earthMarkerImage = img
-        end
-    end
-    -- assets/effects/minimap_galaxy_home.png is the ComfyUI-generated
-    -- home-galaxy (milkyway) waypoint marker (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- earthMarkerImagePath. drawMinimap() scales it to
-    -- 2 * minimap.markerGalaxyHomeRadius instead of the Lua filled
-    -- circle, and falls back to that circle when the image
-    -- failed to load.
-    local galaxyHomeMarkerImagePath = "assets/effects/minimap_galaxy_home.png"
-    local galaxyHomeMarkerImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, galaxyHomeMarkerImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            galaxyHomeMarkerImage = img
-        end
-    end
-    -- assets/effects/minimap_galaxy_plain.png is the ComfyUI-generated
-    -- generic (non-home, non-checkpoint) galaxy waypoint marker
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path / graphics-gated
-    -- image pattern as galaxyHomeMarkerImagePath. drawMinimap() scales it
-    -- to 2 * minimap.markerGalaxyPlainRadius instead of the Lua filled
-    -- circle, and falls back to that circle when the image failed to load.
-    local galaxyPlainMarkerImagePath = "assets/effects/minimap_galaxy_plain.png"
-    local galaxyPlainMarkerImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, galaxyPlainMarkerImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            galaxyPlainMarkerImage = img
-        end
-    end
-    -- assets/effects/minimap_earth_return.png is the ComfyUI-generated
-    -- off-chart Earth-return rim marker (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- galaxyPlainMarkerImagePath. drawMinimap() scales it to
-    -- 2 * minimap.markerBeyondRadius, rotates it toward Earth (sprite
-    -- default is up / -y), and falls back to the Lua filled circle
-    -- when the image failed to load.
-    local earthReturnMarkerImagePath = "assets/effects/minimap_earth_return.png"
-    local earthReturnMarkerImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, earthReturnMarkerImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            earthReturnMarkerImage = img
-        end
-    end
-    -- assets/effects/minimap_spiral_star.png is the ComfyUI-generated
-    -- galaxy spiral-arm point marker (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- earthReturnMarkerImagePath. drawMinimap() scales it to 2.8
-    -- (matching the old Lua filled-circle radius 1.4) and falls back
-    -- to that circle when the image failed to load.
-    local spiralArmImagePath = "assets/effects/minimap_spiral_star.png"
-    local spiralArmImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, spiralArmImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            spiralArmImage = img
-        end
-    end
-    -- assets/effects/minimap_orbit_ring.png is the ComfyUI-generated
-    -- solar-system orbit ring (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- spiralArmImagePath. drawMinimap() scales it to 2 * ring.radius
-    -- for kind=="orbit" rings and falls back to the Lua line circle
-    -- when the image failed to load.
-    local orbitRingImagePath = "assets/effects/minimap_orbit_ring.png"
-    local orbitRingImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, orbitRingImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            orbitRingImage = img
-        end
-    end
-    -- assets/effects/minimap_galaxy_ring.png is the ComfyUI-generated
-    -- galaxy-disk ring (docs/GENERATED_ASSET_LOG.md). Same always-set-path
-    -- / graphics-gated image pattern as orbitRingImagePath. drawMinimap()
-    -- scales it to 2 * ring.radius for kind=="galaxy" rings and falls
-    -- back to the Lua line circle when the image failed to load.
-    local galaxyRingImagePath = "assets/effects/minimap_galaxy_ring.png"
-    local galaxyRingImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, galaxyRingImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            galaxyRingImage = img
-        end
-    end
-    -- assets/planet/planet_hub.png is the ComfyUI-generated galaxy
-    -- hub/checkpoint planet (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- galaxyRingImagePath. :draw() uses it for planet.hub landmarks
-    -- instead of planet_generic.png, and falls back to planetImage
-    -- (then the Lua circle) when the image failed to load.
-    local hubPlanetImagePath = "assets/planet/planet_hub.png"
-    local hubPlanetImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, hubPlanetImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            hubPlanetImage = img
-        end
-    end
-    -- assets/planet/planet_shop.png is the ComfyUI-generated galaxy
-    -- shop/market planet (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- hubPlanetImagePath. :draw() uses it for planet.shop landmarks
-    -- instead of planet_generic.png, and falls back to planetImage
-    -- (then the Lua circle) when the image failed to load.
-    local shopPlanetImagePath = "assets/planet/planet_shop.png"
-    local shopPlanetImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shopPlanetImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shopPlanetImage = img
-        end
-    end
-    -- assets/effects/hud_panel.png is the ComfyUI-generated top HUD
-    -- status-bar panel (docs/GENERATED_ASSET_LOG.md). Same always-set-path
-    -- / graphics-gated image pattern as shopPlanetImagePath. :draw()
-    -- stretches it across the HUD band instead of the Lua fill rectangle,
-    -- and falls back to that rectangle when the image failed to load.
-    local hudPanelImagePath = "assets/effects/hud_panel.png"
-    local hudPanelImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, hudPanelImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            hudPanelImage = img
-        end
-    end
-    -- assets/effects/loadout_panel.png is the ComfyUI-generated launch
-    -- LOADOUT card panel (docs/GENERATED_ASSET_LOG.md). Same always-set-path
-    -- / graphics-gated image pattern as hudPanelImagePath. :draw()
-    -- stretches it across the launch loadout box instead of the Lua fill
-    -- rectangle, and falls back to that rectangle when the image failed
-    -- to load.
-    local loadoutPanelImagePath = "assets/effects/loadout_panel.png"
-    local loadoutPanelImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, loadoutPanelImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            loadoutPanelImage = img
-        end
-    end
-    -- assets/effects/shop_panel.png is the ComfyUI-generated EARTH SHOP
-    -- card panel (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as loadoutPanelImagePath. :draw()
-    -- stretches it across the settlement shop box instead of the Lua fill
-    -- rectangle, and falls back to that rectangle when the image failed
-    -- to load.
-    local shopPanelImagePath = "assets/effects/shop_panel.png"
-    local shopPanelImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shopPanelImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shopPanelImage = img
-        end
-    end
-    -- assets/effects/destroyed_panel.png is the ComfyUI-generated
-    -- destroyed-phase summary card panel (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- shopPanelImagePath. :draw() stretches it across the destroyed
-    -- summary box instead of the Lua fill rectangle, and falls back to
-    -- that rectangle when the image failed to load.
-    local destroyedPanelImagePath = "assets/effects/destroyed_panel.png"
-    local destroyedPanelImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedPanelImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedPanelImage = img
-        end
-    end
-    -- assets/effects/slot_result_panel.png is the ComfyUI-generated
-    -- returning-phase slot result card panel (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- destroyedPanelImagePath. :draw() stretches it across the slot
-    -- result box instead of the Lua fill rectangle, and falls back to
-    -- that rectangle when the image failed to load.
-    local slotResultPanelImagePath = "assets/effects/slot_result_panel.png"
-    local slotResultPanelImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, slotResultPanelImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            slotResultPanelImage = img
-        end
-    end
-    -- assets/effects/slot_spin_button.png is the ComfyUI-generated
-    -- returning-phase slot SPIN button (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- slotResultPanelImagePath. :draw() stretches it across the slot
-    -- spin hit box instead of the Lua fill rectangle, and falls back
-    -- to that rectangle when the image failed to load.
-    local slotSpinButtonImagePath = "assets/effects/slot_spin_button.png"
-    local slotSpinButtonImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, slotSpinButtonImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            slotSpinButtonImage = img
-        end
-    end
-    -- assets/effects/specimen_banner.png is the ComfyUI-generated
-    -- new-specimen discovery banner panel (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- slotSpinButtonImagePath. :draw() stretches it across the banner
-    -- box instead of the Lua fill rectangle, and falls back to that
-    -- rectangle when the image failed to load.
-    local specimenBannerImagePath = "assets/effects/specimen_banner.png"
-    local specimenBannerImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, specimenBannerImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            specimenBannerImage = img
-        end
-    end
-    -- assets/effects/settlement_summary_panel.png is the ComfyUI-generated
-    -- EARTH SHOP settlement summary inner box (docs/GENERATED_ASSET_LOG.md).
-    -- Same always-set-path / graphics-gated image pattern as
-    -- specimenBannerImagePath. :draw() stretches it across the summary
-    -- inner box instead of the Lua fill rectangle, and falls back to
-    -- that rectangle when the image failed to load.
-    local settlementSummaryPanelImagePath = "assets/effects/settlement_summary_panel.png"
-    local settlementSummaryPanelImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, settlementSummaryPanelImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            settlementSummaryPanelImage = img
-        end
-    end
-    -- assets/effects/shop_touch_row.png is the ComfyUI-generated EARTH SHOP
-    -- tappable settlementTouchRows band (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- settlementSummaryPanelImagePath. :draw() stretches it across each
-    -- settlementTouchRows band instead of the Lua fill rectangle, and
-    -- falls back to that rectangle when the image failed to load.
-    local shopTouchRowImagePath = "assets/effects/shop_touch_row.png"
-    local shopTouchRowImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shopTouchRowImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shopTouchRowImage = img
-        end
-    end
-    -- assets/effects/planet_rim.png is the ComfyUI-generated planet
-    -- discovery rim ring (docs/GENERATED_ASSET_LOG.md). Same always-set-path
-    -- / graphics-gated image pattern as shopTouchRowImagePath. :draw()
-    -- scales it to 2 * (planet.radius + 2/3) instead of love.graphics.circle
-    -- "line" rims, and falls back to those line circles when the image
-    -- failed to load.
-    local planetRimImagePath = "assets/effects/planet_rim.png"
-    local planetRimImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, planetRimImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            planetRimImage = img
-        end
-    end
-    -- assets/effects/star_point.png is the ComfyUI-generated playfield
-    -- star sparkle (docs/GENERATED_ASSET_LOG.md). Same always-set-path
-    -- / graphics-gated image pattern as planetRimImagePath. :draw()
-    -- scales it over backgroundStars()/stars() instead of
-    -- love.graphics.points, and falls back to those points when the
-    -- image failed to load.
-    local starPointImagePath = "assets/effects/star_point.png"
-    local starPointImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, starPointImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            starPointImage = img
-        end
-    end
-    -- assets/effects/ship_silhouette.png is the ComfyUI-generated ship
-    -- body silhouette (docs/GENERATED_ASSET_LOG.md). Same always-set-path
-    -- / graphics-gated image pattern as starPointImagePath. :draw() uses
-    -- it instead of the Lua triangle polygon when shipImage failed to
-    -- load, and falls back to that polygon when this image also failed.
-    local shipSilhouetteImagePath = "assets/effects/ship_silhouette.png"
-    local shipSilhouetteImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shipSilhouetteImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shipSilhouetteImage = img
-        end
-    end
-    -- assets/effects/launch_rocket.png is the ComfyUI-generated TAP-TO-LAUNCH
-    -- rocket icon (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as shipSilhouetteImagePath. :draw() uses
-    -- it instead of the Lua rocketIconPoints polygon when
-    -- showLaunchRocketIcon is true, and falls back to that polygon when
-    -- this image failed to load.
-    local launchRocketImagePath = "assets/effects/launch_rocket.png"
-    local launchRocketImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, launchRocketImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            launchRocketImage = img
-        end
-    end
-    -- assets/ship/ship_scout.png is the ComfyUI-generated SCOUT hull
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path / graphics-gated
-    -- image pattern as launchRocketImagePath. :draw() uses it when
-    -- selectedShipId == "scout" instead of ship_default.png, and falls
-    -- back to shipImage / shipSilhouetteImage / the Lua triangle.
-    local scoutShipImagePath = "assets/ship/ship_scout.png"
-    local scoutShipImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, scoutShipImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            scoutShipImage = img
-        end
-    end
-    -- assets/effects/hud_distance.png is the ComfyUI-generated DIST HUD
-    -- nav-diamond (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as scoutShipImagePath. :draw() scales
-    -- it to M.distanceIconSize instead of M.distanceIconPoints, and falls
-    -- back to that diamond polygon when the image failed to load.
-    local distanceIconImagePath = "assets/effects/hud_distance.png"
-    local distanceIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, distanceIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            distanceIconImage = img
-        end
-    end
-    -- assets/effects/hud_best.png is the ComfyUI-generated PERSONAL BEST
-    -- HUD trophy (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as distanceIconImagePath. :draw()
-    -- scales it to M.bestIconSize instead of M.bestIconPoints, and falls
-    -- back to that trophy polygon when the image failed to load.
-    local bestIconImagePath = "assets/effects/hud_best.png"
-    local bestIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, bestIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            bestIconImage = img
-        end
-    end
-    -- assets/effects/hud_samples.png is the ComfyUI-generated SAMPLES HUD
-    -- specimen vial (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as bestIconImagePath. :draw() scales
-    -- it to M.samplesIconSize instead of M.samplesIconPoints, and falls
-    -- back to that flask polygon when the image failed to load.
-    local samplesIconImagePath = "assets/effects/hud_samples.png"
-    local samplesIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, samplesIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            samplesIconImage = img
-        end
-    end
-    -- assets/effects/hud_galaxy.png is the ComfyUI-generated galaxy-name
-    -- HUD star (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as samplesIconImagePath. :draw()
-    -- scales it to M.galaxyIconSize instead of M.galaxyIconPoints, and
-    -- falls back to that 8-point star polygon when the image failed to load.
-    local galaxyIconImagePath = "assets/effects/hud_galaxy.png"
-    local galaxyIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, galaxyIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            galaxyIconImage = img
-        end
-    end
-    -- assets/effects/hud_return.png is the ComfyUI-generated RETURN
-    -- progress HUD chevron (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- galaxyIconImagePath. :draw() scales it to M.returnIconSize instead
-    -- of M.returnIconPoints, and falls back to that downward chevron
-    -- polygon when the image failed to load.
-    local returnIconImagePath = "assets/effects/hud_return.png"
-    local returnIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, returnIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            returnIconImage = img
-        end
-    end
-    -- assets/effects/hud_earth.png is the ComfyUI-generated EARTH
-    -- distance HUD globe (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- returnIconImagePath. :draw() scales it to M.earthIconSize instead
-    -- of M.earthIconPoints, and falls back to that octagon globe
-    -- polygon when the image failed to load.
-    local earthIconImagePath = "assets/effects/hud_earth.png"
-    local earthIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, earthIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            earthIconImage = img
-        end
-    end
-    -- assets/effects/planet_sample.png is the ComfyUI-generated planet
-    -- approach SAMPLE $N crystal (docs/GENERATED_ASSET_LOG.md). Same
-    -- always-set-path / graphics-gated image pattern as
-    -- earthIconImagePath. :draw() scales it to M.sampleValueIconSize
-    -- instead of M.sampleValueIconPoints, and falls back to that
-    -- hexagonal crystal polygon when the image failed to load.
-    local sampleValueIconImagePath = "assets/effects/planet_sample.png"
-    local sampleValueIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, sampleValueIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            sampleValueIconImage = img
-        end
-    end
-    -- assets/effects/planet_risk.png is the ComfyUI-generated planet
-    -- approach RISK/LETHAL warning triangle
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as sampleValueIconImagePath.
-    -- :draw() scales it to M.riskIconSize instead of M.riskIconPoints,
-    -- and falls back to that warning-triangle polygon when the image
-    -- failed to load.
-    local riskIconImagePath = "assets/effects/planet_risk.png"
-    local riskIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, riskIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            riskIconImage = img
-        end
-    end
-    -- assets/effects/floating_sample.png is the ComfyUI-generated
-    -- floating sample-pickup "+$N" plus-badge
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as riskIconImagePath. :draw()
-    -- scales it to M.floatingSampleIconSize instead of
-    -- M.floatingSampleIconPoints, and falls back to that plus-badge
-    -- polygon when the image failed to load.
-    local floatingSampleIconImagePath = "assets/effects/floating_sample.png"
-    local floatingSampleIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, floatingSampleIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            floatingSampleIconImage = img
-        end
-    end
-    -- assets/effects/floating_damage.png is the ComfyUI-generated
-    -- floating damage "-N" minus-badge
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as floatingSampleIconImagePath.
-    -- :draw() scales it to M.floatingDamageIconSize instead of
-    -- M.floatingDamageIconPoints, and falls back to that minus-badge
-    -- polygon when the image failed to load.
-    local floatingDamageIconImagePath = "assets/effects/floating_damage.png"
-    local floatingDamageIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, floatingDamageIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            floatingDamageIconImage = img
-        end
-    end
-    -- assets/effects/message_banner.png is the ComfyUI-generated
-    -- collision/message banner burst-star
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as floatingDamageIconImagePath.
-    -- :draw() scales it to M.messageBannerIconSize instead of
-    -- M.messageBannerIconPoints, and falls back to that burst-star
-    -- polygon when the image failed to load.
-    local messageBannerIconImagePath = "assets/effects/message_banner.png"
-    local messageBannerIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, messageBannerIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            messageBannerIconImage = img
-        end
-    end
-    -- assets/effects/shop_title.png is the ComfyUI-generated
-    -- EARTH SHOP panel title storefront
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as messageBannerIconImagePath.
-    -- :draw() scales it to M.shopTitleIconSize instead of
-    -- M.shopTitleIconPoints, and falls back to that storefront
-    -- pentagon when the image failed to load.
-    local shopTitleIconImagePath = "assets/effects/shop_title.png"
-    local shopTitleIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shopTitleIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shopTitleIconImage = img
-        end
-    end
-    -- assets/effects/destroyed_title.png is the ComfyUI-generated
-    -- destroyed-phase panel title cracked hull
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as shopTitleIconImagePath.
-    -- :draw() scales it to M.destroyedTitleIconSize instead of
-    -- M.destroyedTitleIconPoints, and falls back to that cracked-hull
-    -- hexagon when the image failed to load.
-    local destroyedTitleIconImagePath = "assets/effects/destroyed_title.png"
-    local destroyedTitleIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedTitleIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedTitleIconImage = img
-        end
-    end
-    -- assets/effects/relaunch.png is the ComfyUI-generated
-    -- EARTH SHOP TAP: RELAUNCH action chevron
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as destroyedTitleIconImagePath.
-    -- :draw() scales it to M.relaunchIconSize instead of
-    -- M.relaunchIconPoints, and falls back to that upward-chevron
-    -- pentagon when the image failed to load.
-    local relaunchIconImagePath = "assets/effects/relaunch.png"
-    local relaunchIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, relaunchIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            relaunchIconImage = img
-        end
-    end
-    -- assets/effects/shop_hull_action.png is the ComfyUI-generated
-    -- EARTH SHOP hull compact-action shield plate
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as relaunchIconImagePath.
-    -- :draw() scales it to M.hullActionIconSize instead of
-    -- M.hullActionIconPoints, and falls back to that shield-plate
-    -- pentagon when the image failed to load.
-    local hullActionIconImagePath = "assets/effects/shop_hull_action.png"
-    local hullActionIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, hullActionIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            hullActionIconImage = img
-        end
-    end
-    -- assets/effects/shop_steering_action.png is the ComfyUI-generated
-    -- EARTH SHOP steering compact-action gyro hexagon
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as hullActionIconImagePath.
-    -- :draw() scales it to M.steeringActionIconSize instead of
-    -- M.steeringActionIconPoints, and falls back to that gyro
-    -- hexagon when the image failed to load.
-    local steeringActionIconImagePath = "assets/effects/shop_steering_action.png"
-    local steeringActionIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, steeringActionIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            steeringActionIconImage = img
-        end
-    end
-    -- assets/effects/shop_yield_action.png is the ComfyUI-generated
-    -- EARTH SHOP yield compact-action sample crystal
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as steeringActionIconImagePath.
-    -- :draw() scales it to M.yieldActionIconSize instead of
-    -- M.yieldActionIconPoints, and falls back to that sample-crystal
-    -- diamond when the image failed to load.
-    local yieldActionIconImagePath = "assets/effects/shop_yield_action.png"
-    local yieldActionIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, yieldActionIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            yieldActionIconImage = img
-        end
-    end
-    -- assets/effects/shop_ship_action.png is the ComfyUI-generated
-    -- EARTH SHOP ship compact-action dart
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as yieldActionIconImagePath.
-    -- :draw() scales it to M.shipActionIconSize instead of
-    -- M.shipActionIconPoints, and falls back to that ship-dart
-    -- polygon when the image failed to load.
-    local shipActionIconImagePath = "assets/effects/shop_ship_action.png"
-    local shipActionIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shipActionIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shipActionIconImage = img
-        end
-    end
-    -- assets/effects/shop_stats.png is the ComfyUI-generated
-    -- EARTH SHOP nextLaunch.stats hull-plate
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as shipActionIconImagePath.
-    -- :draw() scales it to M.statsIconSize instead of
-    -- M.statsIconPoints, and falls back to that hull-plate
-    -- hexagon when the image failed to load.
-    local statsIconImagePath = "assets/effects/shop_stats.png"
-    local statsIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, statsIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            statsIconImage = img
-        end
-    end
-    -- assets/effects/shop_hull_status.png is the ComfyUI-generated
-    -- EARTH SHOP hullStatus coin hexagon
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as statsIconImagePath.
-    -- :draw() scales it to M.hullStatusIconSize instead of
-    -- M.hullStatusIconPoints, and falls back to that coin
-    -- hexagon when the image failed to load.
-    local hullStatusIconImagePath = "assets/effects/shop_hull_status.png"
-    local hullStatusIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, hullStatusIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            hullStatusIconImage = img
-        end
-    end
-    -- assets/effects/shop_steering_status.png is the ComfyUI-generated
-    -- EARTH SHOP steeringStatus gyro-coin octagon
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as hullStatusIconImagePath.
-    -- :draw() scales it to M.steeringStatusIconSize instead of
-    -- M.steeringStatusIconPoints, and falls back to that gyro-coin
-    -- octagon when the image failed to load.
-    local steeringStatusIconImagePath = "assets/effects/shop_steering_status.png"
-    local steeringStatusIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, steeringStatusIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            steeringStatusIconImage = img
-        end
-    end
-    -- assets/effects/shop_yield_status.png is the ComfyUI-generated
-    -- EARTH SHOP yieldStatus crystal-coin hexagon
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as steeringStatusIconImagePath.
-    -- :draw() scales it to M.yieldStatusIconSize instead of
-    -- M.yieldStatusIconPoints, and falls back to that crystal-coin
-    -- hexagon when the image failed to load.
-    local yieldStatusIconImagePath = "assets/effects/shop_yield_status.png"
-    local yieldStatusIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, yieldStatusIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            yieldStatusIconImage = img
-        end
-    end
-    -- assets/effects/shop_ship_status.png is the ComfyUI-generated
-    -- EARTH SHOP shipStatus ship-coin diamond
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as yieldStatusIconImagePath.
-    -- :draw() scales it to M.shipStatusIconSize instead of
-    -- M.shipStatusIconPoints, and falls back to that ship-coin
-    -- diamond when the image failed to load.
-    local shipStatusIconImagePath = "assets/effects/shop_ship_status.png"
-    local shipStatusIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shipStatusIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shipStatusIconImage = img
-        end
-    end
-    -- assets/effects/shop_hull_preview.png is the ComfyUI-generated
-    -- EARTH SHOP hullPreviewCompact layered hull-plate
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as shipStatusIconImagePath.
-    -- :draw() scales it to M.hullPreviewIconSize instead of
-    -- M.hullPreviewIconPoints, and falls back to that house-plate
-    -- polygon when the image failed to load.
-    local hullPreviewIconImagePath = "assets/effects/shop_hull_preview.png"
-    local hullPreviewIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, hullPreviewIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            hullPreviewIconImage = img
-        end
-    end
-    -- assets/effects/shop_steering_preview.png is the ComfyUI-generated
-    -- EARTH SHOP steeringPreviewCompact gyro-star
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as hullPreviewIconImagePath.
-    -- :draw() scales it to M.steeringPreviewIconSize instead of
-    -- M.steeringPreviewIconPoints, and falls back to that 4-point
-    -- gyro-star when the image failed to load.
-    local steeringPreviewIconImagePath = "assets/effects/shop_steering_preview.png"
-    local steeringPreviewIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, steeringPreviewIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            steeringPreviewIconImage = img
-        end
-    end
-    -- assets/effects/shop_yield_preview.png is the ComfyUI-generated
-    -- EARTH SHOP yieldPreview faceted sample-crystal
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as steeringPreviewIconImagePath.
-    -- :draw() scales it to M.yieldPreviewIconSize instead of
-    -- M.yieldPreviewIconPoints, and falls back to that cut-gem
-    -- hexagon when the image failed to load.
-    local yieldPreviewIconImagePath = "assets/effects/shop_yield_preview.png"
-    local yieldPreviewIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, yieldPreviewIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            yieldPreviewIconImage = img
-        end
-    end
-    -- assets/effects/shop_ship_preview.png is the ComfyUI-generated
-    -- EARTH SHOP shipPreviewCompact arrowhead scout-hull
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as yieldPreviewIconImagePath.
-    -- :draw() scales it to M.shipPreviewIconSize instead of
-    -- M.shipPreviewIconPoints, and falls back to that notched
-    -- dart when the image failed to load.
-    local shipPreviewIconImagePath = "assets/effects/shop_ship_preview.png"
-    local shipPreviewIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, shipPreviewIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            shipPreviewIconImage = img
-        end
-    end
-    -- assets/effects/shop_next_ship.png is the ComfyUI-generated
-    -- EARTH SHOP nextLaunch.ship hangar-roof pentagon
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as shipPreviewIconImagePath.
-    -- :draw() scales it to M.nextShipIconSize instead of
-    -- M.nextShipIconPoints, and falls back to that house
-    -- pentagon when the image failed to load.
-    local nextShipIconImagePath = "assets/effects/shop_next_ship.png"
-    local nextShipIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, nextShipIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            nextShipIconImage = img
-        end
-    end
-    -- assets/effects/loadout_ship.png is the ComfyUI-generated
-    -- LAUNCH LOADOUT loadout.ship hexagonal nameplate
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as nextShipIconImagePath.
-    -- :draw() scales it to M.loadoutShipIconSize instead of
-    -- M.loadoutShipIconPoints, and falls back to that hexagon
-    -- when the image failed to load.
-    local loadoutShipIconImagePath = "assets/effects/loadout_ship.png"
-    local loadoutShipIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, loadoutShipIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            loadoutShipIconImage = img
-        end
-    end
-    -- assets/effects/destroyed_next_ship.png is the ComfyUI-generated
-    -- destroyed-phase next_ship_line restart-hull dart
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as loadoutShipIconImagePath.
-    -- :draw() scales it to M.destroyedNextShipIconSize instead of
-    -- M.destroyedNextShipIconPoints, and falls back to that notched
-    -- dart when the image failed to load.
-    local destroyedNextShipIconImagePath = "assets/effects/destroyed_next_ship.png"
-    local destroyedNextShipIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedNextShipIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedNextShipIconImage = img
-        end
-    end
-    -- assets/effects/destroyed_tap_start_over.png is the ComfyUI-generated
-    -- destroyed-phase tap_start_over restart-loop hexagon
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as destroyedNextShipIconImagePath.
-    -- :draw() scales it to M.destroyedTapStartOverIconSize instead of
-    -- M.destroyedTapStartOverIconPoints, and falls back to that hexagon
-    -- when the image failed to load.
-    local destroyedTapStartOverIconImagePath = "assets/effects/destroyed_tap_start_over.png"
-    local destroyedTapStartOverIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedTapStartOverIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedTapStartOverIconImage = img
-        end
-    end
-    -- assets/effects/destroyed_lost_total.png is the ComfyUI-generated
-    -- destroyed-phase lost_total_line cracked-coin octagon
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as destroyedTapStartOverIconImagePath.
-    -- :draw() scales it to M.destroyedLostTotalIconSize instead of
-    -- M.destroyedLostTotalIconPoints, and falls back to that octagon
-    -- when the image failed to load.
-    local destroyedLostTotalIconImagePath = "assets/effects/destroyed_lost_total.png"
-    local destroyedLostTotalIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedLostTotalIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedLostTotalIconImage = img
-        end
-    end
-    -- assets/effects/destroyed_samples_settlement.png is the ComfyUI-generated
-    -- destroyed-phase samples_settlement_line hexagonal sample-crystal
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as destroyedLostTotalIconImagePath.
-    -- :draw() scales it to M.destroyedSamplesSettlementIconSize instead of
-    -- M.destroyedSamplesSettlementIconPoints, and falls back to that hexagon
-    -- when the image failed to load.
-    local destroyedSamplesSettlementIconImagePath = "assets/effects/destroyed_samples_settlement.png"
-    local destroyedSamplesSettlementIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedSamplesSettlementIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedSamplesSettlementIconImage = img
-        end
-    end
-    -- assets/effects/destroyed_spins_settlement.png is the ComfyUI-generated
-    -- destroyed-phase spins_settlement_line slot-reel barrel
-    -- (docs/GENERATED_ASSET_LOG.md). Same always-set-path /
-    -- graphics-gated image pattern as destroyedSamplesSettlementIconImagePath.
-    -- :draw() scales it to M.destroyedSpinsSettlementIconSize instead of
-    -- M.destroyedSpinsSettlementIconPoints, and falls back to that barrel
-    -- when the image failed to load.
-    local destroyedSpinsSettlementIconImagePath = "assets/effects/destroyed_spins_settlement.png"
-    local destroyedSpinsSettlementIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedSpinsSettlementIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedSpinsSettlementIconImage = img
-        end
-    end
-    -- Destroyed-phase peak_dist_line icon: mountain-peak silhouette
-    -- (docs/feedback/INBOX.md icon-based HUD follow-on). Same always-set-path
-    -- + graphics-gated image pattern as destroyedSpinsSettlementIconImagePath.
-    local destroyedPeakDistIconImagePath = "assets/effects/destroyed_peak_dist.png"
-    local destroyedPeakDistIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedPeakDistIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedPeakDistIconImage = img
-        end
-    end
-    -- Destroyed-phase newbest_label icon: star-burst silhouette
-    -- (docs/feedback/INBOX.md icon-based HUD follow-on). Same always-set-path
-    -- + graphics-gated image pattern as destroyedPeakDistIconImagePath.
-    local destroyedNewBestIconImagePath = "assets/effects/destroyed_new_best.png"
-    local destroyedNewBestIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedNewBestIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedNewBestIconImage = img
-        end
-    end
-    -- Destroyed-phase meta_reset_line icon: cyclic-arrow silhouette
-    -- (docs/feedback/INBOX.md icon-based HUD follow-on). Same always-set-path
-    -- + graphics-gated image pattern as destroyedNewBestIconImagePath.
-    local destroyedMetaResetIconImagePath = "assets/effects/destroyed_meta_reset.png"
-    local destroyedMetaResetIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, destroyedMetaResetIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            destroyedMetaResetIconImage = img
-        end
-    end
-    -- Settlement-phase peak_dist_line icon: reuses the same mountain-peak
-    -- sprite as destroyed_peak_dist.png (identical visual intent).
-    -- always-set-path + graphics-gated image pattern (TDD: testSettlementPeakDistIconSprite).
-    local settlementPeakDistIconImagePath = "assets/effects/destroyed_peak_dist.png"
-    local settlementPeakDistIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, settlementPeakDistIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            settlementPeakDistIconImage = img
-        end
-    end
-    -- Settlement-phase newbest_label icon: reuses the same star-burst
-    -- sprite as destroyed_new_best.png (identical visual intent).
-    -- always-set-path + graphics-gated image pattern (TDD: testSettlementNewBestIconSprite).
-    local settlementNewBestIconImagePath = "assets/effects/destroyed_new_best.png"
-    local settlementNewBestIconImage = nil
-    if love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, settlementNewBestIconImagePath)
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            settlementNewBestIconImage = img
-        end
+        love.graphics.setFont(fonts.get(14))
     end
     return setmetatable({
         ship = ship,
-        shipImage = shipImage,
-        shipImagePath = shipImagePath,
-        planetImage = planetImage,
-        planetImagePath = planetImagePath,
-        earthImage = earthImage,
-        earthImagePath = earthImagePath,
-        backgroundImage = backgroundImage,
-        backgroundImagePath = backgroundImagePath,
-        sampleEffectImage = sampleEffectImage,
-        sampleEffectImagePath = sampleEffectImagePath,
-        slotSymbolImages = slotSymbolImages,
-        slotSymbolImagePaths = slotSymbolImagePaths,
-        shopIconImages = shopIconImages,
-        shopIconImagePaths = shopIconImagePaths,
-        debrisImages = debrisImages,
-        debrisImagePaths = debrisImagePaths,
-        planetTwinkleImage = planetTwinkleImage,
-        planetTwinkleImagePath = planetTwinkleImagePath,
-        collisionEffectImage = collisionEffectImage,
-        collisionEffectImagePath = collisionEffectImagePath,
-        thrustEffectImage = thrustEffectImage,
-        thrustEffectImagePath = thrustEffectImagePath,
-        planetGlowImage = planetGlowImage,
-        planetGlowImagePath = planetGlowImagePath,
-        planetShadowImage = planetShadowImage,
-        planetShadowImagePath = planetShadowImagePath,
-        minimapDiscImage = minimapDiscImage,
-        minimapDiscImagePath = minimapDiscImagePath,
-        joystickPadImage = joystickPadImage,
-        joystickPadImagePath = joystickPadImagePath,
-        joystickKnobImage = joystickKnobImage,
-        joystickKnobImagePath = joystickKnobImagePath,
-        cashIconImage = cashIconImage,
-        cashIconImagePath = cashIconImagePath,
-        hullIconImage = hullIconImage,
-        hullIconImagePath = hullIconImagePath,
-        speedIconImage = speedIconImage,
-        speedIconImagePath = speedIconImagePath,
-        checkpointStarImage = checkpointStarImage,
-        checkpointStarImagePath = checkpointStarImagePath,
-        checkpointArrowImage = checkpointArrowImage,
-        checkpointArrowImagePath = checkpointArrowImagePath,
-        playerMarkerImage = playerMarkerImage,
-        playerMarkerImagePath = playerMarkerImagePath,
-        sunMarkerImage = sunMarkerImage,
-        sunMarkerImagePath = sunMarkerImagePath,
-        earthMarkerImage = earthMarkerImage,
-        earthMarkerImagePath = earthMarkerImagePath,
-        galaxyHomeMarkerImage = galaxyHomeMarkerImage,
-        galaxyHomeMarkerImagePath = galaxyHomeMarkerImagePath,
-        galaxyPlainMarkerImage = galaxyPlainMarkerImage,
-        galaxyPlainMarkerImagePath = galaxyPlainMarkerImagePath,
-        earthReturnMarkerImage = earthReturnMarkerImage,
-        earthReturnMarkerImagePath = earthReturnMarkerImagePath,
-        spiralArmImage = spiralArmImage,
-        spiralArmImagePath = spiralArmImagePath,
-        orbitRingImage = orbitRingImage,
-        orbitRingImagePath = orbitRingImagePath,
-        galaxyRingImage = galaxyRingImage,
-        galaxyRingImagePath = galaxyRingImagePath,
-        hubPlanetImage = hubPlanetImage,
-        hubPlanetImagePath = hubPlanetImagePath,
-        shopPlanetImage = shopPlanetImage,
-        shopPlanetImagePath = shopPlanetImagePath,
-        hudPanelImage = hudPanelImage,
-        hudPanelImagePath = hudPanelImagePath,
-        loadoutPanelImage = loadoutPanelImage,
-        loadoutPanelImagePath = loadoutPanelImagePath,
-        shopPanelImage = shopPanelImage,
-        shopPanelImagePath = shopPanelImagePath,
-        destroyedPanelImage = destroyedPanelImage,
-        destroyedPanelImagePath = destroyedPanelImagePath,
-        slotResultPanelImage = slotResultPanelImage,
-        slotResultPanelImagePath = slotResultPanelImagePath,
-        slotSpinButtonImage = slotSpinButtonImage,
-        slotSpinButtonImagePath = slotSpinButtonImagePath,
-        specimenBannerImage = specimenBannerImage,
-        specimenBannerImagePath = specimenBannerImagePath,
-        settlementSummaryPanelImage = settlementSummaryPanelImage,
-        settlementSummaryPanelImagePath = settlementSummaryPanelImagePath,
-        shopTouchRowImage = shopTouchRowImage,
-        shopTouchRowImagePath = shopTouchRowImagePath,
-        planetRimImage = planetRimImage,
-        planetRimImagePath = planetRimImagePath,
-        starPointImage = starPointImage,
-        starPointImagePath = starPointImagePath,
-        shipSilhouetteImage = shipSilhouetteImage,
-        shipSilhouetteImagePath = shipSilhouetteImagePath,
-        launchRocketImage = launchRocketImage,
-        launchRocketImagePath = launchRocketImagePath,
-        scoutShipImage = scoutShipImage,
-        scoutShipImagePath = scoutShipImagePath,
-        distanceIconImage = distanceIconImage,
-        distanceIconImagePath = distanceIconImagePath,
-        bestIconImage = bestIconImage,
-        bestIconImagePath = bestIconImagePath,
-        samplesIconImage = samplesIconImage,
-        samplesIconImagePath = samplesIconImagePath,
-        galaxyIconImage = galaxyIconImage,
-        galaxyIconImagePath = galaxyIconImagePath,
-        returnIconImage = returnIconImage,
-        returnIconImagePath = returnIconImagePath,
-        earthIconImage = earthIconImage,
-        earthIconImagePath = earthIconImagePath,
-        sampleValueIconImage = sampleValueIconImage,
-        sampleValueIconImagePath = sampleValueIconImagePath,
-        riskIconImage = riskIconImage,
-        riskIconImagePath = riskIconImagePath,
-        floatingSampleIconImage = floatingSampleIconImage,
-        floatingSampleIconImagePath = floatingSampleIconImagePath,
-        floatingDamageIconImage = floatingDamageIconImage,
-        floatingDamageIconImagePath = floatingDamageIconImagePath,
-        messageBannerIconImage = messageBannerIconImage,
-        messageBannerIconImagePath = messageBannerIconImagePath,
-        shopTitleIconImage = shopTitleIconImage,
-        shopTitleIconImagePath = shopTitleIconImagePath,
-        destroyedTitleIconImage = destroyedTitleIconImage,
-        destroyedTitleIconImagePath = destroyedTitleIconImagePath,
-        relaunchIconImage = relaunchIconImage,
-        relaunchIconImagePath = relaunchIconImagePath,
-        hullActionIconImage = hullActionIconImage,
-        hullActionIconImagePath = hullActionIconImagePath,
-        steeringActionIconImage = steeringActionIconImage,
-        steeringActionIconImagePath = steeringActionIconImagePath,
-        yieldActionIconImage = yieldActionIconImage,
-        yieldActionIconImagePath = yieldActionIconImagePath,
-        shipActionIconImage = shipActionIconImage,
-        shipActionIconImagePath = shipActionIconImagePath,
-        statsIconImage = statsIconImage,
-        statsIconImagePath = statsIconImagePath,
-        hullStatusIconImage = hullStatusIconImage,
-        hullStatusIconImagePath = hullStatusIconImagePath,
-        steeringStatusIconImage = steeringStatusIconImage,
-        steeringStatusIconImagePath = steeringStatusIconImagePath,
-        yieldStatusIconImage = yieldStatusIconImage,
-        yieldStatusIconImagePath = yieldStatusIconImagePath,
-        shipStatusIconImage = shipStatusIconImage,
-        shipStatusIconImagePath = shipStatusIconImagePath,
-        hullPreviewIconImage = hullPreviewIconImage,
-        hullPreviewIconImagePath = hullPreviewIconImagePath,
-        steeringPreviewIconImage = steeringPreviewIconImage,
-        steeringPreviewIconImagePath = steeringPreviewIconImagePath,
-        yieldPreviewIconImage = yieldPreviewIconImage,
-        yieldPreviewIconImagePath = yieldPreviewIconImagePath,
-        shipPreviewIconImage = shipPreviewIconImage,
-        shipPreviewIconImagePath = shipPreviewIconImagePath,
-        nextShipIconImage = nextShipIconImage,
-        nextShipIconImagePath = nextShipIconImagePath,
-        loadoutShipIconImage = loadoutShipIconImage,
-        loadoutShipIconImagePath = loadoutShipIconImagePath,
-        destroyedNextShipIconImage = destroyedNextShipIconImage,
-        destroyedNextShipIconImagePath = destroyedNextShipIconImagePath,
-        destroyedTapStartOverIconImage = destroyedTapStartOverIconImage,
-        destroyedTapStartOverIconImagePath = destroyedTapStartOverIconImagePath,
-        destroyedLostTotalIconImage = destroyedLostTotalIconImage,
-        destroyedLostTotalIconImagePath = destroyedLostTotalIconImagePath,
-        destroyedSamplesSettlementIconImage = destroyedSamplesSettlementIconImage,
-        destroyedSamplesSettlementIconImagePath = destroyedSamplesSettlementIconImagePath,
-        destroyedSpinsSettlementIconImage = destroyedSpinsSettlementIconImage,
-        destroyedSpinsSettlementIconImagePath = destroyedSpinsSettlementIconImagePath,
-        destroyedPeakDistIconImage = destroyedPeakDistIconImage,
-        destroyedPeakDistIconImagePath = destroyedPeakDistIconImagePath,
-        destroyedNewBestIconImage = destroyedNewBestIconImage,
-        destroyedNewBestIconImagePath = destroyedNewBestIconImagePath,
-        destroyedMetaResetIconImage = destroyedMetaResetIconImage,
-        destroyedMetaResetIconImagePath = destroyedMetaResetIconImagePath,
-        settlementPeakDistIconImage = settlementPeakDistIconImage,
-        settlementPeakDistIconImagePath = settlementPeakDistIconImagePath,
-        settlementNewBestIconImage = settlementNewBestIconImage,
-        settlementNewBestIconImagePath = settlementNewBestIconImagePath,
-        specimenImages = loadSpecimenImages(),
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
-        lastKnownBestAltitude = altitudeStore:load(),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
         collectedSpecimens = specimenStore:load(),
@@ -3241,15 +568,29 @@ function M.new(options)
         shipPunch = 0,
         shipShake = 0,
         shipShakeMagnitude = sampleTierShakeMultiplier("common"),
-        distancePunch = 0,
-        slotSpin = nil,
         touches = {},
         verticalOffset = 0,
         rcsCooldown = 0,
-        dockedShopPlanetId = nil,
-        dockedShopGalaxyId = nil,
         message = i18n.t("launch_tap_to_launch"),
+        -- Item 15(b): Earth shop slot state. Holds the last earthSlotSpin
+        -- result during the settlement phase so draw() can render it.
+        earthShopSlotResult = nil,
+        -- Item 7(c): Earth shop gear offer. Rolled once on settlement entry;
+        -- cleared on purchase or relaunch.
+        earthShopGearOffer = nil,
     }, M)
+end
+
+-- Item 15(c): earthSlotSpin returns rewardProfile as a plain string
+-- ("solar"/"fringe"/"void"), not a table. Format it as an uppercase
+-- "SOLAR ODDS" badge for the Earth shop slot UI. Returns nil when there
+-- is no profile so draw() can skip the badge without a `.name` lookup
+-- that would always be nil on a string.
+function M.earthSlotProfileLabel(rewardProfile)
+    if type(rewardProfile) ~= "string" or rewardProfile == "" then
+        return nil
+    end
+    return string.upper(rewardProfile) .. " ODDS"
 end
 
 -- Spawns a tier-scaled burst of short-lived particles at (x, y) using the
@@ -3271,91 +612,96 @@ function M:spawnSampleParticles(x, y, tier)
             r = r,
             g = g,
             b = b,
-            kind = "sample",
         })
     end
     self.shipPunch = shipPunchDuration
-end
-
--- Short orange/red burst at a hull impact. Distinct from sample-pickup
--- sparkles so collision reads as damage, not a collect.
-function M:spawnCollisionParticles(x, y)
-    local count = 10
-    for i = 1, count do
-        local angle = (i / count) * math.pi * 2 + math.random() * 0.4
-        local speed = 50 + math.random() * 60
-        table.insert(self.particles, {
-            x = x,
-            y = y,
-            vx = math.cos(angle) * speed,
-            vy = math.sin(angle) * speed,
-            timer = 0.4,
-            maxTimer = 0.4,
-            r = 1,
-            g = 0.45,
-            b = 0.2,
-            kind = "collision",
-        })
-    end
 end
 
 function M:persistBestAltitude()
     return self.bestAltitudeStore:save(self.expedition.bestAltitude)
 end
 
--- Draws the compact "탐험 도감" (specimen log) strip: one small square per
--- catalog entry (9 total), filled with its tier color plus a soft glow
--- (Balatro-style card rim glow, scaled down) when discovered, and a dim
--- outline placeholder when not. A small "SPECIMENS n/9" label sits above
--- the row so the strip reads as a collection, not a random decoration.
--- Placed over the open starfield/Earth view above the LAUNCH LOADOUT
--- card so exploration trophies decorate the otherwise-empty space under
--- the title screen without competing with any HUD or loadout text.
-function M:drawSpecimenStrip(y)
-    local catalog = world.specimenCatalog()
-    local box = 32
-    local gap = 12
-    local totalWidth = #catalog * box + (#catalog - 1) * gap
+-- Draws equipped gear slots (Item 6): up to 6 hull parts and 3 engine parts
+-- displayed as Balatro-style card icons in the launch screen, replacing the
+-- old specimen log.
+function M:drawGearSlots(y)
+    local hullSlots = 6
+    local engineSlots = 3
+    local boxW = 10
+    local boxH = 14
+    local gap = 3
+    local groupGap = 8
+    
+    local run = self.expedition
+    local hullGear = run.equippedGear or {}
+    local engineGear = run.equippedEngineParts or {}
+
+    local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
     local startX = math.floor((viewport.width - totalWidth) / 2)
-    self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
+    
+    self.tinyFont = self.tinyFont or fonts.get(7)
     local previousFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)
-    local found = self:specimenProgress()
-    love.graphics.setColor(0.55, 0.65, 0.85, 0.9)
-    love.graphics.printf(i18n.t("specimens_count_label", found, #catalog),
-        0, y - 40, viewport.width, "center")
-    for i, entry in ipairs(catalog) do
-        local x = startX + (i - 1) * (box + gap)
-        local sprite = self.specimenImages and self.specimenImages[entry.id]
-        if sprite then
-            if self.collectedSpecimens[entry.id] then
-                love.graphics.setColor(1, 1, 1, 1)
+    
+    for i = 1, hullSlots do
+        local x = startX + (i - 1) * (boxW + gap)
+        local part = hullGear[i]
+        if part then
+            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
+            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1)
+            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
+            else love.graphics.setColor(0.7, 0.7, 0.7) end
+            love.graphics.rectangle("fill", x, y, boxW, boxH)
+            
+            love.graphics.setColor(1, 1, 1, 0.5)
+            local pts = M.shieldIconPoints(x + boxW/2, y + boxH/2, 4)
+            if pts then love.graphics.polygon("fill", pts) end
+            
+            if part.edition and part.edition ~= "base" then
+                love.graphics.setColor(1, 1, 0.5, 0.8)
+                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
             else
-                love.graphics.setColor(1, 1, 1, 0.28)
+                love.graphics.setColor(0.1, 0.1, 0.1, 1)
+                love.graphics.rectangle("line", x, y, boxW, boxH)
             end
-            love.graphics.draw(sprite, x, y, 0, box / sprite:getWidth(), box / sprite:getHeight())
-        elseif self.collectedSpecimens[entry.id] then
-            local r, g, b = sampleTierColor(entry.tier)
-            love.graphics.setColor(r, g, b, 0.35)
-            love.graphics.rectangle("fill", x - 2, y - 2, box + 4, box + 4)
-            love.graphics.setColor(r, g, b, 1)
-            love.graphics.rectangle("fill", x, y, box, box)
         else
             love.graphics.setColor(0.3, 0.35, 0.45, 0.6)
-            love.graphics.rectangle("line", x, y, box, box)
+            love.graphics.rectangle("line", x, y, boxW, boxH)
         end
     end
-    love.graphics.setFont(previousFont)
-end
-
--- Count of specimen kinds discovered out of the full 9-entry catalog.
-function M:specimenProgress()
-    local total = 0
-    local catalog = world.specimenCatalog()
-    for _, entry in ipairs(catalog) do
-        if self.collectedSpecimens[entry.id] then total = total + 1 end
+    
+    local engineStartX = startX + (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap
+    
+    for i = 1, engineSlots do
+        local x = engineStartX + (i - 1) * (boxW + gap)
+        local part = engineGear[i]
+        if part then
+            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
+            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1)
+            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
+            else love.graphics.setColor(0.7, 0.7, 0.7) end
+            love.graphics.rectangle("fill", x, y, boxW, boxH)
+            
+            love.graphics.setColor(1, 1, 1, 0.5)
+            local pts = M.rocketIconPoints(x + boxW/2, y + boxH/2, 4)
+            if pts then love.graphics.polygon("fill", pts) end
+            
+            if part.edition and part.edition ~= "base" then
+                love.graphics.setColor(1, 1, 0.5, 0.8)
+                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
+            else
+                love.graphics.setColor(0.1, 0.1, 0.1, 1)
+                love.graphics.rectangle("line", x, y, boxW, boxH)
+            end
+        else
+            love.graphics.setColor(0.45, 0.35, 0.3, 0.6)
+            love.graphics.rectangle("line", x, y, boxW, boxH)
+        end
     end
-    return total, #catalog
+    
+    love.graphics.setColor(0.6, 0.7, 0.8, 0.9)
+    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 10, viewport.width, "center")
+    love.graphics.setFont(previousFont)
 end
 
 function M:collisionRisk(planet)
@@ -3413,20 +759,20 @@ function M:hudLines()
         best = best,
         earth = earth,
         returnProgress = returnProgress,
-        -- docs/feedback/INBOX.md UI/HUD item 4: the slot forecast (S%02d)
-        -- is always 0 until a return trip starts ("LAUNCH S00" / "ASCEND
-        -- S00" / "SETTLE S00" read as confusing dead weight), so drop that
-        -- segment except during returning, where remaining chances are live.
-        status = run.phase == "returning"
-            and i18n.t("hud_status", run.durability,
-                run.maxDurability, i18n.phaseAbbrev(run.phase), run.slotOpportunities)
-            or i18n.t("hud_status_no_slots", run.durability,
-                run.maxDurability, i18n.phaseAbbrev(run.phase)),
+        -- docs/feedback/INBOX.md UI/HUD item 4: the launch phase's slot
+        -- forecast (S%02d) is always 0 because no return trip has
+        -- Item 11: both launch and non-launch phases now use the same
+        -- hud_status_no_slots format — the S%02d slot segment was removed
+        -- from hud_status since item-15 abolished in-flight slots and
+        -- slotOpportunities is always 0 (dead/misleading UI).
+        status = i18n.t("hud_status_no_slots", run.durability,
+            run.maxDurability, i18n.phaseAbbrev(run.phase)),
         galaxy = (run.phase == "ascending" or run.phase == "returning" or run.phase == "launch")
-            and world.galaxyName(world.galaxyContaining(self.ship.x, self.ship.y))
+            and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name
             or nil,
     }
 end
+
 
 function M:loadoutLines()
     local run = self.expedition
@@ -3444,24 +790,12 @@ function M:loadoutLines()
         -- it is the single default STARTER hull).
         shipLabel = string.upper(run.selectedShipId),
         stats = i18n.t("stats_line", run.maxDurability),
-        -- docs/feedback/INBOX.md UI 대개편 6건 item 2: the "HULL LV.n" line
-        -- is dropped entirely -- hull durability will be shown persistently
-        -- top-left (item 3's card layout) instead of duplicated here.
+        upgrades = i18n.t("upgrades_line",
+            run.durabilityUpgradeLevel),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
     }
 end
 
--- Pure helper for the returning-phase slot result WIN line so tests can
--- pin the copy without drawing. Fuel-bonus wins use the pending-money
--- line; leftover fuel-reward copy keys are gone.
-function M.slotWinLine(run)
-    if run.lastSlotRepair and run.lastSlotRepair > 0 then
-        return i18n.t("win_repair_line", run.lastSlotReward, run.lastSlotRepair)
-    elseif run.lastSlotSampleBonus and run.lastSlotSampleBonus > 0 then
-        return i18n.t("win_sample_line", run.lastSlotReward, run.lastSlotSampleBonus)
-    end
-    return i18n.t("win_pending_line", run.lastSlotReward, run.pendingSlotReward)
-end
 
 local function purchaseStatus(money, cost)
     if money >= cost then return i18n.t("purchase_left", money - cost), true end
@@ -3476,25 +810,18 @@ end
 -- "GAINS <label> <value>" / "LOSSES <label> <value>" numeric format the
 -- planet-style-editor tool uses for its GAINS/LOSSES rows, so future
 -- per-planet-style risk/reward can reuse the same on-screen convention.
--- Returned as short lines (rather than one combined line) because the
+-- Returned as two short lines (rather than one combined line) because the
 -- combined string measures 176px at the shop's small font, wider than the
 -- 148px full-width shop column (measured via GAME_FONTPROBE=1) and would
 -- wrap and overlap the next row.
--- Fuel-labeled gains are omitted from the UI: fuel no longer constrains
--- flight, so "+40 FUEL" is leftover advertising. expedition.shipTradeoff
--- itself is left unchanged (econ / item 10 owns engine redefinition).
 function M.scoutTradeoffLines(run)
     local tradeoff = expedition.shipTradeoff(run, "scout")
-    local lines = {}
     local gain = tradeoff.gains[1]
-    if gain and string.upper(tostring(gain.label)) ~= "FUEL" then
-        lines[#lines + 1] = i18n.t("scout_gains_line", gain.value, gain.label)
-    end
     local loss = tradeoff.losses[1]
-    if loss then
-        lines[#lines + 1] = i18n.t("scout_losses_line", loss.value, loss.label)
-    end
-    return lines
+    return {
+        i18n.t("scout_gains_line", gain.value, gain.label),
+        i18n.t("scout_losses_line", loss.value, loss.label),
+    }
 end
 
 function M:shopLoadoutLines()
@@ -3533,8 +860,8 @@ function M:shopLoadoutLines()
     return {
         ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
         stats = i18n.t("stats_line", run.maxDurability),
-        -- docs/feedback/INBOX.md UI 대개편 6건 item 2: "HULL LV.n" dropped
-        -- (see M:loadoutLines() above for rationale).
+        upgrades = i18n.t("upgrades_line",
+            run.durabilityUpgradeLevel),
         scoutTradeoff = self.scoutTradeoffLines(run),
         shipAction = shipAction,
         shipActionCompact = shipActionCompact,
@@ -3577,97 +904,6 @@ function M:shopLoadoutLines()
     }
 end
 
-function M:slotButtonState()
-    local chances = self.expedition.slotOpportunities
-    if self.slotSpin then
-        return { enabled = false, label = i18n.t("slot_spinning_label"), compactLabel = i18n.t("spinning_compact") }
-    end
-    if self.expedition.phase ~= "returning" or chances <= 0 then
-        return { enabled = false, label = i18n.t("no_slot_chances_label"), compactLabel = i18n.t("no_slots_compact") }
-    end
-    return {
-        enabled = true,
-        label = i18n.t("slot_spin_prompt", chances),
-        compactLabel = i18n.t("spin_compact_label", chances),
-    }
-end
-
-function M:beginSlotSpin()
-    self.slotSpin = {
-        elapsed = 0,
-        reelStagger = slotReelStagger,
-        duration = slotSpinDuration,
-        symbols = self.expedition.lastSlotSymbols,
-        reward = self.expedition.lastSlotReward,
-        repair = self.expedition.lastSlotRepair,
-        fuelBonus = self.expedition.lastSlotFuelBonus,
-        sampleBonus = self.expedition.lastSlotSampleBonus,
-        opportunitiesAfter = self.expedition.slotOpportunities,
-    }
-    self.message = i18n.t("slot_spinning_label")
-end
-
-function M:currentSlotReels()
-    if not self.slotSpin then
-        return self.expedition.lastSlotSymbols
-    end
-    local reels = {}
-    for i = 1, 3 do
-        local stopTime = i * self.slotSpin.reelStagger
-        if self.slotSpin.elapsed >= stopTime then
-            reels[i] = self.slotSpin.symbols[i]
-        else
-            local cycle = math.floor(self.slotSpin.elapsed * 12) + i
-            reels[i] = expedition.slotSymbols[(cycle % #expedition.slotSymbols) + 1]
-        end
-    end
-    return reels
-end
-
--- docs/feedback/INBOX.md 처리대기 항목 "ComfyUI로 실제 에셋 작업 진행": draws
--- the returning-phase slot-machine reel using the ComfyUI-generated
--- comet/planet/star icons (self.slotSymbolImages) instead of the plain
--- "COMET  PLANET  STAR" text row, falling back to text per-symbol whenever
--- an icon failed to load (same fallback pattern as ship/planet/earth
--- sprites elsewhere in this file). (boxX, boxY, boxW) matches the same
--- printf box the old text reel used so callers don't need to change.
-local slotReelIconSize = 48
-function M:drawSlotReel(symbols, boxX, boxY, boxW)
-    local gap = 16
-    local totalWidth = #symbols * slotReelIconSize + (#symbols - 1) * gap
-    local startX = boxX + math.floor((boxW - totalWidth) / 2)
-    for i, symbol in ipairs(symbols) do
-        local x = startX + (i - 1) * (slotReelIconSize + gap)
-        local image = self.slotSymbolImages and self.slotSymbolImages[symbol]
-        if image then
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(image, x, boxY, 0,
-                slotReelIconSize / image:getWidth(), slotReelIconSize / image:getHeight())
-        else
-            love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(symbol, x - 20, boxY + slotReelIconSize / 2 - 6, slotReelIconSize + 40, "center")
-        end
-    end
-end
-
--- docs/feedback/INBOX.md "ComfyUI로 실제 에셋 작업 진행" 남은 부분 (shop icons):
--- draws a small ComfyUI-generated icon (self.shopIconImages[key]) to the
--- left of an EARTH SHOP row's action text, at (leftX, y) with the row's
--- text vertical center. Silently no-ops when the icon failed to load (same
--- fallback pattern as :drawSlotReel -- the text itself is unaffected either
--- way since this only draws in the margin outside the verified text
--- columns, never repositioning existing printf calls).
-local shopIconSize = 24
-M.shopIconSize = shopIconSize
-function M:drawShopIcon(key, leftX, y)
-    local image = self.shopIconImages and self.shopIconImages[key]
-    if not image then
-        return
-    end
-    love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(image, leftX, y, 0,
-        shopIconSize / image:getWidth(), shopIconSize / image:getHeight())
-end
 
 function M:steeringButtonState()
     local left = love.keyboard.isDown("left", "a")
@@ -3762,7 +998,6 @@ function M:update(dt)
     self:pollDesktopMouse()
     local steering = self:steeringButtonState()
     local previousPhase = self.expedition.phase
-    local previousBestAltitude = self.lastKnownBestAltitude or self.expedition.bestAltitude
     for i = #self.floatingTexts, 1, -1 do
         local ft = self.floatingTexts[i]
         ft.timer = ft.timer - dt
@@ -3790,42 +1025,18 @@ function M:update(dt)
     if self.shipShake > 0 then
         self.shipShake = math.max(0, self.shipShake - dt)
     end
-    if self.distancePunch > 0 then
-        self.distancePunch = math.max(0, self.distancePunch - dt)
-    end
     if self.newSpecimenBannerTimer > 0 then
         self.newSpecimenBannerTimer = math.max(0, self.newSpecimenBannerTimer - dt)
         if self.newSpecimenBannerTimer == 0 then
             self.newSpecimenBanner = nil
         end
     end
-    if self.slotSpin then
-        self.slotSpin.elapsed = self.slotSpin.elapsed + dt
-        if self.slotSpin.elapsed >= self.slotSpin.duration then
-            if self.slotSpin.repair and self.slotSpin.repair > 0 then
-                self.message = i18n.t("slot_result_repair",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.repair,
-                    self.slotSpin.opportunitiesAfter)
-            elseif self.slotSpin.sampleBonus and self.slotSpin.sampleBonus > 0 then
-                self.message = i18n.t("slot_result_sample",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.sampleBonus,
-                    self.slotSpin.opportunitiesAfter)
-            else
-                self.message = i18n.t("slot_result_plain",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.opportunitiesAfter)
-            end
-            self.slotSpin = nil
-        end
+    if self.shopModal then
+        return
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
-        local startOffset = self.verticalOffset
+        local startX, startOffset = self.ship.x, self.verticalOffset
         local thrustAngle = self.ship.angle
         if joyMagnitude > 0 then
             local speed = expedition.steeringSpeed(self.expedition)
@@ -3842,15 +1053,12 @@ function M:update(dt)
                     + ((steering.downActive and 1 or 0) - (steering.upActive and 1 or 0))
                     * speed * dt)
         end
+        local extraDx = self.ship.x - startX
         local extraDy = self.verticalOffset - startOffset
+        local extraDistance = math.sqrt(extraDx * extraDx + extraDy * extraDy)
         local steeringHoriz = (steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0)
         local steeringVert = (steering.downActive and 1 or 0) - (steering.upActive and 1 or 0)
         local thrusting = joyMagnitude > 0 or steeringHoriz ~= 0 or steeringVert ~= 0
-        -- docs/feedback/INBOX.md 항목 11(c): expedition.burnManeuverFuel was a
-        -- dead no-op (fuel is no longer a flight constraint) and has been
-        -- removed from game/expedition.lua; this call site (and the
-        -- extraDx/extraDistance values it alone consumed) is removed too.
-        -- `thrusting` itself is still needed below to gate movement/coast.
         if joyMagnitude > 0 then
             local targetAngle = M.headingFromStick(joyDx, joyDy)
             local delta = shortestAngleDelta(self.ship.angle, targetAngle)
@@ -3881,9 +1089,7 @@ function M:update(dt)
                 self.ship.vy = (self.ship.y - yBeforeThrust) / dt
             end
         elseif previousPhase == "ascending" then
-            -- Coast on stored velocity. Fuel is not a flight constraint
-            -- (docs/feedback/INBOX.md item 11), so there is nothing to
-            -- burn or mirror here regardless of stick/key input.
+            -- Coast on stored velocity.
             self.ship.x = self.ship.x + (self.ship.vx or 0) * dt
             self.ship.y = self.ship.y + (self.ship.vy or 0) * dt
         else
@@ -3898,112 +1104,174 @@ function M:update(dt)
         if thrusting and self.rcsCooldown == 0
             and (math.abs(bank) > 0.12 or math.abs(lift) > 0.12) then
             self.rcsCooldown = 0.045
-            local mag = math.sqrt(bank * bank + lift * lift)
-            local dirX = bank / mag
-            local dirY = lift / mag
-            
-            self.particles[#self.particles + 1] = {
-                x = self.ship.x - dirX * 6 + (math.random() * 4 - 2),
-                y = self.ship.y - dirY * 6 + (math.random() * 4 - 2),
-                vx = -dirX * (16 + math.random() * 10) + (math.random() * 8 - 4),
-                vy = -dirY * (16 + math.random() * 10) + (math.random() * 8 - 4),
-                timer = rcsPuffDuration,
-                maxTimer = rcsPuffDuration,
-                r = 0.7,
-                g = 0.88,
-                b = 1,
-                kind = "thrust",
-            }
+            if math.abs(bank) > 0.12 then
+                local side = bank > 0 and -1 or 1
+                self.particles[#self.particles + 1] = {
+                    x = self.ship.x + side * 6,
+                    y = self.ship.y + 3,
+                    vx = side * (16 + math.random() * 10),
+                    vy = 6 + math.random() * 10,
+                    timer = rcsPuffDuration,
+                    maxTimer = rcsPuffDuration,
+                    r = 0.7,
+                    g = 0.88,
+                    b = 1,
+                }
+            end
+            if math.abs(lift) > 0.12 then
+                -- Opposite vertical jet: stick-down puffs above, stick-up below.
+                local vside = lift > 0 and -1 or 1
+                self.particles[#self.particles + 1] = {
+                    x = self.ship.x + (math.random() * 4 - 2),
+                    y = self.ship.y + vside * 6,
+                    vx = (math.random() * 8 - 4),
+                    vy = vside * (16 + math.random() * 10),
+                    timer = rcsPuffDuration,
+                    maxTimer = rcsPuffDuration,
+                    r = 0.7,
+                    g = 0.88,
+                    b = 1,
+                }
+            end
         end
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
         self:persistBestAltitude()
-        self.message = i18n.t("returning_message", self.expedition.slotOpportunities)
+        -- Item 11/15(a): in-flight slot count removed from returning message.
+        self.message = i18n.t("returning_message")
     elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
         self.message = i18n.t("settled_message", self.expedition.lastSettlement, self.expedition.money)
+        -- Item 7(c): Roll one Earth-shop gear offer on settlement entry.
+        -- Uses gear.earthShopPool to exclude galaxy-exclusive parts (those
+        -- are only obtainable via hub exploration — item 7(b)).
+        if not self.earthShopGearOffer then
+            local gearMod = require("game.gear")
+            local hull = gearMod.loadHullParts() or {}
+            local engine = gearMod.loadEngineParts() or {}
+            local combined = {}
+            for _, p in ipairs(hull) do combined[#combined+1] = p end
+            for _, p in ipairs(engine) do combined[#combined+1] = p end
+            local earthPool = gearMod.earthShopPool(combined)
+            local rolls = {
+                rarity = math.random(),
+                pick = math.random(),
+                editionChance = math.random(),
+                editionPick = math.random(),
+            }
+            self.earthShopGearOffer = expedition.rollGearOffer(self.expedition, earthPool, rolls)
+        end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
-        -- docs/feedback/INBOX.md 처리대기 항목 7-a: re-derive shop-planet
-        -- docking fresh each update from actual proximity rather than only
-        -- clearing it when the same planet reappears in the (radius-1)
-        -- nearbyPlanets scan -- once the ship travels far enough the shop
-        -- planet's sector may drop out of that scan entirely, which must
-        -- still count as "no longer docked".
-        local dockedShopStillNear = false
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
             local distanceSquared = dx * dx + dy * dy
-            -- docs/feedback/INBOX.md 처리대기 항목 8: only ordinary planets
-            -- (not the galaxy's checkpoint hub or shop landmark) award
-            -- samples -- hub/shop docking is handled separately below.
             if self.expedition.phase == "ascending"
-                and not planet.hub and not planet.shop
                 and distanceSquared <= (planet.radius + 14) ^ 2
                 and not self.discovered[planet.id] then
                 self.discovered[planet.id] = true
                 self.discoveredCount = self.discoveredCount + 1
-                local value = world.sampleValue(planet)
-                local hueKey = world.hueFamily(planet.hue or 0).key
-                local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
-                awarded = awarded or value
-                table.insert(self.floatingTexts, {
-                    text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
-                    x = planet.x,
-                    y = planet.y,
-                    timer = 1.0,
-                    kind = "sample",
-                    awarded = awarded,
-                    rollupElapsed = 0,
-                })
-                self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
-                if streakMultiplier and streakMultiplier > 1 then
-                    self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
-                else
-                    self.message = i18n.t("sample_message", awarded, planet.id)
-                end
-                local specimenId, specimenLabel = world.specimenKind(planet)
-                if self.collectionStore:record(specimenId) then
-                    self.collectedSpecimens[specimenId] = true
-                    self.newSpecimenBanner = i18n.t("new_specimen_label", specimenLabel)
-                    self.newSpecimenBannerTimer = 2.0
-                end
-            end
-            -- docs/feedback/INBOX.md 처리대기 항목 7-b/8: docking at a
-            -- galaxy's checkpoint hub planet unconditionally grants that
-            -- galaxy's unique gear part exactly once, and (in the
-            -- ascending phase) immediately settles any pending sample
-            -- value into money without ending the expedition.
-            if planet.hub and distanceSquared <= (planet.radius + 14) ^ 2 then
-                if not self.discovered[planet.id] then
-                    self.discovered[planet.id] = true
-                    local granted, gearId = expedition.exploreCheckpoint(self.expedition, planet.galaxyId)
-                    if granted then
-                        self.message = i18n.t("checkpoint_gear_message", gearId)
-                    end
-                    if self.expedition.phase == "ascending" then
-                        local settled, amount = expedition.checkpointSettle(self.expedition)
-                        if settled and amount > 0 then
-                            self.message = i18n.t("checkpoint_settled_message", amount, self.expedition.money)
+
+                if planet.hub then
+                    if self.expedition.pendingSampleValue > 0 then
+                        local payout = expedition.settleAtHub(self.expedition)
+                        if payout and payout > 0 then
+                            table.insert(self.floatingTexts, {
+                                text = i18n.t("floating_hub_settle", payout),
+                                x = planet.x,
+                                y = planet.y - 20,
+                                timer = 3.0,
+                                kind = "sample",
+                                awarded = payout,
+                                rollupElapsed = 0,
+                            })
                         end
                     end
+                    if not self.expedition.hubExplored[planet.galaxyId] then
+                        local gear = require("game.gear")
+                        local pool = {}
+                        local hull = gear.loadHullParts() or {}
+                        local engine = gear.loadEngineParts() or {}
+                        for _, p in ipairs(hull) do pool[#pool+1] = p end
+                        for _, p in ipairs(engine) do pool[#pool+1] = p end
+                        local drop = expedition.exploreHub(self.expedition, planet.galaxyId, pool, {
+                            editionChance = love.math.random(),
+                            editionPick = love.math.random()
+                        })
+                        if drop then
+                            local cat = "hull"
+                            if gear.findById(engine, drop.id) then cat = "engine" end
+                            expedition.equipGear(self.expedition, cat, drop)
+                            table.insert(self.floatingTexts, {
+                                text = i18n.t("floating_hub_gear", drop.name),
+                                x = planet.x,
+                                y = planet.y + 20,
+                                timer = 3.0,
+                                kind = "sample",
+                                awarded = 0,
+                                rollupElapsed = 0,
+                            })
+                        end
+                    end
+                elseif planet.isShop then
+                    if not self.shopModal then
+                        local gearMod = require("game.gear")
+                        local pool = {}
+                        local hull = gearMod.loadHullParts() or {}
+                        local engine = gearMod.loadEngineParts() or {}
+                        for _, p in ipairs(hull) do pool[#pool+1] = p end
+                        for _, p in ipairs(engine) do pool[#pool+1] = p end
+
+                        local prng = love.math.newRandomGenerator()
+                        prng:setSeed(world.hash(planet.x, planet.y, 900) * 1000000)
+                        
+                        local rolls = {
+                            rarity = prng:random(),
+                            pick = prng:random(),
+                            editionChance = prng:random(),
+                            editionPick = prng:random()
+                        }
+                        
+                        local offer = expedition.rollGearOffer(self.expedition, pool, rolls)
+                        if offer then
+                            local cat = "hull"
+                            if gearMod.findById(engine, offer.id) then cat = "engine" end
+                            self.shopModal = {
+                                planet = planet,
+                                gear = offer,
+                                category = cat,
+                                price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
+                            }
+                        end
+                    end
+                else
+                    local value = world.sampleValue(planet)
+                    local hueKey = world.hueFamily(planet.hue or 0).key
+                    local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
+                    awarded = awarded or value
+                    table.insert(self.floatingTexts, {
+                        text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
+                        x = planet.x,
+                        y = planet.y,
+                        timer = 1.0,
+                        kind = "sample",
+                        awarded = awarded,
+                        rollupElapsed = 0,
+                    })
+                    self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
+                    if streakMultiplier and streakMultiplier > 1 then
+                        self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
+                    else
+                        self.message = i18n.t("sample_message", awarded, planet.id)
+                    end
+                    local specimenId, specimenLabel = world.specimenKind(planet)
+                    if self.collectionStore:record(specimenId) then
+                        self.collectedSpecimens[specimenId] = true
+                        self.newSpecimenBanner = i18n.t("new_specimen_label", specimenLabel)
+                        self.newSpecimenBannerTimer = 2.0
+                    end
                 end
             end
-            -- docs/feedback/INBOX.md 처리대기 항목 7-a: a galaxy's shop
-            -- planet is a purchase landmark, not an auto-grant -- track
-            -- proximity here so keypressed() can offer a buy action while
-            -- docked, mirroring the existing settlement-screen upgrade
-            -- purchase keys.
-            if planet.shop and distanceSquared <= (planet.radius + 14) ^ 2 then
-                self.dockedShopPlanetId = planet.id
-                self.dockedShopGalaxyId = planet.galaxyId
-                dockedShopStillNear = true
-            end
-            -- docs/feedback/INBOX.md 처리대기 항목 7-b/7-a: checkpoint hub
-            -- and shop landmark planets are docking points, not hazards --
-            -- a ship parked on top of one to explore/buy must never take
-            -- collision damage the way an ordinary planet would.
-            if not planet.hub and not planet.shop
-                and distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
+            if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
                 self.collided[planet.id] = true
                 local damage = world.collisionDamage(planet)
                 -- Real LOVE runtime capture showed this "-N" damage text
@@ -4021,7 +1289,6 @@ function M:update(dt)
                     timer = 1.0,
                     kind = "damage",
                 })
-                self:spawnCollisionParticles(self.ship.x, self.ship.y)
                 self.shipShake = shipShakeDuration
                 self.shipShakeMagnitude = sampleTierShakeMultiplier(world.sampleTier(planet))
                 if expedition.damage(self.expedition, damage) then
@@ -4031,10 +1298,6 @@ function M:update(dt)
                 end
                 self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
             end
-        end
-        if not dockedShopStillNear then
-            self.dockedShopPlanetId = nil
-            self.dockedShopGalaxyId = nil
         end
         for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
             local dx, dy = junk.x - self.ship.x, junk.y - self.ship.y
@@ -4048,7 +1311,6 @@ function M:update(dt)
                     timer = 1.0,
                     kind = "damage",
                 })
-                self:spawnCollisionParticles(self.ship.x, self.ship.y)
                 self.shipShake = shipShakeDuration
                 self.shipShakeMagnitude = 1.4
                 if expedition.damage(self.expedition, damage) then
@@ -4062,35 +1324,31 @@ function M:update(dt)
     if self.expedition.phase ~= "ascending" and self.expedition.phase ~= "returning" then
         self.touches = {}
     end
-    if self.expedition.bestAltitude > previousBestAltitude then
-        self.distancePunch = distancePunchDuration
-    end
-    self.lastKnownBestAltitude = self.expedition.bestAltitude
 end
 
 function M:keypressed(key)
-    -- docs/feedback/INBOX.md 처리대기 항목 7-a: while docked at a galaxy's
-    -- 상점 행성 (mid-expedition, ascending or returning), "b" buys that
-    -- galaxy's unique gear part for money -- a paid alternative to the
-    -- free checkpoint drop (7-b) for players who reach the shop before the
-    -- hub. Placed first since this action is available outside the
-    -- settlement-only purchase keys below.
-    if (self.expedition.phase == "ascending" or self.expedition.phase == "returning")
-        and self.dockedShopPlanetId and key == "b" then
-        local bought, gearId = expedition.buyShopGear(self.expedition, self.dockedShopGalaxyId)
-        if bought then
-            self.message = i18n.t("gear_bought_message", gearId, self.expedition.money)
-        else
-            self.message = purchaseShortfallMessage(self.expedition.money,
-                expedition.shopGearCost, i18n.t("item_shop_gear"))
+    if self.shopModal then
+        if key == "y" then
+            local ok, err = expedition.buyGearFromShopPlanet(self.expedition, self.shopModal.category, self.shopModal.gear)
+            if ok then
+                table.insert(self.floatingTexts, {
+                    text = i18n.t("floating_hub_gear", self.shopModal.gear.name),
+                    x = self.shopModal.planet.x,
+                    y = self.shopModal.planet.y + 20,
+                    timer = 3.0,
+                    kind = "sample",
+                    awarded = 0,
+                    rollupElapsed = 0,
+                })
+                self.shopModal = nil
+            else
+                self.shopModal.errorText = err
+            end
+        elseif key == "n" then
+            self.shopModal = nil
         end
         return
     end
-    -- NOTE: docs/feedback/INBOX.md 항목 11(b) -- main lane already removed
-    -- the EARTH SHOP fuel-tank-upgrade purchase UI (fuelAction/fuelStatus/
-    -- fuelAffordable no longer returned by shopLoadoutLines()), so the
-    -- former "f"/"down"/"s" -> expedition.buyFuelUpgrade() keybinding from
-    -- the econ lane is intentionally NOT restored here (superseded).
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
         if expedition.buyDurabilityUpgrade(self.expedition) then
             self.message = i18n.t(
@@ -4150,39 +1408,101 @@ function M:keypressed(key)
         end
         return
     end
-    if key == "space" or key == "return" or key == "up" or key == "w" then
-        if self.expedition.phase == "returning" and not self.slotSpin and expedition.useSlot(self.expedition) then
-            self:beginSlotSpin()
+    -- Item 15(b): Earth shop slot machine. "l" triggers a slot spin during
+    -- settlement using the galaxy-aware earthSlotSpin pure function (item 15(c)).
+    -- The result is stored in self.earthShopSlotResult for draw() to render.
+    -- Money reward is applied immediately to run.money.
+    if self.expedition.phase == "settlement" and key == "l" then
+        -- Item 15(b): earthSlotSpin expects rolls.reels (not a plain array).
+        -- Building the table with the reels key ensures random values are used
+        -- instead of the silent fallback to {0,0,0} that a plain array causes.
+        local reels = {}
+        for i = 1, 3 do reels[i] = math.random(1, 10) end
+        local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, { reels = reels })
+        self.earthShopSlotResult = result
+        if result.reward > 0 then
+            self.expedition.money = self.expedition.money + result.reward
+            self.message = i18n.t("earth_slot_result",
+                table.concat(result.symbols, " "), result.reward)
         else
-            local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
-            if expedition.launch(self.expedition) then
-                if relaunching then
-                    self.ship.x = 0
-                    self.ship.y = 0
-                    self.verticalOffset = 0
-                    self.discovered = {}
-                    self.collided = {}
-                    self.discoveredCount = 0
-                    self.floatingTexts = {}
-                    self.dockedShopPlanetId = nil
-                    self.dockedShopGalaxyId = nil
+            self.message = i18n.t("earth_slot_miss",
+                table.concat(result.symbols, " "))
+        end
+        return
+    end
+    -- Item 7(c): Earth shop gear buy. "b" buys the current gear offer
+    -- (rolled on settlement entry) using expedition.buyGear. Galaxy-exclusive
+    -- parts are never in the earth pool (gear.earthShopPool filtered them),
+    -- so buyGear will always accept the offer at settlement phase.
+    if self.expedition.phase == "settlement" and key == "b" then
+        local offer = self.earthShopGearOffer
+        if offer then
+            local gearMod = require("game.gear")
+            local engine = gearMod.loadEngineParts() or {}
+            local cat = gearMod.findById(engine, offer.id) and "engine" or "hull"
+            local price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
+            local engineParts = require("game.engine_parts")
+            local slotsFull = (cat == "hull" and engineParts.isFull(self.expedition.gearLoadout, "hull"))
+                or (cat == "engine" and engineParts.isFull(self.expedition.gearLoadout, "engine"))
+            if slotsFull then
+                self.message = i18n.t("earth_gear_full")
+            elseif self.expedition.money < price then
+                self.message = i18n.t("earth_gear_broke", price - self.expedition.money)
+            else
+                local ok, err = expedition.buyGear(self.expedition, cat, offer)
+                if ok then
+                    self.earthShopGearOffer = nil
+                    self.message = i18n.t("earth_gear_bought", offer.name, self.expedition.money)
+                else
+                    self.message = err or "PURCHASE FAILED"
                 end
-                self.message = i18n.t("ascending_message")
             end
+        end
+        return
+    end
+    if key == "space" or key == "return" or key == "up" or key == "w" then
+        -- Item 15(a): in-flight slot machine removed. Space/return during
+        -- returning phase no longer triggers a slot spin. Settlement happens
+        -- automatically when altitude reaches 0 (expedition.update).
+        local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
+        if expedition.launch(self.expedition) then
+            if relaunching then
+                self.ship.x = 0
+                self.ship.y = 0
+                self.verticalOffset = 0
+                self.discovered = {}
+                self.collided = {}
+                self.discoveredCount = 0
+                self.floatingTexts = {}
+                self.earthShopSlotResult = nil
+                self.earthShopGearOffer = nil
+            end
+            self.message = i18n.t("ascending_message")
         end
     end
 end
 
 function M:touchpressed(id, x, y)
+    if self.shopModal then
+        local btnY = 220
+        if y >= btnY and y <= btnY + 30 then
+            if x >= 15 and x < 85 then
+                self:keypressed("y")
+            elseif x >= 95 and x <= 165 then
+                self:keypressed("n")
+            end
+        end
+        return
+    end
     if self.expedition.phase == "ascending" then
         self.touches[id] = { x = x, y = y, originX = x, originY = y }
         return
     end
     if self.expedition.phase == "returning" then
+        -- Item 15(a): in-flight slot machine removed. The returning phase only
+        -- has steering controls; slot-spin zone removed.
         local inControlRow = y >= returnControls.top and y <= returnControls.bottom
-        if inControlRow and x >= returnControls.slotMinX and x <= returnControls.slotMaxX then
-            self:keypressed("space")
-        elseif inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
+        if inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
             self.touches[id] = { x = x, y = y, originX = x, originY = y }
         end
         return
@@ -4207,6 +1527,8 @@ function M:touchpressed(id, x, y)
                     self:keypressed("y")
                 elseif key == "ship" then
                     self:keypressed("v")
+                elseif key == "slot" then
+                    self:keypressed("l")
                 elseif key == "relaunch" then
                     self:keypressed("space")
                 end
@@ -4243,30 +1565,12 @@ function M:drawJoystickStick()
     if not ox then return end
     local radius = joystick.visualRadius
     local knob = joystick.visualKnobRadius
-    if self.joystickPadImage then
-        local iw, ih = self.joystickPadImage:getDimensions()
-        local scale = (radius * 2) / math.max(iw, ih)
-        love.graphics.setColor(1, 1, 1, joystick.visualFillAlpha + joystick.visualLineAlpha)
-        love.graphics.draw(self.joystickPadImage, ox, oy, 0, scale, scale, iw / 2, ih / 2)
-    else
-        -- Fallback: flat navy disc + cyan rim, used only when the
-        -- ComfyUI-generated sprite failed to load.
-        love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha)
-        love.graphics.circle("fill", ox, oy, radius)
-        love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha)
-        love.graphics.circle("line", ox, oy, radius)
-    end
-    if self.joystickKnobImage then
-        local iw, ih = self.joystickKnobImage:getDimensions()
-        local scale = (knob * 2) / math.max(iw, ih)
-        love.graphics.setColor(1, 1, 1, joystick.visualKnobAlpha)
-        love.graphics.draw(self.joystickKnobImage, kx, ky, 0, scale, scale, iw / 2, ih / 2)
-    else
-        -- Fallback: pale disc, used only when the ComfyUI-generated
-        -- sprite failed to load.
-        love.graphics.setColor(0.9, 0.95, 1, joystick.visualKnobAlpha)
-        love.graphics.circle("fill", kx, ky, knob)
-    end
+    love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha)
+    love.graphics.circle("fill", ox, oy, radius)
+    love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha)
+    love.graphics.circle("line", ox, oy, radius)
+    love.graphics.setColor(0.9, 0.95, 1, joystick.visualKnobAlpha)
+    love.graphics.circle("fill", kx, ky, knob)
 end
 
 -- Circular galaxy chart (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3).
@@ -4278,254 +1582,87 @@ function M:drawMinimap()
         return
     end
     local hud = self:hudLines()
-    local galaxyShift = hud.galaxy and 40 or 0
+    local galaxyShift = hud.galaxy and 10 or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
     local view = minimap.view(self.ship.x, self.ship.y)
     local size = minimap.size
     local cx = viewport.width - size / 2 - 3
     local cy = hudHeight + size / 2 + 2
-    if self.minimapDiscImage then
-        local iw, ih = self.minimapDiscImage:getDimensions()
-        local scale = size / math.max(iw, ih)
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(self.minimapDiscImage, cx, cy, 0, scale, scale, iw / 2, ih / 2)
-    else
-        -- Fallback: flat navy disc + cyan rim, used only when the
-        -- ComfyUI-generated sprite failed to load.
-        love.graphics.setColor(0.02, 0.04, 0.1, 1)
-        love.graphics.circle("fill", cx, cy, size / 2)
-        love.graphics.setColor(0.35, 0.55, 0.8, 1)
-        love.graphics.circle("line", cx, cy, size / 2)
-    end
+    love.graphics.setColor(0.02, 0.04, 0.1, 1)
+    love.graphics.circle("fill", cx, cy, size / 2)
+    love.graphics.setColor(0.35, 0.55, 0.8, 1)
+    love.graphics.circle("line", cx, cy, size / 2)
     for _, ring in ipairs(view.rings or {}) do
         if ring.kind == "orbit" then
-            if self.orbitRingImage then
-                local iw, ih = self.orbitRingImage:getDimensions()
-                local drawSize = ring.radius * 2
-                local scale = drawSize / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1, 0.55)
-                love.graphics.draw(
-                    self.orbitRingImage,
-                    cx + ring.x, cy + ring.y, 0, scale, scale, iw / 2, ih / 2)
-            else
-                -- Fallback: gold line circle, used only when the
-                -- ComfyUI-generated sprite failed to load.
-                love.graphics.setColor(0.85, 0.7, 0.25, 0.55)
-                love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
-            end
+            love.graphics.setColor(0.85, 0.7, 0.25, 0.55)
+            love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
         elseif ring.inside ~= false then
-            if self.galaxyRingImage then
-                local iw, ih = self.galaxyRingImage:getDimensions()
-                local drawSize = ring.radius * 2
-                local scale = drawSize / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1, 0.55)
-                love.graphics.draw(
-                    self.galaxyRingImage,
-                    cx + ring.x, cy + ring.y, 0, scale, scale, iw / 2, ih / 2)
+            if ring.id == "milkyway" then
+                love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
             else
-                -- Fallback: cyan/gold line circle, used only when the
-                -- ComfyUI-generated sprite failed to load.
-                if ring.id == "milkyway" then
-                    love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
-                else
-                    love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
-                end
-                love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+                love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
             end
-        end
-    end
-    -- docs/feedback/INBOX.md item 1 part 1: the player's current galaxy
-    -- (view.spiralGalaxyId) draws its own deterministic spiral-arm shape as
-    -- small dots instead of relying only on the generic disk ring above, so
-    -- crossing into a different galaxy visibly changes the minimap's spiral
-    -- shape (view.spiral is recomputed per-galaxy by minimap.view()).
-    if view.spiral and #view.spiral > 0 then
-        for _, point in ipairs(view.spiral) do
-            if point.inside ~= false then
-                if self.spiralArmImage then
-                    local iw, ih = self.spiralArmImage:getDimensions()
-                    local drawSize = 2.8
-                    local scale = drawSize / math.max(iw, ih)
-                    love.graphics.setColor(1, 1, 1, 0.55)
-                    love.graphics.draw(
-                        self.spiralArmImage,
-                        cx + point.x, cy + point.y, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    -- Fallback: cyan filled circle, used only when the
-                    -- ComfyUI-generated sprite failed to load.
-                    love.graphics.setColor(0.6, 0.8, 1, 0.55)
-                    love.graphics.circle("fill", cx + point.x, cy + point.y, 1.4)
-                end
-            end
+            love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
         end
     end
     if view.sun then
-        if self.sunMarkerImage then
-            local iw, ih = self.sunMarkerImage:getDimensions()
-            local drawSize = minimap.markerSunRadius * 2
-            local scale = drawSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(
-                self.sunMarkerImage,
-                cx + view.sun.x, cy + view.sun.y, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: gold filled circle, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.85, 0.25)
-            love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, minimap.markerSunRadius)
-        end
+        love.graphics.setColor(1, 0.85, 0.25)
+        love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, 2.6)
     end
     for _, galaxy in ipairs(view.galaxies) do
         if galaxy.inside then
             if galaxy.id == "milkyway" then
-                if self.galaxyHomeMarkerImage then
-                    local iw, ih = self.galaxyHomeMarkerImage:getDimensions()
-                    local drawSize = minimap.markerGalaxyHomeRadius * 2
-                    local scale = drawSize / math.max(iw, ih)
-                    love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.draw(
-                        self.galaxyHomeMarkerImage,
-                        cx + galaxy.x, cy + galaxy.y, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    -- Fallback: blue filled circle, used only when the
-                    -- ComfyUI-generated sprite failed to load.
-                    love.graphics.setColor(0.25, 0.55, 1)
-                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius)
-                end
+                love.graphics.setColor(0.25, 0.55, 1)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
             elseif galaxy.hub then
-                -- Checkpoint galaxy (docs/feedback/INBOX.md item 1 part 2):
-                -- a small, sharply distinct 5-point star glyph instead of
-                -- the old plain dot + large pulsing ring (which read as
-                -- "too big" relative to the rest of the chart at
-                -- markerGalaxyHubRingRadius=16, 20% of the whole
-                -- mapRadius). The glyph itself still pulses subtly via
-                -- self.time so it keeps a "special waypoint" beacon feel.
-                local pulse = 0.75 + 0.25 * math.abs(math.sin((self.time or 0) * 2.4))
-                if self.checkpointStarImage then
-                    local iw, ih = self.checkpointStarImage:getDimensions()
-                    local drawSize = minimap.markerGalaxyHubRadius * 2
-                    local scale = drawSize / math.max(iw, ih)
-                    love.graphics.setColor(1, 1, 1, pulse)
-                    love.graphics.draw(
-                        self.checkpointStarImage,
-                        cx + galaxy.x, cy + galaxy.y, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    love.graphics.setColor(1, 0.85, 0.35, pulse)
-                    love.graphics.polygon("fill", minimap.starPoints(
-                        cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius))
-                end
-
+                -- Checkpoint galaxy: bigger dot plus a shimmering ring so it
+                -- reads as distinct from an ordinary galaxy on the chart
+                -- (docs/feedback/INBOX.md item 1). Ring's alpha pulses with
+                -- self.time for a "sparkling" beacon feel.
+                local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
+                love.graphics.setColor(0.9, 0.75, 0.3)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
+                love.graphics.setColor(1, 0.95, 0.6, pulse)
+                love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
             else
-                if self.galaxyPlainMarkerImage then
-                    local iw, ih = self.galaxyPlainMarkerImage:getDimensions()
-                    local drawSize = minimap.markerGalaxyPlainRadius * 2
-                    local scale = drawSize / math.max(iw, ih)
-                    love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.draw(
-                        self.galaxyPlainMarkerImage,
-                        cx + galaxy.x, cy + galaxy.y, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    -- Fallback: gold filled circle, used only when the
-                    -- ComfyUI-generated sprite failed to load.
-                    love.graphics.setColor(0.9, 0.75, 0.3)
-                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius)
-                end
+                love.graphics.setColor(0.9, 0.75, 0.3)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
             end
         end
     end
-    if self.earthMarkerImage then
-        local iw, ih = self.earthMarkerImage:getDimensions()
-        local drawSize = minimap.markerEarthRadius * 2
-        local scale = drawSize / math.max(iw, ih)
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(
-            self.earthMarkerImage,
-            cx + view.earth.x, cy + view.earth.y, 0, scale, scale, iw / 2, ih / 2)
-    else
-        -- Fallback: cyan filled circle, used only when the
-        -- ComfyUI-generated sprite failed to load.
-        love.graphics.setColor(0.3, 0.85, 1)
-        love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius)
-    end
-    if self.playerMarkerImage then
-        local iw, ih = self.playerMarkerImage:getDimensions()
-        local drawSize = minimap.markerPlayerLineRadius * 2
-        local scale = drawSize / math.max(iw, ih)
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(
-            self.playerMarkerImage,
-            cx + view.player.x, cy + view.player.y, 0, scale, scale, iw / 2, ih / 2)
-    else
-        -- Fallback: white filled circle + outline, used only when the
-        -- ComfyUI-generated sprite failed to load.
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, minimap.markerPlayerFillRadius)
-        love.graphics.setColor(1, 1, 1, 0.9)
-        love.graphics.circle("line", cx + view.player.x, cy + view.player.y, minimap.markerPlayerLineRadius)
-    end
+    love.graphics.setColor(0.3, 0.85, 1)
+    love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, 2)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, 1.7)
+    love.graphics.setColor(1, 1, 1, 0.9)
+    love.graphics.circle("line", cx + view.player.x, cy + view.player.y, 2.4)
     if view.beyond then
-        local rim = size / 2 - 5
-        local tipX = cx + view.returnDx * rim
-        local tipY = cy + view.returnDy * rim
-        if self.earthReturnMarkerImage then
-            local iw, ih = self.earthReturnMarkerImage:getDimensions()
-            local drawSize = minimap.markerBeyondRadius * 2
-            local scale = drawSize / math.max(iw, ih)
-            local rotation = math.atan2(view.returnDx, -view.returnDy)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(
-                self.earthReturnMarkerImage,
-                tipX, tipY, rotation, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: orange filled circle, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.55, 0.3)
-            love.graphics.circle("fill", tipX, tipY, minimap.markerBeyondRadius)
-        end
-        local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
         love.graphics.setColor(1, 0.55, 0.3)
+        local rim = size / 2 - 5
+        love.graphics.circle("fill", cx + view.returnDx * rim, cy + view.returnDy * rim, 2.2)
+        local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
-    -- docs/feedback/INBOX.md UI 대개편 6건 item 4: always show the ship's
-    -- actual world coordinates as a small readout next to the minimap
-    -- (replacing the removed, unclear C%/P%/S%/EV$ slot-odds text). Shown
-    -- in every phase the minimap itself is drawn in (settlement/destroyed
-    -- already early-return above).
-    self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
-    local previousCoordsFont = love.graphics.getFont()
-    love.graphics.setFont(self.smallFont)
-    love.graphics.setColor(0.6, 0.8, 1)
-    love.graphics.printf(M.shipCoordsLine(self.ship.x, self.ship.y),
-        16, hudHeight - 36, viewport.width - 32, "right")
-    love.graphics.setFont(previousCoordsFont)
+    if self.expedition.phase == "returning" then
+        -- Item 15(a): in-flight slot machine removed; the slot-odds line
+        -- (C%/P%/S%/AVG$ readout above the minimap) no longer exists.
+        -- The 10px hudOddsLineHeight reservation was zeroed out accordingly.
+    end
     if view.checkpointBeyond then
         -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct
         -- magenta from the orange Earth-return marker above, and offset
         -- slightly inward on the rim so the two never overlap when both
-        -- are showing at once. ComfyUI sprite replaces the Lua
-        -- circle+triangle; rotation points the up-facing arrow toward
-        -- the checkpoint (sprite default is up / -y).
+        -- are showing at once.
+        love.graphics.setColor(0.85, 0.35, 0.95)
         local rim = size / 2 - 9
         local tipX = cx + view.checkpointDx * rim
         local tipY = cy + view.checkpointDy * rim
-        if self.checkpointArrowImage then
-            local iw, ih = self.checkpointArrowImage:getDimensions()
-            local drawSize = minimap.markerCheckpointTipRadius * 2
-            local scale = drawSize / math.max(iw, ih)
-            local rotation = math.atan2(view.checkpointDx, -view.checkpointDy)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(
-                self.checkpointArrowImage,
-                tipX, tipY, rotation, scale, scale, iw / 2, ih / 2)
-        else
-            love.graphics.setColor(0.85, 0.35, 0.95)
-            love.graphics.circle("fill", tipX, tipY, minimap.markerCheckpointTipRadius)
-            local perpX, perpY = -view.checkpointDy, view.checkpointDx
-            love.graphics.polygon("fill",
-                tipX + view.checkpointDx * 3, tipY + view.checkpointDy * 3,
-                tipX - view.checkpointDx * 1.5 + perpX * 1.6, tipY - view.checkpointDy * 1.5 + perpY * 1.6,
-                tipX - view.checkpointDx * 1.5 - perpX * 1.6, tipY - view.checkpointDy * 1.5 - perpY * 1.6)
-        end
+        love.graphics.circle("fill", tipX, tipY, 1.8)
+        local perpX, perpY = -view.checkpointDy, view.checkpointDx
+        love.graphics.polygon("fill",
+            tipX + view.checkpointDx * 3, tipY + view.checkpointDy * 3,
+            tipX - view.checkpointDx * 1.5 + perpX * 1.6, tipY - view.checkpointDy * 1.5 + perpY * 1.6,
+            tipX - view.checkpointDx * 1.5 - perpX * 1.6, tipY - view.checkpointDy * 1.5 - perpY * 1.6)
     end
 end
 
@@ -4534,27 +1671,6 @@ function M:draw()
     love.graphics.clear(world.galaxyBackgroundColor(galaxy))
     local shipScreenX, shipScreenY = viewport.width / 2, math.floor(viewport.height * 0.58)
     local cameraX, cameraY = self.ship.x - shipScreenX, self.ship.y - shipScreenY
-    -- docs/feedback/INBOX.md 처리대기 항목 "ComfyUI로 실제 에셋 작업 진행"
-    -- (background slice): tile the ComfyUI-generated deep-space nebula
-    -- backdrop (assets/backgrounds/deep_space_tile.png) across the whole
-    -- viewport at a slow parallax rate (same 0.4x camera factor as the
-    -- backgroundStars() point layer immediately below) so it reads as a
-    -- distant, mostly-static nebula behind the star fields. Falls back to
-    -- the flat galaxy-tint clear color above when the image failed to
-    -- load.
-    if self.backgroundImage then
-        local bgCameraX, bgCameraY = cameraX * 0.4, cameraY * 0.4
-        local imgW, imgH = self.backgroundImage:getDimensions()
-        local offsetX = bgCameraX % imgW
-        local offsetY = bgCameraY % imgH
-        love.graphics.setColor(1, 1, 1, 0.55)
-        local quad = love.graphics.newQuad(
-            offsetX, offsetY,
-            viewport.width + imgW, viewport.height + imgH,
-            imgW, imgH)
-        love.graphics.draw(self.backgroundImage, quad, -offsetX, -offsetY)
-        love.graphics.setColor(1, 1, 1, 1)
-    end
     local sx, sy = world.sectorAt(self.ship.x, self.ship.y)
     -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): a dense,
     -- near-static background star layer drawn behind the streaking-meteor
@@ -4571,14 +1687,7 @@ function M:draw()
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
                     local c = 0.12 + star.bright * 0.4
                     love.graphics.setColor(c, c, math.min(1, c + 0.08))
-                    if self.starPointImage then
-                        local iw, ih = self.starPointImage:getDimensions()
-                        local scale = 2.0 / math.max(iw, ih)
-                        love.graphics.draw(
-                            self.starPointImage, x, y, 0, scale, scale, iw / 2, ih / 2)
-                    else
-                        love.graphics.points(x, y)
-                    end
+                    love.graphics.points(x, y)
                 end
             end
         end
@@ -4590,34 +1699,18 @@ function M:draw()
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
                     local c = 0.35 + star.bright * 0.65
                     love.graphics.setColor(c, c, math.min(1, c + 0.1))
-                    if self.starPointImage then
-                        local iw, ih = self.starPointImage:getDimensions()
-                        local scale = 3.2 / math.max(iw, ih)
-                        love.graphics.draw(
-                            self.starPointImage, x, y, 0, scale, scale, iw / 2, ih / 2)
-                    else
-                        love.graphics.points(x, y)
-                    end
+                    love.graphics.points(x, y)
                 end
             end
         end
     end
-    local earthX, earthY = math.floor(-cameraX), math.floor(M.earthCenterY - cameraY)
-    if earthY < viewport.height + M.earthRadius + 24 then
-        if self.earthImage then
-            local imgW, imgH = self.earthImage:getDimensions()
-            local scale = (M.earthRadius * 2) / math.max(imgW, imgH)
-            love.graphics.setColor(1, 1, 1)
-            love.graphics.draw(self.earthImage, earthX, earthY, 0, scale, scale, imgW / 2, imgH / 2)
-        else
-            -- Fallback: flat ocean-circle + two green "continent" blobs,
-            -- used only when the ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.15, 0.45, 0.9)
-            love.graphics.circle("fill", earthX, earthY, M.earthRadius)
-            love.graphics.setColor(0.25, 0.8, 0.45)
-            love.graphics.circle("fill", earthX - 72, earthY - 72, 60)
-            love.graphics.circle("fill", earthX + 84, earthY - 20, 48)
-        end
+    local earthX, earthY = math.floor(-cameraX), math.floor(75 - cameraY)
+    if earthY < viewport.height + 64 then
+        love.graphics.setColor(0.15, 0.45, 0.9)
+        love.graphics.circle("fill", earthX, earthY, 58)
+        love.graphics.setColor(0.25, 0.8, 0.45)
+        love.graphics.circle("fill", earthX - 18, earthY - 18, 15)
+        love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
     end
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
         local x, y = math.floor(planet.x - cameraX), math.floor(planet.y - cameraY)
@@ -4630,75 +1723,28 @@ function M:draw()
                 local tier = world.sampleTier(planet)
                 local effect = sampleTierEffect(tier)
                 local glowR, glowG, glowB = sampleTierColor(tier)
-                if self.planetGlowImage then
-                    local iw, ih = self.planetGlowImage:getDimensions()
-                    local glowRadius = planet.radius + 3 + effect.glowRings * 4
-                    local scale = (glowRadius * 2) / math.max(iw, ih)
-                    love.graphics.setColor(glowR, glowG, glowB, effect.glowAlpha)
-                    love.graphics.draw(self.planetGlowImage, x, y, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    for ring = effect.glowRings, 1, -1 do
-                        local ringAlpha = effect.glowAlpha * (ring / effect.glowRings) * 0.5
-                        love.graphics.setColor(glowR, glowG, glowB, ringAlpha)
-                        love.graphics.circle("fill", x, y, planet.radius + 3 + ring * 4)
-                    end
+                for ring = effect.glowRings, 1, -1 do
+                    local ringAlpha = effect.glowAlpha * (ring / effect.glowRings) * 0.5
+                    love.graphics.setColor(glowR, glowG, glowB, ringAlpha)
+                    love.graphics.circle("fill", x, y, planet.radius + 3 + ring * 4)
                 end
             end
             -- Soft drop shadow: a low-alpha dark circle offset toward the
             -- lower-right, opposite the highlight, so planets read as
             -- slightly raised cards instead of flat painted circles.
-            -- ComfyUI sprite when loaded; Lua circle is load-failure fallback.
-            local shadowX = x + planet.radius * 0.22
-            local shadowY = y + planet.radius * 0.22
-            local shadowRadius = planet.radius * 1.02
             love.graphics.setColor(0, 0, 0, 0.25)
-            if self.planetShadowImage then
-                local iw, ih = self.planetShadowImage:getDimensions()
-                local scale = (shadowRadius * 2) / math.max(iw, ih)
-                love.graphics.draw(self.planetShadowImage, shadowX, shadowY, 0, scale, scale, iw / 2, ih / 2)
-            else
-                love.graphics.circle("fill", shadowX, shadowY, shadowRadius)
-            end
-            -- docs/feedback/INBOX.md 처리대기 항목 "ComfyUI로 실제 에셋 작업
-            -- 진행" (planet slice): render the ComfyUI-generated neutral-tone
-            -- sprite (assets/planet/planet_generic.png) tinted by the
-            -- existing planetColor(hue) lookup instead of a flat filled
-            -- circle, so per-planet hue variety is preserved. Hub/checkpoint
-            -- planets use planet_hub.png so they read as a distinct landmark.
-            -- Shop/market planets use planet_shop.png so they read as a
-            -- distinct landmark from both hub and generic worlds.
-            -- Falls back to planetImage, then the previous flat
-            -- gradient-circle rendering whenever the image failed to load
-            -- (e.g. missing file/graphics disabled).
+            love.graphics.circle("fill", x + planet.radius * 0.22, y + planet.radius * 0.22, planet.radius * 1.02)
+            -- Saturated gradient fill: a darker base circle with a brighter
+            -- highlight offset toward the upper-left, approximating a soft
+            -- directional light instead of a single flat fill color.
             local baseR, baseG, baseB = planetColor(planet.hue)
-            local planetSprite = self.planetImage
-            if planet.hub and self.hubPlanetImage then
-                planetSprite = self.hubPlanetImage
-            elseif planet.shop and self.shopPlanetImage then
-                planetSprite = self.shopPlanetImage
-            end
-            if planetSprite then
-                local iw, ih = planetSprite:getWidth(), planetSprite:getHeight()
-                local scale = (planet.radius * 2) / math.max(iw, ih)
-                love.graphics.setColor(baseR, baseG, baseB)
-                love.graphics.draw(planetSprite, x, y, 0, scale, scale, iw / 2, ih / 2)
-            else
-                love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
-                love.graphics.circle("fill", x, y, planet.radius)
-                love.graphics.setColor(math.min(1, baseR * 1.25), math.min(1, baseG * 1.25), math.min(1, baseB * 1.25))
-                love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
-            end
+            love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
+            love.graphics.circle("fill", x, y, planet.radius)
+            love.graphics.setColor(math.min(1, baseR * 1.25), math.min(1, baseG * 1.25), math.min(1, baseB * 1.25))
+            love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
             if not self.discovered[planet.id] then
-                local tierR, tierG, tierB = sampleTierColor(world.sampleTier(planet))
-                love.graphics.setColor(tierR, tierG, tierB)
-                if self.planetRimImage then
-                    local iw, ih = self.planetRimImage:getDimensions()
-                    local rimRadius = planet.radius + 3
-                    local scale = (rimRadius * 2) / math.max(iw, ih)
-                    love.graphics.draw(self.planetRimImage, x, y, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    love.graphics.circle("line", x, y, planet.radius + 3)
-                end
+                love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
+                love.graphics.circle("line", x, y, planet.radius + 3)
                 -- Balatro-style twinkle: a handful of small points orbiting
                 -- just outside the rim glow, each with its own phase so the
                 -- shimmer isn't perfectly synchronized across points.
@@ -4716,94 +1762,38 @@ function M:draw()
                     local py = y + math.sin(angle) * sparkleRadius
                     local alpha = math.max(0, math.min(1, sparkleAlpha(tier, self.time, seed)))
                     love.graphics.setColor(math.min(1, sr + 0.2), math.min(1, sg + 0.2), math.min(1, sb + 0.2), alpha)
-                    if self.planetTwinkleImage then
-                        local iw, ih = self.planetTwinkleImage:getDimensions()
-                        local scale = 4 / math.max(iw, ih)
-                        love.graphics.draw(self.planetTwinkleImage, px, py, 0, scale, scale, iw / 2, ih / 2)
-                    else
-                        love.graphics.circle("fill", px, py, 1.2)
-                    end
+                    love.graphics.circle("fill", px, py, 1.2)
                 end
             end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
-            if self.planetRimImage then
-                local iw, ih = self.planetRimImage:getDimensions()
-                local rimRadius = planet.radius + 2
-                local scale = (rimRadius * 2) / math.max(iw, ih)
-                love.graphics.draw(self.planetRimImage, x, y, 0, scale, scale, iw / 2, ih / 2)
-            else
-                love.graphics.circle("line", x, y, planet.radius + 2)
-            end
+            love.graphics.circle("line", x, y, planet.radius + 2)
             local risk = self:approachWarning(planet, y, shipScreenY)
             if risk then
                 local font = love.graphics.getFont()
                 local previewY
                 if risk.sampleLabel then
                     previewY = math.max(48, y - planet.radius - 24)
-                    local sampleTextWidth = font:getWidth(risk.sampleLabel)
-                    local sampleIconSpan = M.sampleValueIconSize + M.sampleValueIconGap
-                    local sampleLabelX = clampLabelX(x, sampleIconSpan + sampleTextWidth, viewport.width)
-                    local sampleIconCenterX = sampleLabelX + M.sampleValueIconSize / 2
-                    local sampleIconCenterY = previewY + font:getHeight() / 2
-                    if self.sampleValueIconImage then
-                        local iw, ih = self.sampleValueIconImage:getDimensions()
-                        local scale = M.sampleValueIconSize / math.max(iw, ih)
-                        love.graphics.setColor(1, 1, 1, 1)
-                        love.graphics.draw(self.sampleValueIconImage, sampleIconCenterX, sampleIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-                    else
-                        -- Fallback: cyan hexagonal crystal, used only when
-                        -- the ComfyUI-generated sprite failed to load.
-                        love.graphics.setColor(0.45, 0.95, 1)
-                        love.graphics.polygon("fill",
-                            M.sampleValueIconPoints(sampleIconCenterX, sampleIconCenterY, M.sampleValueIconSize))
-                    end
                     love.graphics.setColor(0.45, 0.95, 1)
-                    love.graphics.print(risk.sampleLabel, sampleLabelX + sampleIconSpan, previewY)
+                    love.graphics.print(risk.sampleLabel,
+                        clampLabelX(x, font:getWidth(risk.sampleLabel), viewport.width), previewY)
                     previewY = previewY + 11
                 else
                     previewY = math.max(72, y - planet.radius - 12)
-                end
-                local riskTextWidth = font:getWidth(risk.label)
-                local riskIconSpan = M.riskIconSize + M.riskIconGap
-                local riskLabelX = clampLabelX(x, riskIconSpan + riskTextWidth, viewport.width)
-                local riskIconCenterX = riskLabelX + M.riskIconSize / 2
-                local riskIconCenterY = previewY + font:getHeight() / 2
-                if self.riskIconImage then
-                    local iw, ih = self.riskIconImage:getDimensions()
-                    local scale = M.riskIconSize / math.max(iw, ih)
-                    love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.draw(self.riskIconImage, riskIconCenterX, riskIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    -- Fallback: warning triangle, used only when the
-                    -- ComfyUI-generated sprite failed to load. Tinted
-                    -- red for lethal, amber for normal risk.
-                    if risk.lethal then
-                        love.graphics.setColor(1, 0.3, 0.25)
-                    else
-                        love.graphics.setColor(1, 0.8, 0.25)
-                    end
-                    love.graphics.polygon("fill",
-                        M.riskIconPoints(riskIconCenterX, riskIconCenterY, M.riskIconSize))
                 end
                 if risk.lethal then
                     love.graphics.setColor(1, 0.3, 0.25)
                 else
                     love.graphics.setColor(1, 0.8, 0.25)
                 end
-                love.graphics.print(risk.label, riskLabelX + riskIconSpan, previewY)
+                love.graphics.print(risk.label,
+                    clampLabelX(x, font:getWidth(risk.label), viewport.width), previewY)
             end
         end
     end
     for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
         local x, y = math.floor(junk.x - cameraX), math.floor(junk.y - cameraY)
         if x > -20 and x < viewport.width + 20 and y > -20 and y < viewport.height + 20 then
-            local sprite = self.debrisImages and self.debrisImages[junk.kind]
-            if sprite then
-                local iw, ih = sprite:getWidth(), sprite:getHeight()
-                local scale = (junk.radius * 2) / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1)
-                love.graphics.draw(sprite, x, y, 0, scale, scale, iw / 2, ih / 2)
-            elseif junk.kind == "can" then
+            if junk.kind == "can" then
                 love.graphics.setColor(0.72, 0.76, 0.7)
                 love.graphics.rectangle("fill", x - junk.radius, y - junk.radius * 1.4,
                     junk.radius * 2, junk.radius * 2.8)
@@ -4828,73 +1818,19 @@ function M:draw()
         local fx, fy = math.floor(ft.x - cameraX), math.floor(ft.y - cameraY)
         if fx >= -30 and fx <= viewport.width + 30 and fy >= -20 and fy <= viewport.height + 20 then
             local alpha = math.max(0, math.min(1, ft.timer))
-            local textY = fy - M.floatingTextBoxTopOffset
-            if ft.kind == "sample" then
-                local font = love.graphics.getFont()
-                local textWidth = font:getWidth(ft.text)
-                local iconSpan = M.floatingSampleIconSize + M.floatingSampleIconGap
-                local startX = fx - (iconSpan + textWidth) / 2
-                local iconCenterX = startX + M.floatingSampleIconSize / 2
-                local iconCenterY = textY + font:getHeight() / 2
-                if self.floatingSampleIconImage then
-                    local iw, ih = self.floatingSampleIconImage:getDimensions()
-                    local scale = M.floatingSampleIconSize / math.max(iw, ih)
-                    love.graphics.setColor(1, 1, 1, alpha)
-                    love.graphics.draw(self.floatingSampleIconImage, iconCenterX, iconCenterY, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    -- Fallback: cyan plus-badge, used only when the
-                    -- ComfyUI-generated sprite failed to load.
-                    love.graphics.setColor(0.45, 1, 0.6, alpha)
-                    love.graphics.polygon("fill",
-                        M.floatingSampleIconPoints(iconCenterX, iconCenterY, M.floatingSampleIconSize))
-                end
-                love.graphics.setColor(0.45, 1, 0.6, alpha)
-                love.graphics.print(ft.text, startX + iconSpan, textY)
-            elseif ft.kind == "damage" then
-                local font = love.graphics.getFont()
-                local textWidth = font:getWidth(ft.text)
-                local iconSpan = M.floatingDamageIconSize + M.floatingDamageIconGap
-                local startX = fx - (iconSpan + textWidth) / 2
-                local iconCenterX = startX + M.floatingDamageIconSize / 2
-                local iconCenterY = textY + font:getHeight() / 2
-                if self.floatingDamageIconImage then
-                    local iw, ih = self.floatingDamageIconImage:getDimensions()
-                    local scale = M.floatingDamageIconSize / math.max(iw, ih)
-                    love.graphics.setColor(1, 1, 1, alpha)
-                    love.graphics.draw(self.floatingDamageIconImage, iconCenterX, iconCenterY, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    -- Fallback: red minus-badge, used only when the
-                    -- ComfyUI-generated sprite failed to load.
-                    love.graphics.setColor(1, 0.35, 0.3, alpha)
-                    love.graphics.polygon("fill",
-                        M.floatingDamageIconPoints(iconCenterX, iconCenterY, M.floatingDamageIconSize))
-                end
+            if ft.kind == "damage" then
                 love.graphics.setColor(1, 0.35, 0.3, alpha)
-                love.graphics.print(ft.text, startX + iconSpan, textY)
             else
                 love.graphics.setColor(0.45, 1, 0.6, alpha)
-                love.graphics.printf(ft.text, fx - M.floatingTextBoxHalfWidth,
-                    textY, M.floatingTextBoxHalfWidth * 2, "center")
             end
+            love.graphics.printf(ft.text, fx - 30, fy - 10, 60, "center")
         end
     end
     for _, particle in ipairs(self.particles) do
         local px, py = math.floor(particle.x - cameraX), math.floor(particle.y - cameraY)
         local alpha = math.max(0, particle.timer / particle.maxTimer)
         love.graphics.setColor(particle.r, particle.g, particle.b, alpha)
-        local sprite = self.sampleEffectImage
-        if particle.kind == "collision" then
-            sprite = self.collisionEffectImage
-        elseif particle.kind == "thrust" then
-            sprite = self.thrustEffectImage
-        end
-        if sprite then
-            local iw, ih = sprite:getDimensions()
-            local scale = 3 / math.max(iw, ih)
-            love.graphics.draw(sprite, px, py, 0, scale, scale, iw / 2, ih / 2)
-        else
-            love.graphics.circle("fill", px, py, 1.5)
-        end
+        love.graphics.circle("fill", px, py, 1.5)
     end
     love.graphics.push()
     local shakeX, shakeY = 0, 0
@@ -4910,114 +1846,34 @@ function M:draw()
         love.graphics.scale(punchScale, punchScale)
     end
     love.graphics.setColor(0.8, 0.95, 1)
-    local hullImage = self.shipImage
-    if self.expedition.selectedShipId == "scout" and self.scoutShipImage then
-        hullImage = self.scoutShipImage
-    end
-    if hullImage then
-        local iw, ih = hullImage:getWidth(), hullImage:getHeight()
-        -- ComfyUI-generated 64x64 sprite (docs/GENERATED_ASSET_LOG.md);
-        -- drawn at a 64px logical footprint (old 16px x4) so it stays the
-        -- same relative size on the 720x1280 canvas and is no longer
-        -- downscaled from the 64x64 original. SCOUT uses ship_scout.png
-        -- so the purchased hull is visually distinct from STARTER.
-        local targetSize = 64
-        local scale = targetSize / math.max(iw, ih)
-        love.graphics.draw(hullImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
-    elseif self.shipSilhouetteImage then
-        local iw, ih = self.shipSilhouetteImage:getWidth(), self.shipSilhouetteImage:getHeight()
-        local targetSize = 64
-        local scale = targetSize / math.max(iw, ih)
-        love.graphics.draw(self.shipSilhouetteImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
-    else
-        love.graphics.polygon("fill", 0, -28, -20, 24, 0, 12, 20, 24)
-    end
+    love.graphics.polygon("fill", 0, -7, -5, 6, 0, 3, 5, 6)
     if self.expedition.phase == "ascending" then
         love.graphics.setColor(1, 0.55, 0.15)
-        if self.thrustEffectImage then
-            local iw, ih = self.thrustEffectImage:getDimensions()
-            local scale = 28 / math.max(iw, ih)
-            love.graphics.draw(self.thrustEffectImage, 0, 32, 0, scale, scale, iw / 2, ih / 2)
-        else
-            love.graphics.polygon("fill", -8, 20, 0, 44, 8, 20)
-        end
+        love.graphics.polygon("fill", -2, 5, 0, 11, 2, 5)
     end
     love.graphics.pop()
 
     local hud = self:hudLines()
     local isLaunchHud = self.expedition.phase == "launch"
-    local galaxyShift = hud.galaxy and 40 or 0
+    local galaxyShift = hud.galaxy and 10 or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
-    if self.hudPanelImage then
-        local iw, ih = self.hudPanelImage:getDimensions()
-        love.graphics.setColor(1, 1, 1, 0.85)
-        love.graphics.draw(self.hudPanelImage, 0, 0, 0, viewport.width / iw, hudHeight / ih)
-    else
-        love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
-        love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
-    end
+    love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
+    love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
     local previousHudFont
     if isLaunchHud then
-        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
+        self.smallFont = self.smallFont or fonts.get(8)
         previousHudFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
     end
     love.graphics.setColor(0.7, 0.9, 1)
-    local hudY = 16
+    local hudY = 4
     if hud.galaxy then
-        local galaxyIconCenterX = 20 + M.galaxyIconSize / 2
-        local galaxyIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
-        if self.galaxyIconImage then
-            local iw, ih = self.galaxyIconImage:getDimensions()
-            local scale = M.galaxyIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.galaxyIconImage, galaxyIconCenterX, galaxyIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: gold 8-point star, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.85, 0.4)
-            love.graphics.polygon("fill",
-                M.galaxyIconPoints(galaxyIconCenterX, galaxyIconCenterY, M.galaxyIconSize))
-        end
         love.graphics.setColor(1, 0.85, 0.4)
-        love.graphics.print(hud.galaxy, 20 + M.galaxyIconSize + M.galaxyIconGap, hudY)
-        hudY = hudY + 40
+        love.graphics.print(hud.galaxy, 5, hudY)
+        hudY = hudY + 10
         love.graphics.setColor(0.7, 0.9, 1)
     end
-    local distIconCenterX = 20 + M.distanceIconSize / 2
-    local distIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
-    if self.distanceIconImage then
-        local iw, ih = self.distanceIconImage:getDimensions()
-        local scale = M.distanceIconSize / math.max(iw, ih)
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(self.distanceIconImage, distIconCenterX, distIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-    else
-        -- Fallback: cyan nav diamond, used only when the ComfyUI-generated
-        -- sprite failed to load.
-        love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.polygon("fill",
-            M.distanceIconPoints(distIconCenterX, distIconCenterY, M.distanceIconSize))
-    end
-    local distTextX = 20 + M.distanceIconSize + M.distanceIconGap
-    love.graphics.setColor(0.7, 0.9, 1)
-    love.graphics.print(hud.distance, distTextX, hudY)
-    -- docs/feedback/INBOX.md 국제화 누락 + 발라트로식 점수 연출 + HUD 약자 정리 항목 (2):
-    -- draw a punch-scaled, color-emphasized overlay of the DIST text
-    -- whenever a new all-time best altitude was just set (self.distancePunch
-    -- counts down from distancePunchDuration). Re-print on top of the plain
-    -- print above (same origin) rather than replacing it, so layout/width
-    -- measurement below stays anchored to the unscaled baseline text.
-    if self.distancePunch > 0 then
-        local scale = distancePunchScale(self.distancePunch, distancePunchDuration)
-        local fadeProgress = self.distancePunch / distancePunchDuration
-        love.graphics.push()
-        love.graphics.translate(distTextX, hudY)
-        love.graphics.scale(scale, scale)
-        love.graphics.setColor(1, 0.85, 0.25, fadeProgress)
-        love.graphics.print(hud.distance, 0, 0)
-        love.graphics.pop()
-        love.graphics.setColor(0.7, 0.9, 1)
-    end
+    love.graphics.print(hud.distance, 5, hudY)
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- third slice): pair the CASH readout with a small coin icon, mirroring
     -- the shield icon paired with the hull status line below. The coin sits
@@ -5026,127 +1882,44 @@ function M:draw()
     -- 8px small font) with the CASH text shifted right of the coin's
     -- footprint so nothing overlaps.
     local distanceWidth = love.graphics.getFont():getWidth(hud.distance)
-    local cashIconCenterX = distTextX + distanceWidth + 32 + M.cashIconSize / 2
+    local cashIconCenterX = 5 + distanceWidth + 8 + M.cashIconSize / 2
     local cashIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
-    if self.cashIconImage then
-        local iw, ih = self.cashIconImage:getDimensions()
-        local scale = M.cashIconSize / math.max(iw, ih)
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(self.cashIconImage, cashIconCenterX, cashIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-    else
-        -- Fallback: gold octagon, used only when the ComfyUI-generated
-        -- sprite failed to load.
-        love.graphics.setColor(1, 0.85, 0.3)
-        love.graphics.polygon("fill",
-            M.coinIconPoints(cashIconCenterX, cashIconCenterY, M.cashIconSize))
-    end
+    love.graphics.setColor(1, 0.85, 0.3)
+    love.graphics.polygon("fill",
+        M.coinIconPoints(cashIconCenterX, cashIconCenterY, M.cashIconSize))
     love.graphics.setColor(0.7, 0.9, 1)
     love.graphics.print(hud.cash,
-        distTextX + distanceWidth + 32 + M.cashIconSize + M.cashIconGap, hudY)
+        5 + distanceWidth + 8 + M.cashIconSize + M.cashIconGap, hudY)
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- second slice): pair the hull-durability status text with a small
     -- shield icon drawn just to its left, then shift the text right by
     -- the icon's footprint so it never overlaps the shield.
     local function drawStatusWithShield(y)
-        local iconCenterX = 20 + M.hullIconSize / 2
+        local iconCenterX = 5 + M.hullIconSize / 2
         local iconCenterY = y + M.hullIconSize / 2
-        if self.hullIconImage then
-            local iw, ih = self.hullIconImage:getDimensions()
-            local scale = M.hullIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.hullIconImage, iconCenterX, iconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan shield pentagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.6, 0.85, 1)
-            love.graphics.polygon("fill",
-                M.shieldIconPoints(iconCenterX, iconCenterY, M.hullIconSize))
-        end
+        love.graphics.setColor(0.6, 0.85, 1)
+        love.graphics.polygon("fill",
+            M.shieldIconPoints(iconCenterX, iconCenterY, M.hullIconSize))
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.print(hud.status, 20 + M.hullIconSize + M.hullIconGap, y)
+        love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, y)
     end
     if hud.samples then
         -- Extra vertical gap (M.hudPrimaryStatusGap) below the samples line
-        -- pushes the fuel/hull/slot status line away from the DIST/CASH
-        -- line so the two rows read as visually unrelated numbers rather
-        -- than "fuel gauge gates distance" (docs/feedback/INBOX.md item 2).
-        -- Pair the SAMPLES readout with a small vial icon, mirroring the
-        -- PERSONAL BEST trophy / DIST diamond pattern.
-        local samplesY = 64 + galaxyShift
-        local samplesIconCenterX = 20 + M.samplesIconSize / 2
-        local samplesIconCenterY = samplesY + (love.graphics.getFont():getHeight() / 2)
-        if self.samplesIconImage then
-            local iw, ih = self.samplesIconImage:getDimensions()
-            local scale = M.samplesIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.samplesIconImage, samplesIconCenterX, samplesIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: amber specimen vial, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.polygon("fill",
-                M.samplesIconPoints(samplesIconCenterX, samplesIconCenterY, M.samplesIconSize))
-        end
+        -- separates the secondary hull/slot status from DIST/CASH.
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.samples, 20 + M.samplesIconSize + M.samplesIconGap, samplesY)
-        drawStatusWithShield(120 + M.hudPrimaryStatusGap + galaxyShift)
+        love.graphics.print(hud.samples, 5, 16 + galaxyShift)
+        drawStatusWithShield(30 + M.hudPrimaryStatusGap + galaxyShift)
         if hud.earth then
-            local earthY = 172 + M.hudPrimaryStatusGap + galaxyShift
-            local earthIconCenterX = 20 + M.earthIconSize / 2
-            local earthIconCenterY = earthY + (love.graphics.getFont():getHeight() / 2)
-            if self.earthIconImage then
-                local iw, ih = self.earthIconImage:getDimensions()
-                local scale = M.earthIconSize / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.draw(self.earthIconImage, earthIconCenterX, earthIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-            else
-                -- Fallback: cyan globe octagon, used only when the
-                -- ComfyUI-generated sprite failed to load.
-                love.graphics.setColor(0.4, 0.85, 1)
-                love.graphics.polygon("fill",
-                    M.earthIconPoints(earthIconCenterX, earthIconCenterY, M.earthIconSize))
-            end
             love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.print(hud.earth, 20 + M.earthIconSize + M.earthIconGap, earthY)
-            local returnY = 220 + M.hudPrimaryStatusGap + galaxyShift
-            local returnIconCenterX = 20 + M.returnIconSize / 2
-            local returnIconCenterY = returnY + (love.graphics.getFont():getHeight() / 2)
-            if self.returnIconImage then
-                local iw, ih = self.returnIconImage:getDimensions()
-                local scale = M.returnIconSize / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.draw(self.returnIconImage, returnIconCenterX, returnIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-            else
-                -- Fallback: cyan downward chevron, used only when the
-                -- ComfyUI-generated sprite failed to load.
-                love.graphics.setColor(0.4, 0.85, 1)
-                love.graphics.polygon("fill",
-                    M.returnIconPoints(returnIconCenterX, returnIconCenterY, M.returnIconSize))
-            end
-            love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.print(hud.returnProgress, 20 + M.returnIconSize + M.returnIconGap, returnY)
+            love.graphics.print(hud.earth, 5, 43 + M.hudPrimaryStatusGap + galaxyShift)
+            love.graphics.print(hud.returnProgress, 5, 55 + M.hudPrimaryStatusGap + galaxyShift)
         end
     elseif hud.best then
-        drawStatusWithShield((isLaunchHud and 52 or 72) + galaxyShift)
-        local bestY = (isLaunchHud and 88 or 120) + galaxyShift
-        local bestIconCenterX = 20 + M.bestIconSize / 2
-        local bestIconCenterY = bestY + (love.graphics.getFont():getHeight() / 2)
-        if self.bestIconImage then
-            local iw, ih = self.bestIconImage:getDimensions()
-            local scale = M.bestIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.bestIconImage, bestIconCenterX, bestIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: gold trophy cup, used only when the ComfyUI-generated
-            -- sprite failed to load.
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.polygon("fill",
-                M.bestIconPoints(bestIconCenterX, bestIconCenterY, M.bestIconSize))
-        end
+        drawStatusWithShield((isLaunchHud and 13 or 18) + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.best, 20 + M.bestIconSize + M.bestIconGap, bestY)
+        love.graphics.print(hud.best, 5, (isLaunchHud and 22 or 30) + galaxyShift)
     else
-        drawStatusWithShield(72 + galaxyShift)
+        drawStatusWithShield(18 + galaxyShift)
     end
     if isLaunchHud then
         love.graphics.setFont(previousHudFont)
@@ -5157,92 +1930,49 @@ function M:draw()
         -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so
         -- it never competes with loadout numbers or the TAP TO LAUNCH
         -- message below the panel.
-        if M.showSpecimenStrip then
-            self:drawSpecimenStrip(736)
-        end
+        self:drawGearSlots(184)
         local loadout = self:loadoutLines()
-        local loadoutBoxX = 48
-        local loadoutBoxY = M.launchLoadoutBoxTop
-        local loadoutBoxW = viewport.width - 96
-        local loadoutBoxH = viewport.height - M.launchLoadoutBoxTop
-        if self.loadoutPanelImage then
-            local iw, ih = self.loadoutPanelImage:getDimensions()
-            love.graphics.setColor(1, 1, 1, 0.92)
-            love.graphics.draw(self.loadoutPanelImage, loadoutBoxX, loadoutBoxY, 0,
-                loadoutBoxW / iw, loadoutBoxH / ih)
-        else
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-            love.graphics.rectangle("fill", loadoutBoxX, loadoutBoxY, loadoutBoxW, loadoutBoxH)
-        end
+        -- The card box now extends all the way to the canvas bottom
+        -- (viewport.height) instead of stopping at y=294: a real LÖVE
+        -- runtime capture showed the Earth disc drawn behind the scene
+        -- (radius 58, extending to y=318 for a ship at the world origin)
+        -- peeking out below the old box, directly behind the TAP TO
+        -- LAUNCH message and DEV PLACEHOLDER footer text.
+        love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
+        love.graphics.rectangle("fill", 12, M.launchLoadoutBoxTop, viewport.width - 24,
+            viewport.height - M.launchLoadoutBoxTop)
         -- Every LOADOUT line now uses the small 8px scene-cached font
         -- (previously the default 14px font) so the text sizes relative
         -- to the small circular minimap chart/specimen-strip squares
         -- above it, with a tightened row step so six lines fit in the
         -- freed vertical space without overlapping each other or the
         -- TAP TO LAUNCH message drawn separately below.
-        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousLaunchFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
-        local row = M.launchLoadoutBoxTop + 16
+        local row = M.launchLoadoutBoxTop + 4
         local rowStep = M.launchLoadoutRowStep
-        if loadout.ship then
-            local loadoutShipLabel = loadout.ship
-            local loadoutShipFont = love.graphics.getFont()
-            local loadoutShipWidth = loadoutShipFont:getWidth(loadoutShipLabel)
-            local loadoutShipIconSpan = M.loadoutShipIconSize + M.loadoutShipIconGap
-            local loadoutShipBoxX = 64
-            local loadoutShipBoxW = viewport.width - 128
-            local loadoutShipStartX = loadoutShipBoxX + (loadoutShipBoxW - (loadoutShipIconSpan + loadoutShipWidth)) / 2
-            local loadoutShipIconCenterX = loadoutShipStartX + M.loadoutShipIconSize / 2
-            local loadoutShipIconCenterY = row + loadoutShipFont:getHeight() / 2
-            if self.loadoutShipIconImage then
-                local iw, ih = self.loadoutShipIconImage:getDimensions()
-                local scale = M.loadoutShipIconSize / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.draw(self.loadoutShipIconImage, loadoutShipIconCenterX, loadoutShipIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-            else
-                -- Fallback: gold hexagonal nameplate, used only when the
-                -- ComfyUI-generated sprite failed to load.
-                love.graphics.setColor(1, 0.8, 0.3)
-                love.graphics.polygon("fill",
-                    M.loadoutShipIconPoints(loadoutShipIconCenterX, loadoutShipIconCenterY, M.loadoutShipIconSize))
-            end
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.print(loadoutShipLabel, loadoutShipStartX + loadoutShipIconSpan, row)
+        if M.showLaunchLoadoutTitle then
+            love.graphics.setColor(0.7, 0.9, 1)
+            love.graphics.printf(i18n.t("launch_loadout_title"), 16, row, viewport.width - 32, "center")
             row = row + rowStep
         end
-        if M.drawLoadoutStatsIcon then
-            self:drawStatsIconLabel(loadout.stats, 64, row, viewport.width - 128, 0.4, 0.85, 1)
-        else
-            love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.printf(loadout.stats, 64, row, viewport.width - 128, "center")
+        if loadout.ship then
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.printf(loadout.ship, 16, row, viewport.width - 32, "center")
+            row = row + rowStep
         end
+        love.graphics.setColor(0.4, 0.85, 1)
+        love.graphics.printf(loadout.stats, 16, row, viewport.width - 32, "center")
         row = row + rowStep
-
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(loadout.upgrades, 16, row, viewport.width - 32, "center")
+        row = row + rowStep
         love.graphics.setColor(0.6, 1, 0.85)
-        -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD
-        -- simplification, fourth/final slice): pair the STEER SPEED text
-        -- with a small speedometer icon drawn just to its left, mirroring
-        -- the pattern used for the coin/shield icons elsewhere. The text
-        -- is centered via printf, so the icon is measured against the
-        -- text's rendered width and placed immediately left of it.
-        local steeringTextWidth = love.graphics.getFont():getWidth(loadout.steering)
-        local steeringTextX = 64 + (viewport.width - 128 - steeringTextWidth) / 2
-        local speedIconCenterX = steeringTextX - M.speedIconGap - M.speedIconSize / 2
-        local speedIconCenterY = row + love.graphics.getFont():getHeight() / 2
-        if self.speedIconImage then
-            local iw, ih = self.speedIconImage:getDimensions()
-            local scale = M.speedIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.speedIconImage, speedIconCenterX, speedIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: mint speedometer polygon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.speedIconPoints(speedIconCenterX, speedIconCenterY, M.speedIconSize))
-        end
-        love.graphics.setColor(0.6, 1, 0.85)
-        love.graphics.printf(loadout.steering, 64, row, viewport.width - 128, "center")
+        M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, loadout.steering, 16, row, viewport.width - 32)
+        row = row + rowStep
+        love.graphics.setColor(0.6, 0.8, 1)
+        love.graphics.printf(loadout.odds, 16, row, viewport.width - 32, "center")
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
         -- The summary card is drawn with the same scene-cached small font as
@@ -5252,852 +1982,252 @@ function M:draw()
         -- row to the 44pt real-device accessibility minimum (see
         -- game/self_test.lua) at the smallest supported window (integer
         -- scale 1), not just the previous 34px minimum.
-        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousFont = love.graphics.getFont()
-        if self.shopPanelImage then
-            local iw, ih = self.shopPanelImage:getDimensions()
-            love.graphics.setColor(1, 1, 1, 0.94)
-            love.graphics.draw(self.shopPanelImage, 48, 280, 0,
-                (viewport.width - 96) / iw, 1000 / ih)
-        else
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
-            love.graphics.rectangle("fill", 48, 280, viewport.width - 96, 1000)
-        end
+        love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
+        love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
         -- Faint alternating background bands behind each tappable
         -- settlementTouchRows entry. Drawn before any text so it never
         -- overlaps or obscures the already real-capture-verified printf
         -- calls below; purely a visual affordance for which rows respond
         -- to touch (see settlementRowBackgroundColor comment above).
         for index, touchRow in ipairs(settlementTouchRows) do
-            local rowColor = M.settlementRowBackgroundColor(index)
-            if self.shopTouchRowImage then
-                local iw, ih = self.shopTouchRowImage:getDimensions()
-                love.graphics.setColor(1, 1, 1, rowColor[4] or 0.35)
-                love.graphics.draw(self.shopTouchRowImage, 48, touchRow.top, 0,
-                    (viewport.width - 96) / iw, (touchRow.bottom - touchRow.top) / ih)
-            else
-                love.graphics.setColor(rowColor)
-                love.graphics.rectangle("fill", 48, touchRow.top, viewport.width - 96, touchRow.bottom - touchRow.top)
-            end
+            love.graphics.setColor(M.settlementRowBackgroundColor(index))
+            love.graphics.rectangle("fill", 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top)
         end
         love.graphics.setColor(0.7, 0.9, 1)
-        local shopTitle = i18n.t("earth_shop_title")
-        local shopTitleFont = love.graphics.getFont()
-        local shopTitleWidth = shopTitleFont:getWidth(shopTitle)
-        local shopTitleIconSpan = M.shopTitleIconSize + M.shopTitleIconGap
-        local shopTitleStartX = viewport.width / 2 - (shopTitleIconSpan + shopTitleWidth) / 2
-        local shopTitleIconCenterX = shopTitleStartX + M.shopTitleIconSize / 2
-        local shopTitleIconCenterY = 296 + shopTitleFont:getHeight() / 2
-        if self.shopTitleIconImage then
-            local iw, ih = self.shopTitleIconImage:getDimensions()
-            local scale = M.shopTitleIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.shopTitleIconImage, shopTitleIconCenterX, shopTitleIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan storefront awning, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.7, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.shopTitleIconPoints(shopTitleIconCenterX, shopTitleIconCenterY, M.shopTitleIconSize))
-        end
-        love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.print(shopTitle, shopTitleStartX + shopTitleIconSpan, 296)
-        -- NEW BEST! is the only extra settlement summary line. Dead
-        -- fuel-bonus copy (NEXT LAUNCH FUEL) was removed; econ item 15
-        -- owns any later redefinition of bankedFuelBonus.
+        love.graphics.printf(i18n.t("earth_shop_title"), 16, 74, viewport.width - 32, "center")
+        -- The previously-verified capture (build/spaceship-runtime-preview-
+        -- settlement-newbest-*.png) fit exactly one extra summary line
+        -- (NEW BEST!) at y=127 with shop rows starting unshifted at
+        -- row=140 and the last shop line (TAP: RELAUNCH) landing just
+        -- above the y=307 DEV PLACEHOLDER footer.
         local summaryExtraLine
         if self.expedition.lastNewBest then
             summaryExtraLine = i18n.t("newbest_label")
         end
-        if self.settlementSummaryPanelImage then
-            local iw, ih = self.settlementSummaryPanelImage:getDimensions()
-            love.graphics.setColor(1, 1, 1, 0.85)
-            love.graphics.draw(self.settlementSummaryPanelImage, 72, 352, 0,
-                (viewport.width - 144) / iw, 184 / ih)
-        else
-            love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
-            love.graphics.rectangle("fill", 72, 352, viewport.width - 144, 184)
-        end
+        love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
+        love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 88, 364, viewport.width - 176, "center")
+        love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 88, 400, viewport.width - 176, "center")
-        love.graphics.printf(i18n.t("spins_settlement_line", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 88, 436, viewport.width - 176, "center")
+        love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 100, viewport.width - 44, "center")
+        -- Item 15/11: spins_settlement_line removed (in-flight slots abolished)
         love.graphics.setColor(0.6, 0.8, 1)
-        do
-            local settlementPeakDistLabel = i18n.t("peak_dist_line", math.floor(self.expedition.lastAltitude or 0))
-            local settlementPeakDistFont = love.graphics.getFont()
-            local settlementPeakDistWidth = settlementPeakDistFont:getWidth(settlementPeakDistLabel)
-            local settlementPeakDistIconSpan = M.settlementPeakDistIconSize + M.settlementPeakDistIconGap
-            local fullX, fullW = 88, viewport.width - 176
-            local settlementPeakDistStartX = fullX + (fullW - (settlementPeakDistIconSpan + settlementPeakDistWidth)) / 2
-            local settlementPeakDistIconCenterX = settlementPeakDistStartX + M.settlementPeakDistIconSize / 2
-            local settlementPeakDistIconCenterY = 472 + settlementPeakDistFont:getHeight() / 2
-            if self.settlementPeakDistIconImage then
-                local iw, ih = self.settlementPeakDistIconImage:getDimensions()
-                local scale = M.settlementPeakDistIconSize / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.draw(self.settlementPeakDistIconImage, settlementPeakDistIconCenterX, settlementPeakDistIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-            else
-                -- Fallback: blue mountain-peak, used only when the
-                -- ComfyUI-generated sprite failed to load.
-                love.graphics.setColor(0.6, 0.8, 1)
-                love.graphics.polygon("fill",
-                    M.settlementPeakDistIconPoints(settlementPeakDistIconCenterX, settlementPeakDistIconCenterY, M.settlementPeakDistIconSize))
-            end
-            love.graphics.setColor(0.6, 0.8, 1)
-            love.graphics.print(settlementPeakDistLabel, settlementPeakDistStartX + settlementPeakDistIconSpan, 472)
-        end
+        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 22, 109, viewport.width - 44, "center")
         if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
-            do
-                local settlementNewBestFont = love.graphics.getFont()
-                local settlementNewBestWidth = settlementNewBestFont:getWidth(summaryExtraLine)
-                local settlementNewBestIconSpan = M.settlementNewBestIconSize + M.settlementNewBestIconGap
-                local fullX, fullW = 88, viewport.width - 176
-                local settlementNewBestStartX = fullX + (fullW - (settlementNewBestIconSpan + settlementNewBestWidth)) / 2
-                local settlementNewBestIconCenterX = settlementNewBestStartX + M.settlementNewBestIconSize / 2
-                local settlementNewBestIconCenterY = 508 + settlementNewBestFont:getHeight() / 2
-                if self.settlementNewBestIconImage then
-                    local iw, ih = self.settlementNewBestIconImage:getDimensions()
-                    local scale = M.settlementNewBestIconSize / math.max(iw, ih)
-                    love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.draw(self.settlementNewBestIconImage, settlementNewBestIconCenterX, settlementNewBestIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-                else
-                    -- Fallback: gold star-burst, used only when the
-                    -- ComfyUI-generated sprite failed to load.
-                    love.graphics.setColor(1, 0.95, 0.3)
-                    love.graphics.polygon("fill",
-                        M.settlementNewBestIconPoints(settlementNewBestIconCenterX, settlementNewBestIconCenterY, M.settlementNewBestIconSize))
-                end
-                love.graphics.setColor(1, 0.95, 0.3)
-                love.graphics.print(summaryExtraLine, settlementNewBestStartX + settlementNewBestIconSpan, 508)
-            end
+            love.graphics.printf(summaryExtraLine, 22, 127, viewport.width - 44, "center")
         end
         local nextLaunch = self:shopLoadoutLines()
-        local fullX, fullW = 64, viewport.width - 128
-        -- HULL and STEERING occupy the first remaining shop band after the
-        -- fuel-tank purchase row was removed (docs/feedback/INBOX.md item
-        -- 11(b)). y=720 is the old y=180 ×4 so compact columns stay inside
-        -- the ×4 176px touch band.
-        local row = 720
-        local rowStep = 32
+        local actionX, actionW = shopActionColumnX, shopActionColumnW
+        local statusX, statusW = shopStatusColumnX, shopStatusColumnW
+        local fullX, fullW = 16, viewport.width - 32
+        local row = 140
+        -- Was 9px until the SCOUT trade-off gained a second line (GAINS/
+        -- LOSSES split, see M.scoutTradeoffLines), pushing the 20-row total
+        -- past the y=307 DEV PLACEHOLDER footer (measured via a real LÖVE
+        -- capture: TAP: RELAUNCH landed at y=311, overlapping the footer).
+        -- Tightened to 8px so the last row (TAP: RELAUNCH) lands at
+        -- y=140+19*8=292, comfortably above the footer again.
+        local rowStep = 8
+        row = 156
+        -- HULL and STEERING
+        -- HULL and STEERING
+        rowStep = 8
         love.graphics.setColor(0.75, 0.9, 1)
-        local hullActionLabel = nextLaunch.hullActionCompact
-        local hullActionFont = love.graphics.getFont()
-        local hullActionWidth = hullActionFont:getWidth(hullActionLabel)
-        local hullActionIconSpan = M.hullActionIconSize + M.hullActionIconGap
-        local hullActionStartX = shopColumnLeftX + (shopColumnLeftW - (hullActionIconSpan + hullActionWidth)) / 2
-        local hullActionIconCenterX = hullActionStartX + M.hullActionIconSize / 2
-        local hullActionIconCenterY = row + hullActionFont:getHeight() / 2
-        if self.hullActionIconImage then
-            local iw, ih = self.hullActionIconImage:getDimensions()
-            local scale = M.hullActionIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.hullActionIconImage, hullActionIconCenterX, hullActionIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan shield plate, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.hullActionIconPoints(hullActionIconCenterX, hullActionIconCenterY, M.hullActionIconSize))
-        end
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.print(hullActionLabel, hullActionStartX + hullActionIconSpan, row)
-        local steeringActionLabel = nextLaunch.steeringActionCompact
-        local steeringActionFont = love.graphics.getFont()
-        local steeringActionWidth = steeringActionFont:getWidth(steeringActionLabel)
-        local steeringActionIconSpan = M.steeringActionIconSize + M.steeringActionIconGap
-        local steeringActionStartX = shopColumnRightX + (shopColumnRightW - (steeringActionIconSpan + steeringActionWidth)) / 2
-        local steeringActionIconCenterX = steeringActionStartX + M.steeringActionIconSize / 2
-        local steeringActionIconCenterY = row + steeringActionFont:getHeight() / 2
-        if self.steeringActionIconImage then
-            local iw, ih = self.steeringActionIconImage:getDimensions()
-            local scale = M.steeringActionIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.steeringActionIconImage, steeringActionIconCenterX, steeringActionIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan gyro hexagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.steeringActionIconPoints(steeringActionIconCenterX, steeringActionIconCenterY, M.steeringActionIconSize))
-        end
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.print(steeringActionLabel, steeringActionStartX + steeringActionIconSpan, row)
+        love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
         
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
             nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
-        local hullStatusLabel = nextLaunch.hullStatus
-        local hullStatusFont = love.graphics.getFont()
-        local hullStatusWidth = hullStatusFont:getWidth(hullStatusLabel)
-        local hullStatusIconSpan = M.hullStatusIconSize + M.hullStatusIconGap
-        local hullStatusStartX = shopColumnLeftX + (shopColumnLeftW - (hullStatusIconSpan + hullStatusWidth)) / 2
-        local hullStatusIconCenterX = hullStatusStartX + M.hullStatusIconSize / 2
-        local hullStatusIconCenterY = row + hullStatusFont:getHeight() / 2
-        if self.hullStatusIconImage then
-            local iw, ih = self.hullStatusIconImage:getDimensions()
-            local scale = M.hullStatusIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.hullStatusIconImage, hullStatusIconCenterX, hullStatusIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan coin hexagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.hullStatusIconPoints(hullStatusIconCenterX, hullStatusIconCenterY, M.hullStatusIconSize))
-        end
-        love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
-            nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
-        love.graphics.print(hullStatusLabel, hullStatusStartX + hullStatusIconSpan, row)
+        love.graphics.printf(nextLaunch.hullStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.setColor(nextLaunch.steeringAffordable and 0.45 or 1,
             nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
-        local steeringStatusLabel = nextLaunch.steeringStatus
-        local steeringStatusFont = love.graphics.getFont()
-        local steeringStatusWidth = steeringStatusFont:getWidth(steeringStatusLabel)
-        local steeringStatusIconSpan = M.steeringStatusIconSize + M.steeringStatusIconGap
-        local steeringStatusStartX = shopColumnRightX + (shopColumnRightW - (steeringStatusIconSpan + steeringStatusWidth)) / 2
-        local steeringStatusIconCenterX = steeringStatusStartX + M.steeringStatusIconSize / 2
-        local steeringStatusIconCenterY = row + steeringStatusFont:getHeight() / 2
-        if self.steeringStatusIconImage then
-            local iw, ih = self.steeringStatusIconImage:getDimensions()
-            local scale = M.steeringStatusIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.steeringStatusIconImage, steeringStatusIconCenterX, steeringStatusIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan gyro-coin octagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.steeringStatusIconPoints(steeringStatusIconCenterX, steeringStatusIconCenterY, M.steeringStatusIconSize))
-        end
-        love.graphics.setColor(nextLaunch.steeringAffordable and 0.45 or 1,
-            nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
-        love.graphics.print(steeringStatusLabel, steeringStatusStartX + steeringStatusIconSpan, row)
+        love.graphics.printf(nextLaunch.steeringStatus, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
         
         love.graphics.setColor(0.4, 0.85, 1)
-        local hullPreviewLabel = nextLaunch.hullPreviewCompact
-        local hullPreviewFont = love.graphics.getFont()
-        local hullPreviewWidth = hullPreviewFont:getWidth(hullPreviewLabel)
-        local hullPreviewIconSpan = M.hullPreviewIconSize + M.hullPreviewIconGap
-        local hullPreviewStartX = shopColumnLeftX + (shopColumnLeftW - (hullPreviewIconSpan + hullPreviewWidth)) / 2
-        local hullPreviewIconCenterX = hullPreviewStartX + M.hullPreviewIconSize / 2
-        local hullPreviewIconCenterY = row + hullPreviewFont:getHeight() / 2
-        if self.hullPreviewIconImage then
-            local iw, ih = self.hullPreviewIconImage:getDimensions()
-            local scale = M.hullPreviewIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.hullPreviewIconImage, hullPreviewIconCenterX, hullPreviewIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan layered hull-plate, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.hullPreviewIconPoints(hullPreviewIconCenterX, hullPreviewIconCenterY, M.hullPreviewIconSize))
-        end
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.print(hullPreviewLabel, hullPreviewStartX + hullPreviewIconSpan, row)
-        love.graphics.setColor(0.4, 0.85, 1)
-        local steeringPreviewLabel = nextLaunch.steeringPreviewCompact
-        local steeringPreviewFont = love.graphics.getFont()
-        local steeringPreviewWidth = steeringPreviewFont:getWidth(steeringPreviewLabel)
-        local steeringPreviewIconSpan = M.steeringPreviewIconSize + M.steeringPreviewIconGap
-        local steeringPreviewStartX = shopColumnRightX + (shopColumnRightW - (steeringPreviewIconSpan + steeringPreviewWidth)) / 2
-        local steeringPreviewIconCenterX = steeringPreviewStartX + M.steeringPreviewIconSize / 2
-        local steeringPreviewIconCenterY = row + steeringPreviewFont:getHeight() / 2
-        if self.steeringPreviewIconImage then
-            local iw, ih = self.steeringPreviewIconImage:getDimensions()
-            local scale = M.steeringPreviewIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.steeringPreviewIconImage, steeringPreviewIconCenterX, steeringPreviewIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan 4-point gyro-star, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.steeringPreviewIconPoints(steeringPreviewIconCenterX, steeringPreviewIconCenterY, M.steeringPreviewIconSize))
-        end
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.print(steeringPreviewLabel, steeringPreviewStartX + steeringPreviewIconSpan, row)
+        love.graphics.printf(nextLaunch.hullPreviewCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW)
         row = row + rowStep
-
 
         -- YIELD and SHIP
-        row = 864
-        rowStep = 32
+        row = 216
+        rowStep = 8
         love.graphics.setColor(0.75, 0.9, 1)
-        local yieldActionLabel = nextLaunch.yieldActionCompact
-        local yieldActionFont = love.graphics.getFont()
-        local yieldActionWidth = yieldActionFont:getWidth(yieldActionLabel)
-        local yieldActionIconSpan = M.yieldActionIconSize + M.yieldActionIconGap
-        local yieldActionStartX = shopColumnLeftX + (shopColumnLeftW - (yieldActionIconSpan + yieldActionWidth)) / 2
-        local yieldActionIconCenterX = yieldActionStartX + M.yieldActionIconSize / 2
-        local yieldActionIconCenterY = row + yieldActionFont:getHeight() / 2
-        if self.yieldActionIconImage then
-            local iw, ih = self.yieldActionIconImage:getDimensions()
-            local scale = M.yieldActionIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.yieldActionIconImage, yieldActionIconCenterX, yieldActionIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan sample-crystal diamond, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.yieldActionIconPoints(yieldActionIconCenterX, yieldActionIconCenterY, M.yieldActionIconSize))
-        end
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.print(yieldActionLabel, yieldActionStartX + yieldActionIconSpan, row)
-        local shipActionLabel = nextLaunch.shipActionCompact
-        local shipActionFont = love.graphics.getFont()
-        local shipActionWidth = shipActionFont:getWidth(shipActionLabel)
-        local shipActionIconSpan = M.shipActionIconSize + M.shipActionIconGap
-        local shipActionStartX = shopColumnRightX + (shopColumnRightW - (shipActionIconSpan + shipActionWidth)) / 2
-        local shipActionIconCenterX = shipActionStartX + M.shipActionIconSize / 2
-        local shipActionIconCenterY = row + shipActionFont:getHeight() / 2
-        if self.shipActionIconImage then
-            local iw, ih = self.shipActionIconImage:getDimensions()
-            local scale = M.shipActionIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.shipActionIconImage, shipActionIconCenterX, shipActionIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan ship dart, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.shipActionIconPoints(shipActionIconCenterX, shipActionIconCenterY, M.shipActionIconSize))
-        end
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.print(shipActionLabel, shipActionStartX + shipActionIconSpan, row)
+        love.graphics.printf(nextLaunch.yieldActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
+        love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
         
         love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
             nextLaunch.yieldAffordable and 1 or 0.4, nextLaunch.yieldAffordable and 0.55 or 0.35)
-        local yieldStatusLabel = nextLaunch.yieldStatus
-        local yieldStatusFont = love.graphics.getFont()
-        local yieldStatusWidth = yieldStatusFont:getWidth(yieldStatusLabel)
-        local yieldStatusIconSpan = M.yieldStatusIconSize + M.yieldStatusIconGap
-        local yieldStatusStartX = shopColumnLeftX + (shopColumnLeftW - (yieldStatusIconSpan + yieldStatusWidth)) / 2
-        local yieldStatusIconCenterX = yieldStatusStartX + M.yieldStatusIconSize / 2
-        local yieldStatusIconCenterY = row + yieldStatusFont:getHeight() / 2
-        if self.yieldStatusIconImage then
-            local iw, ih = self.yieldStatusIconImage:getDimensions()
-            local scale = M.yieldStatusIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.yieldStatusIconImage, yieldStatusIconCenterX, yieldStatusIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan crystal-coin hexagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.yieldStatusIconPoints(yieldStatusIconCenterX, yieldStatusIconCenterY, M.yieldStatusIconSize))
-        end
-        love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
-            nextLaunch.yieldAffordable and 1 or 0.4, nextLaunch.yieldAffordable and 0.55 or 0.35)
-        love.graphics.print(yieldStatusLabel, yieldStatusStartX + yieldStatusIconSpan, row)
+        love.graphics.printf(nextLaunch.yieldStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
             nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        local shipStatusLabel = nextLaunch.shipStatus
-        local shipStatusFont = love.graphics.getFont()
-        local shipStatusWidth = shipStatusFont:getWidth(shipStatusLabel)
-        local shipStatusIconSpan = M.shipStatusIconSize + M.shipStatusIconGap
-        local shipStatusStartX = shopColumnRightX + (shopColumnRightW - (shipStatusIconSpan + shipStatusWidth)) / 2
-        local shipStatusIconCenterX = shipStatusStartX + M.shipStatusIconSize / 2
-        local shipStatusIconCenterY = row + shipStatusFont:getHeight() / 2
-        if self.shipStatusIconImage then
-            local iw, ih = self.shipStatusIconImage:getDimensions()
-            local scale = M.shipStatusIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.shipStatusIconImage, shipStatusIconCenterX, shipStatusIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan ship-coin diamond, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.shipStatusIconPoints(shipStatusIconCenterX, shipStatusIconCenterY, M.shipStatusIconSize))
-        end
-        love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
-            nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        love.graphics.print(shipStatusLabel, shipStatusStartX + shipStatusIconSpan, row)
+        love.graphics.printf(nextLaunch.shipStatus, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
 
         love.graphics.setColor(0.4, 0.85, 1)
-        local yieldPreviewLabel = nextLaunch.yieldPreview
-        local yieldPreviewFont = love.graphics.getFont()
-        local yieldPreviewWidth = yieldPreviewFont:getWidth(yieldPreviewLabel)
-        local yieldPreviewIconSpan = M.yieldPreviewIconSize + M.yieldPreviewIconGap
-        local yieldPreviewStartX = shopColumnLeftX + (shopColumnLeftW - (yieldPreviewIconSpan + yieldPreviewWidth)) / 2
-        local yieldPreviewIconCenterX = yieldPreviewStartX + M.yieldPreviewIconSize / 2
-        local yieldPreviewIconCenterY = row + yieldPreviewFont:getHeight() / 2
-        if self.yieldPreviewIconImage then
-            local iw, ih = self.yieldPreviewIconImage:getDimensions()
-            local scale = M.yieldPreviewIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.yieldPreviewIconImage, yieldPreviewIconCenterX, yieldPreviewIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan faceted sample-crystal, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.yieldPreviewIconPoints(yieldPreviewIconCenterX, yieldPreviewIconCenterY, M.yieldPreviewIconSize))
-        end
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.print(yieldPreviewLabel, yieldPreviewStartX + yieldPreviewIconSpan, row)
-        local shipPreviewLabel = nextLaunch.shipPreviewCompact
-        local shipPreviewFont = love.graphics.getFont()
-        local shipPreviewWidth = shipPreviewFont:getWidth(shipPreviewLabel)
-        local shipPreviewIconSpan = M.shipPreviewIconSize + M.shipPreviewIconGap
-        local shipPreviewStartX = shopColumnRightX + (shopColumnRightW - (shipPreviewIconSpan + shipPreviewWidth)) / 2
-        local shipPreviewIconCenterX = shipPreviewStartX + M.shipPreviewIconSize / 2
-        local shipPreviewIconCenterY = row + shipPreviewFont:getHeight() / 2
-        if self.shipPreviewIconImage then
-            local iw, ih = self.shipPreviewIconImage:getDimensions()
-            local scale = M.shipPreviewIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.shipPreviewIconImage, shipPreviewIconCenterX, shipPreviewIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan arrowhead scout-hull, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.polygon("fill",
-                M.shipPreviewIconPoints(shipPreviewIconCenterX, shipPreviewIconCenterY, M.shipPreviewIconSize))
-        end
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.print(shipPreviewLabel, shipPreviewStartX + shipPreviewIconSpan, row)
+        love.graphics.printf(nextLaunch.yieldPreview, shopColumnLeftX, row, shopColumnLeftW, "center")
+        love.graphics.printf(nextLaunch.shipPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
         
         love.graphics.setColor(0.75, 0.9, 1)
-        for _, tradeoffLine in ipairs(nextLaunch.scoutTradeoff) do
-            love.graphics.printf(tradeoffLine, fullX, row, fullW, "center")
+        love.graphics.printf(nextLaunch.scoutTradeoff[1], fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
+        row = row + rowStep
+        row = 236
+        rowStep = 10
+        -- Item 7(c): Earth shop gear offer line.
+        if self.earthShopGearOffer then
+            local offer = self.earthShopGearOffer
+            local gearMod = require("game.gear")
+            local price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
+            love.graphics.setColor(0.4, 1, 0.7)
+            love.graphics.printf(i18n.t("earth_gear_offer", offer.name, price), fullX, row, fullW, "center")
             row = row + rowStep
         end
-
-        
-        row = 1056
-        rowStep = 32
-        local nextShipLabel = nextLaunch.ship
-        local nextShipFont = love.graphics.getFont()
-        local nextShipWidth = nextShipFont:getWidth(nextShipLabel)
-        local nextShipIconSpan = M.nextShipIconSize + M.nextShipIconGap
-        local nextShipStartX = fullX + (fullW - (nextShipIconSpan + nextShipWidth)) / 2
-        local nextShipIconCenterX = nextShipStartX + M.nextShipIconSize / 2
-        local nextShipIconCenterY = row + nextShipFont:getHeight() / 2
-        if self.nextShipIconImage then
-            local iw, ih = self.nextShipIconImage:getDimensions()
-            local scale = M.nextShipIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.nextShipIconImage, nextShipIconCenterX, nextShipIconCenterY, 0, scale, scale, iw / 2, ih / 2)
+        if self.earthShopSlotResult then
+            love.graphics.setColor(0.85, 0.95, 1)
+            love.graphics.printf(table.concat(self.earthShopSlotResult.symbols, "  "), fullX, row, fullW, "center")
+            row = row + rowStep
+            local profileLabel = M.earthSlotProfileLabel(self.earthShopSlotResult.rewardProfile)
+            if profileLabel then
+                love.graphics.setColor(1, 0.55, 0.45)
+                love.graphics.printf(profileLabel, fullX, row, fullW, "center")
+            end
         else
-            -- Fallback: gold hangar-roof pentagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
             love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.polygon("fill",
-                M.nextShipIconPoints(nextShipIconCenterX, nextShipIconCenterY, M.nextShipIconSize))
+            love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, row, fullW, "center")
         end
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(nextShipLabel, nextShipStartX + nextShipIconSpan, row)
-        row = row + rowStep
-        self:drawStatsIconLabel(nextLaunch.stats, fullX, row, fullW, 0.75, 0.9, 1)
-        row = row + rowStep
 
+        row = 280
+        rowStep = 8
+        love.graphics.setColor(1, 0.8, 0.3)
+        love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        local relaunchLabel = i18n.t("tap_relaunch")
-        local relaunchFont = love.graphics.getFont()
-        local relaunchWidth = relaunchFont:getWidth(relaunchLabel)
-        local relaunchIconSpan = M.relaunchIconSize + M.relaunchIconGap
-        local relaunchStartX = viewport.width / 2 - (relaunchIconSpan + relaunchWidth) / 2
-        local relaunchIconCenterX = relaunchStartX + M.relaunchIconSize / 2
-        local relaunchIconCenterY = row + relaunchFont:getHeight() / 2
-        if self.relaunchIconImage then
-            local iw, ih = self.relaunchIconImage:getDimensions()
-            local scale = M.relaunchIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.relaunchIconImage, relaunchIconCenterX, relaunchIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan upward chevron, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.relaunchIconPoints(relaunchIconCenterX, relaunchIconCenterY, M.relaunchIconSize))
-        end
+        love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
+        row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.print(relaunchLabel, relaunchStartX + relaunchIconSpan, row)
+        love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
-        if self.destroyedPanelImage then
-            local iw, ih = self.destroyedPanelImage:getDimensions()
-            love.graphics.setColor(1, 1, 1, 0.94)
-            love.graphics.draw(self.destroyedPanelImage, 48, 696, 0,
-                (viewport.width - 96) / iw, 536 / ih)
-        else
-            love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-            love.graphics.rectangle("fill", 48, 696, viewport.width - 96, 536)
-        end
-        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
+        love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
+        love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 134)
+        self.smallFont = self.smallFont or fonts.get(8)
         local previousFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
-        local fullX, fullW = 64, viewport.width - 128
-        local row = 712
-        local rowStep = 44
+        local fullX, fullW = 16, viewport.width - 32
+        local row = 178
+        local rowStep = 11
         love.graphics.setColor(1, 0.55, 0.45)
-        local destroyedTitle = i18n.t("ship_destroyed_title")
-        local destroyedTitleFont = love.graphics.getFont()
-        local destroyedTitleWidth = destroyedTitleFont:getWidth(destroyedTitle)
-        local destroyedTitleIconSpan = M.destroyedTitleIconSize + M.destroyedTitleIconGap
-        local destroyedTitleStartX = viewport.width / 2 - (destroyedTitleIconSpan + destroyedTitleWidth) / 2
-        local destroyedTitleIconCenterX = destroyedTitleStartX + M.destroyedTitleIconSize / 2
-        local destroyedTitleIconCenterY = row + destroyedTitleFont:getHeight() / 2
-        if self.destroyedTitleIconImage then
-            local iw, ih = self.destroyedTitleIconImage:getDimensions()
-            local scale = M.destroyedTitleIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.destroyedTitleIconImage, destroyedTitleIconCenterX, destroyedTitleIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: coral cracked-hull hexagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.55, 0.45)
-            love.graphics.polygon("fill",
-                M.destroyedTitleIconPoints(destroyedTitleIconCenterX, destroyedTitleIconCenterY, M.destroyedTitleIconSize))
-        end
-        love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.print(destroyedTitle, destroyedTitleStartX + destroyedTitleIconSpan, row)
+        love.graphics.printf(i18n.t("ship_destroyed_title"), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        local destroyedLostTotalLabel = i18n.t("lost_total_line",
-            (self.expedition.lastLostSampleValue or 0) + (self.expedition.lastLostSlotValue or 0))
-        local destroyedLostTotalFont = love.graphics.getFont()
-        local destroyedLostTotalWidth = destroyedLostTotalFont:getWidth(destroyedLostTotalLabel)
-        local destroyedLostTotalIconSpan = M.destroyedLostTotalIconSize + M.destroyedLostTotalIconGap
-        local destroyedLostTotalStartX = fullX + (fullW - (destroyedLostTotalIconSpan + destroyedLostTotalWidth)) / 2
-        local destroyedLostTotalIconCenterX = destroyedLostTotalStartX + M.destroyedLostTotalIconSize / 2
-        local destroyedLostTotalIconCenterY = row + destroyedLostTotalFont:getHeight() / 2
-        if self.destroyedLostTotalIconImage then
-            local iw, ih = self.destroyedLostTotalIconImage:getDimensions()
-            local scale = M.destroyedLostTotalIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.destroyedLostTotalIconImage, destroyedLostTotalIconCenterX, destroyedLostTotalIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: gold cracked-coin octagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.polygon("fill",
-                M.destroyedLostTotalIconPoints(destroyedLostTotalIconCenterX, destroyedLostTotalIconCenterY, M.destroyedLostTotalIconSize))
-        end
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(destroyedLostTotalLabel, destroyedLostTotalStartX + destroyedLostTotalIconSpan, row)
+        love.graphics.printf(i18n.t("lost_total_line",
+            (self.expedition.lastLostSampleValue or 0)),
+            fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
-        local destroyedSamplesSettlementLabel = i18n.t("samples_settlement_line",
-            self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0)
-        local destroyedSamplesSettlementFont = love.graphics.getFont()
-        local destroyedSamplesSettlementWidth = destroyedSamplesSettlementFont:getWidth(destroyedSamplesSettlementLabel)
-        local destroyedSamplesSettlementIconSpan = M.destroyedSamplesSettlementIconSize + M.destroyedSamplesSettlementIconGap
-        local destroyedSamplesSettlementStartX = fullX + (fullW - (destroyedSamplesSettlementIconSpan + destroyedSamplesSettlementWidth)) / 2
-        local destroyedSamplesSettlementIconCenterX = destroyedSamplesSettlementStartX + M.destroyedSamplesSettlementIconSize / 2
-        local destroyedSamplesSettlementIconCenterY = row + destroyedSamplesSettlementFont:getHeight() / 2
-        if self.destroyedSamplesSettlementIconImage then
-            local iw, ih = self.destroyedSamplesSettlementIconImage:getDimensions()
-            local scale = M.destroyedSamplesSettlementIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.destroyedSamplesSettlementIconImage, destroyedSamplesSettlementIconCenterX, destroyedSamplesSettlementIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan hexagonal sample-crystal, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.destroyedSamplesSettlementIconPoints(destroyedSamplesSettlementIconCenterX, destroyedSamplesSettlementIconCenterY, M.destroyedSamplesSettlementIconSize))
-        end
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.print(destroyedSamplesSettlementLabel, destroyedSamplesSettlementStartX + destroyedSamplesSettlementIconSpan, row)
+        love.graphics.printf(i18n.t("samples_settlement_line",
+            self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
+            fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        local destroyedSpinsSettlementLabel = i18n.t("spins_settlement_line",
-            self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0)
-        local destroyedSpinsSettlementFont = love.graphics.getFont()
-        local destroyedSpinsSettlementWidth = destroyedSpinsSettlementFont:getWidth(destroyedSpinsSettlementLabel)
-        local destroyedSpinsSettlementIconSpan = M.destroyedSpinsSettlementIconSize + M.destroyedSpinsSettlementIconGap
-        local destroyedSpinsSettlementStartX = fullX + (fullW - (destroyedSpinsSettlementIconSpan + destroyedSpinsSettlementWidth)) / 2
-        local destroyedSpinsSettlementIconCenterX = destroyedSpinsSettlementStartX + M.destroyedSpinsSettlementIconSize / 2
-        local destroyedSpinsSettlementIconCenterY = row + destroyedSpinsSettlementFont:getHeight() / 2
-        if self.destroyedSpinsSettlementIconImage then
-            local iw, ih = self.destroyedSpinsSettlementIconImage:getDimensions()
-            local scale = M.destroyedSpinsSettlementIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.destroyedSpinsSettlementIconImage, destroyedSpinsSettlementIconCenterX, destroyedSpinsSettlementIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: cyan slot-reel barrel, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.polygon("fill",
-                M.destroyedSpinsSettlementIconPoints(destroyedSpinsSettlementIconCenterX, destroyedSpinsSettlementIconCenterY, M.destroyedSpinsSettlementIconSize))
-        end
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.print(destroyedSpinsSettlementLabel, destroyedSpinsSettlementStartX + destroyedSpinsSettlementIconSpan, row)
-        row = row + rowStep
+        -- Item 15/11: spins_settlement_line removed (in-flight slots abolished)
         love.graphics.setColor(0.6, 0.8, 1)
-        local destroyedPeakDistLabel = i18n.t("peak_dist_line", math.floor(self.expedition.lastLostAltitude or 0))
-        local destroyedPeakDistFont = love.graphics.getFont()
-        local destroyedPeakDistWidth = destroyedPeakDistFont:getWidth(destroyedPeakDistLabel)
-        local destroyedPeakDistIconSpan = M.destroyedPeakDistIconSize + M.destroyedPeakDistIconGap
-        local destroyedPeakDistStartX = fullX + (fullW - (destroyedPeakDistIconSpan + destroyedPeakDistWidth)) / 2
-        local destroyedPeakDistIconCenterX = destroyedPeakDistStartX + M.destroyedPeakDistIconSize / 2
-        local destroyedPeakDistIconCenterY = row + destroyedPeakDistFont:getHeight() / 2
-        if self.destroyedPeakDistIconImage then
-            local iw, ih = self.destroyedPeakDistIconImage:getDimensions()
-            local scale = M.destroyedPeakDistIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.destroyedPeakDistIconImage, destroyedPeakDistIconCenterX, destroyedPeakDistIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: blue mountain-peak, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(0.6, 0.8, 1)
-            love.graphics.polygon("fill",
-                M.destroyedPeakDistIconPoints(destroyedPeakDistIconCenterX, destroyedPeakDistIconCenterY, M.destroyedPeakDistIconSize))
-        end
-        love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.print(destroyedPeakDistLabel, destroyedPeakDistStartX + destroyedPeakDistIconSpan, row)
+        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastLostAltitude or 0)),
+            fullX, row, fullW, "center")
         row = row + rowStep
         if self.expedition.lastLostNewBest then
             love.graphics.setColor(1, 0.95, 0.3)
-            local destroyedNewBestLabel = i18n.t("newbest_label")
-            local destroyedNewBestFont = love.graphics.getFont()
-            local destroyedNewBestWidth = destroyedNewBestFont:getWidth(destroyedNewBestLabel)
-            local destroyedNewBestIconSpan = M.destroyedNewBestIconSize + M.destroyedNewBestIconGap
-            local destroyedNewBestStartX = fullX + (fullW - (destroyedNewBestIconSpan + destroyedNewBestWidth)) / 2
-            local destroyedNewBestIconCenterX = destroyedNewBestStartX + M.destroyedNewBestIconSize / 2
-            local destroyedNewBestIconCenterY = row + destroyedNewBestFont:getHeight() / 2
-            if self.destroyedNewBestIconImage then
-                local iw, ih = self.destroyedNewBestIconImage:getDimensions()
-                local scale = M.destroyedNewBestIconSize / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.draw(self.destroyedNewBestIconImage, destroyedNewBestIconCenterX, destroyedNewBestIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-            else
-                -- Fallback: gold star-burst, used only when the
-                -- ComfyUI-generated sprite failed to load.
-                love.graphics.setColor(1, 0.95, 0.3)
-                love.graphics.polygon("fill",
-                    M.destroyedNewBestIconPoints(destroyedNewBestIconCenterX, destroyedNewBestIconCenterY, M.destroyedNewBestIconSize))
-            end
-            love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.print(destroyedNewBestLabel, destroyedNewBestStartX + destroyedNewBestIconSpan, row)
+            love.graphics.printf(i18n.t("newbest_label"), fullX, row, fullW, "center")
             row = row + rowStep
         end
         love.graphics.setColor(1, 0.55, 0.45)
-        local destroyedMetaResetLabel = i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude))
-        local destroyedMetaResetFont = love.graphics.getFont()
-        local destroyedMetaResetWidth = destroyedMetaResetFont:getWidth(destroyedMetaResetLabel)
-        local destroyedMetaResetIconSpan = M.destroyedMetaResetIconSize + M.destroyedMetaResetIconGap
-        local destroyedMetaResetStartX = fullX + (fullW - (destroyedMetaResetIconSpan + destroyedMetaResetWidth)) / 2
-        local destroyedMetaResetIconCenterX = destroyedMetaResetStartX + M.destroyedMetaResetIconSize / 2
-        local destroyedMetaResetIconCenterY = row + destroyedMetaResetFont:getHeight() / 2
-        if self.destroyedMetaResetIconImage then
-            local iw, ih = self.destroyedMetaResetIconImage:getDimensions()
-            local scale = M.destroyedMetaResetIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.destroyedMetaResetIconImage, destroyedMetaResetIconCenterX, destroyedMetaResetIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: red cyclic-arrow, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.55, 0.45)
-            love.graphics.polygon("fill",
-                M.destroyedMetaResetIconPoints(destroyedMetaResetIconCenterX, destroyedMetaResetIconCenterY, M.destroyedMetaResetIconSize))
-        end
-        love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.print(destroyedMetaResetLabel, destroyedMetaResetStartX + destroyedMetaResetIconSpan, row)
+        love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)), fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        local destroyedNextShipLabel = i18n.t("next_ship_line", loadout.shipLabel)
-        local destroyedNextShipFont = love.graphics.getFont()
-        local destroyedNextShipWidth = destroyedNextShipFont:getWidth(destroyedNextShipLabel)
-        local destroyedNextShipIconSpan = M.destroyedNextShipIconSize + M.destroyedNextShipIconGap
-        local destroyedNextShipStartX = fullX + (fullW - (destroyedNextShipIconSpan + destroyedNextShipWidth)) / 2
-        local destroyedNextShipIconCenterX = destroyedNextShipStartX + M.destroyedNextShipIconSize / 2
-        local destroyedNextShipIconCenterY = row + destroyedNextShipFont:getHeight() / 2
-        if self.destroyedNextShipIconImage then
-            local iw, ih = self.destroyedNextShipIconImage:getDimensions()
-            local scale = M.destroyedNextShipIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.destroyedNextShipIconImage, destroyedNextShipIconCenterX, destroyedNextShipIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: gold restart-hull dart, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.polygon("fill",
-                M.destroyedNextShipIconPoints(destroyedNextShipIconCenterX, destroyedNextShipIconCenterY, M.destroyedNextShipIconSize))
-        end
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(destroyedNextShipLabel, destroyedNextShipStartX + destroyedNextShipIconSpan, row)
+        love.graphics.printf(i18n.t("next_ship_line", loadout.shipLabel), fullX, row, fullW, "center")
         row = row + rowStep
-        local destroyedTapStartOverLabel = i18n.t("tap_start_over")
-        local destroyedTapStartOverFont = love.graphics.getFont()
-        local destroyedTapStartOverWidth = destroyedTapStartOverFont:getWidth(destroyedTapStartOverLabel)
-        local destroyedTapStartOverIconSpan = M.destroyedTapStartOverIconSize + M.destroyedTapStartOverIconGap
-        local destroyedTapStartOverStartX = fullX + (fullW - (destroyedTapStartOverIconSpan + destroyedTapStartOverWidth)) / 2
-        local destroyedTapStartOverIconCenterX = destroyedTapStartOverStartX + M.destroyedTapStartOverIconSize / 2
-        local destroyedTapStartOverIconCenterY = row + destroyedTapStartOverFont:getHeight() / 2
-        if self.destroyedTapStartOverIconImage then
-            local iw, ih = self.destroyedTapStartOverIconImage:getDimensions()
-            local scale = M.destroyedTapStartOverIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.destroyedTapStartOverIconImage, destroyedTapStartOverIconCenterX, destroyedTapStartOverIconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: gold restart-loop hexagon, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.polygon("fill",
-                M.destroyedTapStartOverIconPoints(destroyedTapStartOverIconCenterX, destroyedTapStartOverIconCenterY, M.destroyedTapStartOverIconSize))
-        end
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(destroyedTapStartOverLabel, destroyedTapStartOverStartX + destroyedTapStartOverIconSpan, row)
+        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.printf(loadout.upgrades, fullX, row, fullW, "center")
+        row = row + rowStep
+        love.graphics.printf(i18n.t("tap_start_over"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()
     elseif self.expedition.phase == "returning" then
-        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
-        local previousOddsFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
-        -- line is now drawn above the minimap chart in drawMinimap() instead
-        -- of as a full-width standalone line here.
-        -- The slot result panel's symbol/WIN lines previously used the
-        -- default font (measured 160px for "PLANET  PLANET  PLANET" and
-        -- 155px for "WIN +$40  PENDING $40" via GAME_FONTPROBE) inside a
-        -- 140px-wide printf box, which auto-wrapped the widest strings to
-        -- a second line and collided with the fixed y=231 WIN row below
-        -- (confirmed via a real LÖVE runtime capture,
-        -- GAME_CAPTURE_PHASE=returning-fuelbonus). The same small font
-        -- (8px, measured max 108px symbol row / 103px WIN row) already
-        -- used for the ODDS line above fits both rows without wrapping.
-        if self.slotSpin then
-            if self.slotResultPanelImage then
-                local iw, ih = self.slotResultPanelImage:getDimensions()
-                love.graphics.setColor(1, 1, 1, 0.9)
-                love.graphics.draw(self.slotResultPanelImage, 72, 840, 0,
-                    576 / iw, 136 / ih)
-            else
-                love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-                love.graphics.rectangle("fill", 72, 840, 576, 136)
-            end
-            self:drawSlotReel(self:currentSlotReels(), 80, 864, 560)
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(i18n.t("spinning_label"), 80, 924, 560, "center")
-        elseif self.expedition.lastSlotSymbols then
-            if self.slotResultPanelImage then
-                local iw, ih = self.slotResultPanelImage:getDimensions()
-                love.graphics.setColor(1, 1, 1, 0.9)
-                love.graphics.draw(self.slotResultPanelImage, 72, 840, 0,
-                    576 / iw, 136 / ih)
-            else
-                love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-                love.graphics.rectangle("fill", 72, 840, 576, 136)
-            end
-            self:drawSlotReel(self.expedition.lastSlotSymbols, 80, 864, 560)
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(M.slotWinLine(self.expedition), 80, 924, 560, "center")
-        end
-        love.graphics.setFont(previousOddsFont)
-        local slotButton = self:slotButtonState()
-        local returnBandHeight = returnControls.bottom - returnControls.top
-        local returnLabelY = returnControls.top + math.floor((returnBandHeight - 40) / 2)
-        local slotBtnX = returnControls.slotMinX
-        local slotBtnW = returnControls.slotMaxX - returnControls.slotMinX
-        if self.slotSpinButtonImage then
-            local iw, ih = self.slotSpinButtonImage:getDimensions()
-            if slotButton.enabled then
-                love.graphics.setColor(1, 1, 1, 0.9)
-            else
-                love.graphics.setColor(0.45, 0.48, 0.55, 0.75)
-            end
-            love.graphics.draw(self.slotSpinButtonImage, slotBtnX, returnControls.top, 0,
-                slotBtnW / iw, returnBandHeight / ih)
-        else
-            if slotButton.enabled then
-                love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
-            else
-                love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
-            end
-            love.graphics.rectangle("fill", slotBtnX, returnControls.top, slotBtnW, returnBandHeight)
-        end
-        self.smallFont = self.smallFont or fonts.get(M.smallFontSize)
-        local previousReturnButtonFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        if slotButton.enabled then
-            love.graphics.setColor(0.85, 0.95, 1)
-        else
-            love.graphics.setColor(0.55, 0.58, 0.65)
-        end
-        love.graphics.printf(slotButton.compactLabel, returnControls.slotMinX, returnLabelY, returnControls.slotMaxX - returnControls.slotMinX, "center")
-        love.graphics.setFont(previousReturnButtonFont)
         self:drawJoystickStick()
     end
     love.graphics.setColor(0.85, 0.9, 1)
-    local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 200 or viewport.height - 120
+    local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 50 or viewport.height - 30
     if self.expedition.phase == "launch" then
-        -- docs/feedback/INBOX.md "UI 대개편 6건" item 5: drop the crude
-        -- yellow rocket/arrow, then draw a smaller dark translucent-gray
-        -- prompt with a restrained sine wobble + fade pulse.
-        if M.showLaunchRocketIcon then
-            local rocketX = viewport.width / 2
-            local rocketY = messageY - M.launchIconGap
-            if self.launchRocketImage then
-                local iw, ih = self.launchRocketImage:getDimensions()
-                local scale = M.launchIconSize / math.max(iw, ih)
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.draw(self.launchRocketImage, rocketX, rocketY, 0, scale, scale, iw / 2, ih / 2)
-            else
-                love.graphics.setColor(1, 0.75, 0.25)
-                love.graphics.polygon("fill", M.rocketIconPoints(
-                    rocketX, rocketY, M.launchIconSize))
-            end
-        end
-        local ox, oy = M.launchPromptOffset(self.time)
-        local alpha = M.launchPromptAlpha(self.time)
-        local rgb = M.launchPromptRgb
-        self.launchPromptFont = self.launchPromptFont or fonts.get(M.launchPromptFontSize)
-        local previousPromptFont = love.graphics.getFont()
-        love.graphics.setFont(self.launchPromptFont)
-        love.graphics.setColor(rgb[1], rgb[2], rgb[3], alpha)
-        love.graphics.printf(self.message, 16 + ox, messageY + oy, viewport.width - 32, "center")
-        love.graphics.setFont(previousPromptFont)
-    else
-        local font = love.graphics.getFont()
-        local textWidth = font:getWidth(self.message or "")
-        local iconSpan = M.messageBannerIconSize + M.messageBannerIconGap
-        local startX = viewport.width / 2 - (iconSpan + textWidth) / 2
-        local iconCenterX = startX + M.messageBannerIconSize / 2
-        local iconCenterY = messageY + font:getHeight() / 2
-        if self.messageBannerIconImage then
-            local iw, ih = self.messageBannerIconImage:getDimensions()
-            local scale = M.messageBannerIconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(self.messageBannerIconImage, iconCenterX, iconCenterY, 0, scale, scale, iw / 2, ih / 2)
-        else
-            -- Fallback: amber burst-star, used only when the
-            -- ComfyUI-generated sprite failed to load.
-            love.graphics.setColor(1, 0.75, 0.3, 1)
-            love.graphics.polygon("fill",
-                M.messageBannerIconPoints(iconCenterX, iconCenterY, M.messageBannerIconSize))
-        end
+        -- docs/feedback/INBOX.md UI/HUD item 3: pair the TAP TO LAUNCH
+        -- action with a small rocket icon above it instead of bare text.
+        love.graphics.setColor(1, 0.75, 0.25)
+        love.graphics.polygon("fill", M.rocketIconPoints(
+            viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
         love.graphics.setColor(0.85, 0.9, 1)
-        love.graphics.print(self.message, startX + iconSpan, messageY)
     end
+    love.graphics.printf(self.message, 4, messageY, viewport.width - 8, "center")
     if self.newSpecimenBanner then
         local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
-        if self.specimenBannerImage then
-            local iw, ih = self.specimenBannerImage:getDimensions()
-            love.graphics.setColor(1, 1, 1, 0.85 * alpha)
-            love.graphics.draw(self.specimenBannerImage, 48, 240, 0,
-                (viewport.width - 96) / iw, 64 / ih)
-        else
-            love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)
-            love.graphics.rectangle("fill", 48, 240, viewport.width - 96, 64)
-        end
+        love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)
+        love.graphics.rectangle("fill", 12, 60, viewport.width - 24, 16)
         love.graphics.setColor(1, 0.85, 0.3, alpha)
-        love.graphics.printf(self.newSpecimenBanner, 48, 256, viewport.width - 96, "center")
+        love.graphics.printf(self.newSpecimenBanner, 12, 64, viewport.width - 24, "center")
     end
-    if M.showDevPlaceholder then
-        self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
-        local previousFooterFont = love.graphics.getFont()
-        love.graphics.setFont(self.tinyFont)
-        love.graphics.setColor(1, 0.65, 0.2, M.devPlaceholderAlpha)
-        love.graphics.printf(i18n.t("dev_placeholder"), 16, viewport.height - 44, viewport.width - 32, "center")
-        love.graphics.setFont(previousFooterFont)
+    if self.shopModal then
+        love.graphics.setColor(0, 0, 0, 0.85)
+        love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
+        
+        love.graphics.setColor(0.08, 0.14, 0.22, 1)
+        love.graphics.rectangle("fill", 10, 30, viewport.width - 20, 240)
+        love.graphics.setColor(0.3, 0.6, 1, 1)
+        love.graphics.rectangle("line", 10, 30, viewport.width - 20, 240)
+        
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(i18n.t("shop_modal_title"), 10, 40, viewport.width - 20, "center")
+        
+        love.graphics.setColor(0.7, 0.8, 1)
+        love.graphics.printf(self.shopModal.gear.name, 10, 60, viewport.width - 20, "center")
+        
+        self:drawGearSlots(100)
+        
+        local btnY = 220
+        love.graphics.setColor(0.2, 0.4, 0.2, 1)
+        love.graphics.rectangle("fill", 15, btnY, 70, 30)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(i18n.t("shop_modal_buy", self.shopModal.price), 15, btnY + 8, 70, "center")
+        
+        love.graphics.setColor(0.4, 0.2, 0.2, 1)
+        love.graphics.rectangle("fill", 95, btnY, 70, 30)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(i18n.t("shop_modal_skip"), 95, btnY + 8, 70, "center")
+        
+        if self.shopModal.errorText then
+            self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
+            local prevFont = love.graphics.getFont()
+            love.graphics.setFont(self.tinyFont)
+            love.graphics.setColor(1, 0.3, 0.3)
+            love.graphics.printf(self.shopModal.errorText, 12, 160, viewport.width - 24, "center")
+            love.graphics.setFont(prevFont)
+        end
     end
+    self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
+    local previousFooterFont = love.graphics.getFont()
+    love.graphics.setFont(self.tinyFont)
+    love.graphics.setColor(1, 0.65, 0.2, M.devPlaceholderAlpha)
+    love.graphics.printf(i18n.t("dev_placeholder"), 4, viewport.height - 11, viewport.width - 8, "center")
+    love.graphics.setFont(previousFooterFont)
 end
 
 return M

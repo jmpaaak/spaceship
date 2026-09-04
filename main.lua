@@ -21,8 +21,11 @@ function love.load()
     require("game.i18n").setLocale("ko")
     if os.getenv("GAME_FONTPROBE") == "1" then
         local smallSlotFont = love.graphics.newFont(8)
+        -- Item 11(c): "WIN +$40  FUEL +15" removed — in-flight slot machine
+        -- abolished (item 15), fuel-reward string is dead. Earth shop slot
+        -- rewards are $-only (earthSlotSpin returns { reward, symbols }).
         for _, s in ipairs({ "PLANET  PLANET  PLANET", "COMET  COMET  COMET", "STAR  STAR  STAR",
-            "WIN +$40  FUEL +15", "WIN +$75  REPAIR +1", "WIN +$40  PENDING $40" }) do
+            "WIN +$75  REPAIR +1", "WIN +$40  PENDING $40" }) do
             print(string.format("SMALLSLOTFONTPROBE|%s|%d", s, smallSlotFont:getWidth(s)))
         end
         local font = love.graphics.newFont(8)
@@ -33,8 +36,11 @@ function love.load()
             "T/V BUY SCOUT $125", "T/V SELECT STARTER", "T/V SELECT SCOUT",
             "LEFT $999", "SHORT $999", "OWNED",
             "LEFT $9999", "SHORT $125", "LEFT $105", "SHORT $105",
-            "FUEL LV.0 HULL LV.0 YIELD LV.0 STEER LV.0",
-            "FUEL LV.9 HULL LV.9 YIELD LV.9 STEER LV.9",
+            -- Item 11(c): "FUEL LV.0/LV.9 ..." removed — fuel upgrade mechanic
+            -- abolished; there is no "FUEL LV" row in the Earth shop anymore.
+            -- Only HULL/STEER/YIELD upgrade levels remain active in shopLoadoutLines.
+            "HULL LV.0 STEER LV.0 YIELD LV.0",
+            "HULL LV.9 STEER LV.9 YIELD LV.9",
             "H:LV.9>10", "G:LV.9>10", "Y:LV.9>10", "H:LV.0>1", "G:LV.0>1", "Y:LV.0>1",
             "$999", "OK $999",
             "T/H HULL", "T/G STEER", "T/Y YIELD", "T/V SCOUT",
@@ -66,6 +72,8 @@ function love.load()
     if capturePhase == "destroyed" then
         local run = scenes.current.expedition
         run.phase = "settlement"
+        -- Item 11(c): buyFuelUpgrade abolished; give the run enough money to
+        -- buy a durability upgrade and have $25 left for the destroyed screen.
         run.money = run.durabilityUpgradeCost + 25
         require("game.expedition").buyDurabilityUpgrade(run)
         require("game.expedition").launch(run)
@@ -74,8 +82,6 @@ function love.load()
         run.bestAltitude = 400
         run.sampleCount = 2
         run.pendingSampleValue = 80
-        run.slotSpins = 1
-        run.pendingSlotReward = 75
         require("game.expedition").damage(run, run.durability)
     elseif capturePhase == "settlement-newbest" then
         local run = scenes.current.expedition
@@ -88,16 +94,13 @@ function love.load()
         run.lastAltitude = 400
         run.lastNewBest = true
         run.sampleCount = 0
-        run.slotSpins = 0
         run.pendingSampleValue = 0
-        run.pendingSlotReward = 0
         run.lastSampleCount = 2
         run.lastSampleSettlement = 80
-        run.lastSlotSpinsCount = 1
-        run.lastSlotSettlement = 75
-        run.lastSettlement = 155
-        run.money = 155
-        run.bankedFuelBonus = 15
+        -- Item 11(c): dead slot/fuel-bonus fields removed. Settlement is now
+        -- sample-only; lastSettlement = lastSampleSettlement (no slot payout).
+        run.lastSettlement = 80
+        run.money = 80
     elseif capturePhase == "ascending-wide-warning" then
         local scene = scenes.current
         require("game.expedition").launch(scene.expedition)
@@ -154,25 +157,8 @@ function love.load()
         scene.expedition.phase = "returning"
         scene.expedition.altitude = 500
         scene.expedition.returnDistance = 500
-        scene.expedition.slotOpportunities = 3
-        local world = require("game.world")
-        world.nearbyPlanets = function() return {} end
-    elseif capturePhase == "returning-repair" then
-        -- Real-runtime capture for the new repair-voucher slot reward
-        -- (docs/GAME_DESIGN.md 귀환 슬롯: 수리권). Forces a completed
-        -- STAR-STAR-STAR spin result so the WIN +$N REPAIR +N message
-        -- renders in the slot result box.
-        local scene = scenes.current
-        require("game.expedition").launch(scene.expedition)
-        scene.expedition.phase = "returning"
-        scene.expedition.altitude = 500
-        scene.expedition.returnDistance = 500
-        scene.expedition.durability = 1
-        scene.expedition.slotOpportunities = 2
-        scene.expedition.lastSlotSymbols = { "STAR", "STAR", "STAR" }
-        scene.expedition.lastSlotReward = 75
-        scene.expedition.lastSlotRepair = 1
-        scene.expedition.durability = 2
+        -- Item 11(c)/15(a): slotOpportunities removed — in-flight slot machine
+        -- abolished. This capture now just shows a plain returning phase.
         local world = require("game.world")
         world.nearbyPlanets = function() return {} end
     elseif capturePhase == "settlement-shortfunds" then
@@ -180,7 +166,7 @@ function love.load()
         -- docs/STATUS.md: verify the SHORT $N status branch (as opposed to
         -- the already-captured LEFT $N affordable branch) renders inside
         -- the measured shopStatusColumnW without overlap. money=0 forces
-        -- every purchase row (fuel/hull/steering/yield/scout) into SHORT $N.
+        -- every purchase row (hull/steering/yield/scout) into SHORT $N.
         local run = scenes.current.expedition
         require("game.expedition").launch(run)
         run.phase = "settlement"
@@ -188,8 +174,6 @@ function love.load()
         run.lastSettlement = 0
         run.lastSampleCount = 0
         run.lastSampleSettlement = 0
-        run.lastSlotSpinsCount = 0
-        run.lastSlotSettlement = 0
         run.lastAltitude = 0
         run.lastNewBest = false
     elseif capturePhase == "ascending-streak" then
@@ -252,40 +236,10 @@ function love.load()
             return { { id = "damage-text-test", x = 0, y = -500, radius = 7, hue = 0.1 } }
         end
         world.collisionDamage = function() return 2 end
-    elseif capturePhase == "returning-fuelbonus" then
-        -- Real-runtime capture for the new next-expedition fuel-bonus slot
-        -- reward (docs/GAME_DESIGN.md 귀환 슬롯: 다음 원정 연료 보너스).
-        -- Forces a completed PLANET-PLANET-PLANET spin result so the
-        -- WIN +$N FUEL +N message renders in the slot result box.
-        local scene = scenes.current
-        require("game.expedition").launch(scene.expedition)
-        scene.expedition.phase = "returning"
-        scene.expedition.altitude = 500
-        scene.expedition.returnDistance = 500
-        scene.expedition.slotOpportunities = 2
-        scene.expedition.lastSlotSymbols = { "PLANET", "PLANET", "PLANET" }
-        scene.expedition.lastSlotReward = 40
-        scene.expedition.lastSlotFuelBonus = 15
-        scene.expedition.pendingFuelBonus = 15
-        local world = require("game.world")
-        world.nearbyPlanets = function() return {} end
-    elseif capturePhase == "returning-samplebonus" then
-        -- Real-runtime capture for the new sample-value slot reward
-        -- (docs/GAME_DESIGN.md 귀환 슬롯: 표본 보너스). Forces a completed
-        -- COMET-COMET-COMET spin result so the WIN +$N SAMPLE +$N message
-        -- renders in the slot result box.
-        local scene = scenes.current
-        require("game.expedition").launch(scene.expedition)
-        scene.expedition.phase = "returning"
-        scene.expedition.altitude = 500
-        scene.expedition.returnDistance = 500
-        scene.expedition.slotOpportunities = 2
-        scene.expedition.lastSlotSymbols = { "COMET", "COMET", "COMET" }
-        scene.expedition.lastSlotReward = 40
-        scene.expedition.lastSlotSampleBonus = 25
-        scene.expedition.pendingSampleValue = 25
-        local world = require("game.world")
-        world.nearbyPlanets = function() return {} end
+    -- Item 11(c)/15(a): returning-fuelbonus and returning-samplebonus capture
+    -- phases removed — they demonstrated the in-flight slot machine (abolished
+    -- in item 15(a)). The slot machine now lives exclusively in the Earth shop
+    -- settlement screen (item 15(b)).
     elseif capturePhase == "ascending-joystick-diagonal" then
         -- Real-runtime capture for the new omnidirectional joystick
         -- movement (docs/GAME_DESIGN.md 이동 방식 개선 항목 1). Simulates a
@@ -351,13 +305,13 @@ function love.load()
     elseif capturePhase == "full-loop-relaunch" then
         -- Real-runtime capture for the top pending feedback item (세로
         -- 상승형 로그라이트 핵심 루프): drives the actual scene through a
-        -- full launch -> ascend -> collect -> fuel-empty return -> slot
-        -- spin -> safe settlement -> shop upgrade -> relaunch round trip
-        -- via the same PlayScene:keypressed/update entry points a real
-        -- player uses (not just field assignment), then captures the
-        -- resulting fresh ascending screen so the loop is verified
-        -- end-to-end in one real LOVE runtime frame instead of only via
-        -- static per-phase field seeding.
+        -- full launch -> ascend -> collect -> return -> settlement ->
+        -- shop upgrade -> relaunch round trip via the same
+        -- PlayScene:keypressed/update entry points a real player uses
+        -- (not just field assignment), then captures the resulting fresh
+        -- ascending screen so the loop is verified end-to-end.
+        -- Item 11(c)/15(a): in-flight slot machine abolished — the old
+        -- while-slotOpportunities loop and buyFuelUpgrade call removed.
         local scene = scenes.current
         local world = require("game.world")
         local expeditionModule = require("game.expedition")
@@ -370,47 +324,9 @@ function love.load()
         scene:update(0.001) -- collect the sample near-instantly
         world.nearbyPlanets = function() return {} end
         expeditionModule.beginReturn(scene.expedition)
-        while scene.expedition.phase == "returning" and scene.expedition.slotOpportunities > 0 do
-            scene:keypressed("space") -- spin every offered slot
-            scene:update(1) -- let the slot-spin animation resolve before the
-            -- next keypress, otherwise self.slotSpin never clears and
-            -- keypressed's "not self.slotSpin" guard blocks all further
-            -- spins forever (infinite loop / hang).
-        end
         scene:update(1000) -- finish the return -> settlement
         expeditionModule.buyDurabilityUpgrade(scene.expedition) -- shop upgrade with settled money
         scene:keypressed("space") -- relaunch
-    elseif capturePhase == "checkpoint-dock" then
-        -- Real-runtime capture for docs/feedback/INBOX.md 처리대기 항목
-        -- 7-b/8: places the ship directly on a non-home galaxy's
-        -- checkpoint hub planet with pending sample value queued up, so
-        -- the very first update() docks, grants the galaxy-unique gear,
-        -- and settles the pending sample value into money -- all while
-        -- the expedition stays in the ascending phase (no slot machine,
-        -- no expedition-ending settlement).
-        local scene = scenes.current
-        require("game.expedition").launch(scene.expedition)
-        scene.expedition.pendingSampleValue = 45
-        local world = require("game.world")
-        local found
-        for gy = -3, 3 do
-            for gx = -3, 3 do
-                if not (gx == 0 and gy == 0) then
-                    local galaxy = world.galaxy(gx, gy)
-                    if galaxy then
-                        local hub = world.hubPlanet(galaxy)
-                        if hub then found = hub break end
-                    end
-                end
-            end
-            if found then break end
-        end
-        if found then
-            scene.ship.x = found.x
-            scene.ship.y = found.y
-            scene.expedition.altitude = 400
-        end
-        scene:update(0)
     elseif capturePhase == "launch-with-specimens" then
         -- Real-runtime capture for the launch-screen specimen log strip
         -- (docs/feedback 2026-09-02 request: show off exploration finds
@@ -491,7 +407,7 @@ end
 -- Route the mouse through the same PlayScene touch/joystick path so a
 -- click-drag is a virtual stick. Ignore istouch so a real touch isn't
 -- handled twice (LÖVE also synthesizes mouse events for touches).
--- Coordinates are clamped onto the 720x1280 canvas so high-dpi letterbox
+-- Coordinates are clamped onto the 180x320 canvas so high-dpi letterbox
 -- rounding cannot drop the press as "outside" and silently eat the drag.
 local mouseTouchId = "mouse"
 
