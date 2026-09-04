@@ -97,7 +97,7 @@ def compact_pending_feedback(pending: list[str]) -> list[str]:
 
 
 DOC_ONLY_PATHS = {"docs/STATUS.md", "docs/STATUS_HISTORY.md", "docs/feedback/INBOX.md"}
-DOC_ONLY_STREAK_THRESHOLD = 3
+DOC_ONLY_STREAK_THRESHOLD = 5
 
 
 def recent_commits_doc_only_streak(root: Path, n: int = DOC_ONLY_STREAK_THRESHOLD) -> bool:
