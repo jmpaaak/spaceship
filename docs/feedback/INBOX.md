@@ -2,6 +2,27 @@
 
 ## 처리 대기
 
+- **[2026-09-05] 미니맵 나선 팔 수를 은하 반지름 기반으로 결정 — 팔 간격은 균등 유지 (사용자 확정):**
+  - `game/minimap.lua` `M.spiralArmCount(galaxy)` 수정:
+    - 현재: `2 + floor(hash * 4)` (순수 랜덤 2~5)
+    - 변경: galaxy.radius 구간으로 결정
+      ```lua
+      function M.spiralArmCount(galaxy)
+          if not galaxy then return 2 end
+          local r = galaxy.radius
+          if r < 1000 then return 2
+          elseif r < 1400 then return 3
+          elseif r < 1800 then return 4
+          else return 5
+          end
+      end
+      ```
+    - 팔 간격 `armAngle = rotation + (arm/armCount)*2π` 는 변경 없음 — 이미 균등.
+    - `M.spiralRotation()` 은 hash 기반 유지 (같은 반지름 은하도 시작 방향은 다름).
+    - `world.lua` 기준 은하 반지름: `galaxyCellSize*(0.18~0.46)` ≈ **828~2120px** 범위.
+    - 관련 self_test가 있으면 `spiralArmCount` 반환 범위 assertion 업데이트.
+    - make verify GREEN + 커밋: `fix(minimap): galaxy arm count from radius, not random`
+
 - **[2026-09-05] 모바일 해상도 최적화 + 별 분산 + 중력장 확대 + 행성 마커 + 은하 공유 특성 (사용자 확정, 최우선). 한 사이클 = 아래 소항목 하나 + make verify GREEN + 커밋.**
 
   **(1) 모바일 해상도 최적화 및 세계 스케일 점검:**
