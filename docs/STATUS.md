@@ -1,6 +1,14 @@
 # STATUS
 - preflight this cycle: READY
-- Slice: Item 8 — fix play.lua double-dipping sample collection on hubs/shops + coverage
+- Slice: Item 15(c) — Earth shop slot ODDS badge used rewardProfile.name on a string
+
+## 2026-09-04 — Item 15(c): Fix Earth shop slot ODDS badge (string vs table)
+
+- Found bug: `expedition.earthSlotSpin` returns `rewardProfile` as a plain string (`"solar"`/`"fringe"`/`"void"`). Settlement `draw()` gated the ODDS badge on `earthShopSlotResult.rewardProfile.name`, which is always nil on a string, so the profile badge never rendered after a spin.
+- Fix: added pure helper `PlayScene.earthSlotProfileLabel(rewardProfile)` that uppercases the string (`"void"` → `"VOID ODDS"`) and returns nil for empty/non-string. `draw()` now uses that helper.
+- TDD: RED (`earthSlotProfileLabel must exist`) then GREEN. Covers solar/fringe/void labels, nil/empty skip, and a settlement `"l"` spin whose stored string `rewardProfile` formats as `"VOID ODDS"`.
+- `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK.
+- Next slice: remaining Item 11/15 UI remnants, or Item 7/8 wiring gaps.
 
 ## 2026-09-04 — Item 8: Fix double-dipping sample collection on hubs/shops
 

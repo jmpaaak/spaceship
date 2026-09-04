@@ -5960,6 +5960,56 @@ function M.run()
             "item 15(b): earthSlotSpin must not be called outside settlement phase")
     end
 
+    -- Item 15(c) UI gap: play.lua's settlement draw() gated the ODDS badge
+    -- on `earthShopSlotResult.rewardProfile.name`, but earthSlotSpin returns
+    -- rewardProfile as a plain string ("solar"/"fringe"/"void"), not a table.
+    -- The `.name` lookup was always nil so the badge never rendered.
+    -- PlayScene.earthSlotProfileLabel is the pure helper draw() now uses.
+    do
+        local PlayScene = require("game.scenes.play")
+        assert(type(PlayScene.earthSlotProfileLabel) == "function",
+            "item 15(c): PlayScene.earthSlotProfileLabel must exist so draw() can show the ODDS badge")
+
+        assert(PlayScene.earthSlotProfileLabel("solar") == "SOLAR ODDS",
+            "item 15(c): string rewardProfile 'solar' must format as 'SOLAR ODDS'")
+        assert(PlayScene.earthSlotProfileLabel("fringe") == "FRINGE ODDS",
+            "item 15(c): string rewardProfile 'fringe' must format as 'FRINGE ODDS'")
+        assert(PlayScene.earthSlotProfileLabel("void") == "VOID ODDS",
+            "item 15(c): string rewardProfile 'void' must format as 'VOID ODDS'")
+        assert(PlayScene.earthSlotProfileLabel(nil) == nil,
+            "item 15(c): nil rewardProfile must return nil (no badge)")
+        assert(PlayScene.earthSlotProfileLabel("") == nil,
+            "item 15(c): empty rewardProfile must return nil (no badge)")
+
+        -- Settlement "l" spin stores the string rewardProfile from earthSlotSpin;
+        -- the helper must produce a badge from that stored result.
+        local expedition = require("game.expedition")
+        local originalSpin = expedition.earthSlotSpin
+        expedition.earthSlotSpin = function()
+            return {
+                symbols = { "STAR", "STAR", "STAR" },
+                reward = 75,
+                totalWeight = 10,
+                effectiveStarWeight = 3,
+                rewardProfile = "void",
+            }
+        end
+        local scene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() end },
+        })
+        scene.expedition.phase = "settlement"
+        scene:keypressed("l")
+        expedition.earthSlotSpin = originalSpin
+        assert(scene.earthShopSlotResult ~= nil,
+            "item 15(c): settlement spin must store earthShopSlotResult")
+        assert(type(scene.earthShopSlotResult.rewardProfile) == "string",
+            "item 15(c): earthSlotSpin rewardProfile is a string, not a table with .name")
+        local badge = PlayScene.earthSlotProfileLabel(scene.earthShopSlotResult.rewardProfile)
+        assert(badge == "VOID ODDS",
+            "item 15(c): badge from stored string rewardProfile must be 'VOID ODDS', got: "
+            .. tostring(badge))
+    end
+
     testJoystick()
     testGalaxyStructure()
     testMinimap()

@@ -578,6 +578,18 @@ function M.new(options)
     }, M)
 end
 
+-- Item 15(c): earthSlotSpin returns rewardProfile as a plain string
+-- ("solar"/"fringe"/"void"), not a table. Format it as an uppercase
+-- "SOLAR ODDS" badge for the Earth shop slot UI. Returns nil when there
+-- is no profile so draw() can skip the badge without a `.name` lookup
+-- that would always be nil on a string.
+function M.earthSlotProfileLabel(rewardProfile)
+    if type(rewardProfile) ~= "string" or rewardProfile == "" then
+        return nil
+    end
+    return string.upper(rewardProfile) .. " ODDS"
+end
+
 -- Spawns a tier-scaled burst of short-lived particles at (x, y) using the
 -- tier's rim-glow color, and starts a brief ship scale-punch so pickups feel
 -- impactful (Balatro-style card pop) instead of a flat sprite swap.
@@ -2021,9 +2033,10 @@ function M:draw()
             love.graphics.setColor(0.85, 0.95, 1)
             love.graphics.printf(table.concat(self.earthShopSlotResult.symbols, "  "), fullX, row, fullW, "center")
             row = row + rowStep
-            if self.earthShopSlotResult.rewardProfile and self.earthShopSlotResult.rewardProfile.name then
+            local profileLabel = M.earthSlotProfileLabel(self.earthShopSlotResult.rewardProfile)
+            if profileLabel then
                 love.graphics.setColor(1, 0.55, 0.45)
-                love.graphics.printf(self.earthShopSlotResult.rewardProfile.name .. " ODDS", fullX, row, fullW, "center")
+                love.graphics.printf(profileLabel, fullX, row, fullW, "center")
             end
         else
             love.graphics.setColor(1, 0.8, 0.3)
