@@ -131,20 +131,19 @@ altitude/climb-rate payoff), mirroring Balatro's joker-combo philosophy:
   returned table also carries `synergyMultiplier` so UI/tests can surface
   the current combo strength directly.
 
-The bundled `game/data/hull_parts.json` pool now has 24 cards (item 9's
-"최소 20~30종" target), each tagged with at least one synergy tag —
-including a dedicated `azure`/`ember`/`void` tag per hue family (matching
-`world.hueFamilies`) plus cross-cutting `speed`/`altitude`/`defense`/
-`economy`/`control` tags — so a wide variety of 2-3 card tag-overlap combos
-are available to build around. `game/self_test.lua`'s
-`testGearSynergyEngine` verifies the pool size, that every card has a tag,
-and the multiply-vs-add behavior of the engine itself.
+The bundled `game/data/hull_parts.json` pool now has **36 cards** (well
+above item 9's "최소 20~30종" target), each tagged with at least one synergy
+tag — including a dedicated `azure`/`ember`/`void` tag per hue family
+(matching `world.hueFamilies`) plus cross-cutting `speed`/`altitude`/
+`defense`/`economy`/`control` tags — so a wide variety of 2-3 card
+tag-overlap combos are available to build around. `game/self_test.lua`'s
+`testGearSynergyEngine` verifies the pool size (≥20), that every card has
+a tag, and the multiply-vs-add behavior of the engine itself.
 
-`game/gear.lua` does not yet wire this into `run.equippedGear`/gameplay —
-that connection (and the actual equip/unequip UI) is deferred to a
-follow-up slice per `loop/PROMPT.md`'s scope (this lane may only touch
-`game/scenes/play.lua`/`game/expedition.lua` for the minimal loader-call
-exception, not full gameplay wiring).
+`game/gear.lua` is wired into `run.equippedGear`/`run.equippedEngineParts`
+via `expedition.lua`'s `M.equipGear`/`M.unequipGear`/`M.effectiveClimbSpeed`
+and the full category-A~G effect suite. The actual equip/unequip UI (shop
+popup, loadout screen) remains in `play.lua` (out of this lane's scope).
 
 ## Engine part slot separation (item 10)
 
@@ -153,7 +152,7 @@ exception, not full gameplay wiring).
 `game/data/hull_parts.json` documented above — no schema changes were
 needed for item 10, since the "이원화" (separation) item 10 calls for is
 purely a *slot-tracking* concern, not a card-data concern. The pool
-currently has 12 cards (own initial size; independent of hull's 24), all
+currently has **26 cards** (own initial size; independent of hull's 36), all
 with at least one synergy tag so `gear.aggregateEffects` /
 `gear.tagSynergyMultiplier` / `gear.equippedTotals` (which already operate
 generically on any list of parts) work identically for engine loadouts.
