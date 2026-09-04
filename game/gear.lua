@@ -77,6 +77,66 @@ M.knownRarities = {
     legendary = true,
 }
 
+-- Stellar Origin suit system (docs/feedback/INBOX.md [2026-09-05]):
+-- four suits assign Balatro-style group-synergy identities to cards.
+-- knownSuits drives loader validation; activeSynergies computes which
+-- suit-threshold bonuses fire for a given equipped loadout.
+M.knownSuits = { solar = true, nebula = true, void = true, pulsar = true }
+
+-- Thresholds for each synergy (suit → minimum card count).
+M.suitSynergyThresholds = {
+    solarSystem  = { suit = "solar",  count = 3 },
+    nebulaField  = { suit = "nebula", count = 3 },
+    eventHorizon = { suit = "void",   count = 3 },
+    pulsarBurst  = { suit = "pulsar", count = 2 },
+}
+-- binaryStar and supernova require multi-suit combos; darkMatter requires
+-- a void+pulsar pair — all computed in activeSynergies below.
+
+-- Returns a table of active synergy flags for the equipped hull+engine
+-- card lists combined, e.g. { solarSystem=true, nebulaField=true }.
+-- Pure function — no love.* calls, headless-safe.
+function M.activeSynergies(equippedHull, equippedEngine)
+    local counts = { solar = 0, nebula = 0, void = 0, pulsar = 0 }
+    local allParts = {}
+    for _, p in ipairs(equippedHull or {}) do allParts[#allParts + 1] = p end
+    for _, p in ipairs(equippedEngine or {}) do allParts[#allParts + 1] = p end
+
+    for _, part in ipairs(allParts) do
+        local s = part.suit
+        if s and counts[s] then
+            counts[s] = counts[s] + 1
+        end
+    end
+
+    local result = {}
+
+    -- Single-suit thresholds.
+    for synergy, spec in pairs(M.suitSynergyThresholds) do
+        if counts[spec.suit] >= spec.count then
+            result[synergy] = true
+        end
+    end
+
+    -- binaryStar: solar 2+ AND nebula 2+.
+    if counts.solar >= 2 and counts.nebula >= 2 then
+        result.binaryStar = true
+    end
+
+    -- darkMatter: void 2+ AND pulsar 2+.
+    if counts.void >= 2 and counts.pulsar >= 2 then
+        result.darkMatter = true
+    end
+
+    -- supernova: all four suits each 1+.
+    if counts.solar >= 1 and counts.nebula >= 1
+    and counts.void >= 1 and counts.pulsar >= 1 then
+        result.supernova = true
+    end
+
+    return result
+end
+
 -- Item 12: "선체/엔진 부품 등급(레어리티) + 부수 효과(에디션) 시스템". A
 -- card's `editions` array (already parsed by validatePart) lists which of
 -- these edition ids that specific card is allowed to roll into — unknown
@@ -158,6 +218,16 @@ local function validatePart(part, index)
         end
     end
 
+    -- Stellar Origin suit validation: must be a known suit if present.
+    if part.suit ~= nil then
+        if not (type(part.suit) == "string" and M.knownSuits[part.suit]) then
+            return nil, string.format("part '%s' has unknown suit '%s'", part.id, tostring(part.suit))
+        end
+    else
+        -- Warn but do not fail — old cards without a suit still work.
+        print(string.format("[WARN] card %s missing suit", part.id))
+    end
+
     return {
         id = part.id,
         name = part.name,
@@ -168,6 +238,8 @@ local function validatePart(part, index)
         editions = editions,
         effects = effects,
         galaxyExclusive = part.galaxyExclusive == true,
+        -- Stellar Origin suit field: optional for backward compat; warn if absent.
+        suit = part.suit,
     }
 end
 

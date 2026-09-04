@@ -4665,6 +4665,12 @@ local function testEarthSlotProfileRewardVariation()
             .. ") - risk tradeoff")
 end
 
+-- Forward declaration: testStellarSynergies is defined after runGearTests
+-- (where it is called) to keep related logic together; forward-declaring the
+-- local here satisfies Lua 5.1 scoping while keeping the 60-upvalue limit
+-- per runGearTests intact (only 1 extra upvalue slot consumed).
+local testStellarSynergies
+
 -- Module-level gear test suite (kept outside M.run() so M.run() only
 -- consumes 1 upvalue for this reference instead of 47+, staying within
 -- Lua 5.1's 60-upvalue-per-function limit).
@@ -4719,6 +4725,68 @@ local function runGearTests()
     testGearEarthSlotEngineSlotLuckWiring()
     testEarthSlotProfileRewardVariation()
     testItem15DeadSlotConstantsRemoved()
+    testStellarSynergies()
+end
+
+-- [2026-09-05] Stellar Origin suit system — M.activeSynergies() unit tests.
+-- Verifies all six synergy flags fire at their correct thresholds and that
+-- an empty loadout produces no synergies. Pure: only uses gear.lua tables,
+-- no love.* calls.
+testStellarSynergies = function()
+    -- Helper: build a minimal stub card with a given suit.
+    local function card(suit)
+        return { id = "stub_" .. suit, suit = suit, tags = {}, effects = {} }
+    end
+
+    -- solar 3 → solarSystem=true.
+    local s3 = gear.activeSynergies({ card("solar"), card("solar"), card("solar") }, {})
+    assert(s3.solarSystem == true,
+        "solar 3 must activate solarSystem, got: " .. tostring(s3.solarSystem))
+    assert(s3.nebulaField == nil,
+        "solar 3 must NOT activate nebulaField")
+
+    -- nebula 3 → nebulaField=true.
+    local n3 = gear.activeSynergies({ card("nebula"), card("nebula"), card("nebula") }, {})
+    assert(n3.nebulaField == true,
+        "nebula 3 must activate nebulaField, got: " .. tostring(n3.nebulaField))
+
+    -- void 3 → eventHorizon=true.
+    local v3 = gear.activeSynergies({ card("void"), card("void"), card("void") }, {})
+    assert(v3.eventHorizon == true,
+        "void 3 must activate eventHorizon, got: " .. tostring(v3.eventHorizon))
+
+    -- pulsar 2 → pulsarBurst=true.
+    local p2 = gear.activeSynergies({ card("pulsar"), card("pulsar") }, {})
+    assert(p2.pulsarBurst == true,
+        "pulsar 2 must activate pulsarBurst, got: " .. tostring(p2.pulsarBurst))
+
+    -- 4 suits each 1 card → supernova=true.
+    local four = gear.activeSynergies(
+        { card("solar"), card("nebula") },
+        { card("void"),  card("pulsar") })
+    assert(four.supernova == true,
+        "4 suits each 1+ must activate supernova, got: " .. tostring(four.supernova))
+
+    -- Empty loadout → no synergies.
+    local empty = gear.activeSynergies({}, {})
+    local emptySynergyCount = 0
+    for _ in pairs(empty) do emptySynergyCount = emptySynergyCount + 1 end
+    assert(emptySynergyCount == 0,
+        "empty loadout must produce no synergies, got count: " .. emptySynergyCount)
+
+    -- Bundled JSON cards all have suit field (no [WARN] paths expected from loader in prod).
+    local hullPool, hullErr = gear.loadHullParts()
+    assert(hullPool, "hull pool must load for suit check: " .. tostring(hullErr))
+    for _, part in ipairs(hullPool) do
+        assert(part.suit ~= nil and gear.knownSuits[part.suit],
+            "hull card '" .. part.id .. "' must have a valid suit field, got: " .. tostring(part.suit))
+    end
+    local enginePool, engineErr = gear.loadEngineParts()
+    assert(enginePool, "engine pool must load for suit check: " .. tostring(engineErr))
+    for _, part in ipairs(enginePool) do
+        assert(part.suit ~= nil and gear.knownSuits[part.suit],
+            "engine card '" .. part.id .. "' must have a valid suit field, got: " .. tostring(part.suit))
+    end
 end
 
 local function testItem8HubProximitySettle()

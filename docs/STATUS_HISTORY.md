@@ -1308,3 +1308,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 ## Archived from STATUS.md (2026-09-05 08:22)
 
 2026-09-05 — fix(debris): collision deals 1 damage instead of instant kill.
+
+## Archived from STATUS.md (2026-09-05 08:24)
+
+- RCS puff position/velocity now follow ship.angle.
+- Horizontal (bank) puff: spawns at ship flank using perp direction (angle + pi/2), velocity in that same direction.
+- Vertical (lift) puff: spawns at ship nose/tail using forward direction (cos/sin of angle), velocity along that axis.
+- self_test.lua horizontal-puff assert updated to verify angle-aware geometry.
+- make verify GREEN.

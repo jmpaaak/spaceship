@@ -3,6 +3,7 @@
   "parts": [
     {
       "id": "hull_scrap_plate",
+      "suit": "solar",
       "name": "Scrap Plate",
       "nameKo": "고철 장갑판",
       "icon": "▭",
@@ -15,6 +16,7 @@
     },
     {
       "id": "hull_ion_fin",
+      "suit": "void",
       "name": "Ion Fin",
       "nameKo": "이온 핀",
       "icon": "◭",
@@ -27,6 +29,7 @@
     },
     {
       "id": "hull_cargo_pod",
+      "suit": "nebula",
       "name": "Cargo Pod",
       "nameKo": "화물 포드",
       "icon": "▤",
@@ -39,6 +42,7 @@
     },
     {
       "id": "hull_reserve_tank",
+      "suit": "nebula",
       "name": "Reserve Tank",
       "nameKo": "예비 탱크",
       "icon": "◑",
@@ -51,6 +55,7 @@
     },
     {
       "id": "hull_climb_booster",
+      "suit": "void",
       "name": "Climb Booster",
       "nameKo": "상승 부스터",
       "icon": "▲",
@@ -64,6 +69,7 @@
     },
     {
       "id": "hull_reactive_hull",
+      "suit": "solar",
       "name": "Reactive Hull",
       "nameKo": "반응 장갑",
       "icon": "◈",
@@ -77,6 +83,7 @@
     },
     {
       "id": "hull_azure_collector",
+      "suit": "nebula",
       "name": "Azure Collector",
       "nameKo": "아주르 수집기",
       "icon": "◇",
@@ -89,6 +96,7 @@
     },
     {
       "id": "hull_ember_vent",
+      "suit": "solar",
       "name": "Ember Vent",
       "nameKo": "엠버 배기구",
       "icon": "◆",
@@ -101,6 +109,7 @@
     },
     {
       "id": "hull_void_lens",
+      "suit": "void",
       "name": "Void Lens",
       "nameKo": "보이드 렌즈",
       "icon": "◐",
@@ -113,6 +122,7 @@
     },
     {
       "id": "hull_gyro_stabilizer",
+      "suit": "void",
       "name": "Gyro Stabilizer",
       "nameKo": "자이로 안정기",
       "icon": "◎",
@@ -125,6 +135,7 @@
     },
     {
       "id": "hull_micro_thruster_array",
+      "suit": "void",
       "name": "Micro Thruster Array",
       "nameKo": "마이크로 추진기 배열",
       "icon": "▧",
@@ -138,6 +149,7 @@
     },
     {
       "id": "hull_ablative_coat",
+      "suit": "solar",
       "name": "Ablative Coat",
       "nameKo": "삭마 코팅",
       "icon": "▨",
@@ -150,6 +162,7 @@
     },
     {
       "id": "hull_solar_sail",
+      "suit": "nebula",
       "name": "Solar Sail",
       "nameKo": "태양 돛",
       "icon": "▽",
@@ -163,6 +176,7 @@
     },
     {
       "id": "hull_titan_frame",
+      "suit": "solar",
       "name": "Titan Frame",
       "nameKo": "타이탄 프레임",
       "icon": "▣",
@@ -176,6 +190,7 @@
     },
     {
       "id": "hull_prism_hull",
+      "suit": "nebula",
       "name": "Prism Hull",
       "nameKo": "프리즘 선체",
       "icon": "◭",
@@ -189,6 +204,7 @@
     },
     {
       "id": "hull_ember_core",
+      "suit": "solar",
       "name": "Ember Core",
       "nameKo": "엠버 코어",
       "icon": "◉",
@@ -201,6 +217,7 @@
     },
     {
       "id": "hull_void_shard",
+      "suit": "void",
       "name": "Void Shard",
       "nameKo": "보이드 파편",
       "icon": "◒",
@@ -214,6 +231,7 @@
     },
     {
       "id": "hull_ballast_weight",
+      "suit": "solar",
       "name": "Ballast Weight",
       "nameKo": "밸러스트 웨이트",
       "icon": "▬",
@@ -226,6 +244,7 @@
     },
     {
       "id": "hull_navigation_beacon",
+      "suit": "pulsar",
       "name": "Navigation Beacon",
       "nameKo": "항법 비컨",
       "icon": "✦",
@@ -238,6 +257,7 @@
     },
     {
       "id": "hull_star_compass",
+      "suit": "void",
       "name": "Star Compass",
       "nameKo": "별자리 나침반",
       "icon": "✧",
@@ -251,6 +271,7 @@
     },
     {
       "id": "hull_quantum_alloy",
+      "suit": "pulsar",
       "name": "Quantum Alloy",
       "nameKo": "양자 합금",
       "icon": "◍",
@@ -265,6 +286,7 @@
     },
     {
       "id": "hull_azure_prism",
+      "suit": "nebula",
       "name": "Azure Prism",
       "nameKo": "아주르 프리즘",
       "icon": "◇",
@@ -278,6 +300,7 @@
     },
     {
       "id": "hull_ember_plating",
+      "suit": "solar",
       "name": "Ember Plating",
       "nameKo": "엠버 플레이팅",
       "icon": "◆",
@@ -290,6 +313,7 @@
     },
     {
       "id": "hull_void_capacitor",
+      "suit": "pulsar",
       "name": "Void Capacitor",
       "nameKo": "보이드 축전기",
       "icon": "◐",
@@ -302,6 +326,7 @@
     },
     {
       "id": "hull_emergency_beacon",
+      "suit": "solar",
       "name": "Emergency Beacon",
       "nameKo": "비상 구조 비콘",
       "icon": "✚",
@@ -314,6 +339,7 @@
     },
     {
       "id": "hull_trade_license",
+      "suit": "nebula",
       "name": "Trade License",
       "nameKo": "교역 허가증",
       "icon": "▥",
@@ -326,6 +352,7 @@
     },
     {
       "id": "hull_combo_matrix",
+      "suit": "pulsar",
       "name": "Combo Matrix",
       "nameKo": "콤보 매트릭스",
       "icon": "▦",
@@ -339,6 +366,7 @@
     },
     {
       "id": "hull_market_broker",
+      "suit": "nebula",
       "name": "Market Broker",
       "nameKo": "시세 중개기",
       "icon": "◈",
@@ -351,6 +379,7 @@
     },
     {
       "id": "hull_lucky_charm",
+      "suit": "pulsar",
       "name": "Lucky Charm",
       "nameKo": "행운의 부적",
       "icon": "✦",
@@ -363,6 +392,7 @@
     },
     {
       "id": "hull_echo_relay",
+      "suit": "pulsar",
       "name": "Echo Relay",
       "nameKo": "에코 릴레이",
       "icon": "◎",
@@ -375,6 +405,7 @@
     },
     {
       "id": "hull_negotiator_chip",
+      "suit": "nebula",
       "name": "Negotiator Chip",
       "nameKo": "협상 칩",
       "icon": "◫",
@@ -387,6 +418,7 @@
     },
     {
       "id": "hull_slipstream_hull",
+      "suit": "solar",
       "name": "Slipstream Hull",
       "nameKo": "슬립스트림 선체",
       "icon": "◔",
@@ -399,6 +431,7 @@
     },
     {
       "id": "hull_scanner_array",
+      "suit": "void",
       "name": "Scanner Array",
       "nameKo": "스캐너 배열",
       "icon": "◍",
@@ -411,6 +444,7 @@
     },
     {
       "id": "hull_collector_drone",
+      "suit": "nebula",
       "name": "Collector Drone",
       "nameKo": "수집 드론",
       "icon": "◉",
@@ -423,6 +457,7 @@
     },
     {
       "id": "hull_nebula_forge",
+      "suit": "void",
       "name": "Nebula Forge",
       "nameKo": "성운 단조기",
       "icon": "◈",
@@ -437,6 +472,7 @@
     },
     {
       "id": "hull_starforge_relic",
+      "suit": "nebula",
       "name": "Starforge Relic",
       "nameKo": "성단 유물",
       "icon": "✦",

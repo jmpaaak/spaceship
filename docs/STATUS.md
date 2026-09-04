@@ -1,13 +1,26 @@
 ## Current Status
-- RCS puff position/velocity now follow ship.angle.
-- Horizontal (bank) puff: spawns at ship flank using perp direction (angle + pi/2), velocity in that same direction.
-- Vertical (lift) puff: spawns at ship nose/tail using forward direction (cos/sin of angle), velocity along that axis.
-- self_test.lua horizontal-puff assert updated to verify angle-aware geometry.
-- make verify GREEN.
+
+2026-09-05 — Stellar Origin suit system (INBOX [2026-09-05], sub-items 1+2+5).
+
+- JSON schema: added `"suit"` field to all 35 hull cards and 25 engine cards in
+  `game/data/hull_parts.json` and `game/data/engine_parts.json`. Assignments follow
+  INBOX table (solar=defense/survival, nebula=economy/collection, void=speed/agility,
+  pulsar=multiplier/chain/timing).
+- `game/gear.lua`: added `M.knownSuits`, `M.suitSynergyThresholds`, and pure
+  `M.activeSynergies(equippedHull, equippedEngine)` returning e.g.
+  `{ solarSystem=true, nebulaField=true, ... }`. All 7 synergies implemented
+  (solarSystem/nebulaField/eventHorizon/pulsarBurst/binaryStar/supernova/darkMatter).
+  Loader validates suit field; unknown suit → hard error; missing suit → `[WARN]` + continue.
+- `game/self_test.lua`: `testStellarSynergies()` added and wired into `runGearTests()`.
+  Covers: solar 3→solarSystem, nebula 3→nebulaField, void 3→eventHorizon,
+  pulsar 2→pulsarBurst, 4-suit→supernova, empty→no synergies, all bundled cards have
+  valid suit fields.
+- `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX: 처리 대기 비어있음 (RCS 완료). IDLE.
+- INBOX [2026-09-05] sub-item (3): expedition.lua wiring — nebulaField→sampleYieldMultiplier ×1.5,
+  pulsarBurst→streakMultiplier ×2, darkMatter→streakMultiplier +50%, solarSystem/binaryStar→settle() callbacks.
 
 
 

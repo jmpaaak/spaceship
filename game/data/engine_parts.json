@@ -3,6 +3,7 @@
   "parts": [
     {
       "id": "engine_basic_thruster",
+      "suit": "void",
       "name": "Basic Thruster",
       "nameKo": "기본 추진기",
       "icon": "▽",
@@ -16,6 +17,7 @@
     },
     {
       "id": "engine_afterburner",
+      "suit": "solar",
       "name": "Afterburner",
       "nameKo": "애프터버너",
       "icon": "▼",
@@ -29,6 +31,7 @@
     },
     {
       "id": "engine_vector_nozzle",
+      "suit": "void",
       "name": "Vector Nozzle",
       "nameKo": "벡터 노즐",
       "icon": "◁",
@@ -42,6 +45,7 @@
     },
     {
       "id": "engine_fusion_core",
+      "suit": "nebula",
       "name": "Fusion Core",
       "nameKo": "핵융합 코어",
       "icon": "◉",
@@ -57,6 +61,7 @@
     },
     {
       "id": "engine_ion_drive",
+      "suit": "nebula",
       "name": "Ion Drive",
       "nameKo": "이온 드라이브",
       "icon": "◈",
@@ -71,6 +76,7 @@
     },
     {
       "id": "engine_gyro_stabilizer",
+      "suit": "void",
       "name": "Gyro Stabilizer",
       "nameKo": "자이로 안정기",
       "icon": "◍",
@@ -84,6 +90,7 @@
     },
     {
       "id": "engine_azure_coolant_jet",
+      "suit": "void",
       "name": "Azure Coolant Jet",
       "nameKo": "청옥 냉각 제트",
       "icon": "◐",
@@ -97,6 +104,7 @@
     },
     {
       "id": "engine_ember_burst_valve",
+      "suit": "solar",
       "name": "Ember Burst Valve",
       "nameKo": "적염 분사 밸브",
       "icon": "◑",
@@ -110,6 +118,7 @@
     },
     {
       "id": "engine_void_phase_thruster",
+      "suit": "void",
       "name": "Void Phase Thruster",
       "nameKo": "공허 위상 추진기",
       "icon": "◒",
@@ -124,6 +133,7 @@
     },
     {
       "id": "engine_solar_sail_flap",
+      "suit": "nebula",
       "name": "Solar Sail Flap",
       "nameKo": "태양돛 플랩",
       "icon": "◇",
@@ -138,6 +148,7 @@
     },
     {
       "id": "engine_burst_capacitor",
+      "suit": "void",
       "name": "Burst Capacitor",
       "nameKo": "버스트 축전기",
       "icon": "◆",
@@ -151,6 +162,7 @@
     },
     {
       "id": "engine_singularity_drive",
+      "suit": "pulsar",
       "name": "Singularity Drive",
       "nameKo": "특이점 드라이브",
       "icon": "◎",
@@ -168,6 +180,7 @@
     },
     {
       "id": "engine_emergency_boost_pod",
+      "suit": "solar",
       "name": "Emergency Boost Pod",
       "nameKo": "비상 부스트 포드",
       "icon": "▲",
@@ -181,6 +194,7 @@
     },
     {
       "id": "engine_cryo_fuel_cell",
+      "suit": "nebula",
       "name": "Cryo Fuel Cell",
       "nameKo": "냉각 연료 셀",
       "icon": "▽",
@@ -194,6 +208,7 @@
     },
     {
       "id": "engine_probability_core",
+      "suit": "pulsar",
       "name": "Probability Core",
       "nameKo": "확률 코어",
       "icon": "◔",
@@ -207,6 +222,7 @@
     },
     {
       "id": "engine_echo_thruster",
+      "suit": "pulsar",
       "name": "Echo Thruster",
       "nameKo": "메아리 추진기",
       "icon": "◕",
@@ -220,6 +236,7 @@
     },
     {
       "id": "engine_haggler_valve",
+      "suit": "pulsar",
       "name": "Haggler Valve",
       "nameKo": "흥정꾼 밸브",
       "icon": "◖",
@@ -233,6 +250,7 @@
     },
     {
       "id": "engine_slim_nacelle",
+      "suit": "solar",
       "name": "Slim Nacelle",
       "nameKo": "슬림 나셀",
       "icon": "◗",
@@ -246,6 +264,7 @@
     },
     {
       "id": "engine_deep_scan_pod",
+      "suit": "void",
       "name": "Deep Scan Pod",
       "nameKo": "심층 스캔 포드",
       "icon": "◘",
@@ -259,6 +278,7 @@
     },
     {
       "id": "engine_magnet_intake",
+      "suit": "nebula",
       "name": "Magnet Intake",
       "nameKo": "자력 흡입구",
       "icon": "◙",
@@ -272,6 +292,7 @@
     },
     {
       "id": "engine_escape_pod_thruster",
+      "suit": "solar",
       "name": "Escape Pod Thruster",
       "nameKo": "탈출 포드 추진기",
       "icon": "◚",
@@ -285,6 +306,7 @@
     },
     {
       "id": "engine_freelancer_manifold",
+      "suit": "nebula",
       "name": "Freelancer Manifold",
       "nameKo": "프리랜서 매니폴드",
       "icon": "◛",
@@ -298,6 +320,7 @@
     },
     {
       "id": "engine_market_thruster",
+      "suit": "nebula",
       "name": "Market Thruster",
       "nameKo": "시장 추진기",
       "icon": "◜",
@@ -311,6 +334,7 @@
     },
     {
       "id": "engine_momentum_stabilizer",
+      "suit": "pulsar",
       "name": "Momentum Stabilizer",
       "nameKo": "관성 안정기",
       "icon": "◝",
@@ -324,6 +348,7 @@
     },
     {
       "id": "engine_void_forge_drive",
+      "suit": "pulsar",
       "name": "Void Forge Drive",
       "nameKo": "공허 단조 드라이브",
       "icon": "◎",
@@ -338,6 +363,7 @@
     },
     {
       "id": "engine_stellar_matrix_core",
+      "suit": "solar",
       "name": "Stellar Matrix Core",
       "nameKo": "항성 매트릭스 코어",
       "icon": "◈",
