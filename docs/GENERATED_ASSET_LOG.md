@@ -119,3 +119,6 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-05T01:03:00+0900 | assets/planet/planet_generic.png | INBOX group (3): 64x64 transparent generic planet
 2026-09-05T01:03:00+0900 | assets/planet/planet_hub.png | INBOX group (3): 64x64 transparent central hub planet
 2026-09-05T01:03:00+0900 | assets/planet/planet_shop.png | INBOX group (3): 64x64 transparent shop planet
+2026-09-05T01:18:24+0900 | assets/effects/hud_coin.png | INBOX group (4): 32x32 transparent monochrome coin HUD icon
+2026-09-05T01:18:24+0900 | assets/effects/hud_shield.png | INBOX group (4): 32x32 transparent monochrome shield HUD icon
+2026-09-05T01:18:24+0900 | assets/effects/hud_speed.png | INBOX group (4): 32x32 transparent monochrome speed HUD icon

@@ -1,13 +1,12 @@
+## Current Status
+
+2026-09-05 — ComfyUI HUD icon regen (group 4 of INBOX regen item).
+- Regenerated 32x32 `hud_coin.png`, `hud_shield.png`, `hud_speed.png` via ComfyUI SDXL pipeline (monochrome white).
+- Applied circle-mask alpha channel modification to ensure strict transparent corners for UI overlay compatibility.
+- Updated `docs/assets/MANIFEST.json` with new SHA-256 hashes and appended to `docs/GENERATED_ASSET_LOG.md`.
+- `make verify` GREEN (passed all `self_test.lua` transparency assertions).
+
 # STATUS
-
-2026-09-05 — INBOX ComfyUI regen group (3) planets.
-
-- Regenerated `assets/planet/planet_generic.png`, `planet_hub.png`, `planet_shop.png` via remote ComfyUI HTTP API.
-- Replaced the previous RGB images with 64x64 transparent RGBA sprites (black background removed via custom pillow script mask).
-- Updated `docs/assets/MANIFEST.json` and appended to `docs/GENERATED_ASSET_LOG.md`.
-- Group 3 is now complete in `INBOX.md`.
-- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`).
-
 ## Next Slice
 
 - INBOX ComfyUI regen group (4): HUD icons — `assets/effects/hud_*.png` etc (9 images). 32x32 transparent, solid color symbol, no full bleed.
@@ -134,3 +133,5 @@
 ## Next Slice (group 8)
 
 - Remaining un-drawn assets: `hud_panel.png`, `shop_panel.png`, `shop_touch_row.png`, `shop_title.png`, `shop_hull_action.png`, `shop_steering_action.png`, `shop_yield_action.png`, `shop_ship_action.png`, `shop_stats.png`, `shop_hull_status.png`, `shop_steering_status.png`, `shop_yield_status.png`, `shop_ship_status.png`, `shop_hull_preview.png`, `shop_steering_preview.png`, `shop_yield_preview.png`, `shop_ship_preview.png`, `shop_next_ship.png`, `loadout_ship.png`, `destroyed_next_ship.png`, `destroyed_tap_start_over.png` — these are the settlement shop text-icon rows; load, store, wire per-row.
+
+> 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

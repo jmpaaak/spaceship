@@ -1111,3 +1111,13 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
 
+## Archived from STATUS.md (2026-09-05 01:08)
+
+
+2026-09-05 — INBOX ComfyUI regen group (3) planets.
+
+- Regenerated `assets/planet/planet_generic.png`, `planet_hub.png`, `planet_shop.png` via remote ComfyUI HTTP API.
+- Replaced the previous RGB images with 64x64 transparent RGBA sprites (black background removed via custom pillow script mask).
+- Updated `docs/assets/MANIFEST.json` and appended to `docs/GENERATED_ASSET_LOG.md`.
+- Group 3 is now complete in `INBOX.md`.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`).

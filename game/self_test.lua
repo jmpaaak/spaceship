@@ -566,6 +566,42 @@ local function testSpeedometerIcon()
     -- The left edge is at cx - r, cy -> 16, 20.
 end
 
+-- INBOX group (4) first slice: cash/hull/speed HUD icons must be 32x32
+-- RGBA with transparent padding (no full-bleed RGB square).
+local function testHudIconRegenSlice()
+    local paths = {
+        "assets/effects/hud_coin.png",
+        "assets/effects/hud_shield.png",
+        "assets/effects/hud_speed.png",
+    }
+    for _, path in ipairs(paths) do
+        local data = love.image.newImageData(path)
+        assert(data:getWidth() == 32 and data:getHeight() == 32,
+            path .. " must be 32x32, got " .. data:getWidth() .. "x" .. data:getHeight())
+        local function cornerAlpha(x, y)
+            local _r, _g, _b, a = data:getPixel(x, y)
+            return a
+        end
+        assert(cornerAlpha(0, 0) == 0, path .. " top-left corner must be transparent")
+        assert(cornerAlpha(31, 0) == 0, path .. " top-right corner must be transparent")
+        assert(cornerAlpha(0, 31) == 0, path .. " bottom-left corner must be transparent")
+        assert(cornerAlpha(31, 31) == 0, path .. " bottom-right corner must be transparent")
+        local opaque, transparent = 0, 0
+        for y = 0, 31 do
+            for x = 0, 31 do
+                local _r, _g, _b, a = data:getPixel(x, y)
+                if a > 0 then
+                    opaque = opaque + 1
+                else
+                    transparent = transparent + 1
+                end
+            end
+        end
+        assert(opaque > 0, path .. " must contain an opaque symbol")
+        assert(transparent > 0, path .. " must not be full-bleed")
+    end
+end
+
 local function testDebris()
     local world = require("game.world")
     local a = world.debris(3, -2)
@@ -6163,6 +6199,7 @@ function M.run()
     testHullShieldIcon()
     testCashCoinIcon()
     testSpeedometerIcon()
+    testHudIconRegenSlice()
     testItem8HubProximitySettle()
     runGearTests()
 
