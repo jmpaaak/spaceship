@@ -335,6 +335,19 @@ local function drawPlanetEffectSprite(image, cx, cy, diameter, r, g, b, a)
 end
 M.drawPlanetEffectSprite = drawPlanetEffectSprite
 
+-- Draw a floating-text icon sprite to the left of a floating text label.
+-- image: the icon (may be nil -> no icon drawn). cx, cy: center of the icon.
+-- size: target pixel size of the icon. alpha: overall opacity 0-1.
+-- Returns true if drawn, false if image is nil.
+local function drawFloatingIconSprite(image, cx, cy, size, alpha)
+    if not image then return false end
+    local iw, ih = image:getDimensions()
+    local scale = size / math.max(iw, ih)
+    love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
+    return true
+end
+M.drawFloatingIconSprite = drawFloatingIconSprite
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
@@ -640,6 +653,10 @@ function M.new(options)
         can = "assets/debris/can.png",
         scrap = "assets/debris/scrap.png",
     }
+    -- Floating text icon images (group 4 of ComfyUI asset wiring)
+    local floatingSampleIconImagePath = "assets/effects/floating_sample.png"
+    local floatingDamageIconImagePath = "assets/effects/floating_damage.png"
+    local messageBannerIconImagePath   = "assets/effects/message_banner.png"
     local shipImage = loadSprite(shipImagePath)
     local planetImage = loadSprite(planetImagePath)
     local earthImage = loadSprite(earthImagePath)
@@ -657,6 +674,10 @@ function M.new(options)
     local slotSymbolImages = loadSpriteMap(slotSymbolImagePaths)
     local shopIconImages = loadSpriteMap(shopIconImagePaths)
     local debrisImages = loadSpriteMap(debrisImagePaths)
+    -- Floating text icon images (group 4 of ComfyUI asset wiring)
+    local floatingSampleIconImage = loadSprite(floatingSampleIconImagePath)
+    local floatingDamageIconImage = loadSprite(floatingDamageIconImagePath)
+    local messageBannerIconImage  = loadSprite(messageBannerIconImagePath)
     -- Minimap marker images (group 2 of ComfyUI asset wiring)
     local minimapImages = loadSpriteMap({
         disc           = "assets/effects/minimap_disc.png",
@@ -727,6 +748,13 @@ function M.new(options)
         hudIconImages = hudIconImages,
         minimapImages = minimapImages,
         planetEffectImages = planetEffectImages,
+        -- Floating text icon images (group 4 of ComfyUI asset wiring)
+        floatingSampleIconImage = floatingSampleIconImage,
+        floatingSampleIconImagePath = floatingSampleIconImagePath,
+        floatingDamageIconImage = floatingDamageIconImage,
+        floatingDamageIconImagePath = floatingDamageIconImagePath,
+        messageBannerIconImage = messageBannerIconImage,
+        messageBannerIconImagePath = messageBannerIconImagePath,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -2117,12 +2145,26 @@ function M:draw()
         local fx, fy = math.floor(ft.x - cameraX), math.floor(ft.y - cameraY)
         if fx >= -30 and fx <= viewport.width + 30 and fy >= -20 and fy <= viewport.height + 20 then
             local alpha = math.max(0, math.min(1, ft.timer))
+            local iconImg
             if ft.kind == "damage" then
                 love.graphics.setColor(1, 0.35, 0.3, alpha)
+                iconImg = self.floatingDamageIconImage
             else
                 love.graphics.setColor(0.45, 1, 0.6, alpha)
+                iconImg = self.floatingSampleIconImage
             end
-            love.graphics.printf(ft.text, fx - 30, fy - 10, 60, "center")
+            -- Draw icon to left of text when sprite available (8px icon, 4px gap)
+            local iconSize = 8
+            local iconGap  = 4
+            if iconImg then
+                drawFloatingIconSprite(iconImg, fx - 30 + iconSize * 0.5, fy - 4, iconSize, alpha)
+                love.graphics.setColor(ft.kind == "damage" and 1 or 0.45,
+                                       ft.kind == "damage" and 0.35 or 1,
+                                       ft.kind == "damage" and 0.3 or 0.6, alpha)
+                love.graphics.printf(ft.text, fx - 30 + iconSize + iconGap, fy - 10, 60 - iconSize - iconGap, "left")
+            else
+                love.graphics.printf(ft.text, fx - 30, fy - 10, 60, "center")
+            end
         end
     end
     for _, particle in ipairs(self.particles) do
@@ -2551,6 +2593,15 @@ function M:draw()
         love.graphics.setColor(0.85, 0.9, 1)
     end
     love.graphics.printf(self.message, 4, messageY, viewport.width - 8, "center")
+    -- message_banner icon: draw amber burst-star icon to the left of the message
+    -- for non-launch phases (launch already has a rocket icon polygon).
+    if self.expedition.phase ~= "launch" and self.messageBannerIconImage then
+        local bannerIconSize = 10
+        love.graphics.setColor(1, 0.82, 0.25)
+        drawFloatingIconSprite(self.messageBannerIconImage,
+            4 + bannerIconSize * 0.5, messageY + 5, bannerIconSize, 1)
+        love.graphics.setColor(0.85, 0.9, 1)
+    end
     if self.newSpecimenBanner then
         local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
         love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)

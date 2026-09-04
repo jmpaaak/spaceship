@@ -6198,6 +6198,25 @@ function M.run()
         end
     end
 
+    -- ComfyUI floating text icon wiring (group 4): drawFloatingIconSprite is
+    -- exported and returns false when image is nil (graceful no-op).
+    -- scene instance carries the three floating-icon image slots.
+    do
+        local PlayScene = require("game.scenes.play")
+        assert(type(PlayScene.drawFloatingIconSprite) == "function",
+            "drawFloatingIconSprite must be exported on PlayScene")
+        -- nil image -> returns false without error
+        local ok, res = pcall(PlayScene.drawFloatingIconSprite, nil, 50, 50, 8, 1)
+        assert(ok, "drawFloatingIconSprite(nil,...) must not throw")
+        assert(res == false, "drawFloatingIconSprite(nil,...) must return false")
+        -- scene instance carries the image slots (nil in headless, userdata in LOVE)
+        local scene = PlayScene.new()
+        for _, key in ipairs({"floatingSampleIconImage", "floatingDamageIconImage", "messageBannerIconImage"}) do
+            assert(scene[key] == nil or type(scene[key]) == "userdata",
+                key .. " must be nil (headless) or image userdata")
+        end
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 
