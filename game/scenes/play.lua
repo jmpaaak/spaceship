@@ -1023,6 +1023,9 @@ function M:update(dt)
             self.newSpecimenBanner = nil
         end
     end
+    if self.shopModal then
+        return
+    end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
         local startX, startOffset = self.ship.x, self.verticalOffset
@@ -1139,6 +1142,80 @@ function M:update(dt)
                 and not self.discovered[planet.id] then
                 self.discovered[planet.id] = true
                 self.discoveredCount = self.discoveredCount + 1
+
+                if planet.hub then
+                    if self.expedition.pendingSampleValue > 0 then
+                        local payout = expedition.settleAtHub(self.expedition)
+                        if payout and payout > 0 then
+                            table.insert(self.floatingTexts, {
+                                text = i18n.t("floating_hub_settle", payout),
+                                x = planet.x,
+                                y = planet.y - 20,
+                                timer = 3.0,
+                                kind = "sample",
+                                awarded = payout,
+                                rollupElapsed = 0,
+                            })
+                        end
+                    end
+                    if not self.expedition.hubExplored[planet.galaxyId] then
+                        local gear = require("game.gear")
+                        local pool = {}
+                        local hull = gear.loadHullParts() or {}
+                        local engine = gear.loadEngineParts() or {}
+                        for _, p in ipairs(hull) do pool[#pool+1] = p end
+                        for _, p in ipairs(engine) do pool[#pool+1] = p end
+                        local drop = expedition.exploreHub(self.expedition, planet.galaxyId, pool, {
+                            editionChance = love.math.random(),
+                            editionPick = love.math.random()
+                        })
+                        if drop then
+                            local cat = "hull"
+                            if gear.findById(engine, drop.id) then cat = "engine" end
+                            expedition.equipGear(self.expedition, cat, drop)
+                            table.insert(self.floatingTexts, {
+                                text = i18n.t("floating_hub_gear", drop.name),
+                                x = planet.x,
+                                y = planet.y + 20,
+                                timer = 3.0,
+                                kind = "sample",
+                                awarded = 0,
+                                rollupElapsed = 0,
+                            })
+                        end
+                    end
+                elseif planet.isShop then
+                    if not self.shopModal then
+                        local gearMod = require("game.gear")
+                        local pool = {}
+                        local hull = gearMod.loadHullParts() or {}
+                        local engine = gearMod.loadEngineParts() or {}
+                        for _, p in ipairs(hull) do pool[#pool+1] = p end
+                        for _, p in ipairs(engine) do pool[#pool+1] = p end
+
+                        local prng = love.math.newRandomGenerator()
+                        prng:setSeed(world.hash(planet.x, planet.y, 900) * 1000000)
+                        
+                        local rolls = {
+                            rarity = prng:random(),
+                            pick = prng:random(),
+                            editionChance = prng:random(),
+                            editionPick = prng:random()
+                        }
+                        
+                        local offer = expedition.rollGearOffer(self.expedition, pool, rolls)
+                        if offer then
+                            local cat = "hull"
+                            if gearMod.findById(engine, offer.id) then cat = "engine" end
+                            self.shopModal = {
+                                planet = planet,
+                                gear = offer,
+                                category = cat,
+                                price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
+                            }
+                        end
+                    end
+                end
                 local value = world.sampleValue(planet)
                 local hueKey = world.hueFamily(planet.hue or 0).key
                 local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
@@ -1221,6 +1298,28 @@ function M:update(dt)
 end
 
 function M:keypressed(key)
+    if self.shopModal then
+        if key == "y" then
+            local ok, err = expedition.buyGearFromShopPlanet(self.expedition, self.shopModal.category, self.shopModal.gear)
+            if ok then
+                table.insert(self.floatingTexts, {
+                    text = i18n.t("floating_hub_gear", self.shopModal.gear.name),
+                    x = self.shopModal.planet.x,
+                    y = self.shopModal.planet.y + 20,
+                    timer = 3.0,
+                    kind = "sample",
+                    awarded = 0,
+                    rollupElapsed = 0,
+                })
+                self.shopModal = nil
+            else
+                self.shopModal.errorText = err
+            end
+        elseif key == "n" then
+            self.shopModal = nil
+        end
+        return
+    end
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
         if expedition.buyDurabilityUpgrade(self.expedition) then
             self.message = i18n.t(
@@ -1321,6 +1420,17 @@ function M:keypressed(key)
 end
 
 function M:touchpressed(id, x, y)
+    if self.shopModal then
+        local btnY = 220
+        if y >= btnY and y <= btnY + 30 then
+            if x >= 15 and x < 85 then
+                self:keypressed("y")
+            elseif x >= 95 and x <= 165 then
+                self:keypressed("n")
+            end
+        end
+        return
+    end
     if self.expedition.phase == "ascending" then
         self.touches[id] = { x = x, y = y, originX = x, originY = y }
         return
@@ -2007,6 +2117,43 @@ function M:draw()
         love.graphics.rectangle("fill", 12, 60, viewport.width - 24, 16)
         love.graphics.setColor(1, 0.85, 0.3, alpha)
         love.graphics.printf(self.newSpecimenBanner, 12, 64, viewport.width - 24, "center")
+    end
+    if self.shopModal then
+        love.graphics.setColor(0, 0, 0, 0.85)
+        love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
+        
+        love.graphics.setColor(0.08, 0.14, 0.22, 1)
+        love.graphics.rectangle("fill", 10, 30, viewport.width - 20, 240)
+        love.graphics.setColor(0.3, 0.6, 1, 1)
+        love.graphics.rectangle("line", 10, 30, viewport.width - 20, 240)
+        
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(i18n.t("shop_modal_title"), 10, 40, viewport.width - 20, "center")
+        
+        love.graphics.setColor(0.7, 0.8, 1)
+        love.graphics.printf(self.shopModal.gear.name, 10, 60, viewport.width - 20, "center")
+        
+        self:drawGearSlots(100)
+        
+        local btnY = 220
+        love.graphics.setColor(0.2, 0.4, 0.2, 1)
+        love.graphics.rectangle("fill", 15, btnY, 70, 30)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(i18n.t("shop_modal_buy", self.shopModal.price), 15, btnY + 8, 70, "center")
+        
+        love.graphics.setColor(0.4, 0.2, 0.2, 1)
+        love.graphics.rectangle("fill", 95, btnY, 70, 30)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(i18n.t("shop_modal_skip"), 95, btnY + 8, 70, "center")
+        
+        if self.shopModal.errorText then
+            self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
+            local prevFont = love.graphics.getFont()
+            love.graphics.setFont(self.tinyFont)
+            love.graphics.setColor(1, 0.3, 0.3)
+            love.graphics.printf(self.shopModal.errorText, 12, 160, viewport.width - 24, "center")
+            love.graphics.setFont(prevFont)
+        end
     end
     self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
     local previousFooterFont = love.graphics.getFont()

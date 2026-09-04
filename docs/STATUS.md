@@ -1,14 +1,15 @@
 # STATUS
-- preflight this cycle: FAIL (game/self_test.lua failing due to uncommitted test breaks from previous cycle).
-- Slice: Item 15 — abolished returning-phase slot machine and associated tests, resolving uncommitted breakages.
+- preflight this cycle: READY
+- Slice: Item 7/8 — Implement full interactive UI modal for purchasing gear from `shopPlanet` encounters.
 
-## 2026-09-04 — Item 15 returning slot abolished
+## 2026-09-04 — Item 7/8 shopPlanet UI modal
 
-- Fixed tests broken by uncommitted Item 15 changes (removing in-flight/returning phase slot machine).
-- Removed `slotDistance`, `slotOpportunities`, `useSlot`, `spinSlot` and other related unused slot state from `game/expedition.lua`.
-- Cleaned up `game/self_test.lua` to remove all tests related to the deprecated returning-phase slot machine, and fixed money-payout assertions.
-- Verification: `make verify LOVE=/Users/jm/.local/bin/love` passes unit, smoke, bundle, and asset-manifest checks.
-- Next slice: The codebase is fully green. Finish any remaining UI tasks for Earth shop slots in other lanes.
+- Implemented an interactive UI overlay in `play.lua` when the ship touches a `isShop` planet.
+- Replaced the placeholder floating text with `self.shopModal` state.
+- Bypassed ship movement, floating text updates, and normal phase interactions while the modal is open.
+- Displayed gear name, price, and current gear slots (`drawGearSlots`) inside the modal.
+- Handled BUY ('Y') and LEAVE ('N') actions via touch/keyboard, updating money and floating feedback based on success.
+- Next slice: Finish remaining UI/text adjustments for Item 11 (연료 소진 관련 잔재 UI/문구 전면 제거).
 
 
 
