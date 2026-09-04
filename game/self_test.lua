@@ -292,6 +292,52 @@ local function testGalaxyStructure()
         if planet.id == shop.id then sawShop = true end
     end
     assert(sawShop, "nearbyPlanets at a shop planet location must include that shop planet")
+
+    -- Galaxy shared traits (sub-item 5): starType, starTypeIdx, baseHue
+    assert(type(home.starType) == "string", "home galaxy must have a starType string")
+    assert(type(home.starTypeIdx) == "number", "home galaxy must have a numeric starTypeIdx")
+    assert(home.starTypeIdx >= 0 and home.starTypeIdx <= 5, "home starTypeIdx must be 0..5")
+    assert(type(home.baseHue) == "number", "home galaxy must have a numeric baseHue")
+
+    assert(type(foreignGalaxy.starType) == "string", "foreign galaxy must have a starType string")
+    assert(type(foreignGalaxy.starTypeIdx) == "number", "foreign galaxy must have a numeric starTypeIdx")
+    assert(foreignGalaxy.starTypeIdx >= 0 and foreignGalaxy.starTypeIdx <= 5, "foreign starTypeIdx must be 0..5")
+    assert(type(foreignGalaxy.baseHue) == "number", "foreign galaxy must have a numeric baseHue")
+
+    -- Hub and shop planets inherit starType from their galaxy
+    assert(hub.galaxyStarType == foreignGalaxy.starType, "hub planet galaxyStarType must match galaxy starType")
+    assert(hub.galaxyStarTypeIdx == foreignGalaxy.starTypeIdx, "hub planet galaxyStarTypeIdx must match galaxy starTypeIdx")
+    assert(shop.galaxyStarType == foreignGalaxy.starType, "shop planet galaxyStarType must match galaxy starType")
+    assert(shop.galaxyStarTypeIdx == foreignGalaxy.starTypeIdx, "shop planet galaxyStarTypeIdx must match galaxy starTypeIdx")
+
+    -- Regular planets inside foreignGalaxy inherit starType and have hue clamped to baseHue ±0.083
+    local fgx, fgy = foreignGalaxy.gx, foreignGalaxy.gy
+    local fsx = math.floor(foreignGalaxy.x / world.sectorSize)
+    local fsy = math.floor(foreignGalaxy.y / world.sectorSize)
+    local foundPlanet = nil
+    for searchOy = -3, 3 do
+        for searchOx = -3, 3 do
+            local ps = world.planets(fsx + searchOx, fsy + searchOy)
+            if #ps > 0 then foundPlanet = ps[1]; break end
+        end
+        if foundPlanet then break end
+    end
+    if foundPlanet then
+        assert(foundPlanet.galaxyStarType == foreignGalaxy.starType,
+            "regular planet galaxyStarType must match containing galaxy starType")
+        local lo = (foreignGalaxy.baseHue - 0.083) % 1
+        local hi = (foreignGalaxy.baseHue + 0.083) % 1
+        -- Verify hue is within the window (handles wrap-around too)
+        local h = foundPlanet.hue
+        local inRange
+        if lo <= hi then
+            inRange = h >= lo and h <= hi
+        else
+            inRange = h >= lo or h <= hi  -- wraps around 0
+        end
+        assert(inRange, string.format(
+            "planet hue %.3f must be within baseHue %.3f ± 0.083", h, foreignGalaxy.baseHue))
+    end
 end
 
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing

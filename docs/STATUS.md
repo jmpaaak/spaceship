@@ -1,20 +1,18 @@
 ## Current Status
-- INBOX ComfyUI regen group (2) earth: `assets/earth/earth_generic.png`. 64×64 transparent background, small blue earth sphere with continent silhouettes, padding around edges.
 
-2026-09-05 — INBOX item (2): 별 위치 2D 랜덤 분산 (star salt independence).
+2026-09-05 — INBOX sub-item (5): 은하 공유 특성 (galaxy shared traits). ALL 5 sub-items of the 2026-09-05 item now complete.
 
-- Updated `game/world.lua` `M.stars()`: x uses salt `10001+i`, y uses `20001+i` — fully independent per-axis salts as specified in INBOX item (2). Eliminates diagonal patterning from correlated seed inputs.
-- Updated `game/world.lua` `M.backgroundStars()`: x uses salt `50001+i`, y uses `60001+i` (same fix). Disjoint from foreground salts.
-- Added diagonal-correlation regression test in `game/self_test.lua` `testBackgroundStars()`: for sectorX==sectorY sectors, counts stars on 45° diagonal; asserts ≤1 to confirm independence.
-- `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+- `game/world.lua` `M.galaxy()`: added `starType` (string "ice"/"lava"/"dry"/"gas"/"earth"/"bare"), `starTypeIdx` (0-based, 0..5), `baseHue` (0..1). Determined from gx/gy hash salts 571/572. Home galaxy: starType="earth", starTypeIdx=4, baseHue=0.6.
+- `M.hubPlanet()` / `M.shopPlanet()`: now carry `galaxyStarType` and `galaxyStarTypeIdx` from parent galaxy.
+- `M.planets()`: captures galaxy from `galaxyContaining()`, (a) passes `galaxyStarType`/`galaxyStarTypeIdx`, (b) clamps hue to `baseHue ± 0.083` (≈30°) for intra-galaxy colour unity.
+- `game/scenes/play.lua` `M:draw()`: `galaxySpecialFrame = galaxy.starTypeIdx or 0` fixed once per frame; both background and foreground special-star draw loops use this instead of `starHash%6` — same galaxy → same special star shape.
+- Self-tests added in `testGalaxyStructure()` covering starType/starTypeIdx/baseHue on home+foreign galaxy, hub/shop planet inheritance, and planet hue clamping.
+- `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK + LOVE_BUNDLE_OK + ASSET_MANIFEST_OK).
+- INBOX 2026-09-05 fully done (all 5 sub-items); moved to 처리 완료.
 
-2026-09-05 — INBOX ComfyUI regen group (1) ships.
+## Next Slice
 
-- Generated `assets/ship/ship_default.png` (standard shape) and `assets/ship/ship_scout.png` (swept wings) using ComfyUI asset pipeline.
-- Post-processed images to remove black backgrounds (made transparent), crop, and resize nearest-neighbor to ~38x38 centered within a 64x64 transparent canvas.
-- Updated `docs/assets/MANIFEST.json` with correct sizes and SHA-256 hashes.
-- Appended entries to `docs/GENERATED_ASSET_LOG.md`.
-- `make verify` GREEN.
+- INBOX is now empty. Awaiting new feedback or IDLE.
 
 2026-09-04 — ComfyUI shop panels and action backgrounds wiring (group 8 of INBOX draw-wiring item).
 

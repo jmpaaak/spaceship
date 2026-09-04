@@ -1236,3 +1236,22 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 ## Archived from STATUS.md (2026-09-05 03:49)
 
 ## Next Slice
+
+## Archived from STATUS.md (2026-09-05 04:00)
+
+- INBOX ComfyUI regen group (2) earth: `assets/earth/earth_generic.png`. 64×64 transparent background, small blue earth sphere with continent silhouettes, padding around edges.
+
+2026-09-05 — INBOX item (2): 별 위치 2D 랜덤 분산 (star salt independence).
+
+- Updated `game/world.lua` `M.stars()`: x uses salt `10001+i`, y uses `20001+i` — fully independent per-axis salts as specified in INBOX item (2). Eliminates diagonal patterning from correlated seed inputs.
+- Updated `game/world.lua` `M.backgroundStars()`: x uses salt `50001+i`, y uses `60001+i` (same fix). Disjoint from foreground salts.
+- Added diagonal-correlation regression test in `game/self_test.lua` `testBackgroundStars()`: for sectorX==sectorY sectors, counts stars on 45° diagonal; asserts ≤1 to confirm independence.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+2026-09-05 — INBOX ComfyUI regen group (1) ships.
+
+- Generated `assets/ship/ship_default.png` (standard shape) and `assets/ship/ship_scout.png` (swept wings) using ComfyUI asset pipeline.
+- Post-processed images to remove black backgrounds (made transparent), crop, and resize nearest-neighbor to ~38x38 centered within a 64x64 transparent canvas.
+- Updated `docs/assets/MANIFEST.json` with correct sizes and SHA-256 hashes.
+- Appended entries to `docs/GENERATED_ASSET_LOG.md`.
+- `make verify` GREEN.

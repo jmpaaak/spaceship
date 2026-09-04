@@ -2161,6 +2161,9 @@ function M:draw()
     -- visible grid lines at edges. Using procedural star layers only.
     -- if self.backgroundImage then ... end
     local sx, sy = world.sectorAt(self.ship.x, self.ship.y)
+    -- Galaxy shared star type: all special stars inside the same galaxy use the same frame.
+    -- starTypeIdx is 0-based (0..5) matching the 6 frames of pixelplanets_stars_special.png.
+    local galaxySpecialFrame = galaxy and galaxy.starTypeIdx or 0
     -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): a dense,
     -- near-static background star layer drawn behind the streaking-meteor
     -- foreground layer below. Reduced parallax (0.4x camera motion) makes
@@ -2186,8 +2189,9 @@ function M:draw()
                             love.graphics.rectangle("fill", x - 1, y - 1, 2, 2)
                         end
                     else
-                        -- Special pixel star: 6 frames, 25x25 each, size 4-5px, golden
-                        local frameIdx = starHash % 6
+                        -- Special pixel star: 6 frames, 25x25 each, size 4-5px, golden.
+                        -- All special stars in the same galaxy share the same frame (starType).
+                        local frameIdx = galaxySpecialFrame
                         local sz = 4 + (starHash % 2)
                         local opacity = 0.5 + star.bright * 0.5
                         if not drawPixelStar(self.pixelStarsSpecialImage, x, y, 25, 25, 6, frameIdx, sz, 1, 0.937, 0.620, opacity) then
@@ -2217,8 +2221,9 @@ function M:draw()
                             love.graphics.rectangle("fill", x - 1, y - 1, 2, 2)
                         end
                     else
-                        -- Special pixel star: size 5-6px, golden
-                        local frameIdx = starHash % 6
+                        -- Special pixel star: size 5-6px, golden.
+                        -- All special stars in the same galaxy share the same frame (starType).
+                        local frameIdx = galaxySpecialFrame
                         local sz = 5 + (starHash % 2)
                         local opacity = 0.5 + star.bright * 0.5
                         if not drawPixelStar(self.pixelStarsSpecialImage, x, y, 25, 25, 6, frameIdx, sz, 1, 0.937, 0.620, opacity) then

@@ -32,6 +32,10 @@ M.galaxyAt = galaxyAt
 
 local galaxyExistenceThreshold = 0.72
 
+-- 6 star type names matching the 6 frames of pixelplanets_stars_special.png.
+-- Determined per-galaxy so all special stars inside that galaxy show the same shape.
+local starTypes = { "ice", "lava", "dry", "gas", "earth", "bare" }
+
 -- Deterministically returns the galaxy occupying grid cell (gx, gy), or
 -- nil if that cell is empty deep space.
 function M.galaxy(gx, gy)
@@ -44,6 +48,9 @@ function M.galaxy(gx, gy)
             radius = M.galaxyCellSize * 0.9,
             gx = 0,
             gy = 0,
+            starType = "earth",       -- home galaxy always uses "earth" star type
+            starTypeIdx = 4,          -- 0-based frame index into pixelplanets_stars_special.png
+            baseHue = 0.6,            -- consistent hue for home galaxy
         }
     end
     if hash(gx, gy, 500) <= galaxyExistenceThreshold then
@@ -54,6 +61,10 @@ function M.galaxy(gx, gy)
         + (hash(gx, gy, 520) - 0.5) * M.galaxyCellSize * 0.5
     local cy = gy * M.galaxyCellSize + M.galaxyCellSize / 2
         + (hash(gx, gy, 530) - 0.5) * M.galaxyCellSize * 0.5
+    -- starType: deterministic from galaxy cell, 6 options
+    local starTypeIdx = math.floor(hash(gx, gy, 571) * 6) % 6  -- 0-based
+    -- baseHue: drives planet hue clamping within galaxy (0..1 range)
+    local baseHue = hash(gx, gy, 572)
     return {
         id = string.format("galaxy:%d:%d", gx, gy),
         name = string.format("GALAXY %d-%d", gx, gy),
@@ -62,6 +73,9 @@ function M.galaxy(gx, gy)
         radius = radius,
         gx = gx,
         gy = gy,
+        starType = starTypes[starTypeIdx + 1],
+        starTypeIdx = starTypeIdx,
+        baseHue = baseHue,
     }
 end
 
@@ -150,6 +164,8 @@ function M.hubPlanet(galaxy)
         hue = hash(gx, gy, 550),
         hub = true,
         galaxyId = galaxy.id,
+        galaxyStarType = galaxy.starType,
+        galaxyStarTypeIdx = galaxy.starTypeIdx,
     }
 end
 
@@ -168,6 +184,8 @@ function M.shopPlanet(galaxy)
         hue = hash(gx, gy, 830),
         isShop = true,
         galaxyId = galaxy.id,
+        galaxyStarType = galaxy.starType,
+        galaxyStarTypeIdx = galaxy.starTypeIdx,
     }
 end
 
@@ -210,20 +228,29 @@ function M.planets(sectorX, sectorY)
     local centerY = sectorY * M.sectorSize + M.sectorSize / 2
     -- Planets only ever generate inside a galaxy's radius; deep space
     -- between galaxies is empty. See the galaxy structure comment above.
-    if not M.galaxyContaining(centerX, centerY) then
+    local galaxy = M.galaxyContaining(centerX, centerY)
+    if not galaxy then
         return {}
     end
     local count = hash(sectorX, sectorY, 1) > 0.42 and 1 or 0
     if hash(sectorX, sectorY, 7) > 0.91 then count = 2 end
     local planets = {}
+    -- Clamp hue within ±0.083 of the galaxy's baseHue so planets in the same
+    -- galaxy share a consistent colour mood. (0.083 ≈ 30°/360°)
+    local baseHue = galaxy.baseHue or 0.5
     for i = 1, count do
         local radius = 7 + math.floor(hash(sectorX, sectorY, 20 + i) * 10)
+        local rawHue = hash(sectorX, sectorY, 80 + i)
+        -- Map rawHue into [baseHue-0.083, baseHue+0.083], wrapping in 0..1
+        local hue = (baseHue - 0.083 + rawHue * 0.166) % 1
         planets[#planets + 1] = {
             id = string.format("%d:%d:%d", sectorX, sectorY, i),
             x = sectorX * M.sectorSize + 24 + hash(sectorX, sectorY, 40 + i) * (M.sectorSize - 48),
             y = sectorY * M.sectorSize + 24 + hash(sectorX, sectorY, 60 + i) * (M.sectorSize - 48),
             radius = radius,
-            hue = hash(sectorX, sectorY, 80 + i),
+            hue = hue,
+            galaxyStarType = galaxy.starType,
+            galaxyStarTypeIdx = galaxy.starTypeIdx,
         }
     end
     return planets

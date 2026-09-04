@@ -2,43 +2,14 @@
 
 ## 처리 대기
 
-- **[2026-09-05] 모바일 해상도 최적화 + 별 분산 + 중력장 확대 + 행성 마커 + 은하 공유 특성 (사용자 확정, 최우선). 한 사이클 = 아래 소항목 하나 + make verify GREEN + 커밋.**
-
-  **(1) 모바일 해상도 최적화 및 세계 스케일 점검:**
-  - `conf.lua`: `GAME_SCALE` 기본값이 3이면 창이 2160×3840 → 모니터보다 커서 LÖVE가 자동 축소. 기본을 `1`로 바꾸고, 모바일 실행 시 앱 컨테이너 크기에 맞게 `viewport.fit()` 이 올바르게 동작하는지 확인.
-  - `world.lua` `sectorSize=192`, `galaxyCellSize=4608` 은 고정 픽셀 단위 → 720×1280 캔버스 기준으로 행성/별 밀도가 적절한지 확인. 세로(고도) 방향 별/행성 간격이 캔버스 높이 대비 너무 성기거나 촘촘하지 않은지 `GAME_CAPTURE_PHASE=play` 캡처로 확인 후 STATUS에 경로만 기록.
-
-  **(2) 별 위치 2D 랜덤 분산 (사선/1자 줄 제거):**
-  - 현재 `world.backgroundStars()` / `world.stars()` 둘 다 `x = sectorX * sectorSize + hash(...) * sectorSize`, `y = sectorY * sectorSize + hash(...) * sectorSize` — 두 축에 같은 사이즈 범위 hash를 쓰므로 결과가 대각선으로 쏠릴 수 있음.
-  - 수정: x/y에 **완전히 독립된 salt**를 써서 2D 균등 분포가 되도록 변경. 예:
-    ```lua
-    x = sectorX * M.sectorSize + hash(sectorX, sectorY, 10001 + i) * M.sectorSize,
-    y = sectorY * M.sectorSize + hash(sectorX, sectorY, 20001 + i) * M.sectorSize,
-    ```
-    (이미 다른 salt지만 hash 분포 실제로 대각 쏠리는지 `GAME_CAPTURE`로 확인. 쏠리면 salt를 3배 범위로 늘리거나 `hash(sectorX*31+i, sectorY*17+i, 10000)` 식으로 교차 seed.)
-  - `backgroundStarCount`를 120 → **200**으로 늘려서 밀도 향상.
-
-  **(3) 중력장(표본 수집 반경) 확대 — 난이도 완화:**
-  - 현재 수집 반경: `planet.radius + 14` px (`play.lua` line 1590).
-  - 변경: `planet.radius + 30` px 으로 확대 (2배 이상 넓어짐).
-  - 시각 표시(파란 rim): 현재 `planet.radius + 3`. 수집 반경과 일치하게 `planet.radius + 30` 으로 맞춰서 플레이어가 실제 범위를 직관적으로 보이도록. rim 색은 유지(청록 0.9/0.95/1).
-  - 충돌 데미지 반경(`planet.radius + 5`)은 그대로 유지.
-
-  **(4) 부품/엔진 드롭 행성 별도 표시:**
-  - `planet.isShop == true` 인 행성(현재 shop 행성)에는 이미 다른 색이 있음. 여기에 추가로:
-    - Hub 행성(`planet.hub`): 상단에 작은 ⬡ 또는 `H` 레이블 (i18n `"hub_label"` 키 추가).
-    - Shop 행성(`planet.isShop`): 상단에 작은 🔧 아이콘 대신 `S` 또는 `SHOP` 레이블 — 현재 rim 색과 함께.
-    - 구현: `approachWarning` 표시 근처(`y - planet.radius - 14`) 에 작은 폰트로 레이블 렌더. 아직 발견하지 않은 행성(`not self.discovered[planet.id]`)에만 표시.
-    - i18n: `ko.lua`, `en.lua` 에 `hub_label="HUB"`, `shop_label="SHOP"` 추가.
-
-  **(5) 은하 공유 특성 — PixelPlanets 별 + 행성 타입 묶기:**
-  - `world.galaxyAt(x, y)` 가 반환하는 galaxy 객체에 `starType` (string: "ice"/"lava"/"dry"/"gas"/"earth"/"bare") 필드 추가. galaxyId 의 hash 로 결정 (6가지 중 하나).
-  - `world.planets()` 가 생성한 행성에 `galaxyStarType` 필드 전달.
-  - `play.lua` 별 드로우 시: `pixelplanets_stars_special.png` 의 프레임 선택을 현재 galaxy 의 `starType` 으로 고정 (같은 은하 = 같은 특수별 모양).
-  - 행성 색(`planetColor(hue)`)은 유지하되, 같은 은하 내 행성들은 `hue` 범위를 galaxyId hash 로 ±30° 제한 — 은하마다 색 분위기 통일. (`world.planets()` 에서 `hue = baseHue + (hash(sx,sy,999)-0.5)*0.33` 식으로 클램프.)
-  - make verify GREEN + 커밋.
-
 ## 처리 완료
+
+- ✅ 완료(2026-09-05) **모바일 해상도 최적화 + 별 분산 + 중력장 확대 + 행성 마커 + 은하 공유 특성 (5개 소항목 전부 완료):**
+  - (1) conf.lua GAME_SCALE 기본값 3→1, play-density 밀도 캡처 확인.
+  - (2) world.lua stars/backgroundStars x/y 교차 시드 독립, backgroundStarCount 120→200.
+  - (3) play.lua 수집반경/시각 rim planet.radius+14→+30, 충돌반경 유지.
+  - (4) i18n hub_label/shop_label 추가, 미발견 행성 상단 HUB/SHOP 레이블.
+  - (5) world.lua M.galaxy() starType/starTypeIdx/baseHue 추가; M.planets() galaxyStarType + hue ±30° 클램프; play.lua galaxySpecialFrame으로 특수별 통일. make verify GREEN.
 
 - ✅ 완료(2026-09-05) **미니맵 나선 팔 수를 은하 반지름 기반으로 결정 — 팔 간격은 균등 유지:**
   `game/minimap.lua` `M.spiralArmCount(galaxy)` 수정: hash 랜덤 → radius 구간(r<1000→2, r<1400→3, r<1800→4, else→5). make verify GREEN. 커밋: `fix(minimap): galaxy arm count from radius, not random`.
