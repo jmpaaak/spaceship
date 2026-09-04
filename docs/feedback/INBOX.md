@@ -32,7 +32,7 @@
 
   > 처리 상황 (spaceship-gear 레인, 2026-09-04, 항목15(a) 잔여 dead code 정리 — play.lua 슬롯 상수/필드 제거): 항목15(a)가 비행 중 슬롯머신을 폐지한 이후 `game/scenes/play.lua`에 세 가지 dead 잔재가 남아있었다 — (1) 모듈 수준 상수 `slotReelStagger`/`slotSpinDuration`(어떤 함수에서도 참조되지 않는 orphaned 상수), (2) `returnControls`의 `slotMinX`/`slotMaxX` 필드(귀환 페이즈 슬 …(압축됨)
  이번 사이클의 preflight가 `make test` FAIL을 보고하며 시작했다 — 직전 사이클이 `game/self_test.lua`에 `testGearInsuranceCategoryAgnosticWiring()`(RED, 미커밋)을 이미 추가해 "항목14 (D) `insurance`가 유일하게 아직 `run.equippedGear`(hull)만 …(압축됨)
-  > 처리 상황 (spaceship-gear 레인, 2026-09-04, 항목15(b) earthSlotSpin rolls 포맷 버그 수정): `play.lua`의 `keypressed("l")` 핸들러가 `rolls = {1, 2, 3}`(정수 키 순수 배열)을 만들어 `earthSlotSpin`에 전달했는데, `earthSlotSpin`은 `rolls.reels`만 읽어 nil이면 `{0, 0, 0}`으로 폴백 — 결과적으로 매번 COMET-COMET-COMET 고정 출력이었다. `play.lua`를 `{ reels = {r1,r2,r3} }` 형식으로 수정. TDD: `game/self_test.lua`에 4건 회귀 테스트 추가 — (1) "l" 키 → `earthShopSlotResult` 설정, (2) 당첨 시 `money` 증가 + 메시지 설정, (3) settlement 외 페이즈에서 "l" 키 → no-op, (4) monkey-patch로 `capturedRolls.reels != nil` 확인. RED→GREEN 확인. `make verify LOVE=...` 전체 GREEN.
+  > 처리 상황 (spaceship-gear 레인, 2026-09-04, 항목15(b) earthSlotSpin rolls 포맷 버그 수정): `play.lua`의 `keypressed("l")` 핸들러가 `rolls = {1, 2, 3}`(정수 키 순수 배열)을 만들어 `earthSlotSpin`에 전달했는데, `earthSlotSpin`은 `rolls.reels`만 읽어 nil이면 `{0, 0, 0}`으로 폴백 — 결과적으로 매번 COMET-COMET-COMET 고정 출력이었다. `play.lua`를 `{ reels = {r1 …(압축됨)
 ## 처리 완료
 
 - ✅ 완료(2026-09-03) — **UI/HUD 대대적 정리 6개 항목 (2026-09-02, 사용자 확정, 최우선, 실제 런타임 캡처 검토 기반):** 사용자가 `GAME_CAPTURE_PHASE=launch` 실제 캡처를 보고 다음 6가지를 확정 요청했다. 한 사이클에 전부 처리할 필요는 없으며 순서대로 슬라이스해도 된다.
