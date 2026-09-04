@@ -73,17 +73,21 @@ def compact_pending_feedback(pending: list[str]) -> list[str]:
     titles: list[str] = []
     for line in pending:
         stripped = line.strip()
-        if not stripped.startswith("-"):
+        if stripped.startswith("-"):
+            content = stripped[1:].strip()
+        elif stripped and stripped[0].isdigit() and ". " in stripped:
+            content = stripped.split(". ", 1)[1].strip()
+        else:
             continue
-        cut = stripped
+        cut = content
         for marker in (":**", ":"):
-            index = stripped.find(marker)
+            index = content.find(marker)
             if 0 < index <= MAX_PENDING_PROMPT_CHARS:
-                cut = stripped[: index + (1 if marker == ":" else 3)]
+                cut = content[: index + (1 if marker == ":" else 3)]
                 break
         else:
-            cut = stripped[:MAX_PENDING_PROMPT_CHARS].rstrip()
-        titles.append(cut)
+            cut = content[:MAX_PENDING_PROMPT_CHARS].rstrip()
+        titles.append(f"- {cut}")
     if not titles:
         return pending
     header = [

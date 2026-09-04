@@ -22,6 +22,9 @@ Build the playable portrait-mobile roguelite specified in `docs/feedback/INBOX.m
 
 Durability destruction must wipe unbanked samples, money, purchased ship, and upgrades while preserving only all-time maximum height.
 
+
+**중요 — 재감사 방지 규칙:** 이번 사이클에서 처리할 INBOX 항목이 이미 이전 사이클에서 완료됐다고 판단되면, STATUS.md 업데이트 없이 즉시 다음 미완료 항목으로 넘어가라. "이미 완료됐음을 재확인"하는 문서 커밋을 반복하지 않는다. 할 일이 없으면 IDLE로 종료한다.
+
 ## Required workflow
 
 1. Read only the pending feedback, game design, and current status needed for this cycle. Do not read `docs/STATUS.md` in full — latest `##` section plus next slice only. Do not read `docs/STATUS_HISTORY.md` unless tracking a specific past bug.
