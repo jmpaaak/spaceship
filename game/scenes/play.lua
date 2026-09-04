@@ -1724,7 +1724,7 @@ function M:update(dt)
             local dx, dy = junk.x - self.ship.x, junk.y - self.ship.y
             if dx * dx + dy * dy <= (junk.radius + 5) ^ 2 and not self.collided[junk.id] then
                 self.collided[junk.id] = true
-                local damage = self.expedition.durability
+                local damage = 1
                 table.insert(self.floatingTexts, {
                     text = i18n.t("floating_damage_text", damage),
                     x = self.ship.x + 60,

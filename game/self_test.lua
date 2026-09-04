@@ -818,6 +818,7 @@ local function testDebris()
     local nearby = world.nearbyDebris(0, 0, 1)
     assert(type(nearby) == "table")
 
+    -- sub-test A: debris at full durability deals exactly 1 damage (not instant kill)
     local debrisScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
@@ -833,11 +834,33 @@ local function testDebris()
     end
     debrisScene:update(0)
     world.nearbyDebris = nearbyDebris
-    local wiped = debrisScene.expedition
-    assert(wiped.phase == "destroyed" and wiped.durability == 0)
+    -- durability was 3, damage=1 → should survive at 2
+    assert(debrisScene.expedition.phase == "ascending", "ship must survive debris hit at full durability")
+    assert(debrisScene.expedition.durability == 2, "debris must deal exactly 1 damage (3→2)")
+    assert(debrisScene.expedition.money == 80, "money must be unchanged after non-lethal debris hit")
+
+    -- sub-test B: debris when durability==1 destroys ship
+    local debrisScene2 = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    debrisScene2.expedition.phase = "ascending"
+    debrisScene2.expedition.money = 80
+    debrisScene2.expedition.sampleCount = 2
+    debrisScene2.expedition.pendingSampleValue = 40
+    debrisScene2.expedition.bestAltitude = 400
+    debrisScene2.expedition.durability = 1
+    debrisScene2.ship.x, debrisScene2.ship.y = 0, -40
+    local nearbyDebris2 = world.nearbyDebris
+    world.nearbyDebris = function()
+        return { { id = "junk-can2", x = 0, y = -40, radius = 3, kind = "can", vx = 0, vy = 0 } }
+    end
+    debrisScene2:update(0)
+    world.nearbyDebris = nearbyDebris2
+    local wiped = debrisScene2.expedition
+    assert(wiped.phase == "destroyed" and wiped.durability == 0, "debris must destroy ship when durability==1")
     assert(wiped.money == 0 and wiped.sampleCount == 0 and wiped.pendingSampleValue == 0)
     assert(wiped.bestAltitude == 400)
-    assert(debrisScene.message == "SHIP DESTROYED  BEST 400  META RESET")
+    assert(debrisScene2.message == "SHIP DESTROYED  BEST 400  META RESET")
 end
 
 -- docs/feedback/INBOX.md item 13: JSON gear-data loader must validate

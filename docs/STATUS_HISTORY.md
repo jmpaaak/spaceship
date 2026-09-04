@@ -1255,3 +1255,52 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - Updated `docs/assets/MANIFEST.json` with correct sizes and SHA-256 hashes.
 - Appended entries to `docs/GENERATED_ASSET_LOG.md`.
 - `make verify` GREEN.
+
+## Archived from STATUS.md (2026-09-05 04:08)
+
+
+2026-09-05 — INBOX sub-item (5): 은하 공유 특성 (galaxy shared traits). ALL 5 sub-items of the 2026-09-05 item now complete.
+
+- `game/world.lua` `M.galaxy()`: added `starType` (string "ice"/"lava"/"dry"/"gas"/"earth"/"bare"), `starTypeIdx` (0-based, 0..5), `baseHue` (0..1). Determined from gx/gy hash salts 571/572. Home galaxy: starType="earth", starTypeIdx=4, baseHue=0.6.
+- `M.hubPlanet()` / `M.shopPlanet()`: now carry `galaxyStarType` and `galaxyStarTypeIdx` from parent galaxy.
+- `M.planets()`: captures galaxy from `galaxyContaining()`, (a) passes `galaxyStarType`/`galaxyStarTypeIdx`, (b) clamps hue to `baseHue ± 0.083` (≈30°) for intra-galaxy colour unity.
+- `game/scenes/play.lua` `M:draw()`: `galaxySpecialFrame = galaxy.starTypeIdx or 0` fixed once per frame; both background and foreground special-star draw loops use this instead of `starHash%6` — same galaxy → same special star shape.
+- Self-tests added in `testGalaxyStructure()` covering starType/starTypeIdx/baseHue on home+foreign galaxy, hub/shop planet inheritance, and planet hue clamping.
+- `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK + LOVE_BUNDLE_OK + ASSET_MANIFEST_OK).
+- INBOX 2026-09-05 fully done (all 5 sub-items); moved to 처리 완료.
+
+## Next Slice
+
+- INBOX is now empty. Awaiting new feedback or IDLE.
+
+## Archived from STATUS.md (2026-09-05 04:10)
+
+2026-09-04 — ComfyUI shop panels and action backgrounds wiring (group 8 of INBOX draw-wiring item).
+
+## Archived from STATUS.md (2026-09-05 04:12)
+
+- Finished wiring `shopEffectImages` in `game/scenes/play.lua` (loaded as Group 8).
+- Settlement phase now uses `shopTouchRow` as backgrounds for tappable rows.
+- Wired `shopTitle` behind the shop title and `shopStats` behind the stats box.
+- Action, status, and preview rows in the shop for Hull, Steering, Yield, and Ship now have sprite backgrounds (`hullAction`, `hullStatus`, `hullPreview`, etc.).
+- Wired `shopNextShip` panel behind the next ship details section.
+- Added `GAME_CAPTURE=1 GAME_CAPTURE_PHASE=launch` and `settlement` test captures.
+- Updated `docs/feedback/INBOX.md` to mark the top-level ComfyUI draw wiring task as completely finished.
+- `make verify` GREEN.
+
+## Archived from STATUS.md (2026-09-05 04:14)
+
+## Next Slice
+
+## Archived from STATUS.md (2026-09-05 04:16)
+
+- The ComfyUI draw wiring item is now fully completed (all 69 assets wired). Read `docs/feedback/INBOX.md` for the next top priority pending item.
+
+## Archived from STATUS.md (2026-09-05 04:18)
+
+2026-09-04 — merged `spaceship-gear` into `main`.
+
+## Archived from STATUS.md (2026-09-05 04:20)
+
+- Gear lane had emptied INBOX (items 7/8/11/15 newly completed; 9/10/12/13/14 already done) and was STOP'd to stop idle watchdog restarts.
+- Merge took gear gameplay (`expedition.lua`, `play.lua`, `self_test.lua`, `i18n.lua`, `world.lua`, `main.lua`) plus gear JSON/editor (`game/gear.lua`, `game/data/*`, `tools/gear-editor/`).\n- Kept main analog 8-way `game/ship.lua`, main loop PROMPT/env/preflight (TOKEN HINT, WAIT=10), and main ComfyUI URL prefixes in `tools/verify_asset_manifest.py`.
