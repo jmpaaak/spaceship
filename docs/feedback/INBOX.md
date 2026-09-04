@@ -2,6 +2,85 @@
 
 ## 처리 대기
 
+- **[2026-09-05] Stellar Origin 수트 시스템 도입 — Balatro 스타일 그룹 시너지 (사용자 확정, 최우선). 한 사이클 = 아래 소항목 하나 + make verify GREEN + 커밋.**
+
+  **개요:** 4개 수트(Solar/Nebula/Void/Pulsar)를 카드에 추가하고, 같은 수트 카드를 여러 장 장착하면 시너지 보너스가 발동하는 시스템.
+
+  **(1) JSON 스키마: 카드에 `suit` 필드 추가**
+
+  `game/data/hull_parts.json` + `game/data/engine_parts.json` 전체 카드에 suit 배정:
+
+  | 수트 | 색/아이콘 | 배정 기준 | 대상 카드 (hull) | 대상 카드 (engine) |
+  |---|---|---|---|---|
+  | `solar` | ☀️ 금색 | 내구·생존·방어 | scrap_plate, ablative_coat, ballast_weight, reactive_hull, titan_frame, emergency_beacon, slipstream_hull, ember_plating, ember_core, ember_vent | afterburner, ember_burst_valve, escape_pod_thruster, slim_nacelle, emergency_boost_pod, stellar_matrix_core |
+  | `nebula` | 💫 보라 | 수익·경제·수집 | cargo_pod, reserve_tank, solar_sail, azure_collector, azure_prism, prism_hull, trade_license, market_broker, negotiator_chip, collector_drone, starforge_relic | fusion_core, ion_drive, solar_sail_flap, cryo_fuel_cell, freelancer_manifold, market_thruster, magnet_intake |
+  | `void` | ⚫ 청흑 | 속도·회피·기동 | ion_fin, gyro_stabilizer, micro_thruster_array, climb_booster, star_compass, void_lens, void_shard, void_capacitor, lucky_charm, scanner_array, nebula_forge | basic_thruster, vector_nozzle, gyro_stabilizer, azure_coolant_jet, void_phase_thruster, burst_capacitor, deep_scan_pod |
+  | `pulsar` | ⚡ 전기 청록 | 배율·연쇄·타이밍 | navigation_beacon, combo_matrix, echo_relay, hull_quantum_alloy, void_capacitor(2nd), lucky_charm(2nd) — 이미 void 배정이면 pulsar 우선 | probability_core, echo_thruster, haggler_valve, momentum_stabilizer, void_forge_drive, singularity_drive |
+
+  > 하나의 카드에 수트 하나만. 겹치면 효과 계열 우선(`sellMultiplier/streakMultiplier/chainTrigger` → pulsar, `insurance/collisionRadius` → solar, `sampleSellValue/autoCollect/shopDiscount` → nebula, `speed/steeringResponsiveness/detectionRadius` → void). Legendary는 dominant 효과 기준.
+
+  JSON에 필드 추가 예시:
+  ```json
+  { "id": "hull_scrap_plate", "suit": "solar", "rarity": "common", ... }
+  ```
+
+  `game/gear.lua` `M.knownSuits` 테이블 추가:
+  ```lua
+  M.knownSuits = { solar=true, nebula=true, void=true, pulsar=true }
+  ```
+  로더 검증: suit 필드 없으면 경고 출력(`[WARN] card <id> missing suit`), 게임은 정상 동작.
+
+  **(2) 시너지 엔진: `game/gear.lua` `M.suitSynergies()` 함수**
+
+  장착된 hull+engine 카드 전체를 받아 수트별 카운트 집계 → 임계값 도달 시 보너스 반환:
+
+  ```lua
+  -- 반환 형태: { solarSystem=true, nebulaField=true, ... }
+  function M.activeSynergies(equippedHull, equippedEngine)
+  ```
+
+  | 시너지명 | 조건 | 보너스 효과 | 구현 |
+  |---|---|---|---|
+  | `solarSystem` | solar 3장+ | 착지마다 내구 1 회복 | expedition.settle() 시 `run.durability = min(run.maxDurability, run.durability+1)` |
+  | `nebulaField` | nebula 3장+ | 표본 수익 ×1.5 | `sampleYieldMultiplier`에 1.5 곱 |
+  | `eventHorizon` | void 3장+ | 충돌 반경 −30% | `collisionRadius` 효과값에 −30 추가 |
+  | `pulsarBurst` | pulsar 2장+ | 스트릭 배율 ×2 | `streakMultiplier` 효과값 2배 |
+  | `binaryStar` | solar 2 + nebula 2 | 정착마다 +30💰 | settle() 시 `run.money += 30` |
+  | `supernova` | 4수트 각 1장+ | Legendary 효과 즉시 +50% | 장착 중 legendary 카드 전체 효과 ×1.5 |
+  | `darkMatter` | void 2 + pulsar 2 | 스트릭 배율 +50% 추가 | streakMultiplier 추가 +50 |
+
+  시너지는 중첩 가능 (solarSystem + binaryStar 동시 활성 OK).
+
+  함수는 pure (no love.*), headless 테스트 가능.
+
+  **(3) expedition.lua 연동**
+
+  `expedition.collectSample()` / `expedition.settle()` / `expedition.equippedTotals()` 호출 시 `gear.activeSynergies(run.equippedGear, run.equippedEngineParts)` 결과를 참조:
+  - `nebulaField` → sampleYieldMultiplier에 1.5 추가 곱
+  - `pulsarBurst` → streakMultiplier 2배
+  - `darkMatter` → streakMultiplier +50%
+  - `solarSystem` / `binaryStar` → settle() 콜백
+  - `eventHorizon` → collisionRadius 효과 반영 (play.lua가 gear 효과값 읽는 구조이므로 aggregateEffects에 −30 추가)
+  - `supernova` → aggregateEffects에서 legendary 카드 효과값 ×1.5
+
+  **(4) HUD 시너지 표시**
+
+  발동 중인 시너지 이름을 loadout 화면 하단에 소폰트로 표시:
+  - `☀️ SOLAR SYSTEM` / `💫 NEBULA FIELD` / `⚫ EVENT HORIZON` / `⚡ PULSAR BURST` / `★ BINARY STAR` / `✦ SUPERNOVA` / `◈ DARK MATTER`
+  - i18n: `ko.lua` / `en.lua` 에 각 키 추가.
+  - 발동 안 된 시너지는 표시 안 함.
+
+  **(5) self_test 커버리지**
+
+  `game/self_test.lua` 에 `testStellarSynergies()` 추가 (200로컬 한도 주의 — top-level function):
+  - solar 3장 → `solarSystem=true`
+  - nebula 3장 → `nebulaField=true`
+  - void 3장 → `eventHorizon=true`
+  - pulsar 2장 → `pulsarBurst=true`
+  - 4수트 각 1장 → `supernova=true`
+  - 빈 로드아웃 → 시너지 없음
+  - `make verify` GREEN + 커밋: `feat(gear): Stellar Origin suit system + synergy engine`
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-05) **RCS 분출 위치에 ship.angle 반영 (선택, 조이스틱 개선):**
