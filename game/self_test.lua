@@ -4017,6 +4017,117 @@ local function testEarthSlotMachineGalaxyOdds()
             .. tostring(hubRun.lastVisitedGalaxyId))
 end
 
+-- Item 15(c) follow-up: earthSlotSpin.reward must vary per galaxy profile.
+-- Item 15 says \"보상 테이블이 달라지도록\" (reward TABLE changes) not just
+-- weight odds. Currently slotReward is a global fixed table (STAR*3=75,
+-- etc.) regardless of profile — void's \"고배당\" promise is only half-fulfilled
+-- by raising STAR probability; the jackpot value itself should also scale up.
+-- This test pins:
+--   (a) solar triple-star reward matches the existing global STAR*3 value (75)
+--       so long-time solar players see no change.
+--   (b) void triple-star jackpot > solar triple-star jackpot (\"고배당\").
+--   (c) fringe triple-star jackpot > solar and <= void (gradient).
+--   (d) earthSlotSpin exposes .rewardProfile so UI can show which tier is active.
+--   (e) void no-match (miss) reward <= solar no-match reward (risk tradeoff:
+--       higher ceiling, same or lower floor).
+local function testEarthSlotProfileRewardVariation()
+    local expedition = require("game.expedition")
+
+    -- Find galaxy IDs for fringe and void profiles.
+    local fringeGalaxy, voidGalaxy
+    local candidates = {
+        "andromeda", "triangulum", "ngc1300", "sombrero", "pinwheel",
+        "sculptor", "circinus", "bode", "centaurus", "whirlpool",
+    }
+    for _, g in ipairs(candidates) do
+        local p = expedition.galaxySlotOddsProfile(g)
+        if p == "fringe" and not fringeGalaxy then fringeGalaxy = g end
+        if p == "void"   and not voidGalaxy   then voidGalaxy   = g end
+        if fringeGalaxy and voidGalaxy then break end
+    end
+    assert(fringeGalaxy, "need at least one fringe galaxy in candidates")
+    assert(voidGalaxy,   "need at least one void galaxy in candidates")
+
+    local run = expedition.new()
+
+    -- STAR is the last symbol in slotSymbols canonical order
+    -- (COMET -> PLANET -> STAR). A roll past COMET+PLANET selects STAR.
+    local solarWeights = expedition.earthSlotWeights(nil)
+    local solarTotal   = solarWeights.COMET + solarWeights.PLANET + solarWeights.STAR
+    local starRoll     = solarTotal - 0.5   -- last bucket = STAR
+
+    -- (a) Solar triple-STAR must equal the legacy global STAR*3 value (75).
+    local solarSpin = expedition.earthSlotSpin(run, nil, {
+        reels = { starRoll, starRoll, starRoll },
+    })
+    assert(solarSpin.symbols[1] == "STAR" and solarSpin.symbols[2] == "STAR"
+        and solarSpin.symbols[3] == "STAR",
+        "starRoll must select STAR for solar profile, got: "
+            .. table.concat(solarSpin.symbols, "-"))
+    assert(solarSpin.reward == 75,
+        "solar triple-STAR jackpot must equal the baseline 75, got: "
+            .. tostring(solarSpin.reward))
+
+    -- (b) Void triple-STAR jackpot must EXCEED solar.
+    local voidWeights  = expedition.earthSlotWeights(voidGalaxy)
+    local voidTotal    = voidWeights.COMET + voidWeights.PLANET + voidWeights.STAR
+    local voidStarRoll = voidTotal - 0.5
+    local voidSpin = expedition.earthSlotSpin(run, voidGalaxy, {
+        reels = { voidStarRoll, voidStarRoll, voidStarRoll },
+    })
+    assert(voidSpin.symbols[1] == "STAR",
+        "voidStarRoll must select STAR for void profile, got: "
+            .. table.concat(voidSpin.symbols, "-"))
+    assert(voidSpin.reward > solarSpin.reward,
+        "void triple-STAR jackpot (" .. tostring(voidSpin.reward)
+            .. ") must exceed solar (" .. tostring(solarSpin.reward) .. ")")
+
+    -- (c) Fringe triple-STAR jackpot: > solar and <= void (gradient).
+    local fringeWeights  = expedition.earthSlotWeights(fringeGalaxy)
+    local fringeTotal    = fringeWeights.COMET + fringeWeights.PLANET + fringeWeights.STAR
+    local fringeStarRoll = fringeTotal - 0.5
+    local fringeSpin = expedition.earthSlotSpin(run, fringeGalaxy, {
+        reels = { fringeStarRoll, fringeStarRoll, fringeStarRoll },
+    })
+    assert(fringeSpin.symbols[1] == "STAR",
+        "fringeStarRoll must select STAR for fringe profile, got: "
+            .. table.concat(fringeSpin.symbols, "-"))
+    assert(fringeSpin.reward > solarSpin.reward,
+        "fringe triple-STAR jackpot (" .. tostring(fringeSpin.reward)
+            .. ") must exceed solar (" .. tostring(solarSpin.reward) .. ")")
+    assert(fringeSpin.reward <= voidSpin.reward,
+        "fringe triple-STAR jackpot (" .. tostring(fringeSpin.reward)
+            .. ") must be <= void (" .. tostring(voidSpin.reward) .. ")")
+
+    -- (d) earthSlotSpin must expose .rewardProfile for UI.
+    assert(solarSpin.rewardProfile == "solar",
+        "solar spin must expose rewardProfile='solar', got: "
+            .. tostring(solarSpin.rewardProfile))
+    assert(voidSpin.rewardProfile == "void",
+        "void spin must expose rewardProfile='void', got: "
+            .. tostring(voidSpin.rewardProfile))
+    assert(fringeSpin.rewardProfile == "fringe",
+        "fringe spin must expose rewardProfile='fringe', got: "
+            .. tostring(fringeSpin.rewardProfile))
+
+    -- (e) Void no-match reward <= solar no-match (risk tradeoff: high ceiling,
+    -- same or lower floor — void pays more for wins, not more for misses).
+    -- Force a guaranteed COMET-PLANET-COMET mismatch on each profile.
+    local cometRoll  = 0.5                              -- lands in COMET bucket
+    local planetRoll = solarWeights.COMET + 0.5         -- past COMET, in PLANET bucket
+    local solarMiss  = expedition.earthSlotSpin(run, nil, {
+        reels = { cometRoll, planetRoll, cometRoll },
+    })
+    local voidPlanetRoll = voidWeights.COMET + 0.5
+    local voidMiss = expedition.earthSlotSpin(run, voidGalaxy, {
+        reels = { cometRoll, voidPlanetRoll, cometRoll },
+    })
+    assert(voidMiss.reward <= solarMiss.reward,
+        "void no-match reward (" .. tostring(voidMiss.reward)
+            .. ") must be <= solar no-match (" .. tostring(solarMiss.reward)
+            .. ") - risk tradeoff")
+end
+
 -- Module-level gear test suite (kept outside M.run() so M.run() only
 -- consumes 1 upvalue for this reference instead of 47+, staying within
 -- Lua 5.1's 60-upvalue-per-function limit).
@@ -4065,6 +4176,7 @@ local function runGearTests()
     testGearBoostsUsedDestroyReset()
     testHubPartialSettlement()
     testEarthSlotMachineGalaxyOdds()
+    testEarthSlotProfileRewardVariation()
 end
 
 function M.run()

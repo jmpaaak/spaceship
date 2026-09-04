@@ -1220,7 +1220,39 @@ end
 --   .reward         — money value of the resulting symbol combination
 --   .totalWeight    — total weight used for this spin (for UI's random-roll range)
 --   .effectiveStarWeight — the STAR weight after luck boost (for UI preview / tests)
+-- Item 15(c) follow-up: per-profile reward tables. Item 15 says
+-- "보상 테이블이 달라지도록" (reward TABLE changes, not just odds weights).
+-- void is "고배당/위험부담형" so its triple-STAR jackpot scales up; the miss
+-- (no-match) floor stays equal-to or lower-than solar so it's a genuine
+-- risk trade-off, not a free upgrade. Fringe sits between as a gradient.
+--
+-- Design: multiply the global slotReward baseline by a profile jackpot
+-- multiplier for the triple-STAR case only; other combinations (triple-
+-- other, pairs, misses) use the same unscaled table so solar players see
+-- no change and void/fringe just pay out bigger jackpots for the rare hit.
+M.earthSlotRewardMultipliers = {
+    solar  = { tripleSTAR = 1.0 },
+    fringe = { tripleSTAR = 1.5 },
+    void   = { tripleSTAR = 2.0 },
+}
+
+-- Profile-aware reward function used by earthSlotSpin. Falls back to the
+-- global slotReward for non-STAR triples and mismatches; the triple-STAR
+-- jackpot is scaled by the profile multiplier so the risk/reward shape
+-- changes meaningfully between solar/fringe/void.
+local function earthSlotReward(symbols, profile)
+    local isTriple = (symbols[1] == symbols[2] and symbols[2] == symbols[3])
+    if isTriple and symbols[1] == "STAR" then
+        local mults = M.earthSlotRewardMultipliers[profile or "solar"]
+        local mult = (mults and mults.tripleSTAR) or 1.0
+        -- Global STAR×3 jackpot is 75; scale by profile multiplier.
+        return math.floor(75 * mult)
+    end
+    return slotReward(symbols)
+end
+
 function M.earthSlotSpin(run, galaxyId, rolls)
+    local profile = M.galaxySlotOddsProfile(galaxyId)
     local weights = M.earthSlotWeights(galaxyId)
     -- Item 14(C) luck: boost STAR weight by the equipped gear's luck total.
     -- totalLuckBonus returns a fraction (e.g. 0.5 for 50 luck points);
@@ -1250,9 +1282,12 @@ function M.earthSlotSpin(run, galaxyId, rolls)
     end
     return {
         symbols = symbols,
-        reward = slotReward(symbols),
+        reward = earthSlotReward(symbols, profile),
         totalWeight = total,
         effectiveStarWeight = effectiveStarWeight,
+        -- Item 15(c) follow-up: expose the active profile so UI can show
+        -- which risk tier is in play (e.g. "VOID ODDS" badge in the shop).
+        rewardProfile = profile,
     }
 end
 

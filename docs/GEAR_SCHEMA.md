@@ -1592,3 +1592,42 @@ found one slot category further this time.
   already-existing `game/gear.lua` pure function into run consumption, no
   new gameplay mechanic added).
 
+## Item 15(c) follow-up: per-profile reward variation gap
+
+**Gap found:** `earthSlotSpin.reward` used the global fixed `slotReward`
+regardless of galaxy profile — void's "고배당/위험부담형" promise was only
+half-fulfilled (higher STAR *probability* via `earthSlotOddsProfiles.void`),
+but the jackpot *value* itself (75 for STAR×3) was identical across all
+three profiles. Item 15's literal wording is "보상 테이블이 달라지도록"
+(the reward TABLE should change), which a pure weight-odds shift doesn't
+satisfy.
+
+**Fix:** `M.earthSlotRewardMultipliers` table (per-profile tripleSTAR
+multiplier: solar=1.0, fringe=1.5, void=2.0) and a new local
+`earthSlotReward(symbols, profile)` function that applies the multiplier
+for the rare triple-STAR case while leaving every other combination
+unchanged (non-STAR triples, pairs, misses all use the global `slotReward`
+baseline). `M.earthSlotSpin` now resolves the profile from `galaxyId`
+upfront and calls `earthSlotReward` instead of `slotReward`.
+
+The return table gains a `rewardProfile` field ("solar"/"fringe"/"void")
+so the Earth-shop UI can display a badge ("VOID ODDS") matching the active
+profile without re-calling `galaxySlotOddsProfile`.
+
+**Jackpot values:**
+- solar:  STAR×3 = 75  (unchanged from legacy)
+- fringe: STAR×3 = 112 (75 * 1.5, floor)
+- void:   STAR×3 = 150 (75 * 2.0)
+
+**Risk tradeoff:** non-STAR payouts (COMET/PLANET triples, pairs, misses)
+are identical across profiles. Only the STAR jackpot scales, so void/fringe
+don't give more for misses — genuine high-risk-high-reward.
+
+**Regression test:** `testEarthSlotProfileRewardVariation()` verifies:
+  (a) solar triple-STAR == 75 (legacy parity)
+  (b) void triple-STAR > solar triple-STAR
+  (c) fringe triple-STAR > solar and <= void (gradient)
+  (d) `rewardProfile` field equals the galaxy's profile string
+  (e) void no-match reward <= solar no-match (risk tradeoff)
+RED confirmed (void triple-STAR got 75, expected > 75) → implement → GREEN.
+
