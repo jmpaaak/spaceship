@@ -706,6 +706,16 @@ function M.new(options)
     local joystickKnobImagePath    = "assets/effects/joystick_knob.png"
     local specimenBannerImagePath  = "assets/effects/specimen_banner.png"
     local starPointImagePath       = "assets/effects/star_point.png"
+    -- Group 7 of ComfyUI asset wiring: destroyed-phase row icons
+    local destroyedTitleIconImagePath              = "assets/effects/destroyed_title.png"
+    local destroyedLostTotalIconImagePath          = "assets/effects/destroyed_lost_total.png"
+    local destroyedSamplesSettlementIconImagePath  = "assets/effects/destroyed_samples_settlement.png"
+    local destroyedSpinsSettlementIconImagePath    = "assets/effects/destroyed_spins_settlement.png"
+    local destroyedPeakDistIconImagePath           = "assets/effects/destroyed_peak_dist.png"
+    local destroyedNewBestIconImagePath            = "assets/effects/destroyed_new_best.png"
+    local destroyedMetaResetIconImagePath          = "assets/effects/destroyed_meta_reset.png"
+    local destroyedNextShipIconImagePath           = "assets/effects/destroyed_next_ship.png"
+    local destroyedTapStartOverIconImagePath       = "assets/effects/destroyed_tap_start_over.png"
     local shipImage = loadSprite(shipImagePath)
     local planetImage = loadSprite(planetImagePath)
     local earthImage = loadSprite(earthImagePath)
@@ -741,6 +751,16 @@ function M.new(options)
     local joystickKnobImage   = loadSprite(joystickKnobImagePath)
     local specimenBannerImage = loadSprite(specimenBannerImagePath)
     local starPointImage      = loadSprite(starPointImagePath)
+    -- Group 7 of ComfyUI asset wiring: destroyed-phase row icons
+    local destroyedTitleIconImage             = loadSprite(destroyedTitleIconImagePath)
+    local destroyedLostTotalIconImage         = loadSprite(destroyedLostTotalIconImagePath)
+    local destroyedSamplesSettlementIconImage = loadSprite(destroyedSamplesSettlementIconImagePath)
+    local destroyedSpinsSettlementIconImage   = loadSprite(destroyedSpinsSettlementIconImagePath)
+    local destroyedPeakDistIconImage          = loadSprite(destroyedPeakDistIconImagePath)
+    local destroyedNewBestIconImage           = loadSprite(destroyedNewBestIconImagePath)
+    local destroyedMetaResetIconImage         = loadSprite(destroyedMetaResetIconImagePath)
+    local destroyedNextShipIconImage          = loadSprite(destroyedNextShipIconImagePath)
+    local destroyedTapStartOverIconImage      = loadSprite(destroyedTapStartOverIconImagePath)
     -- Minimap marker images (group 2 of ComfyUI asset wiring)
     local minimapImages = loadSpriteMap({
         disc           = "assets/effects/minimap_disc.png",
@@ -844,6 +864,25 @@ function M.new(options)
         specimenBannerImagePath = specimenBannerImagePath,
         starPointImage = starPointImage,
         starPointImagePath = starPointImagePath,
+        -- Group 7 of ComfyUI asset wiring: destroyed-phase row icons
+        destroyedTitleIconImage             = destroyedTitleIconImage,
+        destroyedTitleIconImagePath         = destroyedTitleIconImagePath,
+        destroyedLostTotalIconImage         = destroyedLostTotalIconImage,
+        destroyedLostTotalIconImagePath     = destroyedLostTotalIconImagePath,
+        destroyedSamplesSettlementIconImage = destroyedSamplesSettlementIconImage,
+        destroyedSamplesSettlementIconImagePath = destroyedSamplesSettlementIconImagePath,
+        destroyedSpinsSettlementIconImage   = destroyedSpinsSettlementIconImage,
+        destroyedSpinsSettlementIconImagePath = destroyedSpinsSettlementIconImagePath,
+        destroyedPeakDistIconImage          = destroyedPeakDistIconImage,
+        destroyedPeakDistIconImagePath      = destroyedPeakDistIconImagePath,
+        destroyedNewBestIconImage           = destroyedNewBestIconImage,
+        destroyedNewBestIconImagePath       = destroyedNewBestIconImagePath,
+        destroyedMetaResetIconImage         = destroyedMetaResetIconImage,
+        destroyedMetaResetIconImagePath     = destroyedMetaResetIconImagePath,
+        destroyedNextShipIconImage          = destroyedNextShipIconImage,
+        destroyedNextShipIconImagePath      = destroyedNextShipIconImagePath,
+        destroyedTapStartOverIconImage      = destroyedTapStartOverIconImage,
+        destroyedTapStartOverIconImagePath  = destroyedTapStartOverIconImagePath,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -2678,39 +2717,57 @@ function M:draw()
         local fullX, fullW = 16, viewport.width - 32
         local row = 178
         local rowStep = 11
+        local dIconSz = 9  -- destroyed-phase row icon size
+        local dIconGap = 2 -- gap between icon and text
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf(i18n.t("ship_destroyed_title"), fullX, row, fullW, "center")
+        drawHudSpriteOrPoly(self.destroyedTitleIconImage, nil,
+            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
+        love.graphics.printf(i18n.t("ship_destroyed_title"), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
+        drawHudSpriteOrPoly(self.destroyedLostTotalIconImage, nil,
+            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
         love.graphics.printf(i18n.t("lost_total_line",
             (self.expedition.lastLostSampleValue or 0)),
-            fullX, row, fullW, "center")
+            fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
+        drawHudSpriteOrPoly(self.destroyedSamplesSettlementIconImage, nil,
+            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
         love.graphics.printf(i18n.t("samples_settlement_line",
             self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
-            fullX, row, fullW, "center")
+            fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
         row = row + rowStep
         -- Item 15/11: spins_settlement_line removed (in-flight slots abolished)
         love.graphics.setColor(0.6, 0.8, 1)
+        drawHudSpriteOrPoly(self.destroyedPeakDistIconImage, nil,
+            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
         love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastLostAltitude or 0)),
-            fullX, row, fullW, "center")
+            fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
         row = row + rowStep
         if self.expedition.lastLostNewBest then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf(i18n.t("newbest_label"), fullX, row, fullW, "center")
+            drawHudSpriteOrPoly(self.destroyedNewBestIconImage, nil,
+                fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
+            love.graphics.printf(i18n.t("newbest_label"), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
             row = row + rowStep
         end
         love.graphics.setColor(1, 0.55, 0.45)
-        love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)), fullX, row, fullW, "center")
+        drawHudSpriteOrPoly(self.destroyedMetaResetIconImage, nil,
+            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
+        love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(i18n.t("next_ship_line", loadout.shipLabel), fullX, row, fullW, "center")
+        drawHudSpriteOrPoly(self.destroyedNextShipIconImage, nil,
+            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
+        love.graphics.printf(i18n.t("next_ship_line", loadout.shipLabel), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(loadout.upgrades, fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.printf(i18n.t("tap_start_over"), fullX, row, fullW, "center")
+        drawHudSpriteOrPoly(self.destroyedTapStartOverIconImage, nil,
+            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
+        love.graphics.printf(i18n.t("tap_start_over"), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()

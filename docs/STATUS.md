@@ -67,3 +67,13 @@
 - `drawMinimap()` fully sprite-wired: background disc, orbit rings, galaxy rings, sun, galaxy home/hub/plain dots, earth marker, player marker, beyond-chart earth-return arrow (rotated), off-chart checkpoint arrow (rotated). Every element falls back to original polygon if image is nil.
 - `make verify` GREEN.
 
+2026-09-04 — ComfyUI destroyed-phase row icon wiring (group 7 of INBOX draw-wiring item).
+
+- 9 destroyed-phase PNGs loaded in `M.new()`: destroyedTitleIconImage, destroyedLostTotalIconImage, destroyedSamplesSettlementIconImage, destroyedSpinsSettlementIconImage, destroyedPeakDistIconImage, destroyedNewBestIconImage, destroyedMetaResetIconImage, destroyedNextShipIconImage, destroyedTapStartOverIconImage.
+- In `draw()` destroyed phase: each printf row now prefixed with a 9px icon via `drawHudSpriteOrPoly`; text shifted right by icon+gap (11px) so icons never overlap text; upgrades line kept full-width (no icon).
+- `make verify` GREEN.
+
+## Next Slice (group 8)
+
+- Remaining un-drawn assets: `hud_panel.png`, `shop_panel.png`, `shop_touch_row.png`, `shop_title.png`, `shop_hull_action.png`, `shop_steering_action.png`, `shop_yield_action.png`, `shop_ship_action.png`, `shop_stats.png`, `shop_hull_status.png`, `shop_steering_status.png`, `shop_yield_status.png`, `shop_ship_status.png`, `shop_hull_preview.png`, `shop_steering_preview.png`, `shop_yield_preview.png`, `shop_ship_preview.png`, `shop_next_ship.png`, `loadout_ship.png`, `destroyed_next_ship.png`, `destroyed_tap_start_over.png` — these are the settlement shop text-icon rows; load, store, wire per-row.
+
