@@ -1631,3 +1631,56 @@ don't give more for misses — genuine high-risk-high-reward.
   (e) void no-match reward <= solar no-match (risk tradeoff)
 RED confirmed (void triple-STAR got 75, expected > 75) → implement → GREEN.
 
+## Item 15(c) + 14(C) earthSlotSpin engine-slot luck regression guard
+
+**Gap found:** `testEarthSlotMachineGalaxyOdds()` verified hull-slot luck raises
+`effectiveStarWeight`, but no test verified the engine-slot path. Since
+`earthSlotSpin` already uses `combinedGearList(run)` (hull+engine), the code
+was correct, but the regression guard was missing.
+
+**Fix (test-only):** `testGearEarthSlotEngineSlotLuckWiring()` asserts:
+  (a) bare run has base STAR weight
+  (b) hull-slot luck card boosts STAR weight
+  (c) engine-slot luck card boosts STAR weight identically to hull-slot
+  (d) boost magnitudes match within 0.001 tolerance
+
+No production code change needed (combinedGearList already covered it).
+RED was induced artificially by removing the engine-slot luck card from the
+test before wiring check — not tested in isolation before. GREEN immediately.
+
+## Item 7(b)/12 gap: exploreHub always hardcoded `edition = nil`
+
+**Gap found:** `exploreHub` returned every hub-confirmed drop with `edition = nil`
+hardcoded, making item 12(B)'s edition rolling and item 14(C) luck target #1
+("에디션 부여 확률 상향") dead for ALL hub-confirmed drops. Players with max-luck
+loadouts visiting galaxy hubs received identical base cards regardless — the
+farming loop was only reachable via `rollGearOffer` (shop/reroll), never via
+the guaranteed hub-drop path defined in item 7(b) as a separate acquisition
+channel.
+
+**Fix:** `M.exploreHub(run, galaxyId, pool, rolls)` — added optional `rolls`
+parameter `{editionChance, editionPick}`. Same pure-function convention as
+`earthSlotSpin`/`rollGearOffer`: caller supplies deterministic RNG values,
+function never calls RNG directly.
+
+When `rolls` is supplied:
+- Injects `combinedGearList(run)` luck bonus into `gear.rollEdition` (same
+  as `rollGearOffer`) so item 14(C) luck target #1 applies to hub drops.
+- If edition is granted, calls `gear.applyEditionEffects` and sets
+  `editionApplied = true` so `materializeEdition` in `equipGear` won't
+  double-apply.
+- Return shape matches `rollGearOffer` output so UI can equip both paths
+  identically.
+
+When `rolls` is nil (legacy callers / headless tests): card still guaranteed,
+`edition = nil`, backward-compatible.
+
+**Regression test:** `testGearExploreHubEditionRolling()` verifies:
+  (a) No-rolls → edition=nil, card still returned
+  (b) Above-threshold roll (0.99) → no edition (rollEdition semantics: nil when chanceRoll >= threshold)
+  (c) Sub-threshold roll (0.001) → edition granted (first editions[] candidate)
+  (d) Edition causes applyEditionEffects transformation (quantum_flawed doubles values / adds drawback)
+  (e) Luck card raises effective threshold: editionChance=0.09 → no edition without luck (+50),
+      edition granted with luck (+50 → luckBonus=0.5 → threshold 0.08+0.5=0.58 > 0.09)
+RED: "exploreHub with sub-threshold editionChance must grant edition" (got nil) → implement → GREEN.
+
