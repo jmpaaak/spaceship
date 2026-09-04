@@ -36,6 +36,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 1. Read only the pending feedback, game design, and current status needed for this cycle. Do not read `docs/STATUS.md` in full — latest `##` section plus next slice only. Do not read `docs/STATUS_HISTORY.md` unless tracking a specific past bug.
    **TOKEN RULE: Do NOT read `docs/feedback/INBOX.md` in full. The cycle prompt already contains pending item titles. Read only the specific item you are implementing this cycle** (use offset/limit or search to extract only that item's section — do not load the entire file).
+   **TOKEN RULE (large files):** Never `read_file` a source file ≥80KB without `offset`+`limit`. Especially `game/self_test.lua` and `game/scenes/play.lua`. Use `search_files` for the symbol, then read ≤80 lines around the match. A full-file read stays in context for every remaining turn of this oneshot cycle — that is the real token waste, not `--oneshot` itself.
 2. Run `git status --short` before editing. Preserve and finish prior-cycle work; do not overwrite it.
 3. If preflight reports FAIL, reproduce and fix that exact failure first.
 4. Otherwise choose one small user-visible or state-machine slice from the top pending requirement.

@@ -164,12 +164,32 @@ def check(label: str, command: list[str], root: Path, env: dict[str, str], timeo
     return result.returncode == 0, result.stdout.strip()
 
 
+def warn_large_source_files(root: Path, min_bytes: int = 80_000) -> None:
+    """Remind the agent not to read_file huge sources without offset/limit."""
+    hits = []
+    for rel in ("game/self_test.lua", "game/scenes/play.lua", "game/expedition.lua"):
+        path = root / rel
+        try:
+            size = path.stat().st_size
+        except OSError:
+            continue
+        if size >= min_bytes:
+            hits.append(f"{rel} ({size // 1024}KB)")
+    if hits:
+        print(
+            "TOKEN HINT: these files are ≥80KB — search_files + offset/limit ≤80 lines, "
+            "never full read_file: " + ", ".join(hits),
+            flush=True,
+        )
+
+
 def main() -> int:
     root = Path(os.environ.get("LOOP_ROOT", Path(__file__).resolve().parents[1])).resolve()
     try:
         compact_inbox_status_notes(root)
     except Exception:
         pass
+    warn_large_source_files(root)
     env = os.environ.copy()
     love = "/Users/jm/.local/bin/love"
     checks = [
