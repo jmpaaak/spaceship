@@ -1960,9 +1960,9 @@ function M:draw()
         love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 100, viewport.width - 44, "center")
-        love.graphics.printf(i18n.t("spins_settlement_line", self.expedition.lastSlotSpinsCount or 0, self.expedition.lastSlotSettlement), 22, 109, viewport.width - 44, "center")
+        -- Item 15/11: spins_settlement_line removed (in-flight slots abolished)
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 22, 118, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 22, 109, viewport.width - 44, "center")
         if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
             love.graphics.printf(summaryExtraLine, 22, 127, viewport.width - 44, "center")
@@ -2071,7 +2071,7 @@ function M:draw()
         row = row + rowStep
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(i18n.t("lost_total_line",
-            (self.expedition.lastLostSampleValue or 0) + (self.expedition.lastLostSlotValue or 0)),
+            (self.expedition.lastLostSampleValue or 0)),
             fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
@@ -2079,10 +2079,7 @@ function M:draw()
             self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
             fullX, row, fullW, "center")
         row = row + rowStep
-        love.graphics.printf(i18n.t("spins_settlement_line",
-            self.expedition.lastLostSlotSpinsCount or 0, self.expedition.lastLostSlotValue or 0),
-            fullX, row, fullW, "center")
-        row = row + rowStep
+        -- Item 15/11: spins_settlement_line removed (in-flight slots abolished)
         love.graphics.setColor(0.6, 0.8, 1)
         love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastLostAltitude or 0)),
             fullX, row, fullW, "center")

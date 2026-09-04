@@ -1,6 +1,15 @@
 # STATUS
 - preflight this cycle: READY
-- Slice: Item 15(c) — Earth shop slot ODDS badge used rewardProfile.name on a string
+- Slice: Item 15/11 residue — remove dead spins_settlement_line from settlement + destroyed panels
+## 2026-09-04 — Item 15/11: Remove dead spins_settlement_line from settlement+destroyed panels
+
+- Found: `play.lua` settlement panel rendered `spins_settlement_line` ("SPINS (0) $0") using `lastSlotSpinsCount`/`lastSlotSettlement`, which expedition.lua never sets (always nil). In-flight slot machine was abolished by item-15 so these are dead UI lines always showing zeroes.
+- Found: destroyed panel's `lost_total_line` added dead `lastLostSlotValue` (always nil/0), and rendered a dead `spins_settlement_line` for lost-slot count.
+- Fix: removed `spins_settlement_line` printf from settlement panel (peak_alt_line shifted up 9px to y=109). Removed `spins_settlement_line` printf from destroyed panel. Removed `lastLostSlotValue` from `lost_total_line` sum (now uses `lastLostSampleValue` only).
+- TDD: added `do` block asserting expedition object never has lastSlotSpinsCount/lastSlotSettlement/lastLostSlotValue/lastLostSlotSpinsCount — all nil. GREEN on first run (fields were never populated).
+- `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK.
+- Next slice: Item 11 remaining — check for any other fuel-framing dead text (launchForecast etc.) or Item 7 UI wiring (shop planet popup).
+
 
 ## 2026-09-04 — Item 15(c): Fix Earth shop slot ODDS badge (string vs table)
 
