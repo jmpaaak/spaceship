@@ -20,6 +20,11 @@ your scope (append-only status notes to your own item are fine).
 
 **중요 — FAIL + 미커밋 변경 규칙:** preflight가 FAIL이고 git status에 수정된 파일이 있으면, 이번 사이클의 유일한 작업은 (1) 실패한 테스트를 수정하고 (2) 모든 수정 파일을 커밋하는 것이다. 새 INBOX 항목 작업을 시작하지 않는다. 미커밋 변경을 버리지 않는다 — 이전 사이클이 절반만 완료한 것을 마저 끝낸다.
 
+**중요 — 한 사이클 한 조각:** 큰 INBOX 항목(ComfyUI 에셋 생성, 전면 UI 개편 등)을 한 사이클에 다 끝내려 하지 마라. 사이클당 검증 가능한 최소 단위 하나만 완료하고 커밋한다.
+- ComfyUI: 장면 1개 또는 에셋 1~3장만 생성·catalog/로그 반영·커밋. 다음 장면은 다음 사이클.
+- 큰 기능: (a)/(b)/(c) 중 한 소항목, 또는 한 파일의 한 동작만. GREEN+커밋 전에 다음 소항목을 시작하지 마라.
+- 이 사이클 턴 한도 안에 커밋할 수 없으면 범위를 더 줄여라. 미커밋으로 턴을 다 쓰는 것은 금지 — 중간이라도 동작하는 조각을 커밋하라.
+
 ## Branch and push discipline
 
 - This lane commits and pushes ONLY to branch `spaceship-gear`. Never push to
