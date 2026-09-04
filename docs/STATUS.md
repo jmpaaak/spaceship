@@ -149,9 +149,17 @@
 
 ## Next Slice
 
-- INBOX 2026-09-05 sub-item (4): 행성 레이블 (Hub → "HUB", Shop → "SHOP") — approachWarning 근처 렌더, i18n 키 추가.
+- INBOX 2026-09-05 sub-item (5): 은하 공유 특성 — galaxy starType + 행성 hue 범위 클램프 + 특수별 프레임 고정.
 
+## 2026-09-05 행성 레이블 — sub-item (4)
 
+- `game/i18n.lua`: `hub_label = "HUB"` / `shop_label = "SHOP"` 키를 `en` 및 `ko` locales에 추가.
+- `game/scenes/play.lua`: planet 루프 내, approachWarning 블록 뒤에 레이블 렌더 삽입.
+  - 조건: `not self.discovered[planet.id]` (미발견 행성만).
+  - Hub 행성(`planet.hub`): `y - planet.radius - 14` 위치에 황금색(0.95/0.85/0.4) "HUB" 텍스트.
+  - Shop 행성(`planet.isShop`): 동일 위치에 "SHOP" 텍스트.
+  - `clampLabelX`로 화면 경계 보정 (기존 approachWarning 레이블과 동일한 방식).
+- `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK + LOVE_BUNDLE_OK + ASSET_MANIFEST_OK).
 
 ## 2026-09-05 별 위치 2D 랜덤 분산 (sub-item 2)
 

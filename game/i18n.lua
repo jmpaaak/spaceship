@@ -126,6 +126,8 @@ locales.en = {
     tap_start_over = "TAP: START OVER",
     minimap_out = "OUT %d",
     dev_placeholder = "DEV PLACEHOLDER",
+    hub_label = "HUB",
+    shop_label = "SHOP",
 }
 
 locales.en.phase_abbrev = {
@@ -241,6 +243,8 @@ locales.ko = {
     tap_start_over = "탭: 다시시작",
     minimap_out = "외부 %d",
     dev_placeholder = "개발 임시본",
+    hub_label = "HUB",
+    shop_label = "SHOP",
 }
 
 locales.ko.phase_abbrev = {

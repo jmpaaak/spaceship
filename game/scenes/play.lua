@@ -2374,6 +2374,22 @@ function M:draw()
                 end
                 love.graphics.print(risk.label, rlx, previewY)
             end
+            -- sub-item (4): hub/shop planet label above undiscovered planets
+            if not self.discovered[planet.id] then
+                local planetLabel = nil
+                if planet.hub then
+                    planetLabel = i18n.t("hub_label")
+                elseif planet.isShop then
+                    planetLabel = i18n.t("shop_label")
+                end
+                if planetLabel then
+                    local font = love.graphics.getFont()
+                    local labelY = y - planet.radius - 14
+                    local lx = clampLabelX(x, font:getWidth(planetLabel), viewport.width)
+                    love.graphics.setColor(0.95, 0.85, 0.4, 0.9)
+                    love.graphics.print(planetLabel, lx, labelY)
+                end
+            end
         end
     end
     for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
