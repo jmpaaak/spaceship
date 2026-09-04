@@ -1,8 +1,21 @@
 # STATUS
 - preflight this cycle: READY
-- Slice: Item 15(a) dead slot artifact cleanup in play.lua
+- Slice: Item 7(a) shop modal keyboard interaction regression tests
 
-## 2026-09-04 — Item 15(a): Remove dead slotReelStagger/returnControls.slotMinX/slotSpin from play.lua
+## 2026-09-04 — Item 7(a): Add regression tests for shop-planet modal Y/N keyboard interaction
+
+- Commit 4358510 ("Finish Item 7(a)") added `keypressed("y"/"n")` shop modal handling to play.lua but had zero self_test coverage for that path.
+- Added a 4-case regression block in `game/self_test.lua`:
+  (a) "n" key dismisses shopModal without deducting money or equipping gear.
+  (b) "y" key with sufficient money calls `buyGearFromShopPlanet`, clears shopModal, deducts exactly `gear.buyPrice`, and appends a floating text naming the gear.
+  (c) "y" key with insufficient money keeps shopModal open and sets `shopModal.errorText` without touching money.
+  (d) shopModal open during settlement phase: "y" is consumed by the modal handler and does NOT fall through to the settlement `sampleYieldUpgrade` shortcut.
+- All 4 cases GREEN on first run (behavior was already correctly implemented by 4358510; test coverage was the gap).
+- Also committing preflight-compressed INBOX.md (-561 chars) from cycle start.
+- `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK.
+- Next slice: Item 7(b) regression gap audit — `exploreHub` hub-drop behavior vs. test coverage, or item 11 remaining fuel-framing text audit.
+
+
 
 
 - `hud_status` in i18n.lua (en + ko) had `S%02d` that displayed `slotOpportunities` (always 0 after item-15 abolished in-flight slots). This was dead/misleading UI implying a slot mechanic still existed mid-flight.

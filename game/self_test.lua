@@ -5724,6 +5724,96 @@ function M.run()
             "item 11(c): run.slotDistance must be nil after item-15(a) abolition")
     end
 
+    -- Item 7(a) UI regression: the shop-planet modal keyboard interaction
+    -- (keypressed "y" = buy, "n" = skip/leave) added in commit 4358510
+    -- had no self_test coverage at all. The function path is:
+    --   1. shopModal is set externally (simulating update() near shop planet)
+    --   2. keypressed("n") clears shopModal without purchase
+    --   3. keypressed("y") calls buyGearFromShopPlanet; on success clears modal
+    --      and inserts a floating text; on failure keeps modal open with errorText
+    --   4. While shopModal is set, keypressed() must return early (not
+    --      process the settlement shop shortcuts like "y"=sampleYield etc.)
+    do
+        local expedition = require("game.expedition")
+        local gearMod = require("game.gear")
+
+        -- Build a minimal gear card fixture (common, affordable).
+        local fixtureCard = {
+            id = "hull_shop_modal_fixture",
+            name = "Modal Fixture", nameKo = "모달 픽스처",
+            icon = "▭", rarity = "common",
+            tags = {}, editions = {},
+            effects = { { type = "hullDurability", value = 0 } },
+        }
+        local fixturePrice = gearMod.buyPrice(fixtureCard) -- typically 12 for common
+
+        -- (a) "n" key: dismiss modal without buying -------------------------
+        local skipScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() end },
+        })
+        skipScene.expedition.phase = "ascending"
+        skipScene.expedition.money = fixturePrice + 10
+        local fakePlanet = { id = "shop:skip-test", x = 0, y = 0, isShop = true }
+        skipScene.shopModal = { planet = fakePlanet, gear = fixtureCard, category = "hull", price = fixturePrice }
+        skipScene:keypressed("n")
+        assert(skipScene.shopModal == nil,
+            "item 7(a): keypressed('n') must dismiss shopModal")
+        assert(skipScene.expedition.money == fixturePrice + 10,
+            "item 7(a): skip must not deduct money")
+        assert(#skipScene.expedition.equippedGear == 0,
+            "item 7(a): skip must not equip any gear")
+
+        -- (b) "y" key with enough money: buy succeeds ----------------------
+        local buyScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() end },
+        })
+        buyScene.expedition.phase = "ascending"
+        buyScene.expedition.money = fixturePrice + 5
+        buyScene.shopModal = { planet = fakePlanet, gear = fixtureCard, category = "hull", price = fixturePrice }
+        buyScene:keypressed("y")
+        assert(buyScene.shopModal == nil,
+            "item 7(a): successful buy must clear shopModal")
+        assert(buyScene.expedition.money == 5,
+            "item 7(a): buy must deduct exactly the gear buy price, got money="
+                .. tostring(buyScene.expedition.money))
+        assert(#buyScene.floatingTexts >= 1,
+            "item 7(a): successful buy must append a floatingText")
+        assert(buyScene.floatingTexts[#buyScene.floatingTexts].text:find(fixtureCard.name),
+            "item 7(a): floating text must mention the acquired gear name")
+
+        -- (c) "y" key without enough money: purchase refused, modal kept ---
+        local poorScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() end },
+        })
+        poorScene.expedition.phase = "ascending"
+        poorScene.expedition.money = fixturePrice - 1
+        poorScene.shopModal = { planet = fakePlanet, gear = fixtureCard, category = "hull", price = fixturePrice }
+        poorScene:keypressed("y")
+        assert(poorScene.shopModal ~= nil,
+            "item 7(a): failed buy must keep shopModal open")
+        assert(poorScene.shopModal.errorText and #poorScene.shopModal.errorText > 0,
+            "item 7(a): failed buy must set shopModal.errorText")
+        assert(poorScene.expedition.money == fixturePrice - 1,
+            "item 7(a): failed buy must not deduct money")
+
+        -- (d) shopModal blocks settlement shortcuts -------------------------
+        -- When the shop modal is open during settlement, "y" must be consumed
+        -- by the modal handler (and refused since phase is settlement, not
+        -- ascending) rather than dispatching to the sampleYield upgrade path.
+        local blockScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() end },
+        })
+        blockScene.expedition.phase = "settlement"
+        blockScene.expedition.money = blockScene.expedition.sampleYieldUpgradeCost + 50
+        local beforeYieldLevel = blockScene.expedition.sampleYieldUpgradeLevel
+        blockScene.shopModal = { planet = fakePlanet, gear = fixtureCard, category = "hull", price = fixturePrice }
+        blockScene:keypressed("y")
+        -- The modal tried to buy but phase=="settlement" is refused by
+        -- buyGearFromShopPlanet; modal stays open with errorText.
+        assert(blockScene.expedition.sampleYieldUpgradeLevel == beforeYieldLevel,
+            "item 7(a): 'y' key must not trigger settlement sampleYield upgrade while shopModal is open")
+    end
+
     testJoystick()
     testGalaxyStructure()
     testMinimap()
