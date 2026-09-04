@@ -113,3 +113,5 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-04T06:53:33+0900 | assets/effects/destroyed_peak_dist.png | destroyed-phase peak_dist_line mountain-peak HUD icon (64x64, ComfyUI seed 20260904301)
 2026-09-04T06:53:33+0900 | assets/effects/destroyed_new_best.png | destroyed-phase newbest_label star-burst HUD icon (64x64, ComfyUI seed 20260904302)
 2026-09-04T06:53:33+0900 | assets/effects/destroyed_meta_reset.png | destroyed-phase meta_reset_line cyclic-arrow HUD icon (64x64, ComfyUI seed 20260904303)
+2026-09-05T00:32:00+0900 | assets/ship/ship_default.png | top-down small silver spaceship, standard basic symmetric shape
+2026-09-05T00:32:00+0900 | assets/ship/ship_scout.png | top-down small silver spaceship, sleek, fast, aerodynamic, swept wings

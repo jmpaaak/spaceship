@@ -11,7 +11,15 @@
 
 ## Next Slice
 
-- INBOX ComfyUI regen group (1) ships: `assets/ship/ship_default.png`, `assets/ship/ship_scout.png`. 64×64 transparent pixel-art top-down silver silhouettes, body ~60% of frame. ComfyUI workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5` via `tools/comfyui_asset_pipeline.py`. Do not start until (0) is on `main`.
+- INBOX ComfyUI regen group (2) earth: `assets/earth/earth_generic.png`. 64×64 transparent background, small blue earth sphere with continent silhouettes, padding around edges.
+
+2026-09-05 — INBOX ComfyUI regen group (1) ships.
+
+- Generated `assets/ship/ship_default.png` (standard shape) and `assets/ship/ship_scout.png` (swept wings) using ComfyUI asset pipeline.
+- Post-processed images to remove black backgrounds (made transparent), crop, and resize nearest-neighbor to ~38x38 centered within a 64x64 transparent canvas.
+- Updated `docs/assets/MANIFEST.json` with correct sizes and SHA-256 hashes.
+- Appended entries to `docs/GENERATED_ASSET_LOG.md`.
+- `make verify` GREEN.
 
 2026-09-04 — ComfyUI shop panels and action backgrounds wiring (group 8 of INBOX draw-wiring item).
 

@@ -6,7 +6,7 @@
 
   (0) ✅ 완료(2026-09-05) **스케일 버그 먼저 (코드, 재생성 전 필수):** `drawPanelSprite`는 더 이상 64×64를 720×N으로 stretch하지 않는다. 이미지 없으면 기존 사각형 폴백, 있으면 원본 픽셀 크기. HUD 아이콘 `drawHudSpriteOrPoly` size 8~14px / 지구 지름 116px / 함선 논리 64px 유지. `GAME_CAPTURE_PHASE=launch` 캡처 경로만 STATUS에 기록(PNG 미커밋).
 
-  (1) **함선** — `assets/ship/ship_default.png`, `assets/ship/ship_scout.png`. 64×64, **투명 배경**, top-down 작은 은색 우주선 실루엣, 픽셀아트, 본체가 프레임의 ~60%만 차지.
+  (1) ✅ 완료(2026-09-05) **함선** — `assets/ship/ship_default.png`, `assets/ship/ship_scout.png`. 64×64, **투명 배경**, top-down 작은 은색 우주선 실루엣, 픽셀아트, 본체가 프레임의 ~60%만 차지.
 
   (2) **지구** — `assets/earth/earth_generic.png`. 64×64 투명 배경, 작은 푸른 지구 구체(대륙 실루엣), 가장자리 여백.
 
