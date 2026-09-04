@@ -284,6 +284,7 @@ local function destroy(run)
     run.equippedEngineParts = run.gearLoadout.engine
     run.insuranceUsed = false
     run.rerollsUsed = 0
+    run.boostsUsed = 0
     run.hubExplored = {}
 end
 
