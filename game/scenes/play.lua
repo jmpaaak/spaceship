@@ -543,6 +543,27 @@ function M.settlementRowBackgroundColor(index)
     return settlementRowBackgroundColors[(index - 1) % #settlementRowBackgroundColors + 1]
 end
 
+
+local function loadSprite(path)
+    if not (love.graphics and love.graphics.newImage) then
+        return nil
+    end
+    local ok, img = pcall(love.graphics.newImage, path)
+    if ok and img then
+        img:setFilter("nearest", "nearest")
+        return img
+    end
+    return nil
+end
+
+local function loadSpriteMap(paths)
+    local images = {}
+    for key, path in pairs(paths) do
+        images[key] = loadSprite(path)
+    end
+    return images
+end
+
 function M.new(options)
     options = options or {}
     local ship = shipModule.new()
@@ -551,8 +572,82 @@ function M.new(options)
     if love.graphics then
         love.graphics.setFont(fonts.get(14))
     end
+
+    local shipImagePath = "assets/ship/ship_default.png"
+    local planetImagePath = "assets/planet/planet_generic.png"
+    local earthImagePath = "assets/earth/earth_generic.png"
+    local backgroundImagePath = "assets/backgrounds/deep_space_tile.png"
+    local sampleEffectImagePath = "assets/effects/sample_sparkle.png"
+    local collisionEffectImagePath = "assets/effects/collision_spark.png"
+    local thrustEffectImagePath = "assets/effects/thrust_plume.png"
+    local hubPlanetImagePath = "assets/planet/planet_hub.png"
+    local shopPlanetImagePath = "assets/planet/planet_shop.png"
+    local scoutShipImagePath = "assets/ship/ship_scout.png"
+    local shipSilhouetteImagePath = "assets/effects/ship_silhouette.png"
+    local slotSymbolImagePaths = {
+        COMET = "assets/slot_symbols/comet.png",
+        PLANET = "assets/slot_symbols/planet.png",
+        STAR = "assets/slot_symbols/star.png",
+    }
+    local shopIconImagePaths = {
+        hull = "assets/shop_icons/hull.png",
+        steering = "assets/shop_icons/steering.png",
+        yield = "assets/shop_icons/yield.png",
+        ship = "assets/shop_icons/ship.png",
+    }
+    local debrisImagePaths = {
+        asteroid = "assets/debris/asteroid.png",
+        can = "assets/debris/can.png",
+        scrap = "assets/debris/scrap.png",
+    }
+    local shipImage = loadSprite(shipImagePath)
+    local planetImage = loadSprite(planetImagePath)
+    local earthImage = loadSprite(earthImagePath)
+    local backgroundImage = loadSprite(backgroundImagePath)
+    if backgroundImage then
+        pcall(backgroundImage.setWrap, backgroundImage, "repeat", "repeat")
+    end
+    local sampleEffectImage = loadSprite(sampleEffectImagePath)
+    local collisionEffectImage = loadSprite(collisionEffectImagePath)
+    local thrustEffectImage = loadSprite(thrustEffectImagePath)
+    local hubPlanetImage = loadSprite(hubPlanetImagePath)
+    local shopPlanetImage = loadSprite(shopPlanetImagePath)
+    local scoutShipImage = loadSprite(scoutShipImagePath)
+    local shipSilhouetteImage = loadSprite(shipSilhouetteImagePath)
+    local slotSymbolImages = loadSpriteMap(slotSymbolImagePaths)
+    local shopIconImages = loadSpriteMap(shopIconImagePaths)
+    local debrisImages = loadSpriteMap(debrisImagePaths)
+
     return setmetatable({
         ship = ship,
+        shipImage = shipImage,
+        shipImagePath = shipImagePath,
+        planetImage = planetImage,
+        planetImagePath = planetImagePath,
+        earthImage = earthImage,
+        earthImagePath = earthImagePath,
+        backgroundImage = backgroundImage,
+        backgroundImagePath = backgroundImagePath,
+        sampleEffectImage = sampleEffectImage,
+        sampleEffectImagePath = sampleEffectImagePath,
+        collisionEffectImage = collisionEffectImage,
+        collisionEffectImagePath = collisionEffectImagePath,
+        thrustEffectImage = thrustEffectImage,
+        thrustEffectImagePath = thrustEffectImagePath,
+        hubPlanetImage = hubPlanetImage,
+        hubPlanetImagePath = hubPlanetImagePath,
+        shopPlanetImage = shopPlanetImage,
+        shopPlanetImagePath = shopPlanetImagePath,
+        scoutShipImage = scoutShipImage,
+        scoutShipImagePath = scoutShipImagePath,
+        shipSilhouetteImage = shipSilhouetteImage,
+        shipSilhouetteImagePath = shipSilhouetteImagePath,
+        slotSymbolImages = slotSymbolImages,
+        slotSymbolImagePaths = slotSymbolImagePaths,
+        shopIconImages = shopIconImages,
+        shopIconImagePaths = shopIconImagePaths,
+        debrisImages = debrisImages,
+        debrisImagePaths = debrisImagePaths,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -1671,6 +1766,14 @@ function M:draw()
     love.graphics.clear(world.galaxyBackgroundColor(galaxy))
     local shipScreenX, shipScreenY = viewport.width / 2, math.floor(viewport.height * 0.58)
     local cameraX, cameraY = self.ship.x - shipScreenX, self.ship.y - shipScreenY
+    if self.backgroundImage then
+        local imgW, imgH = self.backgroundImage:getDimensions()
+        local quad = love.graphics.newQuad(0, 0, viewport.width + imgW, viewport.height + imgH, imgW, imgH)
+        local offsetX = (cameraX * 0.15) % imgW
+        local offsetY = (cameraY * 0.15) % imgH
+        love.graphics.setColor(1, 1, 1, 0.55)
+        love.graphics.draw(self.backgroundImage, quad, -offsetX, -offsetY)
+    end
     local sx, sy = world.sectorAt(self.ship.x, self.ship.y)
     -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): a dense,
     -- near-static background star layer drawn behind the streaking-meteor
@@ -1706,11 +1809,18 @@ function M:draw()
     end
     local earthX, earthY = math.floor(-cameraX), math.floor(75 - cameraY)
     if earthY < viewport.height + 64 then
-        love.graphics.setColor(0.15, 0.45, 0.9)
-        love.graphics.circle("fill", earthX, earthY, 58)
-        love.graphics.setColor(0.25, 0.8, 0.45)
-        love.graphics.circle("fill", earthX - 18, earthY - 18, 15)
-        love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
+        if self.earthImage then
+            local imgW, imgH = self.earthImage:getDimensions()
+            local scale = 116 / math.max(imgW, imgH)
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.draw(self.earthImage, earthX, earthY, 0, scale, scale, imgW / 2, imgH / 2)
+        else
+            love.graphics.setColor(0.15, 0.45, 0.9)
+            love.graphics.circle("fill", earthX, earthY, 58)
+            love.graphics.setColor(0.25, 0.8, 0.45)
+            love.graphics.circle("fill", earthX - 18, earthY - 18, 15)
+            love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
+        end
     end
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
         local x, y = math.floor(planet.x - cameraX), math.floor(planet.y - cameraY)
@@ -1738,10 +1848,23 @@ function M:draw()
             -- highlight offset toward the upper-left, approximating a soft
             -- directional light instead of a single flat fill color.
             local baseR, baseG, baseB = planetColor(planet.hue)
-            love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
-            love.graphics.circle("fill", x, y, planet.radius)
-            love.graphics.setColor(math.min(1, baseR * 1.25), math.min(1, baseG * 1.25), math.min(1, baseB * 1.25))
-            love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
+            local planetSprite = self.planetImage
+            if planet.hub and self.hubPlanetImage then
+                planetSprite = self.hubPlanetImage
+            elseif planet.isShop and self.shopPlanetImage then
+                planetSprite = self.shopPlanetImage
+            end
+            if planetSprite then
+                local iw, ih = planetSprite:getDimensions()
+                local scale = (planet.radius * 2) / math.max(iw, ih)
+                love.graphics.setColor(baseR, baseG, baseB)
+                love.graphics.draw(planetSprite, x, y, 0, scale, scale, iw / 2, ih / 2)
+            else
+                love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
+                love.graphics.circle("fill", x, y, planet.radius)
+                love.graphics.setColor(math.min(1, baseR * 1.25), math.min(1, baseG * 1.25), math.min(1, baseB * 1.25))
+                love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
+            end
             if not self.discovered[planet.id] then
                 love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
                 love.graphics.circle("line", x, y, planet.radius + 3)
@@ -1793,7 +1916,13 @@ function M:draw()
     for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
         local x, y = math.floor(junk.x - cameraX), math.floor(junk.y - cameraY)
         if x > -20 and x < viewport.width + 20 and y > -20 and y < viewport.height + 20 then
-            if junk.kind == "can" then
+            local debrisSprite = self.debrisImages and self.debrisImages[junk.kind]
+            if debrisSprite then
+                local iw, ih = debrisSprite:getDimensions()
+                local scale = (junk.radius * 2) / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1)
+                love.graphics.draw(debrisSprite, x, y, 0, scale, scale, iw / 2, ih / 2)
+            elseif junk.kind == "can" then
                 love.graphics.setColor(0.72, 0.76, 0.7)
                 love.graphics.rectangle("fill", x - junk.radius, y - junk.radius * 1.4,
                     junk.radius * 2, junk.radius * 2.8)
@@ -1830,7 +1959,19 @@ function M:draw()
         local px, py = math.floor(particle.x - cameraX), math.floor(particle.y - cameraY)
         local alpha = math.max(0, particle.timer / particle.maxTimer)
         love.graphics.setColor(particle.r, particle.g, particle.b, alpha)
-        love.graphics.circle("fill", px, py, 1.5)
+        local sprite = self.sampleEffectImage
+        if particle.kind == "collision" then
+            sprite = self.collisionEffectImage
+        elseif particle.kind == "thrust" then
+            sprite = self.thrustEffectImage
+        end
+        if sprite then
+            local iw, ih = sprite:getDimensions()
+            local scale = 3 / math.max(iw, ih)
+            love.graphics.draw(sprite, px, py, 0, scale, scale, iw / 2, ih / 2)
+        else
+            love.graphics.circle("fill", px, py, 1.5)
+        end
     end
     love.graphics.push()
     local shakeX, shakeY = 0, 0
@@ -1846,10 +1987,32 @@ function M:draw()
         love.graphics.scale(punchScale, punchScale)
     end
     love.graphics.setColor(0.8, 0.95, 1)
-    love.graphics.polygon("fill", 0, -7, -5, 6, 0, 3, 5, 6)
+    local hullImage = self.shipImage
+    if self.expedition.selectedShipId == "scout" and self.scoutShipImage then
+        hullImage = self.scoutShipImage
+    end
+    if hullImage then
+        local iw, ih = hullImage:getWidth(), hullImage:getHeight()
+        local targetSize = 64
+        local scale = targetSize / math.max(iw, ih)
+        love.graphics.draw(hullImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
+    elseif self.shipSilhouetteImage then
+        local iw, ih = self.shipSilhouetteImage:getWidth(), self.shipSilhouetteImage:getHeight()
+        local targetSize = 64
+        local scale = targetSize / math.max(iw, ih)
+        love.graphics.draw(self.shipSilhouetteImage, 0, 0, 0, scale, scale, iw / 2, ih / 2)
+    else
+        love.graphics.polygon("fill", 0, -7, -5, 6, 0, 3, 5, 6)
+    end
     if self.expedition.phase == "ascending" then
         love.graphics.setColor(1, 0.55, 0.15)
-        love.graphics.polygon("fill", -2, 5, 0, 11, 2, 5)
+        if self.thrustEffectImage then
+            local iw, ih = self.thrustEffectImage:getDimensions()
+            local scale = 28 / math.max(iw, ih)
+            love.graphics.draw(self.thrustEffectImage, 0, 32, 0, scale, scale, iw / 2, ih / 2)
+        else
+            love.graphics.polygon("fill", -2, 5, 0, 11, 2, 5)
+        end
     end
     love.graphics.pop()
 
