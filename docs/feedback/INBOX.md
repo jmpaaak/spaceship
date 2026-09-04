@@ -2,7 +2,21 @@
 
 ## 처리 대기
 
-(모든 항목 처리 완료)
+- **ComfyUI 에셋 draw 배선 복원 (2026-09-04, 사용자 확정):** gear 머지로 `game/scenes/play.lua`가 교체되면서 69개 ComfyUI 에셋이 로드는 되지만 draw에 연결되지 않은 상태다. 우선순위 순서대로 배선한다. 한 사이클 = 연관 그룹 하나 + `make verify` GREEN + 커밋.
+
+  (1) **HUD 아이콘** — `hud_coin.png`(cashIconImage), `hud_shield.png`(hullIconImage), `hud_speed.png`(speedIconImage), `hud_distance.png`(distanceIconImage), `hud_best.png`(bestIconImage), `hud_samples.png`(samplesIconImage), `hud_galaxy.png`(galaxyIconImage), `hud_return.png`(returnIconImage), `hud_earth.png`(earthIconImage): 기존 Lua 폴리곤·텍스트 옆에 `love.graphics.draw(image, ...)` 분기 추가. pre-merge main `d4abaf3`의 `game/scenes/play.lua`:draw()에 동일 패턴 있음 — 참고해 이식.
+
+  (2) **미니맵 마커** — `minimap_disc.png`, `minimap_player.png`, `minimap_sun.png`, `minimap_earth.png`, `minimap_earth_return.png`, `minimap_galaxy_home.png`, `minimap_galaxy_plain.png`, `minimap_checkpoint_star.png`, `minimap_checkpoint_arrow.png`, `minimap_spiral_star.png`, `minimap_orbit_ring.png`, `minimap_galaxy_ring.png`.
+
+  (3) **행성 이펙트** — `planet_glow.png`(planetGlowImage), `planet_shadow.png`(planetShadowImage), `planet_rim.png`(planetRimImage), `planet_twinkle.png`(planetTwinkleImage), `planet_sample.png`(sampleValueIconImage), `planet_risk.png`(riskIconImage).
+
+  (4) **플로팅 텍스트 아이콘** — `floating_sample.png`, `floating_damage.png`, `message_banner.png`.
+
+  (5) **런치·정산·파괴 패널** — `launch_rocket.png`, `loadout_panel.png`, `shop_panel.png`, `shop_title.png`, `settlement_summary_panel.png`, `destroyed_panel.png`, `destroyed_title.png`, `slot_result_panel.png`, `relaunch.png` 등.
+
+  (6) **상점 아이콘 행** — `shop_hull_action.png`, `shop_steering_action.png`, `shop_yield_action.png`, `shop_ship_action.png`, `shop_stats.png`, `shop_hull_status.png`, `shop_hull_preview.png` 등 settlement 상점 행 아이콘.
+
+  배선 완료 후 `GAME_CAPTURE=1 GAME_CAPTURE_PHASE=launch` 런타임 캡처로 실제 렌더 확인. `make verify GREEN` 필수. 스프라이트 크기는 기존 Lua 도형 크기에 맞춰 scale 계산.
 
 ## 처리 완료
 
