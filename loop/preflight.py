@@ -209,7 +209,25 @@ def main() -> int:
         if not passed:
             failures.append(f"### {label}\n{output[-3000:] or 'no output'}")
     if failures:
+        # Check if there are uncommitted changes — if so, warn the agent explicitly
+        try:
+            dirty = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=root, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                timeout=10, check=False,
+            ).stdout.strip()
+        except Exception:
+            dirty = ""
         print("PREFLIGHT_RESULT=FAIL")
+        if dirty:
+            print(
+                "⚠️  DIRTY WORKING TREE + FAIL: A previous cycle left uncommitted changes that "
+                "are breaking tests. YOUR ONLY JOB THIS CYCLE: fix the failing tests, then "
+                "commit ALL modified files. Do NOT start any new INBOX work until the tree is "
+                "clean and all tests pass. Do NOT abandon the uncommitted changes — finish them."
+            )
+            print(f"Dirty files:\n{dirty}")
         print("\n\n".join(failures))
         return CHECK_FAILED
     pending = pending_feedback(root)

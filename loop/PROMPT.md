@@ -18,6 +18,8 @@ your scope (append-only status notes to your own item are fine).
 
 **중요: 이미 완료된 항목(13/9/10/12/14)은 재감사하지 않는다. 남은 항목(7/8/11/15) 중 하나를 골라 실제 코드 작업을 진행하라.**
 
+**중요 — FAIL + 미커밋 변경 규칙:** preflight가 FAIL이고 git status에 수정된 파일이 있으면, 이번 사이클의 유일한 작업은 (1) 실패한 테스트를 수정하고 (2) 모든 수정 파일을 커밋하는 것이다. 새 INBOX 항목 작업을 시작하지 않는다. 미커밋 변경을 버리지 않는다 — 이전 사이클이 절반만 완료한 것을 마저 끝낸다.
+
 ## Branch and push discipline
 
 - This lane commits and pushes ONLY to branch `spaceship-gear`. Never push to
