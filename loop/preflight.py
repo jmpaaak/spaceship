@@ -24,6 +24,46 @@ def pending_feedback(root: Path) -> list[str]:
     return [line for line in section.splitlines() if line.strip().startswith("-")]
 
 
+def compact_inbox_status_notes(root: Path, max_note_chars: int = 300) -> None:
+    """Collapse verbose '> 처리 상황 ...' note blocks in pending items to one line."""
+    path = root / "docs" / "feedback" / "INBOX.md"
+    original = path.read_text(encoding="utf-8")
+    header, pend_marker, rest = original.partition("## 처리 대기")
+    if not pend_marker:
+        return
+    pending_section, done_marker, done_section = rest.partition("## 처리 완료")
+
+    lines = pending_section.splitlines(keepends=True)
+    out: list[str] = []
+    in_note = False
+    note_first_line = ""
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("> 처리 상황") or stripped.startswith(">  처리 상황"):
+            in_note = True
+            note_first_line = line.rstrip()[:max_note_chars]
+            continue
+        if in_note:
+            if stripped.startswith(">") or stripped == "":
+                continue
+            else:
+                out.append(note_first_line + " …(압축됨)\n")
+                in_note = False
+                out.append(line)
+        else:
+            out.append(line)
+    if in_note:
+        out.append(note_first_line + " …(압축됨)\n")
+
+    new_text = header + pend_marker + "".join(out) + done_marker + done_section
+    if len(new_text) >= len(original):
+        return
+    path.write_text(new_text, encoding="utf-8")
+    print(f"[preflight] INBOX 처리 상황 주석 압축: -{len(original)-len(new_text):,} chars 절감", flush=True)
+
+
+
+
 MAX_PENDING_PROMPT_ITEMS = 4
 MAX_PENDING_PROMPT_CHARS = 220
 
@@ -122,6 +162,10 @@ def check(label: str, command: list[str], root: Path, env: dict[str, str], timeo
 
 def main() -> int:
     root = Path(os.environ.get("LOOP_ROOT", Path(__file__).resolve().parents[1])).resolve()
+    try:
+        compact_inbox_status_notes(root)
+    except Exception:
+        pass
     env = os.environ.copy()
     love = "/Users/jm/.local/bin/love"
     checks = [
