@@ -1219,3 +1219,7 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - Opaque 1093/4096 with blue ocean / green-brown continent / white cloud pixels; circular fill ~1.02 of the body disc.
 - Updated `docs/assets/MANIFEST.json` provenance (sha256 `6d414a91d459e868a355d1ee4a930fbec70bd6a1187c662dab013a87ffb77b93`) and appended `docs/GENERATED_ASSET_LOG.md`.
 - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:172`, `ASSET_MANIFEST_OK`).
+
+## Archived from STATUS.md (2026-09-05 03:41)
+
+2026-09-05 — INBOX ComfyUI regen item (0): stop `drawPanelSprite` stretching 64×64 panels to 720px.

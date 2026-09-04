@@ -1,6 +1,4 @@
 ## Current Status
-2026-09-05 — INBOX ComfyUI regen item (0): stop `drawPanelSprite` stretching 64×64 panels to 720px.
-
 - Launch was a full-bleed red/cyan blur because `drawPanelSprite` did `love.graphics.draw(image, x, y, 0, w/iw, h/ih)` so 64×64 RGB HUD/loadout/shop panels filled `viewport.width` (720).
 - `game/scenes/play.lua` now draws panel sprites at native pixel size (`love.graphics.draw(image, x, y)`). Nil image still returns false so callers keep the original rectangle fallback. Dest `w,h` stay in the signature for a later 9-slice/tile path.
 - HUD icons still use `drawHudSpriteOrPoly` `size` (8–14px). Earth diameter stays 116px; ship logical size stays 64px. Unchanged.
@@ -136,6 +134,13 @@
 
 ## Next Slice
 
-- INBOX 2026-09-05 sub-item (2): 별 위치 2D 랜덤 분산 — `world.stars()` x/y salt (100+i vs 200+i) 를 완전히 독립된 값으로 변경, `backgroundStarCount` 120 → 200.
+- INBOX 2026-09-05 sub-item (3): 중력장(표본 수집 반경) 확대 — `expedition.lua`의 채집 반경을 키워 난이도 완화.
+
+## 2026-09-05 별 위치 2D 랜덤 분산 (sub-item 2)
+
+- `game/world.lua` `M.stars()`: x/y salt를 `hash(sectorX*31+i, sectorY*17, 10001)` / `hash(sectorX*17+i, sectorY*31, 20001)` 교차 시드로 변경. 이전 `hash(sectorX, sectorY, 100+i)` / `hash(..., 200+i)` 방식은 같은 입력 배열에 다른 salt만 추가해 두 축이 암묵적으로 상관관계를 가질 수 있었음. 교차 시드는 x축 해시 입력에 sectorY*17이, y축 해시 입력에 sectorX*17이 역할을 바꿔 들어가므로 두 출력이 독립적으로 분포됨.
+- `game/world.lua` `M.backgroundStars()`: 동일한 교차 시드 패턴 적용, salt 50001/60001로 `M.stars()`의 10001/20001과 완전히 다른 salt 공간 사용 → 두 레이어가 동일 위치에 겹치지 않음.
+- `M.backgroundStarCount` 120 → **200** (별 밀도 향상).
+- `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK + ASSET_MANIFEST_OK).
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

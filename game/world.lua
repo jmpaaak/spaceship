@@ -410,8 +410,12 @@ function M.stars(sectorX, sectorY)
     local stars = {}
     for i = 1, 18 do
         stars[i] = {
-            x = sectorX * M.sectorSize + hash(sectorX, sectorY, 100 + i) * M.sectorSize,
-            y = sectorY * M.sectorSize + hash(sectorX, sectorY, 200 + i) * M.sectorSize,
+            -- Use cross-seeded inputs so x and y are fully independent:
+            -- x seed mixes sectorY into the x-axis hash (and vice versa)
+            -- to break any diagonal correlation from using only (sectorX,
+            -- sectorY, offset+i) with the same hash function.
+            x = sectorX * M.sectorSize + hash(sectorX * 31 + i, sectorY * 17, 10001) * M.sectorSize,
+            y = sectorY * M.sectorSize + hash(sectorX * 17 + i, sectorY * 31, 20001) * M.sectorSize,
             bright = hash(sectorX, sectorY, 300 + i),
         }
     end
@@ -426,14 +430,19 @@ end
 -- backdrop. Uses a disjoint salt range (10000+) so it never coincides with
 -- M.stars' points, and dims/shrinks are handled by the caller (play.lua)
 -- via the `bright` field, kept in the same 0..1 range for consistency.
-M.backgroundStarCount = 120
+M.backgroundStarCount = 200
 
 function M.backgroundStars(sectorX, sectorY)
     local stars = {}
     for i = 1, M.backgroundStarCount do
         stars[i] = {
-            x = sectorX * M.sectorSize + hash(sectorX, sectorY, 10000 + i) * M.sectorSize,
-            y = sectorY * M.sectorSize + hash(sectorX, sectorY, 20000 + i) * M.sectorSize,
+            -- Cross-seed x/y to eliminate diagonal patterning: x axis uses
+            -- (sectorX*31+i, sectorY*17) and y axis swaps the roles so the
+            -- two coordinate outputs are statistically independent.
+            -- Salts 50001/60001 keep this set fully disjoint from M.stars()
+            -- which uses salts 10001/20001.
+            x = sectorX * M.sectorSize + hash(sectorX * 31 + i, sectorY * 17, 50001) * M.sectorSize,
+            y = sectorY * M.sectorSize + hash(sectorX * 17 + i, sectorY * 31, 60001) * M.sectorSize,
             bright = hash(sectorX, sectorY, 30000 + i) * 0.55,
         }
     end
