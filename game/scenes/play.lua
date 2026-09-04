@@ -752,13 +752,12 @@ function M:hudLines()
         returnProgress = returnProgress,
         -- docs/feedback/INBOX.md UI/HUD item 4: the launch phase's slot
         -- forecast (S%02d) is always 0 because no return trip has
-        -- happened yet ("LAUNCH S00" read as confusing dead weight), so
-        -- drop that segment for launch only; every other phase keeps it.
-        status = run.phase == "launch"
-            and i18n.t("hud_status_no_slots", run.durability,
-                run.maxDurability, i18n.phaseAbbrev(run.phase))
-            or i18n.t("hud_status", run.durability,
-                run.maxDurability, i18n.phaseAbbrev(run.phase), run.slotOpportunities),
+        -- Item 11: both launch and non-launch phases now use the same
+        -- hud_status_no_slots format — the S%02d slot segment was removed
+        -- from hud_status since item-15 abolished in-flight slots and
+        -- slotOpportunities is always 0 (dead/misleading UI).
+        status = i18n.t("hud_status_no_slots", run.durability,
+            run.maxDurability, i18n.phaseAbbrev(run.phase)),
         galaxy = (run.phase == "ascending" or run.phase == "returning" or run.phase == "launch")
             and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name
             or nil,

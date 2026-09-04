@@ -1,16 +1,15 @@
 # STATUS
 - preflight this cycle: READY
-- Slice: Item 7/8 — Implement full interactive UI modal for purchasing gear from `shopPlanet` encounters.
+- Slice: Item 11 — Remove dead S%02d slot-count segment from hud_status HUD
 
-## 2026-09-04 — Item 7/8 shopPlanet UI modal
+## 2026-09-04 — Item 11: Remove dead S%02d from hud_status HUD
 
-- Implemented an interactive UI overlay in `play.lua` when the ship touches a `isShop` planet.
-- Replaced the placeholder floating text with `self.shopModal` state.
-- Bypassed ship movement, floating text updates, and normal phase interactions while the modal is open.
-- Displayed gear name, price, and current gear slots (`drawGearSlots`) inside the modal.
-- Handled BUY ('Y') and LEAVE ('N') actions via touch/keyboard, updating money and floating feedback based on success.
-- Next slice: Finish remaining UI/text adjustments for Item 11 (연료 소진 관련 잔재 UI/문구 전면 제거).
-
+- `hud_status` in i18n.lua (en + ko) had `S%02d` that displayed `slotOpportunities` (always 0 after item-15 abolished in-flight slots). This was dead/misleading UI implying a slot mechanic still existed mid-flight.
+- Removed `S%02d` from `hud_status` so it matches `hud_status_no_slots` format: `"H%d/%d %-6s"`. Both keys now share the same format; `hud_status_no_slots` kept as an alias for backward-compat.
+- Simplified `hudLines()` in `play.lua` to always call `hud_status_no_slots` (removed the old launch-vs-other-phase conditional that existed solely to hide `S00` on launch only).
+- TDD: Updated existing `"H3/3 SETTLE S00"` assertion to `"H3/3 SETTLE"`, added `not find("S%d%d")` guard across all phases. Confirmed RED before fix, GREEN after.
+- `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:58, ASSET_MANIFEST_OK.
+- Next slice: Item 11(b)(c) — dead fuel upgrade shop rows in main.lua capture-phase scripts / expedition.lua dead references cleanup, or move to Item 15 remaining UI wiring.
 
 
 

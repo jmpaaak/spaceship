@@ -27,7 +27,11 @@ locales.en = {
     hud_personal_best = "PERSONAL BEST %04d",
     hud_distance = "DIST %04d",
     hud_cash = "CASH $%d",
-    hud_status = "H%d/%d %-6s S%02d",
+    -- Item 11: S%02d (slotOpportunities) removed — item-15 abolished in-flight
+    -- slots so this segment was always "S00" (dead/misleading). hud_status and
+    -- hud_status_no_slots now share the same format; hud_status_no_slots is
+    -- kept as an alias for backward-compatibility with any call sites.
+    hud_status = "H%d/%d %-6s",
     hud_status_no_slots = "H%d/%d %-6s",
     loadout_ship = "SHIP %s",
     stats_line = "HULL %d",
@@ -129,7 +133,11 @@ locales.ko = {
     hud_personal_best = "최고기록 %04d",
     hud_distance = "거리 %04d",
     hud_cash = "자금 $%d",
-    hud_status = "H%d/%d %-6s S%02d",
+    -- Item 11: S%02d (slotOpportunities) removed — item-15 abolished in-flight
+    -- slots so this segment was always "S00" (dead/misleading). hud_status and
+    -- hud_status_no_slots now share the same format; hud_status_no_slots is
+    -- kept as an alias for backward-compatibility with any call sites.
+    hud_status = "H%d/%d %-6s",
     hud_status_no_slots = "H%d/%d %-6s",
     loadout_ship = "함선 %s",
     stats_line = "선체 %d",

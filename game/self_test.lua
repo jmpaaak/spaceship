@@ -4713,18 +4713,23 @@ function M.run()
     riskScene.expedition.altitude = 250
     assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
     riskScene.expedition.phase = "settlement"
-    -- The HUD status line must remain focused on hull and slot state.
-    assert(riskScene:hudLines().status == "H3/3 SETTLE S00")
+    -- Item 11: slot count (S%02d) is always 0 since item-15 abolished
+    -- in-flight slots; the "S00" segment is dead/misleading UI that implies
+    -- a slot mechanic still exists. Remove it from all non-launch phases so
+    -- hud_status no longer references slotOpportunities at all.
+    assert(riskScene:hudLines().status == "H3/3 SETTLE",
+        "item-11: settlement-phase HUD status must not show dead S00 slot segment: "
+        .. tostring(riskScene:hudLines().status))
+    assert(not riskScene:hudLines().status:find("S%d%d"),
+        "item-11: no phase must show dead slot-count segment after item-15 abolition")
     assert(not riskScene:hudLines().status:find("F%d"),
         "hud status must not show a misleading fuel-cap readout")
-    -- docs/feedback/INBOX.md UI/HUD item 4: during the launch phase the
-    -- slot forecast (S%02d) is always 0 because no return trip has
-    -- happened yet, so "LAUNCH S00" reads as confusing dead weight. Drop
-    -- the slot segment for the launch phase only; every other phase
-    -- (including SETTLE, asserted above) keeps showing it.
+    -- Item 11: launch phase now also uses hud_status_no_slots (same format as
+    -- all other phases) — the old per-phase conditional was removed since
+    -- S%02d (slotOpportunities) is always 0 and the entire field is dead.
     riskScene.expedition.phase = "launch"
     assert(riskScene:hudLines().status == "H3/3 LAUNCH",
-        "launch-phase status must omit the always-zero slot forecast: "
+        "launch-phase status must not show a slot count segment: "
         .. tostring(riskScene:hudLines().status))
     assert(not riskScene:hudLines().status:find("S%d%d"),
         "launch-phase status must not show a slot count segment")
