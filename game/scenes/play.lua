@@ -1587,7 +1587,7 @@ function M:update(dt)
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
             local distanceSquared = dx * dx + dy * dy
             if self.expedition.phase == "ascending"
-                and distanceSquared <= (planet.radius + 14) ^ 2
+                and distanceSquared <= (planet.radius + 30) ^ 2
                 and not self.discovered[planet.id] then
                 self.discovered[planet.id] = true
                 self.discoveredCount = self.discoveredCount + 1
@@ -2302,10 +2302,10 @@ function M:draw()
             if not self.discovered[planet.id] then
                 love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
                 local pe3 = self.planetEffectImages or {}
-                local rimDiam = (planet.radius + 3) * 2
+                local rimDiam = (planet.radius + 30) * 2
                 if not drawPlanetEffectSprite(pe3.rim, x, y, rimDiam,
                         sampleTierColor(world.sampleTier(planet))) then
-                    love.graphics.circle("line", x, y, planet.radius + 3)
+                    love.graphics.circle("line", x, y, planet.radius + 30)
                 end
                 -- Balatro-style twinkle: a handful of small points orbiting
                 -- just outside the rim glow, each with its own phase so the
@@ -2315,7 +2315,7 @@ function M:draw()
                 local sr, sg, sb = sampleTierColor(tier)
                 local shipDx, shipDy = planet.x - self.ship.x, planet.y - self.ship.y
                 local shipDistance = math.sqrt(shipDx * shipDx + shipDy * shipDy)
-                local anticipation = sparkleAnticipationMultiplier(shipDistance, planet.radius + 14)
+                local anticipation = sparkleAnticipationMultiplier(shipDistance, planet.radius + 30)
                 local pe4 = self.planetEffectImages or {}
                 for i = 1, sparkle.count do
                     local seed = (planet.id and (tostring(planet.id):len() * 7) or 0) + i * 2.4

@@ -138,9 +138,20 @@
   - `M.spiralRotation()` (hash 기반) 및 팔 간격 계산 unchanged.
 - `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK x3 + LOVE_BUNDLE_OK + ASSET_MANIFEST_OK).
 
+## 2026-09-05 중력장(표본 수집 반경) 확대 — sub-item (3)
+
+- `game/scenes/play.lua`:
+  - 수집 반경: `planet.radius + 14` → `planet.radius + 30` (line 1590).
+  - 시각 rim 반경: `planet.radius + 3` → `planet.radius + 30` (lines 2305/2308) — 플레이어가 실제 수집 범위를 직관적으로 확인 가능.
+  - sparkleAnticipation 기준 반경도 `+ 14` → `+ 30` 동기화 (line 2318).
+  - 충돌 데미지 반경(`planet.radius + 5`)은 그대로 유지.
+- `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK + LOVE_BUNDLE_OK + ASSET_MANIFEST_OK).
+
 ## Next Slice
 
-- INBOX 2026-09-05 sub-item (3): 중력장(표본 수집 반경) 확대 — `expedition.lua`의 채집 반경을 키워 난이도 완화.
+- INBOX 2026-09-05 sub-item (4): 행성 레이블 (Hub → "HUB", Shop → "SHOP") — approachWarning 근처 렌더, i18n 키 추가.
+
+
 
 ## 2026-09-05 별 위치 2D 랜덤 분산 (sub-item 2)
 
