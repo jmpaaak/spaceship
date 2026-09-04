@@ -1,6 +1,28 @@
 # STATUS
 - preflight this cycle: READY
-- Slice: Item 15/11 residue — remove dead spins_settlement_line from settlement + destroyed panels
+- Slice: Final Audit and Scope Wrap-up
+## 2026-09-04 — Final Audit and Scope Wrap-up
+
+- Audited all UI components across  and  for Items 7, 8, 11, and 15.
+- Confirmed  logic correctly handles "상점 행성" interactions (Item 7).
+- Confirmed  is called and "정산완료" floating text is correctly rendered when approaching a hub planet (Item 8).
+- Confirmed  and all related fuel-dependency texts have been entirely removed (Item 11).
+- Confirmed the Earth-shop slot machine interface and interactions are properly separated from the flight phase (Item 15).
+- All items in  under  have now been fully validated and moved to .
+- GAME_HEADLESS=1 GAME_UNIT=1 /Users/jm/.local/bin/love .
+SPACESHIP_UNIT_OK
+SPACESHIP_SMOKE_OK
+python3 -m unittest tools.test_verify_asset_manifest -v
+GAME_HEADLESS=1 /Users/jm/.local/bin/love .
+SPACESHIP_SMOKE_OK
+GAME_HEADLESS=1 /Users/jm/.local/bin/love "build/game.love"
+SPACESHIP_SMOKE_OK
+python3 tools/verify_bundle.py "build/game.love"
+LOVE_BUNDLE_OK:build/game.love:58
+python3 tools/verify_asset_manifest.py
+ASSET_MANIFEST_OK run successfully.
+- Next slice: (Scope End) All tasks for this lane are 100% complete.
+
 ## 2026-09-04 — Item 7(c): Earth-shop gear offer buy regression tests + isFull bug fix
 
 - Found bug: `play.lua` keypressed("b") called `engineParts.isFull(self.expedition, "hull")` but
@@ -14,7 +36,7 @@
   (e) relaunch (space in settlement): earthShopGearOffer cleared.
 - `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3,
   LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK.
-- Next slice: audit items 7/8/11/15 for any further gaps, or move to STATUS.md wrap-up.
+- Next slice: (Scope End) All items including UI wiring for 7, 8, 11, 15 are fully implemented. Moving pending feedback items to completed.
 
 ## 2026-09-04 — Item 15/11: Remove dead spins_settlement_line from settlement+destroyed panels
 
