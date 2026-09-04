@@ -68,25 +68,11 @@ function M.slotExpectedValue()
     return total, probabilitySum
 end
 
-local function spinSlot(run)
-    local symbols = {}
-    for reel = 1, 3 do
-        symbols[reel] = weightedSlotSymbol(run.slotRandom(slotTotalWeight))
-    end
-    return symbols, slotReward(symbols)
-end
 
 -- docs/GAME_DESIGN.md's 귀환 슬롯 section lists repair vouchers (수리권)
 -- as one of the reward kinds a slot spin can grant, alongside money. Only
 -- the rarest/most valuable combo (STAR-STAR-STAR jackpot, 10% per reel,
 -- 0.1% overall) also grants a repair voucher worth 1 durability point.
-local function slotRepairVoucher(symbols)
-    if symbols[1] == "STAR" and symbols[2] == "STAR" and symbols[3] == "STAR" then
-        return 1
-    end
-    return 0
-end
-M.slotRepairVoucher = slotRepairVoucher
 
 -- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "표본 보너스" (sample
 -- bonus) as one of the four slot reward kinds, alongside money multiples,
@@ -98,16 +84,6 @@ M.slotRepairVoucher = slotRepairVoucher
 -- run.pendingSampleValue immediately, same as a collected sample, and is
 -- confirmed at settlement or forfeited at destruction like any other
 -- pending sample value.
-local slotSampleBonusAmount = 25
-M.slotSampleBonusAmount = slotSampleBonusAmount
-
-local function slotSampleBonus(symbols)
-    if symbols[1] == "COMET" and symbols[2] == "COMET" and symbols[3] == "COMET" then
-        return slotSampleBonusAmount
-    end
-    return 0
-end
-M.slotSampleBonus = slotSampleBonus
 
 -- Item 9/14 (A) hullDurability gap: gear.equippedTotals has additively
 -- summed a part's hullDurability effect since item 14's very first slice,
@@ -137,17 +113,12 @@ local function refreshShipStats(run)
         + equippedHullDurabilityBonus(run)
 end
 
-local function slotCount(distance, slotDistance)
-    if distance <= 0 then return 0 end
-    return math.ceil(distance / slotDistance)
-end
 
 -- Safe return is an explicit action (tests / future player input).
 function M.beginReturn(run)
     if not run or run.phase ~= "ascending" then return false end
     run.phase = "returning"
     run.returnDistance = run.maxAltitude
-    run.slotOpportunities = slotCount(run.returnDistance, run.slotDistance)
     return true
 end
 
@@ -167,16 +138,13 @@ end
 
 local function settle(run)
     run.lastSampleSettlement = run.pendingSampleValue
-    run.lastSlotSettlement = run.pendingSlotReward
-    local payout = run.lastSampleSettlement + run.lastSlotSettlement + M.equippedHullMoneyBonus(run)
+    local payout = run.lastSampleSettlement + M.equippedHullMoneyBonus(run)
     run.money = run.money + payout
     run.lastSettlement = payout
     run.lastSampleCount = run.sampleCount
-    run.lastSlotSpinsCount = run.slotSpins
     run.lastAltitude = run.maxAltitude
     run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.pendingSampleValue = 0
-    run.pendingSlotReward = 0
     run.sampleCount = 0
     run.slotOpportunities = 0
     run.phase = "settlement"
@@ -188,28 +156,18 @@ local function destroy(run)
     run.durability = 0
     run.lastLostSampleCount = run.sampleCount
     run.lastLostSampleValue = run.pendingSampleValue
-    run.lastLostSlotSpinsCount = run.slotSpins
-    run.lastLostSlotValue = run.pendingSlotReward
     run.lastLostAltitude = run.maxAltitude
     run.lastLostNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.sampleCount = 0
     run.pendingSampleValue = 0
     run.sampleStreakCount = 0
     run.sampleStreakFamily = nil
-    run.pendingSlotReward = 0
     run.slotOpportunities = 0
-    run.slotSpins = 0
-    run.lastSlotSymbols = nil
-    run.lastSlotReward = 0
-    run.lastSlotRepair = 0
-    run.lastSlotSampleBonus = 0
     run.returnDistance = 0
     run.money = 0
     run.lastSettlement = 0
     run.lastSampleSettlement = 0
-    run.lastSlotSettlement = 0
     run.lastSampleCount = 0
-    run.lastSlotSpinsCount = 0
     run.durabilityUpgradeLevel = 0
     run.sampleYieldUpgradeLevel = 0
     run.steeringUpgradeLevel = 0
@@ -266,28 +224,18 @@ function M.new(options)
         slotDistance = options.slotDistance or 100,
         returnDistance = 0,
         slotOpportunities = 0,
-        slotSpins = 0,
         slotRandom = options.slotRandom or math.random,
-        lastSlotSymbols = nil,
-        lastSlotReward = 0,
-        lastSlotRepair = 0,
-        lastSlotSampleBonus = 0,
         sampleCount = 0,
         pendingSampleValue = 0,
         sampleStreakCount = 0,
         sampleStreakFamily = nil,
-        pendingSlotReward = 0,
         money = options.money or 0,
         lastSettlement = 0,
         lastSampleSettlement = 0,
-        lastSlotSettlement = 0,
         lastSampleCount = 0,
-        lastSlotSpinsCount = 0,
         lastAltitude = 0,
         lastLostSampleCount = 0,
         lastLostSampleValue = 0,
-        lastLostSlotSpinsCount = 0,
-        lastLostSlotValue = 0,
         lastLostAltitude = 0,
         -- Items 9/10/13: independent hull/engine equip-slot lists (item
         -- 10's "run.equippedGear"/"run.equippedEngineParts" wiring),
@@ -520,26 +468,16 @@ function M.launch(run)
         run.boostsUsed = 0
         run.returnDistance = 0
         run.slotOpportunities = 0
-        run.slotSpins = 0
-        run.lastSlotSymbols = nil
-        run.lastSlotReward = 0
-        run.lastSlotRepair = 0
-        run.lastSlotSampleBonus = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
         run.sampleStreakCount = 0
         run.sampleStreakFamily = nil
-        run.pendingSlotReward = 0
         run.lastSettlement = 0
         run.lastSampleSettlement = 0
-        run.lastSlotSettlement = 0
         run.lastSampleCount = 0
-        run.lastSlotSpinsCount = 0
         run.lastAltitude = 0
         run.lastLostSampleCount = 0
         run.lastLostSampleValue = 0
-        run.lastLostSlotSpinsCount = 0
-        run.lastLostSlotValue = 0
         run.lastLostAltitude = 0
         -- Item 7(b)/8 hub-explored reset gap: `destroy()` already resets
         -- hubExplored/{} and lastVisitedGalaxyId on full meta wipe, but
@@ -670,23 +608,6 @@ function M.selectShip(run, shipId)
     return true
 end
 
-function M.useSlot(run)
-    if run.phase ~= "returning" or run.slotOpportunities <= 0 then return false end
-    local symbols, reward = spinSlot(run)
-    run.slotOpportunities = run.slotOpportunities - 1
-    run.slotSpins = run.slotSpins + 1
-    run.lastSlotSymbols = symbols
-    run.lastSlotReward = reward
-    run.pendingSlotReward = run.pendingSlotReward + reward
-    local voucher = slotRepairVoucher(symbols)
-    local applied = math.min(voucher, run.maxDurability - run.durability)
-    run.durability = run.durability + applied
-    run.lastSlotRepair = applied
-    local sampleBonus = slotSampleBonus(symbols)
-    run.lastSlotSampleBonus = sampleBonus
-    run.pendingSampleValue = run.pendingSampleValue + sampleBonus
-    return true
-end
 
 -- docs/feedback/INBOX.md's Balatro core-mechanics porting plan item 1
 -- ("점진적 시너지/빌드업") requests a multiplicative STREAK bonus for

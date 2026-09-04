@@ -84,6 +84,9 @@ M.returnControls = returnControls
 -- column-split pattern by sharing the HULL row (left=HULL, right=STEERING)
 -- instead of adding a fifth 36px-tall row that would fall back under the
 -- 44pt accessibility minimum.
+-- Item 15(b): EARTH SLOT SPIN row added above RELAUNCH. The former full-height
+-- relaunch zone (232-320 = 88px) is split into two 44px rows: SLOT at 232-276
+-- and RELAUNCH at 276-320, both still clearing the 44pt minimum.
 local settlementTouchRows = {
     {
         top = 144, bottom = 188,
@@ -99,7 +102,8 @@ local settlementTouchRows = {
             { key = "ship", left = 90, right = 180 },
         },
     },
-    { key = "relaunch", top = 232, bottom = 320 },
+    { key = "slot", top = 232, bottom = 276 },
+    { key = "relaunch", top = 276, bottom = 320 },
 }
 M.settlementTouchRows = settlementTouchRows
 
@@ -574,6 +578,9 @@ function M.new(options)
         verticalOffset = 0,
         rcsCooldown = 0,
         message = i18n.t("launch_tap_to_launch"),
+        -- Item 15(b): Earth shop slot state. Holds the last earthSlotSpin
+        -- result during the settlement phase so draw() can render it.
+        earthShopSlotResult = nil,
     }, M)
 end
 
@@ -1354,23 +1361,42 @@ function M:keypressed(key)
         end
         return
     end
-    if key == "space" or key == "return" or key == "up" or key == "w" then
-        if self.expedition.phase == "returning" and not self.slotSpin and expedition.useSlot(self.expedition) then
-            self:beginSlotSpin()
+    -- Item 15(b): Earth shop slot machine. "l" triggers a slot spin during
+    -- settlement using the galaxy-aware earthSlotSpin pure function (item 15(c)).
+    -- The result is stored in self.earthShopSlotResult for draw() to render.
+    -- Money reward is applied immediately to run.money.
+    if self.expedition.phase == "settlement" and key == "l" then
+        local rolls = {}
+        for i = 1, 3 do rolls[i] = math.random(1, 10) end
+        local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, rolls)
+        self.earthShopSlotResult = result
+        if result.reward > 0 then
+            self.expedition.money = self.expedition.money + result.reward
+            self.message = i18n.t("earth_slot_result",
+                table.concat(result.symbols, " "), result.reward)
         else
-            local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
-            if expedition.launch(self.expedition) then
-                if relaunching then
-                    self.ship.x = 0
-                    self.ship.y = 0
-                    self.verticalOffset = 0
-                    self.discovered = {}
-                    self.collided = {}
-                    self.discoveredCount = 0
-                    self.floatingTexts = {}
-                end
-                self.message = i18n.t("ascending_message")
+            self.message = i18n.t("earth_slot_miss",
+                table.concat(result.symbols, " "))
+        end
+        return
+    end
+    if key == "space" or key == "return" or key == "up" or key == "w" then
+        -- Item 15(a): in-flight slot machine removed. Space/return during
+        -- returning phase no longer triggers a slot spin. Settlement happens
+        -- automatically when altitude reaches 0 (expedition.update).
+        local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
+        if expedition.launch(self.expedition) then
+            if relaunching then
+                self.ship.x = 0
+                self.ship.y = 0
+                self.verticalOffset = 0
+                self.discovered = {}
+                self.collided = {}
+                self.discoveredCount = 0
+                self.floatingTexts = {}
+                self.earthShopSlotResult = nil
             end
+            self.message = i18n.t("ascending_message")
         end
     end
 end
@@ -1381,10 +1407,10 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "returning" then
+        -- Item 15(a): in-flight slot machine removed. The returning phase only
+        -- has steering controls; slot-spin zone removed.
         local inControlRow = y >= returnControls.top and y <= returnControls.bottom
-        if inControlRow and x >= returnControls.slotMinX and x <= returnControls.slotMaxX then
-            self:keypressed("space")
-        elseif inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
+        if inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
             self.touches[id] = { x = x, y = y, originX = x, originY = y }
         end
         return

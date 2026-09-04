@@ -73,6 +73,10 @@ locales.en = {
     slot_result_sample = "%s +$%d SAMPLE +$%d  %d LEFT",
     slot_result_plain = "%s +$%d  %d LEFT",
     returning_message = "RETURNING  %d SLOT CHANCES",
+    -- Item 15(b): Earth shop slot machine keys
+    earth_slot_spin_prompt = "TAP: EARTH SLOT SPIN",
+    earth_slot_result = "%s  +$%d",
+    earth_slot_miss = "%s  NO WIN",
     settled_message = "SETTLED +$%d  BALANCE $%d",
     floating_sample_gain = "+$%d",
     sample_streak_message = "SAMPLE +$%d  STREAK x%.1f  %s",
@@ -177,6 +181,10 @@ locales.ko = {
     slot_result_sample = "%s +$%d 표본+$%d  %d회",
     slot_result_plain = "%s +$%d  %d회",
     returning_message = "귀환중  슬롯 %d회",
+    -- Item 15(b): Earth shop slot machine keys
+    earth_slot_spin_prompt = "탭: 지구 슬롯 스핀",
+    earth_slot_result = "%s  +$%d",
+    earth_slot_miss = "%s  꽝",
     settled_message = "정산 +$%d  잔액 $%d",
     floating_sample_gain = "+$%d",
     sample_streak_message = "표본 +$%d  연속 x%.1f  %s",

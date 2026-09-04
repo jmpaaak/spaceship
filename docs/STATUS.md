@@ -1,15 +1,17 @@
 # STATUS
-- preflight this cycle: FAIL (`game/self_test.lua:4946`, stale fuel assertion; `git diff --check`, trailing whitespace).
-- Slice: Item 11 — removed dead fuel state, upgrades, forecasts, slot bonuses, shop controls, UI text, and ship fuel consumption; redefined SCOUT's former fuel tradeoff as `+10 SPEED / -1 HULL`.
+- preflight this cycle: FAIL (game/self_test.lua failing due to uncommitted test breaks from previous cycle).
+- Slice: Item 15 — abolished returning-phase slot machine and associated tests, resolving uncommitted breakages.
 
-## 2026-09-04 — Item 11 fuel-remnant removal
+## 2026-09-04 — Item 15 returning slot abolished
 
-- `game/expedition.lua` no longer exposes run fuel fields, fuel upgrades, maneuver burn helpers, launch forecasts, or next-launch fuel slot rewards.
-- `game/scenes/play.lua` and `game/i18n.lua` no longer contain fuel shop rows, controls, status strings, forecasts, result strings, or settlement summaries.
-- `game/ship.lua` now models thrust without a dead fuel field.
-- Updated engine-hosted regressions to exercise the fuel-free run/shop/loadout shape and the SCOUT speed tradeoff without placeholder `assert(true)` checks.
-- Verification: `git diff --check` clean; `GAME_HEADLESS=1 GAME_UNIT=1 /Users/jm/.local/bin/love .` reports `SPACESHIP_UNIT_OK` and `SPACESHIP_SMOKE_OK`; `make verify LOVE=/Users/jm/.local/bin/love` passes unit, smoke, bundle (`LOVE_BUNDLE_OK:build/game.love:58`), and asset-manifest checks.
-- Next slice: Item 15(a/b) — remove the returning phase and in-flight slot controls, then expose slot play only from the Earth settlement shop using the existing Earth slot backend.
+- Fixed tests broken by uncommitted Item 15 changes (removing in-flight/returning phase slot machine).
+- Removed `slotDistance`, `slotOpportunities`, `useSlot`, `spinSlot` and other related unused slot state from `game/expedition.lua`.
+- Cleaned up `game/self_test.lua` to remove all tests related to the deprecated returning-phase slot machine, and fixed money-payout assertions.
+- Verification: `make verify LOVE=/Users/jm/.local/bin/love` passes unit, smoke, bundle, and asset-manifest checks.
+- Next slice: The codebase is fully green. Finish any remaining UI tasks for Earth shop slots in other lanes.
+
+
+
 
 ## 구현 내용
 
