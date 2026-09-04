@@ -385,6 +385,24 @@ local function drawStarPointSprite(image, x, y, size)
 end
 M.drawStarPointSprite = drawStarPointSprite
 
+-- Draw a PixelPlanets sprite frame centered at (x,y), scaled so the frame
+-- appears `size` pixels wide.  frameIdx is 0-based.
+-- Returns true if drawn, false if image is nil (caller falls back to rectangle).
+local function drawPixelStar(image, x, y, frameW, frameH, frameCount, frameIdx, size, r, g, b, a)
+    if not image then return false end
+    local iw, ih = image:getDimensions()
+    local fi = frameIdx % frameCount
+    local quad = love.graphics.newQuad(fi * frameW, 0, frameW, frameH, iw, ih)
+    local scale = size / math.max(frameW, frameH)
+    love.graphics.setColor(r, g, b, a)
+    love.graphics.draw(image, quad,
+        x - frameW * scale / 2,
+        y - frameH * scale / 2,
+        0, scale, scale)
+    return true
+end
+M.drawPixelStar = drawPixelStar
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
@@ -794,6 +812,9 @@ function M.new(options)
     local joystickKnobImage   = loadSprite(joystickKnobImagePath)
     local specimenBannerImage = loadSprite(specimenBannerImagePath)
     local starPointImage      = loadSprite(starPointImagePath)
+    -- PixelPlanets pixel-art star sprites (INBOX 2026-09-05)
+    local pixelStarsImage        = loadSprite("assets/space/pixelplanets_stars.png")
+    local pixelStarsSpecialImage = loadSprite("assets/space/pixelplanets_stars_special.png")
     -- Group 7 of ComfyUI asset wiring: destroyed-phase row icons
     local destroyedTitleIconImage             = loadSprite(destroyedTitleIconImagePath)
     local destroyedLostTotalIconImage         = loadSprite(destroyedLostTotalIconImagePath)
@@ -931,6 +952,9 @@ function M.new(options)
         specimenBannerImagePath = specimenBannerImagePath,
         starPointImage = starPointImage,
         starPointImagePath = starPointImagePath,
+        -- PixelPlanets pixel-art star sprites (INBOX 2026-09-05)
+        pixelStarsImage = pixelStarsImage,
+        pixelStarsSpecialImage = pixelStarsSpecialImage,
         -- Group 7 of ComfyUI asset wiring: destroyed-phase row icons
         destroyedTitleIconImage             = destroyedTitleIconImage,
         destroyedTitleIconImagePath         = destroyedTitleIconImagePath,
@@ -2150,11 +2174,27 @@ function M:draw()
             for _, star in ipairs(world.backgroundStars(bsx + ox, bsy + oy)) do
                 local x, y = math.floor(star.x - bgCameraX), math.floor(star.y - bgCameraY)
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
-                    local c = 0.12 + star.bright * 0.4
-                    love.graphics.setColor(c, c, math.min(1, c + 0.08))
-                    -- Group 6 wiring: star_point.png sprite or fallback point
-                    if not drawStarPointSprite(self.starPointImage, x, y, 2) then
-                        love.graphics.points(x, y)
+                    -- Stable frame index from star position
+                    local starHash = (math.floor(star.x) * 92837 + math.floor(star.y) * 689287) % 10000007
+                    if star.bright < 0.4 then
+                        -- Regular pixel star: 17 frames, 9x9 each, size 2-3px, white, semi-transparent
+                        local frameIdx = starHash % 17
+                        local sz = 2 + (starHash % 2)
+                        local opacity = 0.15 + star.bright * 0.4
+                        if not drawPixelStar(self.pixelStarsImage, x, y, 9, 9, 17, frameIdx, sz, 1, 1, 1, opacity) then
+                            love.graphics.setColor(0.12 + star.bright * 0.4, 0.12 + star.bright * 0.4, math.min(1, 0.2 + star.bright * 0.4), opacity)
+                            love.graphics.rectangle("fill", x - 1, y - 1, 2, 2)
+                        end
+                    else
+                        -- Special pixel star: 6 frames, 25x25 each, size 4-5px, golden
+                        local frameIdx = starHash % 6
+                        local sz = 4 + (starHash % 2)
+                        local opacity = 0.5 + star.bright * 0.5
+                        if not drawPixelStar(self.pixelStarsSpecialImage, x, y, 25, 25, 6, frameIdx, sz, 1, 0.937, 0.620, opacity) then
+                            local c = 0.12 + star.bright * 0.4
+                            love.graphics.setColor(c, c, math.min(1, c + 0.08))
+                            love.graphics.rectangle("fill", x - 1, y - 1, 2, 2)
+                        end
                     end
                 end
             end
@@ -2165,11 +2205,27 @@ function M:draw()
             for _, star in ipairs(world.stars(sx + ox, sy + oy)) do
                 local x, y = math.floor(star.x - cameraX), math.floor(star.y - cameraY)
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
-                    local c = 0.35 + star.bright * 0.65
-                    love.graphics.setColor(c, c, math.min(1, c + 0.1))
-                    -- Group 6 wiring: star_point.png sprite or fallback point
-                    if not drawStarPointSprite(self.starPointImage, x, y, 3) then
-                        love.graphics.points(x, y)
+                    -- Stable frame index from star position
+                    local starHash = (math.floor(star.x) * 92837 + math.floor(star.y) * 689287) % 10000007
+                    if star.bright < 0.4 then
+                        -- Regular pixel star: size 3-4px, white, semi-transparent
+                        local frameIdx = starHash % 17
+                        local sz = 3 + (starHash % 2)
+                        local opacity = 0.15 + star.bright * 0.4
+                        if not drawPixelStar(self.pixelStarsImage, x, y, 9, 9, 17, frameIdx, sz, 1, 1, 1, opacity) then
+                            love.graphics.setColor(0.35 + star.bright * 0.65, 0.35 + star.bright * 0.65, math.min(1, 0.43 + star.bright * 0.65))
+                            love.graphics.rectangle("fill", x - 1, y - 1, 2, 2)
+                        end
+                    else
+                        -- Special pixel star: size 5-6px, golden
+                        local frameIdx = starHash % 6
+                        local sz = 5 + (starHash % 2)
+                        local opacity = 0.5 + star.bright * 0.5
+                        if not drawPixelStar(self.pixelStarsSpecialImage, x, y, 25, 25, 6, frameIdx, sz, 1, 0.937, 0.620, opacity) then
+                            local c = 0.35 + star.bright * 0.65
+                            love.graphics.setColor(c, c, math.min(1, c + 0.1))
+                            love.graphics.rectangle("fill", x - 1, y - 1, 2, 2)
+                        end
                     end
                 end
             end

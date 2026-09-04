@@ -2,7 +2,11 @@
 
 ## 처리 대기
 
-- **[2026-09-05] PixelPlanets 픽셀별 스프라이트로 배경/전경 별 교체 (사용자 확정, 최우선):**
+(없음)
+
+## 처리 완료
+
+- ✅ 완료(2026-09-05) **PixelPlanets 픽셀별 스프라이트로 배경/전경 별 교체 (사용자 확정, 최우선):**
   PixelPlanets JS 포트(MIT)의 별 스프라이트 두 장이 이미 에셋에 반입됨:
   - `assets/space/pixelplanets_stars.png` (144×9 RGBA) — 17종 작은 픽셀별, 각 9×9 프레임
   - `assets/space/pixelplanets_stars_special.png` (150×25 RGBA) — 6종 큰 특수별, 각 25×25 프레임
@@ -25,8 +29,7 @@
   7. 커밋: `feat(stars): PixelPlanets pixel-art star sprites replace procedural points`
 
   **검증 기준:** 배경에 흰/황금 픽셀별 스프라이트가 보이고, `love.graphics.rectangle` 단색 점은 사라짐. `make verify` PASS.
-
-## 처리 완료
+  완료증거: SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK + ASSET_MANIFEST_OK (2026-09-05).
 
 - ✅ 완료(2026-09-05) **깨진 ComfyUI PNG는 다각형 폴백으로 빼고, 쓸 만한 것만 재생성 (2026-09-05, 사용자 확정, 최우선):** 런치가 깨져 보인 주원인은 RGB 불투명 64×64를 패널/이펙트로 그린 것. 투명 RGBA는 함선·지구·HUD 아이콘·표본만. 나머지 ~74장 RGB는 게임에 쓰면 블러/사각 덩어리. 비전 검토 없음. 한 사이클 = 아래 소항목 하나 + `make verify` GREEN + 커밋.
 

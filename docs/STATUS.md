@@ -1,18 +1,4 @@
 ## Current Status
-
-2026-09-05 — Fix ASSET_MANIFEST_FAIL: add manifest entries for PixelPlanets star sprites.
-
-- Previous cycle added `assets/space/pixelplanets_stars.png` (144x9 RGBA, 17 frames) and
-  `assets/space/pixelplanets_stars_special.png` (150x25 RGBA, 6 frames) but omitted manifest
-  entries, causing ASSET_MANIFEST_FAIL.
-- Extended `tools/verify_asset_manifest.py` with `user_supplied: true` flag that skips
-  AetherForgeAI URL checks for open-source MIT-licensed assets confirmed by the user.
-- Added manifest entries for both star sprite sheets (Deep-Fold/PixelPlanets, MIT).
-- Also committed dirty `game/scenes/play.lua` + `game/self_test.lua` changes from the
-  prior cycle (testRgbBrokenAssetsUnwired + pngColorType/shouldLoadRuntimeSprite export).
-- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3,
-  LOVE_BUNDLE_OK:build/game.love:178, ASSET_MANIFEST_OK).
-
 ## Next Slice
 
 - INBOX `## 처리 대기`: PixelPlanets star sprite wiring into play.lua draw loop (replace
@@ -139,5 +125,20 @@
 ## Next Slice
 
 - INBOX `## 처리 대기` is now empty. Waiting for new user feedback or design items.
+
+---
+
+## 2026-09-05 PixelPlanets star sprites (cycle result)
+
+- Implemented `drawPixelStar(image, x, y, frameW, frameH, frameCount, frameIdx, size, r, g, b, a)` helper in `game/scenes/play.lua` (exported as `M.drawPixelStar`).
+- `M.new()` loads `assets/space/pixelplanets_stars.png` (17 frames, 9x9) and `assets/space/pixelplanets_stars_special.png` (6 frames, 25x25); both returned on scene instance as `pixelStarsImage` / `pixelStarsSpecialImage`.
+- Background stars (`world.backgroundStars`) loop: `bright < 0.4` draws a white pixel-art star (size 2-3px, opacity 0.15+bright*0.4), `bright >= 0.4` draws a golden special star (size 4-5px, opacity 0.5+bright*0.5). Rectangle fallback if image nil.
+- Foreground stars (`world.stars`) loop: same logic, sizes 3-4 / 5-6 px. Old `drawStarPointSprite` calls removed from both loops.
+- Self-test: new block asserts `drawPixelStar` exported, nil-safe, and scene slots typed correctly.
+- `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK + ASSET_MANIFEST_OK).
+
+## Next Slice
+
+- No pending INBOX items. Idle until new user feedback arrives.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
