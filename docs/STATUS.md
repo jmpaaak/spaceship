@@ -16,6 +16,19 @@
 
 - INBOX group (6): shop icons — `shop_icons/hull.png`, `steering.png`, `yield.png`, `ship.png` wired into settlement shop rows; joystick sprite wiring (`joystick_knob.png`, `joystick_pad.png`); `star_point.png` and `specimen_banner.png`.
 
+2026-09-04 — ComfyUI shop icons / joystick / star-point / specimen-banner wiring (group 6 of INBOX draw-wiring item).
+
+- Added `drawShopIconSprite(image, cx, cy, size)` and `drawStarPointSprite(image, x, y, size)` helpers; exported on PlayScene.
+- 4 new images loaded in `M.new()`: `joystickPadImage`, `joystickKnobImage`, `specimenBannerImage`, `starPointImage`.
+- `drawJoystickStick()`: pad circle → `joystickPadImage` sprite; knob circle → `joystickKnobImage` sprite (both fall back to circles when nil).
+- Background/foreground star `love.graphics.points` → `drawStarPointSprite(starPointImage, ...)` with size 2/3 px; fallback kept.
+- `newSpecimenBanner` fill-rect → `drawPanelSprite(specimenBannerImage, ...)` behind the discovery text; fallback kept.
+- Settlement shop rows: `shopIconImages.hull/steering/yield/ship` drawn as 7px badge left of each action sub-column text.
+- Regression test: `drawShopIconSprite`/`drawStarPointSprite` exported, nil→false no-throw; scene has `joystickPadImage`, `joystickKnobImage`, `specimenBannerImage`, `starPointImage`; `shopIconImages` map has hull/steering/yield/ship keys.
+- `make verify` GREEN.
+
+## Next Slice (group 7)
+
 2026-09-04 — ComfyUI panel/overlay wiring (group 5 of INBOX draw-wiring item).
 
 - Added `drawPanelSprite(image, x, y, w, h)` helper to `game/scenes/play.lua`; exported as `M.drawPanelSprite`.

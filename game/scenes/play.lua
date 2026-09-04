@@ -359,6 +359,30 @@ local function drawPanelSprite(image, x, y, w, h)
 end
 M.drawPanelSprite = drawPanelSprite
 
+-- Draw a shop-icon sprite centered at (cx, cy), scaled to `size` px.
+-- Used to place a small icon badge to the left of a shop row's text.
+-- Returns true if drawn, false if image is nil (caller keeps the text-only row).
+local function drawShopIconSprite(image, cx, cy, size)
+    if not image then return false end
+    local iw, ih = image:getDimensions()
+    local scale = size / math.max(iw, ih)
+    love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
+    return true
+end
+M.drawShopIconSprite = drawShopIconSprite
+
+-- Draw a star-point sprite centered at (x, y), scaled to `size` px.
+-- Used instead of love.graphics.points for background/foreground stars.
+-- Returns true if drawn, false if image is nil (caller keeps love.graphics.points).
+local function drawStarPointSprite(image, x, y, size)
+    if not image then return false end
+    local iw, ih = image:getDimensions()
+    local scale = size / math.max(iw, ih)
+    love.graphics.draw(image, x - iw * scale / 2, y - ih * scale / 2, 0, scale, scale)
+    return true
+end
+M.drawStarPointSprite = drawStarPointSprite
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
@@ -677,6 +701,11 @@ function M.new(options)
     local relaunChImagePath           = "assets/effects/relaunch.png"
     local slotResultPanelImagePath    = "assets/effects/slot_result_panel.png"
     local slotSpinButtonImagePath     = "assets/effects/slot_spin_button.png"
+    -- Group 6 of ComfyUI asset wiring: joystick, specimen banner, star point
+    local joystickPadImagePath     = "assets/effects/joystick_pad.png"
+    local joystickKnobImagePath    = "assets/effects/joystick_knob.png"
+    local specimenBannerImagePath  = "assets/effects/specimen_banner.png"
+    local starPointImagePath       = "assets/effects/star_point.png"
     local shipImage = loadSprite(shipImagePath)
     local planetImage = loadSprite(planetImagePath)
     local earthImage = loadSprite(earthImagePath)
@@ -707,6 +736,11 @@ function M.new(options)
     local relaunChImage           = loadSprite(relaunChImagePath)
     local slotResultPanelImage    = loadSprite(slotResultPanelImagePath)
     local slotSpinButtonImage     = loadSprite(slotSpinButtonImagePath)
+    -- Group 6 of ComfyUI asset wiring: joystick, specimen banner, star point
+    local joystickPadImage    = loadSprite(joystickPadImagePath)
+    local joystickKnobImage   = loadSprite(joystickKnobImagePath)
+    local specimenBannerImage = loadSprite(specimenBannerImagePath)
+    local starPointImage      = loadSprite(starPointImagePath)
     -- Minimap marker images (group 2 of ComfyUI asset wiring)
     local minimapImages = loadSpriteMap({
         disc           = "assets/effects/minimap_disc.png",
@@ -801,6 +835,15 @@ function M.new(options)
         slotResultPanelImagePath = slotResultPanelImagePath,
         slotSpinButtonImage = slotSpinButtonImage,
         slotSpinButtonImagePath = slotSpinButtonImagePath,
+        -- Group 6 of ComfyUI asset wiring: joystick, specimen banner, star point
+        joystickPadImage = joystickPadImage,
+        joystickPadImagePath = joystickPadImagePath,
+        joystickKnobImage = joystickKnobImage,
+        joystickKnobImagePath = joystickKnobImagePath,
+        specimenBannerImage = specimenBannerImage,
+        specimenBannerImagePath = specimenBannerImagePath,
+        starPointImage = starPointImage,
+        starPointImagePath = starPointImagePath,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -1813,12 +1856,20 @@ function M:drawJoystickStick()
     if not ox then return end
     local radius = joystick.visualRadius
     local knob = joystick.visualKnobRadius
+    -- Group 6 wiring: joystick_pad.png as the pad background, joystick_knob.png as the cap.
+    -- Falls back to filled/outlined circles when images are nil.
     love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha)
-    love.graphics.circle("fill", ox, oy, radius)
+    if not drawShopIconSprite(self.joystickPadImage, ox, oy, radius * 2) then
+        love.graphics.circle("fill", ox, oy, radius)
+    end
     love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha)
-    love.graphics.circle("line", ox, oy, radius)
+    if not self.joystickPadImage then
+        love.graphics.circle("line", ox, oy, radius)
+    end
     love.graphics.setColor(0.9, 0.95, 1, joystick.visualKnobAlpha)
-    love.graphics.circle("fill", kx, ky, knob)
+    if not drawShopIconSprite(self.joystickKnobImage, kx, ky, knob * 2) then
+        love.graphics.circle("fill", kx, ky, knob)
+    end
 end
 
 -- Circular galaxy chart (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3).
@@ -1995,7 +2046,10 @@ function M:draw()
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
                     local c = 0.12 + star.bright * 0.4
                     love.graphics.setColor(c, c, math.min(1, c + 0.08))
-                    love.graphics.points(x, y)
+                    -- Group 6 wiring: star_point.png sprite or fallback point
+                    if not drawStarPointSprite(self.starPointImage, x, y, 2) then
+                        love.graphics.points(x, y)
+                    end
                 end
             end
         end
@@ -2007,7 +2061,10 @@ function M:draw()
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
                     local c = 0.35 + star.bright * 0.65
                     love.graphics.setColor(c, c, math.min(1, c + 0.1))
-                    love.graphics.points(x, y)
+                    -- Group 6 wiring: star_point.png sprite or fallback point
+                    if not drawStarPointSprite(self.starPointImage, x, y, 3) then
+                        love.graphics.points(x, y)
+                    end
                 end
             end
         end
@@ -2510,6 +2567,11 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        -- Group 6 wiring: hull/steering icons to the left of each action sub-column
+        local shopIcons = self.shopIconImages or {}
+        local iconSz = 7
+        drawShopIconSprite(shopIcons.hull, shopColumnLeftX + 2, row + iconSz * 0.5, iconSz)
+        drawShopIconSprite(shopIcons.steering, shopColumnRightX + 2, row + iconSz * 0.5, iconSz)
         row = row + rowStep
         
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
@@ -2531,6 +2593,10 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.yieldActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
+        -- Group 6 wiring: yield/ship icons to the left of each action sub-column
+        local shopIconsYS = self.shopIconImages or {}
+        drawShopIconSprite(shopIconsYS.yield, shopColumnLeftX + 2, row + iconSz * 0.5, iconSz)
+        drawShopIconSprite(shopIconsYS.ship, shopColumnRightX + 2, row + iconSz * 0.5, iconSz)
         row = row + rowStep
         
         love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
@@ -2678,8 +2744,12 @@ function M:draw()
     end
     if self.newSpecimenBanner then
         local alpha = math.min(1, self.newSpecimenBannerTimer / 0.4)
-        love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)
-        love.graphics.rectangle("fill", 12, 60, viewport.width - 24, 16)
+        -- Group 6 wiring: specimen_banner.png behind the discovery banner; fallback rect.
+        love.graphics.setColor(1, 1, 1, 0.9 * alpha)
+        if not drawPanelSprite(self.specimenBannerImage, 12, 60, viewport.width - 24, 16) then
+            love.graphics.setColor(0.05, 0.06, 0.12, 0.85 * alpha)
+            love.graphics.rectangle("fill", 12, 60, viewport.width - 24, 16)
+        end
         love.graphics.setColor(1, 0.85, 0.3, alpha)
         love.graphics.printf(self.newSpecimenBanner, 12, 64, viewport.width - 24, "center")
     end
