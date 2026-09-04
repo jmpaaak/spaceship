@@ -1,33 +1,42 @@
 # STATUS
 - preflight this cycle: PASS.
-- Slice: 항목8 은하 중심 체크포인트 부분 정산 (Partial Settlement) 구현 및 항목 10/14 parity gap 1건(boostsUsed) 닫기.
+- Slice: 항목15(c) Earth 상점 슬롯머신 은하별 오즈 순수 데이터 계층 구현.
 
 ## 구현 내용
-항목 8 ("행성 탐사 보상은 표본만, 정산은 체크포인트에서만")의 요구사항에 따라,
-지구(고도 0) 복귀 시 전체 정산이 일어나는 기존 구조 외에 비행 중(은하 체크포인트 조우 시)
-보유한 표본(pendingSampleValue)만 돈으로 즉시 환산해주는 부분 정산 로직을 구현했다.
+항목15(c)("은하계마다 슬롯머신 오즈 변화")의 순수 데이터 계층을 `game/expedition.lua`에 신규 추가했다.
 
-`game/expedition.lua`에 `M.settleAtHub(run)`을 신규 추가하여, `run.pendingSampleValue`를
-`run.money`로 합산하고 pending 값을 0으로 비운다. 이는 원정을 종료(`run.phase = "settlement"`)시키지 않고
-비행 상태를 유지하며, M.equippedHullMoneyBonus (지구 정산 보너스)는 적용하지 않는다.
-또한, `M.collectSample`이 이미 즉시 돈이 아닌 `pendingSampleValue`만 올려주는
-정상 구조를 갖추고 있음도 확인했다.
-(덧붙여, 이전 사이클의 잔재였던 `run.boostsUsed`가 destroy 시 리셋되지 않는 parity gap 도 닫았다.)
+`M.earthSlotOddsProfiles` — 3종 오즈 프로파일(solar 표준형, fringe 중위험, void 고배당/고위험).
+`M.homeGalaxies` — 홈 은하 whitelist(milkyway → solar 프로파일).
+`M.galaxySlotOddsProfile(galaxyId)` — galaxyId 해시 mod 3으로 결정론적 프로파일 배정
+  (nil/milkyway → "solar", 외부 은하 → fringe 2:1 / void 1:1 비율).
+`M.earthSlotWeights(galaxyId)` — 해당 프로파일의 가중치 테이블 복사본 반환.
+`M.earthSlotSpin(run, galaxyId, rolls)` — 3-릴 스핀 순수 함수.
+  - 누적 가중치로 심볼(COMET/PLANET/STAR) 결정.
+  - 항목14(C) luck 효과를 STAR 가중치에 (1+luckBonus) 배율로 적용.
+  - {symbols, reward, totalWeight, effectiveStarWeight} 반환.
+`M.exploreHub` 확장 — run.lastVisitedGalaxyId 기록 추가.
 
 ## 테스트 (TDD, RED → GREEN)
-`game/self_test.lua`에 신규 `testHubPartialSettlement()`를 추가했다:
-- `M.collectSample`로 획득한 표본이 `money`가 아닌 `pendingSampleValue`에만 적립됨을 확인 (회귀 방지)
-- `M.settleAtHub` 호출 시 `pendingSampleValue`가 0으로 비워지고 그만큼 `money`가 상승함을 검증
-- 여러 번 호출해도 남은 pending이 없으면 money가 변하지 않음을 검증
+`game/self_test.lua`에 `testEarthSlotMachineGalaxyOdds()`를 추가했다:
+1. galaxySlotOddsProfile: nil/milkyway → "solar", 외부 은하 → fringe/void 결정론성.
+2. earthSlotWeights: fringe/void 프로파일의 STAR > solar STAR, COMET < solar COMET.
+3. earthSlotSpin: 고정 롤로 COMET×3 심볼, 양수 reward, totalWeight 노출 확인.
+4. luck 카드 장착 시 effectiveStarWeight > 기본 solar STAR.
+5. exploreHub → lastVisitedGalaxyId 설정/갱신/같은 은하 반복 탐험 시 불변.
 
-RED 확인 후 GREEN 전환.
+RED 확인 (`attempt to call field 'galaxySlotOddsProfile' (a nil value)`) → 구현 후 GREEN.
 
 ## 검증
 `make verify LOVE=/Users/jm/.local/bin/love` 전체 GREEN (`SPACESHIP_UNIT_OK`,
-`SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:63`, `ASSET_MANIFEST_OK`).
+`SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`).
 변경 파일: `game/expedition.lua`/`game/self_test.lua`/`docs/STATUS.md`/`docs/feedback/INBOX.md`
-(`play.lua`/`i18n.lua`/`world.lua` 미변경).
+(`play.lua`/`i18n.lua`/`world.lua`/`game/gear.lua`/`game/engine_parts.lua` 미변경).
 
-- Next slice: 항목 7, 13, 9, 10, 12, 14 의 잔여 gap 재감사 또는 항목 15 순수 데이터 계층 처리.
+항목15(a)(b) — 비행 중 슬롯머신 폐지 및 실제 settlement UI 재배치 — 는 play.lua 담당
+(이 레인 스코프 밖). 이 레인의 순수 데이터 계층(슬롯 오즈 테이블 + 스핀 함수)은
+play.lua 소비자가 `earthSlotSpin(run, run.lastVisitedGalaxyId, {reels=rolls})`를
+호출하는 것만으로 완전히 동작하도록 설계되었다.
+
+- Next slice: 항목13→9→10→12→14 잔여 gap 재감사 (이 레인의 반복 패턴), 또는 gear.lua/expedition.lua 추가 API 감사.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

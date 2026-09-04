@@ -3884,6 +3884,189 @@ local function testHubPartialSettlement()
     assert(run.money == 110, "money should remain unchanged on zero payout")
 end
 
+-- Item 15(b)(c): Earth-shop slot machine redesign with per-galaxy odds tables.
+-- Item 15's core requirements (pure expedition.lua data-layer scope):
+--   (c) Each galaxy's hub visit determines which odds *profile* the Earth shop
+--       slot machine uses on settlement; fringe/void galaxies are riskier
+--       (lower COMET filler rate, higher STAR jackpot rate) than the home
+--       solar system standard profile.
+--   Item 15 + Item 14(C) luck: luck effect now has a third target --
+--       the Earth shop slot machine's STAR (high-payout) symbol weight is
+--       boosted by the run's total luck bonus, so luck cards stack into slot
+--       odds on top of the galaxy-profile base.
+--   run.lastVisitedGalaxyId: exploreHub records which galaxy hub the player
+--       most recently visited, so the Earth shop knows which odds table to use.
+local function testEarthSlotMachineGalaxyOdds()
+    local expedition = require("game.expedition")
+
+    -- (1) galaxySlotOddsProfile: solar system (nil or "milkyway") must
+    -- return the "solar" (standard) profile; outer/unknown galaxies return
+    -- "fringe" or "void" deterministically from galaxy ID so the same galaxy
+    -- always maps to the same risk tier.
+    local solarProfile = expedition.galaxySlotOddsProfile(nil)
+    assert(solarProfile == "solar",
+        "nil/home galaxy must map to the solar (standard) slot profile, got: " .. tostring(solarProfile))
+    local mwProfile = expedition.galaxySlotOddsProfile("milkyway")
+    assert(mwProfile == "solar",
+        "milkyway galaxy must map to the solar slot profile, got: " .. tostring(mwProfile))
+    local outerProfile = expedition.galaxySlotOddsProfile("andromeda")
+    assert(outerProfile == "fringe" or outerProfile == "void",
+        "outer galaxy must map to fringe or void profile, got: " .. tostring(outerProfile))
+    -- Same galaxy ID must always map to the same profile (deterministic).
+    assert(expedition.galaxySlotOddsProfile("andromeda") == outerProfile,
+        "galaxySlotOddsProfile must be deterministic for the same galaxyId")
+
+    -- (2) earthSlotWeights: solar profile must match the existing flat base
+    -- weights; fringe/void profile must have a HIGHER STAR weight and LOWER
+    -- COMET weight than solar (higher variance/jackpot, riskier).
+    local solarWeights = expedition.earthSlotWeights(nil)
+    assert(type(solarWeights) == "table", "earthSlotWeights must return a table")
+    assert(solarWeights.COMET and solarWeights.PLANET and solarWeights.STAR,
+        "earthSlotWeights must include COMET, PLANET, and STAR keys")
+
+    -- Pick a fringe/void galaxy to compare.
+    local fringeGalaxy = nil
+    local candidateGalaxies = { "andromeda", "triangulum", "ngc1300", "sombrero", "pinwheel" }
+    for _, g in ipairs(candidateGalaxies) do
+        local p = expedition.galaxySlotOddsProfile(g)
+        if p == "fringe" or p == "void" then
+            fringeGalaxy = g
+            break
+        end
+    end
+    assert(fringeGalaxy, "at least one of the candidate galaxy IDs must map to fringe or void")
+    local fringeWeights = expedition.earthSlotWeights(fringeGalaxy)
+    assert(fringeWeights.STAR > solarWeights.STAR,
+        "fringe/void galaxy STAR weight must exceed solar STAR weight (higher jackpot odds)")
+    assert(fringeWeights.COMET < solarWeights.COMET,
+        "fringe/void galaxy COMET weight must be below solar COMET weight (riskier, less filler)")
+
+    -- (3) earthSlotSpin: given deterministic rolls, verifies the correct
+    -- symbol is chosen and correct reward returned, using galaxy-specific
+    -- weights. Rolls are in [0, totalWeight) for each reel.
+    -- Force a COMET-COMET-COMET triple via a zero roll on each reel
+    -- (COMET is always the first symbol in the iteration order with
+    -- cumulative weight starting at COMET's weight, so roll 0 = COMET).
+    local run = expedition.new()
+    local solarTotal = solarWeights.COMET + solarWeights.PLANET + solarWeights.STAR
+    -- Roll [0, COMET_weight) forces COMET selection on each reel.
+    local cometRoll = math.floor(solarWeights.COMET / 2)
+    local spinResult = expedition.earthSlotSpin(run, nil, {
+        reels = { cometRoll, cometRoll, cometRoll },
+    })
+    assert(type(spinResult) == "table", "earthSlotSpin must return a result table")
+    assert(spinResult.symbols and #spinResult.symbols == 3, "result must carry a 3-element symbols array")
+    assert(spinResult.symbols[1] == "COMET" and spinResult.symbols[2] == "COMET" and spinResult.symbols[3] == "COMET",
+        "all-zero rolls against solar weights must yield COMET-COMET-COMET triple")
+    assert(type(spinResult.reward) == "number" and spinResult.reward > 0,
+        "a COMET triple must produce a positive reward")
+    assert(type(spinResult.totalWeight) == "number" and spinResult.totalWeight == solarTotal,
+        "earthSlotSpin must expose the totalWeight used for this spin (for UI roll generation)")
+
+    -- (4) luck effect on STAR weight: equip a luck card (+50 luck = 0.5
+    -- luckBonus) and confirm the STAR weight in the resulting spin is
+    -- strictly higher than the base solar STAR weight for the same galaxy
+    -- profile. We verify this via spinResult.effectiveStarWeight rather
+    -- than counting outcomes (deterministic pure function, no need for
+    -- statistical sampling).
+    local luckRun = expedition.new()
+    local luckCard = {
+        id = "test_luck_card", tags = {}, editions = {},
+        rarity = "rare", icon = "✦",
+        effects = { { type = "luck", value = 50 } },
+    }
+    assert(expedition.equipGear(luckRun, "hull", luckCard))
+    local luckySpinResult = expedition.earthSlotSpin(luckRun, nil, {
+        reels = { cometRoll, cometRoll, cometRoll },
+    })
+    assert(luckySpinResult.effectiveStarWeight and luckySpinResult.effectiveStarWeight > solarWeights.STAR,
+        "a luck-boosted run must produce a higher STAR weight than the base solar profile: "
+            .. "baseStarWeight=" .. tostring(solarWeights.STAR)
+            .. " effectiveStarWeight=" .. tostring(luckySpinResult.effectiveStarWeight))
+
+    -- (5) run.lastVisitedGalaxyId: exploreHub records the hub galaxy so the
+    -- Earth shop slot knows which profile to use. A fresh run has nil;
+    -- after exploreHub("andromeda", pool) it should be "andromeda".
+    local hubRun = expedition.new()
+    assert(hubRun.lastVisitedGalaxyId == nil,
+        "a fresh run must have nil lastVisitedGalaxyId")
+    -- Use a minimal pool with one galaxyExclusive card.
+    local exPart = {
+        id = "hull_test_exclusive", name = "Test", nameKo = "테스트", icon = "▲",
+        rarity = "common", tags = { "altitude" }, editions = {}, galaxyExclusive = true,
+        effects = { { type = "climbSpeed", value = 1 } },
+    }
+    expedition.exploreHub(hubRun, "andromeda", { exPart })
+    assert(hubRun.lastVisitedGalaxyId == "andromeda",
+        "exploreHub must set run.lastVisitedGalaxyId to the visited galaxy id, got: "
+            .. tostring(hubRun.lastVisitedGalaxyId))
+    -- A second call to the SAME galaxy must not overwrite lastVisitedGalaxyId
+    -- (hub is already explored) — but it was "andromeda" before and still is.
+    expedition.exploreHub(hubRun, "andromeda", { exPart })
+    assert(hubRun.lastVisitedGalaxyId == "andromeda",
+        "repeated exploreHub for same galaxy must leave lastVisitedGalaxyId unchanged")
+    -- A call for a DIFFERENT galaxy hub must update the tracker.
+    local exPart2 = {
+        id = "hull_test_exclusive2", name = "Test2", nameKo = "테스트2", icon = "◉",
+        rarity = "rare", tags = { "void" }, editions = {}, galaxyExclusive = true,
+        effects = { { type = "climbSpeed", value = 2 } },
+    }
+    expedition.exploreHub(hubRun, "triangulum", { exPart2 })
+    assert(hubRun.lastVisitedGalaxyId == "triangulum",
+        "exploreHub for a new galaxy must update lastVisitedGalaxyId, got: "
+            .. tostring(hubRun.lastVisitedGalaxyId))
+end
+
+-- Module-level gear test suite (kept outside M.run() so M.run() only
+-- consumes 1 upvalue for this reference instead of 47+, staying within
+-- Lua 5.1's 60-upvalue-per-function limit).
+local function runGearTests()
+    testGearJsonLoader()
+    testGearSynergyEngine()
+    testEnginePartsSlotSeparation()
+    testGearRarityAndEditionSystem()
+    testGearEditorSyncSuite()
+    testGearSchemaDocumentsGalaxyExclusive()
+    testGearEffectSchemaExpansion()
+    testEnginePropulsionSpecialization()
+    testGearEffectTypeContentCoverage()
+    testEngineCardsHaveNonHullOnlyEffect()
+    testGearEditionScopeContentCoverage()
+    testHullCardsHaveNonEngineOnlyEffect()
+    testEngineCardsHaveCategoryAgnosticEffectCoverage()
+    testGearRunWiring()
+    testGearPropulsionRunWiring()
+    testGearSurvivalAndEconomyWiring()
+    testGearInsuranceCategoryAgnosticWiring()
+    testGearOfferRolling()
+    testGearRunEffectWiring()
+    testGearSellMultiplierEngineSlotWiring()
+    testGearCollisionRadiusRunWiring()
+    testGearHullDurabilityRunWiring()
+    testGearHullSpeedRunWiring()
+    testGearEngineClimbSpeedRunWiring()
+    testGearMoneyRunWiring()
+    testGearStreakMultiplierWiring()
+    testGearChainTriggerConsumptionWiring()
+    testGearRerollOfferSpendWiring()
+    testGearSlotSwapEconomyWiring()
+    testGearCrystallizedSellPremiumWiring()
+    testGearBuyEconomyWiring()
+    testGearShopPlanetPurchaseWiring()
+    testGearNoSlotCostEditionWiring()
+    testGearNoSlotCostEngineSlotWiring()
+    testGearIrradiatedSynergyBonusWiring()
+    testGearGalaxyExclusiveWiring()
+    testGearGalaxyExclusiveEnginePoolWiring()
+    testGearEquippedEditionEffectsRunWiring()
+    testGearQuantumFlawedEngineDrawbackWiring()
+    testGearEngineSynergyMultiplierWiring()
+    testGearLaunchForecastClimbSpeedGap()
+    testGearBoostsUsedDestroyReset()
+    testHubPartialSettlement()
+    testEarthSlotMachineGalaxyOdds()
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -5578,49 +5761,7 @@ function M.run()
     testHullShieldIcon()
     testCashCoinIcon()
     testSpeedometerIcon()
-    testGearJsonLoader()
-    testGearSynergyEngine()
-    testEnginePartsSlotSeparation()
-    testGearRarityAndEditionSystem()
-    testGearEditorSyncSuite()
-    testGearSchemaDocumentsGalaxyExclusive()
-    testGearEffectSchemaExpansion()
-    testEnginePropulsionSpecialization()
-    testGearEffectTypeContentCoverage()
-    testEngineCardsHaveNonHullOnlyEffect()
-    testGearEditionScopeContentCoverage()
-    testHullCardsHaveNonEngineOnlyEffect()
-    testEngineCardsHaveCategoryAgnosticEffectCoverage()
-    testGearRunWiring()
-    testGearPropulsionRunWiring()
-    testGearSurvivalAndEconomyWiring()
-    testGearInsuranceCategoryAgnosticWiring()
-    testGearOfferRolling()
-    testGearRunEffectWiring()
-    testGearSellMultiplierEngineSlotWiring()
-    testGearCollisionRadiusRunWiring()
-    testGearHullDurabilityRunWiring()
-    testGearHullSpeedRunWiring()
-    testGearEngineClimbSpeedRunWiring()
-    testGearMoneyRunWiring()
-    testGearStreakMultiplierWiring()
-    testGearChainTriggerConsumptionWiring()
-    testGearRerollOfferSpendWiring()
-    testGearSlotSwapEconomyWiring()
-    testGearCrystallizedSellPremiumWiring()
-    testGearBuyEconomyWiring()
-    testGearShopPlanetPurchaseWiring()
-    testGearNoSlotCostEditionWiring()
-    testGearNoSlotCostEngineSlotWiring()
-    testGearIrradiatedSynergyBonusWiring()
-    testGearGalaxyExclusiveWiring()
-    testGearGalaxyExclusiveEnginePoolWiring()
-    testGearEquippedEditionEffectsRunWiring()
-    testGearQuantumFlawedEngineDrawbackWiring()
-    testGearEngineSynergyMultiplierWiring()
-    testGearLaunchForecastClimbSpeedGap()
-    testGearBoostsUsedDestroyReset()
-    testHubPartialSettlement()
+    runGearTests()
 
     print("SPACESHIP_UNIT_OK")
 end

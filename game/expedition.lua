@@ -286,6 +286,7 @@ local function destroy(run)
     run.rerollsUsed = 0
     run.boostsUsed = 0
     run.hubExplored = {}
+    run.lastVisitedGalaxyId = nil
 end
 
 function M.new(options)
@@ -295,6 +296,7 @@ function M.new(options)
     local run = {
         phase = "launch",
         hubExplored = {},
+        lastVisitedGalaxyId = nil,
         altitude = 0,
         maxAltitude = 0,
         bestAltitude = options.bestAltitude or 0,
@@ -1145,6 +1147,115 @@ function M.settleAtHub(run)
     return 0
 end
 
+-- Item 15(c): Earth-shop slot machine galaxy-specific odds tables.
+-- Per docs/feedback/INBOX.md item 15: "은하계마다 슬롯머신 내용/오즈/특수
+-- 심볼 구성에 변화(변동)를 주어, 어떤 은하계의 체크포인트를 찍고 돌아왔느냐에
+-- 따라 지구 상점의 슬롯머신 확률과 보상 테이블이 달라지도록 해 파밍과 탐험의
+-- 동기를 극대화한다 (예: 태양계 슬롯은 표준형, 화성/외곽 은하 슬롯은 고배당/
+-- 위험부담형 등)".
+--
+-- Three risk profiles:
+--   "solar"  — home solar system; standard balanced odds (mirrors the existing
+--               slotWeights so long-time players see no change in familiar play).
+--   "fringe"  — nearby outer galaxies; moderate STAR boost, slight COMET cut.
+--   "void"    — deep/far galaxies; strong STAR boost, significant COMET cut —
+--               high variance, high jackpot, Balatro high-risk-high-reward feel.
+--
+-- The profile assignment is pure/deterministic from galaxyId hash so the same
+-- galaxy always shows the same odds (no per-run RNG, "어떤 은하계의 체크포인트를
+-- 찍고" is the wording — galaxy identity, not per-expedition roll).
+
+M.earthSlotOddsProfiles = {
+    solar  = { COMET = 5, PLANET = 4, STAR = 1 },
+    fringe = { COMET = 4, PLANET = 4, STAR = 2 },
+    void   = { COMET = 3, PLANET = 4, STAR = 3 },
+}
+M.homeGalaxies = { milkyway = true }
+
+-- Maps a galaxyId string to one of the three profile names. nil or any
+-- known home galaxy ("milkyway") returns "solar". Outer galaxies are
+-- assigned "fringe" or "void" via a stable hash of their id (mod 3: 0 ->
+-- fringe, 1 -> void, 2 -> fringe again so fringe is twice as likely as
+-- void — outer galaxies are mostly fringe-grade with occasional deep-void
+-- anomalies, matching the game's tone of gradual risk escalation).
+function M.galaxySlotOddsProfile(galaxyId)
+    if not galaxyId or M.homeGalaxies[galaxyId] then
+        return "solar"
+    end
+    local h = 0
+    for i = 1, #galaxyId do
+        h = (h * 31 + string.byte(galaxyId, i)) % 2147483647
+    end
+    local bucket = h % 3
+    if bucket == 1 then return "void" end
+    return "fringe"
+end
+
+-- Returns the base slot weight table for a given galaxy. Callers can then
+-- apply the luck modifier (see M.earthSlotSpin) on top.
+function M.earthSlotWeights(galaxyId)
+    local profile = M.galaxySlotOddsProfile(galaxyId)
+    local base = M.earthSlotOddsProfiles[profile]
+    -- Return a copy so callers can safely modify without corrupting the table.
+    return { COMET = base.COMET, PLANET = base.PLANET, STAR = base.STAR }
+end
+
+-- Item 15(c) + Item 14(C) luck: Earth-shop slot spin with per-galaxy odds
+-- and luck-boosted STAR weight (item 15 says luck applies to the Earth shop
+-- slot's high-payout symbol probability — the third luck target alongside
+-- item 14's two original targets: edition-assignment chance and rarity drop
+-- weights). Pure function: no state mutation, fully deterministic from its
+-- arguments (same design as M.rollGearOffer/M.rollRarity/M.rollEdition).
+--
+-- `run`: used to read the equipped gear's combined luck bonus (same
+--   combinedGearList pattern as every other category-agnostic effect).
+-- `galaxyId`: nil defaults to the "solar" profile (standard odds).
+-- `rolls.reels`: table of 3 pre-rolled integers, each in [0, totalWeight).
+--   The caller (shop UI) generates these from love.math.random or any RNG
+--   source; earthSlotSpin never calls RNG itself (same convention as
+--   rollGearOffer's `rolls` parameter).
+--
+-- Returns a result table:
+--   .symbols        — array of 3 symbol strings (COMET/PLANET/STAR)
+--   .reward         — money value of the resulting symbol combination
+--   .totalWeight    — total weight used for this spin (for UI's random-roll range)
+--   .effectiveStarWeight — the STAR weight after luck boost (for UI preview / tests)
+function M.earthSlotSpin(run, galaxyId, rolls)
+    local weights = M.earthSlotWeights(galaxyId)
+    -- Item 14(C) luck: boost STAR weight by the equipped gear's luck total.
+    -- totalLuckBonus returns a fraction (e.g. 0.5 for 50 luck points);
+    -- multiply STAR's base weight by (1 + luckBonus) so +50% luck gives
+    -- +50% more STAR weight, same percentage-scaling as rollRarity/rollEdition.
+    local luckBonus = gearModule.totalLuckBonus(combinedGearList(run))
+    local effectiveStarWeight = weights.STAR * (1 + luckBonus)
+    weights.STAR = effectiveStarWeight
+    local total = weights.COMET + weights.PLANET + weights.STAR
+    -- Resolve each reel: iterate slotSymbols in their canonical order
+    -- (COMET -> PLANET -> STAR) with cumulative weight so the same roll
+    -- produces the same symbol regardless of profile (only the thresholds
+    -- move, not the symbol ordering).
+    local reelRolls = (rolls and rolls.reels) or { 0, 0, 0 }
+    local symbols = {}
+    for _, roll in ipairs(reelRolls) do
+        local cumulative = 0
+        local chosen = slotSymbols[#slotSymbols]
+        for _, sym in ipairs(slotSymbols) do
+            cumulative = cumulative + weights[sym]
+            if roll < cumulative then
+                chosen = sym
+                break
+            end
+        end
+        symbols[#symbols + 1] = chosen
+    end
+    return {
+        symbols = symbols,
+        reward = slotReward(symbols),
+        totalWeight = total,
+        effectiveStarWeight = effectiveStarWeight,
+    }
+end
+
 -- Item 7(b): Exploring a galaxy hub deterministically drops a specific
 -- gear part for that galaxy (100% chance, only once per run).
 function M.exploreHub(run, galaxyId, pool)
@@ -1152,6 +1263,14 @@ function M.exploreHub(run, galaxyId, pool)
         return nil
     end
     run.hubExplored[galaxyId] = true
+    -- Item 15(c): record the most-recently-explored hub galaxy so the
+    -- Earth shop slot machine knows which odds profile to use on
+    -- settlement. Always updated (any non-nil galaxyId overrides the
+    -- previous value) because the player's last hub visit determines the
+    -- active profile -- multiple hub visits in one expedition use the
+    -- most recent one, same design as lastVisitedGalaxyId's only consumer
+    -- (the Earth shop slot spin on next settlement).
+    run.lastVisitedGalaxyId = galaxyId
 
     local part = gearModule.galaxySpecificGear(pool, galaxyId)
     if not part then return nil end
