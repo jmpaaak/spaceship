@@ -27,6 +27,65 @@ def pending_feedback(root: Path) -> list[str]:
     ]
 
 
+def compact_inbox_status_notes(root: Path, max_note_chars: int = 300) -> None:
+    """Collapse verbose '> 처리 상황 ...' note blocks in pending items to one line.
+
+    Each '> 처리 상황' block can grow to thousands of words. We keep only
+    the first max_note_chars chars of the first line, which carries the
+    essential 'what was done / what's next' summary. This runs deterministically
+    before the agent starts so every cycle begins with a compact INBOX.
+    Writes only when actual changes are made (size-gated to avoid no-op commits).
+    """
+    import re
+    path = root / "docs" / "feedback" / "INBOX.md"
+    original = path.read_text(encoding="utf-8")
+
+    # Split on pending/done boundary; only compress the pending section
+    header, pend_marker, rest = original.partition("## 처리 대기")
+    if not pend_marker:
+        return
+    pending_section, done_marker, done_section = rest.partition("## 처리 완료")
+
+    def collapse_notes(text: str) -> str:
+        lines = text.splitlines(keepends=True)
+        out = []
+        in_note = False
+        note_first_line = ""
+        for line in lines:
+            stripped = line.strip()
+            # Start of a note block
+            if stripped.startswith("> 처리 상황") or stripped.startswith(">  처리 상황"):
+                in_note = True
+                note_first_line = line.rstrip()[:max_note_chars]
+                continue
+            # Continuation of note block (lines starting with ">")
+            if in_note:
+                if stripped.startswith(">") or stripped == "":
+                    continue  # skip verbose continuation
+                else:
+                    # End of note block — emit compressed version
+                    out.append(note_first_line + " …(압축됨)\n")
+                    in_note = False
+                    out.append(line)
+            else:
+                out.append(line)
+        if in_note:
+            out.append(note_first_line + " …(압축됨)\n")
+        return "".join(out)
+
+    compacted_pending = collapse_notes(pending_section)
+    if compacted_pending == pending_section:
+        return  # nothing changed
+
+    new_text = header + pend_marker + compacted_pending + done_marker + done_section
+    if len(new_text) >= len(original):
+        return  # sanity check: must be smaller
+
+    path.write_text(new_text, encoding="utf-8")
+    saved = len(original) - len(new_text)
+    print(f"[preflight] INBOX 처리 상황 주석 압축: -{saved:,} chars 절감", flush=True)
+
+
 MAX_PENDING_PROMPT_ITEMS = 4
 MAX_PENDING_PROMPT_CHARS = 220
 
@@ -127,6 +186,11 @@ def check(label: str, command: list[str], root: Path, env: dict[str, str], timeo
 
 def main() -> int:
     root = Path(os.environ.get("LOOP_ROOT", Path(__file__).resolve().parents[1])).resolve()
+    # Compact verbose status-note blocks before checks so agent sees slim INBOX
+    try:
+        compact_inbox_status_notes(root)
+    except Exception:
+        pass  # non-fatal
     env = os.environ.copy()
     love = "/Users/jm/.local/bin/love"
     checks = [

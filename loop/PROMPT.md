@@ -31,6 +31,8 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 ## Required workflow
 
 1. Read only the pending feedback, game design, and current status needed for this cycle. Do not read `docs/STATUS.md` in full — latest `##` section plus next slice only. Do not read `docs/STATUS_HISTORY.md` unless tracking a specific past bug.
+   **TOKEN RULE: Do NOT read `docs/feedback/INBOX.md` in full. The cycle prompt already contains pending item titles. Read only the specific item you are implementing this cycle** (use offset/limit or search to extract only that item's section — do not load the entire 150KB file).
+
 2. Run `git status --short` before editing. Preserve and finish prior-cycle work; do not overwrite it.
 3. If preflight reports FAIL, reproduce and fix that exact failure first.
 4. Otherwise choose one small user-visible or state-machine slice from the top pending requirement.
