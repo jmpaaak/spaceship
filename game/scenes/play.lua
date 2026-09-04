@@ -1766,14 +1766,9 @@ function M:draw()
     love.graphics.clear(world.galaxyBackgroundColor(galaxy))
     local shipScreenX, shipScreenY = viewport.width / 2, math.floor(viewport.height * 0.58)
     local cameraX, cameraY = self.ship.x - shipScreenX, self.ship.y - shipScreenY
-    if self.backgroundImage then
-        local imgW, imgH = self.backgroundImage:getDimensions()
-        local quad = love.graphics.newQuad(0, 0, viewport.width + imgW, viewport.height + imgH, imgW, imgH)
-        local offsetX = (cameraX * 0.15) % imgW
-        local offsetY = (cameraY * 0.15) % imgH
-        love.graphics.setColor(1, 1, 1, 0.55)
-        love.graphics.draw(self.backgroundImage, quad, -offsetX, -offsetY)
-    end
+    -- Background image disabled: deep_space_tile.png is not seamless, causing
+    -- visible grid lines at edges. Using procedural star layers only.
+    -- if self.backgroundImage then ... end
     local sx, sy = world.sectorAt(self.ship.x, self.ship.y)
     -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): a dense,
     -- near-static background star layer drawn behind the streaking-meteor
