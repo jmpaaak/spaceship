@@ -2,15 +2,16 @@
 
 ## 처리 대기
 
-- **깨진 ComfyUI PNG는 다각형 폴백으로 빼고, 쓸 만한 것만 재생성 (2026-09-05, 사용자 확정, 최우선):** 런치가 깨져 보인 주원인은 RGB 불투명 64×64를 패널/이펙트로 그린 것. 투명 RGBA는 함선·지구·HUD 아이콘·표본만. 나머지 ~74장 RGB는 게임에 쓰면 블러/사각 덩어리. 비전 검토 없음. 한 사이클 = 아래 소항목 하나 + `make verify` GREEN + 커밋.
-
-  (1) **RGB 깨진 에셋 언와이어 + 다각형 폴백:** `assets/effects/`·`shop_icons/`·`slot_symbols/`·`debris/`·`backgrounds/deep_space_tile.png` 등 mode=RGB PNG는 `M.new()`에서 로드하지 않거나 draw에서 nil 취급. 기존 Lua 다각형/원 폴백이 그려지게. 배경 타일은 계속 비활성(절차적 별만). 파일을 당장 삭제할 필요는 없고 git에서 빼도 됨. 테스트는 스프라이트 nil일 때 폴백이 크래시하지 않는지.
-
-  (2) **함선/지구/행성 ComfyUI 재생성은 하지 말 것 (2026-09-05, 사용자 확정):** 너무 오래 걸려서 사용자가 이미지를 따로 가져와 연결한다. `ship_default`/`ship_scout`/`earth_generic`/`planet_generic`/`planet_hub`/`planet_shop`을 ComfyUI로 다시 뽑지 마라. 새 PNG가 INBOX/디스크로 올 때까지 현행 파일 유지하거나 (1) 폴백만. 연결 작업은 사용자가 파일을 준 뒤의 별도 항목.
-
-  (3) **은하/행성 다양성 — Deep-Fold PixelPlanets 검토 후 적용 여부:** MIT, PNG/GIF/spritesheet export. ComfyUI 행성 대체 후보. 한 사이클에 결정+프로토타입 1장(결정론적 시드=은하/행성 id) 또는 “적용 안 함”을 STATUS에 남김. Godot을 LÖVE에 임베드하지 말 것 — export PNG만.
-
 ## 처리 완료
+
+- ✅ 완료(2026-09-05) **깨진 ComfyUI PNG는 다각형 폴백으로 빼고, 쓸 만한 것만 재생성 (2026-09-05, 사용자 확정, 최우선):** 런치가 깨져 보인 주원인은 RGB 불투명 64×64를 패널/이펙트로 그린 것. 투명 RGBA는 함선·지구·HUD 아이콘·표본만. 나머지 ~74장 RGB는 게임에 쓰면 블러/사각 덩어리. 비전 검토 없음. 한 사이클 = 아래 소항목 하나 + `make verify` GREEN + 커밋.
+
+  (1) ✅ 완료(2026-09-05) **RGB 깨진 에셋 언와이어 + 다각형 폴백:** `loadSprite`는 PNG IHDR color type 6(RGBA)만 `newImage`. RGB(type 2) ~76장은 nil → 기존 Lua 다각형/원 폴백. 배경 타일 `deep_space_tile.png`는 계속 비활성(절차적 별만). 파일은 디스크/git에 유지.
+
+  (2) ✅ 완료(2026-09-05) **함선/지구/행성 ComfyUI 재생성은 하지 말 것 (2026-09-05, 사용자 확정):** 너무 오래 걸려서 사용자가 이미지를 따로 가져와 연결한다. `ship_default`/`ship_scout`/`earth_generic`/`planet_generic`/`planet_hub`/`planet_shop`을 ComfyUI로 다시 뽑지 마라. 새 PNG가 INBOX/디스크로 올 때까지 현행 파일 유지하거나 (1) 폴백만. 연결 작업은 사용자가 파일을 준 뒤의 별도 항목.
+
+  (3) ✅ 완료(2026-09-05) **은하/행성 다양성 — Deep-Fold PixelPlanets 검토 후 적용 여부:** MIT, PNG/GIF/spritesheet export. ComfyUI 행성 대체 후보. 한 사이클에 결정+프로토타입 1장(결정론적 시드=은하/행성 id) 또는 “적용 안 함”을 STATUS에 남김. Godot을 LÖVE에 임베드하지 말 것 — export PNG만. (적용 안 함: 헤드리스 Godot 자동화 제약으로 인해 기존 AetherAI/ComfyUI 파이프라인 유지 결정)
+
 - **모든 시각 에셋 ComfyUI 전면 재생성 (2026-09-04, 사용자 확정, 최우선):** 런치 실행화면이 거대한 빨강/하늘색 블러 덩어리로 깨져 있다. 원인 두 가지를 **같은 항목에서** 고친다. (A) 현재 PNG 100장 중 89장이 64×64 RGB라 `drawPanelSprite`가 HUD/정산/상점 패널을 `viewport.width`(720)로 늘려 그린다. (B) 기존 ComfyUI 결과물이 실루엣·투명 배경·픽셀 밀도 모두 게임에 안 맞는다. 비전 검토 없이 생성→`assets/` 덮어쓰기→`docs/assets/MANIFEST.json` provenance→`docs/GENERATED_ASSET_LOG.md` 한 줄→`make verify` GREEN→커밋. 한 사이클 = 아래 그룹 하나(에셋 1~3장)만.
 
   (0) ✅ 완료(2026-09-05) **스케일 버그 먼저 (코드, 재생성 전 필수):** `drawPanelSprite`는 더 이상 64×64를 720×N으로 stretch하지 않는다. 이미지 없으면 기존 사각형 폴백, 있으면 원본 픽셀 크기. HUD 아이콘 `drawHudSpriteOrPoly` size 8~14px / 지구 지름 116px / 함선 논리 64px 유지. `GAME_CAPTURE_PHASE=launch` 캡처 경로만 STATUS에 기록(PNG 미커밋).

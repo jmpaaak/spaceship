@@ -1,24 +1,21 @@
 ## Current Status
 
-2026-09-05 — ComfyUI asset generation: UI panels (group 5 of INBOX asset generation item).
+2026-09-05 — INBOX ComfyUI regen group (3) Deep-Fold PixelPlanets review.
 
-- Generated 64x64 corner tile transparent PNGs for `shop_panel.png`, `loadout_panel.png`, and `destroyed_panel.png` via ComfyUI.
-- Logged new assets to `docs/GENERATED_ASSET_LOG.md` and updated `MANIFEST.json`.
-- Moved "모든 시각 에셋 ComfyUI 전면 재생성" to `## 처리 완료` as all sub-items (0-5) are now fully completed.
-- `make verify` GREEN.
+- Decided NOT to apply Deep-Fold PixelPlanets ("적용 안 함").
+- Reasoning: The workspace lacks a headless Godot environment (`godot` command not found), making automated PNG export from the Godot project impractical in this container.
+- We will maintain the existing AetherAI/ComfyUI pipeline and rely on user-supplied PNGs as requested in INBOX (2).
+- Moved the entire ComfyUI regen pending item to "처리 완료" in `docs/feedback/INBOX.md` as there is no remaining work in this group.
 
-2026-09-05 — INBOX ComfyUI regen group (4) HUD icons slice 2: distance/best/samples.
+2026-09-05 — INBOX item (1): unwire RGB ComfyUI PNGs so Lua polygon fallbacks draw.
 
-- Finished leftover dirty-tree work: previous cycle regenerated `hud_distance.png` / `hud_best.png` to 32×32 RGBA but left `hud_samples.png` at 64×64 RGB, which failed `testHudIconRegenSlice`.
-- Regenerated `assets/effects/hud_samples.png` via remote ComfyUI (`http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, prompt_id `1bfb2e06-53f4-4dbc-b272-41283ec7c080`, seed `20260905306`, 512×512 then nearest-neighbor fit). Backdrop knock-out + 20×22 body centered on 32×32 RGBA (opaque 281/1024, transparent corners).
-- Slice 2 trio now all 32×32 RGBA with padding: `hud_distance.png` (seed 20260905304, cyan nav diamond, opaque 254/1024), `hud_best.png` (seed 20260905305, gold trophy, opaque 227/1024), `hud_samples.png` (amber vial).
-- Extended `testHudIconRegenSlice` to assert 32×32 + transparent corners + non-full-bleed for the three slice-2 icons (plus slice 1 cash/hull/speed).
-- Updated `docs/assets/MANIFEST.json` provenance and appended `docs/GENERATED_ASSET_LOG.md`.
-- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:183`, `ASSET_MANIFEST_OK`).
+- `game/scenes/play.lua` `loadSprite` now reads PNG IHDR color type (byte 26). Color type 2 (RGB, ~76 opaque 64×64 blobs under `assets/effects/`, `shop_icons/`, `slot_symbols/`, `debris/`, `backgrounds/deep_space_tile.png`) returns nil and never calls `love.graphics.newImage`. Color type 6 (RGBA) keepers still load: `ship_default`/`ship_scout`, `earth_generic`, `planet_generic`/`hub`/`shop`, 9 HUD icons.
+- Existing draw helpers already return false on nil (`drawPanelSprite`, `drawShopIconSprite`, `drawStarPointSprite`, `drawPlanetEffectSprite`, debris/slot/effect branches), so RGB squares never paint. `deep_space_tile.png` stays unused (procedural stars only). Files remain on disk/git.
+- RED then GREEN: `testRgbBrokenAssetsUnwired` asserts RGB paths skip load, RGBA keepers stay loadable, nil-image draw helpers do not throw.
 
 ## Next Slice
 
-- INBOX ComfyUI regen group (4) remaining HUD icons: `hud_galaxy.png`, `hud_return.png`, `hud_earth.png` (still 64×64 RGB full-bleed). 32×32 transparent, solid color symbol, no full bleed.
+- INBOX `## 처리 대기` is now empty. Waiting for new user feedback or design items.
 
 2026-09-05 — INBOX ComfyUI regen group (2) earth.
 
