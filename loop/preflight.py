@@ -21,7 +21,10 @@ def pending_feedback(root: Path) -> list[str]:
     if not marker or "## 처리 완료" not in after:
         raise RuntimeError("feedback inbox must contain one pending and completed section")
     section = after.split("## 처리 완료", 1)[0]
-    return [line for line in section.splitlines() if line.strip().startswith("-")]
+    return [
+        line for line in section.splitlines()
+        if line.strip().startswith("-") or (line.strip() and line.strip()[0].isdigit() and "." in line.strip())
+    ]
 
 
 MAX_PENDING_PROMPT_ITEMS = 4
