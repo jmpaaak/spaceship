@@ -1,6 +1,15 @@
 # STATUS
-- preflight this cycle: PASS.
-- Slice: Doc update cycle (2026-09-04) — updated GEAR_SCHEMA.md card pool counts (36 hull / 26 engine, was stale at 24/12); verify GREEN
+- preflight this cycle: FAIL (`game/self_test.lua:4946`, stale fuel assertion; `git diff --check`, trailing whitespace).
+- Slice: Item 11 — removed dead fuel state, upgrades, forecasts, slot bonuses, shop controls, UI text, and ship fuel consumption; redefined SCOUT's former fuel tradeoff as `+10 SPEED / -1 HULL`.
+
+## 2026-09-04 — Item 11 fuel-remnant removal
+
+- `game/expedition.lua` no longer exposes run fuel fields, fuel upgrades, maneuver burn helpers, launch forecasts, or next-launch fuel slot rewards.
+- `game/scenes/play.lua` and `game/i18n.lua` no longer contain fuel shop rows, controls, status strings, forecasts, result strings, or settlement summaries.
+- `game/ship.lua` now models thrust without a dead fuel field.
+- Updated engine-hosted regressions to exercise the fuel-free run/shop/loadout shape and the SCOUT speed tradeoff without placeholder `assert(true)` checks.
+- Verification: `git diff --check` clean; `GAME_HEADLESS=1 GAME_UNIT=1 /Users/jm/.local/bin/love .` reports `SPACESHIP_UNIT_OK` and `SPACESHIP_SMOKE_OK`; `make verify LOVE=/Users/jm/.local/bin/love` passes unit, smoke, bundle (`LOVE_BUNDLE_OK:build/game.love:58`), and asset-manifest checks.
+- Next slice: Item 15(a/b) — remove the returning phase and in-flight slot controls, then expose slot play only from the Earth settlement shop using the existing Earth slot backend.
 
 ## 구현 내용
 

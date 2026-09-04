@@ -15,10 +15,8 @@ M.__index = M
 -- 1, "조이스틱을 통해 전방향으로 이동 가능함"): the ship's horizontal
 -- steering (self.ship.x) already used the full expedition.steeringSpeed
 -- axis. This adds a vertical maneuvering axis (self.verticalOffset) driven
--- by the same joystick's Y component, layered on top of the still-
--- automatic altitude/fuel economy (game/expedition.lua) so a player can
--- dodge/collect in any direction around the auto-advancing flight line
--- without changing the fuel/distance economy itself. Slice 2 (은하계 기반
+-- by the same joystick's Y component so a player can dodge/collect in any
+-- direction around the auto-advancing flight line. Slice 2 (은하계 기반
 -- 우주 구조, per user's agreed plan) will replace the automatic altitude
 -- line with real free-roam position entirely.
 local verticalOffsetLimit = 90
@@ -77,11 +75,7 @@ M.returnControls = returnControls
 -- The settlement panel's summary-card font/spacing was shrunk to free the
 -- extra 10px of vertical room this needed. See game/self_test.lua for the
 -- device-scale check.
--- Added the SAMPLE YIELD upgrade as a fifth touch target alongside
--- fuel/hull/ship/relaunch. A straight 5-way vertical split of the same
--- 140-320 canvas range would only give 36px/row -- under the 44pt
--- accessibility minimum this table was previously fixed to meet (see
--- game/self_test.lua's canvasPixelsToPoints check). Instead YIELD and SHIP
+-- YIELD and SHIP
 -- share one 44px-tall row, split left/right at x=90 (each half is 90
 -- canvas px wide, far past the 44pt accessibility minimum on the width
 -- axis too), keeping all four rows at the full 44 canvas px band height.
@@ -91,22 +85,21 @@ M.returnControls = returnControls
 -- instead of adding a fifth 36px-tall row that would fall back under the
 -- 44pt accessibility minimum.
 local settlementTouchRows = {
-    { key = "fuel", top = 144, bottom = 188 },
     {
-        top = 188, bottom = 232,
+        top = 144, bottom = 188,
         columns = {
             { key = "hull", left = 0, right = 90 },
             { key = "steering", left = 90, right = 180 },
         },
     },
     {
-        top = 232, bottom = 276,
+        top = 188, bottom = 232,
         columns = {
             { key = "yield", left = 0, right = 90 },
             { key = "ship", left = 90, right = 180 },
         },
     },
-    { key = "relaunch", top = 276, bottom = 320 },
+    { key = "relaunch", top = 232, bottom = 320 },
 }
 M.settlementTouchRows = settlementTouchRows
 
@@ -173,7 +166,7 @@ M.launchLoadoutRowStep = 10
 -- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
 -- panel caption itself was flagged for removal during the "remove
 -- unnecessary text" review -- the card's own contents (hull/upgrades/
--- forecast/steering/odds numbers) are self-explanatory once shown inside
+-- steering/odds numbers) are self-explanatory once shown inside
 -- an obviously bordered box directly under the Earth disc, so the extra
 -- caption line was pure redundant text eating a row of vertical space.
 -- Kept as a named flag (rather than deleting the printf outright) so a
@@ -304,13 +297,8 @@ function M.drawCenteredIconText(iconPointsFn, iconSize, iconGap, text, x, y, w)
 end
 
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
--- the user misread the DIST/CASH line as "altitude requires fuel to
--- increase" because the fuel/status line sat immediately below it. Fuel is
--- not a flight constraint (game/expedition.lua M.update ticks altitude by
--- climbSpeed unconditionally; see "Fuel is no longer a flight constraint").
--- hud_primary is relabeled ALT->DIST ("고도"->"거리") below, and this extra
--- gap is inserted between the DIST/CASH line and the fuel/status line
--- during ascending/returning so the two numbers read as visually unrelated.
+-- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
+-- the primary distance/cash row visually separate from secondary status.
 M.hudPrimaryStatusGap = 6
 
 -- docs/feedback/INBOX.md UI/HUD item 5: the small C%/P%/S%/AVG$ slot-odds
@@ -491,7 +479,7 @@ M.rollupAmount = rollupAmount
 local slotReelStagger = 0.15
 local slotSpinDuration = slotReelStagger * 3
 
--- EARTH SHOP action/status two-column layout for the fuel/hull/steering/
+-- EARTH SHOP action/status two-column layout for the hull/steering/
 -- yield/ship rows. Measured with a real LÖVE font probe
 -- (GAME_FONTPROBE=1 love .) against the small scene-cached font
 -- (love.graphics.newFont(8)): the widest action string
@@ -527,7 +515,7 @@ M.shopStatusColumnW = shopStatusColumnW
 -- half of the shared row, so a row's left half always shows the key whose
 -- touch column is settlementTouchRows[n].columns[1] (left=0,right=90) and
 -- the right half always shows columns[2] (left=90,right=180). The existing
--- full-width preview/forecast lines below each shared row are left
+-- full-width preview lines below each shared row are left
 -- untouched (they are advisory text, not the tap target itself, and were
 -- already verified not to overlap).
 local shopColumnLeftX, shopColumnLeftW = 16, 68
@@ -770,10 +758,6 @@ function M:hudLines()
     }
 end
 
-local function launchForecastLine(run, maxFuel)
-    local forecastAltitude, forecastSlots = expedition.launchForecast(run, maxFuel)
-    return i18n.t("forecast_line", math.floor(forecastAltitude), forecastSlots)
-end
 
 function M:loadoutLines()
     local run = self.expedition
@@ -792,18 +776,12 @@ function M:loadoutLines()
         shipLabel = string.upper(run.selectedShipId),
         stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line",
-            run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
-        forecast = launchForecastLine(run),
+            run.durabilityUpgradeLevel),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
         odds = self:slotOddsLine(),
     }
 end
 
-function M:summaryFuelBonusLine()
-    local bonus = self.expedition.bankedFuelBonus or 0
-    if bonus <= 0 then return nil end
-    return i18n.t("fuel_bonus_line", bonus)
-end
 
 local function purchaseStatus(money, cost)
     if money >= cost then return i18n.t("purchase_left", money - cost), true end
@@ -857,14 +835,11 @@ function M:shopLoadoutLines()
         shipStatus = i18n.t("owned_label")
         previewShipId = "scout"
     end
-    local previewFuel = run.baseFuel + run.fuelUpgradeLevel * run.fuelUpgradeAmount
     local previewDurability = run.baseDurability
         + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
     if previewShipId == "scout" then
-        previewFuel = previewFuel + run.scoutFuelBonus
         previewDurability = previewDurability + run.scoutDurabilityBonus
     end
-    local fuelStatus, fuelAffordable = purchaseStatus(run.money, run.fuelUpgradeCost)
     local hullStatus, hullAffordable = purchaseStatus(run.money, run.durabilityUpgradeCost)
     local yieldStatus, yieldAffordable = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
     local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
@@ -872,8 +847,7 @@ function M:shopLoadoutLines()
         ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
         stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line",
-            run.fuelUpgradeLevel, run.durabilityUpgradeLevel),
-        forecast = launchForecastLine(run),
+            run.durabilityUpgradeLevel),
         scoutTradeoff = self.scoutTradeoffLines(run),
         shipAction = shipAction,
         shipActionCompact = shipActionCompact,
@@ -883,12 +857,6 @@ function M:shopLoadoutLines()
             string.upper(previewShipId), previewDurability),
         shipPreviewCompact = i18n.t("ship_preview_compact",
             string.upper(previewShipId), previewDurability),
-        shipPreviewForecast = launchForecastLine(run, previewFuel),
-        fuelAction = i18n.t("fuel_action_line",
-            run.fuelUpgradeLevel, run.fuelUpgradeLevel + 1, run.fuelUpgradeCost),
-        fuelPreviewForecast = launchForecastLine(run, run.maxFuel + run.fuelUpgradeAmount),
-        fuelStatus = fuelStatus,
-        fuelAffordable = fuelAffordable,
         hullAction = i18n.t("hull_action_line",
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
@@ -899,7 +867,6 @@ function M:shopLoadoutLines()
             run.maxDurability + run.durabilityUpgradeAmount),
         hullPreviewCompact = i18n.t("hull_preview_compact",
             run.maxDurability + run.durabilityUpgradeAmount),
-        hullPreviewForecast = launchForecastLine(run),
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
         yieldAction = i18n.t("yield_action_line",
@@ -956,7 +923,6 @@ function M:beginSlotSpin()
         symbols = self.expedition.lastSlotSymbols,
         reward = self.expedition.lastSlotReward,
         repair = self.expedition.lastSlotRepair,
-        fuelBonus = self.expedition.lastSlotFuelBonus,
         sampleBonus = self.expedition.lastSlotSampleBonus,
         opportunitiesAfter = self.expedition.slotOpportunities,
     }
@@ -1115,12 +1081,7 @@ function M:update(dt)
                     self.slotSpin.reward,
                     self.slotSpin.repair,
                     self.slotSpin.opportunitiesAfter)
-            elseif self.slotSpin.fuelBonus and self.slotSpin.fuelBonus > 0 then
-                self.message = i18n.t("slot_result_fuel",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.fuelBonus,
-                    self.slotSpin.opportunitiesAfter)
+
             elseif self.slotSpin.sampleBonus and self.slotSpin.sampleBonus > 0 then
                 self.message = i18n.t("slot_result_sample",
                     table.concat(self.slotSpin.symbols, " "),
@@ -1161,9 +1122,6 @@ function M:update(dt)
         local steeringHoriz = (steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0)
         local steeringVert = (steering.downActive and 1 or 0) - (steering.upActive and 1 or 0)
         local thrusting = joyMagnitude > 0 or steeringHoriz ~= 0 or steeringVert ~= 0
-        if thrusting then
-            expedition.burnManeuverFuel(self.expedition, extraDistance)
-        end
         if joyMagnitude > 0 then
             local targetAngle = M.headingFromStick(joyDx, joyDy)
             local delta = shortestAngleDelta(self.ship.angle, targetAngle)
@@ -1183,7 +1141,6 @@ function M:update(dt)
         if thrusting then
             local altBefore = self.expedition.altitude
             expedition.update(self.expedition, dt)
-            self.ship.fuel = self.expedition.fuel
             if previousPhase == "ascending" then
                 local step = self.expedition.altitude - altBefore
                 if step < 0 then step = 0 end
@@ -1195,13 +1152,11 @@ function M:update(dt)
                 self.ship.vy = (self.ship.y - yBeforeThrust) / dt
             end
         elseif previousPhase == "ascending" then
-            -- Coast on stored velocity. No stick/keys → no fuel burn.
+            -- Coast on stored velocity.
             self.ship.x = self.ship.x + (self.ship.vx or 0) * dt
             self.ship.y = self.ship.y + (self.ship.vy or 0) * dt
-            self.ship.fuel = self.expedition.fuel
         else
             expedition.update(self.expedition, dt)
-            self.ship.fuel = self.expedition.fuel
         end
         if self.expedition.phase == "returning" then
             self.ship.y = -self.expedition.altitude + self.verticalOffset
@@ -1340,24 +1295,13 @@ function M:update(dt)
 end
 
 function M:keypressed(key)
-    if self.expedition.phase == "settlement" and (key == "f" or key == "down" or key == "s") then
-        if expedition.buyFuelUpgrade(self.expedition) then
-            self.message = i18n.t("fuel_upgraded_message",
-                self.expedition.fuelUpgradeLevel, self.expedition.maxFuel,
-                launchForecastLine(self.expedition), self.expedition.money)
-        else
-            self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.fuelUpgradeCost, i18n.t("item_fuel_upgrade"))
-        end
-        return
-    end
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
         if expedition.buyDurabilityUpgrade(self.expedition) then
             self.message = i18n.t(
                 "hull_upgraded_message",
                 self.expedition.durabilityUpgradeLevel,
                 self.expedition.maxDurability,
-                launchForecastLine(self.expedition), self.expedition.money)
+                self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
                 self.expedition.durabilityUpgradeCost, i18n.t("item_hull_upgrade"))
@@ -1397,7 +1341,7 @@ function M:keypressed(key)
                 self.message = i18n.t(
                     "scout_purchased_message",
                     self.expedition.maxDurability,
-                    launchForecastLine(self.expedition), self.expedition.money)
+                    self.expedition.money)
             else
                 self.message = purchaseShortfallMessage(self.expedition.money,
                     self.expedition.scoutShipCost, i18n.t("item_scout"))
@@ -1406,8 +1350,7 @@ function M:keypressed(key)
             local shipId = self.expedition.selectedShipId == "scout" and "starter" or "scout"
             expedition.selectShip(self.expedition, shipId)
             self.message = i18n.t("ship_selected_message",
-                string.upper(shipId), self.expedition.maxDurability,
-                launchForecastLine(self.expedition))
+                string.upper(shipId), self.expedition.maxDurability)
         end
         return
     end
@@ -1420,7 +1363,6 @@ function M:keypressed(key)
                 if relaunching then
                     self.ship.x = 0
                     self.ship.y = 0
-                    self.ship.fuel = self.expedition.fuel
                     self.verticalOffset = 0
                     self.discovered = {}
                     self.collided = {}
@@ -1459,9 +1401,7 @@ function M:touchpressed(id, x, y)
                         end
                     end
                 end
-                if key == "fuel" then
-                    self:keypressed("f")
-                elseif key == "hull" then
+                if key == "hull" then
                     self:keypressed("h")
                 elseif key == "steering" then
                     self:keypressed("g")
@@ -1586,7 +1526,7 @@ function M:drawMinimap()
     if self.expedition.phase == "returning" then
         -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
         -- readout used to be a full-width standalone line during the
-        -- returning phase, competing for attention with the DIST/CASH/fuel
+        -- returning phase, competing for attention with the primary HUD
         -- HUD text. It is small supplementary context (expected slot value),
         -- not primary flight info, so it is now drawn as a small right-
         -- aligned line directly above the minimap chart instead.
@@ -1858,9 +1798,7 @@ function M:draw()
     end
     if hud.samples then
         -- Extra vertical gap (M.hudPrimaryStatusGap) below the samples line
-        -- pushes the fuel/hull/slot status line away from the DIST/CASH
-        -- line so the two rows read as visually unrelated numbers rather
-        -- than "fuel gauge gates distance" (docs/feedback/INBOX.md item 2).
+        -- separates the secondary hull/slot status from DIST/CASH.
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.print(hud.samples, 5, 16 + galaxyShift)
         drawStatusWithShield(30 + M.hudPrimaryStatusGap + galaxyShift)
@@ -1923,9 +1861,6 @@ function M:draw()
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(loadout.upgrades, 16, row, viewport.width - 32, "center")
         row = row + rowStep
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(loadout.forecast, 16, row, viewport.width - 32, "center")
-        row = row + rowStep
         love.graphics.setColor(0.6, 1, 0.85)
         M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, loadout.steering, 16, row, viewport.width - 32)
         row = row + rowStep
@@ -1955,24 +1890,14 @@ function M:draw()
         end
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf(i18n.t("earth_shop_title"), 16, 74, viewport.width - 32, "center")
-        local fuelBonusLine = self:summaryFuelBonusLine()
         -- The previously-verified capture (build/spaceship-runtime-preview-
         -- settlement-newbest-*.png) fit exactly one extra summary line
         -- (NEW BEST!) at y=127 with shop rows starting unshifted at
         -- row=140 and the last shop line (TAP: RELAUNCH) landing just
-        -- above the y=307 DEV PLACEHOLDER footer. A second real capture
-        -- of both NEW BEST! and the new NEXT LAUNCH FUEL bonus stacked as
-        -- separate lines pushed TAP: RELAUNCH into the footer (found and
-        -- reverted in this slice; see docs/STATUS.md). To keep the
-        -- verified-safe unshifted baseline, when both are present they
-        -- share a single combined line instead of adding a second row.
+        -- above the y=307 DEV PLACEHOLDER footer.
         local summaryExtraLine
-        if self.expedition.lastNewBest and fuelBonusLine then
-            summaryExtraLine = i18n.t("newbest_fuel_combined", self.expedition.bankedFuelBonus)
-        elseif self.expedition.lastNewBest then
+        if self.expedition.lastNewBest then
             summaryExtraLine = i18n.t("newbest_label")
-        elseif fuelBonusLine then
-            summaryExtraLine = fuelBonusLine
         end
         love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
         love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
@@ -2001,17 +1926,8 @@ function M:draw()
         -- y=140+19*8=292, comfortably above the footer again.
         local rowStep = 8
         row = 156
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.fuelAction, actionX, row, actionW, "left")
-        love.graphics.setColor(nextLaunch.fuelAffordable and 0.45 or 1,
-            nextLaunch.fuelAffordable and 1 or 0.4, nextLaunch.fuelAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.fuelStatus, statusX, row, statusW, "right")
-        row = row + rowStep
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.fuelPreviewForecast, fullX, row, fullW, "center")
-        row = row + rowStep
         -- HULL and STEERING
-        row = 180
+        -- HULL and STEERING
         rowStep = 8
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
@@ -2030,9 +1946,6 @@ function M:draw()
         love.graphics.printf(nextLaunch.hullPreviewCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW)
         row = row + rowStep
-
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.hullPreviewForecast, fullX, row, fullW, "center")
 
         -- YIELD and SHIP
         row = 216
@@ -2061,9 +1974,6 @@ function M:draw()
         love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
         row = row + rowStep
         
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.shipPreviewForecast, fullX, row, fullW, "center")
-        
         row = 264
         rowStep = 8
         love.graphics.setColor(1, 0.8, 0.3)
@@ -2073,9 +1983,6 @@ function M:draw()
         love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.45, 1, 0.6)
-        love.graphics.printf(nextLaunch.forecast, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.6, 0.8, 1)
         love.graphics.printf(nextLaunch.odds, fullX, row, fullW, "center")
@@ -2144,9 +2051,7 @@ function M:draw()
         -- 155px for "WIN +$40  PENDING $40" via GAME_FONTPROBE) inside a
         -- 140px-wide printf box, which auto-wrapped the widest strings to
         -- a second line and collided with the fixed y=231 WIN row below
-        -- (confirmed via a real LÖVE runtime capture,
-        -- GAME_CAPTURE_PHASE=returning-fuelbonus). The same small font
-        -- (8px, measured max 108px symbol row / 103px WIN row) already
+        -- The same small font (8px, measured max 108px symbol row / 103px WIN row) already
         -- used for the ODDS line above fits both rows without wrapping.
         if self.slotSpin then
             love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
@@ -2165,10 +2070,6 @@ function M:draw()
                 love.graphics.printf(i18n.t("win_repair_line",
                     self.expedition.lastSlotReward,
                     self.expedition.lastSlotRepair), 20, 231, 140, "center")
-            elseif self.expedition.lastSlotFuelBonus and self.expedition.lastSlotFuelBonus > 0 then
-                love.graphics.printf(i18n.t("win_fuel_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotFuelBonus), 20, 231, 140, "center")
             elseif self.expedition.lastSlotSampleBonus and self.expedition.lastSlotSampleBonus > 0 then
                 love.graphics.printf(i18n.t("win_sample_line",
                     self.expedition.lastSlotReward,

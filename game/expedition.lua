@@ -88,34 +88,13 @@ local function slotRepairVoucher(symbols)
 end
 M.slotRepairVoucher = slotRepairVoucher
 
--- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "다음 원정 연료 보너스"
--- (next-expedition fuel bonus) as one of the reward kinds a slot spin can
--- grant, alongside money and repair vouchers. A PLANET-PLANET-PLANET
--- triple (40% per reel, 6.4% overall -- rarer than a mismatched-symbol
--- payout but far more common than the STAR jackpot) grants a fuel bonus.
--- Unlike the repair voucher, this bonus cannot help the current, already
--- fuel-empty expedition; it is banked at safe settlement and applied to
--- the *next* launch's starting fuel instead.
-local slotFuelBonusAmount = 15
-M.slotFuelBonusAmount = slotFuelBonusAmount
-
-local function slotFuelBonus(symbols)
-    if symbols[1] == "PLANET" and symbols[2] == "PLANET" and symbols[3] == "PLANET" then
-        return slotFuelBonusAmount
-    end
-    return 0
-end
-M.slotFuelBonus = slotFuelBonus
-
 -- docs/GAME_DESIGN.md's 귀환 슬롯 section also lists "표본 보너스" (sample
 -- bonus) as one of the four slot reward kinds, alongside money multiples,
--- repair vouchers and the fuel bonus above. It was the only one of the four
+-- repair vouchers. It was the only one of the four
 -- still unimplemented. A COMET-COMET-COMET triple (50% per reel, 12.5%
 -- overall -- the most common triple, since COMET is the common filler
 -- symbol) grants a flat bonus added directly to the current expedition's
--- unbanked sample value. Unlike the fuel bonus (which cannot help the
--- already fuel-empty current expedition and must be banked for next
--- launch), a sample bonus can still help this expedition: it stacks into
+-- unbanked sample value. It stacks into
 -- run.pendingSampleValue immediately, same as a collected sample, and is
 -- confirmed at settlement or forfeited at destruction like any other
 -- pending sample value.
@@ -149,13 +128,10 @@ end
 M.equippedHullDurabilityBonus = equippedHullDurabilityBonus
 
 local function refreshShipStats(run)
-    local fuelBonus = 0
     local durabilityBonus = 0
     if run.selectedShipId == "scout" then
-        fuelBonus = run.scoutFuelBonus
         durabilityBonus = run.scoutDurabilityBonus
     end
-    run.maxFuel = run.baseFuel + fuelBonus + run.fuelUpgradeLevel * run.fuelUpgradeAmount
     run.maxDurability = run.baseDurability + durabilityBonus
         + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
         + equippedHullDurabilityBonus(run)
@@ -166,37 +142,7 @@ local function slotCount(distance, slotDistance)
     return math.ceil(distance / slotDistance)
 end
 
--- Item 10(b)/14(G) wiring: engine-part fuelEfficiency effects (already a
--- pure conversion in gear.effectiveFuelBurnRate) reduce the burn rate used
--- for this forecast, same "최소한의 로더 호출" exception used for the
--- climbSpeed synergy wiring above. No equipped engine parts (or none with
--- fuelEfficiency) leaves run.fuelBurnRate unchanged.
-function M.effectiveFuelBurnRate(run)
-    return gearModule.effectiveFuelBurnRate(run.fuelBurnRate, run.equippedEngineParts or {})
-end
-
-function M.launchForecast(run, maxFuel)
-    local forecastFuel = maxFuel or run.maxFuel
-    local burnRate = M.effectiveFuelBurnRate(run)
-    local effectiveCS = M.effectiveClimbSpeed(run)
-    if forecastFuel <= 0 or burnRate <= 0 or effectiveCS <= 0 then return 0, 0 end
-    local altitude = forecastFuel / burnRate * effectiveCS
-    return altitude, slotCount(altitude, run.slotDistance)
-end
-
--- Fuel is no longer a flight constraint. These stay as no-ops so older
--- call sites (joystick extra-distance burn) compile without draining the
--- tank or forcing a return.
-function M.maneuverFuel(run, extraDistance)
-    return 0
-end
-
-function M.burnManeuverFuel(run, extraDistance)
-    return 0
-end
-
--- Safe return is now an explicit action (tests / future player input),
--- not a fuel-empty side effect.
+-- Safe return is an explicit action (tests / future player input).
 function M.beginReturn(run)
     if not run or run.phase ~= "ascending" then return false end
     run.phase = "returning"
@@ -229,18 +175,16 @@ local function settle(run)
     run.lastSlotSpinsCount = run.slotSpins
     run.lastAltitude = run.maxAltitude
     run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
-    run.bankedFuelBonus = run.pendingFuelBonus
-    run.pendingFuelBonus = 0
     run.pendingSampleValue = 0
     run.pendingSlotReward = 0
     run.sampleCount = 0
     run.slotOpportunities = 0
     run.phase = "settlement"
 end
+M.settle = settle
 
 local function destroy(run)
     run.phase = "destroyed"
-    run.fuel = 0
     run.durability = 0
     run.lastLostSampleCount = run.sampleCount
     run.lastLostSampleValue = run.pendingSampleValue
@@ -258,10 +202,7 @@ local function destroy(run)
     run.lastSlotSymbols = nil
     run.lastSlotReward = 0
     run.lastSlotRepair = 0
-    run.lastSlotFuelBonus = 0
     run.lastSlotSampleBonus = 0
-    run.pendingFuelBonus = 0
-    run.bankedFuelBonus = 0
     run.returnDistance = 0
     run.money = 0
     run.lastSettlement = 0
@@ -269,7 +210,6 @@ local function destroy(run)
     run.lastSlotSettlement = 0
     run.lastSampleCount = 0
     run.lastSlotSpinsCount = 0
-    run.fuelUpgradeLevel = 0
     run.durabilityUpgradeLevel = 0
     run.sampleYieldUpgradeLevel = 0
     run.steeringUpgradeLevel = 0
@@ -291,7 +231,6 @@ end
 
 function M.new(options)
     options = options or {}
-    local baseFuel = options.fuel or 100
     local baseDurability = options.durability or 3
     local run = {
         phase = "launch",
@@ -303,15 +242,9 @@ function M.new(options)
         launchBestAltitude = options.bestAltitude or 0,
         lastNewBest = false,
         lastLostNewBest = false,
-        fuel = baseFuel,
-        baseFuel = baseFuel,
-        maxFuel = baseFuel,
         durability = baseDurability,
         baseDurability = baseDurability,
         maxDurability = baseDurability,
-        fuelUpgradeAmount = options.fuelUpgradeAmount or 20,
-        fuelUpgradeCost = options.fuelUpgradeCost or 50,
-        fuelUpgradeLevel = 0,
         durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
         durabilityUpgradeCost = options.durabilityUpgradeCost or 75,
         durabilityUpgradeLevel = 0,
@@ -323,11 +256,10 @@ function M.new(options)
         steeringUpgradeCost = options.steeringUpgradeCost or 65,
         steeringUpgradeLevel = 0,
         scoutShipCost = options.scoutShipCost or 125,
-        scoutFuelBonus = options.scoutFuelBonus or 40,
+        scoutClimbSpeedBonus = options.scoutClimbSpeedBonus or 10,
         scoutDurabilityBonus = options.scoutDurabilityBonus or -1,
         ownedShips = { starter = true },
         selectedShipId = "starter",
-        fuelBurnRate = options.fuelBurnRate or 5,
         climbSpeed = options.climbSpeed or 30,
         baseClimbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
@@ -339,10 +271,7 @@ function M.new(options)
         lastSlotSymbols = nil,
         lastSlotReward = 0,
         lastSlotRepair = 0,
-        lastSlotFuelBonus = 0,
         lastSlotSampleBonus = 0,
-        pendingFuelBonus = 0,
-        bankedFuelBonus = 0,
         sampleCount = 0,
         pendingSampleValue = 0,
         sampleStreakCount = 0,
@@ -472,7 +401,7 @@ end
 -- an equipped card from its slot AND refunds money for it in one atomic
 -- action (gear.sellValue's rarity/edition-scaled refund), restricted to
 -- the settlement/shop phase like every other money-moving action in this
--- module (M.buyFuelUpgrade etc.) so it can't be spammed mid-flight for a
+-- module (M.buyDurabilityUpgrade etc.) so it can't be spammed mid-flight for a
 -- free money glitch. Returns true, nil on success or false, error-message
 -- on failure (wrong phase, unknown id) -- never partially applies (no
 -- money change without a successful unequip, and vice versa).
@@ -508,7 +437,7 @@ end
 -- occupy a hull/engine slot. Same settlement-only / no-partial-apply
 -- contract as sellGear and the existing buy*Upgrade helpers. Item 14(F)
 -- shopDiscount applies via M.shopPrice so a trade-license loadout actually
--- cheapens the card that is the shop's main product, not only fuel/hull
+-- cheapens the card that is the shop's main product, not only hull
 -- upgrades. Item 7's Earth-shop rule (galaxyExclusive cards are never
 -- sold on Earth) is enforced here because this IS that Earth-shop action.
 -- Returns true, price on success or false, error-message on failure.
@@ -585,8 +514,6 @@ function M.launch(run)
     if run.phase ~= "launch" then
         run.altitude = 0
         run.maxAltitude = 0
-        run.fuel = run.maxFuel + (run.bankedFuelBonus or 0)
-        run.bankedFuelBonus = 0
         run.durability = run.maxDurability
         run.insuranceUsed = false
         run.rerollsUsed = 0
@@ -597,9 +524,7 @@ function M.launch(run)
         run.lastSlotSymbols = nil
         run.lastSlotReward = 0
         run.lastSlotRepair = 0
-        run.lastSlotFuelBonus = 0
         run.lastSlotSampleBonus = 0
-        run.pendingFuelBonus = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
         run.sampleStreakCount = 0
@@ -646,15 +571,6 @@ function M.shopPrice(run, basePrice)
     return gearModule.effectiveShopPrice(basePrice, parts)
 end
 
-function M.buyFuelUpgrade(run)
-    local price = M.shopPrice(run, run.fuelUpgradeCost)
-    if run.phase ~= "settlement" or run.money < price then return false end
-    run.money = run.money - price
-    run.fuelUpgradeLevel = run.fuelUpgradeLevel + 1
-    refreshShipStats(run)
-    return true
-end
-
 function M.buyDurabilityUpgrade(run)
     local price = M.shopPrice(run, run.durabilityUpgradeCost)
     if run.phase ~= "settlement" or run.money < price then return false end
@@ -664,8 +580,7 @@ function M.buyDurabilityUpgrade(run)
     return true
 end
 
--- Sample yield is the third meta upgrade requested alongside fuel/hull: it
--- scales the money value of every collected sample (not just fuel/durability
+-- Sample yield scales the money value of every collected sample (not just durability
 -- capacity), giving players a third strategic upgrade axis at EARTH SHOP.
 function M.sampleYieldMultiplier(run)
     return 1 + run.sampleYieldUpgradeLevel * run.sampleYieldUpgradeAmount
@@ -680,8 +595,7 @@ function M.buySampleYieldUpgrade(run)
 end
 
 -- Steering is the fourth meta upgrade axis named in
--- docs/GAME_DESIGN.md's meta loop ("연료·내구도·조종·표본 수익을 강화":
--- fuel/hull/steering/sample-yield). It scales the ship's left/right
+-- The steering upgrade scales the ship's left/right
 -- steering speed applied while ascending/returning (game/scenes/play.lua),
 -- giving players a way to spend money on better planet-collision avoidance
 -- rather than capacity or money yield.
@@ -728,7 +642,7 @@ end
 function M.shipTradeoff(run, shipId)
     if shipId == "scout" then
         return {
-            gains = { { label = "FUEL", value = string.format("%+d", run.scoutFuelBonus) } },
+            gains = { { label = "SPEED", value = string.format("%+d", run.scoutClimbSpeedBonus) } },
             losses = { { label = "HULL", value = string.format("%+d", run.scoutDurabilityBonus) } },
         }
     end
@@ -768,9 +682,6 @@ function M.useSlot(run)
     local applied = math.min(voucher, run.maxDurability - run.durability)
     run.durability = run.durability + applied
     run.lastSlotRepair = applied
-    local fuelBonus = slotFuelBonus(symbols)
-    run.lastSlotFuelBonus = fuelBonus
-    run.pendingFuelBonus = (run.pendingFuelBonus or 0) + fuelBonus
     local sampleBonus = slotSampleBonus(symbols)
     run.lastSlotSampleBonus = sampleBonus
     run.pendingSampleValue = run.pendingSampleValue + sampleBonus
@@ -917,7 +828,8 @@ function M.effectiveClimbSpeed(run)
     local engineParts = run.equippedEngineParts or {}
     local engineClimbRaw = gearModule.aggregateEffects(engineParts).climbSpeed or 0
     local engineClimb = engineClimbRaw * gearModule.tagSynergyMultiplier(engineParts)
-    return run.climbSpeed + (gearTotals.climbSpeed or 0) + engineClimb
+    local shipBonus = run.selectedShipId == "scout" and run.scoutClimbSpeedBonus or 0
+    return run.climbSpeed + shipBonus + (gearTotals.climbSpeed or 0) + engineClimb
 end
 
 -- Item 9/14 economy-stat gap audit: gear.equippedTotals already combines a
