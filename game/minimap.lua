@@ -82,7 +82,12 @@ end
 -- same shape (pure function of gx, gy only).
 function M.spiralArmCount(galaxy)
     if not galaxy then return 2 end
-    return 2 + math.floor(spiralHash(galaxy.gx * 92821 + galaxy.gy * 68917 + 7001) * 4)
+    local r = galaxy.radius
+    if r < 1000 then return 2
+    elseif r < 1400 then return 3
+    elseif r < 1800 then return 4
+    else return 5
+    end
 end
 
 function M.spiralRotation(galaxy)

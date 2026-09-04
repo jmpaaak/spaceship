@@ -132,6 +132,14 @@
 - 캡처 경로: `docs/captures/play-density-check-2026-09-05.png`
 - `make verify` GREEN.
 
+## 2026-09-05 미니맵 나선 팔 수 — 은하 반지름 기반 결정
+
+- `game/minimap.lua` `M.spiralArmCount(galaxy)`: 순수 랜덤(hash) 방식 → galaxy.radius 구간 기반으로 변경.
+  - r < 1000 → 2, r < 1400 → 3, r < 1800 → 4, else → 5.
+  - world.lua 기준 은하 반지름 범위 828~2120px와 정렬됨.
+  - `M.spiralRotation()` (hash 기반) 및 팔 간격 계산 unchanged.
+- `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK x3 + LOVE_BUNDLE_OK + ASSET_MANIFEST_OK).
+
 ## Next Slice
 
 - INBOX 2026-09-05 sub-item (3): 중력장(표본 수집 반경) 확대 — `expedition.lua`의 채집 반경을 키워 난이도 완화.
