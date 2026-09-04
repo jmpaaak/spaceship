@@ -340,6 +340,17 @@ function love.load()
             void_epic = true,
             azure_rare = true,
         }
+    elseif capturePhase == "play" then
+        -- Capture for verifying star/planet density at 720×1280 canvas
+        -- (docs/feedback/INBOX.md 2026-09-05 모바일 해상도 최적화 item 1).
+        -- Places the ship at altitude 300 (mid-range) so several sectors
+        -- of background and foreground stars plus nearby planets are
+        -- visible in a single frame.
+        local scene = scenes.current
+        require("game.expedition").launch(scene.expedition)
+        scene.expedition.altitude = 300
+        scene.ship.y = -300
+        scene.ship.x = 0
     end
 end
 

@@ -1,6 +1,6 @@
 function love.conf(t)
     local headless = os.getenv("GAME_HEADLESS") == "1"
-    local scale = math.max(1, math.min(4, math.floor(tonumber(os.getenv("GAME_SCALE")) or 3)))
+    local scale = math.max(1, math.min(4, math.floor(tonumber(os.getenv("GAME_SCALE")) or 1)))
 
     t.identity = "spaceship"
     t.version = "11.5"
