@@ -305,12 +305,15 @@ end
 -- the primary distance/cash row visually separate from secondary status.
 M.hudPrimaryStatusGap = 6
 
--- docs/feedback/INBOX.md UI/HUD item 5: the small C%/P%/S%/AVG$ slot-odds
--- line drawn above the minimap during the returning phase needs its own
--- reserved vertical space in the HUD box; without it the line collided
--- with the RETURN %%/s-left text right above it (confirmed via a real
--- LÖVE runtime capture, GAME_CAPTURE_PHASE=returning-odds).
-M.hudOddsLineHeight = 10
+-- docs/feedback/INBOX.md UI/HUD item 5: the returning-phase slot-odds line
+-- (C%/P%/S%/AVG$ above the minimap) was removed when item-15(a) abolished
+-- in-flight slots. The hudOddsLineHeight that used to reserve 10px for it is
+-- no longer needed; the returning HUD band height is now 70 + hudPrimaryStatusGap
+-- (same as the ascending phase with returnProgress showing).
+-- Constant kept as a zero-read alias for any call site that referenced it,
+-- so old assertions that check "hudOddsLineHeight > 0" will need updating to
+-- reflect item-15(a). See self_test.lua item-15(a) follow-up assertion.
+M.hudOddsLineHeight = 0
 
 -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
 -- footer text is a permanent dev-only disclaimer (kept until real AetherAI
@@ -329,7 +332,7 @@ function M.hudHeight(phase, hud, galaxyShift)
         return M.launchHudHeight + galaxyShift
     end
     if hud.returnProgress then
-        return 70 + M.hudPrimaryStatusGap + M.hudOddsLineHeight + galaxyShift
+        return 70 + M.hudPrimaryStatusGap + galaxyShift
     end
     if hud.samples then
         return 46 + M.hudPrimaryStatusGap + galaxyShift
@@ -1581,12 +1584,9 @@ function M:drawMinimap()
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
     if self.expedition.phase == "returning" then
-        -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
-        -- readout used to be a full-width standalone line during the
-        -- returning phase, competing for attention with the primary HUD
-        -- HUD text. It is small supplementary context (expected slot value),
-        -- not primary flight info, so it is now drawn as a small right-
-        -- aligned line directly above the minimap chart instead.
+        -- Item 15(a): in-flight slot machine removed; the slot-odds line
+        -- (C%/P%/S%/AVG$ readout above the minimap) no longer exists.
+        -- The 10px hudOddsLineHeight reservation was zeroed out accordingly.
     end
     if view.checkpointBeyond then
         -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct

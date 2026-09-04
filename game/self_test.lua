@@ -4689,17 +4689,14 @@ function M.run()
     assert(returningHud.samples == "SAMPLES 03  AT RISK $95")
     assert(returningHud.earth == "EARTH IN 725")
     assert(returningHud.returnProgress == "RETURN 28%  17s LEFT")
-    -- docs/feedback/INBOX.md UI/HUD item 5: the small slot-odds line drawn
-    -- above the minimap during the returning phase needs its own reserved
-    -- vertical space in the HUD box (PlayScene.hudOddsLineHeight); without
-    -- it, that line visually collided with the RETURN %%/s-left text right
-    -- above it (confirmed via a real LÖVE runtime capture,
-    -- GAME_CAPTURE_PHASE=returning-odds).
-    assert(PlayScene.hudOddsLineHeight and PlayScene.hudOddsLineHeight > 0,
-        "PlayScene.hudOddsLineHeight must exist and reserve room for the slot-odds line")
+    -- Item 15(a) follow-up: the returning-phase slot-odds line
+    -- (C%/P%/S%/AVG$ above the minimap) was removed when item-15 abolished
+    -- in-flight slots. The hudOddsLineHeight constant that reserved 10px for
+    -- it is now dead space. The returning HUD height must no longer include it.
     assert(PlayScene.hudHeight("returning", returningHud, 0)
-        == 70 + PlayScene.hudPrimaryStatusGap + PlayScene.hudOddsLineHeight,
-        "returning HUD band height must grow by hudOddsLineHeight to fit the slot-odds line above the minimap")
+        == 70 + PlayScene.hudPrimaryStatusGap,
+        "item-15(a) follow-up: returning HUD height must not reserve dead odds-line space after in-flight slots were abolished: "
+        .. tostring(PlayScene.hudHeight("returning", returningHud, 0)))
 
     -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
     -- footer is a permanent dev-only disclaimer, not gameplay info, so it
