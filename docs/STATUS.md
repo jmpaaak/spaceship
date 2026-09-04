@@ -1,5 +1,18 @@
 # STATUS
 
+2026-09-05 — INBOX ComfyUI regen group (3) planets.
+
+- Regenerated `assets/planet/planet_generic.png`, `planet_hub.png`, `planet_shop.png` via remote ComfyUI HTTP API.
+- Replaced the previous RGB images with 64x64 transparent RGBA sprites (black background removed via custom pillow script mask).
+- Updated `docs/assets/MANIFEST.json` and appended to `docs/GENERATED_ASSET_LOG.md`.
+- Group 3 is now complete in `INBOX.md`.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`).
+
+## Next Slice
+
+- INBOX ComfyUI regen group (4): HUD icons — `assets/effects/hud_*.png` etc (9 images). 32x32 transparent, solid color symbol, no full bleed.
+
+
 2026-09-05 — INBOX ComfyUI regen group (2) earth.
 
 - Regenerated `assets/earth/earth_generic.png` via remote ComfyUI (`http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, prompt_id `180c63ef-ff98-452c-837c-a5b5cc380702`, seed `20260905101`, 512×512 then nearest-neighbor fit).
@@ -8,9 +21,6 @@
 - Updated `docs/assets/MANIFEST.json` provenance (sha256 `6d414a91d459e868a355d1ee4a930fbec70bd6a1187c662dab013a87ffb77b93`) and appended `docs/GENERATED_ASSET_LOG.md`.
 - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:172`, `ASSET_MANIFEST_OK`).
 
-## Next Slice
-
-- INBOX ComfyUI regen group (3) planets: `assets/planet/planet_generic.png`, `planet_hub.png`, `planet_shop.png`. Each 64×64 transparent small planet sphere. Up to 3 in one cycle.
 
 2026-09-05 — INBOX ComfyUI regen item (0): stop `drawPanelSprite` stretching 64×64 panels to 720px.
 
@@ -124,4 +134,3 @@
 ## Next Slice (group 8)
 
 - Remaining un-drawn assets: `hud_panel.png`, `shop_panel.png`, `shop_touch_row.png`, `shop_title.png`, `shop_hull_action.png`, `shop_steering_action.png`, `shop_yield_action.png`, `shop_ship_action.png`, `shop_stats.png`, `shop_hull_status.png`, `shop_steering_status.png`, `shop_yield_status.png`, `shop_ship_status.png`, `shop_hull_preview.png`, `shop_steering_preview.png`, `shop_yield_preview.png`, `shop_ship_preview.png`, `shop_next_ship.png`, `loadout_ship.png`, `destroyed_next_ship.png`, `destroyed_tap_start_over.png` — these are the settlement shop text-icon rows; load, store, wire per-row.
-

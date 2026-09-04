@@ -116,3 +116,6 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-05T00:32:00+0900 | assets/ship/ship_default.png | top-down small silver spaceship, standard basic symmetric shape
 2026-09-05T00:32:00+0900 | assets/ship/ship_scout.png | top-down small silver spaceship, sleek, fast, aerodynamic, swept wings
 2026-09-05T00:44:51+0900 | assets/earth/earth_generic.png | ComfyUI-regenerated 64x64 RGBA Earth sphere (seed 20260905101), transparent padding, blue oceans with continent silhouettes, wired as PlayScene earthImage
+2026-09-05T01:03:00+0900 | assets/planet/planet_generic.png | INBOX group (3): 64x64 transparent generic planet
+2026-09-05T01:03:00+0900 | assets/planet/planet_hub.png | INBOX group (3): 64x64 transparent central hub planet
+2026-09-05T01:03:00+0900 | assets/planet/planet_shop.png | INBOX group (3): 64x64 transparent shop planet
