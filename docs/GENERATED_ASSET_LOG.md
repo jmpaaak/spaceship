@@ -115,3 +115,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-04T06:53:33+0900 | assets/effects/destroyed_meta_reset.png | destroyed-phase meta_reset_line cyclic-arrow HUD icon (64x64, ComfyUI seed 20260904303)
 2026-09-05T00:32:00+0900 | assets/ship/ship_default.png | top-down small silver spaceship, standard basic symmetric shape
 2026-09-05T00:32:00+0900 | assets/ship/ship_scout.png | top-down small silver spaceship, sleek, fast, aerodynamic, swept wings
+2026-09-05T00:44:51+0900 | assets/earth/earth_generic.png | ComfyUI-regenerated 64x64 RGBA Earth sphere (seed 20260905101), transparent padding, blue oceans with continent silhouettes, wired as PlayScene earthImage

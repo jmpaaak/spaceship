@@ -8,7 +8,7 @@
 
   (1) ✅ 완료(2026-09-05) **함선** — `assets/ship/ship_default.png`, `assets/ship/ship_scout.png`. 64×64, **투명 배경**, top-down 작은 은색 우주선 실루엣, 픽셀아트, 본체가 프레임의 ~60%만 차지.
 
-  (2) **지구** — `assets/earth/earth_generic.png`. 64×64 투명 배경, 작은 푸른 지구 구체(대륙 실루엣), 가장자리 여백.
+  (2) ✅ 완료(2026-09-05) **지구** — `assets/earth/earth_generic.png`. 64×64 투명 배경, 작은 푸른 지구 구체(대륙 실루엣), 가장자리 여백.
 
   (3) **행성 3종** — `assets/planet/planet_generic.png` `planet_hub.png` `planet_shop.png`. 각 64×64 투명 배경, 작은 행성 구체. 한 사이클에 3장까지.
 

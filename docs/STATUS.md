@@ -1,5 +1,17 @@
 # STATUS
 
+2026-09-05 — INBOX ComfyUI regen group (2) earth.
+
+- Regenerated `assets/earth/earth_generic.png` via remote ComfyUI (`http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, prompt_id `180c63ef-ff98-452c-837c-a5b5cc380702`, seed `20260905101`, 512×512 then nearest-neighbor fit).
+- Knocked out the generated beige backdrop from the edges, cropped the globe, and centered a 37×38 body on a 64×64 RGBA canvas (~60% footprint, transparent corners).
+- Opaque 1093/4096 with blue ocean / green-brown continent / white cloud pixels; circular fill ~1.02 of the body disc.
+- Updated `docs/assets/MANIFEST.json` provenance (sha256 `6d414a91d459e868a355d1ee4a930fbec70bd6a1187c662dab013a87ffb77b93`) and appended `docs/GENERATED_ASSET_LOG.md`.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:172`, `ASSET_MANIFEST_OK`).
+
+## Next Slice
+
+- INBOX ComfyUI regen group (3) planets: `assets/planet/planet_generic.png`, `planet_hub.png`, `planet_shop.png`. Each 64×64 transparent small planet sphere. Up to 3 in one cycle.
+
 2026-09-05 — INBOX ComfyUI regen item (0): stop `drawPanelSprite` stretching 64×64 panels to 720px.
 
 - Launch was a full-bleed red/cyan blur because `drawPanelSprite` did `love.graphics.draw(image, x, y, 0, w/iw, h/ih)` so 64×64 RGB HUD/loadout/shop panels filled `viewport.width` (720).
