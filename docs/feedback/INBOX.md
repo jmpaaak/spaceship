@@ -2,6 +2,14 @@
 
 ## 처리 대기
 
+- **깨진 ComfyUI PNG는 다각형 폴백으로 빼고, 쓸 만한 것만 재생성 (2026-09-05, 사용자 확정, 최우선):** 런치가 깨져 보인 주원인은 RGB 불투명 64×64를 패널/이펙트로 그린 것. 투명 RGBA는 함선·지구·HUD 아이콘·표본만. 나머지 ~74장 RGB는 게임에 쓰면 블러/사각 덩어리. 비전 검토 없음. 한 사이클 = 아래 소항목 하나 + `make verify` GREEN + 커밋.
+
+  (1) **RGB 깨진 에셋 언와이어 + 다각형 폴백:** `assets/effects/`·`shop_icons/`·`slot_symbols/`·`debris/`·`backgrounds/deep_space_tile.png` 등 mode=RGB PNG는 `M.new()`에서 로드하지 않거나 draw에서 nil 취급. 기존 Lua 다각형/원 폴백이 그려지게. 배경 타일은 계속 비활성(절차적 별만). 파일을 당장 삭제할 필요는 없고 git에서 빼도 됨. 테스트는 스프라이트 nil일 때 폴백이 크래시하지 않는지.
+
+  (2) **남길 스프라이트 재생성 (투명 RGBA만):** 함선 `ship_default`/`ship_scout`, 지구 `earth_generic`, 행성 3종. 64×64 **RGBA**, 실루엣이 프레임의 ~60%, 배경 완전 투명. 행성 3종은 지금 RGBA라도 불투명 100%라 사각으로 보임 — 원형 마스크+투명 필수. HUD 아이콘 9장은 이미 32×32 RGBA면 유지, 깨져 있으면 같은 규칙으로 재생성. `tools/comfyui_asset_pipeline.py`, `http://222.238.86.132:8188`.
+
+  (3) **은하/행성 다양성 — Deep-Fold PixelPlanets 검토 후 적용 여부:** MIT, PNG/GIF/spritesheet export. ComfyUI 행성 대체 후보. 한 사이클에 결정+프로토타입 1장(결정론적 시드=은하/행성 id) 또는 “적용 안 함”을 STATUS에 남김. Godot을 LÖVE에 임베드하지 말 것 — export PNG만.
+
 ## 처리 완료
 - **모든 시각 에셋 ComfyUI 전면 재생성 (2026-09-04, 사용자 확정, 최우선):** 런치 실행화면이 거대한 빨강/하늘색 블러 덩어리로 깨져 있다. 원인 두 가지를 **같은 항목에서** 고친다. (A) 현재 PNG 100장 중 89장이 64×64 RGB라 `drawPanelSprite`가 HUD/정산/상점 패널을 `viewport.width`(720)로 늘려 그린다. (B) 기존 ComfyUI 결과물이 실루엣·투명 배경·픽셀 밀도 모두 게임에 안 맞는다. 비전 검토 없이 생성→`assets/` 덮어쓰기→`docs/assets/MANIFEST.json` provenance→`docs/GENERATED_ASSET_LOG.md` 한 줄→`make verify` GREEN→커밋. 한 사이클 = 아래 그룹 하나(에셋 1~3장)만.
 
