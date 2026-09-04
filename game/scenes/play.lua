@@ -785,7 +785,6 @@ function M:loadoutLines()
         upgrades = i18n.t("upgrades_line",
             run.durabilityUpgradeLevel),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
-        odds = self:slotOddsLine(),
     }
 end
 
@@ -894,64 +893,9 @@ function M:shopLoadoutLines()
             run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
         steeringStatus = steeringStatus,
         steeringAffordable = steeringAffordable,
-        odds = self:slotOddsLine(),
     }
 end
 
-function M:slotOddsLine()
-    local ev = expedition.slotExpectedValue()
-    return i18n.t("slot_odds_line",
-        math.floor(expedition.slotSymbolProbability("COMET") * 100 + 0.5),
-        math.floor(expedition.slotSymbolProbability("PLANET") * 100 + 0.5),
-        math.floor(expedition.slotSymbolProbability("STAR") * 100 + 0.5),
-        ev)
-end
-
-function M:slotButtonState()
-    local chances = self.expedition.slotOpportunities
-    if self.slotSpin then
-        return { enabled = false, label = i18n.t("slot_spinning_label"), compactLabel = i18n.t("spinning_compact") }
-    end
-    if self.expedition.phase ~= "returning" or chances <= 0 then
-        return { enabled = false, label = i18n.t("no_slot_chances_label"), compactLabel = i18n.t("no_slots_compact") }
-    end
-    return {
-        enabled = true,
-        label = i18n.t("slot_spin_prompt", chances),
-        compactLabel = i18n.t("spin_compact_label", chances),
-    }
-end
-
-function M:beginSlotSpin()
-    self.slotSpin = {
-        elapsed = 0,
-        reelStagger = slotReelStagger,
-        duration = slotSpinDuration,
-        symbols = self.expedition.lastSlotSymbols,
-        reward = self.expedition.lastSlotReward,
-        repair = self.expedition.lastSlotRepair,
-        sampleBonus = self.expedition.lastSlotSampleBonus,
-        opportunitiesAfter = self.expedition.slotOpportunities,
-    }
-    self.message = i18n.t("slot_spinning_label")
-end
-
-function M:currentSlotReels()
-    if not self.slotSpin then
-        return self.expedition.lastSlotSymbols
-    end
-    local reels = {}
-    for i = 1, 3 do
-        local stopTime = i * self.slotSpin.reelStagger
-        if self.slotSpin.elapsed >= stopTime then
-            reels[i] = self.slotSpin.symbols[i]
-        else
-            local cycle = math.floor(self.slotSpin.elapsed * 12) + i
-            reels[i] = expedition.slotSymbols[(cycle % #expedition.slotSymbols) + 1]
-        end
-    end
-    return reels
-end
 
 function M:steeringButtonState()
     local left = love.keyboard.isDown("left", "a")
@@ -1077,31 +1021,6 @@ function M:update(dt)
         self.newSpecimenBannerTimer = math.max(0, self.newSpecimenBannerTimer - dt)
         if self.newSpecimenBannerTimer == 0 then
             self.newSpecimenBanner = nil
-        end
-    end
-    if self.slotSpin then
-        self.slotSpin.elapsed = self.slotSpin.elapsed + dt
-        if self.slotSpin.elapsed >= self.slotSpin.duration then
-            if self.slotSpin.repair and self.slotSpin.repair > 0 then
-                self.message = i18n.t("slot_result_repair",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.repair,
-                    self.slotSpin.opportunitiesAfter)
-
-            elseif self.slotSpin.sampleBonus and self.slotSpin.sampleBonus > 0 then
-                self.message = i18n.t("slot_result_sample",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.sampleBonus,
-                    self.slotSpin.opportunitiesAfter)
-            else
-                self.message = i18n.t("slot_result_plain",
-                    table.concat(self.slotSpin.symbols, " "),
-                    self.slotSpin.reward,
-                    self.slotSpin.opportunitiesAfter)
-            end
-            self.slotSpin = nil
         end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
@@ -1435,6 +1354,8 @@ function M:touchpressed(id, x, y)
                     self:keypressed("y")
                 elseif key == "ship" then
                     self:keypressed("v")
+                elseif key == "slot" then
+                    self:keypressed("l")
                 elseif key == "relaunch" then
                     self:keypressed("space")
                 end
@@ -1556,16 +1477,6 @@ function M:drawMinimap()
         -- HUD text. It is small supplementary context (expected slot value),
         -- not primary flight info, so it is now drawn as a small right-
         -- aligned line directly above the minimap chart instead.
-        self.smallFont = self.smallFont or fonts.get(8)
-        local previousOddsFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        love.graphics.setColor(0.6, 0.8, 1)
-        -- Full canvas width (rather than the narrow size+4 minimap column)
-        -- so the localized Korean odds string (wider than its English
-        -- equivalent at this small font) stays on one line instead of
-        -- wrapping down into the minimap circle below it.
-        love.graphics.printf(self:slotOddsLine(), 4, hudHeight - 9, viewport.width - 8, "right")
-        love.graphics.setFont(previousOddsFont)
     end
     if view.checkpointBeyond then
         -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct
@@ -1999,8 +1910,22 @@ function M:draw()
         row = row + rowStep
         love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
         row = row + rowStep
-        
-        row = 264
+        row = 236
+        rowStep = 10
+        if self.earthShopSlotResult then
+            love.graphics.setColor(0.85, 0.95, 1)
+            love.graphics.printf(table.concat(self.earthShopSlotResult.symbols, "  "), fullX, row, fullW, "center")
+            row = row + rowStep
+            if self.earthShopSlotResult.rewardProfile and self.earthShopSlotResult.rewardProfile.name then
+                love.graphics.setColor(1, 0.55, 0.45)
+                love.graphics.printf(self.earthShopSlotResult.rewardProfile.name .. " ODDS", fullX, row, fullW, "center")
+            end
+        else
+            love.graphics.setColor(1, 0.8, 0.3)
+            love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, row, fullW, "center")
+        end
+
+        row = 280
         rowStep = 8
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
@@ -2009,9 +1934,6 @@ function M:draw()
         love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(nextLaunch.odds, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
@@ -2066,66 +1988,6 @@ function M:draw()
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()
     elseif self.expedition.phase == "returning" then
-        self.smallFont = self.smallFont or fonts.get(8)
-        local previousOddsFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        -- docs/feedback/INBOX.md UI/HUD item 5: the C%/P%/S%/AVG$ slot-odds
-        -- line is now drawn above the minimap chart in drawMinimap() instead
-        -- of as a full-width standalone line here.
-        -- The slot result panel's symbol/WIN lines previously used the
-        -- default font (measured 160px for "PLANET  PLANET  PLANET" and
-        -- 155px for "WIN +$40  PENDING $40" via GAME_FONTPROBE) inside a
-        -- 140px-wide printf box, which auto-wrapped the widest strings to
-        -- a second line and collided with the fixed y=231 WIN row below
-        -- The same small font (8px, measured max 108px symbol row / 103px WIN row) already
-        -- used for the ODDS line above fits both rows without wrapping.
-        if self.slotSpin then
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 18, 210, 144, 34)
-            love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(table.concat(self:currentSlotReels(), "  "), 20, 216, 140, "center")
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(i18n.t("spinning_label"), 20, 231, 140, "center")
-        elseif self.expedition.lastSlotSymbols then
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.9)
-            love.graphics.rectangle("fill", 18, 210, 144, 34)
-            love.graphics.setColor(0.85, 0.95, 1)
-            love.graphics.printf(table.concat(self.expedition.lastSlotSymbols, "  "), 20, 216, 140, "center")
-            love.graphics.setColor(1, 0.8, 0.3)
-            if self.expedition.lastSlotRepair and self.expedition.lastSlotRepair > 0 then
-                love.graphics.printf(i18n.t("win_repair_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotRepair), 20, 231, 140, "center")
-            elseif self.expedition.lastSlotSampleBonus and self.expedition.lastSlotSampleBonus > 0 then
-                love.graphics.printf(i18n.t("win_sample_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.lastSlotSampleBonus), 20, 231, 140, "center")
-            else
-                love.graphics.printf(i18n.t("win_pending_line",
-                    self.expedition.lastSlotReward,
-                    self.expedition.pendingSlotReward), 20, 231, 140, "center")
-            end
-        end
-        love.graphics.setFont(previousOddsFont)
-        local slotButton = self:slotButtonState()
-        local returnBandHeight = returnControls.bottom - returnControls.top
-        local returnLabelY = returnControls.top + math.floor((returnBandHeight - 10) / 2)
-        if slotButton.enabled then
-            love.graphics.setColor(0.25, 0.55, 0.8, 0.6)
-        else
-            love.graphics.setColor(0.18, 0.2, 0.25, 0.75)
-        end
-        love.graphics.rectangle("fill", 60, returnControls.top, 60, returnBandHeight)
-        self.smallFont = self.smallFont or fonts.get(8)
-        local previousReturnButtonFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        if slotButton.enabled then
-            love.graphics.setColor(0.85, 0.95, 1)
-        else
-            love.graphics.setColor(0.55, 0.58, 0.65)
-        end
-        love.graphics.printf(slotButton.compactLabel, 60, returnLabelY, 60, "center")
-        love.graphics.setFont(previousReturnButtonFont)
         self:drawJoystickStick()
     end
     love.graphics.setColor(0.85, 0.9, 1)
