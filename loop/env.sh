@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
 HERMES_BIN="${HERMES_BIN:-/Users/jm/.hermes/hermes-agent/venv/bin/hermes}"
-PROVIDER="${PROVIDER:-anthropic}"
-MODEL="${MODEL:-claude-sonnet-4-6}"
+PROVIDER="${PROVIDER:-openai-codex}"
+MODEL="${MODEL:-gpt-5.6-sol}"
 REASONING="${REASONING:-high}"
+# The Hermes oneshot inherits ~/.hermes/config.yaml, whose native fallback is
+# xai-oauth/grok-4.6. If Codex and Grok both fail, loop.sh invokes agy Gemini.
 FALLBACK_AGY_BIN="${FALLBACK_AGY_BIN:-/Users/jm/.local/bin/agy}"
 FALLBACK_MODEL="${FALLBACK_MODEL:-gemini-3.1-pro-high}"
 FALLBACK_PRINT_TIMEOUT="${FALLBACK_PRINT_TIMEOUT:-20m}"

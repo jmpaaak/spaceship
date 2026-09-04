@@ -138,7 +138,7 @@ while :; do
   if (( agent_status != 0 )) && \
       /usr/bin/python3 "${SCRIPT_DIR}/classify_provider_failure.py" \
         "${agent_output}" "${agent_status}"; then
-    printf 'Codex rate limit confirmed; retrying this fresh cycle with %s.\n' \
+    printf 'Codex/Grok chain exhausted; retrying this fresh cycle with %s.\n' \
       "${FALLBACK_MODEL}" | tee -a "${log_file}"
     /usr/bin/python3 "${SCRIPT_DIR}/run_agent.py" \
       --max-turns "${MAX_TURNS}" \
@@ -149,7 +149,7 @@ while :; do
       --dangerously-skip-permissions \
       --disable-slash-commands \
       --mode accept-edits \
-      --print "${prompt} The primary OpenAI Codex request exhausted its rate limit, so continue this same task as the configured Gemini fallback." \
+      --print "${prompt} The configured Hermes Codex then Grok chain was exhausted, so continue this same task as the configured Gemini fallback." \
       --output-format stream-json \
       --print-timeout "${FALLBACK_PRINT_TIMEOUT}" \
       --model "${FALLBACK_MODEL}" \
@@ -163,7 +163,7 @@ while :; do
     "${cycle}" "${finished_at}" "${agent_status}" | tee -a "${log_file}"
 
   if (( agent_status == 124 )); then
-    printf 'Primary went silent (idle timeout); fallback was attempted if Codex. Continuing next cycle.\n' | tee -a "${log_file}"
+    printf 'Hermes Codex/Grok chain went silent; Gemini fallback was attempted. Continuing next cycle.\n' | tee -a "${log_file}"
   elif (( agent_status != 0 )); then
     printf 'Agent cycle failed with status=%d; propagating failure.\n' \
       "${agent_status}" | tee -a "${log_file}"
