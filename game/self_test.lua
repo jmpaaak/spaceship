@@ -5675,6 +5675,22 @@ function M.run()
         i18n.setLocale("en")
     end
 
+    -- Item 11(c): dead fuel-upgrade function and run state fields must not exist
+    -- in expedition.lua. buyFuelUpgrade was removed when the fuel upgrade mechanic
+    -- was abolished; main.lua capture harnesses that still reference it would crash
+    -- at runtime if those GAME_CAPTURE_PHASE values are ever triggered.
+    do
+        local expedition = require("game.expedition")
+        assert(expedition.buyFuelUpgrade == nil,
+            "item 11(c): expedition.buyFuelUpgrade must not exist (fuel upgrade abolished)")
+        -- slotOpportunities must not be initialised in a fresh run (item 15(a))
+        local run = expedition.new({})
+        assert(run.slotOpportunities == nil,
+            "item 11(c): run.slotOpportunities must be nil after item-15(a) abolition")
+        assert(run.slotDistance == nil,
+            "item 11(c): run.slotDistance must be nil after item-15(a) abolition")
+    end
+
     testJoystick()
     testGalaxyStructure()
     testMinimap()
