@@ -1970,9 +1970,11 @@ function M:draw()
         row = row + rowStep
         love.graphics.setColor(0.6, 1, 0.85)
         M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, loadout.steering, 16, row, viewport.width - 32)
-        row = row + rowStep
-        love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(loadout.odds, 16, row, viewport.width - 32, "center")
+        if loadout.odds then
+            row = row + rowStep
+            love.graphics.setColor(0.6, 0.8, 1)
+            love.graphics.printf(loadout.odds, 16, row, viewport.width - 32, "center")
+        end
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
         -- The summary card is drawn with the same scene-cached small font as
