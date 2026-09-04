@@ -24,6 +24,8 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 
 **중요 — 재감사 방지 규칙:** 이번 사이클에서 처리할 INBOX 항목이 이미 이전 사이클에서 완료됐다고 판단되면, STATUS.md 업데이트 없이 즉시 다음 미완료 항목으로 넘어가라. "이미 완료됐음을 재확인"하는 문서 커밋을 반복하지 않는다. 할 일이 없으면 IDLE로 종료한다.
+**중요 — FAIL + 미커밋 변경 규칙:** preflight가 FAIL이고 git status에 수정된 파일이 있으면, 이번 사이클의 유일한 작업은 (1) 실패한 테스트를 수정하고 (2) 모든 수정 파일을 커밋하는 것이다. 새 INBOX 항목 작업을 시작하지 않는다. 미커밋 변경을 버리지 않는다 — 이전 사이클이 절반만 완료한 것을 마저 끝낸다.
+
 
 ## Required workflow
 
