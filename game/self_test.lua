@@ -3425,6 +3425,126 @@ local function testGearGalaxyExclusiveEnginePoolWiring()
     assert(offer3 == nil, "a galaxy hub already explored via one pool must stay explored for the other pool too")
 end
 
+-- Item 7(b)/12 gap: exploreHub always hardcodes `edition = nil` on the
+-- returned drop, meaning item 12(B)'s edition rolling and item 14(C) luck's
+-- edition-chance boost target #1 ("에디션 부여 확률 상향") are dead for ALL
+-- hub-confirmed drops. A player running a max-luck loadout before visiting a
+-- galaxy hub receives identical base cards regardless — the entire edition
+-- farming loop is only reachable via rollGearOffer (shop/reroll), never via
+-- the hub path that item 7(b) defines as an independent acquisition channel.
+--
+-- Fix design: exploreHub must accept an optional `rolls` parameter (same
+-- convention as earthSlotSpin/rollGearOffer: caller supplies deterministic
+-- rolls, function never calls RNG itself) containing at least
+-- { editionChance, editionPick } so the UI can pass love.math.random() pairs.
+-- When rolls are supplied, exploreHub applies gear.rollEdition with the
+-- run's combined luck bonus (same luckBonus injection as rollGearOffer),
+-- and if an edition is granted, calls gear.applyEditionEffects to transform
+-- the returned card's effects — matching the output shape of rollGearOffer so
+-- the equip UI can treat both paths identically.
+-- When rolls is nil (legacy callers / headless tests that don't care about
+-- editions), exploreHub must still return a valid non-nil drop (regression
+-- safety: guaranteed card is still guaranteed).
+local function testGearExploreHubEditionRolling()
+    local expedition = require("game.expedition")
+    local gear_mod   = require("game.gear")
+
+    -- Use hull_void_forge_drive (engine pool's engine_void_forge_drive is
+    -- legendary+galaxyExclusive+editions=["quantum_flawed"]).
+    -- We need a pool card that IS galaxyExclusive AND has non-empty editions.
+    -- Use engine pool: engine_void_forge_drive qualifies.
+    local enginePool = gear_mod.loadEngineParts()
+    local editionableCard = nil
+    for _, c in ipairs(enginePool) do
+        if c.galaxyExclusive and c.editions and #c.editions > 0 then
+            editionableCard = c
+            break
+        end
+    end
+    assert(editionableCard, "engine pool must have at least one galaxyExclusive card with editions candidates")
+
+    -- Build a single-card pool so galaxySpecificGear always returns our target.
+    local singlePool = { editionableCard }
+
+    -- (a) Legacy call (no rolls): must still return a drop; edition must be nil.
+    local run0 = expedition.new()
+    local drop0 = expedition.exploreHub(run0, "omega", singlePool)
+    assert(drop0 and drop0.id == editionableCard.id,
+        "exploreHub without rolls must still return a guaranteed drop")
+    assert(drop0.edition == nil,
+        "exploreHub without rolls must return edition=nil (no RNG call)")
+
+    -- (b) rolls.editionChance >= gear.baseEditionChance: must NOT grant edition.
+    --     rollEdition returns nil when chanceRoll >= chance (0.08 base with luck=0).
+    --     Pass editionChance=0.99 (well above 0.08 base, luck=0) → no edition.
+    local run1 = expedition.new()
+    local drop1 = expedition.exploreHub(run1, "omega", singlePool, { editionChance = 0.99, editionPick = 0 })
+    assert(drop1 and drop1.id == editionableCard.id,
+        "exploreHub with above-threshold editionChance must still return a guaranteed card")
+    assert(drop1.edition == nil,
+        "exploreHub with above-threshold editionChance must return edition=nil, got: " .. tostring(drop1.edition))
+
+    -- (c) rolls.editionChance < gear.baseEditionChance: edition IS granted.
+    --     Use editionChance=0.001 (well below 0.08) to trigger, editionPick=0 to pick first candidate.
+    local run2 = expedition.new()
+    local drop2 = expedition.exploreHub(run2, "omega", singlePool, { editionChance = 0.001, editionPick = 0 })
+    assert(drop2 and drop2.id == editionableCard.id,
+        "exploreHub with sub-threshold editionChance must return a guaranteed card")
+    local expectedEdition = editionableCard.editions[1]
+    assert(drop2.edition == expectedEdition,
+        "exploreHub with sub-threshold editionChance must grant the first edition candidate ("
+            .. expectedEdition .. "), got: " .. tostring(drop2.edition))
+
+    -- (d) When an edition IS granted, the returned card's effects must already
+    --     have been transformed by applyEditionEffects (same as rollGearOffer)
+    --     so the UI can equip it directly without a second materialize pass.
+    --     For quantum_flawed the double-effect means at least one numeric
+    --     effect value is doubled. Check that any numeric effect value changed.
+    local baseEffects = editionableCard.effects
+    local droppedEffects = drop2.effects
+    local anyChanged = false
+    for i, be in ipairs(baseEffects) do
+        local de = droppedEffects[i]
+        if de and de.value ~= be.value then
+            anyChanged = true
+        end
+    end
+    -- Also quantum_flawed adds hullDurability -1 drawback, so dropped has more effects.
+    if not anyChanged then
+        anyChanged = (#droppedEffects ~= #baseEffects)
+    end
+    assert(anyChanged,
+        "exploreHub with edition must return effects transformed by applyEditionEffects "
+            .. "(quantum_flawed must double values or add drawback)")
+
+    -- (e) Luck boost: equip a luck card (+50) on run before exploreHub.
+    --     rollEdition: edition fires when chanceRoll < (baseChance + luckBonus).
+    --     baseChance = 0.08, luckBonus = luck/100 = 50/100 = 0.5.
+    --     So effective threshold = 0.08 + 0.5 = 0.58.
+    --     With editionChance=0.09 (just above base 0.08):
+    --       WITHOUT luck: 0.09 >= 0.08 → no edition.
+    --       WITH luck (+50): 0.09 < 0.58 → edition granted.
+    local luckCard = {
+        id = "hub-luck-fixture", name = "Luck", nameKo = "럭", icon = "✦",
+        rarity = "common", tags = {}, editions = {},
+        effects = { { type = "luck", value = 50 } },
+    }
+    -- No-luck baseline: editionChance=0.09 >= 0.08 → no edition.
+    local runNoLuck = expedition.new()
+    local dropNoLuck = expedition.exploreHub(runNoLuck, "beta", singlePool, { editionChance = 0.09, editionPick = 0 })
+    assert(dropNoLuck.edition == nil,
+        "exploreHub without luck, editionChance=0.09 must NOT grant edition (base threshold 0.08, 0.09 >= 0.08)")
+
+    -- Luck-boosted: editionChance=0.09 < (0.08 + 0.5) = 0.58 → edition granted.
+    local runLuck = expedition.new()
+    assert(expedition.equipGear(runLuck, "hull", luckCard))
+    local dropLuck = expedition.exploreHub(runLuck, "gamma", singlePool, { editionChance = 0.09, editionPick = 0 })
+    assert(dropLuck.edition == expectedEdition,
+        "exploreHub with luck-boosted run and editionChance=0.09 must grant edition "
+            .. "(luck raises effective threshold to 0.58 > 0.09), got: " .. tostring(dropLuck.edition))
+end
+
+
 -- Item 12/9 follow-up: rollGearOffer already applies gear.applyEditionEffects
 -- onto the *offer table*, but M.equipGear historically stored whatever it
 -- was handed as-is. A shop/hub UI that copies `edition` onto the pool card
@@ -4095,6 +4215,62 @@ local function testEarthSlotMachineGalaxyOdds()
             .. tostring(hubRun.lastVisitedGalaxyId))
 end
 
+-- Item 15(c) + Item 14(C): earthSlotSpin engine-slot luck regression guard.
+-- testEarthSlotMachineGalaxyOdds already verifies hull-slot luck raises
+-- effectiveStarWeight. This companion test verifies the ENGINE-slot path:
+-- earthSlotSpin uses combinedGearList(run) (hull+engine) for its luck total,
+-- so an engine-slot luck card must raise effectiveStarWeight to the same
+-- degree as the same card equipped in a hull slot. If this regresses the
+-- guard catches it before it silently becomes a dead content path again.
+local function testGearEarthSlotEngineSlotLuckWiring()
+    local expedition = require("game.expedition")
+    local solarWeights = expedition.earthSlotWeights(nil)
+    local rolls = { reels = { 0, 0, 0 } }  -- deterministic rolls
+
+    -- Baseline: no gear equipped.
+    local bareRun = expedition.new()
+    local bareResult = expedition.earthSlotSpin(bareRun, nil, rolls)
+    assert(bareResult.effectiveStarWeight == solarWeights.STAR,
+        "bare run must have base STAR weight in earthSlotSpin, got: "
+            .. tostring(bareResult.effectiveStarWeight))
+
+    local luckCard = {
+        id = "engine-slot-luck-fixture", name = "EngLuck", nameKo = "엔진럭",
+        icon = "✦", rarity = "common", tags = {}, editions = {},
+        effects = { { type = "luck", value = 50 } },  -- +50 luck = 0.5 luckBonus
+    }
+
+    -- Hull-slot luck: equip as hull, verify STAR boost.
+    local hullLuckRun = expedition.new()
+    assert(expedition.equipGear(hullLuckRun, "hull", luckCard))
+    local hullResult = expedition.earthSlotSpin(hullLuckRun, nil, rolls)
+    assert(hullResult.effectiveStarWeight > solarWeights.STAR,
+        "hull-slot luck card must boost earthSlotSpin STAR weight (baseline "
+            .. tostring(solarWeights.STAR) .. ", got "
+            .. tostring(hullResult.effectiveStarWeight) .. ")")
+
+    -- Engine-slot luck: same card in ENGINE slot must produce the same boost.
+    local engineLuckRun = expedition.new()
+    local engineCard = {
+        id = "engine-slot-luck-fixture2", name = "EngLuck2", nameKo = "엔진럭2",
+        icon = "✦", rarity = "common", tags = {}, editions = {},
+        effects = { { type = "luck", value = 50 } },
+    }
+    assert(expedition.equipGear(engineLuckRun, "engine", engineCard))
+    local engineResult = expedition.earthSlotSpin(engineLuckRun, nil, rolls)
+    assert(engineResult.effectiveStarWeight > solarWeights.STAR,
+        "engine-slot luck card must also boost earthSlotSpin STAR weight "
+            .. "(earthSlotSpin uses combinedGearList, so engine luck must feed through): "
+            .. "baseline=" .. tostring(solarWeights.STAR)
+            .. " engineResult=" .. tostring(engineResult.effectiveStarWeight))
+
+    -- The boost magnitude should match hull-slot for the same luck value.
+    assert(math.abs(hullResult.effectiveStarWeight - engineResult.effectiveStarWeight) < 0.001,
+        "engine-slot and hull-slot luck with same value must produce identical STAR weight boost: "
+            .. "hull=" .. tostring(hullResult.effectiveStarWeight)
+            .. " engine=" .. tostring(engineResult.effectiveStarWeight))
+end
+
 -- Item 15(c) follow-up: earthSlotSpin.reward must vary per galaxy profile.
 -- Item 15 says \"보상 테이블이 달라지도록\" (reward TABLE changes) not just
 -- weight odds. Currently slotReward is a global fixed table (STAR*3=75,
@@ -4247,6 +4423,7 @@ local function runGearTests()
     testGearIrradiatedSynergyBonusWiring()
     testGearGalaxyExclusiveWiring()
     testGearGalaxyExclusiveEnginePoolWiring()
+    testGearExploreHubEditionRolling()
     testGearEquippedEditionEffectsRunWiring()
     testGearQuantumFlawedEngineDrawbackWiring()
     testGearEngineSynergyMultiplierWiring()
@@ -4255,6 +4432,7 @@ local function runGearTests()
     testHubExploredResetsOnLaunch()
     testHubPartialSettlement()
     testEarthSlotMachineGalaxyOdds()
+    testGearEarthSlotEngineSlotLuckWiring()
     testEarthSlotProfileRewardVariation()
 end
 

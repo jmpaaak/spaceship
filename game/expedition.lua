@@ -1305,7 +1305,7 @@ end
 
 -- Item 7(b): Exploring a galaxy hub deterministically drops a specific
 -- gear part for that galaxy (100% chance, only once per run).
-function M.exploreHub(run, galaxyId, pool)
+function M.exploreHub(run, galaxyId, pool, rolls)
     if run.hubExplored[galaxyId] then
         return nil
     end
@@ -1322,6 +1322,27 @@ function M.exploreHub(run, galaxyId, pool)
     local part = gearModule.galaxySpecificGear(pool, galaxyId)
     if not part then return nil end
 
+    -- Item 7(b)/12: the confirmed CARD is guaranteed (no rarity roll), but
+    -- the edition layer (item 12B) and luck's edition-chance boost (item 14C
+    -- target #1) must still apply when the caller supplies deterministic
+    -- rolls. Same pure-function convention as earthSlotSpin/rollGearOffer:
+    -- the caller passes love.math.random() pairs; we never call RNG directly.
+    -- If rolls is nil (legacy callers / headless tests), edition stays nil.
+    local edition = nil
+    local effects = part.effects
+    if rolls then
+        local luckBonus = gearModule.totalLuckBonus(combinedGearList(run))
+        edition = gearModule.rollEdition(
+            part,
+            rolls.editionChance or 1,
+            rolls.editionPick    or 0,
+            luckBonus
+        )
+        if edition then
+            effects = gearModule.applyEditionEffects(part, edition)
+        end
+    end
+
     return {
         id = part.id,
         name = part.name,
@@ -1329,8 +1350,9 @@ function M.exploreHub(run, galaxyId, pool)
         icon = part.icon,
         rarity = part.rarity,
         tags = part.tags,
-        edition = nil,
-        effects = part.effects,
+        edition = edition,
+        effects = effects,
+        editionApplied = (edition ~= nil),
     }
 end
 
