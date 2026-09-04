@@ -1209,31 +1209,32 @@ function M:update(dt)
                             }
                         end
                     end
-                end
-                local value = world.sampleValue(planet)
-                local hueKey = world.hueFamily(planet.hue or 0).key
-                local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
-                awarded = awarded or value
-                table.insert(self.floatingTexts, {
-                    text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
-                    x = planet.x,
-                    y = planet.y,
-                    timer = 1.0,
-                    kind = "sample",
-                    awarded = awarded,
-                    rollupElapsed = 0,
-                })
-                self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
-                if streakMultiplier and streakMultiplier > 1 then
-                    self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
                 else
-                    self.message = i18n.t("sample_message", awarded, planet.id)
-                end
-                local specimenId, specimenLabel = world.specimenKind(planet)
-                if self.collectionStore:record(specimenId) then
-                    self.collectedSpecimens[specimenId] = true
-                    self.newSpecimenBanner = i18n.t("new_specimen_label", specimenLabel)
-                    self.newSpecimenBannerTimer = 2.0
+                    local value = world.sampleValue(planet)
+                    local hueKey = world.hueFamily(planet.hue or 0).key
+                    local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
+                    awarded = awarded or value
+                    table.insert(self.floatingTexts, {
+                        text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
+                        x = planet.x,
+                        y = planet.y,
+                        timer = 1.0,
+                        kind = "sample",
+                        awarded = awarded,
+                        rollupElapsed = 0,
+                    })
+                    self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
+                    if streakMultiplier and streakMultiplier > 1 then
+                        self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
+                    else
+                        self.message = i18n.t("sample_message", awarded, planet.id)
+                    end
+                    local specimenId, specimenLabel = world.specimenKind(planet)
+                    if self.collectionStore:record(specimenId) then
+                        self.collectedSpecimens[specimenId] = true
+                        self.newSpecimenBanner = i18n.t("new_specimen_label", specimenLabel)
+                        self.newSpecimenBannerTimer = 2.0
+                    end
                 end
             end
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then

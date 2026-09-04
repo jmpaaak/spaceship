@@ -1,40 +1,19 @@
 # STATUS
 - preflight this cycle: READY
-- Slice: Item 15(b) regression — earthSlotSpin rolls format bug fix + coverage
+- Slice: Item 8 — fix play.lua double-dipping sample collection on hubs/shops + coverage
 
-## 2026-09-04 — Item 15(b): Fix rolls format bug in Earth shop slot machine
+## 2026-09-04 — Item 8: Fix double-dipping sample collection on hubs/shops
 
-- Found bug: play.lua `keypressed("l")` handler built `rolls = {1, 2, 3}` (plain
-  integer-keyed array) and passed to `expedition.earthSlotSpin`. But earthSlotSpin
-  reads `rolls.reels` (not numeric keys), so `rolls.reels` was always nil,
-  silently falling back to `{0, 0, 0}`. Every Earth shop spin always produced
-  COMET-COMET-COMET regardless of the random values generated.
-- Fix: changed play.lua to build `{ reels = { r1, r2, r3 } }` and pass that.
-- TDD: added 4-case regression block in `game/self_test.lua` for item 15(b):
-  (1) "l" key in settlement sets earthShopSlotResult
-  (2) winning spin adds reward to money and sets message to "+$N" format
-  (3) "l" key outside settlement is a no-op (no earthSlotSpin call, no result)
-  (4) capturedRolls.reels is not nil (detects the plain-array format bug)
+- Found bug: `play.lua` correctly evaluated `planet.hub` to call `expedition.settleAtHub` or `planet.isShop` to show shop offers, but it fell through and called `expedition.collectSample` for EVERY discovered planet. This violated Item 8's spec that hubs and shops do not yield samples.
+- Fix: Wrapped the `collectSample` call in `play.lua` inside an `else` block so it only runs for normal planets.
+- TDD: added `testItem8HubProximitySettle` in `game/self_test.lua`:
+  (1) ship passing near a normal planet doesn't trigger settlement.
+  (2) ship passing near a hub planet correctly triggers `settleAtHub` and clears `pendingSampleValue`, adding to `money`.
+  (3) verified that `pendingSampleValue` is exactly 0 after hub proximity (detects the double-dipping bug).
   Confirmed RED before fix, GREEN after.
-- Also committed from previous cycle: item 11(c) shopLoadoutLines fuel-key
-  guard + dead font-probe string removal (d381128).
 - `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK,
   SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK.
-- Next slice: Item 7(b) or Item 8 regression audit — verify settleAtHub is
-  tested from play.lua touch/proximity path, or audit for remaining item 11
-  fuel-framing text in expedition.lua comments.
-
-
-
-
-- `hud_status` in i18n.lua (en + ko) had `S%02d` that displayed `slotOpportunities` (always 0 after item-15 abolished in-flight slots). This was dead/misleading UI implying a slot mechanic still existed mid-flight.
-- Removed `S%02d` from `hud_status` so it matches `hud_status_no_slots` format: `"H%d/%d %-6s"`. Both keys now share the same format; `hud_status_no_slots` kept as an alias for backward-compat.
-- Simplified `hudLines()` in `play.lua` to always call `hud_status_no_slots` (removed the old launch-vs-other-phase conditional that existed solely to hide `S00` on launch only).
-- TDD: Updated existing `"H3/3 SETTLE S00"` assertion to `"H3/3 SETTLE"`, added `not find("S%d%d")` guard across all phases. Confirmed RED before fix, GREEN after.
-- `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:58, ASSET_MANIFEST_OK.
-- Next slice: Item 11(b)(c) — dead fuel upgrade shop rows in main.lua capture-phase scripts / expedition.lua dead references cleanup, or move to Item 15 remaining UI wiring.
-
-
+- Next slice: Audit remaining UI wiring for Item 11/15, or check if Item 7/8 has any gaps left (like Item 7 shop UI popups).
 
 ## 구현 내용
 
