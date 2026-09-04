@@ -6166,6 +6166,18 @@ function M.run()
     testItem8HubProximitySettle()
     runGearTests()
 
+    -- ComfyUI HUD wiring (group 1): drawHudSpriteOrPoly is exported and
+    -- behaves correctly when image is nil (falls back to polygon).
+    do
+        local PlayScene = require("game.scenes.play")
+        assert(type(PlayScene.drawHudSpriteOrPoly) == "function",
+            "drawHudSpriteOrPoly must be exported on PlayScene")
+        -- With a real love.graphics stub (headless), confirm nil image + nil
+        -- pointsFn does not error (no-op branch).
+        local ok, err = pcall(PlayScene.drawHudSpriteOrPoly, nil, nil, 10, 10, 8)
+        assert(ok, "drawHudSpriteOrPoly(nil,nil,...) must not throw: " .. tostring(err))
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

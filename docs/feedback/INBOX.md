@@ -4,7 +4,7 @@
 
 - **ComfyUI 에셋 draw 배선 복원 (2026-09-04, 사용자 확정):** gear 머지로 `game/scenes/play.lua`가 교체되면서 69개 ComfyUI 에셋이 로드는 되지만 draw에 연결되지 않은 상태다. 우선순위 순서대로 배선한다. 한 사이클 = 연관 그룹 하나 + `make verify` GREEN + 커밋.
 
-  (1) **HUD 아이콘** — `hud_coin.png`(cashIconImage), `hud_shield.png`(hullIconImage), `hud_speed.png`(speedIconImage), `hud_distance.png`(distanceIconImage), `hud_best.png`(bestIconImage), `hud_samples.png`(samplesIconImage), `hud_galaxy.png`(galaxyIconImage), `hud_return.png`(returnIconImage), `hud_earth.png`(earthIconImage): 기존 Lua 폴리곤·텍스트 옆에 `love.graphics.draw(image, ...)` 분기 추가. pre-merge main `d4abaf3`의 `game/scenes/play.lua`:draw()에 동일 패턴 있음 — 참고해 이식.
+  (1) ✅ **HUD 아이콘 — 완료 (2026-09-04):** `hud_coin.png`(cash), `hud_shield.png`(hull), `hud_speed.png`(speed), `hud_distance.png`(dist), `hud_best.png`(best), `hud_samples.png`(samples), `hud_galaxy.png`(galaxy), `hud_return.png`(return), `hud_earth.png`(earth) 9개 PNG를 `M.new()`에서 로드해 `self.hudIconImages`에 저장. `drawHudSpriteOrPoly()` 헬퍼 추가. draw()의 galaxy/distance/cash/hull/samples/earth/return/best 행 모두 sprite-or-poly 분기 적용. `make verify` GREEN.
 
   (2) **미니맵 마커** — `minimap_disc.png`, `minimap_player.png`, `minimap_sun.png`, `minimap_earth.png`, `minimap_earth_return.png`, `minimap_galaxy_home.png`, `minimap_galaxy_plain.png`, `minimap_checkpoint_star.png`, `minimap_checkpoint_arrow.png`, `minimap_spiral_star.png`, `minimap_orbit_ring.png`, `minimap_galaxy_ring.png`.
 

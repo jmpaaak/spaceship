@@ -295,6 +295,20 @@ function M.drawCenteredIconText(iconPointsFn, iconSize, iconGap, text, x, y, w)
     love.graphics.print(text, startX + iconSize + iconGap, y)
 end
 
+-- Draw a HUD sprite icon at (cx, cy) scaled to fit `size` px.
+-- If image is nil, falls back to drawing the polygon produced by pointsFn.
+-- Call with the icon color already set.
+local function drawHudSpriteOrPoly(image, pointsFn, cx, cy, size)
+    if image then
+        local iw, ih = image:getDimensions()
+        local scale = size / math.max(iw, ih)
+        love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
+    elseif pointsFn then
+        love.graphics.polygon("fill", pointsFn(cx, cy, size))
+    end
+end
+M.drawHudSpriteOrPoly = drawHudSpriteOrPoly
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
@@ -617,6 +631,18 @@ function M.new(options)
     local slotSymbolImages = loadSpriteMap(slotSymbolImagePaths)
     local shopIconImages = loadSpriteMap(shopIconImagePaths)
     local debrisImages = loadSpriteMap(debrisImagePaths)
+    -- HUD icon images (group 1 of ComfyUI asset wiring)
+    local hudIconImages = loadSpriteMap({
+        cash     = "assets/effects/hud_coin.png",
+        hull     = "assets/effects/hud_shield.png",
+        speed    = "assets/effects/hud_speed.png",
+        distance = "assets/effects/hud_distance.png",
+        best     = "assets/effects/hud_best.png",
+        samples  = "assets/effects/hud_samples.png",
+        galaxy   = "assets/effects/hud_galaxy.png",
+        returnIc = "assets/effects/hud_return.png",
+        earth    = "assets/effects/hud_earth.png",
+    })
 
     return setmetatable({
         ship = ship,
@@ -648,6 +674,7 @@ function M.new(options)
         shopIconImagePaths = shopIconImagePaths,
         debrisImages = debrisImages,
         debrisImagePaths = debrisImagePaths,
+        hudIconImages = hudIconImages,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -2027,11 +2054,23 @@ function M:draw()
     local hudY = 4
     if hud.galaxy then
         love.graphics.setColor(1, 0.85, 0.4)
-        love.graphics.print(hud.galaxy, 5, hudY)
+        -- ComfyUI HUD wiring (group 1): galaxy icon before galaxy name
+        local hudIconsTmp = self.hudIconImages or {}
+        local galaxyIconSize = M.hullIconSize
+        drawHudSpriteOrPoly(hudIconsTmp.galaxy, nil,
+            5 + galaxyIconSize / 2, hudY + galaxyIconSize / 2, galaxyIconSize)
+        love.graphics.print(hud.galaxy, 5 + galaxyIconSize + M.hullIconGap, hudY)
         hudY = hudY + 10
         love.graphics.setColor(0.7, 0.9, 1)
     end
-    love.graphics.print(hud.distance, 5, hudY)
+    -- ComfyUI HUD wiring (group 1): distance icon before distance text
+    do
+        local hudIconsTmp2 = self.hudIconImages or {}
+        local distIconSize = M.hullIconSize
+        drawHudSpriteOrPoly(hudIconsTmp2.distance, nil,
+            5 + distIconSize / 2, hudY + distIconSize / 2, distIconSize)
+        love.graphics.print(hud.distance, 5 + distIconSize + M.hullIconGap, hudY)
+    end
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- third slice): pair the CASH readout with a small coin icon, mirroring
     -- the shield icon paired with the hull status line below. The coin sits
@@ -2040,14 +2079,19 @@ function M:draw()
     -- 8px small font) with the CASH text shifted right of the coin's
     -- footprint so nothing overlaps.
     local distanceWidth = love.graphics.getFont():getWidth(hud.distance)
-    local cashIconCenterX = 5 + distanceWidth + 8 + M.cashIconSize / 2
+    -- Distance text now starts after the distance icon, so cash icon needs
+    -- to account for the distance icon prefix too.
+    local distIconOffset = M.hullIconSize + M.hullIconGap
+    local cashIconCenterX = 5 + distIconOffset + distanceWidth + 8 + M.cashIconSize / 2
     local cashIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
     love.graphics.setColor(1, 0.85, 0.3)
-    love.graphics.polygon("fill",
-        M.coinIconPoints(cashIconCenterX, cashIconCenterY, M.cashIconSize))
+    -- ComfyUI HUD wiring (group 1): use hud_coin.png if loaded, else polygon
+    local hudIcons = self.hudIconImages or {}
+    drawHudSpriteOrPoly(hudIcons.cash, M.coinIconPoints,
+        cashIconCenterX, cashIconCenterY, M.cashIconSize)
     love.graphics.setColor(0.7, 0.9, 1)
     love.graphics.print(hud.cash,
-        5 + distanceWidth + 8 + M.cashIconSize + M.cashIconGap, hudY)
+        5 + distIconOffset + distanceWidth + 8 + M.cashIconSize + M.cashIconGap, hudY)
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- second slice): pair the hull-durability status text with a small
     -- shield icon drawn just to its left, then shift the text right by
@@ -2056,8 +2100,9 @@ function M:draw()
         local iconCenterX = 5 + M.hullIconSize / 2
         local iconCenterY = y + M.hullIconSize / 2
         love.graphics.setColor(0.6, 0.85, 1)
-        love.graphics.polygon("fill",
-            M.shieldIconPoints(iconCenterX, iconCenterY, M.hullIconSize))
+        -- ComfyUI HUD wiring (group 1): use hud_shield.png if loaded, else polygon
+        drawHudSpriteOrPoly(hudIcons.hull, M.shieldIconPoints,
+            iconCenterX, iconCenterY, M.hullIconSize)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, y)
     end
@@ -2065,17 +2110,37 @@ function M:draw()
         -- Extra vertical gap (M.hudPrimaryStatusGap) below the samples line
         -- separates the secondary hull/slot status from DIST/CASH.
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.samples, 5, 16 + galaxyShift)
+        -- ComfyUI HUD wiring (group 1): samples icon left of sample count text
+        local samplesY = 16 + galaxyShift
+        local samplesIconSize = M.hullIconSize
+        local samplesIconCenterX = 5 + samplesIconSize / 2
+        local samplesIconCenterY = samplesY + samplesIconSize / 2
+        drawHudSpriteOrPoly(hudIcons.samples, nil,
+            samplesIconCenterX, samplesIconCenterY, samplesIconSize)
+        love.graphics.print(hud.samples, 5 + samplesIconSize + M.hullIconGap, samplesY)
         drawStatusWithShield(30 + M.hudPrimaryStatusGap + galaxyShift)
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
-            love.graphics.print(hud.earth, 5, 43 + M.hudPrimaryStatusGap + galaxyShift)
-            love.graphics.print(hud.returnProgress, 5, 55 + M.hudPrimaryStatusGap + galaxyShift)
+            -- ComfyUI HUD wiring (group 1): earth + return icons
+            local earthY = 43 + M.hudPrimaryStatusGap + galaxyShift
+            local earthIconSize = M.hullIconSize
+            drawHudSpriteOrPoly(hudIcons.earth, nil,
+                5 + earthIconSize / 2, earthY + earthIconSize / 2, earthIconSize)
+            love.graphics.print(hud.earth, 5 + earthIconSize + M.hullIconGap, earthY)
+            local returnY = 55 + M.hudPrimaryStatusGap + galaxyShift
+            drawHudSpriteOrPoly(hudIcons.returnIc, nil,
+                5 + earthIconSize / 2, returnY + earthIconSize / 2, earthIconSize)
+            love.graphics.print(hud.returnProgress, 5 + earthIconSize + M.hullIconGap, returnY)
         end
     elseif hud.best then
         drawStatusWithShield((isLaunchHud and 13 or 18) + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.print(hud.best, 5, (isLaunchHud and 22 or 30) + galaxyShift)
+        -- ComfyUI HUD wiring (group 1): best-altitude icon
+        local bestY = (isLaunchHud and 22 or 30) + galaxyShift
+        local bestIconSize = M.hullIconSize
+        drawHudSpriteOrPoly(hudIcons.best, nil,
+            5 + bestIconSize / 2, bestY + bestIconSize / 2, bestIconSize)
+        love.graphics.print(hud.best, 5 + bestIconSize + M.hullIconGap, bestY)
     else
         drawStatusWithShield(18 + galaxyShift)
     end
