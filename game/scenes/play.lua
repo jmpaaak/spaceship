@@ -46,21 +46,16 @@ local function shortestAngleDelta(from, to)
 end
 M.shortestAngleDelta = shortestAngleDelta
 
--- Returning-phase LEFT/RIGHT/SPIN touch band. Was a 24px-tall row
+-- Returning-phase LEFT/RIGHT touch band. Was a 24px-tall row
 -- (254-278), which only clears ~24pt at the smallest supported window
 -- (integer scale 1, 1x device pixel ratio) -- well under the iOS/Android
 -- ~44pt accessibility minimum PlayScene.settlementTouchRows was already
 -- fixed to meet (see game/self_test.lua's canvasPixelsToPoints check).
--- Widened to a 44 canvas px band (244-288). The slot-reel result box above
--- was shrunk from 36px to 34px tall (210-244) so it stops exactly where
--- this band starts, and the message text below still starts at
--- viewport.height - 30 == 290, 2px clear of this band's bottom (288).
+-- Widened to a 44 canvas px band (244-288).
 local returnControls = {
     top = 244,
     bottom = 288,
     leftMaxX = 55,
-    slotMinX = 60,
-    slotMaxX = 120,
     rightMinX = 125,
 }
 M.returnControls = returnControls
@@ -483,9 +478,6 @@ local function rollupAmount(awarded, elapsed, duration)
 end
 M.rollupAmount = rollupAmount
 
-local slotReelStagger = 0.15
-local slotSpinDuration = slotReelStagger * 3
-
 -- EARTH SHOP action/status two-column layout for the hull/steering/
 -- yield/ship rows. Measured with a real LÖVE font probe
 -- (GAME_FONTPROBE=1 love .) against the small scene-cached font
@@ -576,7 +568,6 @@ function M.new(options)
         shipPunch = 0,
         shipShake = 0,
         shipShakeMagnitude = sampleTierShakeMultiplier("common"),
-        slotSpin = nil,
         touches = {},
         verticalOffset = 0,
         rcsCooldown = 0,

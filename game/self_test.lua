@@ -4282,6 +4282,38 @@ end
 --       so long-time solar players see no change.
 --   (b) void triple-star jackpot > solar triple-star jackpot (\"고배당\").
 --   (c) fringe triple-star jackpot > solar and <= void (gradient).
+-- Item 15(a) cleanup: dead in-flight slot constants/fields removed from play.lua.
+-- After item-15 abolished the returning-phase slot machine, three dead remnants
+-- remained: (1) the module-level constants `slotReelStagger`/`slotSpinDuration`
+-- (no longer referenced by any function), (2) `returnControls.slotMinX`/
+-- `.slotMaxX` (slot tap zone fields — only leftMaxX/rightMinX are still used),
+-- and (3) `slotSpin = nil` in M.new() (dead state field never written or read).
+-- This test guards that all three dead artifacts are gone.
+local function testItem15DeadSlotConstantsRemoved()
+    local PlayScene = require("game.scenes.play")
+    -- (1) Module-level dead constants must not leak onto the table.
+    assert(PlayScene.slotReelStagger == nil,
+        "item15 cleanup: PlayScene.slotReelStagger must be removed (dead constant)")
+    assert(PlayScene.slotSpinDuration == nil,
+        "item15 cleanup: PlayScene.slotSpinDuration must be removed (dead constant)")
+    -- (2) returnControls dead slot-zone fields.
+    local rc = PlayScene.returnControls
+    assert(rc ~= nil, "returnControls must still exist")
+    assert(rc.slotMinX == nil,
+        "item15 cleanup: returnControls.slotMinX must be removed (dead slot zone)")
+    assert(rc.slotMaxX == nil,
+        "item15 cleanup: returnControls.slotMaxX must be removed (dead slot zone)")
+    -- Steering fields still present.
+    assert(type(rc.leftMaxX) == "number", "returnControls.leftMaxX must remain")
+    assert(type(rc.rightMinX) == "number", "returnControls.rightMinX must remain")
+    -- (3) Dead slotSpin state field must not appear in a fresh PlayScene instance.
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    assert(scene.slotSpin == nil,
+        "item15 cleanup: scene.slotSpin must be removed from M.new() (dead field)")
+end
+
 --   (d) earthSlotSpin exposes .rewardProfile so UI can show which tier is active.
 --   (e) void no-match (miss) reward <= solar no-match reward (risk tradeoff:
 --       higher ceiling, same or lower floor).
@@ -4436,6 +4468,7 @@ local function runGearTests()
     testEarthSlotMachineGalaxyOdds()
     testGearEarthSlotEngineSlotLuckWiring()
     testEarthSlotProfileRewardVariation()
+    testItem15DeadSlotConstantsRemoved()
 end
 
 function M.run()

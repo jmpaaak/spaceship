@@ -1,8 +1,9 @@
 # STATUS
 - preflight this cycle: READY
-- Slice: Item 11 — Remove dead S%02d slot-count segment from hud_status HUD
+- Slice: Item 15(a) dead slot artifact cleanup in play.lua
 
-## 2026-09-04 — Item 11: Remove dead S%02d from hud_status HUD
+## 2026-09-04 — Item 15(a): Remove dead slotReelStagger/returnControls.slotMinX/slotSpin from play.lua
+
 
 - `hud_status` in i18n.lua (en + ko) had `S%02d` that displayed `slotOpportunities` (always 0 after item-15 abolished in-flight slots). This was dead/misleading UI implying a slot mechanic still existed mid-flight.
 - Removed `S%02d` from `hud_status` so it matches `hud_status_no_slots` format: `"H%d/%d %-6s"`. Both keys now share the same format; `hud_status_no_slots` kept as an alias for backward-compat.
