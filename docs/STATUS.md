@@ -14,8 +14,21 @@
 
 ## Next Slice
 
-- INBOX group (2) minimap markers: DONE this cycle.
-- INBOX group (3): planet effect PNGs (planet_glow.png, planet_shadow.png, planet_rim.png, planet_twinkle.png, planet_sample.png, planet_risk.png) wired into planet draw calls.
+- INBOX group (4): floating text icons — `floating_sample.png`, `floating_damage.png`, `message_banner.png`.
+
+2026-09-04 — ComfyUI planet effect wiring (group 3 of INBOX draw-wiring item).
+
+- Added `drawPlanetEffectSprite(image, cx, cy, diameter, r, g, b, a)` helper; exported as `M.drawPlanetEffectSprite`.
+- 6 planet effect PNGs loaded in `M.new()` into `self.planetEffectImages`: glow, shadow, rim, twinkle, sampleValue, risk.
+- In `draw()` planet loop:
+  - Glow rings: sprite-or-poly fallback (`planet_glow.png` tinted with tier color, diameter = radius+3+glowRings*4 * 2).
+  - Drop shadow: sprite-or-poly fallback (`planet_shadow.png` offset lower-right).
+  - Rim circle (undiscovered): sprite-or-poly fallback (`planet_rim.png` tinted with tier color).
+  - Twinkle sparkle points: each small point replaced with `planet_twinkle.png` sprite-or-1.2px-circle fallback.
+  - Sample value label: `planet_sample.png` icon drawn 9px to the left when image available.
+  - Risk label: `planet_risk.png` icon drawn 9px to the left when image available.
+- Regression test: `drawPlanetEffectSprite` exported, nil→false no-throw, `planetEffectImages` has all 6 keys.
+- `make verify` GREEN.
 
 2026-09-04 — ComfyUI minimap marker wiring (group 2 of INBOX draw-wiring item).
 

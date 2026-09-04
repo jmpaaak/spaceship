@@ -8,7 +8,7 @@
 
   (2) ✅ **미니맵 마커 — 완료 (2026-09-04):** `minimapImages` 맵으로 12개 PNG 로드. `drawMinimapSprite()` 헬퍼 추가. `drawMinimap()`의 배경 disc, orbit ring, galaxy ring, sun, galaxy home/hub/plain, earth, player, beyond-chart 화살표, checkpoint 화살표 모두 sprite-or-poly 분기 적용. 화살표 계열은 방향각 회전 적용. `make verify` GREEN.
 
-  (3) **행성 이펙트** — `planet_glow.png`(planetGlowImage), `planet_shadow.png`(planetShadowImage), `planet_rim.png`(planetRimImage), `planet_twinkle.png`(planetTwinkleImage), `planet_sample.png`(sampleValueIconImage), `planet_risk.png`(riskIconImage).
+  (3) ✅ **행성 이펙트 — 완료 (2026-09-04):** `planet_glow.png`(glow), `planet_shadow.png`(shadow), `planet_rim.png`(rim), `planet_twinkle.png`(twinkle), `planet_sample.png`(sampleValue), `planet_risk.png`(risk) 6개 PNG를 `M.new()`의 `planetEffectImages` 맵으로 로드. `drawPlanetEffectSprite()` 헬퍼 추가. 행성 루프의 glow rings/drop shadow/rim circle/twinkle sparkle 4개 draw 경로와 sample-value·risk 레이블 아이콘 모두 sprite-or-poly 분기 적용. `make verify` GREEN.
 
   (4) **플로팅 텍스트 아이콘** — `floating_sample.png`, `floating_damage.png`, `message_banner.png`.
 

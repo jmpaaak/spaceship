@@ -6178,6 +6178,26 @@ function M.run()
         assert(ok, "drawHudSpriteOrPoly(nil,nil,...) must not throw: " .. tostring(err))
     end
 
+    -- ComfyUI planet effect wiring (group 3): drawPlanetEffectSprite is
+    -- exported and returns false when image is nil (fallback to polygon).
+    do
+        local PlayScene = require("game.scenes.play")
+        assert(type(PlayScene.drawPlanetEffectSprite) == "function",
+            "drawPlanetEffectSprite must be exported on PlayScene")
+        -- nil image -> returns false without error
+        local ok, res = pcall(PlayScene.drawPlanetEffectSprite, nil, 50, 50, 20, 1, 1, 1, 1)
+        assert(ok, "drawPlanetEffectSprite(nil,...) must not throw")
+        assert(res == false, "drawPlanetEffectSprite(nil,...) must return false")
+        -- planetEffectImages key set is present on a new scene instance
+        local scene = PlayScene.new()
+        local pe = scene.planetEffectImages
+        assert(type(pe) == "table", "scene.planetEffectImages must be a table")
+        for _, key in ipairs({"glow","shadow","rim","twinkle","sampleValue","risk"}) do
+            assert(pe[key] == nil or type(pe[key]) == "userdata",
+                "planetEffectImages." .. key .. " must be nil (headless) or image userdata")
+        end
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

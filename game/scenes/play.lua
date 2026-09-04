@@ -321,6 +321,20 @@ local function drawMinimapSprite(image, cx, cy, targetDiameter)
 end
 M.drawMinimapSprite = drawMinimapSprite
 
+-- Draw a planet-effect overlay sprite centered on (cx, cy), scaled so its
+-- largest dimension matches diameter. tint (r,g,b,a) is applied before draw.
+-- Returns true if the image was drawn, false if image is nil (caller keeps
+-- original polygon fallback).
+local function drawPlanetEffectSprite(image, cx, cy, diameter, r, g, b, a)
+    if not image then return false end
+    local iw, ih = image:getDimensions()
+    local scale = diameter / math.max(iw, ih)
+    love.graphics.setColor(r or 1, g or 1, b or 1, a or 1)
+    love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
+    return true
+end
+M.drawPlanetEffectSprite = drawPlanetEffectSprite
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
@@ -670,6 +684,15 @@ function M.new(options)
         returnIc = "assets/effects/hud_return.png",
         earth    = "assets/effects/hud_earth.png",
     })
+    -- Planet effect images (group 3 of ComfyUI asset wiring)
+    local planetEffectImages = loadSpriteMap({
+        glow        = "assets/effects/planet_glow.png",
+        shadow      = "assets/effects/planet_shadow.png",
+        rim         = "assets/effects/planet_rim.png",
+        twinkle     = "assets/effects/planet_twinkle.png",
+        sampleValue = "assets/effects/planet_sample.png",
+        risk        = "assets/effects/planet_risk.png",
+    })
 
     return setmetatable({
         ship = ship,
@@ -703,6 +726,7 @@ function M.new(options)
         debrisImagePaths = debrisImagePaths,
         hudIconImages = hudIconImages,
         minimapImages = minimapImages,
+        planetEffectImages = planetEffectImages,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -1940,17 +1964,27 @@ function M:draw()
                 local tier = world.sampleTier(planet)
                 local effect = sampleTierEffect(tier)
                 local glowR, glowG, glowB = sampleTierColor(tier)
-                for ring = effect.glowRings, 1, -1 do
-                    local ringAlpha = effect.glowAlpha * (ring / effect.glowRings) * 0.5
-                    love.graphics.setColor(glowR, glowG, glowB, ringAlpha)
-                    love.graphics.circle("fill", x, y, planet.radius + 3 + ring * 4)
+                local pe = self.planetEffectImages or {}
+                local glowDiam = (planet.radius + 3 + effect.glowRings * 4) * 2
+                if not drawPlanetEffectSprite(pe.glow, x, y, glowDiam, glowR, glowG, glowB, effect.glowAlpha) then
+                    for ring = effect.glowRings, 1, -1 do
+                        local ringAlpha = effect.glowAlpha * (ring / effect.glowRings) * 0.5
+                        love.graphics.setColor(glowR, glowG, glowB, ringAlpha)
+                        love.graphics.circle("fill", x, y, planet.radius + 3 + ring * 4)
+                    end
                 end
             end
             -- Soft drop shadow: a low-alpha dark circle offset toward the
             -- lower-right, opposite the highlight, so planets read as
             -- slightly raised cards instead of flat painted circles.
-            love.graphics.setColor(0, 0, 0, 0.25)
-            love.graphics.circle("fill", x + planet.radius * 0.22, y + planet.radius * 0.22, planet.radius * 1.02)
+            local pe2 = self.planetEffectImages or {}
+            local shadowDiam = planet.radius * 2 * 1.02
+            if not drawPlanetEffectSprite(pe2.shadow,
+                    x + planet.radius * 0.22, y + planet.radius * 0.22,
+                    shadowDiam, 0, 0, 0, 0.25) then
+                love.graphics.setColor(0, 0, 0, 0.25)
+                love.graphics.circle("fill", x + planet.radius * 0.22, y + planet.radius * 0.22, planet.radius * 1.02)
+            end
             -- Saturated gradient fill: a darker base circle with a brighter
             -- highlight offset toward the upper-left, approximating a soft
             -- directional light instead of a single flat fill color.
@@ -1974,7 +2008,12 @@ function M:draw()
             end
             if not self.discovered[planet.id] then
                 love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
-                love.graphics.circle("line", x, y, planet.radius + 3)
+                local pe3 = self.planetEffectImages or {}
+                local rimDiam = (planet.radius + 3) * 2
+                if not drawPlanetEffectSprite(pe3.rim, x, y, rimDiam,
+                        sampleTierColor(world.sampleTier(planet))) then
+                    love.graphics.circle("line", x, y, planet.radius + 3)
+                end
                 -- Balatro-style twinkle: a handful of small points orbiting
                 -- just outside the rim glow, each with its own phase so the
                 -- shimmer isn't perfectly synchronized across points.
@@ -1984,6 +2023,7 @@ function M:draw()
                 local shipDx, shipDy = planet.x - self.ship.x, planet.y - self.ship.y
                 local shipDistance = math.sqrt(shipDx * shipDx + shipDy * shipDy)
                 local anticipation = sparkleAnticipationMultiplier(shipDistance, planet.radius + 14)
+                local pe4 = self.planetEffectImages or {}
                 for i = 1, sparkle.count do
                     local seed = (planet.id and (tostring(planet.id):len() * 7) or 0) + i * 2.4
                     local angle = self.time * (sparkle.speed * 0.4 * anticipation) + seed
@@ -1991,8 +2031,13 @@ function M:draw()
                     local px = x + math.cos(angle) * sparkleRadius
                     local py = y + math.sin(angle) * sparkleRadius
                     local alpha = math.max(0, math.min(1, sparkleAlpha(tier, self.time, seed)))
-                    love.graphics.setColor(math.min(1, sr + 0.2), math.min(1, sg + 0.2), math.min(1, sb + 0.2), alpha)
-                    love.graphics.circle("fill", px, py, 1.2)
+                    local tr = math.min(1, sr + 0.2)
+                    local tg = math.min(1, sg + 0.2)
+                    local tb = math.min(1, sb + 0.2)
+                    if not drawPlanetEffectSprite(pe4.twinkle, px, py, 4, tr, tg, tb, alpha) then
+                        love.graphics.setColor(tr, tg, tb, alpha)
+                        love.graphics.circle("fill", px, py, 1.2)
+                    end
                 end
             end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
@@ -2001,11 +2046,18 @@ function M:draw()
             if risk then
                 local font = love.graphics.getFont()
                 local previewY
+                local pe5 = self.planetEffectImages or {}
                 if risk.sampleLabel then
                     previewY = math.max(48, y - planet.radius - 24)
                     love.graphics.setColor(0.45, 0.95, 1)
-                    love.graphics.print(risk.sampleLabel,
-                        clampLabelX(x, font:getWidth(risk.sampleLabel), viewport.width), previewY)
+                    local lx = clampLabelX(x, font:getWidth(risk.sampleLabel), viewport.width)
+                    -- planet_sample.png icon to the left of sample value label
+                    local iconSize = 9
+                    if pe5.sampleValue then
+                        drawPlanetEffectSprite(pe5.sampleValue, lx - iconSize * 0.5 - 1, previewY + iconSize * 0.5, iconSize, 0.45, 0.95, 1, 1)
+                        love.graphics.setColor(0.45, 0.95, 1)
+                    end
+                    love.graphics.print(risk.sampleLabel, lx, previewY)
                     previewY = previewY + 11
                 else
                     previewY = math.max(72, y - planet.radius - 12)
@@ -2015,8 +2067,19 @@ function M:draw()
                 else
                     love.graphics.setColor(1, 0.8, 0.25)
                 end
-                love.graphics.print(risk.label,
-                    clampLabelX(x, font:getWidth(risk.label), viewport.width), previewY)
+                local rlx = clampLabelX(x, font:getWidth(risk.label), viewport.width)
+                -- planet_risk.png icon to the left of risk label
+                local rIconSize = 9
+                local rr, rg, rb = risk.lethal and 1 or 1, risk.lethal and 0.3 or 0.8, risk.lethal and 0.25 or 0.25
+                if pe5.risk then
+                    drawPlanetEffectSprite(pe5.risk, rlx - rIconSize * 0.5 - 1, previewY + rIconSize * 0.5, rIconSize, rr, rg, rb, 1)
+                    if risk.lethal then
+                        love.graphics.setColor(1, 0.3, 0.25)
+                    else
+                        love.graphics.setColor(1, 0.8, 0.25)
+                    end
+                end
+                love.graphics.print(risk.label, rlx, previewY)
             end
         end
     end
