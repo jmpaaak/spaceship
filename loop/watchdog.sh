@@ -54,6 +54,47 @@ has_in_progress_merge() {
   [[ -f "${worktree_dir}/.git/MERGE_HEAD" ]] || [[ -d "${worktree_dir}/.git/rebase-merge" ]] || [[ -d "${worktree_dir}/.git/rebase-apply" ]]
 }
 
+# If STOP exists but INBOX has pending work, treat STOP as stale idle-stop
+# and resume. Manual halt still works: leave 처리 대기 empty, or write
+# loop/STOP with first line containing MANUAL.
+inbox_has_pending() {
+  local worktree_dir="$1"
+  local inbox="${worktree_dir}/docs/feedback/INBOX.md"
+  [[ -f "${inbox}" ]] || return 1
+  python3 - "${inbox}" <<'PY'
+from pathlib import Path
+import sys
+text = Path(sys.argv[1]).read_text(encoding="utf-8")
+_, marker, after = text.partition("## 처리 대기")
+if not marker:
+    raise SystemExit(1)
+section = after.split("## 처리 완료", 1)[0]
+for line in section.splitlines():
+    s = line.strip()
+    if not s or s.startswith("(") or s.startswith("<!--"):
+        continue
+    if s.startswith("-") or (s[:1].isdigit() and "." in s[:4]):
+        raise SystemExit(0)
+raise SystemExit(1)
+PY
+}
+
+maybe_clear_stale_stop() {
+  local worktree_dir="$1"
+  local label="$2"
+  local stop="${worktree_dir}/loop/STOP"
+  [[ -f "${stop}" ]] || return 0
+  if head -n 1 "${stop}" 2>/dev/null | grep -qi "MANUAL"; then
+    log "SKIP ${label}: loop/STOP is MANUAL, not auto-clearing."
+    return 0
+  fi
+  if inbox_has_pending "${worktree_dir}"; then
+    log "RESUME ${label}: INBOX has pending items; removing stale loop/STOP."
+    rm -f "${stop}"
+  fi
+}
+
+
 start_loop() {
   local worktree_dir="$1"
   local label="$2"
@@ -61,6 +102,7 @@ start_loop() {
     log "SKIP ${label}: merge/rebase in progress in ${worktree_dir}, not touching it."
     return
   fi
+  maybe_clear_stale_stop "${worktree_dir}" "${label}"
   if [[ -f "${worktree_dir}/loop/STOP" ]]; then
     log "SKIP ${label}: loop/STOP present (intentionally stopped), not restarting."
     return
