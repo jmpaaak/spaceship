@@ -1304,3 +1304,7 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 
 - Gear lane had emptied INBOX (items 7/8/11/15 newly completed; 9/10/12/13/14 already done) and was STOP'd to stop idle watchdog restarts.
 - Merge took gear gameplay (`expedition.lua`, `play.lua`, `self_test.lua`, `i18n.lua`, `world.lua`, `main.lua`) plus gear JSON/editor (`game/gear.lua`, `game/data/*`, `tools/gear-editor/`).\n- Kept main analog 8-way `game/ship.lua`, main loop PROMPT/env/preflight (TOKEN HINT, WAIT=10), and main ComfyUI URL prefixes in `tools/verify_asset_manifest.py`.
+
+## Archived from STATUS.md (2026-09-05 08:22)
+
+2026-09-05 — fix(debris): collision deals 1 damage instead of instant kill.

@@ -124,8 +124,20 @@ local function testJoystick()
     assert(math.abs(tiltScene.ship.angle - restAngle) > 0.5,
         "unclamped heading must be able to travel more than the old 0.5 rad lean")
     assert(#tiltScene.particles > 0, "tilting left/right must spawn a side RCS puff")
-    assert(tiltScene.particles[1].x < tiltScene.ship.x,
-        "a right tilt's RCS puff must emit from the ship's left side")
+    -- With angle-aware RCS puffs the spawn offset is perpendicular to the
+    -- ship's current heading (angle + pi/2).  bank>0 → side=-1.
+    do
+        local p = tiltScene.particles[1]
+        local a = tiltScene.ship.angle
+        local perpX = math.cos(a + math.pi / 2)
+        local perpY = math.sin(a + math.pi / 2)
+        -- side = -1 for right bank
+        local expDx = -perpX * 6
+        local expDy = -perpY * 6
+        assert(math.abs(p.x - tiltScene.ship.x - expDx) < 0.5 and
+               math.abs(p.y - tiltScene.ship.y - expDy) < 0.5,
+            "a right tilt's RCS puff must emit perpendicular to ship.angle (angle-aware)")
+    end
     local heldAngle = tiltScene.ship.angle
     tiltScene.touches["stick"] = nil
     tiltScene:update(1)

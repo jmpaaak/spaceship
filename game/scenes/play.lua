@@ -1527,11 +1527,15 @@ function M:update(dt)
             self.rcsCooldown = 0.045
             if math.abs(bank) > 0.12 then
                 local side = bank > 0 and -1 or 1
+                -- RCS side puff: emit from the ship's flank in the
+                -- perpendicular direction (ship.angle + π/2).
+                local perpX = math.cos(self.ship.angle + math.pi / 2)
+                local perpY = math.sin(self.ship.angle + math.pi / 2)
                 self.particles[#self.particles + 1] = {
-                    x = self.ship.x + side * 6,
-                    y = self.ship.y + 3,
-                    vx = side * (16 + math.random() * 10),
-                    vy = 6 + math.random() * 10,
+                    x = self.ship.x + side * perpX * 6,
+                    y = self.ship.y + side * perpY * 6,
+                    vx = side * perpX * (16 + math.random() * 10),
+                    vy = side * perpY * (16 + math.random() * 10),
                     timer = rcsPuffDuration,
                     maxTimer = rcsPuffDuration,
                     r = 0.7,
@@ -1540,13 +1544,18 @@ function M:update(dt)
                 }
             end
             if math.abs(lift) > 0.12 then
-                -- Opposite vertical jet: stick-down puffs above, stick-up below.
+                -- Opposite fore/aft jet: stick-down puffs from above (nose
+                -- side), stick-up puffs from below (tail side).
+                -- Uses ship.angle forward vector (cos/sin) so the spawn and
+                -- velocity rotate correctly when the ship is banked.
                 local vside = lift > 0 and -1 or 1
+                local fwdX = math.cos(self.ship.angle)
+                local fwdY = math.sin(self.ship.angle)
                 self.particles[#self.particles + 1] = {
-                    x = self.ship.x + (math.random() * 4 - 2),
-                    y = self.ship.y + vside * 6,
-                    vx = (math.random() * 8 - 4),
-                    vy = vside * (16 + math.random() * 10),
+                    x = self.ship.x + (-vside) * fwdX * 6,
+                    y = self.ship.y + (-vside) * fwdY * 6,
+                    vx = (-vside) * fwdX * (16 + math.random() * 10),
+                    vy = (-vside) * fwdY * (16 + math.random() * 10),
                     timer = rcsPuffDuration,
                     maxTimer = rcsPuffDuration,
                     r = 0.7,

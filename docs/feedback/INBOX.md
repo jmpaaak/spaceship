@@ -2,22 +2,12 @@
 
 ## 처리 대기
 
-- **[2026-09-05] RCS 분출 위치에 ship.angle 반영 (선택, 조이스틱 개선):**
-  - 현재 분출 위치가 `ship.x ± 6, ship.y ± 6` 고정 좌표 — 배가 기울어져도 분출이 배 측면에서 나오지 않음.
-  - 개선: 분출 위치를 `ship.angle` 기준 회전 좌표로 계산:
-    ```lua
-    -- 가로 분출: 배 측면 (ship.angle + π/2 방향 ± 6px)
-    local perpX = math.cos(self.ship.angle + math.pi / 2)
-    local perpY = math.sin(self.ship.angle + math.pi / 2)
-    x = self.ship.x + side * perpX * 6
-    y = self.ship.y + side * perpY * 6
-    vx = side * perpX * (16 + math.random()*10)
-    vy = side * perpY * (16 + math.random()*10)
-    ```
-  - 세로 분출도 동일하게 `ship.angle` 기준 앞뒤로 계산.
-  - `make verify` GREEN + 커밋: `fix(rcs): puff position/velocity follow ship.angle`
-
 ## 처리 완료
+
+- ✅ 완료(2026-09-05) **RCS 분출 위치에 ship.angle 반영 (선택, 조이스틱 개선):**
+  - play.lua: 가로 분출 위치/속도 → `perp = angle + pi/2` 방향 × 6px. 세로 분출 → `fwd = (cos/sin)(angle)` 방향 × 6px.
+  - self_test.lua: 기존 `particles[1].x < ship.x` 단순 검사 → 각도 인식 기하학 검증(perpX/perpY 계산으로 0.5px 허용오차 비교)으로 교체.
+  - make verify GREEN.
 
 - ✅ 완료(2026-09-05) **잔해(debris) 충돌 즉사 → 고정 1 데미지로 완화:**
   - `play.lua` line 1727: `local damage = self.expedition.durability` → `local damage = 1`.

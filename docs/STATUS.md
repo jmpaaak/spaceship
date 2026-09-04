@@ -1,14 +1,13 @@
 ## Current Status
-2026-09-05 — fix(debris): collision deals 1 damage instead of instant kill.
-
-- `play.lua` line 1727: `local damage = self.expedition.durability` → `local damage = 1`.
-- self_test.lua debris test split into (A) 1-damage survival at full HP and (B) lethal hit at durability==1.
-- Particles, screen shake, and floating damage text unchanged.
-- `make verify` GREEN.
+- RCS puff position/velocity now follow ship.angle.
+- Horizontal (bank) puff: spawns at ship flank using perp direction (angle + pi/2), velocity in that same direction.
+- Vertical (lift) puff: spawns at ship nose/tail using forward direction (cos/sin of angle), velocity along that axis.
+- self_test.lua horizontal-puff assert updated to verify angle-aware geometry.
+- make verify GREEN.
 
 ## Next Slice
 
-- INBOX: RCS 분출 위치에 ship.angle 반영 — puff position/velocity follow ship.angle.
+- INBOX: 처리 대기 비어있음 (RCS 완료). IDLE.
 
 
 
