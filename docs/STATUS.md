@@ -14,4 +14,13 @@
 
 ## Next Slice
 
-- INBOX group (2): minimap marker PNGs (minimap_disc.png, minimap_player.png, minimap_sun.png, etc.) wired into `drawMinimap()`.
+- INBOX group (2) minimap markers: DONE this cycle.
+- INBOX group (3): planet effect PNGs (planet_glow.png, planet_shadow.png, planet_rim.png, planet_twinkle.png, planet_sample.png, planet_risk.png) wired into planet draw calls.
+
+2026-09-04 — ComfyUI minimap marker wiring (group 2 of INBOX draw-wiring item).
+
+- Added `drawMinimapSprite(image, cx, cy, targetDiameter)` helper to `game/scenes/play.lua`; exported as `M.drawMinimapSprite`.
+- 12 minimap PNGs now loaded in `M.new()` into `self.minimapImages`: disc, player, sun, earth, earthReturn, galaxyHome, galaxyPlain, checkpointStar, checkpointArrow, spiralStar, orbitRing, galaxyRing.
+- `drawMinimap()` fully sprite-wired: background disc, orbit rings, galaxy rings, sun, galaxy home/hub/plain dots, earth marker, player marker, beyond-chart earth-return arrow (rotated), off-chart checkpoint arrow (rotated). Every element falls back to original polygon if image is nil.
+- `make verify` GREEN.
+

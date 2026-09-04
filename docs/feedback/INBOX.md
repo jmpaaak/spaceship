@@ -6,7 +6,7 @@
 
   (1) ✅ **HUD 아이콘 — 완료 (2026-09-04):** `hud_coin.png`(cash), `hud_shield.png`(hull), `hud_speed.png`(speed), `hud_distance.png`(dist), `hud_best.png`(best), `hud_samples.png`(samples), `hud_galaxy.png`(galaxy), `hud_return.png`(return), `hud_earth.png`(earth) 9개 PNG를 `M.new()`에서 로드해 `self.hudIconImages`에 저장. `drawHudSpriteOrPoly()` 헬퍼 추가. draw()의 galaxy/distance/cash/hull/samples/earth/return/best 행 모두 sprite-or-poly 분기 적용. `make verify` GREEN.
 
-  (2) **미니맵 마커** — `minimap_disc.png`, `minimap_player.png`, `minimap_sun.png`, `minimap_earth.png`, `minimap_earth_return.png`, `minimap_galaxy_home.png`, `minimap_galaxy_plain.png`, `minimap_checkpoint_star.png`, `minimap_checkpoint_arrow.png`, `minimap_spiral_star.png`, `minimap_orbit_ring.png`, `minimap_galaxy_ring.png`.
+  (2) ✅ **미니맵 마커 — 완료 (2026-09-04):** `minimapImages` 맵으로 12개 PNG 로드. `drawMinimapSprite()` 헬퍼 추가. `drawMinimap()`의 배경 disc, orbit ring, galaxy ring, sun, galaxy home/hub/plain, earth, player, beyond-chart 화살표, checkpoint 화살표 모두 sprite-or-poly 분기 적용. 화살표 계열은 방향각 회전 적용. `make verify` GREEN.
 
   (3) **행성 이펙트** — `planet_glow.png`(planetGlowImage), `planet_shadow.png`(planetShadowImage), `planet_rim.png`(planetRimImage), `planet_twinkle.png`(planetTwinkleImage), `planet_sample.png`(sampleValueIconImage), `planet_risk.png`(riskIconImage).
 

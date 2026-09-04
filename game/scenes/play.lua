@@ -309,6 +309,18 @@ local function drawHudSpriteOrPoly(image, pointsFn, cx, cy, size)
 end
 M.drawHudSpriteOrPoly = drawHudSpriteOrPoly
 
+-- Draw a minimap sprite icon centered on (cx, cy), scaled so its largest
+-- dimension matches targetDiameter. If image is nil, no fallback is needed
+-- here -- the caller keeps the original polygon draw.
+local function drawMinimapSprite(image, cx, cy, targetDiameter)
+    if not image then return false end
+    local iw, ih = image:getDimensions()
+    local scale = targetDiameter / math.max(iw, ih)
+    love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
+    return true
+end
+M.drawMinimapSprite = drawMinimapSprite
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
@@ -631,6 +643,21 @@ function M.new(options)
     local slotSymbolImages = loadSpriteMap(slotSymbolImagePaths)
     local shopIconImages = loadSpriteMap(shopIconImagePaths)
     local debrisImages = loadSpriteMap(debrisImagePaths)
+    -- Minimap marker images (group 2 of ComfyUI asset wiring)
+    local minimapImages = loadSpriteMap({
+        disc           = "assets/effects/minimap_disc.png",
+        player         = "assets/effects/minimap_player.png",
+        sun            = "assets/effects/minimap_sun.png",
+        earth          = "assets/effects/minimap_earth.png",
+        earthReturn    = "assets/effects/minimap_earth_return.png",
+        galaxyHome     = "assets/effects/minimap_galaxy_home.png",
+        galaxyPlain    = "assets/effects/minimap_galaxy_plain.png",
+        checkpointStar = "assets/effects/minimap_checkpoint_star.png",
+        checkpointArrow= "assets/effects/minimap_checkpoint_arrow.png",
+        spiralStar     = "assets/effects/minimap_spiral_star.png",
+        orbitRing      = "assets/effects/minimap_orbit_ring.png",
+        galaxyRing     = "assets/effects/minimap_galaxy_ring.png",
+    })
     -- HUD icon images (group 1 of ComfyUI asset wiring)
     local hudIconImages = loadSpriteMap({
         cash     = "assets/effects/hud_coin.png",
@@ -675,6 +702,7 @@ function M.new(options)
         debrisImages = debrisImages,
         debrisImagePaths = debrisImagePaths,
         hudIconImages = hudIconImages,
+        minimapImages = minimapImages,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -1710,59 +1738,109 @@ function M:drawMinimap()
     local size = minimap.size
     local cx = viewport.width - size / 2 - 3
     local cy = hudHeight + size / 2 + 2
-    love.graphics.setColor(0.02, 0.04, 0.1, 1)
-    love.graphics.circle("fill", cx, cy, size / 2)
-    love.graphics.setColor(0.35, 0.55, 0.8, 1)
-    love.graphics.circle("line", cx, cy, size / 2)
+    local mm = self.minimapImages or {}
+    -- Background disc: sprite or filled circle
+    love.graphics.setColor(1, 1, 1, 1)
+    if not drawMinimapSprite(mm.disc, cx, cy, size) then
+        love.graphics.setColor(0.02, 0.04, 0.1, 1)
+        love.graphics.circle("fill", cx, cy, size / 2)
+        love.graphics.setColor(0.35, 0.55, 0.8, 1)
+        love.graphics.circle("line", cx, cy, size / 2)
+    end
+    -- Rings: galaxy rings and orbit rings (sprites drawn per ring type)
     for _, ring in ipairs(view.rings or {}) do
         if ring.kind == "orbit" then
             love.graphics.setColor(0.85, 0.7, 0.25, 0.55)
-            love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
-        elseif ring.inside ~= false then
-            if ring.id == "milkyway" then
-                love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
+            local ringImg = mm.orbitRing
+            if ringImg then
+                love.graphics.setColor(1, 1, 1, 0.55)
+                local diam = ring.radius * 2
+                drawMinimapSprite(ringImg, cx + ring.x, cy + ring.y, diam)
             else
-                love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
+                love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
             end
-            love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+        elseif ring.inside ~= false then
+            local ringImg = mm.galaxyRing
+            if ringImg then
+                if ring.id == "milkyway" then
+                    love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
+                else
+                    love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
+                end
+                drawMinimapSprite(ringImg, cx + ring.x, cy + ring.y, ring.radius * 2)
+            else
+                if ring.id == "milkyway" then
+                    love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
+                else
+                    love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
+                end
+                love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+            end
         end
     end
+    -- Sun marker
     if view.sun then
-        love.graphics.setColor(1, 0.85, 0.25)
-        love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, 2.6)
+        love.graphics.setColor(1, 0.85, 0.25, 1)
+        if not drawMinimapSprite(mm.sun, cx + view.sun.x, cy + view.sun.y, minimap.markerSunRadius * 2) then
+            love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, 2.6)
+        end
     end
+    -- Galaxy markers
     for _, galaxy in ipairs(view.galaxies) do
         if galaxy.inside then
             if galaxy.id == "milkyway" then
-                love.graphics.setColor(0.25, 0.55, 1)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
+                love.graphics.setColor(0.25, 0.55, 1, 1)
+                if not drawMinimapSprite(mm.galaxyHome, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius * 2) then
+                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
+                end
             elseif galaxy.hub then
-                -- Checkpoint galaxy: bigger dot plus a shimmering ring so it
-                -- reads as distinct from an ordinary galaxy on the chart
-                -- (docs/feedback/INBOX.md item 1). Ring's alpha pulses with
-                -- self.time for a "sparkling" beacon feel.
+                -- Checkpoint galaxy: sprite or pulsing dot+ring
                 local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
-                love.graphics.setColor(0.9, 0.75, 0.3)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
-                love.graphics.setColor(1, 0.95, 0.6, pulse)
-                love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
+                if mm.checkpointStar then
+                    love.graphics.setColor(0.9, 0.75, 0.3, pulse * 0.7 + 0.3)
+                    drawMinimapSprite(mm.checkpointStar, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius * 3)
+                else
+                    love.graphics.setColor(0.9, 0.75, 0.3)
+                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
+                    love.graphics.setColor(1, 0.95, 0.6, pulse)
+                    love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
+                end
             else
-                love.graphics.setColor(0.9, 0.75, 0.3)
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
+                love.graphics.setColor(0.9, 0.75, 0.3, 1)
+                if not drawMinimapSprite(mm.galaxyPlain, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius * 2) then
+                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
+                end
             end
         end
     end
-    love.graphics.setColor(0.3, 0.85, 1)
-    love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, 2)
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, 1.7)
-    love.graphics.setColor(1, 1, 1, 0.9)
-    love.graphics.circle("line", cx + view.player.x, cy + view.player.y, 2.4)
+    -- Earth marker
+    love.graphics.setColor(0.3, 0.85, 1, 1)
+    if not drawMinimapSprite(mm.earth, cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius * 2) then
+        love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, 2)
+    end
+    -- Player marker
+    love.graphics.setColor(1, 1, 1, 1)
+    if not drawMinimapSprite(mm.player, cx + view.player.x, cy + view.player.y, minimap.markerPlayerLineRadius * 2) then
+        love.graphics.circle("fill", cx + view.player.x, cy + view.player.y, 1.7)
+        love.graphics.setColor(1, 1, 1, 0.9)
+        love.graphics.circle("line", cx + view.player.x, cy + view.player.y, 2.4)
+    end
+    -- Beyond-chart earth-return arrow
     if view.beyond then
-        love.graphics.setColor(1, 0.55, 0.3)
+        love.graphics.setColor(1, 0.55, 0.3, 1)
         local rim = size / 2 - 5
-        love.graphics.circle("fill", cx + view.returnDx * rim, cy + view.returnDy * rim, 2.2)
+        local bx = cx + view.returnDx * rim
+        local by = cy + view.returnDy * rim
+        local angle = math.atan2(view.returnDy, view.returnDx) + math.pi / 2
+        if mm.earthReturn then
+            local iw, ih = mm.earthReturn:getDimensions()
+            local bscale = (minimap.markerBeyondRadius * 2) / math.max(iw, ih)
+            love.graphics.draw(mm.earthReturn, bx, by, angle, bscale, bscale, iw / 2, ih / 2)
+        else
+            love.graphics.circle("fill", bx, by, 2.2)
+        end
         local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
+        love.graphics.setColor(1, 0.55, 0.3, 1)
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
     if self.expedition.phase == "returning" then
@@ -1775,16 +1853,23 @@ function M:drawMinimap()
         -- magenta from the orange Earth-return marker above, and offset
         -- slightly inward on the rim so the two never overlap when both
         -- are showing at once.
-        love.graphics.setColor(0.85, 0.35, 0.95)
+        love.graphics.setColor(0.85, 0.35, 0.95, 1)
         local rim = size / 2 - 9
         local tipX = cx + view.checkpointDx * rim
         local tipY = cy + view.checkpointDy * rim
-        love.graphics.circle("fill", tipX, tipY, 1.8)
-        local perpX, perpY = -view.checkpointDy, view.checkpointDx
-        love.graphics.polygon("fill",
-            tipX + view.checkpointDx * 3, tipY + view.checkpointDy * 3,
-            tipX - view.checkpointDx * 1.5 + perpX * 1.6, tipY - view.checkpointDy * 1.5 + perpY * 1.6,
-            tipX - view.checkpointDx * 1.5 - perpX * 1.6, tipY - view.checkpointDy * 1.5 - perpY * 1.6)
+        local angle = math.atan2(view.checkpointDy, view.checkpointDx) + math.pi / 2
+        if mm.checkpointArrow then
+            local iw, ih = mm.checkpointArrow:getDimensions()
+            local bscale = (minimap.markerCheckpointTipRadius * 2) / math.max(iw, ih)
+            love.graphics.draw(mm.checkpointArrow, tipX, tipY, angle, bscale, bscale, iw / 2, ih / 2)
+        else
+            love.graphics.circle("fill", tipX, tipY, 1.8)
+            local perpX, perpY = -view.checkpointDy, view.checkpointDx
+            love.graphics.polygon("fill",
+                tipX + view.checkpointDx * 3, tipY + view.checkpointDy * 3,
+                tipX - view.checkpointDx * 1.5 + perpX * 1.6, tipY - view.checkpointDy * 1.5 + perpY * 1.6,
+                tipX - view.checkpointDx * 1.5 - perpX * 1.6, tipY - view.checkpointDy * 1.5 - perpY * 1.6)
+        end
     end
 end
 
