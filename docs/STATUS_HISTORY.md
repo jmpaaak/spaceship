@@ -1130,3 +1130,26 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - Applied circle-mask alpha channel modification to ensure strict transparent corners for UI overlay compatibility.
 - Updated `docs/assets/MANIFEST.json` with new SHA-256 hashes and appended to `docs/GENERATED_ASSET_LOG.md`.
 - `make verify` GREEN (passed all `self_test.lua` transparency assertions).
+
+## Archived from STATUS.md (2026-09-05 01:56)
+
+
+2026-09-05 — INBOX ComfyUI regen group (4) HUD icons slice 2: distance/best/samples.
+
+- Finished leftover dirty-tree work: previous cycle regenerated `hud_distance.png` / `hud_best.png` to 32×32 RGBA but left `hud_samples.png` at 64×64 RGB, which failed `testHudIconRegenSlice`.
+- Regenerated `assets/effects/hud_samples.png` via remote ComfyUI (`http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, prompt_id `1bfb2e06-53f4-4dbc-b272-41283ec7c080`, seed `20260905306`, 512×512 then nearest-neighbor fit). Backdrop knock-out + 20×22 body centered on 32×32 RGBA (opaque 281/1024, transparent corners).
+- Slice 2 trio now all 32×32 RGBA with padding: `hud_distance.png` (seed 20260905304, cyan nav diamond, opaque 254/1024), `hud_best.png` (seed 20260905305, gold trophy, opaque 227/1024), `hud_samples.png` (amber vial).
+- Extended `testHudIconRegenSlice` to assert 32×32 + transparent corners + non-full-bleed for the three slice-2 icons (plus slice 1 cash/hull/speed).
+- Updated `docs/assets/MANIFEST.json` provenance and appended `docs/GENERATED_ASSET_LOG.md`.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:183`, `ASSET_MANIFEST_OK`).
+
+## Archived from STATUS.md (2026-09-05 02:13)
+
+
+2026-09-05 — INBOX ComfyUI regen group (4) HUD icons slice 3: galaxy/return/earth.
+
+- Regenerated remaining HUD trio via remote ComfyUI (`http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`): `hud_galaxy.png` (prompt_id `75620296-2bad-40e5-a7f9-1bb29081ed5e`, seed `20260905307`, gold eight-pointed star, opaque 484/1024, body 22×22), `hud_return.png` (prompt_id `84e66392-646a-4c97-821e-7a1e895308f5`, seed `20260905308`, cyan downward chevron, opaque 64/1024, body 14×19), `hud_earth.png` (prompt_id `9b27582e-3da9-48e6-8fde-0ce357a26cd6`, seed `20260905309`, cyan Earth globe, opaque 359/1024, body 22×21). 512×512 then nearest-neighbor fit onto 32×32 RGBA with transparent corners.
+- Group (4) all 9 HUD icons are now 32×32 RGBA with padding (coin/shield/speed, distance/best/samples, galaxy/return/earth).
+- Extended `testHudIconRegenSlice` to assert 32×32 + transparent corners + non-full-bleed for the three slice-3 icons.
+- Updated `docs/assets/MANIFEST.json` provenance and appended `docs/GENERATED_ASSET_LOG.md`.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:184`, `ASSET_MANIFEST_OK`).

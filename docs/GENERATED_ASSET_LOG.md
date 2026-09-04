@@ -125,3 +125,9 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-05T01:52:58+0900 | assets/effects/hud_distance.png | INBOX group (4) slice 2: 32x32 transparent cyan nav-diamond distance HUD icon (seed 20260905304)
 2026-09-05T01:52:58+0900 | assets/effects/hud_best.png | INBOX group (4) slice 2: 32x32 transparent gold trophy personal-best HUD icon (seed 20260905305)
 2026-09-05T01:52:58+0900 | assets/effects/hud_samples.png | INBOX group (4) slice 2: 32x32 transparent amber specimen-vial samples HUD icon (seed 20260905306)
+2026-09-05T02:04:47+0900 | assets/effects/hud_galaxy.png | INBOX group (4) slice 3: 32x32 transparent gold eight-pointed-star galaxy HUD icon (seed 20260905307)
+2026-09-05T02:04:47+0900 | assets/effects/hud_return.png | INBOX group (4) slice 3: 32x32 transparent cyan downward-chevron return HUD icon (seed 20260905308)
+2026-09-05T02:04:47+0900 | assets/effects/hud_earth.png | INBOX group (4) slice 3: 32x32 transparent cyan Earth-globe earth HUD icon (seed 20260905309)
+2026-09-05T02:13:00+0900 | assets/effects/shop_panel.png | 64x64 shop panel corner background
+2026-09-05T02:13:00+0900 | assets/effects/loadout_panel.png | 64x64 loadout panel corner background
+2026-09-05T02:13:00+0900 | assets/effects/destroyed_panel.png | 64x64 destroyed panel corner background

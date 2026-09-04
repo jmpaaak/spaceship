@@ -577,6 +577,9 @@ local function testHudIconRegenSlice()
         "assets/effects/hud_distance.png",
         "assets/effects/hud_best.png",
         "assets/effects/hud_samples.png",
+        "assets/effects/hud_galaxy.png",
+        "assets/effects/hud_return.png",
+        "assets/effects/hud_earth.png",
     }
     for _, path in ipairs(paths) do
         local data = love.image.newImageData(path)

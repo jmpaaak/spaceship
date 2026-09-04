@@ -1,5 +1,12 @@
 ## Current Status
 
+2026-09-05 — ComfyUI asset generation: UI panels (group 5 of INBOX asset generation item).
+
+- Generated 64x64 corner tile transparent PNGs for `shop_panel.png`, `loadout_panel.png`, and `destroyed_panel.png` via ComfyUI.
+- Logged new assets to `docs/GENERATED_ASSET_LOG.md` and updated `MANIFEST.json`.
+- Moved "모든 시각 에셋 ComfyUI 전면 재생성" to `## 처리 완료` as all sub-items (0-5) are now fully completed.
+- `make verify` GREEN.
+
 2026-09-05 — INBOX ComfyUI regen group (4) HUD icons slice 2: distance/best/samples.
 
 - Finished leftover dirty-tree work: previous cycle regenerated `hud_distance.png` / `hud_best.png` to 32×32 RGBA but left `hud_samples.png` at 64×64 RGB, which failed `testHudIconRegenSlice`.
@@ -131,8 +138,8 @@
 - In `draw()` destroyed phase: each printf row now prefixed with a 9px icon via `drawHudSpriteOrPoly`; text shifted right by icon+gap (11px) so icons never overlap text; upgrades line kept full-width (no icon).
 - `make verify` GREEN.
 
-## Next Slice (group 8)
+## Next Slice
 
-- Remaining un-drawn assets: `hud_panel.png`, `shop_panel.png`, `shop_touch_row.png`, `shop_title.png`, `shop_hull_action.png`, `shop_steering_action.png`, `shop_yield_action.png`, `shop_ship_action.png`, `shop_stats.png`, `shop_hull_status.png`, `shop_steering_status.png`, `shop_yield_status.png`, `shop_ship_status.png`, `shop_hull_preview.png`, `shop_steering_preview.png`, `shop_yield_preview.png`, `shop_ship_preview.png`, `shop_next_ship.png`, `loadout_ship.png`, `destroyed_next_ship.png`, `destroyed_tap_start_over.png` — these are the settlement shop text-icon rows; load, store, wire per-row.
+- INBOX `## 처리 대기` is now empty. Waiting for new user feedback or design items.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

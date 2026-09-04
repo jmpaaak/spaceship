@@ -2,6 +2,7 @@
 
 ## 처리 대기
 
+## 처리 완료
 - **모든 시각 에셋 ComfyUI 전면 재생성 (2026-09-04, 사용자 확정, 최우선):** 런치 실행화면이 거대한 빨강/하늘색 블러 덩어리로 깨져 있다. 원인 두 가지를 **같은 항목에서** 고친다. (A) 현재 PNG 100장 중 89장이 64×64 RGB라 `drawPanelSprite`가 HUD/정산/상점 패널을 `viewport.width`(720)로 늘려 그린다. (B) 기존 ComfyUI 결과물이 실루엣·투명 배경·픽셀 밀도 모두 게임에 안 맞는다. 비전 검토 없이 생성→`assets/` 덮어쓰기→`docs/assets/MANIFEST.json` provenance→`docs/GENERATED_ASSET_LOG.md` 한 줄→`make verify` GREEN→커밋. 한 사이클 = 아래 그룹 하나(에셋 1~3장)만.
 
   (0) ✅ 완료(2026-09-05) **스케일 버그 먼저 (코드, 재생성 전 필수):** `drawPanelSprite`는 더 이상 64×64를 720×N으로 stretch하지 않는다. 이미지 없으면 기존 사각형 폴백, 있으면 원본 픽셀 크기. HUD 아이콘 `drawHudSpriteOrPoly` size 8~14px / 지구 지름 116px / 함선 논리 64px 유지. `GAME_CAPTURE_PHASE=launch` 캡처 경로만 STATUS에 기록(PNG 미커밋).
@@ -12,13 +13,12 @@
 
   (3) ✅ 완료(2026-09-05) **행성 3종** — `assets/planet/planet_generic.png` `planet_hub.png` `planet_shop.png`. 각 64×64 투명 배경, 작은 행성 구체. 한 사이클에 3장까지.
 
-  (4) **HUD 아이콘** — `assets/effects/hud_*.png` 등 실제 로드 경로 기준 9장. **32×32 투명**, 단색 심볼(동전/방패/속도 등), 풀블리드 금지.
+  (4) ✅ 완료(2026-09-05) **HUD 아이콘** — 9장 전부 32×32 RGBA 투명(풀블리드 아님). slice 1 coin/shield/speed, slice 2 distance/best/samples, slice 3 galaxy/return/earth.
 
-  (5) **패널·상점 행** — 64×64를 풀스크린으로 쓰지 말 것. 필요하면 코너/타일용 작은 PNG만 생성하고 draw는 (0)의 비-stretch 경로. 기존 `shop_panel`/`loadout_panel`/`destroyed_panel` 등 64×64 패널 PNG는 재생성하되 draw가 늘리지 않게 (0)이 선행해야 한다.
+  (5) ✅ 완료(2026-09-05) **패널·상점 행** — 64×64를 풀스크린으로 쓰지 말 것. 필요하면 코너/타일용 작은 PNG만 생성하고 draw는 (0)의 비-stretch 경로. 기존 `shop_panel`/`loadout_panel`/`destroyed_panel` 등 64×64 패널 PNG는 재생성하되 draw가 늘리지 않게 (0)이 선행해야 한다.
 
   원격 ComfyUI `http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, `tools/comfyui_asset_pipeline.py`. 배경 타일 `deep_space_tile.png`는 이미 비활성(격자 시밍) — 재생성하지 말고 절차적 별만 유지.
 
-## 처리 완료
 
 - ✅ 완료(2026-09-04) — **ComfyUI 에셋 draw 배선 복원 (2026-09-04, 사용자 확정):** gear 머지로 `game/scenes/play.lua`가 교체되면서 69개 ComfyUI 에셋이 로드는 되지만 draw에 연결되지 않은 상태다. 전체 우선순위 그룹 배선 완료.
   (1) ✅ HUD 아이콘 (2026-09-04)
