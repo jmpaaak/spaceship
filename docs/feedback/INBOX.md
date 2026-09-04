@@ -2,23 +2,16 @@
 
 ## 처리 대기
 
-- **ComfyUI 에셋 draw 배선 복원 (2026-09-04, 사용자 확정):** gear 머지로 `game/scenes/play.lua`가 교체되면서 69개 ComfyUI 에셋이 로드는 되지만 draw에 연결되지 않은 상태다. 우선순위 순서대로 배선한다. 한 사이클 = 연관 그룹 하나 + `make verify` GREEN + 커밋.
-
-  (1) ✅ **HUD 아이콘 — 완료 (2026-09-04):** `hud_coin.png`(cash), `hud_shield.png`(hull), `hud_speed.png`(speed), `hud_distance.png`(dist), `hud_best.png`(best), `hud_samples.png`(samples), `hud_galaxy.png`(galaxy), `hud_return.png`(return), `hud_earth.png`(earth) 9개 PNG를 `M.new()`에서 로드해 `self.hudIconImages`에 저장. `drawHudSpriteOrPoly()` 헬퍼 추가. draw()의 galaxy/distance/cash/hull/samples/earth/return/best 행 모두 sprite-or-poly 분기 적용. `make verify` GREEN.
-
-  (2) ✅ **미니맵 마커 — 완료 (2026-09-04):** `minimapImages` 맵으로 12개 PNG 로드. `drawMinimapSprite()` 헬퍼 추가. `drawMinimap()`의 배경 disc, orbit ring, galaxy ring, sun, galaxy home/hub/plain, earth, player, beyond-chart 화살표, checkpoint 화살표 모두 sprite-or-poly 분기 적용. 화살표 계열은 방향각 회전 적용. `make verify` GREEN.
-
-  (3) ✅ **행성 이펙트 — 완료 (2026-09-04):** `planet_glow.png`(glow), `planet_shadow.png`(shadow), `planet_rim.png`(rim), `planet_twinkle.png`(twinkle), `planet_sample.png`(sampleValue), `planet_risk.png`(risk) 6개 PNG를 `M.new()`의 `planetEffectImages` 맵으로 로드. `drawPlanetEffectSprite()` 헬퍼 추가. 행성 루프의 glow rings/drop shadow/rim circle/twinkle sparkle 4개 draw 경로와 sample-value·risk 레이블 아이콘 모두 sprite-or-poly 분기 적용. `make verify` GREEN.
-
-  (4) ✅ **플로팅 텍스트 아이콘 — 완료 (2026-09-04):** `floating_sample.png`(cyan plus-badge), `floating_damage.png`(red minus-badge), `message_banner.png`(amber burst-star) 3개 PNG를 `M.new()`에서 로드해 `self.floatingSampleIconImage`/`self.floatingDamageIconImage`/`self.messageBannerIconImage`에 저장. `drawFloatingIconSprite()` 헬퍼 추가. draw() 플로팅 텍스트 루프에서 종류별 아이콘을 텍스트 왼쪽에 그리고, 메시지 행(non-launch)에 burst-star 아이콘 추가. `make verify` GREEN.
-
-  (5) **런치·정산·파괴 패널** — `launch_rocket.png`, `loadout_panel.png`, `shop_panel.png`, `shop_title.png`, `settlement_summary_panel.png`, `destroyed_panel.png`, `destroyed_title.png`, `slot_result_panel.png`, `relaunch.png` 등.
-
-  (6) **상점 아이콘 행** — `shop_hull_action.png`, `shop_steering_action.png`, `shop_yield_action.png`, `shop_ship_action.png`, `shop_stats.png`, `shop_hull_status.png`, `shop_hull_preview.png` 등 settlement 상점 행 아이콘.
-
-  배선 완료 후 `GAME_CAPTURE=1 GAME_CAPTURE_PHASE=launch` 런타임 캡처로 실제 렌더 확인. `make verify GREEN` 필수. 스프라이트 크기는 기존 Lua 도형 크기에 맞춰 scale 계산.
-
 ## 처리 완료
+
+- ✅ 완료(2026-09-04) — **ComfyUI 에셋 draw 배선 복원 (2026-09-04, 사용자 확정):** gear 머지로 `game/scenes/play.lua`가 교체되면서 69개 ComfyUI 에셋이 로드는 되지만 draw에 연결되지 않은 상태다. 전체 우선순위 그룹 배선 완료.
+  (1) ✅ HUD 아이콘 (2026-09-04)
+  (2) ✅ 미니맵 마커 (2026-09-04)
+  (3) ✅ 행성 이펙트 (2026-09-04)
+  (4) ✅ 플로팅 텍스트 아이콘 (2026-09-04)
+  (5) ✅ 런치·정산·파괴 패널 (2026-09-04)
+  (6) ✅ 상점 아이콘 행 (2026-09-04) — 이번 사이클에서 Shop/HUD 패널 및 버튼 백그라운드 배선 완료. `make verify` 통과.
+
 
 7. ✅ 완료(2026-09-04) — **함선 장비 획득 경로 3원화:** 장비 카드는 세 가지 방식으로 얻을 수 있다. (a) 각 은하계의 고정 좌표에 존재하는 "상점 행성"(신규 개념 — 은하마다 결정론적으로 하나씩, `game/world.lua`의 갤럭시 해시 방식을 재사용해 상점 행성 좌표를 고정 생성)에서 돈으로 구매. (b) 각 은하계의 중심 체크포인트 행성(기존 `M.hubPlanet`, 태양계는 지구에 해당하는 "은하 중심 행성" 개념)을 최초 탐사(착륙/근접 상호작용)하면 **확률이 아니라 해당 은하계 특유의 고유 장비 부품을 무조건 1개 확정 지급**. (c) 범용(은하 특정적이지 않은) 일반 등급 장비 부품은 지구 EARTH SHOP에서도 구매 가능 — 특정 은하 고유의 희귀 장비는 지구에서 판매하지 않는다. `game/world.lua`에 상점 행성 결정론적 생성 함수를, `game/expedition.lua`에 은하 중심 탐사 시 고유 장비 확정 드롭 로직을 추가하고 각각 `game/self_test.lua` 회귀 테스트로 검증한다.
   > 처리 상황 (spaceship-gear 레인, 2026-09-04, 항목7(c) Earth shop gear offer UI 배선 + isFull 버그 수정): `game/i18n.lua`에 earth_gear_offer/earth_gear_bought/earth_gear_full/earth_gear_broke 4개 키(en/ko)를 추가했다. `game/scenes/play.lua` settlement 진입 시 `gear.earthShopPool`+`expedition.rollGearOffer`로 오퍼를 1장 생성해 `ea …(압축됨)

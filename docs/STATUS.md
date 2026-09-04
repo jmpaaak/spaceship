@@ -1,5 +1,20 @@
 # STATUS
 
+2026-09-04 — ComfyUI shop panels and action backgrounds wiring (group 8 of INBOX draw-wiring item).
+
+- Finished wiring `shopEffectImages` in `game/scenes/play.lua` (loaded as Group 8).
+- Settlement phase now uses `shopTouchRow` as backgrounds for tappable rows.
+- Wired `shopTitle` behind the shop title and `shopStats` behind the stats box.
+- Action, status, and preview rows in the shop for Hull, Steering, Yield, and Ship now have sprite backgrounds (`hullAction`, `hullStatus`, `hullPreview`, etc.).
+- Wired `shopNextShip` panel behind the next ship details section.
+- Added `GAME_CAPTURE=1 GAME_CAPTURE_PHASE=launch` and `settlement` test captures.
+- Updated `docs/feedback/INBOX.md` to mark the top-level ComfyUI draw wiring task as completely finished.
+- `make verify` GREEN.
+
+## Next Slice
+
+- The ComfyUI draw wiring item is now fully completed (all 69 assets wired). Read `docs/feedback/INBOX.md` for the next top priority pending item.
+
 2026-09-04 — merged `spaceship-gear` into `main`.
 
 - Gear lane had emptied INBOX (items 7/8/11/15 newly completed; 9/10/12/13/14 already done) and was STOP'd to stop idle watchdog restarts.

@@ -797,6 +797,28 @@ function M.new(options)
         sampleValue = "assets/effects/planet_sample.png",
         risk        = "assets/effects/planet_risk.png",
     })
+    -- Shop/HUD panel images (group 8 of ComfyUI asset wiring): settlement shop
+    -- row icons and HUD background panel.
+    local shopEffectImages = loadSpriteMap({
+        hudPanel        = "assets/effects/hud_panel.png",
+        shopPanel       = "assets/effects/shop_panel.png",
+        shopTitle       = "assets/effects/shop_title.png",
+        shopTouchRow    = "assets/effects/shop_touch_row.png",
+        shopStats       = "assets/effects/shop_stats.png",
+        shopNextShip    = "assets/effects/shop_next_ship.png",
+        hullAction      = "assets/effects/shop_hull_action.png",
+        steeringAction  = "assets/effects/shop_steering_action.png",
+        yieldAction     = "assets/effects/shop_yield_action.png",
+        shipAction      = "assets/effects/shop_ship_action.png",
+        hullStatus      = "assets/effects/shop_hull_status.png",
+        steeringStatus  = "assets/effects/shop_steering_status.png",
+        yieldStatus     = "assets/effects/shop_yield_status.png",
+        shipStatus      = "assets/effects/shop_ship_status.png",
+        hullPreview     = "assets/effects/shop_hull_preview.png",
+        steeringPreview = "assets/effects/shop_steering_preview.png",
+        yieldPreview    = "assets/effects/shop_yield_preview.png",
+        shipPreview     = "assets/effects/shop_ship_preview.png",
+    })
 
     return setmetatable({
         ship = ship,
@@ -831,6 +853,8 @@ function M.new(options)
         hudIconImages = hudIconImages,
         minimapImages = minimapImages,
         planetEffectImages = planetEffectImages,
+        -- Shop/HUD panel images (group 8 of ComfyUI asset wiring)
+        shopEffectImages = shopEffectImages,
         -- Floating text icon images (group 4 of ComfyUI asset wiring)
         floatingSampleIconImage = floatingSampleIconImage,
         floatingSampleIconImagePath = floatingSampleIconImagePath,
@@ -2374,8 +2398,13 @@ function M:draw()
     local isLaunchHud = self.expedition.phase == "launch"
     local galaxyShift = hud.galaxy and 10 or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
-    love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
-    love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
+    -- Group 8 wiring: hud_panel.png as HUD background; fallback dark rectangle.
+    local shopEff = self.shopEffectImages or {}
+    love.graphics.setColor(1, 1, 1, 0.85)
+    if not drawPanelSprite(shopEff.hudPanel, 0, 0, viewport.width, hudHeight) then
+        love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
+        love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
+    end
     local previousHudFont
     if isLaunchHud then
         self.smallFont = self.smallFont or fonts.get(8)
@@ -2558,10 +2587,20 @@ function M:draw()
         -- overlaps or obscures the already real-capture-verified printf
         -- calls below; purely a visual affordance for which rows respond
         -- to touch (see settlementRowBackgroundColor comment above).
+        local shopEff = self.shopEffectImages or {}
+        -- Faint alternating background bands behind each tappable
+        -- settlementTouchRows entry. Drawn before any text so it never
+        -- overlaps or obscures the already real-capture-verified printf
+        -- calls below; purely a visual affordance for which rows respond
+        -- to touch (see settlementRowBackgroundColor comment above).
         for index, touchRow in ipairs(settlementTouchRows) do
             love.graphics.setColor(M.settlementRowBackgroundColor(index))
-            love.graphics.rectangle("fill", 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top)
+            if not drawPanelSprite(shopEff.shopTouchRow, 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top) then
+                love.graphics.rectangle("fill", 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top)
+            end
         end
+        love.graphics.setColor(1, 1, 1, 0.9)
+        drawPanelSprite(shopEff.shopTitle, 16, 74 - 2, viewport.width - 32, 14)
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.printf(i18n.t("earth_shop_title"), 16, 74, viewport.width - 32, "center")
         -- The previously-verified capture (build/spaceship-runtime-preview-
@@ -2573,8 +2612,11 @@ function M:draw()
         if self.expedition.lastNewBest then
             summaryExtraLine = i18n.t("newbest_label")
         end
-        love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
-        love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
+        love.graphics.setColor(1, 1, 1, 0.9)
+        if not drawPanelSprite(shopEff.shopStats, 18, 88, viewport.width - 36, 46) then
+            love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
+            love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
+        end
         love.graphics.setFont(self.smallFont)
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
@@ -2601,8 +2643,13 @@ function M:draw()
         local rowStep = 8
         row = 156
         -- HULL and STEERING
-        -- HULL and STEERING
         rowStep = 8
+        
+        -- Group 8 wiring: action backgrounds
+        love.graphics.setColor(1, 1, 1, 0.85)
+        drawPanelSprite(shopEff.hullAction, shopColumnLeftX, row, shopColumnLeftW, rowStep)
+        drawPanelSprite(shopEff.steeringAction, shopColumnRightX, row, shopColumnRightW, rowStep)
+        
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
@@ -2613,6 +2660,11 @@ function M:draw()
         drawShopIconSprite(shopIcons.steering, shopColumnRightX + 2, row + iconSz * 0.5, iconSz)
         row = row + rowStep
         
+        -- Group 8 wiring: status backgrounds
+        love.graphics.setColor(1, 1, 1, 0.85)
+        drawPanelSprite(shopEff.hullStatus, shopColumnLeftX, row, shopColumnLeftW, rowStep)
+        drawPanelSprite(shopEff.steeringStatus, shopColumnRightX, row, shopColumnRightW, rowStep)
+        
         love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
             nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
         love.graphics.printf(nextLaunch.hullStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
@@ -2620,6 +2672,11 @@ function M:draw()
             nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
         love.graphics.printf(nextLaunch.steeringStatus, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
+        
+        -- Group 8 wiring: preview backgrounds
+        love.graphics.setColor(1, 1, 1, 0.85)
+        drawPanelSprite(shopEff.hullPreview, shopColumnLeftX, row, shopColumnLeftW, rowStep)
+        drawPanelSprite(shopEff.steeringPreview, shopColumnRightX, row, shopColumnRightW, rowStep)
         
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.printf(nextLaunch.hullPreviewCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
@@ -2629,6 +2686,12 @@ function M:draw()
         -- YIELD and SHIP
         row = 216
         rowStep = 8
+        
+        -- Group 8 wiring: action backgrounds
+        love.graphics.setColor(1, 1, 1, 0.85)
+        drawPanelSprite(shopEff.yieldAction, shopColumnLeftX, row, shopColumnLeftW, rowStep)
+        drawPanelSprite(shopEff.shipAction, shopColumnRightX, row, shopColumnRightW, rowStep)
+        
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.yieldActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
@@ -2638,6 +2701,11 @@ function M:draw()
         drawShopIconSprite(shopIconsYS.ship, shopColumnRightX + 2, row + iconSz * 0.5, iconSz)
         row = row + rowStep
         
+        -- Group 8 wiring: status backgrounds
+        love.graphics.setColor(1, 1, 1, 0.85)
+        drawPanelSprite(shopEff.yieldStatus, shopColumnLeftX, row, shopColumnLeftW, rowStep)
+        drawPanelSprite(shopEff.shipStatus, shopColumnRightX, row, shopColumnRightW, rowStep)
+        
         love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
             nextLaunch.yieldAffordable and 1 or 0.4, nextLaunch.yieldAffordable and 0.55 or 0.35)
         love.graphics.printf(nextLaunch.yieldStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
@@ -2646,6 +2714,11 @@ function M:draw()
         love.graphics.printf(nextLaunch.shipStatus, shopColumnRightX, row, shopColumnRightW, "center")
         row = row + rowStep
 
+        -- Group 8 wiring: preview backgrounds
+        love.graphics.setColor(1, 1, 1, 0.85)
+        drawPanelSprite(shopEff.yieldPreview, shopColumnLeftX, row, shopColumnLeftW, rowStep)
+        drawPanelSprite(shopEff.shipPreview, shopColumnRightX, row, shopColumnRightW, rowStep)
+        
         love.graphics.setColor(0.4, 0.85, 1)
         love.graphics.printf(nextLaunch.yieldPreview, shopColumnLeftX, row, shopColumnLeftW, "center")
         love.graphics.printf(nextLaunch.shipPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
@@ -2689,6 +2762,11 @@ function M:draw()
 
         row = 280
         rowStep = 8
+        
+        -- Group 8 wiring: next ship panel background
+        love.graphics.setColor(1, 1, 1, 0.9)
+        drawPanelSprite(shopEff.shopNextShip, fullX, row - 2, fullW, rowStep * 3 + 2)
+        
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
         row = row + rowStep
