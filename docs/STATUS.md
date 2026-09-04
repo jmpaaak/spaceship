@@ -1,6 +1,21 @@
 # STATUS
 - preflight this cycle: READY
 - Slice: Item 15/11 residue — remove dead spins_settlement_line from settlement + destroyed panels
+## 2026-09-04 — Item 7(c): Earth-shop gear offer buy regression tests + isFull bug fix
+
+- Found bug: `play.lua` keypressed("b") called `engineParts.isFull(self.expedition, "hull")` but
+  `engine_parts.lua:isFull` reads `loadout.hull`/`loadout.engine`, not the expedition fields.
+  The correct object is `self.expedition.gearLoadout`. Fixed both hull and engine branches.
+- Added 5-case `do` block regression test for item 7(c) in `game/self_test.lua`:
+  (a) successful buy: money deducted, gear equipped, earthShopGearOffer cleared.
+  (b) insufficient money: offer preserved, broke message with amount shown.
+  (c) slots full (fills via `expedition.equipGear`): offer preserved, message set.
+  (d) "b" outside settlement (ascending): offer not consumed.
+  (e) relaunch (space in settlement): earthShopGearOffer cleared.
+- `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3,
+  LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK.
+- Next slice: audit items 7/8/11/15 for any further gaps, or move to STATUS.md wrap-up.
+
 ## 2026-09-04 — Item 15/11: Remove dead spins_settlement_line from settlement+destroyed panels
 
 - Found: `play.lua` settlement panel rendered `spins_settlement_line` ("SPINS (0) $0") using `lastSlotSpinsCount`/`lastSlotSettlement`, which expedition.lua never sets (always nil). In-flight slot machine was abolished by item-15 so these are dead UI lines always showing zeroes.

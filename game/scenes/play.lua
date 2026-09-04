@@ -1442,8 +1442,8 @@ function M:keypressed(key)
             local cat = gearMod.findById(engine, offer.id) and "engine" or "hull"
             local price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
             local engineParts = require("game.engine_parts")
-            local slotsFull = (cat == "hull" and engineParts.isFull(self.expedition, "hull"))
-                or (cat == "engine" and engineParts.isFull(self.expedition, "engine"))
+            local slotsFull = (cat == "hull" and engineParts.isFull(self.expedition.gearLoadout, "hull"))
+                or (cat == "engine" and engineParts.isFull(self.expedition.gearLoadout, "engine"))
             if slotsFull then
                 self.message = i18n.t("earth_gear_full")
             elseif self.expedition.money < price then
