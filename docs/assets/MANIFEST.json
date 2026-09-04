@@ -2408,5 +2408,37 @@
     "width": 64,
     "height": 64,
     "qa": "runtime placement pending"
+  },
+  {
+    "path": "assets/space/pixelplanets_stars.png",
+    "user_supplied": true,
+    "source_url": "https://github.com/Deep-Fold/PixelPlanets",
+    "terms_url": "https://github.com/Deep-Fold/PixelPlanets/blob/master/LICENSE",
+    "asset_id": "deep-fold-pixelplanets-stars",
+    "prompt": "PixelPlanets JS port (MIT) by Deep-Fold. Sprite sheet: 17 small pixel-art star frames, each 9x9 px, arranged in a single 144x9 strip. User-confirmed for use as background star sprites.",
+    "model": "PixelPlanets (Deep-Fold, MIT)",
+    "style": "pixel-art sprite sheet",
+    "settings": "{\"source\":\"user-supplied\",\"repo\":\"https://github.com/Deep-Fold/PixelPlanets\",\"license\":\"MIT\"}",
+    "downloaded_at": "2026-09-05T02:58:19+09:00",
+    "sha256": "dbe9eff00708d012d1b48f52cec4e214b3cfeabee881118969f15304bc8b25ce",
+    "width": 144,
+    "height": 9,
+    "qa": "User-confirmed 2026-09-05: 17 star frames 9x9 RGBA, verified RGBA mode, wired into play.lua loadSprite as pixelStarsImage for background star rendering."
+  },
+  {
+    "path": "assets/space/pixelplanets_stars_special.png",
+    "user_supplied": true,
+    "source_url": "https://github.com/Deep-Fold/PixelPlanets",
+    "terms_url": "https://github.com/Deep-Fold/PixelPlanets/blob/master/LICENSE",
+    "asset_id": "deep-fold-pixelplanets-stars-special",
+    "prompt": "PixelPlanets JS port (MIT) by Deep-Fold. Sprite sheet: 6 large special pixel-art star frames, each 25x25 px, arranged in a single 150x25 strip. User-confirmed for use as bright foreground star sprites.",
+    "model": "PixelPlanets (Deep-Fold, MIT)",
+    "style": "pixel-art sprite sheet",
+    "settings": "{\"source\":\"user-supplied\",\"repo\":\"https://github.com/Deep-Fold/PixelPlanets\",\"license\":\"MIT\"}",
+    "downloaded_at": "2026-09-05T02:58:19+09:00",
+    "sha256": "8259e8751c7ffd8143bf56f7eb103ba85d74492cb3e24725a54e4989efe12be2",
+    "width": 150,
+    "height": 25,
+    "qa": "User-confirmed 2026-09-05: 6 special star frames 25x25 RGBA, verified RGBA mode, wired into play.lua loadSprite as pixelStarsSpecialImage for bright foreground star rendering."
   }
 ]

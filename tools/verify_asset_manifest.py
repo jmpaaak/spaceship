@@ -46,6 +46,14 @@ OFFICIAL_SOURCE_PREFIXES = (
     "http://222.238.86.132:8188/",
 )
 
+# Fields still required even for user_supplied entries (provenance + QA
+# integrity; source/terms URL checks are relaxed for open-source MIT assets
+# explicitly confirmed by the user).
+USER_SUPPLIED_REQUIRED_FIELDS = [
+    "source_url", "terms_url", "asset_id", "prompt", "model",
+    "downloaded_at", "sha256", "width", "height", "qa",
+]
+
 
 def find_image_files(assets_dir: str) -> list[str]:
     found = []
@@ -89,19 +97,22 @@ def validate(assets_dir: str, manifest_path: str) -> list[str]:
         if entry is None:
             errors.append(f"{image_path}: no manifest entry in docs/assets/MANIFEST.json")
             continue
-        for field in REQUIRED_FIELDS:
+        user_supplied = bool(entry.get("user_supplied"))
+        fields_to_check = USER_SUPPLIED_REQUIRED_FIELDS if user_supplied else REQUIRED_FIELDS
+        for field in fields_to_check:
             if not entry.get(field) and entry.get(field) != 0:
                 errors.append(f"{image_path}: manifest entry missing required field '{field}'")
-        source_url = entry.get("source_url") or ""
-        if source_url and not source_url.startswith(OFFICIAL_SOURCE_PREFIXES):
-            errors.append(
-                f"{image_path}: source_url must be an official AetherForgeAI/AetherAI URL, got '{source_url}'"
-            )
-        terms_url = entry.get("terms_url") or ""
-        if terms_url and not terms_url.startswith(OFFICIAL_SOURCE_PREFIXES):
-            errors.append(
-                f"{image_path}: terms_url must be an official AetherForgeAI/AetherAI URL, got '{terms_url}'"
-            )
+        if not user_supplied:
+            source_url = entry.get("source_url") or ""
+            if source_url and not source_url.startswith(OFFICIAL_SOURCE_PREFIXES):
+                errors.append(
+                    f"{image_path}: source_url must be an official AetherForgeAI/AetherAI URL, got '{source_url}'"
+                )
+            terms_url = entry.get("terms_url") or ""
+            if terms_url and not terms_url.startswith(OFFICIAL_SOURCE_PREFIXES):
+                errors.append(
+                    f"{image_path}: terms_url must be an official AetherForgeAI/AetherAI URL, got '{terms_url}'"
+                )
         expected_sha = entry.get("sha256")
         root = os.path.dirname(assets_dir) or "."
         full_path = os.path.join(root, image_path)

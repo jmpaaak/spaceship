@@ -634,7 +634,45 @@ function M.settlementRowBackgroundColor(index)
 end
 
 
+-- PNG IHDR color type (byte 26): 2 = RGB (opaque square blobs), 6 = RGBA.
+-- INBOX 2026-09-05 item (1): RGB ComfyUI PNGs stay on disk but must not
+-- load; draw helpers already fall back to Lua polygons when image is nil.
+local function pngColorType(path)
+    if type(path) ~= "string" or path == "" then
+        return nil
+    end
+    local data
+    if love.filesystem and love.filesystem.read then
+        local ok, contents = pcall(love.filesystem.read, path)
+        if ok then
+            data = contents
+        end
+    end
+    if not data then
+        local handle = io.open(path, "rb")
+        if not handle then
+            return nil
+        end
+        data = handle:read(33)
+        handle:close()
+    end
+    if type(data) ~= "string" or #data < 26 then
+        return nil
+    end
+    if data:sub(1, 8) ~= "\137PNG\r\n\26\n" then
+        return nil
+    end
+    return data:byte(26)
+end
+
+local function shouldLoadRuntimeSprite(path)
+    return pngColorType(path) == 6
+end
+
 local function loadSprite(path)
+    if not shouldLoadRuntimeSprite(path) then
+        return nil
+    end
     if not (love.graphics and love.graphics.newImage) then
         return nil
     end
@@ -645,6 +683,9 @@ local function loadSprite(path)
     end
     return nil
 end
+M.pngColorType = pngColorType
+M.shouldLoadRuntimeSprite = shouldLoadRuntimeSprite
+M.loadSprite = loadSprite
 
 local function loadSpriteMap(paths)
     local images = {}

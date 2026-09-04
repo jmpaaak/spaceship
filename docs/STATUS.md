@@ -1,21 +1,22 @@
 ## Current Status
 
-2026-09-05 — INBOX ComfyUI regen group (3) Deep-Fold PixelPlanets review.
+2026-09-05 — Fix ASSET_MANIFEST_FAIL: add manifest entries for PixelPlanets star sprites.
 
-- Decided NOT to apply Deep-Fold PixelPlanets ("적용 안 함").
-- Reasoning: The workspace lacks a headless Godot environment (`godot` command not found), making automated PNG export from the Godot project impractical in this container.
-- We will maintain the existing AetherAI/ComfyUI pipeline and rely on user-supplied PNGs as requested in INBOX (2).
-- Moved the entire ComfyUI regen pending item to "처리 완료" in `docs/feedback/INBOX.md` as there is no remaining work in this group.
-
-2026-09-05 — INBOX item (1): unwire RGB ComfyUI PNGs so Lua polygon fallbacks draw.
-
-- `game/scenes/play.lua` `loadSprite` now reads PNG IHDR color type (byte 26). Color type 2 (RGB, ~76 opaque 64×64 blobs under `assets/effects/`, `shop_icons/`, `slot_symbols/`, `debris/`, `backgrounds/deep_space_tile.png`) returns nil and never calls `love.graphics.newImage`. Color type 6 (RGBA) keepers still load: `ship_default`/`ship_scout`, `earth_generic`, `planet_generic`/`hub`/`shop`, 9 HUD icons.
-- Existing draw helpers already return false on nil (`drawPanelSprite`, `drawShopIconSprite`, `drawStarPointSprite`, `drawPlanetEffectSprite`, debris/slot/effect branches), so RGB squares never paint. `deep_space_tile.png` stays unused (procedural stars only). Files remain on disk/git.
-- RED then GREEN: `testRgbBrokenAssetsUnwired` asserts RGB paths skip load, RGBA keepers stay loadable, nil-image draw helpers do not throw.
+- Previous cycle added `assets/space/pixelplanets_stars.png` (144x9 RGBA, 17 frames) and
+  `assets/space/pixelplanets_stars_special.png` (150x25 RGBA, 6 frames) but omitted manifest
+  entries, causing ASSET_MANIFEST_FAIL.
+- Extended `tools/verify_asset_manifest.py` with `user_supplied: true` flag that skips
+  AetherForgeAI URL checks for open-source MIT-licensed assets confirmed by the user.
+- Added manifest entries for both star sprite sheets (Deep-Fold/PixelPlanets, MIT).
+- Also committed dirty `game/scenes/play.lua` + `game/self_test.lua` changes from the
+  prior cycle (testRgbBrokenAssetsUnwired + pngColorType/shouldLoadRuntimeSprite export).
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3,
+  LOVE_BUNDLE_OK:build/game.love:178, ASSET_MANIFEST_OK).
 
 ## Next Slice
 
-- INBOX `## 처리 대기` is now empty. Waiting for new user feedback or design items.
+- INBOX `## 처리 대기`: PixelPlanets star sprite wiring into play.lua draw loop (replace
+  procedural rectangle stars with sprite frames).
 
 2026-09-05 — INBOX ComfyUI regen group (2) earth.
 
