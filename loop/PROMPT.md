@@ -1,7 +1,7 @@
 # LANE SCOPE — main
 
 This worktree is the only Spaceship autonomous loop
-(`/Users/jm/orca/workspaces/spaceship/main`). `spaceship-gear` was merged
+(`/Users/jm/orca/workspaces/interactive-story-game-factory/spaceship`). `spaceship-gear` was merged
 into `main` on 2026-09-04 (items 7/8/9/10/11/12/13/14/15). Process
 `docs/feedback/INBOX.md` pending items from the top. Commit and push to
 `main` after tests pass. Do not resurrect parallel lanes unless new
@@ -64,7 +64,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## Safety and scope
 
-- Work only in `/Users/jm/orca/workspaces/spaceship/main`.
+- Work only in `/Users/jm/orca/workspaces/interactive-story-game-factory/spaceship`.
 - Do not access credentials or paid actions.
 - Do not edit or stop the `man-of-korea` loop.
 - Do not claim device QA without an actual device result.

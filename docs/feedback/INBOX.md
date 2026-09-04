@@ -2,6 +2,22 @@
 
 ## 처리 대기
 
+- **모든 시각 에셋 ComfyUI 전면 재생성 (2026-09-04, 사용자 확정, 최우선):** 런치 실행화면이 거대한 빨강/하늘색 블러 덩어리로 깨져 있다. 원인 두 가지를 **같은 항목에서** 고친다. (A) 현재 PNG 100장 중 89장이 64×64 RGB라 `drawPanelSprite`가 HUD/정산/상점 패널을 `viewport.width`(720)로 늘려 그린다. (B) 기존 ComfyUI 결과물이 실루엣·투명 배경·픽셀 밀도 모두 게임에 안 맞는다. 비전 검토 없이 생성→`assets/` 덮어쓰기→`docs/assets/MANIFEST.json` provenance→`docs/GENERATED_ASSET_LOG.md` 한 줄→`make verify` GREEN→커밋. 한 사이클 = 아래 그룹 하나(에셋 1~3장)만.
+
+  (0) **스케일 버그 먼저 (코드, 재생성 전 필수):** `game/scenes/play.lua`의 `drawPanelSprite`가 64×64를 720×N으로 stretch한다. 패널은 늘리지 말고 (a) 이미지가 없으면 기존 사각형 폴백, (b) 있으면 원본 픽셀 크기 또는 9-slice/타일만. HUD 아이콘은 `drawHudSpriteOrPoly`의 `size`(8~14px)만. 지구 지름 ~116px, 함선 논리 64px 유지. 이 슬라이스 없이 재생성을 하면 또 화면을 덮는다. `GAME_CAPTURE_PHASE=launch`로 지구·함선·작은 HUD만 보이게 확인할 것(캡처 PNG는 커밋하지 말고 경로만 STATUS에).
+
+  (1) **함선** — `assets/ship/ship_default.png`, `assets/ship/ship_scout.png`. 64×64, **투명 배경**, top-down 작은 은색 우주선 실루엣, 픽셀아트, 본체가 프레임의 ~60%만 차지.
+
+  (2) **지구** — `assets/earth/earth_generic.png`. 64×64 투명 배경, 작은 푸른 지구 구체(대륙 실루엣), 가장자리 여백.
+
+  (3) **행성 3종** — `assets/planet/planet_generic.png` `planet_hub.png` `planet_shop.png`. 각 64×64 투명 배경, 작은 행성 구체. 한 사이클에 3장까지.
+
+  (4) **HUD 아이콘** — `assets/effects/hud_*.png` 등 실제 로드 경로 기준 9장. **32×32 투명**, 단색 심볼(동전/방패/속도 등), 풀블리드 금지.
+
+  (5) **패널·상점 행** — 64×64를 풀스크린으로 쓰지 말 것. 필요하면 코너/타일용 작은 PNG만 생성하고 draw는 (0)의 비-stretch 경로. 기존 `shop_panel`/`loadout_panel`/`destroyed_panel` 등 64×64 패널 PNG는 재생성하되 draw가 늘리지 않게 (0)이 선행해야 한다.
+
+  원격 ComfyUI `http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, `tools/comfyui_asset_pipeline.py`. 배경 타일 `deep_space_tile.png`는 이미 비활성(격자 시밍) — 재생성하지 말고 절차적 별만 유지.
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-04) — **ComfyUI 에셋 draw 배선 복원 (2026-09-04, 사용자 확정):** gear 머지로 `game/scenes/play.lua`가 교체되면서 69개 ComfyUI 에셋이 로드는 되지만 draw에 연결되지 않은 상태다. 전체 우선순위 그룹 배선 완료.
