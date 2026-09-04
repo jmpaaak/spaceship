@@ -21,8 +21,11 @@ function love.load()
     require("game.i18n").setLocale("ko")
     if os.getenv("GAME_FONTPROBE") == "1" then
         local smallSlotFont = love.graphics.newFont(8)
+        -- Item 11(c): "WIN +$40  FUEL +15" removed — in-flight slot machine
+        -- abolished (item 15), fuel-reward string is dead. Earth shop slot
+        -- rewards are $-only (earthSlotSpin returns { reward, symbols }).
         for _, s in ipairs({ "PLANET  PLANET  PLANET", "COMET  COMET  COMET", "STAR  STAR  STAR",
-            "WIN +$40  FUEL +15", "WIN +$75  REPAIR +1", "WIN +$40  PENDING $40" }) do
+            "WIN +$75  REPAIR +1", "WIN +$40  PENDING $40" }) do
             print(string.format("SMALLSLOTFONTPROBE|%s|%d", s, smallSlotFont:getWidth(s)))
         end
         local font = love.graphics.newFont(8)
@@ -33,8 +36,11 @@ function love.load()
             "T/V BUY SCOUT $125", "T/V SELECT STARTER", "T/V SELECT SCOUT",
             "LEFT $999", "SHORT $999", "OWNED",
             "LEFT $9999", "SHORT $125", "LEFT $105", "SHORT $105",
-            "FUEL LV.0 HULL LV.0 YIELD LV.0 STEER LV.0",
-            "FUEL LV.9 HULL LV.9 YIELD LV.9 STEER LV.9",
+            -- Item 11(c): "FUEL LV.0/LV.9 ..." removed — fuel upgrade mechanic
+            -- abolished; there is no "FUEL LV" row in the Earth shop anymore.
+            -- Only HULL/STEER/YIELD upgrade levels remain active in shopLoadoutLines.
+            "HULL LV.0 STEER LV.0 YIELD LV.0",
+            "HULL LV.9 STEER LV.9 YIELD LV.9",
             "H:LV.9>10", "G:LV.9>10", "Y:LV.9>10", "H:LV.0>1", "G:LV.0>1", "Y:LV.0>1",
             "$999", "OK $999",
             "T/H HULL", "T/G STEER", "T/Y YIELD", "T/V SCOUT",

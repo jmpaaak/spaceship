@@ -5461,7 +5461,7 @@ function M.run()
             "settlement touch row " .. (row.key or "columns") .. " is under the 34px minimum")
     end
 
-    -- EARTH SHOP fuel/hull/steering/yield/ship rows print an action string
+    -- EARTH SHOP hull/steering/yield/ship rows print an action string
     -- (left column) and a status string (right column, "LEFT $N"/"SHORT $N"/
     -- "OWNED") side by side. A real LÖVE font probe (GAME_FONTPROBE=1 love .)
     -- against the small scene-cached font (love.graphics.newFont(8)) measured
@@ -5722,6 +5722,33 @@ function M.run()
             "item 11(c): run.slotOpportunities must be nil after item-15(a) abolition")
         assert(run.slotDistance == nil,
             "item 11(c): run.slotDistance must be nil after item-15(a) abolition")
+    end
+
+    -- Item 11(c) follow-up: the Earth shop's shopLoadoutLines() must not expose
+    -- any fuel-upgrade keys (fuelAction/fuelStatus/fuelAffordable/fuelPreview)
+    -- now that the fuel upgrade mechanic is fully abolished. This prevents a
+    -- future refactor from re-introducing dead fuel UI into the settlement shop.
+    do
+        local shopScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() end },
+        })
+        shopScene.expedition.phase = "settlement"
+        local loadout = shopScene:shopLoadoutLines()
+        assert(loadout.fuelAction == nil,
+            "item 11(c): shopLoadoutLines must not expose fuelAction (fuel upgrade abolished)")
+        assert(loadout.fuelStatus == nil,
+            "item 11(c): shopLoadoutLines must not expose fuelStatus")
+        assert(loadout.fuelAffordable == nil,
+            "item 11(c): shopLoadoutLines must not expose fuelAffordable")
+        assert(loadout.fuelPreview == nil,
+            "item 11(c): shopLoadoutLines must not expose fuelPreview")
+        -- The shop must still expose the remaining three upgrade rows.
+        assert(loadout.hullAction ~= nil,
+            "item 11(c): shopLoadoutLines must still expose hullAction")
+        assert(loadout.yieldAction ~= nil,
+            "item 11(c): shopLoadoutLines must still expose yieldAction")
+        assert(loadout.steeringAction ~= nil,
+            "item 11(c): shopLoadoutLines must still expose steeringAction")
     end
 
     -- Item 7(a) UI regression: the shop-planet modal keyboard interaction
