@@ -122,3 +122,6 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-05T01:18:24+0900 | assets/effects/hud_coin.png | INBOX group (4): 32x32 transparent monochrome coin HUD icon
 2026-09-05T01:18:24+0900 | assets/effects/hud_shield.png | INBOX group (4): 32x32 transparent monochrome shield HUD icon
 2026-09-05T01:18:24+0900 | assets/effects/hud_speed.png | INBOX group (4): 32x32 transparent monochrome speed HUD icon
+2026-09-05T01:52:58+0900 | assets/effects/hud_distance.png | INBOX group (4) slice 2: 32x32 transparent cyan nav-diamond distance HUD icon (seed 20260905304)
+2026-09-05T01:52:58+0900 | assets/effects/hud_best.png | INBOX group (4) slice 2: 32x32 transparent gold trophy personal-best HUD icon (seed 20260905305)
+2026-09-05T01:52:58+0900 | assets/effects/hud_samples.png | INBOX group (4) slice 2: 32x32 transparent amber specimen-vial samples HUD icon (seed 20260905306)

@@ -1,16 +1,17 @@
 ## Current Status
 
-2026-09-05 — ComfyUI HUD icon regen (group 4 of INBOX regen item).
-- Regenerated 32x32 `hud_coin.png`, `hud_shield.png`, `hud_speed.png` via ComfyUI SDXL pipeline (monochrome white).
-- Applied circle-mask alpha channel modification to ensure strict transparent corners for UI overlay compatibility.
-- Updated `docs/assets/MANIFEST.json` with new SHA-256 hashes and appended to `docs/GENERATED_ASSET_LOG.md`.
-- `make verify` GREEN (passed all `self_test.lua` transparency assertions).
+2026-09-05 — INBOX ComfyUI regen group (4) HUD icons slice 2: distance/best/samples.
 
-# STATUS
+- Finished leftover dirty-tree work: previous cycle regenerated `hud_distance.png` / `hud_best.png` to 32×32 RGBA but left `hud_samples.png` at 64×64 RGB, which failed `testHudIconRegenSlice`.
+- Regenerated `assets/effects/hud_samples.png` via remote ComfyUI (`http://222.238.86.132:8188`, workflow `7a3eb820-f17d-47ce-a337-da2358c2a0d5`, prompt_id `1bfb2e06-53f4-4dbc-b272-41283ec7c080`, seed `20260905306`, 512×512 then nearest-neighbor fit). Backdrop knock-out + 20×22 body centered on 32×32 RGBA (opaque 281/1024, transparent corners).
+- Slice 2 trio now all 32×32 RGBA with padding: `hud_distance.png` (seed 20260905304, cyan nav diamond, opaque 254/1024), `hud_best.png` (seed 20260905305, gold trophy, opaque 227/1024), `hud_samples.png` (amber vial).
+- Extended `testHudIconRegenSlice` to assert 32×32 + transparent corners + non-full-bleed for the three slice-2 icons (plus slice 1 cash/hull/speed).
+- Updated `docs/assets/MANIFEST.json` provenance and appended `docs/GENERATED_ASSET_LOG.md`.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x3, `LOVE_BUNDLE_OK:build/game.love:183`, `ASSET_MANIFEST_OK`).
+
 ## Next Slice
 
-- INBOX ComfyUI regen group (4): HUD icons — `assets/effects/hud_*.png` etc (9 images). 32x32 transparent, solid color symbol, no full bleed.
-
+- INBOX ComfyUI regen group (4) remaining HUD icons: `hud_galaxy.png`, `hud_return.png`, `hud_earth.png` (still 64×64 RGB full-bleed). 32×32 transparent, solid color symbol, no full bleed.
 
 2026-09-05 — INBOX ComfyUI regen group (2) earth.
 

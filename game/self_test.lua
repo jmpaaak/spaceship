@@ -566,13 +566,17 @@ local function testSpeedometerIcon()
     -- The left edge is at cx - r, cy -> 16, 20.
 end
 
--- INBOX group (4) first slice: cash/hull/speed HUD icons must be 32x32
--- RGBA with transparent padding (no full-bleed RGB square).
+-- INBOX group (4): HUD icons must be 32x32 RGBA with transparent
+-- padding (no full-bleed RGB square). Slice 1: cash/hull/speed.
+-- Slice 2: distance/best/samples.
 local function testHudIconRegenSlice()
     local paths = {
         "assets/effects/hud_coin.png",
         "assets/effects/hud_shield.png",
         "assets/effects/hud_speed.png",
+        "assets/effects/hud_distance.png",
+        "assets/effects/hud_best.png",
+        "assets/effects/hud_samples.png",
     }
     for _, path in ipairs(paths) do
         local data = love.image.newImageData(path)
