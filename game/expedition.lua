@@ -146,7 +146,7 @@ local function settle(run)
     run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.pendingSampleValue = 0
     run.sampleCount = 0
-    run.slotOpportunities = 0
+    -- Item 15(a): slotOpportunities removed from run state.
     run.phase = "settlement"
 end
 M.settle = settle
@@ -162,7 +162,7 @@ local function destroy(run)
     run.pendingSampleValue = 0
     run.sampleStreakCount = 0
     run.sampleStreakFamily = nil
-    run.slotOpportunities = 0
+    -- Item 15(a): slotOpportunities removed from run state.
     run.returnDistance = 0
     run.money = 0
     run.lastSettlement = 0
@@ -221,10 +221,10 @@ function M.new(options)
         climbSpeed = options.climbSpeed or 30,
         baseClimbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
-        slotDistance = options.slotDistance or 100,
+        -- Item 15(a): slotDistance / slotOpportunities / slotRandom removed;
+        -- in-flight slot machine abolished. earthSlotSpin (item 15(b)) uses
+        -- an explicit rolls parameter supplied by the caller, not a run field.
         returnDistance = 0,
-        slotOpportunities = 0,
-        slotRandom = options.slotRandom or math.random,
         sampleCount = 0,
         pendingSampleValue = 0,
         sampleStreakCount = 0,
@@ -467,7 +467,7 @@ function M.launch(run)
         run.rerollsUsed = 0
         run.boostsUsed = 0
         run.returnDistance = 0
-        run.slotOpportunities = 0
+        -- Item 15(a): slotOpportunities removed from run state.
         run.sampleCount = 0
         run.pendingSampleValue = 0
         run.sampleStreakCount = 0
