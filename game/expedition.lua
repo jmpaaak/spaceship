@@ -178,8 +178,9 @@ end
 function M.launchForecast(run, maxFuel)
     local forecastFuel = maxFuel or run.maxFuel
     local burnRate = M.effectiveFuelBurnRate(run)
-    if forecastFuel <= 0 or burnRate <= 0 or run.climbSpeed <= 0 then return 0, 0 end
-    local altitude = forecastFuel / burnRate * run.climbSpeed
+    local effectiveCS = M.effectiveClimbSpeed(run)
+    if forecastFuel <= 0 or burnRate <= 0 or effectiveCS <= 0 then return 0, 0 end
+    local altitude = forecastFuel / burnRate * effectiveCS
     return altitude, slotCount(altitude, run.slotDistance)
 end
 

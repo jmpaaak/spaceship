@@ -3750,6 +3750,63 @@ local function testGearEngineSynergyMultiplierWiring()
             .. ", irradiated=" .. tostring(irradiatedClimb) .. ")")
 end
 
+-- docs/feedback/INBOX.md item 9/10/14 gap: M.launchForecast(run) uses the
+-- raw run.climbSpeed (base stat) in its altitude formula instead of
+-- M.effectiveClimbSpeed(run) (which includes hull gear's tag-synergy-
+-- multiplied climbSpeed total and engine gear's plain additive climbSpeed).
+-- This creates a visible discrepancy: a player equips hull_climb_booster
+-- (climbSpeed +4) before launch, the HUD shows the REACH N forecast using
+-- only the raw base (e.g. 60), but the actual ascent uses 64 (or more with
+-- synergy). testGearPropulsionRunWiring already verifies that fuelEfficiency
+-- engine cards raise the forecast via M.effectiveFuelBurnRate -- the
+-- parallel climbSpeed axis is the silent gap. This test closes it
+-- (TDD: first shows RED, then the launchForecast fix makes it GREEN).
+local function testGearLaunchForecastClimbSpeedGap()
+    local expedition = require("game.expedition")
+    local hullPool = gear.loadHullParts()
+
+    -- Baseline: a fresh run with no gear equipped reports a forecast altitude
+    -- based purely on the raw base climbSpeed and the fuel parameters.
+    local baseRun = expedition.new({ climbSpeed = 60, fuelBurnRate = 5 })
+    local baseAlt = expedition.launchForecast(baseRun)
+    assert(baseAlt > 0, "baseline launchForecast must return a positive altitude")
+
+    -- Equipping a hull card with a climbSpeed bonus must raise the forecast
+    -- altitude by the same ratio that M.effectiveClimbSpeed grows -- the
+    -- gear bonus must not be invisible to the pre-launch estimate shown to
+    -- the player.
+    local climbCard = gear.findById(hullPool, "hull_ember_core") -- climbSpeed +5
+    assert(climbCard, "fixture hull card 'hull_ember_core' must exist in the bundled pool")
+    assert(expedition.equipGear(baseRun, "hull", climbCard))
+    local gearAlt = expedition.launchForecast(baseRun)
+    assert(gearAlt > baseAlt,
+        "launchForecast must use effectiveClimbSpeed so equipped hull climbSpeed gear raises the "
+            .. "predicted altitude (baseline=" .. tostring(baseAlt) .. ", with gear=" .. tostring(gearAlt) .. ")")
+
+    -- The ratio must match M.effectiveClimbSpeed exactly, not just be
+    -- slightly higher: forecast = fuel/burnRate * effectiveClimbSpeed
+    -- => gearAlt / baseAlt == effectiveClimbSpeed(run) / run.climbSpeed.
+    local effectiveCS = expedition.effectiveClimbSpeed(baseRun)
+    local expectedRatio = effectiveCS / baseRun.climbSpeed
+    local actualRatio = gearAlt / baseAlt
+    assert(math.abs(actualRatio - expectedRatio) < 1e-6,
+        "launchForecast altitude ratio (gear/bare=" .. tostring(actualRatio) .. ") must equal "
+            .. "effectiveClimbSpeed/baseClimbSpeed (" .. tostring(expectedRatio) .. ")")
+
+    -- Engine-slot climbSpeed must also be visible in the forecast via the
+    -- same M.effectiveClimbSpeed path (not a separate hull-only formula).
+    local enginePool = gear.loadEngineParts()
+    local engineRun = expedition.new({ climbSpeed = 60, fuelBurnRate = 5 })
+    local engineBase = expedition.launchForecast(engineRun)
+    local afterburner = gear.findById(enginePool, "engine_afterburner") -- climbSpeed +6
+    assert(afterburner, "fixture engine card 'engine_afterburner' must exist in the bundled pool")
+    assert(expedition.equipGear(engineRun, "engine", afterburner))
+    local engineGearAlt = expedition.launchForecast(engineRun)
+    assert(engineGearAlt > engineBase,
+        "launchForecast must also reflect engine-slot climbSpeed cards (baseline="
+            .. tostring(engineBase) .. ", with engine gear=" .. tostring(engineGearAlt) .. ")")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -5484,6 +5541,7 @@ function M.run()
     testGearEquippedEditionEffectsRunWiring()
     testGearQuantumFlawedEngineDrawbackWiring()
     testGearEngineSynergyMultiplierWiring()
+    testGearLaunchForecastClimbSpeedGap()
 
     print("SPACESHIP_UNIT_OK")
 end
