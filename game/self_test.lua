@@ -6217,6 +6217,29 @@ function M.run()
         end
     end
 
+    -- ComfyUI panel/overlay wiring (group 5): drawPanelSprite is exported and
+    -- returns false when image is nil (graceful no-op). scene instance carries
+    -- the 8 panel image slots (nil in headless, userdata in LOVE).
+    do
+        local PlayScene = require("game.scenes.play")
+        assert(type(PlayScene.drawPanelSprite) == "function",
+            "drawPanelSprite must be exported on PlayScene")
+        -- nil image -> returns false without error
+        local ok, res = pcall(PlayScene.drawPanelSprite, nil, 0, 0, 100, 50)
+        assert(ok, "drawPanelSprite(nil,...) must not throw")
+        assert(res == false, "drawPanelSprite(nil,...) must return false")
+        -- scene instance carries the panel image slots
+        local scene = PlayScene.new()
+        for _, key in ipairs({
+            "launchRocketIconImage", "loadoutPanelImage", "loadoutShipImage",
+            "settlementPanelImage", "destroyedPanelImage",
+            "relaunChImage", "slotResultPanelImage", "slotSpinButtonImage",
+        }) do
+            assert(scene[key] == nil or type(scene[key]) == "userdata",
+                key .. " must be nil (headless) or image userdata")
+        end
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

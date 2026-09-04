@@ -348,6 +348,17 @@ local function drawFloatingIconSprite(image, cx, cy, size, alpha)
 end
 M.drawFloatingIconSprite = drawFloatingIconSprite
 
+-- Draw a panel/overlay sprite stretched to fill the rectangle (x, y, w, h).
+-- image: the panel sprite (may be nil -> caller draws its original rectangle).
+-- Returns true if drawn, false if image is nil.
+local function drawPanelSprite(image, x, y, w, h)
+    if not image then return false end
+    local iw, ih = image:getDimensions()
+    love.graphics.draw(image, x, y, 0, w / iw, h / ih)
+    return true
+end
+M.drawPanelSprite = drawPanelSprite
+
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
@@ -657,6 +668,15 @@ function M.new(options)
     local floatingSampleIconImagePath = "assets/effects/floating_sample.png"
     local floatingDamageIconImagePath = "assets/effects/floating_damage.png"
     local messageBannerIconImagePath   = "assets/effects/message_banner.png"
+    -- Panel/overlay images (group 5 of ComfyUI asset wiring)
+    local launchRocketIconImagePath   = "assets/effects/launch_rocket.png"
+    local loadoutPanelImagePath       = "assets/effects/loadout_panel.png"
+    local loadoutShipImagePath        = "assets/effects/loadout_ship.png"
+    local settlementPanelImagePath    = "assets/effects/settlement_summary_panel.png"
+    local destroyedPanelImagePath     = "assets/effects/destroyed_panel.png"
+    local relaunChImagePath           = "assets/effects/relaunch.png"
+    local slotResultPanelImagePath    = "assets/effects/slot_result_panel.png"
+    local slotSpinButtonImagePath     = "assets/effects/slot_spin_button.png"
     local shipImage = loadSprite(shipImagePath)
     local planetImage = loadSprite(planetImagePath)
     local earthImage = loadSprite(earthImagePath)
@@ -678,6 +698,15 @@ function M.new(options)
     local floatingSampleIconImage = loadSprite(floatingSampleIconImagePath)
     local floatingDamageIconImage = loadSprite(floatingDamageIconImagePath)
     local messageBannerIconImage  = loadSprite(messageBannerIconImagePath)
+    -- Panel/overlay images (group 5 of ComfyUI asset wiring)
+    local launchRocketIconImage   = loadSprite(launchRocketIconImagePath)
+    local loadoutPanelImage       = loadSprite(loadoutPanelImagePath)
+    local loadoutShipImage        = loadSprite(loadoutShipImagePath)
+    local settlementPanelImage    = loadSprite(settlementPanelImagePath)
+    local destroyedPanelImage     = loadSprite(destroyedPanelImagePath)
+    local relaunChImage           = loadSprite(relaunChImagePath)
+    local slotResultPanelImage    = loadSprite(slotResultPanelImagePath)
+    local slotSpinButtonImage     = loadSprite(slotSpinButtonImagePath)
     -- Minimap marker images (group 2 of ComfyUI asset wiring)
     local minimapImages = loadSpriteMap({
         disc           = "assets/effects/minimap_disc.png",
@@ -755,6 +784,23 @@ function M.new(options)
         floatingDamageIconImagePath = floatingDamageIconImagePath,
         messageBannerIconImage = messageBannerIconImage,
         messageBannerIconImagePath = messageBannerIconImagePath,
+        -- Panel/overlay images (group 5 of ComfyUI asset wiring)
+        launchRocketIconImage = launchRocketIconImage,
+        launchRocketIconImagePath = launchRocketIconImagePath,
+        loadoutPanelImage = loadoutPanelImage,
+        loadoutPanelImagePath = loadoutPanelImagePath,
+        loadoutShipImage = loadoutShipImage,
+        loadoutShipImagePath = loadoutShipImagePath,
+        settlementPanelImage = settlementPanelImage,
+        settlementPanelImagePath = settlementPanelImagePath,
+        destroyedPanelImage = destroyedPanelImage,
+        destroyedPanelImagePath = destroyedPanelImagePath,
+        relaunChImage = relaunChImage,
+        relaunChImagePath = relaunChImagePath,
+        slotResultPanelImage = slotResultPanelImage,
+        slotResultPanelImagePath = slotResultPanelImagePath,
+        slotSpinButtonImage = slotSpinButtonImage,
+        slotSpinButtonImagePath = slotSpinButtonImagePath,
         expedition = expedition.new({ bestAltitude = altitudeStore:load() }),
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
@@ -2351,9 +2397,15 @@ function M:draw()
         -- (radius 58, extending to y=318 for a ship at the world origin)
         -- peeking out below the old box, directly behind the TAP TO
         -- LAUNCH message and DEV PLACEHOLDER footer text.
-        love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-        love.graphics.rectangle("fill", 12, M.launchLoadoutBoxTop, viewport.width - 24,
-            viewport.height - M.launchLoadoutBoxTop)
+        local panelX = 12
+        local panelY = M.launchLoadoutBoxTop
+        local panelW = viewport.width - 24
+        local panelH = viewport.height - M.launchLoadoutBoxTop
+        love.graphics.setColor(1, 1, 1, 0.92)
+        if not drawPanelSprite(self.loadoutPanelImage, panelX, panelY, panelW, panelH) then
+            love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
+            love.graphics.rectangle("fill", panelX, panelY, panelW, panelH)
+        end
         -- Every LOADOUT line now uses the small 8px scene-cached font
         -- (previously the default 14px font) so the text sizes relative
         -- to the small circular minimap chart/specimen-strip squares
@@ -2399,8 +2451,12 @@ function M:draw()
         -- scale 1), not just the previous 34px minimum.
         self.smallFont = self.smallFont or fonts.get(8)
         local previousFont = love.graphics.getFont()
-        love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
-        love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
+        -- Group 5 wiring: settlement_summary_panel.png as background; fallback rect.
+        love.graphics.setColor(1, 1, 1, 0.94)
+        if not drawPanelSprite(self.settlementPanelImage, 12, 70, viewport.width - 24, 250) then
+            love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
+            love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
+        end
         -- Faint alternating background bands behind each tappable
         -- settlementTouchRows entry. Drawn before any text so it never
         -- overlaps or obscures the already real-capture-verified printf
@@ -2507,6 +2563,9 @@ function M:draw()
             row = row + rowStep
         end
         if self.earthShopSlotResult then
+            -- Group 5 wiring: slot_result_panel.png behind the result area.
+            love.graphics.setColor(1, 1, 1, 0.85)
+            drawPanelSprite(self.slotResultPanelImage, fullX, row - 2, fullW, rowStep * 2 + 2)
             love.graphics.setColor(0.85, 0.95, 1)
             love.graphics.printf(table.concat(self.earthShopSlotResult.symbols, "  "), fullX, row, fullW, "center")
             row = row + rowStep
@@ -2516,6 +2575,9 @@ function M:draw()
                 love.graphics.printf(profileLabel, fullX, row, fullW, "center")
             end
         else
+            -- Group 5 wiring: slot_spin_button.png behind the spin prompt text.
+            love.graphics.setColor(1, 1, 1, 0.85)
+            drawPanelSprite(self.slotSpinButtonImage, fullX, row - 2, fullW, rowStep + 4)
             love.graphics.setColor(1, 0.8, 0.3)
             love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, row, fullW, "center")
         end
@@ -2530,13 +2592,20 @@ function M:draw()
         row = row + rowStep
         love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
         row = row + rowStep
+        -- Group 5 wiring: relaunch.png behind the TAP: RELAUNCH button text.
+        love.graphics.setColor(1, 1, 1, 0.9)
+        drawPanelSprite(self.relaunChImage, fullX, row - 2, fullW, rowStep + 4)
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
-        love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-        love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 134)
+        -- Group 5 wiring: destroyed_panel.png as background; fallback rect.
+        love.graphics.setColor(1, 1, 1, 0.94)
+        if not drawPanelSprite(self.destroyedPanelImage, 12, 174, viewport.width - 24, 134) then
+            love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
+            love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 134)
+        end
         self.smallFont = self.smallFont or fonts.get(8)
         local previousFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
@@ -2587,9 +2656,14 @@ function M:draw()
     if self.expedition.phase == "launch" then
         -- docs/feedback/INBOX.md UI/HUD item 3: pair the TAP TO LAUNCH
         -- action with a small rocket icon above it instead of bare text.
+        -- Group 5 wiring: use launch_rocket.png sprite when available,
+        -- fall back to original polygon.
         love.graphics.setColor(1, 0.75, 0.25)
-        love.graphics.polygon("fill", M.rocketIconPoints(
-            viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
+        if not drawHudSpriteOrPoly(self.launchRocketIconImage, M.rocketIconPoints,
+                viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize) then
+            love.graphics.polygon("fill", M.rocketIconPoints(
+                viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
+        end
         love.graphics.setColor(0.85, 0.9, 1)
     end
     love.graphics.printf(self.message, 4, messageY, viewport.width - 8, "center")

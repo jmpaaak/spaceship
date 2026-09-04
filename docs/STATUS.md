@@ -14,7 +14,15 @@
 
 ## Next Slice
 
-- INBOX group (5): launch/settle/destroy panels — `launch_rocket.png`, `loadout_panel.png`, `shop_panel.png`, etc.
+- INBOX group (6): shop icons — `shop_icons/hull.png`, `steering.png`, `yield.png`, `ship.png` wired into settlement shop rows; joystick sprite wiring (`joystick_knob.png`, `joystick_pad.png`); `star_point.png` and `specimen_banner.png`.
+
+2026-09-04 — ComfyUI panel/overlay wiring (group 5 of INBOX draw-wiring item).
+
+- Added `drawPanelSprite(image, x, y, w, h)` helper to `game/scenes/play.lua`; exported as `M.drawPanelSprite`.
+- 8 panel PNGs loaded in `M.new()`: `launchRocketIconImage` (launch_rocket.png), `loadoutPanelImage` (loadout_panel.png), `loadoutShipImage` (loadout_ship.png), `settlementPanelImage` (settlement_summary_panel.png), `destroyedPanelImage` (destroyed_panel.png), `relaunChImage` (relaunch.png), `slotResultPanelImage` (slot_result_panel.png), `slotSpinButtonImage` (slot_spin_button.png).
+- In `draw()`: launch rocket polygon → sprite-or-poly fallback (`launch_rocket.png`); launch loadout box → `loadoutPanelImage` sprite-or-rect; settlement panel → `settlementPanelImage` sprite-or-rect; slot result area → `slotResultPanelImage` behind result text; spin prompt → `slotSpinButtonImage` behind text; relaunch button → `relaunChImage` behind text; destroyed panel → `destroyedPanelImage` sprite-or-rect.
+- Regression test: `drawPanelSprite` exported, nil→false no-throw, scene has all 8 panel image slots.
+- `make verify` GREEN.
 
 2026-09-04 — ComfyUI floating text icon wiring (group 4 of INBOX draw-wiring item).
 
