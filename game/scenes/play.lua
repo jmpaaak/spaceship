@@ -1378,9 +1378,12 @@ function M:keypressed(key)
     -- The result is stored in self.earthShopSlotResult for draw() to render.
     -- Money reward is applied immediately to run.money.
     if self.expedition.phase == "settlement" and key == "l" then
-        local rolls = {}
-        for i = 1, 3 do rolls[i] = math.random(1, 10) end
-        local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, rolls)
+        -- Item 15(b): earthSlotSpin expects rolls.reels (not a plain array).
+        -- Building the table with the reels key ensures random values are used
+        -- instead of the silent fallback to {0,0,0} that a plain array causes.
+        local reels = {}
+        for i = 1, 3 do reels[i] = math.random(1, 10) end
+        local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, { reels = reels })
         self.earthShopSlotResult = result
         if result.reward > 0 then
             self.expedition.money = self.expedition.money + result.reward

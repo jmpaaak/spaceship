@@ -1,19 +1,28 @@
 # STATUS
 - preflight this cycle: READY
-- Slice: Item 7(a) shop modal keyboard interaction regression tests
+- Slice: Item 15(b) regression — earthSlotSpin rolls format bug fix + coverage
 
-## 2026-09-04 — Item 7(a): Add regression tests for shop-planet modal Y/N keyboard interaction
+## 2026-09-04 — Item 15(b): Fix rolls format bug in Earth shop slot machine
 
-- Commit 4358510 ("Finish Item 7(a)") added `keypressed("y"/"n")` shop modal handling to play.lua but had zero self_test coverage for that path.
-- Added a 4-case regression block in `game/self_test.lua`:
-  (a) "n" key dismisses shopModal without deducting money or equipping gear.
-  (b) "y" key with sufficient money calls `buyGearFromShopPlanet`, clears shopModal, deducts exactly `gear.buyPrice`, and appends a floating text naming the gear.
-  (c) "y" key with insufficient money keeps shopModal open and sets `shopModal.errorText` without touching money.
-  (d) shopModal open during settlement phase: "y" is consumed by the modal handler and does NOT fall through to the settlement `sampleYieldUpgrade` shortcut.
-- All 4 cases GREEN on first run (behavior was already correctly implemented by 4358510; test coverage was the gap).
-- Also committing preflight-compressed INBOX.md (-561 chars) from cycle start.
-- `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK.
-- Next slice: Item 7(b) regression gap audit — `exploreHub` hub-drop behavior vs. test coverage, or item 11 remaining fuel-framing text audit.
+- Found bug: play.lua `keypressed("l")` handler built `rolls = {1, 2, 3}` (plain
+  integer-keyed array) and passed to `expedition.earthSlotSpin`. But earthSlotSpin
+  reads `rolls.reels` (not numeric keys), so `rolls.reels` was always nil,
+  silently falling back to `{0, 0, 0}`. Every Earth shop spin always produced
+  COMET-COMET-COMET regardless of the random values generated.
+- Fix: changed play.lua to build `{ reels = { r1, r2, r3 } }` and pass that.
+- TDD: added 4-case regression block in `game/self_test.lua` for item 15(b):
+  (1) "l" key in settlement sets earthShopSlotResult
+  (2) winning spin adds reward to money and sets message to "+$N" format
+  (3) "l" key outside settlement is a no-op (no earthSlotSpin call, no result)
+  (4) capturedRolls.reels is not nil (detects the plain-array format bug)
+  Confirmed RED before fix, GREEN after.
+- Also committed from previous cycle: item 11(c) shopLoadoutLines fuel-key
+  guard + dead font-probe string removal (d381128).
+- `make verify LOVE=/Users/jm/.local/bin/love`: SPACESHIP_UNIT_OK,
+  SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK.
+- Next slice: Item 7(b) or Item 8 regression audit — verify settleAtHub is
+  tested from play.lua touch/proximity path, or audit for remaining item 11
+  fuel-framing text in expedition.lua comments.
 
 
 
