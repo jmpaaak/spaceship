@@ -7,7 +7,16 @@ your scope (append-only status notes to your own item are fine).
 
 ## Scope for this lane
 
-이 레인은 오직 다음 INBOX 항목만, 이 순서로 처리한다: 항목13(부품 데이터 JSON 외부화 + tools/gear-editor/ 웹 에디터) -> 항목9(선체 부품 20~30종 + 시너지 엔진, game/gear.lua 신규) -> 항목10(엔진 부품 슬롯 분리, game/engine_parts.lua 신규) -> 항목12(등급/에디션 파밍 시스템) -> 항목14(효과 스키마 A~F 확장, 웹 에디터 폼 동기화). 이 레인은 game/scenes/play.lua, game/i18n.lua, game/world.lua, game/expedition.lua를 원칙적으로 건드리지 않는다(다른 레인 담당) -- 단, gear.lua/engine_parts.lua를 게임에 배선하기 위한 최소한의 로더 호출 추가는 예외로 허용한다. docs/feedback/INBOX.md 처리대기 섹션의 항목13/9/10/12/14 하위에만 진행상황을 append한다.
+이 레인은 INBOX 처리 대기의 **모든 항목**을 처리한다 (이 레인이 현재 유일한 활성 레인이므로). 우선순위 순서:
+- 항목 7 (함선 장비 획득 경로 3원화)
+- 항목 8 (행성 탐사 보상은 표본만, 정산은 체크포인트에서만)
+- 항목 11 (연료 소진 관련 잔재 UI/문구 전면 제거)
+- 항목 15 (귀환 페이즈 및 비행 중 슬롯머신 폐지 + 지구 상점 전용 슬롯머신)
+- 항목 9/10/12/13/14 — 이미 완료됨, 추가 감사 불필요
+
+항목 11/15는 `game/scenes/play.lua`, `game/i18n.lua`를 반드시 수정해야 하므로 이 레인에서 예외적으로 허용한다. 항목 7/8은 `game/world.lua`, `game/expedition.lua`를 수정해야 하므로 마찬가지로 허용한다.
+
+**중요: 이미 완료된 항목(13/9/10/12/14)은 재감사하지 않는다. 남은 항목(7/8/11/15) 중 하나를 골라 실제 코드 작업을 진행하라.**
 
 ## Branch and push discipline
 
