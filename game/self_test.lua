@@ -457,6 +457,31 @@ local function testBackgroundStars()
         if a[i].x ~= foreground[i].x or a[i].y ~= foreground[i].y then distinct = true end
     end
     assert(distinct, "background stars must be an independently seeded point set")
+
+    -- INBOX item 2 (2026-09-05): verify that x and y coordinates use
+    -- fully independent salts so no diagonal correlation exists.
+    -- If x and y were produced by the same salt, then for a star at position i
+    -- within a sector whose sectorX == sectorY, x_offset would equal y_offset
+    -- (they'd be on the 45-degree diagonal). With independent salts they differ.
+    local fg = world.stars(5, 5)  -- sectorX == sectorY to trigger diagonal if broken
+    local diagCount = 0
+    for _, s in ipairs(fg) do
+        local ox = s.x - 5 * world.sectorSize
+        local oy = s.y - 5 * world.sectorSize
+        if math.abs(ox - oy) < 1e-6 then diagCount = diagCount + 1 end
+    end
+    assert(diagCount <= 1,
+        "stars x/y must use independent salts: too many on the diagonal for sectorX==sectorY")
+
+    local bg = world.backgroundStars(5, 5)
+    local bgDiagCount = 0
+    for _, s in ipairs(bg) do
+        local ox = s.x - 5 * world.sectorSize
+        local oy = s.y - 5 * world.sectorSize
+        if math.abs(ox - oy) < 1e-6 then bgDiagCount = bgDiagCount + 1 end
+    end
+    assert(bgDiagCount <= 1,
+        "backgroundStars x/y must use independent salts: too many on the diagonal for sectorX==sectorY")
 end
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first
