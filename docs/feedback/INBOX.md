@@ -6,7 +6,7 @@
 
   (1) **RGB 깨진 에셋 언와이어 + 다각형 폴백:** `assets/effects/`·`shop_icons/`·`slot_symbols/`·`debris/`·`backgrounds/deep_space_tile.png` 등 mode=RGB PNG는 `M.new()`에서 로드하지 않거나 draw에서 nil 취급. 기존 Lua 다각형/원 폴백이 그려지게. 배경 타일은 계속 비활성(절차적 별만). 파일을 당장 삭제할 필요는 없고 git에서 빼도 됨. 테스트는 스프라이트 nil일 때 폴백이 크래시하지 않는지.
 
-  (2) **남길 스프라이트 재생성 (투명 RGBA만):** 함선 `ship_default`/`ship_scout`, 지구 `earth_generic`, 행성 3종. 64×64 **RGBA**, 실루엣이 프레임의 ~60%, 배경 완전 투명. 행성 3종은 지금 RGBA라도 불투명 100%라 사각으로 보임 — 원형 마스크+투명 필수. HUD 아이콘 9장은 이미 32×32 RGBA면 유지, 깨져 있으면 같은 규칙으로 재생성. `tools/comfyui_asset_pipeline.py`, `http://222.238.86.132:8188`.
+  (2) **함선/지구/행성 ComfyUI 재생성은 하지 말 것 (2026-09-05, 사용자 확정):** 너무 오래 걸려서 사용자가 이미지를 따로 가져와 연결한다. `ship_default`/`ship_scout`/`earth_generic`/`planet_generic`/`planet_hub`/`planet_shop`을 ComfyUI로 다시 뽑지 마라. 새 PNG가 INBOX/디스크로 올 때까지 현행 파일 유지하거나 (1) 폴백만. 연결 작업은 사용자가 파일을 준 뒤의 별도 항목.
 
   (3) **은하/행성 다양성 — Deep-Fold PixelPlanets 검토 후 적용 여부:** MIT, PNG/GIF/spritesheet export. ComfyUI 행성 대체 후보. 한 사이클에 결정+프로토타입 1장(결정론적 시드=은하/행성 id) 또는 “적용 안 함”을 STATUS에 남김. Godot을 LÖVE에 임베드하지 말 것 — export PNG만.
 
