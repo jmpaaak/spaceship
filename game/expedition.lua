@@ -616,6 +616,18 @@ function M.launch(run)
         run.lastLostSlotSpinsCount = 0
         run.lastLostSlotValue = 0
         run.lastLostAltitude = 0
+        -- Item 7(b)/8 hub-explored reset gap: `destroy()` already resets
+        -- hubExplored/{} and lastVisitedGalaxyId on full meta wipe, but
+        -- `launch()` (safe re-launch from settlement) was not clearing them.
+        -- Effect: after a safe return, the player's hubExplored from the
+        -- previous expedition persisted into the new run, silently preventing
+        -- exploreHub from granting hub drops they legitimately earned on
+        -- subsequent expeditions to the same galaxy. The Earth shop slot spin
+        -- (item 15) also reads lastVisitedGalaxyId, and that spin happens
+        -- DURING the settlement phase (before this launch), so a new
+        -- expedition has no "last visited galaxy" yet and must start at nil.
+        run.hubExplored = {}
+        run.lastVisitedGalaxyId = nil
     end
     run.phase = "ascending"
     return true
