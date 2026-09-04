@@ -1132,6 +1132,19 @@ function M.rollGearOffer(run, pool, rolls)
     }
 end
 
+-- Item 8: Partial settlement at a galaxy hub. Converts pending samples
+-- into money without ending the flight phase (unlike full Earth return).
+-- Does NOT trigger M.equippedHullMoneyBonus (that remains Earth-only).
+function M.settleAtHub(run)
+    local payout = run.pendingSampleValue
+    if payout > 0 then
+        run.money = run.money + payout
+        run.pendingSampleValue = 0
+        return payout
+    end
+    return 0
+end
+
 -- Item 7(b): Exploring a galaxy hub deterministically drops a specific
 -- gear part for that galaxy (100% chance, only once per run).
 function M.exploreHub(run, galaxyId, pool)

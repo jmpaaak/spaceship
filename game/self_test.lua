@@ -3857,6 +3857,33 @@ local function testGearBoostsUsedDestroyReset()
         "boostsRemaining must be 0 after destroy (no gear equipped)")
 end
 
+-- Item 8: Partial settlement at checkpoint (hub).
+-- Tests that normal collection only gives samples (not money), and returning to
+-- a hub converts those pending samples into money without triggering full Earth settlement.
+local function testHubPartialSettlement()
+    local expedition = require("game.expedition")
+    
+    local run = expedition.new()
+    expedition.launch(run)
+    run.money = 100
+    
+    -- Normal planet collection
+    expedition.collectSample(run, 10, "azure")
+    assert(run.pendingSampleValue == 10, "normal collection should only increase pendingSampleValue")
+    assert(run.money == 100, "normal collection must not increase money immediately")
+    
+    -- Settle at hub
+    local payout = expedition.settleAtHub(run)
+    assert(payout == 10, "settleAtHub should return the settled amount")
+    assert(run.pendingSampleValue == 0, "settleAtHub must clear pendingSampleValue")
+    assert(run.money == 110, "settleAtHub must add pendingSampleValue to money")
+    
+    -- Additional calls yield 0
+    local payout2 = expedition.settleAtHub(run)
+    assert(payout2 == 0, "consecutive settleAtHub should yield 0")
+    assert(run.money == 110, "money should remain unchanged on zero payout")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 180 and viewport.height == 320)
@@ -5593,6 +5620,7 @@ function M.run()
     testGearEngineSynergyMultiplierWiring()
     testGearLaunchForecastClimbSpeedGap()
     testGearBoostsUsedDestroyReset()
+    testHubPartialSettlement()
 
     print("SPACESHIP_UNIT_OK")
 end
