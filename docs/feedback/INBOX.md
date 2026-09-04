@@ -2,6 +2,30 @@
 
 ## 처리 대기
 
+- **[2026-09-05] PixelPlanets 픽셀별 스프라이트로 배경/전경 별 교체 (사용자 확정, 최우선):**
+  PixelPlanets JS 포트(MIT)의 별 스프라이트 두 장이 이미 에셋에 반입됨:
+  - `assets/space/pixelplanets_stars.png` (144×9 RGBA) — 17종 작은 픽셀별, 각 9×9 프레임
+  - `assets/space/pixelplanets_stars_special.png` (150×25 RGBA) — 6종 큰 특수별, 각 25×25 프레임
+
+  **구현:**
+  1. `M.new()` 에 두 이미지 로드 추가:
+     ```lua
+     M.pixelStarsImage = loadSprite("assets/space/pixelplanets_stars.png")
+     M.pixelStarsSpecialImage = loadSprite("assets/space/pixelplanets_stars_special.png")
+     ```
+  2. 별 스프라이트 드로우 헬퍼 `drawPixelStar(image, x, y, frameW, frameH, frameCount, frameIdx, size, r, g, b, a)` 추가:
+     `love.graphics.newQuad(frameIdx*frameW, 0, frameW, frameH, iw, ih)` 로 프레임 잘라서 `love.graphics.draw`.
+  3. `world.backgroundStars()` 루프 내에서 기존 `drawStarPointSprite` 대신:
+     - `bright < 0.4` → `pixelplanets_stars.png` 17프레임 중 `starIdx = (hash % 17)` 프레임, size=2~3px, color=white, opacity=`0.15 + bright*0.4`
+     - `bright >= 0.4` → `pixelplanets_stars_special.png` 6프레임 중 하나, size=4~5px, color=`#ffef9e`(황금), opacity=`0.5 + bright*0.5`
+     - 이미지 없으면 기존 `love.graphics.rectangle("fill",...)` 폴백 유지
+  4. `world.stars()` (전경 meteors) 루프도 동일하게: 일반 별은 size=3~4px, 특수별은 size=5~6px.
+  5. `M.new()` 리턴 테이블에 `pixelStarsImage`, `pixelStarsSpecialImage` 포함.
+  6. `make verify` GREEN + `GAME_CAPTURE_PHASE=launch` 캡처 경로 STATUS에 기록(PNG 미커밋).
+  7. 커밋: `feat(stars): PixelPlanets pixel-art star sprites replace procedural points`
+
+  **검증 기준:** 배경에 흰/황금 픽셀별 스프라이트가 보이고, `love.graphics.rectangle` 단색 점은 사라짐. `make verify` PASS.
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-05) **깨진 ComfyUI PNG는 다각형 폴백으로 빼고, 쓸 만한 것만 재생성 (2026-09-05, 사용자 확정, 최우선):** 런치가 깨져 보인 주원인은 RGB 불투명 64×64를 패널/이펙트로 그린 것. 투명 RGBA는 함선·지구·HUD 아이콘·표본만. 나머지 ~74장 RGB는 게임에 쓰면 블러/사각 덩어리. 비전 검토 없음. 한 사이클 = 아래 소항목 하나 + `make verify` GREEN + 커밋.
