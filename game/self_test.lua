@@ -5639,6 +5639,40 @@ function M.run()
 
     -- Omnidirectional joystick movement (docs/GAME_DESIGN.md 이동 방식 개선
     -- 항목 1, "조이스틱을 통해 전방향으로 이동 가능함").
+    -- Item 11 (docs/feedback/INBOX.md): dead in-flight slot i18n keys that no
+    -- longer have any consumer in play.lua (slot_spin_prompt, slot_result_*,
+    -- slot_spinning_label, no_slot_chances_label, no_slots_compact) must be
+    -- absent from both en and ko locales after the item-15(a) in-flight slot
+    -- machine abolition. returning_message must not contain the word "SLOT"
+    -- (en) or "슬롯" (ko) since it formerly said "RETURNING N SLOT CHANCES"
+    -- but in-flight slot opportunities no longer exist.
+    do
+        local i18n = require("game.i18n")
+        local deadKeys = {
+            "slot_spin_prompt", "slot_result_repair", "slot_result_sample",
+            "slot_result_plain", "slot_spinning_label", "no_slot_chances_label",
+            "no_slots_compact", "spin_compact_label", "spinning_compact",
+            "hold_left", "hold_right", "spinning_label",
+            "win_repair_line", "win_sample_line", "win_pending_line",
+            "button_left", "button_right", "slot_odds_line",
+        }
+        for _, key in ipairs(deadKeys) do
+            -- i18n.t asserts on missing keys; use pcall to detect them.
+            local ok = pcall(i18n.t, key)
+            assert(not ok,
+                "item 11: dead in-flight slot key '" .. key ..
+                "' must be removed from i18n (still resolves to a value)")
+        end
+        local returnMsg = i18n.t("returning_message")
+        assert(not returnMsg:upper():find("SLOT"),
+            "item 11: returning_message must not contain slot-count language: " .. returnMsg)
+        i18n.setLocale("ko")
+        local returnMsgKo = i18n.t("returning_message")
+        assert(not returnMsgKo:find("슬롯"),
+            "item 11: ko returning_message must not contain 슬롯 slot language: " .. returnMsgKo)
+        i18n.setLocale("en")
+    end
+
     testJoystick()
     testGalaxyStructure()
     testMinimap()

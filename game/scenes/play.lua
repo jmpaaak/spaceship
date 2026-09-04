@@ -1129,7 +1129,8 @@ function M:update(dt)
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
         self:persistBestAltitude()
-        self.message = i18n.t("returning_message", self.expedition.slotOpportunities)
+        -- Item 11/15(a): in-flight slot count removed from returning message.
+        self.message = i18n.t("returning_message")
     elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
         self.message = i18n.t("settled_message", self.expedition.lastSettlement, self.expedition.money)
     end

@@ -62,18 +62,10 @@ locales.en = {
     -- $") read as an ambiguous label for the slot machine's expected-value
     -- payout. "EV $" (Expected Value) is the precise statistical term this
     -- number represents and matches common gambling/game UI convention.
-    slot_odds_line = "C%d P%d S%d  EV $%.2f",
-    slot_spinning_label = "SLOT SPINNING...",
-    no_slot_chances_label = "NO SLOT CHANCES",
-    no_slots_compact = "NO SLOTS",
-    slot_spin_prompt = "TAP: SLOT SPIN  %d LEFT",
-    spin_compact_label = "SPIN %d",
-    spinning_compact = "SPINNING",
-    slot_result_repair = "%s +$%d REPAIR +%d  %d LEFT",
-    slot_result_sample = "%s +$%d SAMPLE +$%d  %d LEFT",
-    slot_result_plain = "%s +$%d  %d LEFT",
-    returning_message = "RETURNING  %d SLOT CHANCES",
     -- Item 15(b): Earth shop slot machine keys
+    -- Item 11/15(a): returning_message no longer references in-flight slot
+    -- opportunities (abolished).
+    returning_message = "RETURNING  DRAG TO STEER",
     earth_slot_spin_prompt = "TAP: EARTH SLOT SPIN",
     earth_slot_result = "%s  +$%d",
     earth_slot_miss = "%s  NO WIN",
@@ -114,14 +106,6 @@ locales.en = {
     meta_reset_line = "META RESET  BEST %d",
     next_ship_line = "NEXT %s",
     tap_start_over = "TAP: START OVER",
-    hold_left = "HOLD LEFT",
-    hold_right = "HOLD RIGHT",
-    spinning_label = "SPINNING...",
-    win_repair_line = "WIN +$%d  REPAIR +%d",
-    win_sample_line = "WIN +$%d  SAMPLE +$%d",
-    win_pending_line = "WIN +$%d  PENDING $%d",
-    button_left = "LEFT",
-    button_right = "RIGHT",
     minimap_out = "OUT %d",
     dev_placeholder = "DEV PLACEHOLDER",
 }
@@ -175,18 +159,10 @@ locales.ko = {
     steering_action_line = "T/G 조종 LV.%d>%d $%d",
     steering_action_compact = "G:LV.%d>%d $%d",
     steering_preview_compact = "%d",
-    slot_odds_line = "C%d P%d S%d  기대값 $%.2f",
-    slot_spinning_label = "슬롯 회전중...",
-    no_slot_chances_label = "슬롯 기회 없음",
-    no_slots_compact = "슬롯없음",
-    slot_spin_prompt = "탭: 슬롯회전  %d회 남음",
-    spin_compact_label = "회전 %d",
-    spinning_compact = "회전중",
-    slot_result_repair = "%s +$%d 수리+%d  %d회",
-    slot_result_sample = "%s +$%d 표본+$%d  %d회",
-    slot_result_plain = "%s +$%d  %d회",
-    returning_message = "귀환중  슬롯 %d회",
     -- Item 15(b): Earth shop slot machine keys
+    -- Item 11/15(a): returning_message no longer references in-flight slot
+    -- opportunities (abolished).
+    returning_message = "귀환중  드래그 조종",
     earth_slot_spin_prompt = "탭: 지구 슬롯 스핀",
     earth_slot_result = "%s  +$%d",
     earth_slot_miss = "%s  꽝",
@@ -227,14 +203,6 @@ locales.ko = {
     meta_reset_line = "초기화  최고 %d",
     next_ship_line = "다음 %s",
     tap_start_over = "탭: 다시시작",
-    hold_left = "좌 유지",
-    hold_right = "우 유지",
-    spinning_label = "회전중...",
-    win_repair_line = "승리 +$%d  수리+%d",
-    win_sample_line = "승리 +$%d  표본+$%d",
-    win_pending_line = "승리 +$%d  대기 $%d",
-    button_left = "좌",
-    button_right = "우",
     minimap_out = "외부 %d",
     dev_placeholder = "개발 임시본",
 }
