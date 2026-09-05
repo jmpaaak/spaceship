@@ -237,7 +237,7 @@ M.launchTouchArea = launchTouchArea
 -- band height scales proportionally so text lines never overlap and the
 -- minimap sits below the taller band.
 M.hudFontSize = 14
-M.hudLineStep = 16  -- vertical px between successive HUD text lines
+M.hudLineStep = 22  -- vertical px between successive HUD text lines (item 17e: raised for 16px icons)
 M.launchHudHeight = 88
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
