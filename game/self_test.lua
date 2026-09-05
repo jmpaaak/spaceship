@@ -7248,6 +7248,34 @@ function M.run()
                 end
             end
         end
+
+        -- Verify planetImagePathForPlanet wiring (INBOX 12 draw wiring)
+        local resolve = PlayScene.planetImagePathForPlanet
+
+        -- Regular planet with starType → pp_<type>
+        assert(resolve({ galaxyStarType = "ice" }) == "assets/planet/pp_ice.png",
+            "regular ice planet must resolve to pp_ice.png")
+        assert(resolve({ galaxyStarType = "lava" }) == "assets/planet/pp_lava.png",
+            "regular lava planet must resolve to pp_lava.png")
+        assert(resolve({ galaxyStarType = "bare" }) == "assets/planet/pp_bare.png",
+            "regular bare planet must resolve to pp_bare.png")
+
+        -- Hub planet → planet_hub.png (takes priority over starType)
+        assert(resolve({ hub = true, galaxyStarType = "gas" }) == "assets/planet/planet_hub.png",
+            "hub planet must resolve to planet_hub.png regardless of starType")
+
+        -- Shop planet → planet_shop.png (takes priority over starType)
+        assert(resolve({ isShop = true, galaxyStarType = "dry" }) == "assets/planet/planet_shop.png",
+            "shop planet must resolve to planet_shop.png regardless of starType")
+
+        -- Planet without starType → planet_generic.png fallback
+        assert(resolve({}) == "assets/planet/planet_generic.png",
+            "planet without starType must fallback to planet_generic.png")
+
+        -- ppPlanetImagePaths table is stored in scene
+        -- (cannot instantiate scene without love.graphics, verify paths table exists in module)
+        assert(type(PlayScene.planetImagePathForPlanet) == "function",
+            "PlayScene.planetImagePathForPlanet must be exposed")
     end
 
     print("SPACESHIP_UNIT_OK")

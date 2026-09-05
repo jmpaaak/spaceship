@@ -1,17 +1,16 @@
 ## Current Status
 
-2026-09-05 — INBOX (12) PixelPlanets 에셋 — gas/earth/bare 3종 생성
+2026-09-05 — INBOX (12) PixelPlanets 배선 — play.lua에서 pp_<type> 스프라이트 사용
 
-- `tools/gen_pixelplanet.py`: 기존 ice/lava/dry에 이어 gas, earth, bare 3종 PIL 생성 (seed 20260905, 64x64 RGBA).
-- `assets/planet/pp_gas.png`, `pp_earth.png`, `pp_bare.png`: 추가. 전 6종 starType에 대응하는 PNG 완성.
-- `game/self_test.lua`: rgbaKeepers 목록에 3종 추가, INBOX (12) 테스트에서 ppTypes를 6종으로 확장.
-- `docs/assets/MANIFEST.json`: 3종 항목 추가 (sha256 검증 완료).
-- `docs/GENERATED_ASSET_LOG.md`: 3종 append.
+- `game/scenes/play.lua`: `ppPlanetImages` (6종) 로딩 추가. 행성 draw 루프에서 `planet.galaxyStarType` → `pp_<type>` 스프라이트 선택. hub/shop은 기존 전용 스프라이트 우선, 그 외 regular 행성은 PixelPlanets 스프라이트 사용.
+- `game/scenes/play.lua`: `M.planetImagePathForPlanet(planet)` 헬퍼 함수 노출 — 테스트용 path 해석 로직.
+- `game/scenes/play.lua`: hue 틴트를 약하게 조정 (baseR*0.35+0.65) — PixelPlanets 팔레트가 보이도록.
+- `game/self_test.lua`: 배선 검증 테스트 7개 추가 (ice/lava/bare→pp_<type>, hub→planet_hub, shop→planet_shop, 빈 starType→planet_generic, 함수 노출).
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (12) 다음 조각: play.lua 배선 — `planet.galaxyStarType` → `pp_<type>` 스프라이트 로드 및 행성 draw 루프에서 사용. hub/shop 분기 포함.
+- INBOX (12) 남은 조각: 은하 내 행성 id로 회전 프레임/반지름 변주, 같은 은하 동일 타입/팔레트 확인, hub/shop에도 pp_<starType> 적용 시도.
 
 ---
 

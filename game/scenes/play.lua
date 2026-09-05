@@ -785,6 +785,21 @@ M.pngColorType = pngColorType
 M.shouldLoadRuntimeSprite = shouldLoadRuntimeSprite
 M.loadSprite = loadSprite
 
+-- Resolve the planet image path based on starType / hub / shop flags.
+-- Used by self_test to verify wiring without requiring love.graphics.
+function M.planetImagePathForPlanet(planet)
+    local ppTypes = { ice = true, lava = true, dry = true, gas = true, earth = true, bare = true }
+    if planet.hub then
+        return "assets/planet/planet_hub.png"
+    elseif planet.isShop then
+        return "assets/planet/planet_shop.png"
+    elseif planet.galaxyStarType and ppTypes[planet.galaxyStarType] then
+        return "assets/planet/pp_" .. planet.galaxyStarType .. ".png"
+    else
+        return "assets/planet/planet_generic.png"
+    end
+end
+
 local function loadSpriteMap(paths)
     local images = {}
     for key, path in pairs(paths) do
@@ -869,6 +884,16 @@ function M.new(options)
     local thrustEffectImage = loadSprite(thrustEffectImagePath)
     local hubPlanetImage = loadSprite(hubPlanetImagePath)
     local shopPlanetImage = loadSprite(shopPlanetImagePath)
+    -- PixelPlanets per-starType sprites (INBOX 12 wiring)
+    local ppPlanetImagePaths = {
+        ice   = "assets/planet/pp_ice.png",
+        lava  = "assets/planet/pp_lava.png",
+        dry   = "assets/planet/pp_dry.png",
+        gas   = "assets/planet/pp_gas.png",
+        earth = "assets/planet/pp_earth.png",
+        bare  = "assets/planet/pp_bare.png",
+    }
+    local ppPlanetImages = loadSpriteMap(ppPlanetImagePaths)
     local scoutShipImage = loadSprite(scoutShipImagePath)
     local shipSilhouetteImage = loadSprite(shipSilhouetteImagePath)
     local slotSymbolImages = loadSpriteMap(slotSymbolImagePaths)
@@ -984,6 +1009,8 @@ function M.new(options)
         hubPlanetImagePath = hubPlanetImagePath,
         shopPlanetImage = shopPlanetImage,
         shopPlanetImagePath = shopPlanetImagePath,
+        ppPlanetImages = ppPlanetImages,
+        ppPlanetImagePaths = ppPlanetImagePaths,
         scoutShipImage = scoutShipImage,
         scoutShipImagePath = scoutShipImagePath,
         shipSilhouetteImage = shipSilhouetteImage,
@@ -2525,15 +2552,23 @@ function M:draw()
             -- directional light instead of a single flat fill color.
             local baseR, baseG, baseB = planetColor(planet.hue)
             local planetSprite = self.planetImage
+            -- PixelPlanets per-starType sprite wiring (INBOX 12)
+            local ppImages = self.ppPlanetImages or {}
             if planet.hub and self.hubPlanetImage then
                 planetSprite = self.hubPlanetImage
             elseif planet.isShop and self.shopPlanetImage then
                 planetSprite = self.shopPlanetImage
+            elseif planet.galaxyStarType and ppImages[planet.galaxyStarType] then
+                planetSprite = ppImages[planet.galaxyStarType]
             end
             if planetSprite then
                 local iw, ih = planetSprite:getDimensions()
                 local scale = (planet.radius * 2) / math.max(iw, ih)
-                love.graphics.setColor(baseR, baseG, baseB)
+                -- Light tint: blend toward white so PixelPlanets palette shows through
+                local tR = math.min(1, baseR * 0.35 + 0.65)
+                local tG = math.min(1, baseG * 0.35 + 0.65)
+                local tB = math.min(1, baseB * 0.35 + 0.65)
+                love.graphics.setColor(tR, tG, tB)
                 love.graphics.draw(planetSprite, x, y, 0, scale, scale, iw / 2, ih / 2)
             else
                 love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
