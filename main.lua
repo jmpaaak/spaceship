@@ -65,8 +65,6 @@ function love.load()
         return
     end
     love.graphics.setDefaultFilter("nearest", "nearest")
-    canvas = love.graphics.newCanvas(viewport.width, viewport.height)
-    canvas:setFilter("nearest", "nearest")
     scenes = sceneStack.new(PlayScene.new())
     local capturePhase = os.getenv("GAME_CAPTURE_PHASE")
     if capturePhase == "destroyed" then
@@ -360,13 +358,13 @@ end
 
 function love.draw()
     if not scenes then return end
-    love.graphics.setCanvas(canvas)
-    sceneStack.draw(scenes)
-    love.graphics.setCanvas()
     local width, height = love.graphics.getDimensions()
     local scale, x, y = viewport.fit(width, height, true)
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.draw(canvas, x, y, 0, scale, scale)
+    love.graphics.push()
+    love.graphics.translate(x, y)
+    love.graphics.scale(scale, scale)
+    sceneStack.draw(scenes)
+    love.graphics.pop()
     if captureRequested and not captureQueued then
         captureQueued = true
         love.graphics.captureScreenshot(function(imageData)
