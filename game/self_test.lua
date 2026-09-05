@@ -5234,7 +5234,7 @@ function M.run()
     -- in-flight slots. The hudOddsLineHeight constant that reserved 10px for
     -- it is now dead space. The returning HUD height must no longer include it.
     assert(PlayScene.hudHeight("returning", returningHud, 0)
-        == 94 + PlayScene.hudPrimaryStatusGap,
+        == 144 + PlayScene.hudPrimaryStatusGap,
         "item-15(a) follow-up: returning HUD height must not reserve dead odds-line space after in-flight slots were abolished: "
         .. tostring(PlayScene.hudHeight("returning", returningHud, 0)))
 
@@ -5301,7 +5301,7 @@ function M.run()
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
     assert(PlayScene.hudHeight("ascending", ascendingHud, 0)
-        == 58 + PlayScene.hudPrimaryStatusGap,
+        == 88 + PlayScene.hudPrimaryStatusGap,
         "ascending HUD band height must grow by hudPrimaryStatusGap to fit the added gap")
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)

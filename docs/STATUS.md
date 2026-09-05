@@ -1,5 +1,23 @@
 ## Current Status
 
+2026-09-05 — 모바일 UI 전체 점검 (1) 재작업 및 완료: HUD 폰트 및 행 간격 비례 확대
+
+- `game/scenes/play.lua`:
+  - `M.hudLineStep` 18 → 28, `M.launchHudHeight` 58 → 88, `M.hudGalaxyShift` 16 → 28.
+  - HUD 렌더링 시 하드코딩된 Y 좌표 일괄 상향 보정 (22→32, 40→60, 58→88, 76→116).
+  - `M.hudHeight` 함수의 반환값도 비례하여 증가 (40→60, 58→88, 94→144).
+- `game/self_test.lua`:
+  - 변경된 `hudHeight` 반환값에 맞추어 관련 어설션 수정 (94→144, 58→88).
+- `make verify` GREEN.
+
+## Next Slice
+
+- 모바일 UI 전체 점검 (2): 미니맵 크기 + 위치 변경 (마커 반경 1.5배)
+
+---
+
+## 2026-09-05 모바일 UI 전체 점검 (3)
+
 2026-09-05 — 모바일 UI 전체 점검 (3): 조이스틱 크기 + 위치 모바일 최적화.
 
 - `game/joystick.lua`:
@@ -12,16 +30,6 @@
   - `drawJoystickStick()`: 터치 없을 때 앵커 위치에 반투명 고스트 패드 표시.
 - `game/self_test.lua`: 조이스틱 모바일 상수 어설션 6개 추가.
 - `make verify` GREEN.
-
-## Next Slice
-
-- 모바일 UI 전체 점검 (4): 상점(settlement) 패널 터치 영역 + 폰트 크기 조정.
-
----
-
-## 2026-09-05 모바일 UI 전체 점검 (1)
-
-2026-09-05 — 모바일 UI 전체 점검 (1): HUD 폰트 8→14px, 행 간격 확대, hudHeight 비례 증가.
 
 ---
 
