@@ -82,6 +82,25 @@
   - self_test: 우물 밖 무중력, 4초당 1딜, 10초 연속 시 1회 표본, 이탈 시 타이머 리셋, 은하당 1회.
   - `make verify` GREEN + 커밋: `feat(play): central-star gravity well, DoT, 10s sample`
 
+(10) **미니맵: 가장 가까운 HUB를 화살표로 항상 가리킴 + HUB와 중심별 구분 (사용자 확정):**
+  - 현재: `checkpointBeyond`가 true일 때만 마젠타 화살표 (`play.lua` `if view.checkpointBeyond`). 차트 안에 hub가 있으면 화살표가 사라짐.
+  - 변경 A — 항상 화살표:
+    - `minimap.view()` 에서 `checkpointBeyond` 조건 제거. `nearestCheckpointDirection` 결과가 있으면 **항상** `checkpointDx/Dy` + 화살표 그리기.
+    - 화살표는 차트 **림(가장자리)** 에 고정. 플레이어에서 가장 가까운 non-milkyway hub 방향. 홈 은하에 있을 때도 가장 가까운 이웃 HUB를 가리킴.
+    - hub에 이미 도착(거리 < hub.radius*3)하면 화살표 숨김 (도착 완료).
+    - 지구 귀환 주황 화살(`view.beyond`)과 겹치지 않게 림 inset 유지 (현재 -9 vs -5).
+  - 변경 B — HUB vs 중심별(태양) 미니맵 구분:
+    - 원인: 타 은하는 `hubPlanet`과 `sunPosition`이 둘 다 `(galaxy.x, galaxy.y)`라 마커가 겹침.
+    - `world.hubPlanet`: 중심별에서 **오프셋**. 예: `angle = hash(gx,gy,580)*2π`, `dist = max(80, galaxy.radius * 0.18)` → hub는 나선 안쪽 행성, sun은 정중앙.
+    - milkyway는 이미 Earth(origin) ≠ Sun(`galaxyCellSize*0.12`) — 유지.
+    - 미니맵 글리프:
+      - **중심별/태양:** 노란 원+작은 코로나 (`1.0, 0.85, 0.25`) — 기존 sun 마커.
+      - **HUB:** 마젠타/시안 다이아몬드 또는 별 글리프 (`0.85, 0.35, 0.95`), 펄스 링. 은하 금색 점과 다르게.
+      - 같은 은하 차트 안에 sun과 hub가 **동시에** 보여야 함 (줌인 (7) 이후).
+    - `minimap.view()` galaxies 엔트리에 `sun`과 별도 `hub` 마커를 넣거나, galaxies 루프와 sun 마커를 분리 유지.
+    - self_test: (a) 차트 안 hub여도 `checkpointArrow` 방향 필드가 채워짐 (도착 직전 제외); (b) 타 은하 `hubPlanet.x ~= sunPosition.x` 또는 y 불일치; (c) view에 sun 좌표와 hub 좌표가 다름.
+  - `make verify` GREEN + 커밋: `feat(minimap): always-on nearest-hub arrow; offset hub from sun`
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-05) **상점(settlement) UI 텍스트 겹침/깨짐 수정:**
