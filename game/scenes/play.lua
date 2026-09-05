@@ -130,11 +130,12 @@ M.destroyedTouchArea = destroyedTouchArea
 local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
 M.ascendControls = ascendControls
 
--- Ascending-phase RETURN TO EARTH button. A 44px-tall strip at the bottom
+-- Ascending-phase RETURN TO EARTH button. A 48px-tall strip at the bottom
 -- of the canvas (above the status message at viewport.height-30=1250).
--- Centered horizontally, 200px wide — comfortably above the 44pt minimum.
--- Tapping this calls expedition.beginReturn() to start the returning phase.
-local ascendReturnButton = { top = 1190, bottom = 1234, left = 260, right = 460 }
+-- Centered horizontally, 300px wide — comfortably above the 80×44pt mobile
+-- minimum and easy to hit with a thumb.
+-- Mobile-UI sub-item (7): widened 200→300px, height 44→48px for mobile.
+local ascendReturnButton = { top = 1186, bottom = 1234, left = 210, right = 510 }
 M.ascendReturnButton = ascendReturnButton
 
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
@@ -2999,15 +3000,16 @@ function M:draw()
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()
-        -- Return-to-Earth button: semi-transparent pill at the bottom of the
+        -- Return-to-Earth button: opaque pill at the bottom of the
         -- screen so players know they can initiate return.
-        love.graphics.setColor(0.15, 0.25, 0.45, 0.7)
+        -- Mobile-UI (7): increased opacity 0.7→0.85, text color brighter.
+        love.graphics.setColor(0.15, 0.25, 0.45, 0.85)
         love.graphics.rectangle("fill", ascendReturnButton.left, ascendReturnButton.top,
             ascendReturnButton.right - ascendReturnButton.left,
-            ascendReturnButton.bottom - ascendReturnButton.top, 6, 6)
-        love.graphics.setColor(0.6, 0.85, 1, 0.9)
+            ascendReturnButton.bottom - ascendReturnButton.top, 8, 8)
+        love.graphics.setColor(0.75, 0.95, 1, 1)
         love.graphics.printf(i18n.t("return_to_earth"),
-            ascendReturnButton.left, ascendReturnButton.top + 12,
+            ascendReturnButton.left, ascendReturnButton.top + 14,
             ascendReturnButton.right - ascendReturnButton.left, "center")
     elseif self.expedition.phase == "returning" then
         self:drawJoystickStick()

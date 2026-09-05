@@ -6898,6 +6898,23 @@ function M.run()
             "after returning to altitude 0, should be settlement, got " .. rtScene.expedition.phase)
     end
 
+    -- Mobile-UI sub-item (7): Return to Earth button must meet mobile touch
+    -- target minimums (80×40px per INBOX, iOS HIG 44pt) and be reasonably
+    -- wide for thumb targeting.
+    do
+        local btn = PlayScene.ascendReturnButton
+        local w = btn.right - btn.left
+        local h = btn.bottom - btn.top
+        assert(w >= 80,
+            "return button width must be >= 80px for mobile, got " .. tostring(w))
+        assert(h >= 44,
+            "return button height must be >= 44px (iOS HIG minimum), got " .. tostring(h))
+        -- Button should be centered horizontally on the 720px canvas.
+        local cx = (btn.left + btn.right) / 2
+        assert(math.abs(cx - 360) < 20,
+            "return button should be centered on 720px canvas, center is " .. tostring(cx))
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 
