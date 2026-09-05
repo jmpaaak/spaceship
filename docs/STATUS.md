@@ -1,17 +1,26 @@
 ## Current Status
 
-2026-09-05 — INBOX (6) HUB 충돌 게임오버 금지 (지구와 동일 취급)
+2026-09-05 — INBOX (4) 행성 표본 채집 궤도 진입 시 타격감 이펙트
+
+- `game/scenes/play.lua`: 표본 수집 반경 진입 시 `self.timeSlip = { timer = 0.4, scale = 0.3 }`를 적용하여 0.4초간 게임 배속 0.3의 타임슬립 효과 추가.
+- `game/scenes/play.lua`: 기존 충돌에만 쓰이던 `self.shipShake`를 수집 시에도 0.25초간 발동시키고, 강도(`shipShakeMagnitude`)를 표본 등급(common=0.6, rare=1.0, epic=1.4)에 따라 설정.
+- `game/scenes/play.lua`: 수집 시 화면 전체에 0.15초 동안 흰색 반투명 오버레이를 그리는 `self.collectFlash` 추가.
+- `game/self_test.lua`: 롤업 애니메이션 테스트가 타임슬립에 의해 영향받지 않도록 `floatingTextScene.timeSlip = nil` 추가.
+- `docs/feedback/INBOX.md`: 항목 (4) 타격감 이펙트를 `## 처리 대기`에서 `## 처리 완료`로 이동.
+- `make verify` GREEN.
+
+## Next Slice
+
+- INBOX (5) 지구 착륙 시 진입 이펙트 — 길게 흔들리는 대기권 진입 느낌
+
+---
+
+## 2026-09-05 — INBOX (6) HUB 충돌 게임오버 금지 (지구와 동일 취급)
 
 - `game/scenes/play.lua`: 충돌 판정(`planet.radius + 5`) 내에서 `planet.hub`와 `planet.isShop`일 경우 데미지 로직을 우회하도록 예외 추가 (`not planet.hub and not planet.isShop`).
 - `game/self_test.lua`: 허브 및 상점 행성과의 충돌 시뮬레이션에서 내구도가 감소하지 않고 `collided` 플래그가 설정되지 않음을 단언하는 테스트 추가.
 - `docs/feedback/INBOX.md`: 기완료 항목 (2), (3) 및 방금 완료한 항목 (6)을 `## 처리 대기`에서 `## 처리 완료`로 이동.
 - `make verify` GREEN.
-
-## Next Slice
-
-- INBOX (4) 행성 표본 채집 궤도 진입 시 타격감 이펙트
-
----
 
 ## 2026-09-05 — INBOX (1) 상점 UI 텍스트 겹침 수정
 

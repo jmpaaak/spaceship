@@ -1458,6 +1458,18 @@ end
 M.clampVerticalOffset = clampVerticalOffset
 
 function M:update(dt)
+    local rawDt = dt
+    if self.timeSlip then
+        self.timeSlip.timer = self.timeSlip.timer - rawDt
+        if self.timeSlip.timer <= 0 then
+            self.timeSlip = nil
+        else
+            dt = dt * self.timeSlip.scale
+        end
+    end
+    if self.collectFlash and self.collectFlash > 0 then
+        self.collectFlash = math.max(0, self.collectFlash - rawDt)
+    end
     self.time = self.time + dt
     self:pollDesktopMouse()
     local steering = self:steeringButtonState()
@@ -1731,7 +1743,18 @@ function M:update(dt)
                         awarded = awarded,
                         rollupElapsed = 0,
                     })
-                    self:spawnSampleParticles(planet.x, planet.y, world.sampleTier(planet))
+                    local tier = world.sampleTier(planet)
+                    self:spawnSampleParticles(planet.x, planet.y, tier)
+                    self.timeSlip = { timer = 0.4, scale = 0.3 }
+                    self.shipShake = 0.25
+                    if tier == "epic" then
+                        self.shipShakeMagnitude = 1.4
+                    elseif tier == "rare" then
+                        self.shipShakeMagnitude = 1.0
+                    else
+                        self.shipShakeMagnitude = 0.6
+                    end
+                    self.collectFlash = 0.15
                     if streakMultiplier and streakMultiplier > 1 then
                         self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
                     else
@@ -3010,6 +3033,10 @@ function M:draw()
         end
         love.graphics.setColor(1, 0.85, 0.3, alpha)
         love.graphics.printf(self.newSpecimenBanner, 12, 64, viewport.width - 24, "center")
+    end
+    if self.collectFlash and self.collectFlash > 0 then
+        love.graphics.setColor(1, 1, 1, 0.3 * (self.collectFlash / 0.15))
+        love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
     end
     if self.shopModal then
         love.graphics.setColor(0, 0, 0, 0.85)

@@ -5912,6 +5912,7 @@ function M.run()
     world.nearbyPlanets = floatingTextNearby
     assert(#floatingTextScene.floatingTexts == 1)
     local sampleFloatingText = floatingTextScene.floatingTexts[1]
+    floatingTextScene.timeSlip = nil
     -- Numeric roll-up feedback (docs/feedback/INBOX.md 2026-09-02 후속
     -- 확정 사항 #2): "+$N" no longer pops in at its final value instantly.
     -- It starts at "+$0" and counts up over sampleRollupDuration (0.3s)
