@@ -387,6 +387,17 @@ local function drawMinimapSprite(image, cx, cy, targetDiameter)
 end
 M.drawMinimapSprite = drawMinimapSprite
 
+-- INBOX (8): one gold palette for every galaxy ring, spiral, and galaxy
+-- marker. milkyway used to be blue; that special-case is gone. Earth /
+-- player / return-arrow / checkpoint-arrow / sun keep their own colors.
+function M.galaxyChartLineColor(_galaxyId)
+    return 0.9, 0.75, 0.3, 0.55
+end
+
+function M.galaxyChartFillColor(_galaxyId)
+    return 0.9, 0.75, 0.3, 1
+end
+
 -- Draw a planet-effect overlay sprite centered on (cx, cy), scaled so its
 -- largest dimension matches diameter. tint (r,g,b,a) is applied before draw.
 -- Returns true if the image was drawn, false if image is nil (caller keeps
@@ -2180,20 +2191,21 @@ function M:drawMinimap()
             end
         elseif ring.inside ~= false then
             local ringImg = mm.galaxyRing
+            love.graphics.setColor(M.galaxyChartLineColor(ring.id))
             if ringImg then
-                if ring.id == "milkyway" then
-                    love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
-                else
-                    love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
-                end
                 drawMinimapSprite(ringImg, cx + ring.x, cy + ring.y, ring.radius * 2)
             else
-                if ring.id == "milkyway" then
-                    love.graphics.setColor(0.3, 0.55, 0.95, 0.55)
-                else
-                    love.graphics.setColor(0.9, 0.75, 0.3, 0.5)
-                end
                 love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+            end
+        end
+    end
+    -- Spiral-arm points (computed by minimap.view). Same gold as the rings.
+    for _, point in ipairs(view.spiral or {}) do
+        if point.inside ~= false then
+            love.graphics.setColor(M.galaxyChartLineColor(view.spiralGalaxyId))
+            local spiralImg = mm.spiralStar
+            if not drawMinimapSprite(spiralImg, cx + point.x, cy + point.y, 3) then
+                love.graphics.circle("fill", cx + point.x, cy + point.y, 1.2)
             end
         end
     end
@@ -2204,28 +2216,30 @@ function M:drawMinimap()
             love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, 2.6)
         end
     end
-    -- Galaxy markers
+    -- Galaxy markers: one gold palette for every galaxy, including milkyway.
+    -- Hub checkpoints still pulse; home uses the same gold fill (Earth/sun
+    -- keep their distinct cyan/yellow markers elsewhere).
     for _, galaxy in ipairs(view.galaxies) do
-        if galaxy.id == "milkyway" then
-            love.graphics.setColor(0.25, 0.55, 1, 1)
-            if not drawMinimapSprite(mm.galaxyHome, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius * 2) then
-                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
-            end
-        elseif galaxy.hub then
+        if galaxy.hub then
             -- Checkpoint galaxy: sprite or pulsing dot+ring
             local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
+            local fr, fg, fb = M.galaxyChartFillColor(galaxy.id)
             if mm.checkpointStar then
-                love.graphics.setColor(0.9, 0.75, 0.3, pulse * 0.7 + 0.3)
+                love.graphics.setColor(fr, fg, fb, pulse * 0.7 + 0.3)
                 drawMinimapSprite(mm.checkpointStar, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius * 3)
             else
-                love.graphics.setColor(0.9, 0.75, 0.3)
+                love.graphics.setColor(fr, fg, fb)
                 love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
                 love.graphics.setColor(1, 0.95, 0.6, pulse)
                 love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
             end
         else
-            love.graphics.setColor(0.9, 0.75, 0.3, 1)
-            if not drawMinimapSprite(mm.galaxyPlain, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius * 2) then
+            love.graphics.setColor(M.galaxyChartFillColor(galaxy.id))
+            local homeOrPlain = galaxy.id == "milkyway" and mm.galaxyHome or mm.galaxyPlain
+            local diam = galaxy.id == "milkyway"
+                and minimap.markerGalaxyHomeRadius * 2
+                or minimap.markerGalaxyPlainRadius * 2
+            if not drawMinimapSprite(homeOrPlain, cx + galaxy.x, cy + galaxy.y, diam) then
                 love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
             end
         end

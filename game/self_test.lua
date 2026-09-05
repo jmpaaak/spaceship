@@ -523,6 +523,91 @@ local function testMinimap()
         "markerCheckpointTipRadius must be >= 10.8 (1.5× original 7.2)")
 end
 
+-- INBOX (8): every galaxy uses the same gold ring/spiral/marker palette.
+-- milkyway must not keep a blue special-case, and view.spiral points must
+-- actually be plotted (minimap.view already computes them).
+local function testMinimapUnifiedGalaxyPalette()
+    local minimap = require("game.minimap")
+    local PlayScene = require("game.scenes.play")
+
+    local rHome, gHome, bHome, aHome = PlayScene.galaxyChartLineColor("milkyway")
+    local rOther, gOther, bOther, aOther = PlayScene.galaxyChartLineColor("outer-1-0")
+    assert(rHome == 0.9 and gHome == 0.75 and bHome == 0.3,
+        "galaxy ring/spiral line color must be gold 0.9, 0.75, 0.3")
+    assert(aHome == 0.55, "galaxy ring line alpha must be 0.55")
+    assert(rHome == rOther and gHome == gOther and bHome == bOther and aHome == aOther,
+        "milkyway must not use a different ring/spiral color than other galaxies")
+
+    local fr, fg, fb, fa = PlayScene.galaxyChartFillColor("milkyway")
+    local fr2, fg2, fb2, fa2 = PlayScene.galaxyChartFillColor("outer-1-0")
+    assert(fr == 0.9 and fg == 0.75 and fb == 0.3 and fa == 1,
+        "galaxy marker fill must be gold 0.9, 0.75, 0.3")
+    assert(fr == fr2 and fg == fg2 and fb == fb2 and fa == fa2,
+        "milkyway galaxy marker must use the same gold fill as every other galaxy")
+
+    local originView = minimap.view(0, 0)
+    assert(originView.spiral and #originView.spiral > 0,
+        "minimap.view must compute spiral-arm points for the current galaxy")
+
+    local scene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    scene.expedition.phase = "ascending"
+    scene.ship.x, scene.ship.y = 0, 0
+    scene.minimapImages = {}
+    scene.time = 0
+
+    local colors = {}
+    local circleCount = 0
+    local previousGraphics = love.graphics
+    love.graphics = {
+        setColor = function(r, g, b, a)
+            colors[#colors + 1] = { r, g, b, a or 1 }
+        end,
+        circle = function()
+            circleCount = circleCount + 1
+        end,
+        printf = function() end,
+        polygon = function() end,
+        draw = function() end,
+    }
+    local ok, err = pcall(function() scene:drawMinimap() end)
+    love.graphics = previousGraphics
+    assert(ok, "drawMinimap must not throw: " .. tostring(err))
+
+    local expectedSpiral = 0
+    for _, point in ipairs(originView.spiral) do
+        if point.inside ~= false then
+            expectedSpiral = expectedSpiral + 1
+        end
+    end
+    assert(expectedSpiral > 0, "home spiral must have on-chart points")
+    assert(circleCount >= expectedSpiral,
+        "drawMinimap must plot spiral points (circleCount="
+            .. circleCount .. " expectedSpiral=" .. expectedSpiral .. ")")
+
+    for _, c in ipairs(colors) do
+        local isBlueRing = math.abs(c[1] - 0.3) < 1e-6
+            and math.abs(c[2] - 0.55) < 1e-6
+            and math.abs(c[3] - 0.95) < 1e-6
+        local isBlueMarker = math.abs(c[1] - 0.25) < 1e-6
+            and math.abs(c[2] - 0.55) < 1e-6
+            and math.abs(c[3] - 1) < 1e-6
+        assert(not isBlueRing, "milkyway ring must not use the old blue special-case color")
+        assert(not isBlueMarker, "milkyway galaxy marker must not use the old blue special-case color")
+    end
+
+    local sawGold = false
+    for _, c in ipairs(colors) do
+        if math.abs(c[1] - 0.9) < 1e-6
+            and math.abs(c[2] - 0.75) < 1e-6
+            and math.abs(c[3] - 0.3) < 1e-6 then
+            sawGold = true
+        end
+    end
+    assert(sawGold, "drawMinimap must use the unified gold galaxy palette")
+end
+
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
 -- as a lethal planet collision.
 -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): the existing
@@ -6683,6 +6768,7 @@ function M.run()
     testJoystick()
     testGalaxyStructure()
     testMinimap()
+    testMinimapUnifiedGalaxyPalette()
     testDebris()
     testBackgroundStars()
     testLaunchRocketIcon()

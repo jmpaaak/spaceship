@@ -3,13 +3,6 @@
 ## 처리 대기
 
 
-(8) **미니맵 나선/링 색 — 전 은하 동일, 태양계 특례 제거 (사용자 확정):**
-  - 현재 `play.lua` drawMinimap: milkyway 링/마커만 파랑 `(0.3, 0.55, 0.95)` / `(0.25, 0.55, 1)`, 나머지 은하는 전부 금색 `(0.9, 0.75, 0.3)`.
-  - 사용자: 은하계 나선색은 모두 같아야 함. 태양계만 다른 이유 없음.
-  - 변경: 링·나선·galaxy 마커를 **한 팔레트**로 통일 (금색 유지 권장: fill `0.9, 0.75, 0.3`, line alpha 0.55). milkyway `if ring.id == "milkyway"` / `if galaxy.id == "milkyway"` 색 분기를 제거.
-  - Earth 마커(시안) / player(흰색) / 귀환 화살(주황) / 체크포인트 화살(마젠타) / sun(노란 별) 은 구분용이라 **유지**.
-  - 나선 점(`view.spiral`)이 안 그려지고 있으면 금색으로 그려 넣을 것 (계산은 `minimap.view()`에 이미 있음).
-  - `make verify` GREEN + 커밋: `fix(minimap): same spiral/ring color for every galaxy`
 
 (9) **은하 중심별(태양) 중력우물 + 도트 데미지 + 10초 생존 시 표본 (사용자 확정):**
   - 대상: `world.sunPosition(galaxy)` 위치의 중심별. milkyway는 Earth가 아닌 **태양**(origin에서 `galaxyCellSize*0.12` 오프셋). 다른 은하는 galaxy 중심 = sun (hub와 좌표가 같음).
@@ -68,6 +61,16 @@
   - 사이클당 타입 2~3장 또는 배선 한 조각. 커밋 예: `feat(planets): PixelPlanets sprites by galaxy starType`
 
 ## 처리 완료
+
+(8) **미니맵 나선/링 색 — 전 은하 동일, 태양계 특례 제거 (사용자 확정):**
+  - 현재 `play.lua` drawMinimap: milkyway 링/마커만 파랑 `(0.3, 0.55, 0.95)` / `(0.25, 0.55, 1)`, 나머지 은하는 전부 금색 `(0.9, 0.75, 0.3)`.
+  - 사용자: 은하계 나선색은 모두 같아야 함. 태양계만 다른 이유 없음.
+  - 변경: 링·나선·galaxy 마커를 **한 팔레트**로 통일 (금색 유지 권장: fill `0.9, 0.75, 0.3`, line alpha 0.55). milkyway `if ring.id == "milkyway"` / `if galaxy.id == "milkyway"` 색 분기를 제거.
+  - Earth 마커(시안) / player(흰색) / 귀환 화살(주황) / 체크포인트 화살(마젠타) / sun(노란 별) 은 구분용이라 **유지**.
+  - 나선 점(`view.spiral`)이 안 그려지고 있으면 금색으로 그려 넣을 것 (계산은 `minimap.view()`에 이미 있음).
+  - `make verify` GREEN + 커밋: `fix(minimap): same spiral/ring color for every galaxy`
+  - [2026-09-05] 구현 완료: milkyway 특례 제거 및 공통 금색 팔레트 적용.
+
 
 (7) **미니맵 줌인 — HUB/중심행성이 보이게 (사용자 확정):**
   - 현재 `minimap.viewRadius = galaxyCellSize * 2.5` (≈11520px). 은하 디스크가 차트에서 ~10px, hub 행성은 서브픽셀.
