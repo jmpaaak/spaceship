@@ -1,21 +1,20 @@
 ## Current Status
 
-2026-09-05 — 모바일 UI 전체 점검 (5) 로드아웃(launch) 패널 확대 및 재배치
+2026-09-05 — 모바일 UI 전체 점검 (6) Destroyed/Game Over 패널 확대
 
 - `game/scenes/play.lua`:
-  - `M.launchLoadoutBoxTop` 202 → 750 (화면 하단 1/3, Earth disc 위).
-  - `M.launchLoadoutRowStep` 10 → 22 (모바일 가독성).
-  - `M.launchLoadoutFontSize` 신규 상수 12px (기존 하드코딩 8px).
-  - `M.launchGearBoxW` / `M.launchGearBoxH` 신규 상수 15 / 21 (기존 10 / 14, 1.5×).
-  - `launchTouchArea` 180×320 → 720×1280 (전체 캔버스).
-  - 기어 슬롯 아이콘 크기 4 → 6, 라벨 폰트 7 → 10, 간격 확대.
+  - `destroyedTouchArea` 180×320 → 720×1280 (전체 캔버스, 아무 곳 터치로 재시작).
+  - 패널 위치 y=174 → y=340, 크기 134 → 560 (화면 중앙 배치).
+  - 폰트 8px → 14px (`destroyedFont`), 행 간격 11 → 44px.
+  - 아이콘 크기 9 → 20, 아이콘-텍스트 간격 2 → 6.
 - `game/self_test.lua`:
-  - 로드아웃 패널 위치/크기/폰트 검증 어설션 8개 추가.
+  - destroyed 터치 영역 720×1280 전체 캔버스 검증 어설션 추가.
+  - 44pt 접근성 최소 기준 검증 추가.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- 모바일 UI 전체 점검 (6): Destroyed/Game Over 패널 확대
+- 모바일 UI 전체 점검 (7): 귀환 버튼 (Return to Earth) 크기/위치 확인
 
 ---
 

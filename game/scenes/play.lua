@@ -111,7 +111,9 @@ M.settlementTouchRowHeight = settlementTouchRowHeight
 -- any tap on the full 180x320 internal canvas rather than a narrow band.
 -- Documented and engine-tested explicitly so this stays true if the
 -- destroyed phase ever grows per-row touch targets like settlement did.
-local destroyedTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
+-- Mobile-UI sub-item (6): touch target spans the full 720×1280 canvas so
+-- any tap restarts. Previous 180×320 was from the old canvas era.
+local destroyedTouchArea = { top = 0, bottom = 1280, left = 0, right = 720 }
 M.destroyedTouchArea = destroyedTouchArea
 
 -- Ascending-phase HOLD LEFT/HOLD RIGHT steering buttons. touchpressed for
@@ -2928,20 +2930,23 @@ function M:draw()
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
-        -- Group 5 wiring: destroyed_panel.png as background; fallback rect.
+        -- Mobile-UI sub-item (6): destroyed panel enlarged for 720×1280 canvas.
+        -- Panel centered vertically with generous row spacing for readability.
+        local panelX, panelW = 24, viewport.width - 48
+        local panelY, panelH = 340, 560
         love.graphics.setColor(1, 1, 1, 0.94)
-        if not drawPanelSprite(self.destroyedPanelImage, 12, 174, viewport.width - 24, 134) then
+        if not drawPanelSprite(self.destroyedPanelImage, panelX, panelY, panelW, panelH) then
             love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-            love.graphics.rectangle("fill", 12, 174, viewport.width - 24, 134)
+            love.graphics.rectangle("fill", panelX, panelY, panelW, panelH)
         end
-        self.smallFont = self.smallFont or fonts.get(8)
+        self.destroyedFont = self.destroyedFont or fonts.get(14)
         local previousFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        local fullX, fullW = 16, viewport.width - 32
-        local row = 178
-        local rowStep = 11
-        local dIconSz = 9  -- destroyed-phase row icon size
-        local dIconGap = 2 -- gap between icon and text
+        love.graphics.setFont(self.destroyedFont)
+        local fullX, fullW = panelX + 16, panelW - 32
+        local row = panelY + 20
+        local rowStep = 44
+        local dIconSz = 20  -- destroyed-phase row icon size (mobile-friendly)
+        local dIconGap = 6  -- gap between icon and text
         love.graphics.setColor(1, 0.55, 0.45)
         drawHudSpriteOrPoly(self.destroyedTitleIconImage, nil,
             fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)

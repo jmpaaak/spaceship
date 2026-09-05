@@ -6086,10 +6086,20 @@ function M.run()
     world.nearbyPlanets = edgeNearbyPlanets
 
     local destroyedArea = PlayScene.destroyedTouchArea
+    -- Mobile-UI sub-item (6): destroyed touch area must span the full
+    -- 720×1280 canvas so any tap restarts.
+    assert(destroyedArea.left == 0 and destroyedArea.top == 0,
+        "destroyed touch area must start at (0,0)")
+    assert(destroyedArea.right == 720 and destroyedArea.bottom == 1280,
+        "destroyed touch area must span full 720×1280 canvas")
     assert(destroyedArea.bottom - destroyedArea.top >= 34,
         "destroyed touch area height is under the 34px minimum")
     assert(destroyedArea.right - destroyedArea.left >= 34,
         "destroyed touch area width is under the 34px minimum")
+    local destroyedAreaPoints = viewport.canvasPixelsToPoints(
+        destroyedArea.bottom - destroyedArea.top, 720, 1280, 1, false)
+    assert(destroyedAreaPoints >= 44,
+        "destroyed touch area is under the 44pt accessibility minimum at scale 1 (" .. destroyedAreaPoints .. "pt)")
     local destroyedCorners = {
         { x = destroyedArea.left, y = destroyedArea.top },
         { x = destroyedArea.right - 1, y = destroyedArea.top },
