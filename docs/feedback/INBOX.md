@@ -53,6 +53,20 @@
     - self_test: 우입력 시 puff vx < 0 (왼쪽), 대각 입력 시 particles 추가가 **틱당 1개**.
   - `make verify` GREEN + 커밋: `fix(rcs): single opposite-stick exhaust stream`
 
+(12) **PixelPlanets(GitHub Deep-Fold / JS 포트)로 행성 모양 교체 (사용자 확정, 2026-09-05):**
+  - 배경: 별 스프라이트만 적용됨. 행성 PNG 적용은 2026-09-05에 「적용 안 함」으로 닫혔음. 사용자가 **다시 큐에 넣으라고 확정.**
+  - 금지: ComfyUI 재생성, Godot 엔진 임베드, 함선/지구 이미지 교체.
+  - 소스: `/tmp/pixelplanets/PixelPlanets` (https://github.com/Timur310/PixelPlanets, MIT) 또는 동일 JS 포트. itch `https://deep-fold.itch.io/pixel-planet-generator`.
+  - **에셋:** `galaxy.starType` 6종(`ice`/`lava`/`dry`/`gas`/`earth`/`bare`) + hub + shop. 각 타입 RGBA PNG 1장 이상 (`assets/planet/pp_<type>.png`). 가능하면 회전 프레임 스프라이트시트(가로 스트립). 시드=행성/은하 id 결정론. 불투명 RGB 사각형 금지 (IHDR color type 6만 `loadSprite`).
+  - **생성 경로 (한 사이클에 에셋 또는 배선 중 하나):**
+    1. JS 포트 로컬 서버 + 헤드리스 캡처로 타입별 PNG export. 실패하면 itch 수동 export PNG를 `assets/planet/`에 두고 배선만.
+    2. Godot 셰이더 LÖVE 포팅 시도하지 말 것.
+  - **배선 (`play.lua` draw 행성 루프):** `planet.galaxyStarType` → `pp_<type>` 스프라이트. hub=`pp_hub` 또는 해당 은하 starType의 큰 버전. shop=`pp_shop`. 없으면 현행 `planet_generic` 폴백. 기존 hue 틴트는 **약하게만** (팔레트 유지, 실루엣은 PixelPlanets).
+  - 같은 은하 행성은 같은 타입/팔레트, 행성 id로 반지름·회전 프레임만 변주 (이전 은하 공유 특성 설계와 일치).
+  - MANIFEST + GENERATED_ASSET_LOG + Deep-Fold MIT 크레딧(만든이/README).
+  - self_test: 각 starType 파일 존재, `planetImagePath`/`hub`/`shop` 배선, 헤드리스는 getInfo만.
+  - 사이클당 타입 2~3장 또는 배선 한 조각. 커밋 예: `feat(planets): PixelPlanets sprites by galaxy starType`
+
 ## 처리 완료
 
 (7) **미니맵 줌인 — HUB/중심행성이 보이게 (사용자 확정):**
