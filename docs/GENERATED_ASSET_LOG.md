@@ -134,3 +134,6 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-05T18:30:00+0900 | assets/planet/pp_ice.png | INBOX (12): PIL-generated 64x64 ice planet sprite, RGBA, seed 20260905
 2026-09-05T18:30:00+0900 | assets/planet/pp_lava.png | INBOX (12): PIL-generated 64x64 lava planet sprite, RGBA, seed 20260905
 2026-09-05T18:30:00+0900 | assets/planet/pp_dry.png | INBOX (12): PIL-generated 64x64 dry planet sprite, RGBA, seed 20260905
+2026-09-05T18:38:41+0900 | assets/planet/pp_gas.png | INBOX (12): PIL-generated 64x64 gas giant planet sprite, RGBA, seed 20260905
+2026-09-05T18:38:41+0900 | assets/planet/pp_earth.png | INBOX (12): PIL-generated 64x64 earth-like planet sprite, RGBA, seed 20260905
+2026-09-05T18:38:41+0900 | assets/planet/pp_bare.png | INBOX (12): PIL-generated 64x64 bare rocky planet sprite, RGBA, seed 20260905

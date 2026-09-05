@@ -922,6 +922,9 @@ local function testRgbBrokenAssetsUnwired()
         "assets/planet/pp_ice.png",
         "assets/planet/pp_lava.png",
         "assets/planet/pp_dry.png",
+        "assets/planet/pp_gas.png",
+        "assets/planet/pp_earth.png",
+        "assets/planet/pp_bare.png",
         "assets/effects/hud_coin.png",
         "assets/effects/hud_shield.png",
         "assets/effects/hud_speed.png",
@@ -7196,8 +7199,8 @@ function M.run()
     do
         local PlayScene = require("game.scenes.play")
         local world = require("game.world")
-        -- Verify first 3 pp_<type> PNG files exist and are color type 6
-        local ppTypes = { "ice", "lava", "dry" }
+        -- Verify all 6 pp_<type> PNG files exist and are color type 6
+        local ppTypes = { "ice", "lava", "dry", "gas", "earth", "bare" }
         for _, ptype in ipairs(ppTypes) do
             local path = "assets/planet/pp_" .. ptype .. ".png"
             local colorType = PlayScene.pngColorType(path)

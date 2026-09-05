@@ -1,14 +1,17 @@
 ## Current Status
 
-2026-09-05 — INBOX (11) RCS 분출 한 줄 — 조이스틱 반대 방향만
+2026-09-05 — INBOX (12) PixelPlanets 에셋 — gas/earth/bare 3종 생성
 
-- `game/scenes/play.lua`: Replaced separate `bank`/`lift` puff branches (two simultaneous exhaust streams on diagonal input) with a single opposite-stick-direction puff. `dirX, dirY = -bank/mag, -lift/mag` normalized. Spawn at `ship + dir*6`, velocity `dir*(16+rand*10)`. Cooldown 0.045, duration `rcsPuffDuration` (1.32), color unchanged. Deadzone: stickMag < 0.12 → no puff.
-- `game/self_test.lua`: Updated right-stick puff test to assert `vx < 0` (leftward exhaust). Updated vertical puff test to find puff by `vy < 0`. Added diagonal-stick test asserting exactly 1 particle per tick.
+- `tools/gen_pixelplanet.py`: 기존 ice/lava/dry에 이어 gas, earth, bare 3종 PIL 생성 (seed 20260905, 64x64 RGBA).
+- `assets/planet/pp_gas.png`, `pp_earth.png`, `pp_bare.png`: 추가. 전 6종 starType에 대응하는 PNG 완성.
+- `game/self_test.lua`: rgbaKeepers 목록에 3종 추가, INBOX (12) 테스트에서 ppTypes를 6종으로 확장.
+- `docs/assets/MANIFEST.json`: 3종 항목 추가 (sha256 검증 완료).
+- `docs/GENERATED_ASSET_LOG.md`: 3종 append.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (11) is done. Next: INBOX (12) PixelPlanets 행성 모양 교체.
+- INBOX (12) 다음 조각: play.lua 배선 — `planet.galaxyStarType` → `pp_<type>` 스프라이트 로드 및 행성 draw 루프에서 사용. hub/shop 분기 포함.
 
 ---
 
