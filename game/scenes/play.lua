@@ -558,9 +558,6 @@ function M.hudHeight(phase, hud, galaxyShift)
         return M.launchHudHeight + galaxyShift
     end
     -- Item 2: returnProgress branch removed (returning phase abolished).
-    if hud.samples then
-        return 88 + M.hudPrimaryStatusGap + galaxyShift
-    end
     if hud.best then
         return 88 + galaxyShift
     end
@@ -594,9 +591,6 @@ function M.hudBackgroundWidth(hud, font)
     local distIconOffset = icon + gap
     consider(left + distIconOffset + textW(hud.distance) + 8
         + M.cashIconSize + M.cashIconGap + textW(hud.cash))
-    if hud.samples then
-        consider(left + icon + gap + textW(hud.samples))
-    end
     if hud.status then
         consider(left + icon + gap + textW(hud.status))
     end
@@ -1388,18 +1382,14 @@ end
 
 function M:hudLines()
     local run = self.expedition
-    local samples
     local best
     -- Item 2: returning phase abolished; earth/returnProgress HUD lines removed.
-    if run.phase == "ascending" then
-        samples = i18n.t("hud_samples", run.sampleCount, run.pendingSampleValue)
-    elseif run.phase == "launch" or run.phase == "settlement" then
+    if run.phase == "launch" or run.phase == "settlement" then
         best = i18n.t("hud_personal_best", math.floor(run.bestAltitude))
     end
     return {
         distance = i18n.t("hud_distance", math.floor(run.altitude)),
         cash = i18n.t("hud_cash", run.money),
-        samples = samples,
         best = best,
         -- docs/feedback/INBOX.md UI/HUD item 4: the launch phase's slot
         -- forecast (S%02d) is always 0 because no return trip has
@@ -3000,33 +2990,7 @@ function M:draw()
         love.graphics.setColor(0.7, 0.9, 1)
         love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, y)
     end
-    if hud.samples then
-        -- Extra vertical gap (M.hudPrimaryStatusGap) below the samples line
-        -- separates the secondary hull/slot status from DIST/CASH.
-        love.graphics.setColor(1, 0.8, 0.3)
-        -- ComfyUI HUD wiring (group 1): samples icon left of sample count text
-        local samplesY = 32 + galaxyShift
-        local samplesIconSize = M.hullIconSize
-        local samplesIconCenterX = 5 + samplesIconSize / 2
-        local samplesIconCenterY = samplesY + samplesIconSize / 2
-        drawHudSpriteOrPoly(hudIcons.samples, nil,
-            samplesIconCenterX, samplesIconCenterY, samplesIconSize)
-        love.graphics.print(hud.samples, 5 + samplesIconSize + M.hullIconGap, samplesY)
-        drawStatusWithShield(60 + M.hudPrimaryStatusGap + galaxyShift)
-        if hud.earth then
-            love.graphics.setColor(0.4, 0.85, 1)
-            -- ComfyUI HUD wiring (group 1): earth + return icons
-            local earthY = 88 + M.hudPrimaryStatusGap + galaxyShift
-            local earthIconSize = M.hullIconSize
-            drawHudSpriteOrPoly(hudIcons.earth, nil,
-                5 + earthIconSize / 2, earthY + earthIconSize / 2, earthIconSize)
-            love.graphics.print(hud.earth, 5 + earthIconSize + M.hullIconGap, earthY)
-            local returnY = 116 + M.hudPrimaryStatusGap + galaxyShift
-            drawHudSpriteOrPoly(hudIcons.returnIc, nil,
-                5 + earthIconSize / 2, returnY + earthIconSize / 2, earthIconSize)
-            love.graphics.print(hud.returnProgress, 5 + earthIconSize + M.hullIconGap, returnY)
-        end
-    elseif hud.best then
+    if hud.best then
         drawStatusWithShield(32 + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
         -- ComfyUI HUD wiring (group 1): best-altitude icon

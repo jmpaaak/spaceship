@@ -5835,12 +5835,14 @@ function M.run()
         "launch-phase status must not show a slot count segment")
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
-    assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95", tostring(ascendingHud.samples))
+    -- (17b) samples HUD line removed; only distance, cash, status remain in ascending.
+    assert(ascendingHud.samples == nil,
+        "hudLines().samples must be nil after item 17b removal")
     -- "고도(ALT)" -> "거리(DIST)" relabel (docs/feedback/INBOX.md item 2,
     -- 2026-09-03): the user misread the ALT/CASH line + adjacent fuel
     -- status line as "fuel gates altitude". hud_distance must no longer say
     -- ALT, and drawing the status line must leave an explicit gap
-    -- (PlayScene.hudPrimaryStatusGap) below the samples line so the fuel
+    -- (PlayScene.hudPrimaryStatusGap) below the distance line so the fuel
     -- gauge visually separates from the distance-from-Earth readout.
     -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
     -- third slice): the CASH readout gets a small coin icon paired with it,
@@ -5856,9 +5858,8 @@ function M.run()
         "hudLines().cash must read CASH $N: " .. tostring(ascendingHud.cash))
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
-    assert(PlayScene.hudHeight("ascending", ascendingHud, 0)
-        == 88 + PlayScene.hudPrimaryStatusGap,
-        "ascending HUD band height must grow by hudPrimaryStatusGap to fit the added gap")
+    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 60,
+        "ascending HUD band height must be 60 (no samples line after item 17b)")
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
     riskScene.expedition.altitude = 500
