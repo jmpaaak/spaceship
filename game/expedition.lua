@@ -22,6 +22,10 @@ for _, symbol in ipairs(slotSymbols) do
 end
 M.slotTotalWeight = slotTotalWeight
 
+-- INBOX (15)(b): spinning costs money so a miss is a real loss. Default 10;
+-- tools/slot-editor will later write this into data/slot_config.json.
+M.slotSpinCost = 10
+
 function M.slotSymbolProbability(symbol)
     return slotWeights[symbol] / slotTotalWeight
 end
@@ -34,7 +38,8 @@ local function slotReward(symbols)
     if symbols[1] == symbols[2] or symbols[1] == symbols[3] or symbols[2] == symbols[3] then
         return 15
     end
-    return 5
+    -- INBOX (15)(b): miss pays 0 (was +$5, which made every spin free money).
+    return 0
 end
 M.slotReward = slotReward
 

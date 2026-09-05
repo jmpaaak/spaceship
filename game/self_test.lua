@@ -4877,6 +4877,93 @@ local function testEarthSlotProfileRewardVariation()
             .. ") - risk tradeoff")
 end
 
+-- INBOX (15)(b): spin cost + miss pays 0. Miss used to pay +$5 so every
+-- spin was free money. Cost is 10 (editor-tunable later); miss reward is 0.
+local function testSlotSpinCostAndMissPaysZero()
+    local expedition = require("game.expedition")
+    local PlayScene = require("game.scenes.play")
+
+    assert(expedition.slotSpinCost == 10,
+        "INBOX 15(b): default slot spin cost must be 10, got: "
+            .. tostring(expedition.slotSpinCost))
+    assert(expedition.slotReward({ "COMET", "PLANET", "STAR" }) == 0,
+        "INBOX 15(b): miss must pay 0, not +$5")
+    assert(expedition.slotReward({ "COMET", "COMET", "PLANET" }) == 15,
+        "INBOX 15(b): pair payout stays 15")
+    assert(expedition.slotReward({ "COMET", "COMET", "COMET" }) == 40,
+        "INBOX 15(b): non-STAR triple payout stays 40")
+    assert(expedition.slotReward({ "STAR", "STAR", "STAR" }) == 75,
+        "INBOX 15(b): STAR jackpot stays 75")
+
+    local run = expedition.new()
+    local solarWeights = expedition.earthSlotWeights(nil)
+    local cometRoll = 0.5
+    local planetRoll = solarWeights.COMET + 0.5
+    local starRoll = solarWeights.COMET + solarWeights.PLANET + 0.5
+    local missSpin = expedition.earthSlotSpin(run, nil, {
+        reels = { cometRoll, planetRoll, starRoll },
+    })
+    assert(missSpin.symbols[1] == "COMET" and missSpin.symbols[2] == "PLANET"
+        and missSpin.symbols[3] == "STAR",
+        "COMET-PLANET-STAR rolls must be a true miss, got: "
+            .. table.concat(missSpin.symbols, "-"))
+    assert(missSpin.reward == 0,
+        "INBOX 15(b): earthSlotSpin miss reward must be 0, got: "
+            .. tostring(missSpin.reward))
+
+    local originalSpin = expedition.earthSlotSpin
+    expedition.earthSlotSpin = function()
+        return {
+            symbols = { "COMET", "PLANET", "STAR" },
+            reward = 0,
+            totalWeight = 10,
+            effectiveStarWeight = 1,
+            rewardProfile = "solar",
+        }
+    end
+    local missScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() end },
+    })
+    missScene.expedition.phase = "settlement"
+    missScene.expedition.money = 20
+    missScene:keypressed("l")
+    assert(missScene.expedition.money == 10,
+        "INBOX 15(b): miss must charge spin cost 10 (20-10=10), got: "
+            .. tostring(missScene.expedition.money))
+
+    local brokeScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() end },
+    })
+    brokeScene.expedition.phase = "settlement"
+    brokeScene.expedition.money = 5
+    brokeScene.earthShopSlotResult = nil
+    brokeScene:keypressed("l")
+    assert(brokeScene.earthShopSlotResult == nil,
+        "INBOX 15(b): spinning with less than cost must not consume a spin")
+    assert(brokeScene.expedition.money == 5,
+        "INBOX 15(b): broke spin must not change money")
+
+    expedition.earthSlotSpin = function()
+        return {
+            symbols = { "STAR", "STAR", "STAR" },
+            reward = 75,
+            totalWeight = 10,
+            effectiveStarWeight = 3,
+            rewardProfile = "solar",
+        }
+    end
+    local winScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() end },
+    })
+    winScene.expedition.phase = "settlement"
+    winScene.expedition.money = 20
+    winScene:keypressed("l")
+    expedition.earthSlotSpin = originalSpin
+    assert(winScene.expedition.money == 85,
+        "INBOX 15(b): win must be money - cost + reward (20-10+75=85), got: "
+            .. tostring(winScene.expedition.money))
+end
+
 -- Forward declaration: testStellarSynergies is defined after runGearTests
 -- (where it is called) to keep related logic together; forward-declaring the
 -- local here satisfies Lua 5.1 scoping while keeping the 60-upvalue limit
@@ -4938,6 +5025,7 @@ local function runGearTests()
     testEarthSlotMachineGalaxyOdds()
     testGearEarthSlotEngineSlotLuckWiring()
     testEarthSlotProfileRewardVariation()
+    testSlotSpinCostAndMissPaysZero()
     testItem15DeadSlotConstantsRemoved()
     testStellarSynergies()
     testExpeditionStellarSynergies()
@@ -6729,7 +6817,9 @@ function M.run()
             bestAltitudeStore = { load = function() return 0 end, save = function() end },
         })
         slotScene.expedition.phase = "settlement"
+        slotScene.expedition.money = 20
         local moneyBefore = slotScene.expedition.money
+        local spinCost = expedition.slotSpinCost or 10
 
         slotScene:keypressed("l")
 
@@ -6739,9 +6829,9 @@ function M.run()
             "item 15(b): keypressed('l') during settlement must set earthShopSlotResult")
         assert(slotScene.earthShopSlotResult.symbols[1] == "STAR",
             "item 15(b): earthShopSlotResult.symbols must reflect earthSlotSpin return value")
-        assert(slotScene.expedition.money == moneyBefore + 75,
-            "item 15(b): winning spin must add reward to run.money, expected "
-            .. (moneyBefore + 75) .. " got " .. slotScene.expedition.money)
+        assert(slotScene.expedition.money == moneyBefore - spinCost + 75,
+            "item 15(b): winning spin must be money - cost + reward, expected "
+            .. (moneyBefore - spinCost + 75) .. " got " .. slotScene.expedition.money)
         assert(slotScene.message ~= nil and slotScene.message:find("%+%$75"),
             "item 15(b): message must reference the +$75 reward, got: " .. tostring(slotScene.message))
 
@@ -6811,6 +6901,7 @@ function M.run()
             bestAltitudeStore = { load = function() return 0 end, save = function() end },
         })
         scene.expedition.phase = "settlement"
+        scene.expedition.money = 20
         scene:keypressed("l")
         expedition.earthSlotSpin = originalSpin
         assert(scene.earthShopSlotResult ~= nil,

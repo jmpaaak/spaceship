@@ -1338,3 +1338,9 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - Sparkle / hit-feel / collection trigger unchanged.
 - `testFaintCollectOrbitRing` asserts padding, alpha, line width, no rim sprite, and restored line width.
 - `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-05 22:31)
+
+
+- Fixed test failure from previous cycle (`fix(settlement): slot row no longer overlaps shop upgrades`).
+- Preflight `make verify` now fully passes. All modified files are ready to be committed.

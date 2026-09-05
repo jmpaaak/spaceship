@@ -1,12 +1,21 @@
 ## Current Status
 
-- Fixed test failure from previous cycle (`fix(settlement): slot row no longer overlaps shop upgrades`).
-- Preflight `make verify` now fully passes. All modified files are ready to be committed.
+- INBOX (15)(b) complete: Earth shop slot now costs $10 per spin and miss pays $0.
 
 ## Next Slice
 
-- INBOX (15)(b): `feat(slot): spin cost + miss pays 0`
 - INBOX (15)(c): `feat(tools): slot-editor web UI`
+- INBOX (16): HUD full-width black band
+
+---
+
+## 2026-09-05 — INBOX (15)(b) 슬롯 스핀 비용 + miss $0
+
+- `game/expedition.lua`: `M.slotSpinCost = 10`. `slotReward` miss payout 5→0. Pair 15 / triple 40 / STAR×3 75 unchanged.
+- `game/scenes/play.lua`: settlement `"l"` deducts spin cost before applying reward; money < cost refuses the spin (`earth_slot_broke`).
+- `game/i18n.lua`: `earth_slot_broke` EN/KO.
+- `game/self_test.lua`: `testSlotSpinCostAndMissPaysZero` (cost, miss 0, broke refuse, win net = -10+75). Existing settlement `"l"` tests fund $20 and expect money-cost+reward.
+- `make verify` GREEN.
 
 ---
 

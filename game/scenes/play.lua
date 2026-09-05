@@ -2122,9 +2122,14 @@ function M:keypressed(key)
     end
     -- Item 15(b): Earth shop slot machine. "l" triggers a slot spin during
     -- settlement using the galaxy-aware earthSlotSpin pure function (item 15(c)).
-    -- The result is stored in self.earthShopSlotResult for draw() to render.
-    -- Money reward is applied immediately to run.money.
+    -- Spin costs expedition.slotSpinCost up front; miss reward is 0 so a
+    -- miss is a real loss. Reward is applied after the cost is deducted.
     if self.expedition.phase == "settlement" and key == "l" then
+        local spinCost = expedition.slotSpinCost or 10
+        if self.expedition.money < spinCost then
+            self.message = i18n.t("earth_slot_broke", spinCost - self.expedition.money)
+            return
+        end
         -- Item 15(b): earthSlotSpin expects rolls.reels (not a plain array).
         -- Building the table with the reels key ensures random values are used
         -- instead of the silent fallback to {0,0,0} that a plain array causes.
@@ -2132,8 +2137,8 @@ function M:keypressed(key)
         for i = 1, 3 do reels[i] = math.random(1, 10) end
         local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, { reels = reels })
         self.earthShopSlotResult = result
+        self.expedition.money = self.expedition.money - spinCost + result.reward
         if result.reward > 0 then
-            self.expedition.money = self.expedition.money + result.reward
             self.message = i18n.t("earth_slot_result",
                 table.concat(result.symbols, " "), result.reward)
         else
