@@ -101,6 +101,18 @@
     - self_test: (a) 차트 안 hub여도 `checkpointArrow` 방향 필드가 채워짐 (도착 직전 제외); (b) 타 은하 `hubPlanet.x ~= sunPosition.x` 또는 y 불일치; (c) view에 sun 좌표와 hub 좌표가 다름.
   - `make verify` GREEN + 커밋: `feat(minimap): always-on nearest-hub arrow; offset hub from sun`
 
+(11) **RCS 분출 한 줄 — 조이스틱 반대 방향만 (사용자 확정):**
+  - 보고: 공기 분출이 두 줄이라 어색함. 조이스틱 반대 방향으로 **한 줄만**.
+  - 원인: `play.lua` ~1567–1608. `bank`(좌우)와 `lift`(전후)를 각각 별도 puff로 쏴서 대각 입력이면 두 줄기.
+  - 변경:
+    - `bank`/`lift` 분기 두 개 삭제. 조이스틱 벡터 `(joyDx, joyDy)` (또는 `steerBank`/`steerLift`를 하나의 방향으로)의 **반대**로 한 puff만.
+    - `dirX, dirY = -joyDx, -joyDy` 정규화. 스폰: `ship.x + dirX*6, ship.y + dirY*6`. 속도: `dir * (16+rand*10)`.
+    - 선체 `ship.angle` 기준 측면/전후가 아니라 **스틱 반대** (움직임 방향의 뒤쪽 배기).
+    - 쿨다운 0.045, duration `rcsPuffDuration`(1.32), 색 유지.
+    - 스틱 magnitude < 0.12 이면 puff 없음 (기존 deadzone).
+    - self_test: 우입력 시 puff vx < 0 (왼쪽), 대각 입력 시 particles 추가가 **틱당 1개**.
+  - `make verify` GREEN + 커밋: `fix(rcs): single opposite-stick exhaust stream`
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-05) **상점(settlement) UI 텍스트 겹침/깨짐 수정:**
