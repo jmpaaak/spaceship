@@ -1,15 +1,15 @@
 ## Current Status
 
-2026-09-05 — INBOX (12) PixelPlanets 배선 3/n — 행성 id 기반 회전/스케일 변주
+2026-09-05 — INBOX (12) PixelPlanets 완료 → 처리 완료 이동
 
-- `game/scenes/play.lua`: `M.planetVariation(planet)` 함수 추가 — planet.id 문자열에서 결정론적 해시로 rotation(0..2π)과 scaleFactor(0.85..1.15) 산출. 같은 id는 항상 같은 결과, 다른 id는 다른 결과.
-- `game/scenes/play.lua`: draw 루프에서 pp 스프라이트 그릴 때 `planetVariation`으로 얻은 rotation·scaleFactor 적용. 같은 은하 행성은 같은 starType 스프라이트를 쓰되, 개별 회전/크기가 변주됨.
-- `game/self_test.lua`: planetVariation 테스트 — nil/empty→identity, 결정론, 다른 id→다른 값, 범위 검증, hub id 호환.
+- INBOX (12) 전체 완료 확인: 6종 pp_*.png 에셋, MANIFEST, GENERATED_ASSET_LOG, MIT 크레딧, play.lua 배선 (starType→pp, hub/shop pp 우선, 약한 hue tint, id 기반 rotation/scale 변주), self_test 전 항목 GREEN.
+- `docs/feedback/INBOX.md`: 항목 (12)를 `## 처리 대기`에서 `## 처리 완료`로 이동 (완료 증거 기재).
+- `## 처리 대기` 현재 비어 있음 — 다음 사이클에서 신규 피드백 대기.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (12) 완료 판단 및 처리 완료 이동, 또는 다음 INBOX 항목 착수.
+- 처리 대기 항목 없음. 다음 사용자 피드백 대기 (IDLE).
 
 ---
 
