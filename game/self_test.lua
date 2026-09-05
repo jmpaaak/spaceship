@@ -5574,7 +5574,7 @@ function M.run()
     assert(shopScene.message == string.format("NEED $%d MORE FOR SAMPLE YIELD UPGRADE",
         shopScene.expedition.sampleYieldUpgradeCost))
     shopScene.expedition.money = shopScene.expedition.scoutShipCost + 20
-    shopScene:touchpressed("ship", 135, 210)
+    shopScene:touchpressed("ship", 540, 615)
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
     assert(shopScene.expedition.money == 20)
     assert(shopScene.message
@@ -5613,7 +5613,7 @@ function M.run()
     shortfallScene:keypressed("h")
     assert(shortfallScene.expedition.durabilityUpgradeLevel == 0)
     assert(shortfallScene.message == "NEED $55 MORE FOR HULL UPGRADE")
-    shortfallScene:touchpressed("ship", 135, 210)
+    shortfallScene:touchpressed("ship", 540, 615)
     assert(not shortfallScene.expedition.ownedShips.scout)
     assert(shortfallScene.message == "NEED $105 MORE FOR SCOUT")
 
@@ -5687,11 +5687,11 @@ function M.run()
     touchScene.expedition.phase = "settlement"
     touchScene.expedition.money = touchScene.expedition.durabilityUpgradeCost
         + touchScene.expedition.scoutShipCost
-    touchScene:touchpressed("hull", 45, 166)
-    touchScene:touchpressed("ship", 135, 210)
+    touchScene:touchpressed("hull", 180, 545)
+    touchScene:touchpressed("ship", 540, 615)
     assert(touchScene.expedition.durabilityUpgradeLevel == 1)
     assert(touchScene.expedition.ownedShips.scout and touchScene.expedition.selectedShipId == "scout")
-    touchScene:touchpressed("relaunch", 90, 300)
+    touchScene:touchpressed("relaunch", 360, 755)
     assert(touchScene.expedition.phase == "ascending")
 
     local loadoutScene = PlayScene.new({
@@ -5820,7 +5820,7 @@ function M.run()
     assert(reselectedNextLaunch.shipAction == "SELECT SCOUT")
     assert(nextLaunchScene.message
         == "STARTER SELECTED  HULL 4")
-    nextLaunchScene:touchpressed("ship", 135, 210)
+    nextLaunchScene:touchpressed("ship", 540, 615)
     assert(nextLaunchScene.expedition.selectedShipId == "scout")
     assert(nextLaunchScene.message
         == "SCOUT SELECTED  HULL 3")

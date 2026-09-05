@@ -92,3 +92,10 @@
 - `make verify` GREEN (SPACESHIP_UNIT_OK + SPACESHIP_SMOKE_OK + ASSET_MANIFEST_OK).
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
+
+## 2026-09-05 모바일 UI 점검 - sub-item (4) 상점 패널
+
+- `game/scenes/play.lua`: 상점(settlement) 패널의 수직 위치를 1280 캔버스 기준 중앙(`y=400`)으로 내리고, 터치 행 4개의 높이를 각각 70px(iOS HIG 최소인 44pt를 크게 상회)로 확대 적용.
+- 텍스트 크기를 8px에서 12px(`M.settlementFontSize = 12`)로 확대하고, 각 행의 행간을 넓힘. 메인 패널 백그라운드 및 "EARTH SHOP" / "CHECKPOINT" 제목 문자열이 누락되었던 것을 복구함.
+- `game/self_test.lua`: 상점 터치 테스트에서, 변경된 터치 버튼들의(ship, hull, relaunch) 좌표에 맞게 테스트 `touchpressed` 파라미터 갱신 (예: `ship` 타겟을 `135, 210`에서 `540, 615`로 이동).
+- `make verify` GREEN. 다음 처리 대상 슬라이스: "(2) 미니맵 크기 + 위치" 또는 "(5) 로드아웃(launch) 패널"

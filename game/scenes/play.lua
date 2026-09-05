@@ -60,47 +60,51 @@ local returnControls = {
 }
 M.returnControls = returnControls
 
--- Settlement (EARTH SHOP) touch rows, top-to-bottom. Each row's height is a
--- Actual finger touch target on the device, not just a text layout band.
--- Evenly split across the 140-320 canvas range (180px / 4 = 45px each) so
--- every row clears the 44pt accessibility minimum (see
--- game/self_test.lua's canvasPixelsToPoints check) at the smallest
--- supported window (integer scale 1, 1x device pixel ratio), superseding
--- the previous 150-320/42px rows that only cleared the lower 34px bar.
--- The settlement panel's summary-card font/spacing was shrunk to free the
--- extra 10px of vertical room this needed. See game/self_test.lua for the
--- device-scale check.
--- YIELD and SHIP
--- share one 44px-tall row, split left/right at x=90 (each half is 90
--- canvas px wide, far past the 44pt accessibility minimum on the width
--- axis too), keeping all four rows at the full 44 canvas px band height.
--- STEERING is the fourth GAME_DESIGN.md meta upgrade axis (see
--- game/self_test.lua's steeringRun scenario); it reuses the same
--- column-split pattern by sharing the HULL row (left=HULL, right=STEERING)
--- instead of adding a fifth 36px-tall row that would fall back under the
--- 44pt accessibility minimum.
--- Item 15(b): EARTH SLOT SPIN row added above RELAUNCH. The former full-height
--- relaunch zone (232-320 = 88px) is split into two 44px rows: SLOT at 232-276
--- and RELAUNCH at 276-320, both still clearing the 44pt minimum.
+-- Mobile-UI sub-item (4): settlement panel vertically centered on 1280px
+-- canvas with 12px font (was 8px crammed into 70-320 at the top). Touch
+-- rows expanded to 70px each (well above 44pt iOS HIG minimum). Columns
+-- widened to fill the 720px canvas.
+M.settlementFontSize = 12
+M.settlementRowStep = 14  -- vertical px between successive text lines in the shop
+M.settlementSummaryRowStep = 16  -- vertical px between summary stat lines
+-- Vertical layout anchors (all in 720×1280 canvas coordinates):
+M.settlementPanelTop = 400
+M.settlementPanelHeight = 420
+M.settlementTitleY = 410
+M.settlementSummaryBgTop = 432
+M.settlementSummaryBgHeight = 70
+M.settlementTotalY = 438
+M.settlementSamplesY = 454
+M.settlementPeakAltY = 470
+M.settlementNewBestY = 486
+-- Touch rows: 4 rows × 70px each, starting after the summary section.
+local settlementTouchRowTop = 510
+local settlementTouchRowHeight = 70
 local settlementTouchRows = {
     {
-        top = 144, bottom = 188,
+        top = settlementTouchRowTop, bottom = settlementTouchRowTop + settlementTouchRowHeight,
         columns = {
-            { key = "hull", left = 0, right = 90 },
-            { key = "steering", left = 90, right = 180 },
+            { key = "hull", left = 0, right = 360 },
+            { key = "steering", left = 360, right = 720 },
         },
     },
     {
-        top = 188, bottom = 232,
+        top = settlementTouchRowTop + settlementTouchRowHeight,
+        bottom = settlementTouchRowTop + settlementTouchRowHeight * 2,
         columns = {
-            { key = "yield", left = 0, right = 90 },
-            { key = "ship", left = 90, right = 180 },
+            { key = "yield", left = 0, right = 360 },
+            { key = "ship", left = 360, right = 720 },
         },
     },
-    { key = "slot", top = 232, bottom = 276 },
-    { key = "relaunch", top = 276, bottom = 320 },
+    { key = "slot",
+      top = settlementTouchRowTop + settlementTouchRowHeight * 2,
+      bottom = settlementTouchRowTop + settlementTouchRowHeight * 3 },
+    { key = "relaunch",
+      top = settlementTouchRowTop + settlementTouchRowHeight * 3,
+      bottom = settlementTouchRowTop + settlementTouchRowHeight * 4 },
 }
 M.settlementTouchRows = settlementTouchRows
+M.settlementTouchRowHeight = settlementTouchRowHeight
 
 -- SHIP DESTROYED restart touch target. Unlike EARTH SHOP's four stacked
 -- rows, this phase has a single action (restart), so touchpressed accepts
@@ -612,8 +616,10 @@ M.rollupAmount = rollupAmount
 -- (viewport.width - 24 wide from x=12), so the two columns are sized to
 -- exactly cover their measured worst case within that inner width with
 -- no wasted margin: action 16..116 (100px), status 116..168 (52px).
-local shopActionColumnX, shopActionColumnW = 16, 100
-local shopStatusColumnX, shopStatusColumnW = 116, 52
+-- Mobile-UI sub-item (4): columns widened for 720px canvas + 12px font.
+-- Action column takes the left ~60%, status the right ~40%.
+local shopActionColumnX, shopActionColumnW = 24, 400
+local shopStatusColumnX, shopStatusColumnW = 430, 260
 M.shopActionColumnX = shopActionColumnX
 M.shopActionColumnW = shopActionColumnW
 M.shopStatusColumnX = shopStatusColumnX
@@ -638,8 +644,10 @@ M.shopStatusColumnW = shopStatusColumnW
 -- full-width preview lines below each shared row are left
 -- untouched (they are advisory text, not the tap target itself, and were
 -- already verified not to overlap).
-local shopColumnLeftX, shopColumnLeftW = 16, 68
-local shopColumnRightX, shopColumnRightW = 88, 68
+-- Mobile-UI sub-item (4): split columns widened for 720px canvas + 12px font.
+-- Each half is ~330px wide within the 696px panel.
+local shopColumnLeftX, shopColumnLeftW = 24, 330
+local shopColumnRightX, shopColumnRightW = 370, 320
 M.shopColumnLeftX = shopColumnLeftX
 M.shopColumnLeftW = shopColumnLeftW
 M.shopColumnRightX = shopColumnRightX
@@ -2773,171 +2781,98 @@ function M:draw()
         end
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then
-        -- The summary card is drawn with the same scene-cached small font as
-        -- the shop rows (instead of the default 14px font) and tightened to
-        -- a 9px line step. This frees enough vertical room above the fixed
-        -- 320px canvas bottom for PlayScene.settlementTouchRows to grow each
-        -- row to the 44pt real-device accessibility minimum (see
-        -- game/self_test.lua) at the smallest supported window (integer
-        -- scale 1), not just the previous 34px minimum.
-        self.smallFont = self.smallFont or fonts.get(8)
         local previousFont = love.graphics.getFont()
-        -- Group 5 wiring: settlement_summary_panel.png as background; fallback rect.
-        love.graphics.setColor(1, 1, 1, 0.94)
-        if not drawPanelSprite(self.settlementPanelImage, 12, 70, viewport.width - 24, 250) then
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
-            love.graphics.rectangle("fill", 12, 70, viewport.width - 24, 250)
-        end
-        -- Faint alternating background bands behind each tappable
-        -- settlementTouchRows entry. Drawn before any text so it never
-        -- overlaps or obscures the already real-capture-verified printf
-        -- calls below; purely a visual affordance for which rows respond
-        -- to touch (see settlementRowBackgroundColor comment above).
-        local shopEff = self.shopEffectImages or {}
-        -- Faint alternating background bands behind each tappable
-        -- settlementTouchRows entry. Drawn before any text so it never
-        -- overlaps or obscures the already real-capture-verified printf
-        -- calls below; purely a visual affordance for which rows respond
-        -- to touch (see settlementRowBackgroundColor comment above).
-        for index, touchRow in ipairs(settlementTouchRows) do
-            love.graphics.setColor(M.settlementRowBackgroundColor(index))
-            if not drawPanelSprite(shopEff.shopTouchRow, 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top) then
-                love.graphics.rectangle("fill", 12, touchRow.top, viewport.width - 24, touchRow.bottom - touchRow.top)
-            end
-        end
-        love.graphics.setColor(1, 1, 1, 0.9)
-        drawPanelSprite(shopEff.shopTitle, 16, 74 - 2, viewport.width - 32, 14)
-        love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.printf(i18n.t("earth_shop_title"), 16, 74, viewport.width - 32, "center")
-        -- The previously-verified capture (build/spaceship-runtime-preview-
-        -- settlement-newbest-*.png) fit exactly one extra summary line
-        -- (NEW BEST!) at y=127 with shop rows starting unshifted at
-        -- row=140 and the last shop line (TAP: RELAUNCH) landing just
-        -- above the y=307 DEV PLACEHOLDER footer.
+        love.graphics.setFont(fonts.get(M.settlementFontSize))
         local summaryExtraLine
         if self.expedition.lastNewBest then
             summaryExtraLine = i18n.t("newbest_label")
         end
-        love.graphics.setColor(1, 1, 1, 0.9)
-        if not drawPanelSprite(shopEff.shopStats, 18, 88, viewport.width - 36, 46) then
-            love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
-            love.graphics.rectangle("fill", 18, 88, viewport.width - 36, 46)
+        
+        love.graphics.setColor(1, 1, 1, 0.94)
+        if not drawPanelSprite(self.settlementPanelImage, 0, M.settlementPanelTop, viewport.width, M.settlementPanelHeight) then
+            love.graphics.setColor(0.02, 0.03, 0.08, 0.94)
+            love.graphics.rectangle("fill", 0, M.settlementPanelTop, viewport.width, M.settlementPanelHeight)
         end
-        love.graphics.setFont(self.smallFont)
+
+        local titleStr = self.expedition.lastVisitedGalaxyId and i18n.t("checkpoint_label") or i18n.t("earth_shop_label")
+        if titleStr then
+            love.graphics.setColor(1, 0.9, 0.5)
+            love.graphics.printf(titleStr, 0, M.settlementTitleY, viewport.width, "center")
+        end
+
+        love.graphics.setColor(1, 1, 1, 0.9)
+        local shopEff = self.shopEffectImages or {}
+        local bgW = viewport.width - 48
+        if not drawPanelSprite(shopEff.shopStats, 24, M.settlementSummaryBgTop, bgW, M.settlementSummaryBgHeight) then
+            love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
+            love.graphics.rectangle("fill", 24, M.settlementSummaryBgTop, bgW, M.settlementSummaryBgHeight)
+        end
+        
         love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 22, 91, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 30, M.settlementTotalY, bgW - 12, "center")
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 22, 100, viewport.width - 44, "center")
-        -- Item 15/11: spins_settlement_line removed (in-flight slots abolished)
+        love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 30, M.settlementSamplesY, bgW - 12, "center")
         love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 22, 109, viewport.width - 44, "center")
+        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 30, M.settlementPeakAltY, bgW - 12, "center")
         if summaryExtraLine then
             love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf(summaryExtraLine, 22, 127, viewport.width - 44, "center")
+            love.graphics.printf(summaryExtraLine, 30, M.settlementNewBestY, bgW - 12, "center")
         end
+        
         local nextLaunch = self:shopLoadoutLines()
         local actionX, actionW = shopActionColumnX, shopActionColumnW
         local statusX, statusW = shopStatusColumnX, shopStatusColumnW
-        local fullX, fullW = 16, viewport.width - 32
-        local row = 140
-        -- Was 9px until the SCOUT trade-off gained a second line (GAINS/
-        -- LOSSES split, see M.scoutTradeoffLines), pushing the 20-row total
-        -- past the y=307 DEV PLACEHOLDER footer (measured via a real LÖVE
-        -- capture: TAP: RELAUNCH landed at y=311, overlapping the footer).
-        -- Tightened to 8px so the last row (TAP: RELAUNCH) lands at
-        -- y=140+19*8=292, comfortably above the footer again.
-        local rowStep = 8
-        row = 156
-        -- HULL and STEERING
-        rowStep = 8
+        local fullX, fullW = 24, viewport.width - 48
+        local rowStep = M.settlementRowStep
+        local touchRowHeight = M.settlementTouchRowHeight
         
-        -- Group 8 wiring: action backgrounds
-        love.graphics.setColor(1, 1, 1, 0.85)
-        drawPanelSprite(shopEff.hullAction, shopColumnLeftX, row, shopColumnLeftW, rowStep)
-        drawPanelSprite(shopEff.steeringAction, shopColumnRightX, row, shopColumnRightW, rowStep)
-        
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.hullActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
-        love.graphics.printf(nextLaunch.steeringActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
-        -- Group 6 wiring: hull/steering icons to the left of each action sub-column
+        -- Helper for drawing touch row columns
+        local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg)
+            local row = rowTop + 8
+            love.graphics.setColor(1, 1, 1, 0.85)
+            drawPanelSprite(actionImg, leftX, row, leftW, rowStep)
+            love.graphics.setColor(0.75, 0.9, 1)
+            love.graphics.printf(actionText, leftX, row, leftW, "center")
+            if iconImg then
+                local iconSz = 10
+                drawShopIconSprite(iconImg, leftX + 8, row + iconSz * 0.5, iconSz)
+            end
+            row = row + rowStep
+            
+            love.graphics.setColor(1, 1, 1, 0.85)
+            drawPanelSprite(statusImg, leftX, row, leftW, rowStep)
+            love.graphics.setColor(isAffordable and 0.45 or 1, isAffordable and 1 or 0.4, isAffordable and 0.55 or 0.35)
+            love.graphics.printf(statusText, leftX, row, leftW, "center")
+            row = row + rowStep
+            
+            love.graphics.setColor(1, 1, 1, 0.85)
+            drawPanelSprite(previewImg, leftX, row, leftW, rowStep)
+            love.graphics.setColor(0.4, 0.85, 1)
+            if string.find(previewText, "SPD") then
+                M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, previewText, leftX, row, leftW)
+            else
+                love.graphics.printf(previewText, leftX, row, leftW, "center")
+            end
+        end
+
         local shopIcons = self.shopIconImages or {}
-        local iconSz = 7
-        drawShopIconSprite(shopIcons.hull, shopColumnLeftX + 2, row + iconSz * 0.5, iconSz)
-        drawShopIconSprite(shopIcons.steering, shopColumnRightX + 2, row + iconSz * 0.5, iconSz)
-        row = row + rowStep
-        
-        -- Group 8 wiring: status backgrounds
-        love.graphics.setColor(1, 1, 1, 0.85)
-        drawPanelSprite(shopEff.hullStatus, shopColumnLeftX, row, shopColumnLeftW, rowStep)
-        drawPanelSprite(shopEff.steeringStatus, shopColumnRightX, row, shopColumnRightW, rowStep)
-        
-        love.graphics.setColor(nextLaunch.hullAffordable and 0.45 or 1,
-            nextLaunch.hullAffordable and 1 or 0.4, nextLaunch.hullAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.hullStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
-        love.graphics.setColor(nextLaunch.steeringAffordable and 0.45 or 1,
-            nextLaunch.steeringAffordable and 1 or 0.4, nextLaunch.steeringAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.steeringStatus, shopColumnRightX, row, shopColumnRightW, "center")
-        row = row + rowStep
-        
-        -- Group 8 wiring: preview backgrounds
-        love.graphics.setColor(1, 1, 1, 0.85)
-        drawPanelSprite(shopEff.hullPreview, shopColumnLeftX, row, shopColumnLeftW, rowStep)
-        drawPanelSprite(shopEff.steeringPreview, shopColumnRightX, row, shopColumnRightW, rowStep)
-        
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.hullPreviewCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
-        M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, nextLaunch.steeringPreviewCompact, shopColumnRightX, row, shopColumnRightW)
-        row = row + rowStep
+        local r1 = M.settlementTouchRows[1].top
+        drawShopItem(r1, shopColumnLeftX, shopColumnLeftW, shopEff.hullAction, shopEff.hullStatus, shopEff.hullPreview, nextLaunch.hullActionCompact, nextLaunch.hullStatus, nextLaunch.hullPreviewCompact, nextLaunch.hullAffordable, shopIcons.hull)
+        drawShopItem(r1, shopColumnRightX, shopColumnRightW, shopEff.steeringAction, shopEff.steeringStatus, shopEff.steeringPreview, nextLaunch.steeringActionCompact, nextLaunch.steeringStatus, nextLaunch.steeringPreviewCompact, nextLaunch.steeringAffordable, shopIcons.steering)
 
-        -- YIELD and SHIP
-        row = 216
-        rowStep = 8
-        
-        -- Group 8 wiring: action backgrounds
-        love.graphics.setColor(1, 1, 1, 0.85)
-        drawPanelSprite(shopEff.yieldAction, shopColumnLeftX, row, shopColumnLeftW, rowStep)
-        drawPanelSprite(shopEff.shipAction, shopColumnRightX, row, shopColumnRightW, rowStep)
-        
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.yieldActionCompact, shopColumnLeftX, row, shopColumnLeftW, "center")
-        love.graphics.printf(nextLaunch.shipActionCompact, shopColumnRightX, row, shopColumnRightW, "center")
-        -- Group 6 wiring: yield/ship icons to the left of each action sub-column
+        local r2 = M.settlementTouchRows[2].top
         local shopIconsYS = self.shopIconImages or {}
-        drawShopIconSprite(shopIconsYS.yield, shopColumnLeftX + 2, row + iconSz * 0.5, iconSz)
-        drawShopIconSprite(shopIconsYS.ship, shopColumnRightX + 2, row + iconSz * 0.5, iconSz)
-        row = row + rowStep
+        drawShopItem(r2, shopColumnLeftX, shopColumnLeftW, shopEff.yieldAction, shopEff.yieldStatus, shopEff.yieldPreview, nextLaunch.yieldActionCompact, nextLaunch.yieldStatus, nextLaunch.yieldPreview, nextLaunch.yieldAffordable, shopIconsYS.yield)
+        drawShopItem(r2, shopColumnRightX, shopColumnRightW, shopEff.shipAction, shopEff.shipStatus, shopEff.shipPreview, nextLaunch.shipActionCompact, nextLaunch.shipStatus, nextLaunch.shipPreviewCompact, nextLaunch.shipAffordable, shopIconsYS.ship)
         
-        -- Group 8 wiring: status backgrounds
-        love.graphics.setColor(1, 1, 1, 0.85)
-        drawPanelSprite(shopEff.yieldStatus, shopColumnLeftX, row, shopColumnLeftW, rowStep)
-        drawPanelSprite(shopEff.shipStatus, shopColumnRightX, row, shopColumnRightW, rowStep)
-        
-        love.graphics.setColor(nextLaunch.yieldAffordable and 0.45 or 1,
-            nextLaunch.yieldAffordable and 1 or 0.4, nextLaunch.yieldAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.yieldStatus, shopColumnLeftX, row, shopColumnLeftW, "center")
-        love.graphics.setColor(nextLaunch.shipAffordable and 0.45 or 1,
-            nextLaunch.shipAffordable and 1 or 0.4, nextLaunch.shipAffordable and 0.55 or 0.35)
-        love.graphics.printf(nextLaunch.shipStatus, shopColumnRightX, row, shopColumnRightW, "center")
-        row = row + rowStep
-
-        -- Group 8 wiring: preview backgrounds
-        love.graphics.setColor(1, 1, 1, 0.85)
-        drawPanelSprite(shopEff.yieldPreview, shopColumnLeftX, row, shopColumnLeftW, rowStep)
-        drawPanelSprite(shopEff.shipPreview, shopColumnRightX, row, shopColumnRightW, rowStep)
-        
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(nextLaunch.yieldPreview, shopColumnLeftX, row, shopColumnLeftW, "center")
-        love.graphics.printf(nextLaunch.shipPreviewCompact, shopColumnRightX, row, shopColumnRightW, "center")
-        row = row + rowStep
-        
+        local row = r2 + 3 * rowStep + 4
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(nextLaunch.scoutTradeoff[1], fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
-        row = row + rowStep
-        row = 236
-        rowStep = 10
-        -- Item 7(c): Earth shop gear offer line.
+
+        local r3 = M.settlementTouchRows[3].top
+        row = r3 + 12
         if self.earthShopGearOffer then
             local offer = self.earthShopGearOffer
             local gearMod = require("game.gear")
@@ -2947,7 +2882,6 @@ function M:draw()
             row = row + rowStep
         end
         if self.earthShopSlotResult then
-            -- Group 5 wiring: slot_result_panel.png behind the result area.
             love.graphics.setColor(1, 1, 1, 0.85)
             drawPanelSprite(self.slotResultPanelImage, fullX, row - 2, fullW, rowStep * 2 + 2)
             love.graphics.setColor(0.85, 0.95, 1)
@@ -2959,20 +2893,16 @@ function M:draw()
                 love.graphics.printf(profileLabel, fullX, row, fullW, "center")
             end
         else
-            -- Group 5 wiring: slot_spin_button.png behind the spin prompt text.
             love.graphics.setColor(1, 1, 1, 0.85)
             drawPanelSprite(self.slotSpinButtonImage, fullX, row - 2, fullW, rowStep + 4)
             love.graphics.setColor(1, 0.8, 0.3)
             love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, row, fullW, "center")
         end
 
-        row = 280
-        rowStep = 8
-        
-        -- Group 8 wiring: next ship panel background
+        local r4 = M.settlementTouchRows[4].top
+        row = r4 + 8
         love.graphics.setColor(1, 1, 1, 0.9)
         drawPanelSprite(shopEff.shopNextShip, fullX, row - 2, fullW, rowStep * 3 + 2)
-        
         love.graphics.setColor(1, 0.8, 0.3)
         love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
         row = row + rowStep
@@ -2980,12 +2910,13 @@ function M:draw()
         love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
         row = row + rowStep
         love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
-        row = row + rowStep
-        -- Group 5 wiring: relaunch.png behind the TAP: RELAUNCH button text.
+        
+        row = r4 + touchRowHeight - rowStep - 8
         love.graphics.setColor(1, 1, 1, 0.9)
         drawPanelSprite(self.relaunChImage, fullX, row - 2, fullW, rowStep + 4)
         love.graphics.setColor(0.75, 0.9, 1)
         love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
+        
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local loadout = self:loadoutLines()
