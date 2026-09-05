@@ -1080,6 +1080,11 @@ function M.new(options)
         -- Item 7(c): Earth shop gear offer. Rolled once on settlement entry;
         -- cleared on purchase or relaunch.
         earthShopGearOffer = nil,
+        -- Item 9: Central star gravity well state
+        starWellTimer = 0,        -- continuous seconds inside the well
+        starDotAccum = 0,         -- accumulator for DoT ticks
+        starWellSampled = {},     -- galaxyId → true once sample awarded
+        starWellShake = 0,        -- gentle continuous shake while in well
     }, M)
 end
 
@@ -1702,6 +1707,75 @@ function M:update(dt)
             expedition.settle(self.expedition)
             self.reentryShake = 0
             self.reentryHeatAlpha = 0
+        end
+
+        -- Item 9: Central star gravity well — pull, DoT, 10s sample
+        do
+            local galaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+            local sun = galaxy and world.sunPosition(galaxy)
+            local inWell = false
+            if sun then
+                local sdx, sdy = sun.x - self.ship.x, sun.y - self.ship.y
+                local sunDist = math.sqrt(sdx * sdx + sdy * sdy)
+                if sunDist < world.starWellRadius then
+                    inWell = true
+                    -- Gravity pull: inversely proportional to distance
+                    if sunDist > 1 then
+                        local pullStrength = world.starGravityStrength * (world.starRadius / sunDist)
+                        local nx, ny = sdx / sunDist, sdy / sunDist
+                        self.ship.x = self.ship.x + nx * pullStrength * dt
+                        self.ship.y = self.ship.y + ny * pullStrength * dt
+                    end
+                    -- Gentle continuous shake
+                    self.starWellShake = 0.4
+                    -- DoT damage accumulator
+                    self.starDotAccum = self.starDotAccum + dt
+                    while self.starDotAccum >= world.starDotInterval do
+                        self.starDotAccum = self.starDotAccum - world.starDotInterval
+                        table.insert(self.floatingTexts, {
+                            text = i18n.t("floating_damage_text", 1),
+                            x = self.ship.x + 60,
+                            y = self.ship.y,
+                            timer = 1.0,
+                            kind = "damage",
+                        })
+                        self.shipShake = shipShakeDuration * 0.5
+                        self.shipShakeMagnitude = 0.6
+                        if expedition.damage(self.expedition, 1) then
+                            self:persistBestAltitude()
+                            self.message = i18n.t("ship_destroyed_message",
+                                math.floor(self.expedition.bestAltitude))
+                            inWell = false
+                            break
+                        end
+                    end
+                    -- 10-second survival timer
+                    if inWell and not self.starWellSampled[galaxy.id] then
+                        self.starWellTimer = self.starWellTimer + dt
+                        if self.starWellTimer >= world.starSurvivalTime then
+                            self.starWellSampled[galaxy.id] = true
+                            local value = world.sampleValue({ y = sun.y })
+                            local _, awarded = expedition.collectSample(
+                                self.expedition, value, "star")
+                            table.insert(self.floatingTexts, {
+                                text = i18n.t("star_well_sample")
+                                    .. " +$" .. (awarded or value),
+                                x = self.ship.x,
+                                y = self.ship.y - 20,
+                                timer = 3.0,
+                                kind = "sample",
+                                awarded = awarded or value,
+                                rollupElapsed = 0,
+                            })
+                        end
+                    end
+                end
+            end
+            if not inWell then
+                self.starWellTimer = 0
+                self.starDotAccum = 0
+                self.starWellShake = math.max(0, (self.starWellShake or 0) - dt * 2)
+            end
         end
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
@@ -2399,6 +2473,26 @@ function M:draw()
             love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
         end
     end
+    -- Item 9: Draw star gravity well ring around the central star
+    do
+        local wellGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+        local wellSun = wellGalaxy and world.sunPosition(wellGalaxy)
+        if wellSun then
+            local sx, sy = math.floor(wellSun.x - cameraX), math.floor(wellSun.y - cameraY)
+            if sx > -world.starWellRadius - 10 and sx < viewport.width + world.starWellRadius + 10
+                and sy > -world.starWellRadius - 10 and sy < viewport.height + world.starWellRadius + 10 then
+                -- Orange/red well ring
+                local pulse = 0.6 + 0.15 * math.sin(self.time * 3)
+                love.graphics.setColor(1.0, 0.45, 0.15, pulse * 0.35)
+                love.graphics.circle("line", sx, sy, world.starWellRadius)
+                love.graphics.setColor(1.0, 0.25, 0.1, pulse * 0.15)
+                love.graphics.circle("line", sx, sy, world.starWellRadius * 0.7)
+                -- Inner glow
+                love.graphics.setColor(1.0, 0.85, 0.25, pulse * 0.08)
+                love.graphics.circle("fill", sx, sy, world.starRadius)
+            end
+        end
+    end
     for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
         local x, y = math.floor(planet.x - cameraX), math.floor(planet.y - cameraY)
         if x > -24 and x < viewport.width + 24 and y > -24 and y < viewport.height + 24 then
@@ -2782,6 +2876,16 @@ function M:draw()
         love.graphics.setFont(previousHudFont)
     end
     self:drawMinimap()
+    -- Item 9: Star well HUD timer (ascending only, inside well, not yet sampled)
+    if self.expedition.phase == "ascending" and self.starWellTimer > 0 then
+        local wellGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+        if wellGalaxy and not self.starWellSampled[wellGalaxy.id] then
+            love.graphics.setColor(1.0, 0.6, 0.2)
+            love.graphics.printf(
+                i18n.t("star_well_timer", self.starWellTimer, world.starSurvivalTime),
+                0, viewport.height - 60, viewport.width, "center")
+        end
+    end
     if self.expedition.phase == "launch" then
         -- Specimen log strip sits in the empty space between the HUD and
         -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so

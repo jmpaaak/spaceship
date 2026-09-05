@@ -1,20 +1,21 @@
 ## Current Status
 
-2026-09-05 — INBOX (8) 미니맵 나선/링 색 — 전 은하 동일, 태양계 특례 제거
+2026-09-05 — INBOX (9) 은하 중심별 중력우물 + 도트 데미지 + 10초 생존 시 표본
 
-- `game/scenes/play.lua`: milkyway의 파란색 특례 코드를 제거하고, 모든 은하의 링, 나선, 마커에 통일된 금색(`0.9, 0.75, 0.3`) 팔레트를 적용.
-- `game/scenes/play.lua`: 나선 점(`view.spiral`)이 미니맵에 그려지도록 추가.
-- `game/self_test.lua`: 모든 은하가 같은 금색 팔레트를 사용하고 나선이 렌더링되는지 검증하는 `testMinimapUnifiedGalaxyPalette` 테스트 추가.
-- `docs/feedback/INBOX.md`: 항목 (8)을 `## 처리 대기`에서 `## 처리 완료`로 이동.
+- `game/world.lua`: `starRadius=24`, `starWellRadius=96`, `starDotInterval=0.5`, `starSurvivalTime=10`, `starGravityStrength=120` 상수 추가.
+- `game/scenes/play.lua`: 중력 당김(거리 반비례), 0.5초당 1딜 DoT(플로팅 텍스트+셰이크), 10초 연속 생존 시 표본 수집(`expedition.collectSample`), HUD 카운트업 타이머, 주황/빨강 우물 링 시각 효과 구현.
+- `game/i18n.lua`: `star_well_timer`, `star_well_sample` 영/한 번역 키 추가.
+- `game/self_test.lua`: 5개 테스트 추가 (우물 밖 무중력/무데미지, 0.5초당 1딜, 10초 표본 수집, 이탈 시 타이머 리셋, 은하당 1회 제한).
+- `docs/feedback/INBOX.md`: 항목 (9)를 `## 처리 대기`에서 `## 처리 완료`로 이동.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (9) 은하 중심별(태양) 중력우물 + 도트 데미지 + 10초 생존 시 표본
+- INBOX (10) 미니맵: 가장 가까운 HUB를 화살표로 항상 가리킴 + HUB와 중심별 구분
 
 ---
 
-## 2026-09-05 — INBOX (5)(b)(c) 착륙 직전 슬로우모션 및 붉은 비네트 발열 이펙트
+## 2026-09-05 — INBOX (8) 미니맵 나선/링 색 — 전 은하 동일, 태양계 특례 제거
 
 - `game/scenes/play.lua`: 지구 근접 시(거리 < `settleRadius + 15`) `self.timeSlip`을 설정하여 0.6초간 게임 속도를 0.5배로 낮추는 슬로우모션 구현.
 - `game/scenes/play.lua`: `M.reentryHeatVignetteAlpha` 함수를 추가하여 진입 구간에서 붉은 발열 비네트의 투명도를 0에서 0.3까지 증가시키고 화면 전체에 테두리로 그림.

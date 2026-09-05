@@ -4,17 +4,6 @@
 
 
 
-(9) **은하 중심별(태양) 중력우물 + 도트 데미지 + 10초 생존 시 표본 (사용자 확정):**
-  - 대상: `world.sunPosition(galaxy)` 위치의 중심별. milkyway는 Earth가 아닌 **태양**(origin에서 `galaxyCellSize*0.12` 오프셋). 다른 은하는 galaxy 중심 = sun (hub와 좌표가 같음).
-  - hub는 (6)대로 안전 체크포인트. 중심별은 **별도 위험 구역** — 같은 좌표면 hub 상호작용(기어)과 별 우물을 둘 다 적용하되, 별 본체 smash-kill은 없음.
-  - **중력:** 함선이 `starRadius * 4` (starRadius = hub.radius 또는 24) 이내면 별 방향으로 당김. 강도는 거리에 반비례. 조이스틱 추력으로 버틸 수 있어야 함 (starter 속도로 탈출 가능, 방치하면 빨려들어감).
-  - **도트 데미지:** 우물 안에 있는 동안 선체 **1 데미지 / 0.5초** (사용자 2026-09-05 수정. starter 3HP면 1.5초 만에 파괴 — 10초 표본은 내구 업그레이드/기어 필요). 기존 smash `(radius+5)` 충돌은 중심별에 적용하지 않음. 플로팅 `-1` + 짧은 셰이크. 0 되면 기존 destroy.
-  - **10초 생존 → 표본:** 우물 안에 **연속** 10초. 한 은하당 런당 1회. 성공 시 `expedition.collectSample` + 플로팅 텍스트. 우물을 벗어나면 타이머 리셋 (재진입 가능, 이미 획득한 은하는 재지급 없음). 도트가 0.5초/1딜이므로 표본 완료는 고내구 빌드 전용.
-  - HUD: 우물 안에서 `태양 접근 3.2 / 10s` 식 카운트업 (i18n `star_well_timer`). 이미 획득한 은하는 표시 없음.
-  - 시각: 우물 반경 주황/빨강 링 (행성 파란 수집링과 구분). 당기는 동안 약한 지속 셰이크.
-  - self_test: 우물 밖 무중력, **0.5초당 1딜**, 10초 연속 시 1회 표본, 이탈 시 타이머 리셋, 은하당 1회.
-  - `make verify` GREEN + 커밋: `feat(play): central-star gravity well, DoT, 10s sample`
-
 (10) **미니맵: 가장 가까운 HUB를 화살표로 항상 가리킴 + HUB와 중심별 구분 (사용자 확정):**
   - 현재: `checkpointBeyond`가 true일 때만 마젠타 화살표 (`play.lua` `if view.checkpointBeyond`). 차트 안에 hub가 있으면 화살표가 사라짐.
   - 변경 A — 항상 화살표:
@@ -61,6 +50,9 @@
   - 사이클당 타입 2~3장 또는 배선 한 조각. 커밋 예: `feat(planets): PixelPlanets sprites by galaxy starType`
 
 ## 처리 완료
+
+(9) **은하 중심별(태양) 중력우물 + 도트 데미지 + 10초 생존 시 표본 (사용자 확정):**
+  - [2026-09-05] 구현 완료: world.lua에 starRadius/wellRadius/dotInterval/survivalTime/gravityStrength 상수 추가. play.lua에 중력 당김, 0.5초당 1딜 DoT, 10초 연속 생존 시 표본 수집, HUD 타이머, 주황/빨강 우물 링 시각 효과 구현. self_test.lua에 5개 테스트 (우물 밖 무중력, 0.5초당 1딜, 10초 표본, 이탈 시 리셋, 은하당 1회).
 
 (8) **미니맵 나선/링 색 — 전 은하 동일, 태양계 특례 제거 (사용자 확정):**
   - 현재 `play.lua` drawMinimap: milkyway 링/마커만 파랑 `(0.3, 0.55, 0.95)` / `(0.25, 0.55, 1)`, 나머지 은하는 전부 금색 `(0.9, 0.75, 0.3)`.

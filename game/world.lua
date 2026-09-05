@@ -146,6 +146,20 @@ function M.sunPosition(galaxy)
     return { x = galaxy.x, y = galaxy.y }
 end
 
+-- Item 9: Central star "gravity well" parameters. starRadius is the
+-- visual body radius of the galaxy's central star (same scale as
+-- hubPlanet.radius).  wellRadius = starRadius * 4 defines the danger
+-- zone where gravity pull, DoT damage, and the 10-second sample timer
+-- apply.  dotInterval is the period between 1-HP ticks inside the well.
+-- survivalTime is how long the ship must remain continuously inside the
+-- well to earn the one-time-per-galaxy sample.
+M.starRadius = 24
+M.starWellMultiplier = 4
+M.starWellRadius = M.starRadius * M.starWellMultiplier -- 96
+M.starDotInterval = 0.5   -- seconds between 1-damage ticks
+M.starSurvivalTime = 10   -- continuous seconds for sample reward
+M.starGravityStrength = 120 -- pull force (px/s²) at starRadius distance
+
 -- The "center planet" of a galaxy (docs/GAME_DESIGN.md 이동 방식 개선
 -- 항목 2, "각 은하계의 중심 행성들"). The home galaxy's center is Earth
 -- itself (drawn separately in PlayScene), so milkyway has no extra hub
