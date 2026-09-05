@@ -6786,6 +6786,47 @@ function M.run()
             "nearbyDebris search radius must be 4 sectors, got " .. tostring(capturedDebrisRad))
     end
 
+    -- Return-to-Earth button: tapping the ascendReturnButton zone during
+    -- ascending phase triggers beginReturn → returning phase.
+    do
+        local rtScene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        -- Launch first to reach ascending phase.
+        rtScene:touchpressed("launch-rt", 90, 280)
+        assert(rtScene.expedition.phase == "ascending",
+            "should be ascending after launch tap, got " .. rtScene.expedition.phase)
+        rtScene.expedition.altitude = 500
+        rtScene.expedition.maxAltitude = 500
+
+        -- Tap inside the return button zone.
+        local btn = PlayScene.ascendReturnButton
+        local cx = math.floor((btn.left + btn.right) / 2)
+        local cy = math.floor((btn.top + btn.bottom) / 2)
+        rtScene:touchpressed("return-btn", cx, cy)
+        assert(rtScene.expedition.phase == "returning",
+            "tapping return button should start returning, got " .. rtScene.expedition.phase)
+        assert(rtScene.expedition.returnDistance == 500,
+            "returnDistance should equal maxAltitude")
+
+        -- Keyboard shortcut 'r' also triggers return.
+        local rtScene2 = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        rtScene2:touchpressed("launch-rt2", 90, 280)
+        assert(rtScene2.expedition.phase == "ascending")
+        rtScene2.expedition.altitude = 300
+        rtScene2.expedition.maxAltitude = 300
+        rtScene2:keypressed("r")
+        assert(rtScene2.expedition.phase == "returning",
+            "pressing 'r' should start returning, got " .. rtScene2.expedition.phase)
+
+        -- Full loop: return → settle → settlement phase reached.
+        expedition.update(rtScene.expedition, 1000)
+        assert(rtScene.expedition.phase == "settlement",
+            "after returning to altitude 0, should be settlement, got " .. rtScene.expedition.phase)
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

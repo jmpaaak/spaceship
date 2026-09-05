@@ -1,17 +1,17 @@
 ## Current Status
 
-2026-09-05 — 행성 팝인/팝아웃 수정: nearbyPlanets/nearbyDebris 검색 반경 1→4 확대.
+2026-09-05 — 상점(settlement) 미도달 해결: Return-to-Earth 버튼 + 키보드 단축키 추가.
 
-- `game/scenes/play.lua`: 4개 호출 전부 `nearbyPlanets(x,y,1)` → `nearbyPlanets(x,y,4)`,
-  `nearbyDebris(x,y,1,time)` → `nearbyDebris(x,y,4,time)` 변경. 4섹터(768px) 반경으로
-  720×1280 캔버스 가장자리 밖까지 충분히 커버 — 팝인/팝아웃 현상 해소.
-- `game/self_test.lua`: update() 시 world.nearbyPlanets/nearbyDebris에 전달되는
-  radius 파라미터를 캡처하여 ==4 검증하는 테스트 추가.
+- 원인: 모바일에서 ascending→returning 전환을 트리거할 수단이 없었음 (fuel 메카닉 없음, 키보드 'r' 키만 존재).
+- `game/scenes/play.lua`: ascending 단계에 "↓ RETURN TO EARTH" 터치 버튼 (1190–1234, 260–460) 추가.
+  터치·키보드('r') 모두 `expedition.beginReturn()` 호출 → returning → altitude 0 → settle → settlement.
+- `game/i18n.lua`: `return_to_earth` 키 en/ko 추가.
+- `game/self_test.lua`: 터치 버튼 탭 → returning 전환, 'r' 키 → returning 전환, returning → settlement 완주 테스트 추가.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX [2026-09-05] 상점(settlement) 미도달 — returning→settle 전환 점검.
+- INBOX 다음 처리 대기 항목.
 
 ---
 
