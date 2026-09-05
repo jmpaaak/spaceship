@@ -1,16 +1,18 @@
 ## Current Status
 
-2026-09-05 — debris field 및 HUD font size 테스트 수정
+2026-09-05 — INBOX (1) 상점 UI 텍스트 겹침 수정
 
-- world.debris(): 종류 분포(asteroid/can/scrap) 개선 — hash salt 변경 + kind 비율 확대 (0.22/0.44)
-- world.debris(): count 임계값 낮춤 (0.65→0.25) — 더 많은 섹터에 debris 생성, drift 테스트 통과
-- play.lua: hudFontSize 22→14, hudLineStep 36→16, hudGalaxyShift 28→16 (모바일 가독성)
-- play.lua: devPlaceholderFontSize 22→10 (DEV 워터마크 축소)
+- play.lua: settlementRowStep 28→44, summaryRowStep 32→40
+- play.lua: settlementPanelTop 400→200, panelHeight 420→880
+- play.lua: summaryBgHeight 70→170, touchRowHeight 70→165
+- play.lua: summary Y좌표 40px 간격 재배치 (totalY=248, samplesY=288, peakAltY=328, newBestY=368)
+- self_test.lua: overlap 방지 assertion 추가 (rowStep >= fontSize+4, summary line gaps >= fontSize, panel contains all rows)
+- self_test.lua: hardcoded touch coordinates 업데이트 (hull y:545→500, ship y:615→670, relaunch y:755→1000)
 - `make verify` GREEN.
 
 ## Next Slice
 
-- 새 사용자 피드백 대기 (INBOX 처리 대기 비어 있음)
+- INBOX (2) 귀환 버튼 제거 + 지구 근접 시 자동 정착
 
 ---
 

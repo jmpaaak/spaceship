@@ -5574,7 +5574,7 @@ function M.run()
     assert(shopScene.message == string.format("NEED $%d MORE FOR SAMPLE YIELD UPGRADE",
         shopScene.expedition.sampleYieldUpgradeCost))
     shopScene.expedition.money = shopScene.expedition.scoutShipCost + 20
-    shopScene:touchpressed("ship", 540, 615)
+    shopScene:touchpressed("ship", 540, 670)
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
     assert(shopScene.expedition.money == 20)
     assert(shopScene.message
@@ -5613,7 +5613,7 @@ function M.run()
     shortfallScene:keypressed("h")
     assert(shortfallScene.expedition.durabilityUpgradeLevel == 0)
     assert(shortfallScene.message == "NEED $55 MORE FOR HULL UPGRADE")
-    shortfallScene:touchpressed("ship", 540, 615)
+    shortfallScene:touchpressed("ship", 540, 670)
     assert(not shortfallScene.expedition.ownedShips.scout)
     assert(shortfallScene.message == "NEED $105 MORE FOR SCOUT")
 
@@ -5687,11 +5687,11 @@ function M.run()
     touchScene.expedition.phase = "settlement"
     touchScene.expedition.money = touchScene.expedition.durabilityUpgradeCost
         + touchScene.expedition.scoutShipCost
-    touchScene:touchpressed("hull", 180, 545)
-    touchScene:touchpressed("ship", 540, 615)
+    touchScene:touchpressed("hull", 180, 500)
+    touchScene:touchpressed("ship", 540, 670)
     assert(touchScene.expedition.durabilityUpgradeLevel == 1)
     assert(touchScene.expedition.ownedShips.scout and touchScene.expedition.selectedShipId == "scout")
-    touchScene:touchpressed("relaunch", 360, 755)
+    touchScene:touchpressed("relaunch", 360, 1000)
     assert(touchScene.expedition.phase == "ascending")
 
     local loadoutScene = PlayScene.new({
@@ -5820,7 +5820,7 @@ function M.run()
     assert(reselectedNextLaunch.shipAction == "SELECT SCOUT")
     assert(nextLaunchScene.message
         == "STARTER SELECTED  HULL 4")
-    nextLaunchScene:touchpressed("ship", 540, 615)
+    nextLaunchScene:touchpressed("ship", 540, 670)
     assert(nextLaunchScene.expedition.selectedShipId == "scout")
     assert(nextLaunchScene.message
         == "SCOUT SELECTED  HULL 3")
@@ -5974,6 +5974,22 @@ function M.run()
         assert(row.bottom - row.top >= 34,
             "settlement touch row " .. (row.key or "columns") .. " is under the 34px minimum")
     end
+
+    -- Item 1 fix: settlement row step must exceed font size to prevent overlap
+    assert(PlayScene.settlementRowStep >= PlayScene.settlementFontSize + 4,
+        "settlementRowStep (" .. PlayScene.settlementRowStep .. ") too small vs font ("
+            .. PlayScene.settlementFontSize .. ") — text will overlap")
+    -- Summary lines must not overlap each other
+    assert(PlayScene.settlementSamplesY - PlayScene.settlementTotalY >= PlayScene.settlementFontSize,
+        "settlement summary total/samples lines overlap")
+    assert(PlayScene.settlementPeakAltY - PlayScene.settlementSamplesY >= PlayScene.settlementFontSize,
+        "settlement summary samples/peakAlt lines overlap")
+    assert(PlayScene.settlementNewBestY - PlayScene.settlementPeakAltY >= PlayScene.settlementFontSize,
+        "settlement summary peakAlt/newBest lines overlap")
+    -- Panel must contain all 4 touch rows
+    local lastRow = PlayScene.settlementTouchRows[#PlayScene.settlementTouchRows]
+    assert(lastRow.bottom <= PlayScene.settlementPanelTop + PlayScene.settlementPanelHeight,
+        "settlement touch rows extend below panel bottom")
 
     -- EARTH SHOP hull/steering/yield/ship rows print an action string
     -- (left column) and a status string (right column, "LEFT $N"/"SHORT $N"/

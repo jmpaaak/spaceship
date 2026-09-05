@@ -65,21 +65,21 @@ M.returnControls = returnControls
 -- rows expanded to 70px each (well above 44pt iOS HIG minimum). Columns
 -- widened to fill the 720px canvas.
 M.settlementFontSize = 22
-M.settlementRowStep = 28  -- vertical px between successive text lines in the shop
-M.settlementSummaryRowStep = 32  -- vertical px between summary stat lines
+M.settlementRowStep = 44  -- vertical px between successive text lines in the shop
+M.settlementSummaryRowStep = 40  -- vertical px between summary stat lines
 -- Vertical layout anchors (all in 720×1280 canvas coordinates):
-M.settlementPanelTop = 400
-M.settlementPanelHeight = 420
-M.settlementTitleY = 410
-M.settlementSummaryBgTop = 432
-M.settlementSummaryBgHeight = 70
-M.settlementTotalY = 438
-M.settlementSamplesY = 454
-M.settlementPeakAltY = 470
-M.settlementNewBestY = 486
--- Touch rows: 4 rows × 70px each, starting after the summary section.
-local settlementTouchRowTop = 510
-local settlementTouchRowHeight = 70
+M.settlementPanelTop = 200
+M.settlementPanelHeight = 880
+M.settlementTitleY = 210
+M.settlementSummaryBgTop = 240
+M.settlementSummaryBgHeight = 170
+M.settlementTotalY = 248
+M.settlementSamplesY = 288
+M.settlementPeakAltY = 328
+M.settlementNewBestY = 368
+-- Touch rows: 4 rows × 165px each, starting after the summary section.
+local settlementTouchRowTop = 420
+local settlementTouchRowHeight = 165
 local settlementTouchRows = {
     {
         top = settlementTouchRowTop, bottom = settlementTouchRowTop + settlementTouchRowHeight,
