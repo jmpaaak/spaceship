@@ -1,21 +1,22 @@
 ## Current Status
 
-2026-09-05 — Stellar Origin suit system (INBOX [2026-09-05], sub-item 3).
+2026-09-05 — Stellar Origin suit system sub-item 4: HUD synergy display in loadout screen.
 
-- `expedition.lua` wired to read `gear.activeSynergies`:
-  - `nebulaField`: `sampleYieldMultiplier` applies extra ×1.5 multiplier.
-  - `pulsarBurst`: `streakMultiplier` doubled (×2).
-  - `darkMatter`: `streakMultiplier` gets extra +50% (×1.5).
-  - `solarSystem`: `settle()` heals 1 durability.
-  - `binaryStar`: `settle()` grants flat +30 money.
-  - `eventHorizon`: `collisionRadius` subtracts 30 percentage points.
-  - `supernova`: `aggregateEffectsWithSynergies()` scales legendary card effects by ×1.5.
-- `game/self_test.lua`: Added `testExpeditionStellarSynergies()` verifying all 6 gameplay behaviors.
+- `game/i18n.lua`: Added 7 synergy i18n keys for both `en` and `ko` locales:
+  `synergy_solarSystem`, `synergy_nebulaField`, `synergy_eventHorizon`,
+  `synergy_pulsarBurst`, `synergy_binaryStar`, `synergy_supernova`, `synergy_darkMatter`.
+- `game/scenes/play.lua` `loadoutLines()`: calls `gear.activeSynergies()` and returns
+  `synergies` list of translated label strings (empty when none active).
+- Draw section: renders active synergy labels in dim gold below steering row.
+- `game/self_test.lua`: Added `testStellarSynergyHUD()` — empty loadout = 0 labels;
+  nebula-3 loadout = 1 label matching `i18n.t("synergy_nebulaField")`.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX [2026-09-05] sub-item (4): HUD 시너지 표시 (active synergies listed in loadout screen).
+- INBOX [2026-09-05] sub-item (5): `self_test.lua` coverage (`testStellarSynergies`) is
+  already committed. All 5 sub-items of Stellar Origin are now complete — move the full
+  INBOX item to 처리 완료 in next cycle.
 
 ---
 

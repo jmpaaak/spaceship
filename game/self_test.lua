@@ -4671,6 +4671,7 @@ end
 -- per runGearTests intact (only 1 extra upvalue slot consumed).
 local testStellarSynergies
 local testExpeditionStellarSynergies
+local testStellarSynergyHUD
 
 -- Module-level gear test suite (kept outside M.run() so M.run() only
 -- consumes 1 upvalue for this reference instead of 47+, staying within
@@ -4728,6 +4729,7 @@ local function runGearTests()
     testItem15DeadSlotConstantsRemoved()
     testStellarSynergies()
     testExpeditionStellarSynergies()
+    testStellarSynergyHUD()
 end
 
 -- [2026-09-05] Stellar Origin suit system — M.activeSynergies() unit tests.
@@ -4862,6 +4864,41 @@ testExpeditionStellarSynergies = function()
     assert(runSettle.phase == "settlement", "Must reach settlement")
     assert(runSettle.durability == 2, "solarSystem must heal 1 durability")
     assert(runSettle.money == 130, "binaryStar must grant 30 money")
+end
+
+-- [2026-09-05] Stellar Origin sub-item 4: loadoutLines() synergy HUD test.
+-- Verifies that a nebula-3 loadout populates loadout.synergies with the
+-- NEBULA FIELD label and that an empty loadout returns an empty list.
+-- Pure: uses PlayScene.new() in headless mode (no love.graphics calls).
+testStellarSynergyHUD = function()
+    local PlayScene = require("game.scenes.play")
+    local i18n = require("game.i18n")
+    -- Stub store
+    local store = { load = function() return 0 end, save = function() return false end }
+    local scene = PlayScene.new({ bestAltitudeStore = store })
+
+    -- Case 1: empty loadout → synergies list is empty.
+    scene.expedition.equippedGear = {}
+    scene.expedition.equippedEngineParts = {}
+    local lEmpty = scene:loadoutLines()
+    assert(type(lEmpty.synergies) == "table",
+        "loadoutLines must return synergies table, got: " .. type(lEmpty.synergies))
+    assert(#lEmpty.synergies == 0,
+        "empty loadout must produce 0 synergy labels, got: " .. #lEmpty.synergies)
+
+    -- Case 2: nebula 3 → nebulaField synergy label present.
+    local function nc(id)
+        return { id = id, suit = "nebula", rarity = "common", tags = {}, effects = {} }
+    end
+    scene.expedition.equippedGear = { nc("n1"), nc("n2"), nc("n3") }
+    scene.expedition.equippedEngineParts = {}
+    local lNebula = scene:loadoutLines()
+    assert(#lNebula.synergies == 1,
+        "nebula 3 loadout must produce 1 synergy label, got: " .. #lNebula.synergies)
+    local expectedLabel = i18n.t("synergy_nebulaField")
+    assert(lNebula.synergies[1] == expectedLabel,
+        "nebula 3 synergy label must be '" .. expectedLabel
+        .. "', got: '" .. tostring(lNebula.synergies[1]) .. "'")
 end
 
 

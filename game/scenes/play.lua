@@ -1197,6 +1197,20 @@ end
 
 function M:loadoutLines()
     local run = self.expedition
+    -- Stellar Origin sub-item 4: collect active synergy display labels.
+    local gearMod = require("game.gear")
+    local syn = gearMod.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    -- Ordered list so the display is deterministic.
+    local synergyOrder = {
+        "solarSystem", "nebulaField", "eventHorizon",
+        "pulsarBurst", "binaryStar", "supernova", "darkMatter",
+    }
+    local synergyLabels = {}
+    for _, key in ipairs(synergyOrder) do
+        if syn[key] then
+            synergyLabels[#synergyLabels + 1] = i18n.t("synergy_" .. key)
+        end
+    end
     return {
         -- docs/feedback/INBOX.md UI/HUD item 4: naming the current ship is
         -- meaningless dead text while STARTER is the only hull ever
@@ -1214,6 +1228,7 @@ function M:loadoutLines()
         upgrades = i18n.t("upgrades_line",
             run.durabilityUpgradeLevel),
         steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
+        synergies = synergyLabels,
     }
 end
 
@@ -2693,6 +2708,15 @@ function M:draw()
             row = row + rowStep
             love.graphics.setColor(0.6, 0.8, 1)
             love.graphics.printf(loadout.odds, 16, row, viewport.width - 32, "center")
+        end
+        -- Stellar Origin sub-item 4: show active suit synergies at the bottom
+        -- of the loadout panel in a dim gold colour, one per row.
+        if loadout.synergies and #loadout.synergies > 0 then
+            love.graphics.setColor(1, 0.85, 0.3, 0.85)
+            for _, label in ipairs(loadout.synergies) do
+                row = row + rowStep
+                love.graphics.printf(label, 16, row, viewport.width - 32, "center")
+            end
         end
         love.graphics.setFont(previousLaunchFont)
     elseif self.expedition.phase == "settlement" then

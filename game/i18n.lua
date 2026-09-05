@@ -128,6 +128,14 @@ locales.en = {
     dev_placeholder = "DEV PLACEHOLDER",
     hub_label = "HUB",
     shop_label = "SHOP",
+    -- Stellar Origin suit synergy labels (item 16 sub-item 4)
+    synergy_solarSystem  = "☀ SOLAR SYSTEM",
+    synergy_nebulaField  = "* NEBULA FIELD",
+    synergy_eventHorizon = "# EVENT HORIZON",
+    synergy_pulsarBurst  = "~ PULSAR BURST",
+    synergy_binaryStar   = "x BINARY STAR",
+    synergy_supernova    = "+ SUPERNOVA",
+    synergy_darkMatter   = "@ DARK MATTER",
 }
 
 locales.en.phase_abbrev = {
@@ -245,6 +253,14 @@ locales.ko = {
     dev_placeholder = "개발 임시본",
     hub_label = "HUB",
     shop_label = "SHOP",
+    -- Stellar Origin suit synergy labels (item 16 sub-item 4)
+    synergy_solarSystem  = "☀ 태양계 시너지",
+    synergy_nebulaField  = "* 성운 지대",
+    synergy_eventHorizon = "# 사건 지평선",
+    synergy_pulsarBurst  = "~ 펄서 폭발",
+    synergy_binaryStar   = "x 쌍성",
+    synergy_supernova    = "+ 초신성",
+    synergy_darkMatter   = "@ 암흑물질",
 }
 
 locales.ko.phase_abbrev = {
