@@ -21,6 +21,26 @@
 (3) **귀환 시 순간이동 수정:**
   - (2)에서 returning phase 폐지하면 자동 해결. ascending에서 직접 이동하므로 순간이동 없음.
 
+(4) **행성 표본 채집 궤도 진입 시 타격감 이펙트 (사용자 확정):**
+  - 행성 수집 반경(`planet.radius + 30`)에 진입하는 순간 다음 효과 동시 발동:
+
+  **(a) 타임슬립 (슬로우모션):**
+  - 진입 순간 `dt` 배율을 0.3으로 낮춰서 0.4초간 슬로우. 별·잔해·행성 궤도 반짝임 모두 느려짐.
+  - 구현: `self.timeSlip = { timer = 0.4, scale = 0.3 }` → `update(dt)`에서 `dt = dt * timeSlip.scale` 적용 → timer 소진 시 해제.
+
+  **(b) 카메라 흔들림 (셰이크):**
+  - 이미 `self.shipShake` 메커니즘이 있음. 수집 시 `shipShake = 0.25`, `shipShakeMagnitude`를 tier에 따라 설정 (common=0.6, rare=1.0, epic=1.4).
+  - 현재 충돌에서만 쓰는데, **수집 시에도** 발동하도록 수집 블록에 추가.
+
+  **(c) 화면 플래시:**
+  - 수집 순간 화면 전체에 0.15초간 흰색 반투명 오버레이(`love.graphics.setColor(1,1,1,0.3)` → `love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)`).
+  - `self.collectFlash = 0.15` → draw에서 남은 시간 비례로 alpha 감소.
+
+  **(d) 선체 펀치 스케일 (이미 있음):**
+  - `spawnSampleParticles`에서 `shipScalePunch`가 발동됨 — 유지.
+
+  - `make verify` GREEN + 커밋: `feat(play): timeslip + shake + flash on sample collection`
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-05) **모바일 UI 전체 점검 및 재배치 — 7개 소항목 전부 완료:**
