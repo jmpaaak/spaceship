@@ -65,24 +65,10 @@ M.galaxyCellRadius = 2
 -- is silently skipped by the dot-drawing "inside" check today).
 M.checkpointSearchCellRadius = M.galaxyCellRadius + 4
 
--- Deterministic pseudo-random in [0, 1), independent of world.lua's local
--- hash (minimap.lua stays framework-free and dependency-light -- it only
--- needs a stable per-galaxy hash, not the exact same sequence world.lua
--- uses for planet/galaxy placement).
-local function spiralHash(n)
-    n = (n * 2654435761) % 2147483647
-    n = (n * 48271 + 12345) % 2147483647
-    return n / 2147483647
-end
-
--- docs/feedback/INBOX.md item 1 part 1: each galaxy must draw its OWN
--- spiral-arm shape on the minimap, derived deterministically from its grid
--- coordinates, and that shape must change when the player crosses into a
--- different galaxy. Arm count (2-5) and overall rotation are both derived
--- from (gx, gy) so two different galaxies overwhelmingly get visibly
--- different spirals, while the same galaxy always regenerates the exact
--- same shape (pure function of gx, gy only).
-function M.spiralArmCount(galaxy)
+-- docs/feedback/INBOX.md item 13: concentric rings replace the old spiral
+-- arms. Ring count (2-5) is derived from galaxy.radius using the same
+-- bracket table the old spiralArmCount used.
+function M.concentricRingCount(galaxy)
     if not galaxy then return 2 end
     local r = galaxy.radius
     if r < 1000 then return 2
@@ -90,45 +76,6 @@ function M.spiralArmCount(galaxy)
     elseif r < 1800 then return 4
     else return 5
     end
-end
-
-function M.spiralRotation(galaxy)
-    if not galaxy then return 0 end
-    return spiralHash(galaxy.gx * 55529 + galaxy.gy * 40399 + 7002) * math.pi * 2
-end
-
--- How many sample points are plotted along each arm, tightest near the
--- core and reaching the galaxy's outer radius.
-M.spiralPointsPerArm = 14
--- How many full turns each arm winds through from core to rim.
-M.spiralWindTurns = 1.2
-
--- Pure function: world-space (x, y) points tracing `galaxy`'s spiral arms,
--- centered on its central star (docs/feedback/INBOX.md item 1 part 3:
--- world.sunPosition(galaxy) -- the home solar system spirals around the
--- SUN, not Earth; every other galaxy's star sits at its own galaxy.x/y, so
--- this is unchanged for them) and bounded by galaxy.radius. Same galaxy
--- (same gx, gy, x, y, radius) always returns the identical point list.
-function M.spiralPoints(galaxy)
-    if not galaxy then return {} end
-    local sun = world.sunPosition(galaxy)
-    local armCount = M.spiralArmCount(galaxy)
-    local rotation = M.spiralRotation(galaxy)
-    local points = {}
-    for arm = 0, armCount - 1 do
-        local armAngle = rotation + (arm / armCount) * math.pi * 2
-        for i = 1, M.spiralPointsPerArm do
-            local t = i / M.spiralPointsPerArm
-            local radius = galaxy.radius * t
-            local angle = armAngle + t * math.pi * 2 * M.spiralWindTurns
-            points[#points + 1] = {
-                x = sun.x + math.cos(angle) * radius,
-                y = sun.y + math.sin(angle) * radius,
-                arm = arm,
-            }
-        end
-    end
-    return points
 end
 
 -- Pure function: flat {x1, y1, x2, y2, ...} polygon points for a small
@@ -274,15 +221,24 @@ function M.view(shipX, shipY)
             }
         end
     end
-    -- docs/feedback/INBOX.md item 1 part 1: the player's current galaxy
-    -- draws its own deterministic spiral-arm shape (instead of the generic
-    -- circular disk ring above), and this spiral swaps for a different
-    -- shape the moment `containing` changes to a different galaxy id.
-    local spiral = {}
+    -- docs/feedback/INBOX.md item 13: concentric rings for the current galaxy.
+    -- Evenly spaced rings from center to galaxy.radius, projected onto the
+    -- minimap. Drawn as "line" circles in the gold color.
     if containing then
-        for _, point in ipairs(M.spiralPoints(containing)) do
-            local mx, my, inside = M.project(point.x, point.y, shipX, shipY)
-            spiral[#spiral + 1] = { x = mx, y = my, inside = inside, arm = point.arm }
+        local sun = world.sunPosition(containing)
+        local ringCount = M.concentricRingCount(containing)
+        local sunMx, sunMy, sunInside2 = M.project(sun.x, sun.y, shipX, shipY)
+        for i = 1, ringCount do
+            local worldRadius = containing.radius * (i / ringCount)
+            local scaledRadius = worldRadius * M.mapRadius / M.viewRadius
+            rings[#rings + 1] = {
+                x = sunMx,
+                y = sunMy,
+                radius = math.max(2, math.min(scaledRadius, M.mapRadius)),
+                kind = "concentricRing",
+                inside = sunInside2,
+                id = containing.id,
+            }
         end
     end
     -- Always-on hub arrow (item 10 change A): show arrow whenever a
@@ -303,8 +259,6 @@ function M.view(shipX, shipY)
         galaxies = galaxies,
         hubMarkers = hubMarkers,
         rings = rings,
-        spiral = spiral,
-        spiralGalaxyId = containing and containing.id or nil,
         galaxyName = containing and world.galaxyName(containing) or nil,
         beyond = beyond,
         distanceBeyond = beyond and (distEarth - M.chartRadius) or 0,

@@ -2,19 +2,10 @@
 
 ## 처리 대기
 
-(13) **미니맵 은하 표현: 나선 → 동심원 (사용자 확정, 2026-09-05):**
-  - 보고: "나선이라는 게 잘못 이해한 거. 반지름이 다른 여러 원들을 의미한 것."
-  - 현재: `minimap.spiralPoints(galaxy)` → 와인딩 나선 팔 점. `spiralArmCount`(반지름 기반 2~5), `spiralWindTurns=1.2`, `spiralPointsPerArm=14`.
-  - 변경:
-    - `spiralPoints` / `spiralArmCount` / `spiralRotation` / `spiralWindTurns` 전부 **삭제** 또는 `concentricRings`로 교체.
-    - `M.concentricRingCount(galaxy)` — 은하 반지름 기반: <1000→2, <1400→3, <1800→4, else→5 (기존 armCount 테이블 재활용).
-    - `minimap.view()` → `view.rings`에 은하 중심(sun) 기준 동심원 추가. 반지름은 `galaxy.radius * (i / ringCount)` 균등 배분.
-    - draw: `love.graphics.circle("line", cx+sunX, cy+sunY, scaledRadius)` — 기존 나선 점 대신.
-    - 색: 금색 (`0.9, 0.75, 0.3, 0.4`). 태양 궤도 링(`orbit` kind, 반지름 4/7/11)과 구분 — 동심원은 은하 디스크 크기, 궤도는 태양계 미세 링.
-    - self_test: `testMinimap` — `view.spiral` 필드 없음 또는 빈 테이블. `view.rings`에 `kind="concentricRing"` 엔트리 존재.
-  - `make verify` GREEN + 커밋: `fix(minimap): replace spiral arms with concentric rings`
-
 ## 처리 완료
+
+(13) **미니맵 은하 표현: 나선 → 동심원 (사용자 확정, 2026-09-05):**
+  - [2026-09-05] ✅ 완료: `spiralArmCount`/`spiralRotation`/`spiralPointsPerArm`/`spiralWindTurns`/`spiralPoints`/`spiralHash` 전부 삭제. `M.concentricRingCount(galaxy)` 신규 (반지름 구간 2~5). `view.rings`에 `kind="concentricRing"` 엔트리 추가, `view.spiral`/`view.spiralGalaxyId` 제거. play.lua 나선 그리기→동심원 `circle("line")` (금색 0.9/0.75/0.3/0.4). self_test 검증 통과. `make verify` GREEN.
 
 (12) **PixelPlanets(GitHub Deep-Fold / JS 포트)로 행성 모양 교체 (사용자 확정, 2026-09-05):**
   - [2026-09-05] ✅ 완료: PIL 생성 6종 pp_*.png (ice/lava/dry/gas/earth/bare, 64x64 RGBA), MANIFEST.json 등록, GENERATED_ASSET_LOG 기록, README MIT 크레딧 추가. play.lua `planetImagePathForPlanet` 배선 (starType→pp_<type>, hub/shop도 pp 우선·폴백 유지), 약한 hue tint (0.35 blend), `planetVariation` id 기반 회전/스케일 변주. self_test: 파일 존재·color type 6, resolve 배선 5케이스, planetVariation 결정론·범위 검증. `make verify` GREEN.

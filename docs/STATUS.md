@@ -1,15 +1,17 @@
 ## Current Status
 
-2026-09-05 — INBOX (12) PixelPlanets 완료 → 처리 완료 이동
+2026-09-05 — INBOX (13) 미니맵 나선 → 동심원 교체
 
-- INBOX (12) 전체 완료 확인: 6종 pp_*.png 에셋, MANIFEST, GENERATED_ASSET_LOG, MIT 크레딧, play.lua 배선 (starType→pp, hub/shop pp 우선, 약한 hue tint, id 기반 rotation/scale 변주), self_test 전 항목 GREEN.
-- `docs/feedback/INBOX.md`: 항목 (12)를 `## 처리 대기`에서 `## 처리 완료`로 이동 (완료 증거 기재).
-- `## 처리 대기` 현재 비어 있음 — 다음 사이클에서 신규 피드백 대기.
+- `game/minimap.lua`: `spiralArmCount`/`spiralRotation`/`spiralPointsPerArm`/`spiralWindTurns`/`spiralPoints`/`spiralHash` 전부 삭제.
+- 신규 `M.concentricRingCount(galaxy)`: 은하 반지름 기반 2~5 (기존 armCount 테이블 재활용).
+- `minimap.view()`: `view.spiral`/`view.spiralGalaxyId` 제거. 대신 `view.rings`에 `kind="concentricRing"` 엔트리 추가 — 은하 중심(sun) 기준, `galaxy.radius * (i/ringCount)` 균등 배분.
+- `game/scenes/play.lua`: 나선 점 그리기 블록 삭제, `spiralStar` 이미지 참조 제거, rings 루프에 `concentricRing` 분기 추가 (금색 `0.9, 0.75, 0.3, 0.4`, `circle("line")`).
+- `game/self_test.lua`: `testMinimapUnifiedGalaxyPalette` — `view.spiral` nil/빈 테이블 확인, `view.rings`에 `concentricRing` 존재 확인, `concentricRingCount` 구간 검증 5케이스, `drawMinimap` circle 카운트 검증.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- 처리 대기 항목 없음. 다음 사용자 피드백 대기 (IDLE).
+- `## 처리 대기` 다음 항목 확인 및 작업.
 
 ---
 

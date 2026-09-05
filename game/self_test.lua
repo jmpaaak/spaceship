@@ -578,9 +578,9 @@ local function testMinimap()
         "markerCheckpointTipRadius must be >= 10.8 (1.5× original 7.2)")
 end
 
--- INBOX (8): every galaxy uses the same gold ring/spiral/marker palette.
--- milkyway must not keep a blue special-case, and view.spiral points must
--- actually be plotted (minimap.view already computes them).
+-- INBOX (8)+(13): every galaxy uses the same gold ring/marker palette.
+-- milkyway must not keep a blue special-case. Spiral fields must be absent;
+-- concentric rings must appear in view.rings.
 local function testMinimapUnifiedGalaxyPalette()
     local minimap = require("game.minimap")
     local PlayScene = require("game.scenes.play")
@@ -600,9 +600,28 @@ local function testMinimapUnifiedGalaxyPalette()
     assert(fr == fr2 and fg == fg2 and fb == fb2 and fa == fa2,
         "milkyway galaxy marker must use the same gold fill as every other galaxy")
 
+    -- Item 13: spiral fields must be absent (or nil), concentric rings present
     local originView = minimap.view(0, 0)
-    assert(originView.spiral and #originView.spiral > 0,
-        "minimap.view must compute spiral-arm points for the current galaxy")
+    assert(originView.spiral == nil or (type(originView.spiral) == "table" and #originView.spiral == 0),
+        "minimap.view must not produce spiral-arm points (item 13: replaced by concentric rings)")
+
+    local sawConcentricRing = false
+    for _, ring in ipairs(originView.rings or {}) do
+        if ring.kind == "concentricRing" then
+            sawConcentricRing = true
+            assert(ring.radius > 0, "concentricRing must have positive radius")
+            assert(ring.id, "concentricRing must carry a galaxy id")
+        end
+    end
+    assert(sawConcentricRing,
+        "minimap.view must include concentricRing entries in view.rings (item 13)")
+
+    -- concentricRingCount bracket check
+    assert(minimap.concentricRingCount(nil) == 2, "nil galaxy => 2 rings")
+    assert(minimap.concentricRingCount({ radius = 800 }) == 2)
+    assert(minimap.concentricRingCount({ radius = 1200 }) == 3)
+    assert(minimap.concentricRingCount({ radius = 1600 }) == 4)
+    assert(minimap.concentricRingCount({ radius = 2000 }) == 5)
 
     local scene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -630,16 +649,17 @@ local function testMinimapUnifiedGalaxyPalette()
     love.graphics = previousGraphics
     assert(ok, "drawMinimap must not throw: " .. tostring(err))
 
-    local expectedSpiral = 0
-    for _, point in ipairs(originView.spiral) do
-        if point.inside ~= false then
-            expectedSpiral = expectedSpiral + 1
+    -- Must have drawn at least the concentric ring circles
+    local expectedConcentricRings = 0
+    for _, ring in ipairs(originView.rings or {}) do
+        if ring.kind == "concentricRing" and ring.inside ~= false then
+            expectedConcentricRings = expectedConcentricRings + 1
         end
     end
-    assert(expectedSpiral > 0, "home spiral must have on-chart points")
-    assert(circleCount >= expectedSpiral,
-        "drawMinimap must plot spiral points (circleCount="
-            .. circleCount .. " expectedSpiral=" .. expectedSpiral .. ")")
+    assert(expectedConcentricRings > 0, "home galaxy must have concentric rings on chart")
+    assert(circleCount >= expectedConcentricRings,
+        "drawMinimap must draw concentric ring circles (circleCount="
+            .. circleCount .. " expectedConcentricRings=" .. expectedConcentricRings .. ")")
 
     for _, c in ipairs(colors) do
         local isBlueRing = math.abs(c[1] - 0.3) < 1e-6

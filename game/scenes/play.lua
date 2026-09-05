@@ -965,7 +965,6 @@ function M.new(options)
         galaxyPlain    = "assets/effects/minimap_galaxy_plain.png",
         checkpointStar = "assets/effects/minimap_checkpoint_star.png",
         checkpointArrow= "assets/effects/minimap_checkpoint_arrow.png",
-        spiralStar     = "assets/effects/minimap_spiral_star.png",
         orbitRing      = "assets/effects/minimap_orbit_ring.png",
         galaxyRing     = "assets/effects/minimap_galaxy_ring.png",
     })
@@ -2278,7 +2277,7 @@ function M:drawMinimap()
         love.graphics.setColor(0.35, 0.55, 0.8, 1)
         love.graphics.circle("line", cx, cy, size / 2)
     end
-    -- Rings: galaxy rings and orbit rings (sprites drawn per ring type)
+    -- Rings: galaxy rings, orbit rings, and concentric rings (item 13)
     for _, ring in ipairs(view.rings or {}) do
         if ring.kind == "orbit" then
             love.graphics.setColor(0.85, 0.7, 0.25, 0.55)
@@ -2290,6 +2289,11 @@ function M:drawMinimap()
             else
                 love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
             end
+        elseif ring.kind == "concentricRing" then
+            if ring.inside ~= false then
+                love.graphics.setColor(0.9, 0.75, 0.3, 0.4)
+                love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
+            end
         elseif ring.inside ~= false then
             local ringImg = mm.galaxyRing
             love.graphics.setColor(M.galaxyChartLineColor(ring.id))
@@ -2297,16 +2301,6 @@ function M:drawMinimap()
                 drawMinimapSprite(ringImg, cx + ring.x, cy + ring.y, ring.radius * 2)
             else
                 love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
-            end
-        end
-    end
-    -- Spiral-arm points (computed by minimap.view). Same gold as the rings.
-    for _, point in ipairs(view.spiral or {}) do
-        if point.inside ~= false then
-            love.graphics.setColor(M.galaxyChartLineColor(view.spiralGalaxyId))
-            local spiralImg = mm.spiralStar
-            if not drawMinimapSprite(spiralImg, cx + point.x, cy + point.y, 3) then
-                love.graphics.circle("fill", cx + point.x, cy + point.y, 1.2)
             end
         end
     end
