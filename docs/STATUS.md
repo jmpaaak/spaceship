@@ -1,16 +1,16 @@
 ## Current Status
 
-2026-09-05 — INBOX (12) PixelPlanets 배선 — play.lua에서 pp_<type> 스프라이트 사용
+2026-09-05 — INBOX (12) PixelPlanets 배선 2/n — hub/shop도 pp_<starType> 사용 + MIT 크레딧
 
-- `game/scenes/play.lua`: `ppPlanetImages` (6종) 로딩 추가. 행성 draw 루프에서 `planet.galaxyStarType` → `pp_<type>` 스프라이트 선택. hub/shop은 기존 전용 스프라이트 우선, 그 외 regular 행성은 PixelPlanets 스프라이트 사용.
-- `game/scenes/play.lua`: `M.planetImagePathForPlanet(planet)` 헬퍼 함수 노출 — 테스트용 path 해석 로직.
-- `game/scenes/play.lua`: hue 틴트를 약하게 조정 (baseR*0.35+0.65) — PixelPlanets 팔레트가 보이도록.
-- `game/self_test.lua`: 배선 검증 테스트 7개 추가 (ice/lava/bare→pp_<type>, hub→planet_hub, shop→planet_shop, 빈 starType→planet_generic, 함수 노출).
+- `game/scenes/play.lua`: `planetImagePathForPlanet` — hub/shop 행성도 `galaxyStarType`이 있으면 `pp_<starType>.png`를 우선 사용, 없으면 기존 `planet_hub.png`/`planet_shop.png` 폴백.
+- `game/scenes/play.lua`: draw 루프도 동일하게 변경 — hub/shop에서 pp 스프라이트 우선, 전용 스프라이트 폴백.
+- `game/self_test.lua`: hub+starType→pp, hub-only→planet_hub, shop+starType→pp, shop-only→planet_shop 테스트 4개로 확장.
+- `README.md`: Deep-Fold/PixelPlanets MIT 크레딧 추가 (Third-party credits 섹션).
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (12) 남은 조각: 은하 내 행성 id로 회전 프레임/반지름 변주, 같은 은하 동일 타입/팔레트 확인, hub/shop에도 pp_<starType> 적용 시도.
+- INBOX (12) 남은 조각: 은하 내 행성 id로 회전 프레임/반지름 변주, 같은 은하 동일 타입/팔레트 확인.
 
 ---
 

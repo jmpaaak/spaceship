@@ -29,6 +29,11 @@ make verify LOVE=/Users/jm/.local/bin/love
 
 이 프로젝트는 [`jmpaaak/love2d-game-skeleton`](https://github.com/jmpaaak/love2d-game-skeleton)에서 생성되었습니다.
 
+## Third-party credits
+
+- **PixelPlanets** (planet sprites style reference) — [Deep-Fold / Timur310](https://github.com/Timur310/PixelPlanets), MIT License.
+  Star sprites from the PixelPlanets pack are used under MIT. Planet sprites are PIL-generated in the same visual style.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

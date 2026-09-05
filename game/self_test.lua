@@ -7260,13 +7260,21 @@ function M.run()
         assert(resolve({ galaxyStarType = "bare" }) == "assets/planet/pp_bare.png",
             "regular bare planet must resolve to pp_bare.png")
 
-        -- Hub planet → planet_hub.png (takes priority over starType)
-        assert(resolve({ hub = true, galaxyStarType = "gas" }) == "assets/planet/planet_hub.png",
-            "hub planet must resolve to planet_hub.png regardless of starType")
+        -- Hub planet with starType → pp_<starType> (starType takes priority over dedicated hub sprite)
+        assert(resolve({ hub = true, galaxyStarType = "gas" }) == "assets/planet/pp_gas.png",
+            "hub planet with starType must resolve to pp_<starType>.png")
 
-        -- Shop planet → planet_shop.png (takes priority over starType)
-        assert(resolve({ isShop = true, galaxyStarType = "dry" }) == "assets/planet/planet_shop.png",
-            "shop planet must resolve to planet_shop.png regardless of starType")
+        -- Hub planet without starType → planet_hub.png fallback
+        assert(resolve({ hub = true }) == "assets/planet/planet_hub.png",
+            "hub planet without starType must fallback to planet_hub.png")
+
+        -- Shop planet with starType → pp_<starType> (starType takes priority over dedicated shop sprite)
+        assert(resolve({ isShop = true, galaxyStarType = "dry" }) == "assets/planet/pp_dry.png",
+            "shop planet with starType must resolve to pp_<starType>.png")
+
+        -- Shop planet without starType → planet_shop.png fallback
+        assert(resolve({ isShop = true }) == "assets/planet/planet_shop.png",
+            "shop planet without starType must fallback to planet_shop.png")
 
         -- Planet without starType → planet_generic.png fallback
         assert(resolve({}) == "assets/planet/planet_generic.png",

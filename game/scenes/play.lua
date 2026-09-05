@@ -789,9 +789,17 @@ M.loadSprite = loadSprite
 -- Used by self_test to verify wiring without requiring love.graphics.
 function M.planetImagePathForPlanet(planet)
     local ppTypes = { ice = true, lava = true, dry = true, gas = true, earth = true, bare = true }
+    -- Hub and shop planets use pp_<starType> when their galaxy has a known starType,
+    -- falling back to dedicated planet_hub/planet_shop sprites otherwise.
     if planet.hub then
+        if planet.galaxyStarType and ppTypes[planet.galaxyStarType] then
+            return "assets/planet/pp_" .. planet.galaxyStarType .. ".png"
+        end
         return "assets/planet/planet_hub.png"
     elseif planet.isShop then
+        if planet.galaxyStarType and ppTypes[planet.galaxyStarType] then
+            return "assets/planet/pp_" .. planet.galaxyStarType .. ".png"
+        end
         return "assets/planet/planet_shop.png"
     elseif planet.galaxyStarType and ppTypes[planet.galaxyStarType] then
         return "assets/planet/pp_" .. planet.galaxyStarType .. ".png"
@@ -2554,10 +2562,20 @@ function M:draw()
             local planetSprite = self.planetImage
             -- PixelPlanets per-starType sprite wiring (INBOX 12)
             local ppImages = self.ppPlanetImages or {}
-            if planet.hub and self.hubPlanetImage then
-                planetSprite = self.hubPlanetImage
-            elseif planet.isShop and self.shopPlanetImage then
-                planetSprite = self.shopPlanetImage
+            if planet.hub then
+                -- Prefer pp_<starType> for hub; fall back to dedicated hubPlanetImage
+                if planet.galaxyStarType and ppImages[planet.galaxyStarType] then
+                    planetSprite = ppImages[planet.galaxyStarType]
+                elseif self.hubPlanetImage then
+                    planetSprite = self.hubPlanetImage
+                end
+            elseif planet.isShop then
+                -- Prefer pp_<starType> for shop; fall back to dedicated shopPlanetImage
+                if planet.galaxyStarType and ppImages[planet.galaxyStarType] then
+                    planetSprite = ppImages[planet.galaxyStarType]
+                elseif self.shopPlanetImage then
+                    planetSprite = self.shopPlanetImage
+                end
             elseif planet.galaxyStarType and ppImages[planet.galaxyStarType] then
                 planetSprite = ppImages[planet.galaxyStarType]
             end
