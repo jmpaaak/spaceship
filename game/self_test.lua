@@ -32,6 +32,20 @@ local function testJoystick()
     jdx, jdy, jmag = joystick.vector(0, 0, 0, halfRadius)
     assert(jmag > 0 and jmag < 1, "a drag between deadzone and maxRadius must interpolate strictly between 0 and 1")
 
+    -- Mobile-UI sub-item (3): joystick constants for mobile-friendly sizing.
+    assert(joystick.deadzone >= 28,
+        "deadzone must be >= 28px for touchscreen finger imprecision: " .. tostring(joystick.deadzone))
+    assert(joystick.visualRadius >= 72,
+        "visualRadius must be >= 72px for mobile thumb sizing: " .. tostring(joystick.visualRadius))
+    assert(joystick.visualKnobRadius >= 18,
+        "visualKnobRadius must be >= 18px for mobile thumb sizing: " .. tostring(joystick.visualKnobRadius))
+    assert(joystick.anchorX and joystick.anchorX > 0 and joystick.anchorX < 360,
+        "anchorX must be in left half of 720px canvas: " .. tostring(joystick.anchorX))
+    assert(joystick.anchorY and joystick.anchorY > 960,
+        "anchorY must be in bottom quarter of 1280px canvas for thumb reach: " .. tostring(joystick.anchorY))
+    assert(joystick.touchZoneRadius and joystick.touchZoneRadius >= 100,
+        "touchZoneRadius must be >= 100px for easy thumb target: " .. tostring(joystick.touchZoneRadius))
+
     -- A dragged touch (originX/originY set away from the current x/y) must
     -- move the ship diagonally: horizontal speed on ship.x same as before,
     -- plus a new vertical maneuvering offset (self.verticalOffset) applied

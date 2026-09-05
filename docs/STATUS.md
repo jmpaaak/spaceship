@@ -1,16 +1,21 @@
 ## Current Status
 
-2026-09-05 — 모바일 UI 전체 점검 (2): 미니맵 마커 반경 1.5배 확대.
+2026-09-05 — 모바일 UI 전체 점검 (3): 조이스틱 크기 + 위치 모바일 최적화.
 
-- `game/minimap.lua`:
-  - 모든 마커 반경(`markerSunRadius`, `markerGalaxyHomeRadius`, `markerEarthRadius` 등) ×1.5 스케일.
-  - 예: `markerSunRadius` 10.4→15.6, `markerEarthRadius` 8→12, `markerPlayerLineRadius` 9.6→14.4 등.
-- `game/self_test.lua`: 8개 마커 반경이 1.5× 이상인지 어설션 추가.
+- `game/joystick.lua`:
+  - `deadzone` 24→28px (터치 정밀도 보정).
+  - `visualRadius` 56→72px, `visualKnobRadius` 12→18px (엄지 친화 크기).
+  - 고정 앵커 추가: `anchorX=130`, `anchorY=1120` (화면 하단 좌측), `touchZoneRadius=120`.
+- `game/scenes/play.lua`:
+  - `joystickOrigin()` 헬퍼: 앵커 zone 내 터치 시작 시 origin을 앵커로 스냅.
+  - ascending/returning `touchpressed`에서 `joystickOrigin` 적용.
+  - `drawJoystickStick()`: 터치 없을 때 앵커 위치에 반투명 고스트 패드 표시.
+- `game/self_test.lua`: 조이스틱 모바일 상수 어설션 6개 추가.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- 모바일 UI 전체 점검 (3): 조이스틱 크기 + 위치 모바일 최적화.
+- 모바일 UI 전체 점검 (4): 상점(settlement) 패널 터치 영역 + 폰트 크기 조정.
 
 ---
 

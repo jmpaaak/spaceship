@@ -1944,6 +1944,18 @@ function M:keypressed(key)
     end
 end
 
+-- Mobile-UI sub-item (3): when a touch starts inside the fixed joystick
+-- anchor zone, snap its origin to the anchor so the pad stays in a
+-- predictable bottom-left position.
+local function joystickOrigin(x, y)
+    local dx = x - joystick.anchorX
+    local dy = y - joystick.anchorY
+    if dx * dx + dy * dy <= joystick.touchZoneRadius * joystick.touchZoneRadius then
+        return joystick.anchorX, joystick.anchorY
+    end
+    return x, y
+end
+
 function M:touchpressed(id, x, y)
     if self.shopModal then
         local btnY = 220
@@ -1964,7 +1976,8 @@ function M:touchpressed(id, x, y)
             expedition.beginReturn(self.expedition)
             return
         end
-        self.touches[id] = { x = x, y = y, originX = x, originY = y }
+        local ox, oy = joystickOrigin(x, y)
+        self.touches[id] = { x = x, y = y, originX = ox, originY = oy }
         return
     end
     if self.expedition.phase == "returning" then
@@ -1972,7 +1985,8 @@ function M:touchpressed(id, x, y)
         -- has steering controls; slot-spin zone removed.
         local inControlRow = y >= returnControls.top and y <= returnControls.bottom
         if inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
-            self.touches[id] = { x = x, y = y, originX = x, originY = y }
+            local ox, oy = joystickOrigin(x, y)
+            self.touches[id] = { x = x, y = y, originX = ox, originY = oy }
         end
         return
     end
@@ -2031,9 +2045,23 @@ end
 
 function M:drawJoystickStick()
     local ox, oy, kx, ky = self:joystickKnob()
-    if not ox then return end
     local radius = joystick.visualRadius
     local knob = joystick.visualKnobRadius
+    -- Mobile-UI sub-item (3): when the player is NOT dragging, show a
+    -- faint ghost pad at the fixed anchor so they know where to put their
+    -- thumb. Only in ascending/returning where steering exists.
+    if not ox and (self.expedition.phase == "ascending" or self.expedition.phase == "returning") then
+        love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha * 0.6)
+        if not drawShopIconSprite(self.joystickPadImage, joystick.anchorX, joystick.anchorY, radius * 2) then
+            love.graphics.circle("fill", joystick.anchorX, joystick.anchorY, radius)
+        end
+        love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha * 0.5)
+        if not self.joystickPadImage then
+            love.graphics.circle("line", joystick.anchorX, joystick.anchorY, radius)
+        end
+        return
+    end
+    if not ox then return end
     -- Group 6 wiring: joystick_pad.png as the pad background, joystick_knob.png as the cap.
     -- Falls back to filled/outlined circles when images are nil.
     love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha)

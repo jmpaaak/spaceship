@@ -16,7 +16,9 @@ local M = {}
 -- dragged" (magnitude 0) so a simple tap-and-hold can fall back to the
 -- legacy binary steering behavior instead of jittering on tiny finger
 -- movement.
-M.deadzone = 24
+-- Mobile-UI sub-item (3): deadzone widened from 24→28 for touchscreen
+-- finger imprecision (a light tap-hold shouldn't jitter the ship).
+M.deadzone = 28
 
 -- Drag distance (canvas px) at which the joystick reads full magnitude
 -- (1.0). Input reach stays large so a finger/mouse can steer without
@@ -26,8 +28,19 @@ M.maxRadius = 160
 -- On-screen stick size/alpha. The old disc used maxRadius (160px after ×4)
 -- at ~0.35/0.9 alpha and read as a huge opaque overlay on the 720x1280
 -- canvas. Keep input math on maxRadius; only the draw uses these.
-M.visualRadius = 56
-M.visualKnobRadius = 12
+-- Mobile-UI sub-item (3): visualRadius 56→72, visualKnobRadius 12→18 for
+-- mobile thumb-friendly sizing.
+M.visualRadius = 72
+M.visualKnobRadius = 18
+
+-- Mobile-UI sub-item (3): fixed bottom-left anchor for the joystick.
+-- The joystick pad is always visible at this position during
+-- ascending/returning phases so the player knows where to place their
+-- thumb. Touch origin snaps to this anchor when touch starts inside the
+-- touchZone circle; touches outside the zone still steer freely (floating).
+M.anchorX = 130          -- canvas px from left
+M.anchorY = 1280 - 160   -- canvas px from top (1120, well within thumb reach)
+M.touchZoneRadius = 120  -- radius around anchor that snaps to fixed origin
 M.visualFillAlpha = 0.12
 M.visualLineAlpha = 0.28
 M.visualKnobAlpha = 0.4
