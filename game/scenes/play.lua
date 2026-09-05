@@ -147,6 +147,24 @@ M.earthCenterX = 0
 M.earthCenterY = 75
 M.earthVisualRadius = 58
 M.earthSettleRadius = 58 + 30  -- 88
+-- INBOX (5)(a): atmospheric reentry starts outside settle range.
+M.earthReentryRadius = 58 * 3  -- 174
+M.reentryShakeMax = 6
+
+function M.reentryDrawOffsetX(time, magnitude)
+    return math.sin(time * 60) * (magnitude or 0)
+end
+
+function M.reentryShakeFromDistance(dist)
+    local radius = M.earthReentryRadius
+    if dist >= radius then
+        return 0
+    end
+    if dist <= 0 then
+        return M.reentryShakeMax
+    end
+    return M.reentryShakeMax * (1 - dist / radius)
+end
 
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
 -- already accepts any tap on the internal canvas regardless of x/y (see the
@@ -1029,6 +1047,7 @@ function M.new(options)
         shipPunch = 0,
         shipShake = 0,
         shipShakeMagnitude = sampleTierShakeMultiplier("common"),
+        reentryShake = 0,
         touches = {},
         verticalOffset = 0,
         rcsCooldown = 0,
@@ -1645,8 +1664,12 @@ function M:update(dt)
     if self.expedition.phase == "ascending" then
         local dx = self.ship.x - M.earthCenterX
         local dy = self.ship.y - M.earthCenterY
-        if dx * dx + dy * dy <= M.earthSettleRadius * M.earthSettleRadius then
+        local earthDistSq = dx * dx + dy * dy
+        local earthDist = math.sqrt(earthDistSq)
+        self.reentryShake = M.reentryShakeFromDistance(earthDist)
+        if earthDistSq <= M.earthSettleRadius * M.earthSettleRadius then
             expedition.settle(self.expedition)
+            self.reentryShake = 0
         end
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
@@ -2569,6 +2592,10 @@ function M:draw()
         local shakeStrength = (self.shipShake / shipShakeDuration) * 3 * self.shipShakeMagnitude
         shakeX = (math.random() * 2 - 1) * shakeStrength
         shakeY = (math.random() * 2 - 1) * shakeStrength
+    end
+    -- INBOX (5)(a): persistent reentry x-offset, independent of shipShake.
+    if (self.reentryShake or 0) > 0 then
+        shakeX = shakeX + M.reentryDrawOffsetX(self.time, self.reentryShake)
     end
     love.graphics.translate(shipScreenX + shakeX, shipScreenY + shakeY)
     love.graphics.rotate(self.ship.angle + math.pi / 2)

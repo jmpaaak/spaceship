@@ -1,6 +1,20 @@
 ## Current Status
 
-2026-09-05 — INBOX (4) 행성 표본 채집 궤도 진입 시 타격감 이펙트
+2026-09-05 — INBOX (5)(a) 지구 착륙 진입 지속 흔들림
+
+- `game/scenes/play.lua`: 지구 거리 < `earthVisualRadius * 3`이면 `self.reentryShake`를 거리 반비례로 갱신 (멀면 약, 가까울수록 강). 기존 `shipShake`와 별도.
+- `game/scenes/play.lua`: 함선 draw x 오프셋에 `math.sin(time*60) * reentryShake` 적용.
+- `game/scenes/play.lua`: Earth settle 트리거 시 `reentryShake = 0`.
+- `game/self_test.lua`: `testReentryShake` — 원거리 0, 진입 구간 >0, 근접 시 증가, settle 시 0, `shipShake` 독립.
+- `make verify` GREEN.
+
+## Next Slice
+
+- INBOX (5)(b) 착륙 직전 슬로우모션 (거리 < earthRadius * 1.5, 0.6초 dt 0.5배)
+
+---
+
+## 2026-09-05 — INBOX (4) 행성 표본 채집 궤도 진입 시 타격감 이펙트
 
 - `game/scenes/play.lua`: 표본 수집 반경 진입 시 `self.timeSlip = { timer = 0.4, scale = 0.3 }`를 적용하여 0.4초간 게임 배속 0.3의 타임슬립 효과 추가.
 - `game/scenes/play.lua`: 기존 충돌에만 쓰이던 `self.shipShake`를 수집 시에도 0.25초간 발동시키고, 강도(`shipShakeMagnitude`)를 표본 등급(common=0.6, rare=1.0, epic=1.4)에 따라 설정.
@@ -8,10 +22,6 @@
 - `game/self_test.lua`: 롤업 애니메이션 테스트가 타임슬립에 의해 영향받지 않도록 `floatingTextScene.timeSlip = nil` 추가.
 - `docs/feedback/INBOX.md`: 항목 (4) 타격감 이펙트를 `## 처리 대기`에서 `## 처리 완료`로 이동.
 - `make verify` GREEN.
-
-## Next Slice
-
-- INBOX (5) 지구 착륙 시 진입 이펙트 — 길게 흔들리는 대기권 진입 느낌
 
 ---
 

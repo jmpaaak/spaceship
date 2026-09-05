@@ -4989,6 +4989,66 @@ local function testItem8HubProximitySettle()
     world.nearbyPlanets = savedNearby
 end
 
+-- INBOX (5)(a): persistent atmospheric reentry shake while approaching Earth.
+-- Kept outside M.run() so the extra locals do not push M.run() over Lua's
+-- 200-local limit.
+local function testReentryShake()
+    local store = { load = function() return 0 end, save = function() return false end }
+    local savedNP = world.nearbyPlanets
+    local savedND = world.nearbyDebris
+    world.nearbyPlanets = function() return {} end
+    world.nearbyDebris = function() return {} end
+
+    local scene = PlayScene.new({ bestAltitudeStore = store })
+    scene.expedition.phase = "ascending"
+    scene.ship.vx, scene.ship.vy = 0, 0
+    scene.ship.x = PlayScene.earthCenterX
+    scene.ship.y = PlayScene.earthCenterY - 500
+    scene:update(0)
+    assert((scene.reentryShake or 0) == 0,
+        "far from Earth must not set reentryShake, got " .. tostring(scene.reentryShake))
+
+    local reentryR = PlayScene.earthVisualRadius * 3
+    scene.ship.y = PlayScene.earthCenterY - (reentryR - 1)
+    scene:update(0)
+    local farShake = scene.reentryShake or 0
+    assert(farShake > 0,
+        "ship distance < earthRadius*3 must start reentryShake")
+
+    scene.ship.y = PlayScene.earthCenterY - (PlayScene.earthSettleRadius + 1)
+    scene:update(0)
+    local nearShake = scene.reentryShake or 0
+    assert(nearShake > farShake,
+        "reentryShake must grow as Earth distance shrinks")
+
+    scene.ship.x = PlayScene.earthCenterX
+    scene.ship.y = PlayScene.earthCenterY
+    scene:update(0)
+    assert(scene.expedition.phase == "settlement",
+        "landing on Earth must settle, got " .. tostring(scene.expedition.phase))
+    assert((scene.reentryShake or 0) == 0,
+        "settle must reset reentryShake to 0")
+
+    assert(type(PlayScene.reentryDrawOffsetX) == "function",
+        "reentry draw offset helper must be exported")
+    local t, mag = 0.1, 4
+    assert(math.abs(PlayScene.reentryDrawOffsetX(t, mag) - math.sin(t * 60) * mag) < 1e-9,
+        "draw x offset must be sin(time*60)*reentryShake")
+
+    local scene2 = PlayScene.new({ bestAltitudeStore = store })
+    scene2.expedition.phase = "ascending"
+    scene2.shipShake = 0.25
+    scene2.ship.vx, scene2.ship.vy = 0, 0
+    scene2.ship.x = PlayScene.earthCenterX
+    scene2.ship.y = PlayScene.earthCenterY - (reentryR - 1)
+    scene2:update(0)
+    assert((scene2.reentryShake or 0) > 0, "reentryShake must be independent of shipShake")
+    assert(scene2.shipShake > 0, "reentryShake must not replace shipShake")
+
+    world.nearbyPlanets = savedNP
+    world.nearbyDebris = savedND
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 720 and viewport.height == 1280)
@@ -6608,6 +6668,7 @@ function M.run()
     testHudIconRegenSlice()
     testRgbBrokenAssetsUnwired()
     testItem8HubProximitySettle()
+    testReentryShake()
     runGearTests()
 
     -- ComfyUI HUD wiring (group 1): drawHudSpriteOrPoly is exported and
