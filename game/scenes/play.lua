@@ -159,7 +159,12 @@ M.launchTouchArea = launchTouchArea
 -- the same small font inside a background box extended all the way to
 -- the canvas bottom (viewport.height) so the Earth disc can no longer
 -- show through below the box.
-M.launchHudHeight = 32
+-- Mobile-UI sub-item (1): HUD font enlarged from 8px to 14px; every HUD
+-- band height scales proportionally so text lines never overlap and the
+-- minimap sits below the taller band.
+M.hudFontSize = 14
+M.hudLineStep = 18  -- vertical px between successive HUD text lines
+M.launchHudHeight = 58
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
 -- at the world origin, radius 58) tops out at y=202, two pixels above the
@@ -414,6 +419,7 @@ M.drawPixelStar = drawPixelStar
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
 M.hudPrimaryStatusGap = 6
+M.hudGalaxyShift = 16  -- extra height when galaxy name is shown (was 10)
 
 -- docs/feedback/INBOX.md UI/HUD item 5: the returning-phase slot-odds line
 -- (C%/P%/S%/AVG$ above the minimap) was removed when item-15(a) abolished
@@ -442,15 +448,15 @@ function M.hudHeight(phase, hud, galaxyShift)
         return M.launchHudHeight + galaxyShift
     end
     if hud.returnProgress then
-        return 70 + M.hudPrimaryStatusGap + galaxyShift
+        return 94 + M.hudPrimaryStatusGap + galaxyShift
     end
     if hud.samples then
-        return 46 + M.hudPrimaryStatusGap + galaxyShift
+        return 58 + M.hudPrimaryStatusGap + galaxyShift
     end
     if hud.best then
-        return 46 + galaxyShift
+        return 58 + galaxyShift
     end
-    return 34 + galaxyShift
+    return 40 + galaxyShift
 end
 
 local function planetColor(hue)
@@ -2053,7 +2059,7 @@ function M:drawMinimap()
         return
     end
     local hud = self:hudLines()
-    local galaxyShift = hud.galaxy and 10 or 0
+    local galaxyShift = hud.galaxy and M.hudGalaxyShift or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
     local view = minimap.view(self.ship.x, self.ship.y)
     local size = minimap.size
@@ -2558,7 +2564,7 @@ function M:draw()
 
     local hud = self:hudLines()
     local isLaunchHud = self.expedition.phase == "launch"
-    local galaxyShift = hud.galaxy and 10 or 0
+    local galaxyShift = hud.galaxy and M.hudGalaxyShift or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
     -- Group 8 wiring: hud_panel.png as HUD background; fallback dark rectangle.
     local shopEff = self.shopEffectImages or {}
@@ -2569,9 +2575,10 @@ function M:draw()
     end
     local previousHudFont
     if isLaunchHud then
-        self.smallFont = self.smallFont or fonts.get(8)
+        -- Mobile-UI sub-item (1): launch HUD now uses the same 14px font as
+        -- other phases (was 8px). The smallFont is kept for loadout/settlement.
         previousHudFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
+        love.graphics.setFont(fonts.get(M.hudFontSize))
     end
     love.graphics.setColor(0.7, 0.9, 1)
     local hudY = 4
@@ -2583,7 +2590,7 @@ function M:draw()
         drawHudSpriteOrPoly(hudIconsTmp.galaxy, nil,
             5 + galaxyIconSize / 2, hudY + galaxyIconSize / 2, galaxyIconSize)
         love.graphics.print(hud.galaxy, 5 + galaxyIconSize + M.hullIconGap, hudY)
-        hudY = hudY + 10
+        hudY = hudY + M.hudLineStep
         love.graphics.setColor(0.7, 0.9, 1)
     end
     -- ComfyUI HUD wiring (group 1): distance icon before distance text
@@ -2634,38 +2641,38 @@ function M:draw()
         -- separates the secondary hull/slot status from DIST/CASH.
         love.graphics.setColor(1, 0.8, 0.3)
         -- ComfyUI HUD wiring (group 1): samples icon left of sample count text
-        local samplesY = 16 + galaxyShift
+        local samplesY = 22 + galaxyShift
         local samplesIconSize = M.hullIconSize
         local samplesIconCenterX = 5 + samplesIconSize / 2
         local samplesIconCenterY = samplesY + samplesIconSize / 2
         drawHudSpriteOrPoly(hudIcons.samples, nil,
             samplesIconCenterX, samplesIconCenterY, samplesIconSize)
         love.graphics.print(hud.samples, 5 + samplesIconSize + M.hullIconGap, samplesY)
-        drawStatusWithShield(30 + M.hudPrimaryStatusGap + galaxyShift)
+        drawStatusWithShield(40 + M.hudPrimaryStatusGap + galaxyShift)
         if hud.earth then
             love.graphics.setColor(0.4, 0.85, 1)
             -- ComfyUI HUD wiring (group 1): earth + return icons
-            local earthY = 43 + M.hudPrimaryStatusGap + galaxyShift
+            local earthY = 58 + M.hudPrimaryStatusGap + galaxyShift
             local earthIconSize = M.hullIconSize
             drawHudSpriteOrPoly(hudIcons.earth, nil,
                 5 + earthIconSize / 2, earthY + earthIconSize / 2, earthIconSize)
             love.graphics.print(hud.earth, 5 + earthIconSize + M.hullIconGap, earthY)
-            local returnY = 55 + M.hudPrimaryStatusGap + galaxyShift
+            local returnY = 76 + M.hudPrimaryStatusGap + galaxyShift
             drawHudSpriteOrPoly(hudIcons.returnIc, nil,
                 5 + earthIconSize / 2, returnY + earthIconSize / 2, earthIconSize)
             love.graphics.print(hud.returnProgress, 5 + earthIconSize + M.hullIconGap, returnY)
         end
     elseif hud.best then
-        drawStatusWithShield((isLaunchHud and 13 or 18) + galaxyShift)
+        drawStatusWithShield(22 + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
         -- ComfyUI HUD wiring (group 1): best-altitude icon
-        local bestY = (isLaunchHud and 22 or 30) + galaxyShift
+        local bestY = 40 + galaxyShift
         local bestIconSize = M.hullIconSize
         drawHudSpriteOrPoly(hudIcons.best, nil,
             5 + bestIconSize / 2, bestY + bestIconSize / 2, bestIconSize)
         love.graphics.print(hud.best, 5 + bestIconSize + M.hullIconGap, bestY)
     else
-        drawStatusWithShield(18 + galaxyShift)
+        drawStatusWithShield(22 + galaxyShift)
     end
     if isLaunchHud then
         love.graphics.setFont(previousHudFont)

@@ -1,17 +1,19 @@
 ## Current Status
 
-2026-09-05 — 상점(settlement) 미도달 해결: Return-to-Earth 버튼 + 키보드 단축키 추가.
+2026-09-05 — 모바일 UI 전체 점검 (1): HUD 폰트 8→14px, 행 간격 확대, hudHeight 비례 증가.
 
-- 원인: 모바일에서 ascending→returning 전환을 트리거할 수단이 없었음 (fuel 메카닉 없음, 키보드 'r' 키만 존재).
-- `game/scenes/play.lua`: ascending 단계에 "↓ RETURN TO EARTH" 터치 버튼 (1190–1234, 260–460) 추가.
-  터치·키보드('r') 모두 `expedition.beginReturn()` 호출 → returning → altitude 0 → settle → settlement.
-- `game/i18n.lua`: `return_to_earth` 키 en/ko 추가.
-- `game/self_test.lua`: 터치 버튼 탭 → returning 전환, 'r' 키 → returning 전환, returning → settlement 완주 테스트 추가.
+- `game/scenes/play.lua`:
+  - `M.hudFontSize = 14` (was 8px via smallFont); launch HUD도 14px 사용.
+  - `M.hudLineStep = 18` — HUD 텍스트 행 간격 (was ~10px).
+  - `M.hudGalaxyShift = 16` — 은하 이름 표시 시 추가 높이 (was 10).
+  - `M.launchHudHeight = 58` (was 32); ascending `58`, returning `94`, fallback `40` 등 비례 증가.
+  - 모든 HUD Y좌표 (samplesY, bestY, earthY, returnY, drawStatusWithShield) 14px 폰트에 맞게 재배치.
+- `game/self_test.lua`: hudFontSize 12-14 범위, hudLineStep ≥14, hudGalaxyShift ≥14 어설션 추가.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX 다음 처리 대기 항목.
+- 모바일 UI 전체 점검 (2): 미니맵 마커 반경 1.5배 키우기.
 
 ---
 

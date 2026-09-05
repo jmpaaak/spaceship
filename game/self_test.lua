@@ -5201,7 +5201,7 @@ function M.run()
     -- in-flight slots. The hudOddsLineHeight constant that reserved 10px for
     -- it is now dead space. The returning HUD height must no longer include it.
     assert(PlayScene.hudHeight("returning", returningHud, 0)
-        == 70 + PlayScene.hudPrimaryStatusGap,
+        == 94 + PlayScene.hudPrimaryStatusGap,
         "item-15(a) follow-up: returning HUD height must not reserve dead odds-line space after in-flight slots were abolished: "
         .. tostring(PlayScene.hudHeight("returning", returningHud, 0)))
 
@@ -5214,6 +5214,13 @@ function M.run()
         "devPlaceholderFontSize must exist and be smaller than the default HUD font size")
     assert(PlayScene.devPlaceholderAlpha and PlayScene.devPlaceholderAlpha < 0.85,
         "devPlaceholderAlpha must exist and be dimmer than the previous 0.85 opacity")
+    -- Mobile-UI sub-item (1): HUD font must be 12-14px for mobile readability.
+    assert(PlayScene.hudFontSize and PlayScene.hudFontSize >= 12 and PlayScene.hudFontSize <= 14,
+        "hudFontSize must be 12-14px for mobile readability: " .. tostring(PlayScene.hudFontSize))
+    assert(PlayScene.hudLineStep and PlayScene.hudLineStep >= 14,
+        "hudLineStep must be >= 14px for mobile line spacing: " .. tostring(PlayScene.hudLineStep))
+    assert(PlayScene.hudGalaxyShift and PlayScene.hudGalaxyShift >= 14,
+        "hudGalaxyShift must be >= 14px for mobile readability: " .. tostring(PlayScene.hudGalaxyShift))
     riskScene.expedition.altitude = 250
     assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
     riskScene.expedition.phase = "settlement"
@@ -5261,7 +5268,7 @@ function M.run()
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
     assert(PlayScene.hudHeight("ascending", ascendingHud, 0)
-        == 46 + PlayScene.hudPrimaryStatusGap,
+        == 58 + PlayScene.hudPrimaryStatusGap,
         "ascending HUD band height must grow by hudPrimaryStatusGap to fit the added gap")
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
