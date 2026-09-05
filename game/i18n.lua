@@ -32,7 +32,7 @@ locales.en = {
     -- hud_status_no_slots now share the same format; hud_status_no_slots is
     -- kept as an alias for backward-compatibility with any call sites.
     hud_status = "H%d/%d %-6s",
-    hud_status_no_slots = "H%d/%d %-6s",
+    hud_status_no_slots = "H%d/%d %s",
     galaxy_home = "SOLAR SYSTEM",
     galaxy_names = {
         "Andromeda", "Whirlpool", "Triangulum", "Sombrero", "Pinwheel",
@@ -166,7 +166,7 @@ locales.ko = {
     -- hud_status_no_slots now share the same format; hud_status_no_slots is
     -- kept as an alias for backward-compatibility with any call sites.
     hud_status = "H%d/%d %-6s",
-    hud_status_no_slots = "H%d/%d %-6s",
+    hud_status_no_slots = "H%d/%d %s",
     galaxy_home = "태양계",
     galaxy_names = {
         "안드로메다", "소용돌이", "삼각형자리", "솜브레로", "바람개비",
