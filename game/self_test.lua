@@ -4964,6 +4964,90 @@ local function testSlotSpinCostAndMissPaysZero()
             .. tostring(winScene.expedition.money))
 end
 
+-- INBOX (15)(c): tools/slot-editor web UI + runtime data/slot_config.json.
+-- Missing file must keep current defaults (spin 10, miss 0, pair 15,
+-- triple 40, STAR×3 75, solar/fringe/void multipliers 1/1.5/2).
+local function testSlotEditorWebUi()
+    local html = love.filesystem.read("tools/slot-editor/index.html")
+    local css = love.filesystem.read("tools/slot-editor/editor.css")
+    local js = love.filesystem.read("tools/slot-editor/editor.js")
+    assert(html, "INBOX 15(c): tools/slot-editor/index.html must exist")
+    assert(css, "INBOX 15(c): tools/slot-editor/editor.css must exist")
+    assert(js, "INBOX 15(c): tools/slot-editor/editor.js must exist")
+    assert(html:find("Slot Editor", 1, true),
+        "slot-editor HTML must title the Slot Editor")
+    assert(js:find("spinCost", 1, true),
+        "slot-editor JS must edit spinCost")
+    assert(js:find("symbols", 1, true),
+        "slot-editor JS must edit symbols")
+    assert(js:find("payouts", 1, true),
+        "slot-editor JS must edit payouts")
+    assert(js:find("\"solar\"", 1, true) and js:find("\"fringe\"", 1, true)
+        and js:find("\"void\"", 1, true),
+        "slot-editor JS must edit solar/fringe/void profiles")
+
+    local contents = love.filesystem.read("data/slot_config.json")
+    assert(contents, "INBOX 15(c): data/slot_config.json must exist")
+    local doc = json.decode(contents)
+    assert(doc.spinCost == 10, "bundled spinCost default is 10")
+    assert(doc.payouts and doc.payouts.miss == 0, "bundled miss payout is 0")
+    assert(doc.payouts.pair == 15 and doc.payouts.triple == 40
+        and doc.payouts.jackpot == 75,
+        "bundled pair/triple/jackpot stay 15/40/75")
+    assert(type(doc.symbols) == "table" and #doc.symbols >= 3,
+        "bundled config must list slot symbols")
+    assert(doc.profiles and doc.profiles.solar and doc.profiles.fringe
+        and doc.profiles.void,
+        "bundled config must include solar/fringe/void profiles")
+
+    assert(type(expedition.loadSlotConfig) == "function",
+        "INBOX 15(c): runtime must expose loadSlotConfig")
+    assert(expedition.slotConfigPath == "data/slot_config.json",
+        "runtime path must be data/slot_config.json")
+
+    local loaded, loadErr = expedition.loadSlotConfig()
+    assert(loaded, "bundled slot_config.json must load: " .. tostring(loadErr))
+    assert(expedition.slotSpinCost == 10)
+    assert(expedition.slotReward({ "COMET", "PLANET", "STAR" }) == 0)
+    assert(expedition.slotReward({ "STAR", "STAR", "STAR" }) == 75)
+
+    local custom = [[{
+      "schemaVersion": 1,
+      "spinCost": 25,
+      "symbols": [
+        {"id": "COMET", "name": "Comet", "weight": 5},
+        {"id": "PLANET", "name": "Planet", "weight": 4},
+        {"id": "STAR", "name": "Star", "weight": 1}
+      ],
+      "payouts": {"miss": 0, "pair": 20, "triple": 50, "jackpot": 100},
+      "profiles": {
+        "solar":  {"weights": {"COMET": 5, "PLANET": 4, "STAR": 1}, "multipliers": {"tripleSTAR": 1.0}},
+        "fringe": {"weights": {"COMET": 4, "PLANET": 4, "STAR": 2}, "multipliers": {"tripleSTAR": 1.5}},
+        "void":   {"weights": {"COMET": 3, "PLANET": 4, "STAR": 3}, "multipliers": {"tripleSTAR": 2.0}}
+      }
+    }]]
+    local applied, applyErr = expedition.loadSlotConfig({
+        read = function() return custom end,
+    })
+    assert(applied, "custom slot config must apply: " .. tostring(applyErr))
+    assert(expedition.slotSpinCost == 25,
+        "custom spinCost must apply, got " .. tostring(expedition.slotSpinCost))
+    assert(expedition.slotReward({ "COMET", "COMET", "PLANET" }) == 20,
+        "custom pair payout must apply")
+    assert(expedition.slotReward({ "STAR", "STAR", "STAR" }) == 100,
+        "custom jackpot must apply")
+
+    local missingOk = expedition.loadSlotConfig({
+        read = function() return nil end,
+    })
+    assert(not missingOk, "missing slot_config.json must not apply")
+    assert(expedition.slotSpinCost == 10,
+        "missing file restores default spinCost 10, got "
+            .. tostring(expedition.slotSpinCost))
+    assert(expedition.slotReward({ "STAR", "STAR", "STAR" }) == 75,
+        "missing file restores default jackpot 75")
+end
+
 -- Forward declaration: testStellarSynergies is defined after runGearTests
 -- (where it is called) to keep related logic together; forward-declaring the
 -- local here satisfies Lua 5.1 scoping while keeping the 60-upvalue limit
@@ -5026,6 +5110,7 @@ local function runGearTests()
     testGearEarthSlotEngineSlotLuckWiring()
     testEarthSlotProfileRewardVariation()
     testSlotSpinCostAndMissPaysZero()
+    testSlotEditorWebUi()
     testItem15DeadSlotConstantsRemoved()
     testStellarSynergies()
     testExpeditionStellarSynergies()

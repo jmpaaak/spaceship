@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "spinCost": 10,
+  "symbols": [
+    {"id": "COMET", "name": "Comet", "weight": 5},
+    {"id": "PLANET", "name": "Planet", "weight": 4},
+    {"id": "STAR", "name": "Star", "weight": 1}
+  ],
+  "payouts": {
+    "miss": 0,
+    "pair": 15,
+    "triple": 40,
+    "jackpot": 75
+  },
+  "profiles": {
+    "solar":  {"weights": {"COMET": 5, "PLANET": 4, "STAR": 1}, "multipliers": {"tripleSTAR": 1.0}},
+    "fringe": {"weights": {"COMET": 4, "PLANET": 4, "STAR": 2}, "multipliers": {"tripleSTAR": 1.5}},
+    "void":   {"weights": {"COMET": 3, "PLANET": 4, "STAR": 3}, "multipliers": {"tripleSTAR": 2.0}}
+  }
+}

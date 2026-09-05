@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slot Editor — Spaceship</title>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+<header>
+  <h1>Slot Editor</h1>
+  <p class="subtitle">Earth shop slot machine configuration editor — data/slot_config.json</p>
+</header>
+
+<section class="toolbar">
+  <div class="toolbar-group">
+    <label class="file-btn">
+      Open slot_config.json
+      <input type="file" id="openConfigInput" accept=".json" hidden>
+    </label>
+    <button id="openFsaBtn" title="Chrome/Edge only: pick a file and enable direct save-to-disk">Open + enable direct save</button>
+  </div>
+  <div class="toolbar-group">
+    <button id="saveFsaBtn" disabled>Save to disk</button>
+    <button id="downloadBtn" disabled>Download JSON</button>
+  </div>
+</section>
+
+<section id="statusBar" class="status"></section>
+
+<main>
+  <aside id="formPanel" class="form-panel">
+    <h2 id="formTitle">Edit Slot Config</h2>
+    <form id="configForm">
+      <label>Spin Cost
+        <input type="number" id="fieldSpinCost" required min="0">
+      </label>
+
+      <fieldset>
+        <legend>Symbols (Reel Weights)</legend>
+        <div id="symbolsList"></div>
+        <button type="button" id="addSymbolBtn">+ Add Symbol</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Payouts</legend>
+        <label>Miss
+          <input type="number" id="fieldPayoutMiss" required min="0">
+        </label>
+        <label>Pair
+          <input type="number" id="fieldPayoutPair" required min="0">
+        </label>
+        <label>Triple
+          <input type="number" id="fieldPayoutTriple" required min="0">
+        </label>
+        <label>Jackpot
+          <input type="number" id="fieldPayoutJackpot" required min="0">
+        </label>
+      </fieldset>
+      
+      <fieldset>
+        <legend>Profiles (solar/fringe/void)</legend>
+        <!-- For brevity, hardcode the three profiles as required by the test -->
+        <label>Solar Jackpot Multiplier
+          <input type="number" id="fieldSolarJackpot" step="0.1" required min="0">
+        </label>
+        <label>Fringe Jackpot Multiplier
+          <input type="number" id="fieldFringeJackpot" step="0.1" required min="0">
+        </label>
+        <label>Void Jackpot Multiplier
+          <input type="number" id="fieldVoidJackpot" step="0.1" required min="0">
+        </label>
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="submit" id="saveConfigBtn">Apply Changes</button>
+      </div>
+      <div id="formError" class="form-error"></div>
+    </form>
+  </aside>
+</main>
+
+<script src="editor.js"></script>
+</body>
+</html>

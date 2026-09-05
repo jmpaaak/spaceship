@@ -1,0 +1,10 @@
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #111;
+  color: #eee;
+}
+.hidden {
+  display: none !important;
+}

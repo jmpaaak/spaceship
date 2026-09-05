@@ -1344,3 +1344,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 
 - Fixed test failure from previous cycle (`fix(settlement): slot row no longer overlaps shop upgrades`).
 - Preflight `make verify` now fully passes. All modified files are ready to be committed.
+
+## Archived from STATUS.md (2026-09-05 22:41)
+
+
+- INBOX (15)(b) complete: Earth shop slot now costs $10 per spin and miss pays $0.
+
+## Archived from STATUS.md (2026-09-05 22:51)
+
+## Next Slice

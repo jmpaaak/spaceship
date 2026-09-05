@@ -2,6 +2,13 @@
 
 ## 처리 대기
 
+(16) **HUD 가로 검정띠 제거 (사용자 확정, 2026-09-05):**
+  - `M:draw`가 `drawPanelSprite(shopEff.hudPanel, 0, 0, viewport.width, hudHeight)` / 폴백 `rectangle("fill", 0, 0, viewport.width, hudHeight)` 로 화면 가로 전체를 덮음. 미니맵 Y는 `hudHeight`에 묶여 있음.
+  - 변경: HUD 배경은 **왼쪽 텍스트 폭만큼**만 (대략 텍스트+아이콘+패딩, 최대 ~280px). 오른쪽 별/행성이 비치게. 미니맵은 기존처럼 HUD 아래 우측. `hudHeight()` 숫자 자체는 미니맵 앵커용으로 유지해도 됨 — **full-width fill만 금지**.
+  - `make verify` GREEN + 커밋: `fix(hud): stop drawing full-width black HUD band`
+
+## 처리 완료
+
 (15) **지구상점 슬롯 — 겹침 해소 + 리스크 + 웹에디터 (사용자 확정, 2026-09-05):**
   - 상점 슬롯이 업글/기어 오퍼와 같은 밴드에 그려져 겹침. `settlementTouchRows[3]`(slot)과 `[4]`(relaunch) 레이아웃을 분리: 슬롯은 전용 행, 결과 패널이 다른 행 텍스트를 덮지 않게.
   - 슬롯 본체 스프라이트: itch **Caz PIXEL FANTASY SLOT MACHINE** (https://cazwolf.itch.io/pixel-slot-machine, NYOP, 상업 OK) 사용자 구매 후 `assets/slot/` 에 본체+레버. 구매 전엔 기존 `slot_spin_button.png` / 심볼 3종 유지하되 겹침만 먼저 고친다. ComfyUI 재생성 금지.
@@ -9,12 +16,7 @@
   - 웹에디터: `tools/gear-editor/` 패턴 복제 → `tools/slot-editor/index.html`+css+js. 심볼 이름/가중치/배당/스핀비용/은하 프로필(solar/fringe/void) 배율을 JSON으로 편집·저장. 런타임은 `data/slot_config.json` (없으면 현재 기본값).
   - `make verify` GREEN + 커밋 순서: (a) `fix(settlement): slot row no longer overlaps shop upgrades` (b) `feat(slot): spin cost + miss pays 0` (c) `feat(tools): slot-editor web UI`
 
-(16) **HUD 가로 검정띠 제거 (사용자 확정, 2026-09-05):**
-  - `M:draw`가 `drawPanelSprite(shopEff.hudPanel, 0, 0, viewport.width, hudHeight)` / 폴백 `rectangle("fill", 0, 0, viewport.width, hudHeight)` 로 화면 가로 전체를 덮음. 미니맵 Y는 `hudHeight`에 묶여 있음.
-  - 변경: HUD 배경은 **왼쪽 텍스트 폭만큼**만 (대략 텍스트+아이콘+패딩, 최대 ~280px). 오른쪽 별/행성이 비치게. 미니맵은 기존처럼 HUD 아래 우측. `hudHeight()` 숫자 자체는 미니맵 앵커용으로 유지해도 됨 — **full-width fill만 금지**.
-  - `make verify` GREEN + 커밋: `fix(hud): stop drawing full-width black HUD band`
-
-## 처리 완료
+  - [2026-09-05] ✅ 완료: (a) 상점 슬롯 레이아웃 겹침 분리 (b) 스핀 비용 도입 및 miss 0 적용 (c) slot-editor 웹 UI 구현 및 slot_config.json 런타임 적용 완료. make verify GREEN.
 
 (14) **수집 궤도 링을 옅고 얇은 선으로 (사용자 확정, 2026-09-05):**
   - [2026-09-05] ✅ 완료: 수집 반경 `radius+30` 유지. 미발견 행성 궤도 링은 `setLineWidth(1)` + alpha 0.3 폴백 선. 불투명 `planet_rim.png`는 끄고 선만 사용. 반짝임/타격감 유지. `testFaintCollectOrbitRing` 상수/alpha 단언. `make verify` GREEN.

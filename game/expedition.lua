@@ -7,6 +7,7 @@ local M = {}
 -- keeps that wiring inside this lane's owned files.
 local gearModule = require("game.gear")
 local enginePartsModule = require("game.engine_parts")
+local json = require("game.json")
 
 local slotSymbols = { "COMET", "PLANET", "STAR" }
 M.slotSymbols = slotSymbols
@@ -22,9 +23,84 @@ for _, symbol in ipairs(slotSymbols) do
 end
 M.slotTotalWeight = slotTotalWeight
 
--- INBOX (15)(b): spinning costs money so a miss is a real loss. Default 10;
--- tools/slot-editor will later write this into data/slot_config.json.
+M.slotPayouts = { miss = 0, pair = 15, triple = 40, jackpot = 75 }
+M.earthSlotOddsProfiles = {
+    solar  = { COMET = 5, PLANET = 4, STAR = 1 },
+    fringe = { COMET = 4, PLANET = 4, STAR = 2 },
+    void   = { COMET = 3, PLANET = 4, STAR = 3 },
+}
+M.earthSlotRewardMultipliers = {
+    solar  = { tripleSTAR = 1.0 },
+    fringe = { tripleSTAR = 1.5 },
+    void   = { tripleSTAR = 2.0 },
+}
+
 M.slotSpinCost = 10
+M.slotConfigPath = "data/slot_config.json"
+
+function M.loadSlotConfig(fsOverride)
+    local fs = fsOverride or love.filesystem
+    local contents = fs.read(M.slotConfigPath)
+    if not contents then
+        -- Restore defaults
+        M.slotSpinCost = 10
+        M.slotSymbols = { "COMET", "PLANET", "STAR" }
+        M.slotWeights = { COMET = 5, PLANET = 4, STAR = 1 }
+        M.slotPayouts = { miss = 0, pair = 15, triple = 40, jackpot = 75 }
+        M.earthSlotOddsProfiles = {
+            solar  = { COMET = 5, PLANET = 4, STAR = 1 },
+            fringe = { COMET = 4, PLANET = 4, STAR = 2 },
+            void   = { COMET = 3, PLANET = 4, STAR = 3 },
+        }
+        M.earthSlotRewardMultipliers = {
+            solar  = { tripleSTAR = 1.0 },
+            fringe = { tripleSTAR = 1.5 },
+            void   = { tripleSTAR = 2.0 },
+        }
+        slotSymbols = M.slotSymbols
+        slotWeights = M.slotWeights
+        local w = 0
+        for _, s in ipairs(slotSymbols) do w = w + slotWeights[s] end
+        M.slotTotalWeight = w
+        slotTotalWeight = w
+        return false, "file missing"
+    end
+    
+    local ok, doc = pcall(json.decode, contents)
+    if not ok then return false, "json error" end
+    
+    M.slotSpinCost = doc.spinCost or 10
+    
+    if doc.symbols then
+        M.slotSymbols = {}
+        M.slotWeights = {}
+        for _, s in ipairs(doc.symbols) do
+            table.insert(M.slotSymbols, s.id)
+            M.slotWeights[s.id] = s.weight
+        end
+        slotSymbols = M.slotSymbols
+        slotWeights = M.slotWeights
+        local w = 0
+        for _, s in ipairs(slotSymbols) do w = w + slotWeights[s] end
+        M.slotTotalWeight = w
+        slotTotalWeight = w
+    end
+    
+    if doc.payouts then
+        M.slotPayouts = doc.payouts
+    end
+    
+    if doc.profiles then
+        M.earthSlotOddsProfiles = {}
+        M.earthSlotRewardMultipliers = {}
+        for k, v in pairs(doc.profiles) do
+            M.earthSlotOddsProfiles[k] = v.weights or {}
+            M.earthSlotRewardMultipliers[k] = v.multipliers or {}
+        end
+    end
+    
+    return true
+end
 
 function M.slotSymbolProbability(symbol)
     return slotWeights[symbol] / slotTotalWeight
@@ -32,14 +108,13 @@ end
 
 local function slotReward(symbols)
     if symbols[1] == symbols[2] and symbols[2] == symbols[3] then
-        if symbols[1] == "STAR" then return 75 end
-        return 40
+        if symbols[1] == slotSymbols[#slotSymbols] then return M.slotPayouts.jackpot end
+        return M.slotPayouts.triple
     end
     if symbols[1] == symbols[2] or symbols[1] == symbols[3] or symbols[2] == symbols[3] then
-        return 15
+        return M.slotPayouts.pair
     end
-    -- INBOX (15)(b): miss pays 0 (was +$5, which made every spin free money).
-    return 0
+    return M.slotPayouts.miss
 end
 M.slotReward = slotReward
 
@@ -1088,11 +1163,6 @@ end
 -- galaxy always shows the same odds (no per-run RNG, "어떤 은하계의 체크포인트를
 -- 찍고" is the wording — galaxy identity, not per-expedition roll).
 
-M.earthSlotOddsProfiles = {
-    solar  = { COMET = 5, PLANET = 4, STAR = 1 },
-    fringe = { COMET = 4, PLANET = 4, STAR = 2 },
-    void   = { COMET = 3, PLANET = 4, STAR = 3 },
-}
 M.homeGalaxies = { milkyway = true }
 
 -- Maps a galaxyId string to one of the three profile names. nil or any
@@ -1118,7 +1188,7 @@ end
 -- apply the luck modifier (see M.earthSlotSpin) on top.
 function M.earthSlotWeights(galaxyId)
     local profile = M.galaxySlotOddsProfile(galaxyId)
-    local base = M.earthSlotOddsProfiles[profile]
+    local base = M.earthSlotOddsProfiles[profile] or M.earthSlotOddsProfiles["solar"]
     -- Return a copy so callers can safely modify without corrupting the table.
     return { COMET = base.COMET, PLANET = base.PLANET, STAR = base.STAR }
 end
@@ -1131,7 +1201,7 @@ end
 -- arguments (same design as M.rollGearOffer/M.rollRarity/M.rollEdition).
 --
 -- `run`: used to read the equipped gear's combined luck bonus (same
---   combinedGearList pattern as every other category-agnostic effect).
+--   combinedGearList pattern as every category-agnostic effect).
 -- `galaxyId`: nil defaults to the "solar" profile (standard odds).
 -- `rolls.reels`: table of 3 pre-rolled integers, each in [0, totalWeight).
 --   The caller (shop UI) generates these from love.math.random or any RNG
@@ -1153,11 +1223,6 @@ end
 -- multiplier for the triple-STAR case only; other combinations (triple-
 -- other, pairs, misses) use the same unscaled table so solar players see
 -- no change and void/fringe just pay out bigger jackpots for the rare hit.
-M.earthSlotRewardMultipliers = {
-    solar  = { tripleSTAR = 1.0 },
-    fringe = { tripleSTAR = 1.5 },
-    void   = { tripleSTAR = 2.0 },
-}
 
 -- Profile-aware reward function used by earthSlotSpin. Falls back to the
 -- global slotReward for non-STAR triples and mismatches; the triple-STAR
@@ -1165,7 +1230,7 @@ M.earthSlotRewardMultipliers = {
 -- changes meaningfully between solar/fringe/void.
 local function earthSlotReward(symbols, profile)
     local isTriple = (symbols[1] == symbols[2] and symbols[2] == symbols[3])
-    if isTriple and symbols[1] == "STAR" then
+    if isTriple and symbols[1] == slotSymbols[#slotSymbols] then
         local mults = M.earthSlotRewardMultipliers[profile or "solar"]
         local mult = (mults and mults.tripleSTAR) or 1.0
         -- Global STAR×3 jackpot is 75; scale by profile multiplier.
