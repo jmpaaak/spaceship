@@ -64,7 +64,7 @@ M.returnControls = returnControls
 -- canvas with 12px font (was 8px crammed into 70-320 at the top). Touch
 -- rows expanded to 70px each (well above 44pt iOS HIG minimum). Columns
 -- widened to fill the 720px canvas.
-M.settlementFontSize = 12
+M.settlementFontSize = 11
 M.settlementRowStep = 14  -- vertical px between successive text lines in the shop
 M.settlementSummaryRowStep = 16  -- vertical px between summary stat lines
 -- Vertical layout anchors (all in 720×1280 canvas coordinates):
@@ -452,7 +452,7 @@ M.hudOddsLineHeight = 0
 -- watermark instead of competing with the message line above it. Smaller
 -- font + lower alpha than the default text keeps it legible but visually
 -- de-emphasized.
-M.devPlaceholderFontSize = 7
+M.devPlaceholderFontSize = 11
 M.devPlaceholderAlpha = 0.4
 
 -- Shared HUD background-box height so the minimap placement (drawMinimap)
@@ -751,7 +751,7 @@ function M.new(options)
     local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
     local specimenStore = options.collectionStore or collectionStore.new()
     if love.graphics then
-        love.graphics.setFont(fonts.get(14))
+        love.graphics.setFont(fonts.get(11))
     end
 
     local shipImagePath = "assets/ship/ship_default.png"
@@ -1092,7 +1092,7 @@ function M:drawGearSlots(y)
     local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
     local startX = math.floor((viewport.width - totalWidth) / 2)
     
-    self.tinyFont = self.tinyFont or fonts.get(10)
+    self.tinyFont = self.tinyFont or fonts.get(11)
     local previousFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)
     
@@ -2940,7 +2940,7 @@ function M:draw()
             love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
             love.graphics.rectangle("fill", panelX, panelY, panelW, panelH)
         end
-        self.destroyedFont = self.destroyedFont or fonts.get(14)
+        self.destroyedFont = self.destroyedFont or fonts.get(11)
         local previousFont = love.graphics.getFont()
         love.graphics.setFont(self.destroyedFont)
         local fullX, fullW = panelX + 16, panelW - 32
