@@ -169,8 +169,8 @@ M.launchTouchArea = launchTouchArea
 -- Mobile-UI sub-item (1): HUD font enlarged from 8px to 14px; every HUD
 -- band height scales proportionally so text lines never overlap and the
 -- minimap sits below the taller band.
-M.hudFontSize = 22
-M.hudLineStep = 36  -- vertical px between successive HUD text lines
+M.hudFontSize = 14
+M.hudLineStep = 16  -- vertical px between successive HUD text lines
 M.launchHudHeight = 88
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
@@ -434,7 +434,7 @@ M.drawPixelStar = drawPixelStar
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
 M.hudPrimaryStatusGap = 6
-M.hudGalaxyShift = 28  -- extra height when galaxy name is shown (was 10)
+M.hudGalaxyShift = 16  -- extra height when galaxy name is shown (was 10)
 
 -- docs/feedback/INBOX.md UI/HUD item 5: the returning-phase slot-odds line
 -- (C%/P%/S%/AVG$ above the minimap) was removed when item-15(a) abolished
@@ -452,7 +452,7 @@ M.hudOddsLineHeight = 0
 -- watermark instead of competing with the message line above it. Smaller
 -- font + lower alpha than the default text keeps it legible but visually
 -- de-emphasized.
-M.devPlaceholderFontSize = 22
+M.devPlaceholderFontSize = 10
 M.devPlaceholderAlpha = 0.4
 
 -- Shared HUD background-box height so the minimap placement (drawMinimap)

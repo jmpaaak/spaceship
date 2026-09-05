@@ -294,15 +294,15 @@ end
 function M.debris(sectorX, sectorY, time)
     time = time or 0
     local count = 0
-    if hash(sectorX, sectorY, 900) > 0.65 then count = 1 end
-    if hash(sectorX, sectorY, 901) > 0.93 then count = 2 end
+    if hash(sectorX, sectorY, 900) > 0.25 then count = 1 end
+    if hash(sectorX, sectorY, 901) > 0.80 then count = 2 end
     local pieces = {}
     for i = 1, count do
-        local kindRoll = hash(sectorX, sectorY, 910 + i)
+        local kindRoll = hash(sectorX + i * 7, sectorY + i * 13, 910)
         local kind = "asteroid"
-        if kindRoll < 0.18 then
+        if kindRoll < 0.22 then
             kind = "can"
-        elseif kindRoll < 0.36 then
+        elseif kindRoll < 0.44 then
             kind = "scrap"
         end
         local minR, maxR = 3, 7

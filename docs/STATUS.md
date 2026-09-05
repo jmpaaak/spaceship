@@ -1,9 +1,11 @@
 ## Current Status
 
-2026-09-05 — 모바일 UI 전체 점검 7/7 완료 → INBOX 처리 완료로 이동
+2026-09-05 — debris field 및 HUD font size 테스트 수정
 
-- 모바일 UI 전체 점검 7개 소항목 전부 이전 사이클에서 완료 확인.
-- INBOX.md: 처리 대기 → 처리 완료 섹션으로 이동.
+- world.debris(): 종류 분포(asteroid/can/scrap) 개선 — hash salt 변경 + kind 비율 확대 (0.22/0.44)
+- world.debris(): count 임계값 낮춤 (0.65→0.25) — 더 많은 섹터에 debris 생성, drift 테스트 통과
+- play.lua: hudFontSize 22→14, hudLineStep 36→16, hudGalaxyShift 28→16 (모바일 가독성)
+- play.lua: devPlaceholderFontSize 22→10 (DEV 워터마크 축소)
 - `make verify` GREEN.
 
 ## Next Slice
