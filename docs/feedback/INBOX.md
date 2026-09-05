@@ -36,6 +36,15 @@
 
   - `make verify` GREEN + 커밋: `feat(play): timeslip + shake + flash on sample collection`
 
+(5) **지구 착륙 시 진입 이펙트 — 길게 흔들리는 대기권 진입 느낌 (사용자 확정):**
+  - 지구 근접 → settle 판정 직전, 일정 거리 안에 들어오면 "착륙 진입" 연출:
+  - 판정: `ship 거리 < earthRadius * 3` 이면 착륙 진입 시작 (settle 거리보다 넓은 구간).
+  - **(a) 지속 흔들림:** `self.reentryShake` — 착륙 진입 구간에 있는 동안 계속 흔들림. 강도는 거리에 반비례 (멀면 약하게, 가까울수록 세게). 기존 `shipShake`와 별도로 `reentryShake` 값 추가. draw에서 `math.sin(time*60) * reentryShake` 으로 x 오프셋.
+  - **(b) 슬로우모션:** 착륙 직전(거리 < earthRadius * 1.5) 0.6초간 dt를 0.5배로.
+  - **(c) 화면 가장자리 붉은 발열:** 진입 구간에서 화면 가장자리에 반투명 빨간 비네트. 거리에 따라 alpha 0→0.3 증가. draw 마지막에 그리기.
+  - settle 트리거 시점에 `reentryShake = 0` 초기화.
+  - `make verify` GREEN + 커밋: `feat(play): atmospheric reentry shake + heat vignette on Earth landing`
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-05) **상점(settlement) UI 텍스트 겹침/깨짐 수정:**
