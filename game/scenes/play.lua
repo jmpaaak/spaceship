@@ -142,7 +142,7 @@ M.ascendReturnButton = ascendReturnButton
 -- Named and exposed to close out the last remaining touch surface that was
 -- accepted unconditionally but never given an explicit constant or
 -- corner-touch regression test, matching destroyedTouchArea's pattern.
-local launchTouchArea = { top = 0, bottom = 320, left = 0, right = 180 }
+local launchTouchArea = { top = 0, bottom = 1280, left = 0, right = 720 }
 M.launchTouchArea = launchTouchArea
 
 -- Launch-screen text size/layout cleanup (docs/feedback 2026-09-02, user
@@ -175,8 +175,16 @@ M.launchHudHeight = 88
 -- box's previous 204px top -- a real LÖVE runtime capture showed a faint
 -- blue crescent peeking out just above the LAUNCH LOADOUT card. Raised the
 -- box top to 202 so it fully covers the disc's topmost extent.
-M.launchLoadoutBoxTop = 202
-M.launchLoadoutRowStep = 10
+M.launchLoadoutBoxTop = 750
+M.launchLoadoutRowStep = 22
+-- Mobile-UI sub-item (5): loadout font enlarged from 8px to 12px for
+-- mobile readability on 720×1280 canvas.
+M.launchLoadoutFontSize = 12
+
+-- Mobile-UI sub-item (5): gear slot box dimensions exposed as module
+-- constants (1.5× the old 10×14 boxes) for testability.
+M.launchGearBoxW = 15
+M.launchGearBoxH = 21
 
 -- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
 -- panel caption itself was flagged for removal during the "remove
@@ -1069,10 +1077,10 @@ end
 function M:drawGearSlots(y)
     local hullSlots = 6
     local engineSlots = 3
-    local boxW = 10
-    local boxH = 14
-    local gap = 3
-    local groupGap = 8
+    local boxW = M.launchGearBoxW
+    local boxH = M.launchGearBoxH
+    local gap = 5
+    local groupGap = 12
     
     local run = self.expedition
     local hullGear = run.equippedGear or {}
@@ -1081,7 +1089,7 @@ function M:drawGearSlots(y)
     local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
     local startX = math.floor((viewport.width - totalWidth) / 2)
     
-    self.tinyFont = self.tinyFont or fonts.get(7)
+    self.tinyFont = self.tinyFont or fonts.get(10)
     local previousFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)
     
@@ -1096,7 +1104,7 @@ function M:drawGearSlots(y)
             love.graphics.rectangle("fill", x, y, boxW, boxH)
             
             love.graphics.setColor(1, 1, 1, 0.5)
-            local pts = M.shieldIconPoints(x + boxW/2, y + boxH/2, 4)
+            local pts = M.shieldIconPoints(x + boxW/2, y + boxH/2, 6)
             if pts then love.graphics.polygon("fill", pts) end
             
             if part.edition and part.edition ~= "base" then
@@ -1125,7 +1133,7 @@ function M:drawGearSlots(y)
             love.graphics.rectangle("fill", x, y, boxW, boxH)
             
             love.graphics.setColor(1, 1, 1, 0.5)
-            local pts = M.rocketIconPoints(x + boxW/2, y + boxH/2, 4)
+            local pts = M.rocketIconPoints(x + boxW/2, y + boxH/2, 6)
             if pts then love.graphics.polygon("fill", pts) end
             
             if part.edition and part.edition ~= "base" then
@@ -1142,7 +1150,7 @@ function M:drawGearSlots(y)
     end
     
     love.graphics.setColor(0.6, 0.7, 0.8, 0.9)
-    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 10, viewport.width, "center")
+    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 14, viewport.width, "center")
     love.graphics.setFont(previousFont)
 end
 
@@ -2719,7 +2727,7 @@ function M:draw()
         -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so
         -- it never competes with loadout numbers or the TAP TO LAUNCH
         -- message below the panel.
-        self:drawGearSlots(184)
+        self:drawGearSlots(M.launchLoadoutBoxTop - M.launchGearBoxH - 18)
         local loadout = self:loadoutLines()
         -- The card box now extends all the way to the canvas bottom
         -- (viewport.height) instead of stopping at y=294: a real LÖVE
@@ -2742,7 +2750,7 @@ function M:draw()
         -- above it, with a tightened row step so six lines fit in the
         -- freed vertical space without overlapping each other or the
         -- TAP TO LAUNCH message drawn separately below.
-        self.smallFont = self.smallFont or fonts.get(8)
+        self.smallFont = self.smallFont or fonts.get(M.launchLoadoutFontSize)
         local previousLaunchFont = love.graphics.getFont()
         love.graphics.setFont(self.smallFont)
         local row = M.launchLoadoutBoxTop + 4

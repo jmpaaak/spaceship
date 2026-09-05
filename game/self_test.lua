@@ -6168,6 +6168,27 @@ function M.run()
     assert(PlayScene.showLaunchLoadoutTitle == false,
         "launch loadout panel title should stay hidden (docs/feedback item 4)")
 
+    -- Mobile-UI sub-item (5): loadout panel positioned at bottom 1/3 of
+    -- the 720×1280 canvas, gear slot boxes enlarged 1.5×, launch touch
+    -- area covers full canvas, and loadout row step is mobile-friendly.
+    assert(PlayScene.launchLoadoutBoxTop >= 700,
+        "loadout panel should start near bottom 1/3 of 1280px canvas, got " .. PlayScene.launchLoadoutBoxTop)
+    assert(PlayScene.launchLoadoutBoxTop <= earthTopY,
+        "loadout panel top (" .. PlayScene.launchLoadoutBoxTop ..
+        ") must still cover Earth disc top (" .. earthTopY .. ")")
+    assert(PlayScene.launchLoadoutRowStep >= 20,
+        "loadout row step should be ≥20px for mobile readability, got " .. PlayScene.launchLoadoutRowStep)
+    assert(PlayScene.launchGearBoxW >= 15,
+        "gear slot box width should be ≥15px (1.5× old 10px), got " .. PlayScene.launchGearBoxW)
+    assert(PlayScene.launchGearBoxH >= 21,
+        "gear slot box height should be ≥21px (1.5× old 14px), got " .. PlayScene.launchGearBoxH)
+    assert(launchArea.right >= 720,
+        "launch touch area should span full 720px canvas width, got right=" .. launchArea.right)
+    assert(launchArea.bottom >= 1280,
+        "launch touch area should span full 1280px canvas height, got bottom=" .. launchArea.bottom)
+    assert(PlayScene.launchLoadoutFontSize >= 12,
+        "loadout font should be ≥12px for mobile, got " .. PlayScene.launchLoadoutFontSize)
+
     -- Ascending no longer draws HOLD LEFT/HOLD RIGHT boxes; the full
     -- canvas is still a tap-hold fallback (left half / right half).
     local ascendControls = PlayScene.ascendControls

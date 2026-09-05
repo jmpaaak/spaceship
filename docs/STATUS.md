@@ -1,18 +1,21 @@
 ## Current Status
 
-2026-09-05 — 모바일 UI 전체 점검 (1) 재작업 및 완료: HUD 폰트 및 행 간격 비례 확대
+2026-09-05 — 모바일 UI 전체 점검 (5) 로드아웃(launch) 패널 확대 및 재배치
 
 - `game/scenes/play.lua`:
-  - `M.hudLineStep` 18 → 28, `M.launchHudHeight` 58 → 88, `M.hudGalaxyShift` 16 → 28.
-  - HUD 렌더링 시 하드코딩된 Y 좌표 일괄 상향 보정 (22→32, 40→60, 58→88, 76→116).
-  - `M.hudHeight` 함수의 반환값도 비례하여 증가 (40→60, 58→88, 94→144).
+  - `M.launchLoadoutBoxTop` 202 → 750 (화면 하단 1/3, Earth disc 위).
+  - `M.launchLoadoutRowStep` 10 → 22 (모바일 가독성).
+  - `M.launchLoadoutFontSize` 신규 상수 12px (기존 하드코딩 8px).
+  - `M.launchGearBoxW` / `M.launchGearBoxH` 신규 상수 15 / 21 (기존 10 / 14, 1.5×).
+  - `launchTouchArea` 180×320 → 720×1280 (전체 캔버스).
+  - 기어 슬롯 아이콘 크기 4 → 6, 라벨 폰트 7 → 10, 간격 확대.
 - `game/self_test.lua`:
-  - 변경된 `hudHeight` 반환값에 맞추어 관련 어설션 수정 (94→144, 58→88).
+  - 로드아웃 패널 위치/크기/폰트 검증 어설션 8개 추가.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- 모바일 UI 전체 점검 (2): 미니맵 크기 + 위치 변경 (마커 반경 1.5배)
+- 모바일 UI 전체 점검 (6): Destroyed/Game Over 패널 확대
 
 ---
 
