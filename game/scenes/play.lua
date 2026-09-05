@@ -550,15 +550,6 @@ M.hudGalaxyShift = 16  -- extra height when galaxy name is shown (was 10)
 -- reflect item-15(a). See self_test.lua item-15(a) follow-up assertion.
 M.hudOddsLineHeight = 0
 
--- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
--- footer text is a permanent dev-only disclaimer (kept until real AetherAI
--- assets land), not gameplay information, so it should read as a quiet
--- watermark instead of competing with the message line above it. Smaller
--- font + lower alpha than the default text keeps it legible but visually
--- de-emphasized.
-M.devPlaceholderFontSize = 10
-M.devPlaceholderAlpha = 0.4
-
 -- Shared HUD background-box height so the minimap placement (drawMinimap)
 -- and the actual text draw (draw) never disagree about how tall the top
 -- HUD band is.
@@ -3408,7 +3399,7 @@ function M:draw()
         love.graphics.printf(i18n.t("shop_modal_skip"), 95, btnY + 8, 70, "center")
         
         if self.shopModal.errorText then
-            self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
+            self.tinyFont = self.tinyFont or fonts.get(10)
             local prevFont = love.graphics.getFont()
             love.graphics.setFont(self.tinyFont)
             love.graphics.setColor(1, 0.3, 0.3)
@@ -3424,12 +3415,6 @@ function M:draw()
         love.graphics.setLineWidth(prevLineWidth)
     end
 
-    self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
-    local previousFooterFont = love.graphics.getFont()
-    love.graphics.setFont(self.tinyFont)
-    love.graphics.setColor(1, 0.65, 0.2, M.devPlaceholderAlpha)
-    love.graphics.printf(i18n.t("dev_placeholder"), 4, viewport.height - 11, viewport.width - 8, "center")
-    love.graphics.setFont(previousFooterFont)
 end
 
 return M

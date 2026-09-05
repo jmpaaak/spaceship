@@ -130,7 +130,6 @@ locales.en = {
     next_ship_line = "NEXT %s",
     tap_start_over = "TAP: START OVER",
     minimap_out = "OUT %d",
-    dev_placeholder = "DEV PLACEHOLDER",
     hub_label = "HUB",
     shop_label = "SHOP",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
@@ -260,7 +259,6 @@ locales.ko = {
     next_ship_line = "다음 %s",
     tap_start_over = "탭: 다시시작",
     minimap_out = "외부 %d",
-    dev_placeholder = "개발 임시본",
     hub_label = "HUB",
     shop_label = "SHOP",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
