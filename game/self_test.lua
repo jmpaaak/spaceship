@@ -141,19 +141,11 @@ local function testJoystick()
     assert(math.abs(tiltScene.ship.angle - restAngle) > 0.5,
         "unclamped heading must be able to travel more than the old 0.5 rad lean")
     assert(#tiltScene.particles > 0, "tilting left/right must spawn a side RCS puff")
-    -- With angle-aware RCS puffs the spawn offset is perpendicular to the
-    -- ship's current heading (angle + pi/2).  bank>0 → side=-1.
+    -- Single opposite-stick puff: right stick → puff vx < 0 (leftward exhaust).
     do
         local p = tiltScene.particles[1]
-        local a = tiltScene.ship.angle
-        local perpX = math.cos(a + math.pi / 2)
-        local perpY = math.sin(a + math.pi / 2)
-        -- side = -1 for right bank
-        local expDx = -perpX * 6
-        local expDy = -perpY * 6
-        assert(math.abs(p.x - tiltScene.ship.x - expDx) < 0.5 and
-               math.abs(p.y - tiltScene.ship.y - expDy) < 0.5,
-            "a right tilt's RCS puff must emit perpendicular to ship.angle (angle-aware)")
+        assert(p.vx < 0,
+            "a right stick's RCS puff must exhaust leftward (opposite stick direction)")
     end
     local heldAngle = tiltScene.ship.angle
     tiltScene.touches["stick"] = nil
@@ -195,12 +187,26 @@ local function testJoystick()
     assert(#puffScene.particles > 0, "vertical stick must spawn an RCS puff")
     local verticalPuff
     for _, p in ipairs(puffScene.particles) do
-        if math.abs(p.y - puffScene.ship.y) >= 5 then verticalPuff = p end
+        if p.vy < 0 then verticalPuff = p end
     end
-    assert(verticalPuff, "downward stick must emit a vertical puff")
+    assert(verticalPuff, "downward stick must emit an upward puff (opposite stick)")
     assert(verticalPuff.y < puffScene.ship.y,
         "a down stick's RCS puff must emit from above the ship (opposite jet)")
     assert(math.abs(verticalPuff.maxTimer - PlayScene.rcsPuffDuration) < 1e-9)
+
+    -- Diagonal stick must produce exactly 1 puff per tick (not 2).
+    local diagScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    diagScene.expedition.phase = "ascending"
+    diagScene.touches["stick"] = {
+        originX = 90, originY = 160,
+        x = 90 + joystick.maxRadius * 0.707, y = 160 + joystick.maxRadius * 0.707,
+    }
+    diagScene:update(0.05)
+    local diagPuffCount = 0
+    for _ in ipairs(diagScene.particles) do diagPuffCount = diagPuffCount + 1 end
+    assert(diagPuffCount == 1, "diagonal stick must produce exactly 1 puff per tick, got " .. diagPuffCount)
     assert(PlayScene.stickTurnFollow < 5,
         "hull turn follow must be slow, not the old snap rate of 14")
 end

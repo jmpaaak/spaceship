@@ -1622,47 +1622,23 @@ function M:update(dt)
         self.rcsCooldown = math.max(0, (self.rcsCooldown or 0) - dt)
         local bank = self.steerBank or 0
         local lift = self.steerLift or 0
-        if thrusting and self.rcsCooldown == 0
-            and (math.abs(bank) > 0.12 or math.abs(lift) > 0.12) then
+        local stickMag = math.sqrt(bank * bank + lift * lift)
+        if thrusting and self.rcsCooldown == 0 and stickMag > 0.12 then
             self.rcsCooldown = 0.045
-            if math.abs(bank) > 0.12 then
-                local side = bank > 0 and -1 or 1
-                -- RCS side puff: emit from the ship's flank in the
-                -- perpendicular direction (ship.angle + π/2).
-                local perpX = math.cos(self.ship.angle + math.pi / 2)
-                local perpY = math.sin(self.ship.angle + math.pi / 2)
-                self.particles[#self.particles + 1] = {
-                    x = self.ship.x + side * perpX * 6,
-                    y = self.ship.y + side * perpY * 6,
-                    vx = side * perpX * (16 + math.random() * 10),
-                    vy = side * perpY * (16 + math.random() * 10),
-                    timer = rcsPuffDuration,
-                    maxTimer = rcsPuffDuration,
-                    r = 0.7,
-                    g = 0.88,
-                    b = 1,
-                }
-            end
-            if math.abs(lift) > 0.12 then
-                -- Opposite fore/aft jet: stick-down puffs from above (nose
-                -- side), stick-up puffs from below (tail side).
-                -- Uses ship.angle forward vector (cos/sin) so the spawn and
-                -- velocity rotate correctly when the ship is banked.
-                local vside = lift > 0 and -1 or 1
-                local fwdX = math.cos(self.ship.angle)
-                local fwdY = math.sin(self.ship.angle)
-                self.particles[#self.particles + 1] = {
-                    x = self.ship.x + (-vside) * fwdX * 6,
-                    y = self.ship.y + (-vside) * fwdY * 6,
-                    vx = (-vside) * fwdX * (16 + math.random() * 10),
-                    vy = (-vside) * fwdY * (16 + math.random() * 10),
-                    timer = rcsPuffDuration,
-                    maxTimer = rcsPuffDuration,
-                    r = 0.7,
-                    g = 0.88,
-                    b = 1,
-                }
-            end
+            -- Single RCS puff in the opposite direction of the stick vector.
+            local dirX = -bank / stickMag
+            local dirY = -lift / stickMag
+            self.particles[#self.particles + 1] = {
+                x = self.ship.x + dirX * 6,
+                y = self.ship.y + dirY * 6,
+                vx = dirX * (16 + math.random() * 10),
+                vy = dirY * (16 + math.random() * 10),
+                timer = rcsPuffDuration,
+                maxTimer = rcsPuffDuration,
+                r = 0.7,
+                g = 0.88,
+                b = 1,
+            }
         end
     end
     if previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then

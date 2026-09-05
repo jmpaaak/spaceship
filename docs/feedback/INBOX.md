@@ -4,18 +4,6 @@
 
 
 
-(11) **RCS 분출 한 줄 — 조이스틱 반대 방향만 (사용자 확정):**
-  - 보고: 공기 분출이 두 줄이라 어색함. 조이스틱 반대 방향으로 **한 줄만**.
-  - 원인: `play.lua` ~1567–1608. `bank`(좌우)와 `lift`(전후)를 각각 별도 puff로 쏴서 대각 입력이면 두 줄기.
-  - 변경:
-    - `bank`/`lift` 분기 두 개 삭제. 조이스틱 벡터 `(joyDx, joyDy)` (또는 `steerBank`/`steerLift`를 하나의 방향으로)의 **반대**로 한 puff만.
-    - `dirX, dirY = -joyDx, -joyDy` 정규화. 스폰: `ship.x + dirX*6, ship.y + dirY*6`. 속도: `dir * (16+rand*10)`.
-    - 선체 `ship.angle` 기준 측면/전후가 아니라 **스틱 반대** (움직임 방향의 뒤쪽 배기).
-    - 쿨다운 0.045, duration `rcsPuffDuration`(1.32), 색 유지.
-    - 스틱 magnitude < 0.12 이면 puff 없음 (기존 deadzone).
-    - self_test: 우입력 시 puff vx < 0 (왼쪽), 대각 입력 시 particles 추가가 **틱당 1개**.
-  - `make verify` GREEN + 커밋: `fix(rcs): single opposite-stick exhaust stream`
-
 (12) **PixelPlanets(GitHub Deep-Fold / JS 포트)로 행성 모양 교체 (사용자 확정, 2026-09-05):**
   - 배경: 별 스프라이트만 적용됨. 행성 PNG 적용은 2026-09-05에 「적용 안 함」으로 닫혔음. 사용자가 **다시 큐에 넣으라고 확정.**
   - 금지: ComfyUI 재생성, Godot 엔진 임베드, 함선/지구 이미지 교체.
@@ -31,6 +19,9 @@
   - 사이클당 타입 2~3장 또는 배선 한 조각. 커밋 예: `feat(planets): PixelPlanets sprites by galaxy starType`
 
 ## 처리 완료
+
+(11) **RCS 분출 한 줄 — 조이스틱 반대 방향만 (사용자 확정):**
+  - [2026-09-05] 완료: bank/lift 분기 두 개를 단일 opposite-stick puff로 교체. 대각 입력 시 틱당 1개만 생성. self_test 3개 (vx<0, vy<0, diagPuffCount==1) GREEN.
 
 (10) **미니맵: 가장 가까운 HUB를 화살표로 항상 가리킴 + HUB와 중심별 구분 (사용자 확정):**
   - [2026-09-05] 변경 A 완료: checkpointBeyond 조건 제거, 항상 화살표 표시 (도착 시만 숨김).

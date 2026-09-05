@@ -1,20 +1,18 @@
 ## Current Status
 
-2026-09-05 — INBOX (10) 변경 B — HUB vs 중심별(태양) 미니맵 구분
+2026-09-05 — INBOX (11) RCS 분출 한 줄 — 조이스틱 반대 방향만
 
-- `game/world.lua`: `hubPlanet()` now offsets hub from galaxy center using hash-based angle/distance (~18% of galaxy.radius, min 80 wu). Sun stays at galaxy.x/y; hub is a nearby but distinct point.
-- `game/minimap.lua`: `nearestCheckpointDirection()` now points toward the offset hub position (not galaxy center). `view()` returns `hubMarkers` table with projected hub positions for each non-milkyway galaxy.
-- `game/scenes/play.lua`: New hub marker drawing — magenta diamond glyph with pulse ring, visually distinct from gold galaxy dots and yellow sun marker.
-- `game/self_test.lua`: Updated hub position assertions (hub.x != sun.x for foreign galaxies). New test: minimap view hubMarkers have different chart coords from galaxy center dots.
+- `game/scenes/play.lua`: Replaced separate `bank`/`lift` puff branches (two simultaneous exhaust streams on diagonal input) with a single opposite-stick-direction puff. `dirX, dirY = -bank/mag, -lift/mag` normalized. Spawn at `ship + dir*6`, velocity `dir*(16+rand*10)`. Cooldown 0.045, duration `rcsPuffDuration` (1.32), color unchanged. Deadzone: stickMag < 0.12 → no puff.
+- `game/self_test.lua`: Updated right-stick puff test to assert `vx < 0` (leftward exhaust). Updated vertical puff test to find puff by `vy < 0`. Added diagonal-stick test asserting exactly 1 particle per tick.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (10) is fully done (변경 A + 변경 B). Next: INBOX (11) RCS 분출 한 줄.
+- INBOX (11) is done. Next: INBOX (12) PixelPlanets 행성 모양 교체.
 
 ---
 
-## 2026-09-05 — INBOX (10) 미니맵: always-on hub arrow (변경 A)
+## 2026-09-05 — INBOX (10) 변경 B — HUB vs 중심별(태양) 미니맵 구분
 
 - `game/minimap.lua`: `nearestCheckpointDirection` now also returns the galaxy object (5th return). `view()` changed `checkpointBeyond` logic: arrow shows whenever a non-milkyway hub exists AND ship distance >= hubRadius*3 (arrival threshold). Previously only showed when hub was outside `viewRadius`.
 - `game/self_test.lua`: 2 new assertions — (a) hub inside chart but not arrived → arrow shows; (b) ship at hub (dist < hubRadius*3) → arrow hides.
