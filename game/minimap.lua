@@ -172,23 +172,29 @@ end
 -- cells. Returns unit-vector dx, dy (0, 0 if none found), the world
 -- distance (nil if none found), and the galaxy id (nil if none found).
 function M.nearestCheckpointDirection(shipX, shipY)
-    local nearest, nearestDist
+    local nearest, nearestDist, nearestHub
     for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.checkpointSearchCellRadius)) do
         if galaxy.id ~= "milkyway" then
-            local dx, dy = galaxy.x - shipX, galaxy.y - shipY
+            -- Item 10 change B: point toward the offset hub planet, not
+            -- galaxy center (the sun).
+            local hubObj = world.hubPlanet(galaxy)
+            local tx, ty = hubObj and hubObj.x or galaxy.x, hubObj and hubObj.y or galaxy.y
+            local dx, dy = tx - shipX, ty - shipY
             local dist = math.sqrt(dx * dx + dy * dy)
             if not nearestDist or dist < nearestDist then
-                nearest, nearestDist = galaxy, dist
+                nearest, nearestDist, nearestHub = galaxy, dist, hubObj
             end
         end
     end
     if not nearest then
         return 0, 0, nil, nil
     end
+    local tx = nearestHub and nearestHub.x or nearest.x
+    local ty = nearestHub and nearestHub.y or nearest.y
     if nearestDist < 1e-9 then
-        return 0, 0, 0, nearest.id
+        return 0, 0, 0, nearest.id, nearest
     end
-    return (nearest.x - shipX) / nearestDist, (nearest.y - shipY) / nearestDist, nearestDist, nearest.id, nearest
+    return (tx - shipX) / nearestDist, (ty - shipY) / nearestDist, nearestDist, nearest.id, nearest
 end
 
 -- Snapshot of everything PlayScene needs to draw the chart for a ship at
@@ -218,6 +224,7 @@ function M.view(shipX, shipY)
     end
     local galaxies = {}
     local rings = {}
+    local hubMarkers = {}   -- item 10 change B: separate hub markers
     for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.galaxyCellRadius)) do
         local mx, my, inside = M.project(galaxy.x, galaxy.y, shipX, shipY)
         galaxies[#galaxies + 1] = {
@@ -238,6 +245,19 @@ function M.view(shipX, shipY)
             kind = "galaxy",
             inside = inside,
         }
+        -- Item 10 change B: project the offset hub planet so PlayScene can
+        -- draw it as a distinct marker (magenta diamond) next to the gold
+        -- galaxy-center/sun dot.
+        local hubObj = world.hubPlanet(galaxy)
+        if hubObj then
+            local hx, hy, hInside = M.project(hubObj.x, hubObj.y, shipX, shipY)
+            hubMarkers[#hubMarkers + 1] = {
+                id = galaxy.id,
+                x = hx,
+                y = hy,
+                inside = hInside,
+            }
+        end
     end
     -- Sun-centered solar-system orbits: readable pixel rings around the
     -- sun marker (true AU scale is sub-pixel on this chart). Earth's own
@@ -281,6 +301,7 @@ function M.view(shipX, shipY)
         earth = { x = earthX, y = earthY, inside = earthInside },
         sun = sunX and { x = sunX, y = sunY, inside = sunInside } or nil,
         galaxies = galaxies,
+        hubMarkers = hubMarkers,
         rings = rings,
         spiral = spiral,
         spiralGalaxyId = containing and containing.id or nil,

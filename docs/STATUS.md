@@ -1,12 +1,26 @@
 ## Current Status
 
-2026-09-05 — INBOX (10) 미니맵: always-on hub arrow (변경 A)
+2026-09-05 — INBOX (10) 변경 B — HUB vs 중심별(태양) 미니맵 구분
+
+- `game/world.lua`: `hubPlanet()` now offsets hub from galaxy center using hash-based angle/distance (~18% of galaxy.radius, min 80 wu). Sun stays at galaxy.x/y; hub is a nearby but distinct point.
+- `game/minimap.lua`: `nearestCheckpointDirection()` now points toward the offset hub position (not galaxy center). `view()` returns `hubMarkers` table with projected hub positions for each non-milkyway galaxy.
+- `game/scenes/play.lua`: New hub marker drawing — magenta diamond glyph with pulse ring, visually distinct from gold galaxy dots and yellow sun marker.
+- `game/self_test.lua`: Updated hub position assertions (hub.x != sun.x for foreign galaxies). New test: minimap view hubMarkers have different chart coords from galaxy center dots.
+- `make verify` GREEN.
+
+## Next Slice
+
+- INBOX (10) is fully done (변경 A + 변경 B). Next: INBOX (11) RCS 분출 한 줄.
+
+---
+
+## 2026-09-05 — INBOX (10) 미니맵: always-on hub arrow (변경 A)
 
 - `game/minimap.lua`: `nearestCheckpointDirection` now also returns the galaxy object (5th return). `view()` changed `checkpointBeyond` logic: arrow shows whenever a non-milkyway hub exists AND ship distance >= hubRadius*3 (arrival threshold). Previously only showed when hub was outside `viewRadius`.
 - `game/self_test.lua`: 2 new assertions — (a) hub inside chart but not arrived → arrow shows; (b) ship at hub (dist < hubRadius*3) → arrow hides.
 - `make verify` GREEN.
 
-## Next Slice
+## Next Slice (was)
 
 - INBOX (10) 변경 B — HUB vs 중심별(태양) 미니맵 구분: hub offset from sun, distinct glyphs
 

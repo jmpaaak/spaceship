@@ -304,9 +304,13 @@ local function testGalaxyStructure()
     end
     assert(foreignGalaxy, "need at least one non-home galaxy to check hub planets")
     local hub = world.hubPlanet(foreignGalaxy)
-    assert(hub and hub.hub and hub.x == foreignGalaxy.x and hub.y == foreignGalaxy.y)
+    assert(hub and hub.hub, "foreign galaxy must have a hub planet")
     assert(hub.id == "hub:" .. foreignGalaxy.id)
-    local hubsNearby = world.nearbyPlanets(foreignGalaxy.x, foreignGalaxy.y, 1)
+    -- Item 10 change B: hub must be offset from sun (galaxy center)
+    local foreignSun = world.sunPosition(foreignGalaxy)
+    assert(hub.x ~= foreignSun.x or hub.y ~= foreignSun.y,
+        "hub planet must be offset from sun position (item 10 change B)")
+    local hubsNearby = world.nearbyPlanets(hub.x, hub.y, 1)
     local sawHub = false
     for _, planet in ipairs(hubsNearby) do
         if planet.id == hub.id then sawHub = true end
@@ -496,10 +500,10 @@ local function testMinimap()
     -- the ship hasn't arrived (distance >= hubRadius*3).
     local hubObj = world.hubPlanet(foundGalaxy)
     local arrivalDist = hubObj and hubObj.radius * 3 or 48
-    -- Place ship just outside arrival threshold but within viewRadius
+    -- Place ship just outside arrival threshold from the hub position
     local nearHubDist = arrivalDist + 10
-    local nearHubX = foundGalaxy.x + nearHubDist
-    local nearHubY = foundGalaxy.y
+    local nearHubX = hubObj.x + nearHubDist
+    local nearHubY = hubObj.y
     local nearView = minimap.view(nearHubX, nearHubY)
     if nearView.checkpointId == foundGalaxy.id then
         assert(nearView.checkpointBeyond,
@@ -508,14 +512,32 @@ local function testMinimap()
     end
 
     -- When the ship IS at the hub (distance < hubRadius*3), arrow hides
-    local atHubX = foundGalaxy.x + 1
-    local atHubY = foundGalaxy.y
+    local atHubX = hubObj.x + 1
+    local atHubY = hubObj.y
     local atHubView = minimap.view(atHubX, atHubY)
     if atHubView.checkpointId == foundGalaxy.id and atHubView.checkpointDistance then
         assert(atHubView.checkpointDistance < arrivalDist,
             "sanity: ship should be within arrival distance")
         assert(not atHubView.checkpointBeyond,
             "hub arrow must hide when ship has arrived at hub")
+    end
+
+    -- Item 10 change B: minimap view must include hubMarkers with positions
+    -- distinct from the galaxy-center (sun) dot.
+    local hubView = minimap.view(foundGalaxy.x + 50, foundGalaxy.y + 50)
+    assert(hubView.hubMarkers, "minimap view must have hubMarkers table")
+    local foundHub = nil
+    for _, hm in ipairs(hubView.hubMarkers) do
+        if hm.id == foundGalaxy.id then foundHub = hm end
+    end
+    -- Find matching galaxy dot
+    local foundGalDot = nil
+    for _, gd in ipairs(hubView.galaxies) do
+        if gd.id == foundGalaxy.id then foundGalDot = gd end
+    end
+    if foundHub and foundGalDot then
+        assert(math.abs(foundHub.x - foundGalDot.x) > 0.1 or math.abs(foundHub.y - foundGalDot.y) > 0.1,
+            "hub marker must be at a different chart position than galaxy center dot (item 10 change B)")
     end
 
     -- Galaxy-specific background tint (item 1 part 4): the home solar

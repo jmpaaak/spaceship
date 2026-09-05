@@ -4,25 +4,6 @@
 
 
 
-(10) **미니맵: 가장 가까운 HUB를 화살표로 항상 가리킴 + HUB와 중심별 구분 (사용자 확정):**
-  - 현재: `checkpointBeyond`가 true일 때만 마젠타 화살표 (`play.lua` `if view.checkpointBeyond`). 차트 안에 hub가 있으면 화살표가 사라짐.
-  - 변경 A — 항상 화살표: ✅ DONE (2026-09-05)
-    - `minimap.view()` 에서 `checkpointBeyond` 조건 제거. `nearestCheckpointDirection` 결과가 있으면 **항상** `checkpointDx/Dy` + 화살표 그리기.
-    - 화살표는 차트 **림(가장자리)** 에 고정. 플레이어에서 가장 가까운 non-milkyway hub 방향. 홈 은하에 있을 때도 가장 가까운 이웃 HUB를 가리킴.
-    - hub에 이미 도착(거리 < hub.radius*3)하면 화살표 숨김 (도착 완료).
-    - 지구 귀환 주황 화살(`view.beyond`)과 겹치지 않게 림 inset 유지 (현재 -9 vs -5).
-  - 변경 B — HUB vs 중심별(태양) 미니맵 구분:
-    - 원인: 타 은하는 `hubPlanet`과 `sunPosition`이 둘 다 `(galaxy.x, galaxy.y)`라 마커가 겹침.
-    - `world.hubPlanet`: 중심별에서 **오프셋**. 예: `angle = hash(gx,gy,580)*2π`, `dist = max(80, galaxy.radius * 0.18)` → hub는 나선 안쪽 행성, sun은 정중앙.
-    - milkyway는 이미 Earth(origin) ≠ Sun(`galaxyCellSize*0.12`) — 유지.
-    - 미니맵 글리프:
-      - **중심별/태양:** 노란 원+작은 코로나 (`1.0, 0.85, 0.25`) — 기존 sun 마커.
-      - **HUB:** 마젠타/시안 다이아몬드 또는 별 글리프 (`0.85, 0.35, 0.95`), 펄스 링. 은하 금색 점과 다르게.
-      - 같은 은하 차트 안에 sun과 hub가 **동시에** 보여야 함 (줌인 (7) 이후).
-    - `minimap.view()` galaxies 엔트리에 `sun`과 별도 `hub` 마커를 넣거나, galaxies 루프와 sun 마커를 분리 유지.
-    - self_test: (a) 차트 안 hub여도 `checkpointArrow` 방향 필드가 채워짐 (도착 직전 제외); (b) 타 은하 `hubPlanet.x ~= sunPosition.x` 또는 y 불일치; (c) view에 sun 좌표와 hub 좌표가 다름.
-  - `make verify` GREEN + 커밋: `feat(minimap): always-on nearest-hub arrow; offset hub from sun`
-
 (11) **RCS 분출 한 줄 — 조이스틱 반대 방향만 (사용자 확정):**
   - 보고: 공기 분출이 두 줄이라 어색함. 조이스틱 반대 방향으로 **한 줄만**.
   - 원인: `play.lua` ~1567–1608. `bank`(좌우)와 `lift`(전후)를 각각 별도 puff로 쏴서 대각 입력이면 두 줄기.
@@ -50,6 +31,10 @@
   - 사이클당 타입 2~3장 또는 배선 한 조각. 커밋 예: `feat(planets): PixelPlanets sprites by galaxy starType`
 
 ## 처리 완료
+
+(10) **미니맵: 가장 가까운 HUB를 화살표로 항상 가리킴 + HUB와 중심별 구분 (사용자 확정):**
+  - [2026-09-05] 변경 A 완료: checkpointBeyond 조건 제거, 항상 화살표 표시 (도착 시만 숨김).
+  - [2026-09-05] 변경 B 완료: hubPlanet 위치를 은하 중심(sun)에서 오프셋 (hash(gx,gy,580) 각도, galaxy.radius*0.18 거리). minimap.view()에 hubMarkers 테이블 추가. play.lua에서 마젠타 다이아몬드+펄스 링으로 hub 그리기. self_test 3개 검증 (hub≠sun 위치, hubMarkers 차트 좌표 분리, 화살표 방향).
 
 (9) **은하 중심별(태양) 중력우물 + 도트 데미지 + 10초 생존 시 표본 (사용자 확정):**
   - [2026-09-05] 구현 완료: world.lua에 starRadius/wellRadius/dotInterval/survivalTime/gravityStrength 상수 추가. play.lua에 중력 당김, 0.5초당 1딜 DoT, 10초 연속 생존 시 표본 수집, HUD 타이머, 주황/빨강 우물 링 시각 효과 구현. self_test.lua에 5개 테스트 (우물 밖 무중력, 0.5초당 1딜, 10초 표본, 이탈 시 리셋, 은하당 1회).

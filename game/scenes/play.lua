@@ -2318,6 +2318,25 @@ function M:drawMinimap()
             end
         end
     end
+    -- Item 10 change B: hub markers — distinct magenta/cyan diamond glyph
+    -- with pulse ring, drawn at the offset hub position (not galaxy center).
+    for _, hubMk in ipairs(view.hubMarkers or {}) do
+        if hubMk.inside ~= false then
+            local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
+            love.graphics.setColor(0.85, 0.35, 0.95, pulse * 0.7 + 0.3)
+            -- Diamond shape (rotated square)
+            local hx, hy = cx + hubMk.x, cy + hubMk.y
+            local r = 3.0
+            love.graphics.polygon("fill",
+                hx, hy - r,
+                hx + r, hy,
+                hx, hy + r,
+                hx - r, hy)
+            -- Pulse ring around the diamond
+            love.graphics.setColor(0.85, 0.35, 0.95, pulse * 0.5)
+            love.graphics.circle("line", hx, hy, 5)
+        end
+    end
     -- Earth marker
     love.graphics.setColor(0.3, 0.85, 1, 1)
     if not drawMinimapSprite(mm.earth, cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius * 2) then

@@ -170,10 +170,18 @@ function M.hubPlanet(galaxy)
         return nil
     end
     local gx, gy = galaxy.gx, galaxy.gy
+    -- Item 10 change B: offset hub from galaxy center (sunPosition) so the
+    -- minimap can show sun and hub as distinct markers.  The hub sits on a
+    -- hash-deterministic angle at ~18% of galaxy.radius (min 80 wu) from
+    -- the center, inside the inner spiral but clearly not at the sun.
+    local angle = hash(gx, gy, 580) * math.pi * 2
+    local dist = math.max(80, galaxy.radius * 0.18)
+    local hubX = galaxy.x + math.cos(angle) * dist
+    local hubY = galaxy.y + math.sin(angle) * dist
     return {
         id = "hub:" .. galaxy.id,
-        x = galaxy.x,
-        y = galaxy.y,
+        x = hubX,
+        y = hubY,
         radius = 16 + math.floor(hash(gx, gy, 540) * 8),
         hue = hash(gx, gy, 550),
         hub = true,
