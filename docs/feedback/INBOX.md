@@ -2,6 +2,18 @@
 
 ## 처리 대기
 
+(13) **미니맵 은하 표현: 나선 → 동심원 (사용자 확정, 2026-09-05):**
+  - 보고: "나선이라는 게 잘못 이해한 거. 반지름이 다른 여러 원들을 의미한 것."
+  - 현재: `minimap.spiralPoints(galaxy)` → 와인딩 나선 팔 점. `spiralArmCount`(반지름 기반 2~5), `spiralWindTurns=1.2`, `spiralPointsPerArm=14`.
+  - 변경:
+    - `spiralPoints` / `spiralArmCount` / `spiralRotation` / `spiralWindTurns` 전부 **삭제** 또는 `concentricRings`로 교체.
+    - `M.concentricRingCount(galaxy)` — 은하 반지름 기반: <1000→2, <1400→3, <1800→4, else→5 (기존 armCount 테이블 재활용).
+    - `minimap.view()` → `view.rings`에 은하 중심(sun) 기준 동심원 추가. 반지름은 `galaxy.radius * (i / ringCount)` 균등 배분.
+    - draw: `love.graphics.circle("line", cx+sunX, cy+sunY, scaledRadius)` — 기존 나선 점 대신.
+    - 색: 금색 (`0.9, 0.75, 0.3, 0.4`). 태양 궤도 링(`orbit` kind, 반지름 4/7/11)과 구분 — 동심원은 은하 디스크 크기, 궤도는 태양계 미세 링.
+    - self_test: `testMinimap` — `view.spiral` 필드 없음 또는 빈 테이블. `view.rings`에 `kind="concentricRing"` 엔트리 존재.
+  - `make verify` GREEN + 커밋: `fix(minimap): replace spiral arms with concentric rings`
+
 ## 처리 완료
 
 (12) **PixelPlanets(GitHub Deep-Fold / JS 포트)로 행성 모양 교체 (사용자 확정, 2026-09-05):**
