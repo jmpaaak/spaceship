@@ -364,7 +364,7 @@ function love.draw()
     sceneStack.draw(scenes)
     love.graphics.setCanvas()
     local width, height = love.graphics.getDimensions()
-    local scale, x, y = viewport.fit(width, height, false)
+    local scale, x, y = viewport.fit(width, height, true)
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(canvas, x, y, 0, scale, scale)
     if captureRequested and not captureQueued then
