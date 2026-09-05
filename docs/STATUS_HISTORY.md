@@ -1316,3 +1316,17 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - Vertical (lift) puff: spawns at ship nose/tail using forward direction (cos/sin of angle), velocity along that axis.
 - self_test.lua horizontal-puff assert updated to verify angle-aware geometry.
 - make verify GREEN.
+
+## Archived from STATUS.md (2026-09-05 21:56)
+
+
+2026-09-05 — Earth shop start trap: spawn outside settle disk + leave-before-settle gate
+
+## Archived from STATUS.md (2026-09-05 21:58)
+
+- Previous cycle left uncommitted `play.lua`/`self_test.lua` work that spawned the ship at (0,0), inside Earth's settle radius 88, so the first ascending frame auto-settled into Earth shop.
+- `PlayScene.launchSpawnX/Y` = (0, -63), outside `earthSettleRadius`. New scenes and relaunch both use this spawn.
+- Auto-settle now requires `hasLeftEarth` (distance left the settle disk) before re-entry can call `expedition.settle`.
+- Accidental `settlementTouchRows` relaunch `bottom = 1280` overflowed the 200+880 panel; restored to `420 + 165*4 = 1080`.
+- `testEarthShopStartTrap` covers spawn distance, first-frame no-settle, and post-leave settle.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN.

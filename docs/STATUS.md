@@ -1,17 +1,16 @@
 ## Current Status
 
-2026-09-05 — Earth shop start trap: spawn outside settle disk + leave-before-settle gate
+2026-09-05 — INBOX (14) faint thin collect-orbit ring
 
-- Previous cycle left uncommitted `play.lua`/`self_test.lua` work that spawned the ship at (0,0), inside Earth's settle radius 88, so the first ascending frame auto-settled into Earth shop.
-- `PlayScene.launchSpawnX/Y` = (0, -63), outside `earthSettleRadius`. New scenes and relaunch both use this spawn.
-- Auto-settle now requires `hasLeftEarth` (distance left the settle disk) before re-entry can call `expedition.settle`.
-- Accidental `settlementTouchRows` relaunch `bottom = 1280` overflowed the 200+880 panel; restored to `420 + 165*4 = 1080`.
-- `testEarthShopStartTrap` covers spawn distance, first-frame no-settle, and post-leave settle.
+- Collect radius stays `planet.radius + 30` (`PlayScene.collectRadiusPadding = 30`).
+- Undiscovered-planet orbit is a 1px `circle("line")` at alpha `0.3` (range 0.25–0.35). Opaque `planet_rim.png` sprite is skipped (`useCollectOrbitRimSprite = false`).
+- Sparkle / hit-feel / collection trigger unchanged.
+- `testFaintCollectOrbitRing` asserts padding, alpha, line width, no rim sprite, and restored line width.
 - `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
 
 ## Next Slice
 
-- `## 처리 대기` 다음 항목 확인 및 작업.
+- INBOX (15)(a): `fix(settlement): slot row no longer overlaps shop upgrades`
 
 ---
 

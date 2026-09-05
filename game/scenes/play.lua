@@ -156,6 +156,17 @@ M.launchSpawnY = 75 - (58 + 30) - 50  -- -63
 M.earthReentryRadius = 58 * 3  -- 174
 M.reentryShakeMax = 6
 
+-- INBOX (14): undiscovered-planet collect orbit is a faint thin line.
+-- Collection still uses radius+30; only the ring visual is thinned.
+M.collectRadiusPadding = 30
+M.collectOrbitRingAlpha = 0.3
+M.collectOrbitRingLineWidth = 1
+M.useCollectOrbitRimSprite = false
+
+function M.collectOrbitRadius(planetRadius)
+    return (planetRadius or 0) + M.collectRadiusPadding
+end
+
 function M.reentryDrawOffsetX(time, magnitude)
     return math.sin(time * 60) * (magnitude or 0)
 end
@@ -416,6 +427,32 @@ local function drawPlanetEffectSprite(image, cx, cy, diameter, r, g, b, a)
     return true
 end
 M.drawPlanetEffectSprite = drawPlanetEffectSprite
+
+-- Faint thin collect-orbit ring. Opaque rim sprites stay off so the
+-- fallback 1px alpha line is what the player sees on mobile.
+local function drawCollectOrbitRing(x, y, planetRadius, r, g, b, rimImage)
+    local radius = M.collectOrbitRadius(planetRadius)
+    local alpha = M.collectOrbitRingAlpha
+    if M.useCollectOrbitRimSprite and rimImage then
+        if drawPlanetEffectSprite(rimImage, x, y, radius * 2, r, g, b, alpha) then
+            return true
+        end
+    end
+    local prevWidth = 1
+    if love.graphics.getLineWidth then
+        prevWidth = love.graphics.getLineWidth()
+    end
+    if love.graphics.setLineWidth then
+        love.graphics.setLineWidth(M.collectOrbitRingLineWidth)
+    end
+    love.graphics.setColor(r or 1, g or 1, b or 1, alpha)
+    love.graphics.circle("line", x, y, radius)
+    if love.graphics.setLineWidth then
+        love.graphics.setLineWidth(prevWidth)
+    end
+    return false
+end
+M.drawCollectOrbitRing = drawCollectOrbitRing
 
 -- Draw a floating-text icon sprite to the left of a floating text label.
 -- image: the icon (may be nil -> no icon drawn). cx, cy: center of the icon.
@@ -1818,7 +1855,7 @@ function M:update(dt)
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
             local distanceSquared = dx * dx + dy * dy
             if self.expedition.phase == "ascending"
-                and distanceSquared <= (planet.radius + 30) ^ 2
+                and distanceSquared <= (M.collectOrbitRadius(planet.radius)) ^ 2
                 and not self.discovered[planet.id] then
                 self.discovered[planet.id] = true
                 self.discoveredCount = self.discoveredCount + 1
@@ -2620,13 +2657,9 @@ function M:draw()
                 love.graphics.circle("fill", x - planet.radius * 0.3, y - planet.radius * 0.3, planet.radius * 0.55)
             end
             if not self.discovered[planet.id] then
-                love.graphics.setColor(sampleTierColor(world.sampleTier(planet)))
                 local pe3 = self.planetEffectImages or {}
-                local rimDiam = (planet.radius + 30) * 2
-                if not drawPlanetEffectSprite(pe3.rim, x, y, rimDiam,
-                        sampleTierColor(world.sampleTier(planet))) then
-                    love.graphics.circle("line", x, y, planet.radius + 30)
-                end
+                local cr, cg, cb = sampleTierColor(world.sampleTier(planet))
+                drawCollectOrbitRing(x, y, planet.radius, cr, cg, cb, pe3.rim)
                 -- Balatro-style twinkle: a handful of small points orbiting
                 -- just outside the rim glow, each with its own phase so the
                 -- shimmer isn't perfectly synchronized across points.
@@ -2635,7 +2668,7 @@ function M:draw()
                 local sr, sg, sb = sampleTierColor(tier)
                 local shipDx, shipDy = planet.x - self.ship.x, planet.y - self.ship.y
                 local shipDistance = math.sqrt(shipDx * shipDx + shipDy * shipDy)
-                local anticipation = sparkleAnticipationMultiplier(shipDistance, planet.radius + 30)
+                local anticipation = sparkleAnticipationMultiplier(shipDistance, M.collectOrbitRadius(planet.radius))
                 local pe4 = self.planetEffectImages or {}
                 for i = 1, sparkle.count do
                     local seed = (planet.id and (tostring(planet.id):len() * 7) or 0) + i * 2.4

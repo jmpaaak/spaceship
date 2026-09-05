@@ -2,13 +2,6 @@
 
 ## 처리 대기
 
-(14) **수집 궤도 링을 옅고 얇은 선으로 (사용자 확정, 2026-09-05):**
-  - 현재 `play.lua` 미발견 행성: `love.graphics.setColor(sampleTierColor(...))` 후 `circle("line", x, y, planet.radius + 30)` 또는 `drawPlanetEffectSprite(pe3.rim, …, rimDiam=(radius+30)*2)`. 모바일에서 진한 원으로 보임.
-  - 변경: 폴백 `circle("line")`은 `setLineWidth(1)` + 색 alpha **0.25~0.35**. rim 스프라이트도 같은 alpha로 그리거나, 스프라이트가 불투명하면 폴백 선만 쓰고 rim 스프라이트는 끄기.
-  - 수집 판정 `radius+30` / 반짝임 / 타격감은 유지. 선만 옅게.
-  - self_test: 수집 반경 숫자는 그대로. 시각은 capture 불필요 — 코드 상수/alpha 단언.
-  - `make verify` GREEN + 커밋: `fix(play): faint thin collect-orbit ring`
-
 (15) **지구상점 슬롯 — 겹침 해소 + 리스크 + 웹에디터 (사용자 확정, 2026-09-05):**
   - 상점 슬롯이 업글/기어 오퍼와 같은 밴드에 그려져 겹침. `settlementTouchRows[3]`(slot)과 `[4]`(relaunch) 레이아웃을 분리: 슬롯은 전용 행, 결과 패널이 다른 행 텍스트를 덮지 않게.
   - 슬롯 본체 스프라이트: itch **Caz PIXEL FANTASY SLOT MACHINE** (https://cazwolf.itch.io/pixel-slot-machine, NYOP, 상업 OK) 사용자 구매 후 `assets/slot/` 에 본체+레버. 구매 전엔 기존 `slot_spin_button.png` / 심볼 3종 유지하되 겹침만 먼저 고친다. ComfyUI 재생성 금지.
@@ -22,6 +15,9 @@
   - `make verify` GREEN + 커밋: `fix(hud): stop drawing full-width black HUD band`
 
 ## 처리 완료
+
+(14) **수집 궤도 링을 옅고 얇은 선으로 (사용자 확정, 2026-09-05):**
+  - [2026-09-05] ✅ 완료: 수집 반경 `radius+30` 유지. 미발견 행성 궤도 링은 `setLineWidth(1)` + alpha 0.3 폴백 선. 불투명 `planet_rim.png`는 끄고 선만 사용. 반짝임/타격감 유지. `testFaintCollectOrbitRing` 상수/alpha 단언. `make verify` GREEN.
 
 (13) **미니맵 은하 표현: 나선 → 동심원 (사용자 확정, 2026-09-05):**
   - [2026-09-05] ✅ 완료: `spiralArmCount`/`spiralRotation`/`spiralPointsPerArm`/`spiralWindTurns`/`spiralPoints`/`spiralHash` 전부 삭제. `M.concentricRingCount(galaxy)` 신규 (반지름 구간 2~5). `view.rings`에 `kind="concentricRing"` 엔트리 추가, `view.spiral`/`view.spiralGalaxyId` 제거. play.lua 나선 그리기→동심원 `circle("line")` (금색 0.9/0.75/0.3/0.4). self_test 검증 통과. `make verify` GREEN.
