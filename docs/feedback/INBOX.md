@@ -45,6 +45,43 @@
   - settle 트리거 시점에 `reentryShake = 0` 초기화.
   - `make verify` GREEN + 커밋: `feat(play): atmospheric reentry shake + heat vignette on Earth landing`
 
+(6) **HUB 충돌 게임오버 금지 — 지구와 동일 취급 (사용자 확정, 최우선):**
+  - 보고: HUB에 부딪히면 일반 행성처럼 데미지 → 게임오버.
+  - 원인: `play.lua` 행성 루프에서 수집(`radius+30`)과 충돌(`radius+5` + `world.collisionDamage`)이 **모든** 행성에 적용됨. `planet.hub`도 예외 없음.
+  - 변경:
+    - `planet.hub` 및 `planet.isShop` 은 충돌 데미지 블록을 **건너뛴다** (지구처럼 근접=상호작용만).
+    - hub 기존 상호작용 유지: 근접 시 `settleAtHub` + 은하당 1회 `exploreHub` 기어 드롭. shop 모달도 유지.
+    - `self.collided[planet.id]` 를 hub/shop에 세팅하지 말 것 (데미지 경로 자체가 없어야 함).
+    - self_test: hub에 `collisionDamage` 호출/내구도 감소가 일어나지 않음을 단언.
+  - `make verify` GREEN + 커밋: `fix(play): hub/shop planets never deal collision damage`
+
+(7) **미니맵 줌인 — HUB/중심행성이 보이게 (사용자 확정):**
+  - 현재 `minimap.viewRadius = galaxyCellSize * 2.5` (≈11520px). 은하 디스크가 차트에서 ~10px, hub 행성은 서브픽셀.
+  - 변경: `M.viewRadius = world.galaxyCellSize * 0.7` (현재 은하가 차트의 대부분을 채움).
+  - 이웃 은하는 기존 `project()` 림 클램프로 가장자리에 점으로 유지. `chartRadius` / `galaxyCellRadius` / `checkpointSearchCellRadius` 는 그대로 (오프차트 화살표 유지).
+  - hub 마커(`markerGalaxyHubRadius`)와 sun 마커가 현재 은하 안에서 서로 구분되게 그릴 것.  Milky Way는 Earth + Sun 둘 다 차트에 들어와야 함.
+  - self_test의 viewRadius 의존 assertion (`Earth must clamp…`, `checkpointBeyond`)을 새 스케일에 맞게 수정.
+  - `make verify` GREEN + 커밋: `fix(minimap): zoom in viewRadius 2.5→0.7 cells so hub/sun readable`
+
+(8) **미니맵 나선/링 색 — 전 은하 동일, 태양계 특례 제거 (사용자 확정):**
+  - 현재 `play.lua` drawMinimap: milkyway 링/마커만 파랑 `(0.3, 0.55, 0.95)` / `(0.25, 0.55, 1)`, 나머지 은하는 전부 금색 `(0.9, 0.75, 0.3)`.
+  - 사용자: 은하계 나선색은 모두 같아야 함. 태양계만 다른 이유 없음.
+  - 변경: 링·나선·galaxy 마커를 **한 팔레트**로 통일 (금색 유지 권장: fill `0.9, 0.75, 0.3`, line alpha 0.55). milkyway `if ring.id == "milkyway"` / `if galaxy.id == "milkyway"` 색 분기를 제거.
+  - Earth 마커(시안) / player(흰색) / 귀환 화살(주황) / 체크포인트 화살(마젠타) / sun(노란 별) 은 구분용이라 **유지**.
+  - 나선 점(`view.spiral`)이 안 그려지고 있으면 금색으로 그려 넣을 것 (계산은 `minimap.view()`에 이미 있음).
+  - `make verify` GREEN + 커밋: `fix(minimap): same spiral/ring color for every galaxy`
+
+(9) **은하 중심별(태양) 중력우물 + 도트 데미지 + 10초 생존 시 표본 (사용자 확정):**
+  - 대상: `world.sunPosition(galaxy)` 위치의 중심별. milkyway는 Earth가 아닌 **태양**(origin에서 `galaxyCellSize*0.12` 오프셋). 다른 은하는 galaxy 중심 = sun (hub와 좌표가 같음).
+  - hub는 (6)대로 안전 체크포인트. 중심별은 **별도 위험 구역** — 같은 좌표면 hub 상호작용(기어)과 별 우물을 둘 다 적용하되, 별 본체 smash-kill은 없음.
+  - **중력:** 함선이 `starRadius * 4` (starRadius = hub.radius 또는 24) 이내면 별 방향으로 당김. 강도는 거리에 반비례. 조이스틱 추력으로 버틸 수 있어야 함 (starter 속도로 탈출 가능, 방치하면 빨려들어감).
+  - **도트 데미지:** 우물 안에 있는 동안 선체 1 데미지 / 4초 (starter 3HP면 10초 생존 후 HP 1 남음). 기존 smash `(radius+5)` 충돌은 중심별에 적용하지 않음. 플로팅 `-1` + 짧은 셰이크. 0 되면 기존 destroy.
+  - **10초 생존 → 표본:** 우물 안에 **연속** 10초. 한 은하당 런당 1회. 성공 시 `expedition.collectSample` + 플로팅 텍스트. 우물을 벗어나면 타이머 리셋 (재진입 가능, 이미 획득한 은하는 재지급 없음).
+  - HUD: 우물 안에서 `태양 접근 3.2 / 10s` 식 카운트업 (i18n `star_well_timer`). 이미 획득한 은하는 표시 없음.
+  - 시각: 우물 반경 주황/빨강 링 (행성 파란 수집링과 구분). 당기는 동안 약한 지속 셰이크.
+  - self_test: 우물 밖 무중력, 4초당 1딜, 10초 연속 시 1회 표본, 이탈 시 타이머 리셋, 은하당 1회.
+  - `make verify` GREEN + 커밋: `feat(play): central-star gravity well, DoT, 10s sample`
+
 ## 처리 완료
 
 - ✅ 완료(2026-09-05) **상점(settlement) UI 텍스트 겹침/깨짐 수정:**
