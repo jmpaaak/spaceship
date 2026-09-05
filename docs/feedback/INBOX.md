@@ -2,14 +2,6 @@
 
 ## 처리 대기
 
-(17) **HUD 정리 — 개발 임시본 제거, 표본금액 HUD 줄 제거, 좌표 좌상단, 아이콘 확대, 겹침 수정 (사용자 확정, 2026-09-06):**
-  - **(a) "개발 임시본" / "DEV PLACEHOLDER" 풋터 완전 제거.** `M.devPlaceholderFontSize`, `M.devPlaceholderAlpha`, `self.tinyFont = fonts.get(...)`, 그리고 `draw()`의 `love.graphics.printf(i18n.t("dev_placeholder"), ...)` 전부 삭제. i18n에서도 `dev_placeholder` 키 제거. `M.devPlaceholderAlpha`가 남으면 컴파일 에러.
-  - **(b) 표본 금액 HUD 줄 제거.** `hud.samples` (현재 `"표본 14  위험 $1736"`)를 HUD에서 삭제. HUD에는 `거리`·`자금`·`H3/3 상승`만 남긴다. `hudLines()`에서 `samples = nil` 고정. `hudHeight()` 계산에서 samples 분기 제거. self_test 갱신.
-  - **(c) `H3/3 상승`(상태 줄)을 좌상단으로.** 지금 스크린샷 `10:-12:1`은 좌표 같은 값인데 의도하지 않은 것. `hud_status_no_slots` 포맷을 `"H%d/%d %s"` (음수 없는 정렬)으로 고치고, 거리·자금 바로 아래 2째줄에 그린다. 좌표가 아닌 hull·phase.
-  - **(d) HUD 아이콘 크기.** `M.hullIconSize = 8` → **16**, `M.cashIconSize = 8` → **16**, `M.hullIconGap = 4` → **6**. 아이콘은 `drawHudSpriteOrPoly`가 그리는데, 스케일 인자가 `M.hullIconSize`라 이 상수만 올리면 자동 확대.
-  - **(e) HUD 줄 겹침 수정.** `M.hudLineStep = 36` → 아이콘 16+간격+폰트 22이면 최소 **26** 이상이어야 함. 현재 36이면 충분한데, 스크린샷에서 겹쳐 보이면 `hudHeight()`가 2줄 기준으로 줄어들었을 수 있음. 확인 후 수정.
-  - `make verify` GREEN + 커밋: `fix(hud): remove dev placeholder, sample risk line, enlarge icons, fix overlap`
-
 (18) **일시정지 버튼 — 우측 상단 (사용자 확정, 2026-09-06):**
   - ascending 페이즈에서만 우측 상단에 일시정지 ⏸ 아이콘 (44×44 터치 영역).
   - 탭 → `self.paused = true` 토글. paused면 `dt = 0`, 화면 중앙 `"PAUSED"` / `"일시정지"` 오버레이 + 터치하면 해제.
@@ -60,6 +52,9 @@
   - `make verify` GREEN + 커밋: `feat(play): zoom-in on sample collect + slower timeslip`
 
 ## 처리 완료
+
+(17) **HUD 정리 — 개발 임시본 제거, 표본금액 HUD 줄 제거, 좌표 좌상단, 아이콘 확대, 겹침 수정 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: (a) devPlaceholder 상수/draw/i18n 전부 삭제. (b) samples HUD 줄 제거 — hudLines/hudHeight/draw에서 samples 분기 삭제, self_test 갱신. (c) hud_status_no_slots 포맷 `"H%d/%d %s"` — 좌상단에 hull+phase. (d) hullIconSize/cashIconSize 8→16, gap 4→6. (e) hudLineStep 16→22.
 
 (16) **HUD 가로 검정띠 제거 (사용자 확정, 2026-09-05):**
   - `M:draw`가 `drawPanelSprite(shopEff.hudPanel, 0, 0, viewport.width, hudHeight)` / 폴백 `rectangle("fill", 0, 0, viewport.width, hudHeight)` 로 화면 가로 전체를 덮음. 미니맵 Y는 `hudHeight`에 묶여 있음.

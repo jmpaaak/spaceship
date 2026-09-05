@@ -1,7 +1,12 @@
 ## Current Status
 
-- INBOX (16) complete: `fix(hud): stop drawing full-width black HUD band`. HUD fill is now left-text width only (`PlayScene.hudBackgroundWidth`, cap `hudBackgroundMaxWidth=280`). `hudHeight()` still anchors the minimap on the right. Stars/planets show through on the right of the HUD.
+- INBOX (17) complete: HUD cleanup — all 5 sub-items done.
+  - (a) DEV PLACEHOLDER footer fully removed (constants, draw, i18n).
+  - (b) Samples/risk HUD line removed from hudLines, hudHeight, draw, self_test.
+  - (c) hud_status_no_slots format cleaned to "H%d/%d %s".
+  - (d) HUD icon sizes doubled: hullIconSize/cashIconSize 8→16, gap 4→6.
+  - (e) hudLineStep raised 16→22 to prevent overlap with larger icons.
 
 ## Next Slice
 
-- No pending INBOX items. Idle until new feedback arrives.
+- INBOX (18): Pause button — top-right corner during ascending phase.
