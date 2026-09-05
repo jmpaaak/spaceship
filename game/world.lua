@@ -232,8 +232,8 @@ function M.planets(sectorX, sectorY)
     if not galaxy then
         return {}
     end
-    local count = hash(sectorX, sectorY, 1) > 0.42 and 1 or 0
-    if hash(sectorX, sectorY, 7) > 0.91 then count = 2 end
+    local count = hash(sectorX, sectorY, 1) > 0.70 and 1 or 0
+    if hash(sectorX, sectorY, 7) > 0.96 then count = 2 end
     local planets = {}
     -- Clamp hue within ±0.083 of the galaxy's baseHue so planets in the same
     -- galaxy share a consistent colour mood. (0.083 ≈ 30°/360°)

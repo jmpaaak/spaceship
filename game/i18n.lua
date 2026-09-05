@@ -109,6 +109,7 @@ locales.en = {
     equipped_gear_label = "EQUIPPED GEAR",
     launch_loadout_title = "LAUNCH LOADOUT",
     earth_shop_title = "EARTH SHOP",
+    earth_shop_label = "EARTH SHOP",
     -- Item 7(c): Earth shop gear purchase UI
     earth_gear_offer = "GEAR OFFER [B]: %s  $%d",
     earth_gear_bought = "GEAR ACQUIRED: %s  BALANCE $%d",
@@ -235,6 +236,7 @@ locales.ko = {
     equipped_gear_label = "장착 장비",
     launch_loadout_title = "발사 장비",
     earth_shop_title = "지구 상점",
+    earth_shop_label = "지구 상점",
     -- Item 7(c): Earth shop gear purchase UI
     earth_gear_offer = "장비 제안 [B]: %s  $%d",
     earth_gear_bought = "장비 획득: %s  잔액 $%d",
