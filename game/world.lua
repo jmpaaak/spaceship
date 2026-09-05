@@ -293,9 +293,9 @@ end
 -- by PlayScene using the same destroy/reset path as a lethal planet hit.
 function M.debris(sectorX, sectorY, time)
     time = time or 0
-    local count = 1
-    if hash(sectorX, sectorY, 900) > 0.55 then count = 2 end
-    if hash(sectorX, sectorY, 901) > 0.88 then count = 3 end
+    local count = 0
+    if hash(sectorX, sectorY, 900) > 0.65 then count = 1 end
+    if hash(sectorX, sectorY, 901) > 0.93 then count = 2 end
     local pieces = {}
     for i = 1, count do
         local kindRoll = hash(sectorX, sectorY, 910 + i)
@@ -305,11 +305,11 @@ function M.debris(sectorX, sectorY, time)
         elseif kindRoll < 0.36 then
             kind = "scrap"
         end
-        local minR, maxR = 5, 14
+        local minR, maxR = 3, 7
         if kind == "can" then
             minR, maxR = 2, 3
         elseif kind == "scrap" then
-            minR, maxR = 3, 6
+            minR, maxR = 2, 4
         end
         local radius = minR + math.floor(hash(sectorX, sectorY, 920 + i) * (maxR - minR + 1))
         local vxSign = hash(sectorX, sectorY, 930 + i) < 0.5 and -1 or 1
