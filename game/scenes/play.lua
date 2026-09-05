@@ -166,6 +166,17 @@ function M.reentryShakeFromDistance(dist)
     return M.reentryShakeMax * (1 - dist / radius)
 end
 
+function M.reentryHeatVignetteAlpha(dist)
+    local radius = M.earthReentryRadius
+    if dist >= radius then
+        return 0
+    end
+    if dist <= 0 then
+        return 0.3
+    end
+    return 0.3 * (1 - dist / radius)
+end
+
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
 -- already accepts any tap on the internal canvas regardless of x/y (see the
 -- "launch" branch below), so the functional touch target has always spanned
@@ -1667,9 +1678,19 @@ function M:update(dt)
         local earthDistSq = dx * dx + dy * dy
         local earthDist = math.sqrt(earthDistSq)
         self.reentryShake = M.reentryShakeFromDistance(earthDist)
+        self.reentryHeatAlpha = M.reentryHeatVignetteAlpha(earthDist)
+
+        -- M.earthVisualRadius * 1.5 is 87, but settle is 88. To trigger BEFORE settle,
+        -- use a slightly larger radius, e.g. M.earthSettleRadius + 15 (103).
+        if not self.hasReentrySlowmo and earthDist < M.earthSettleRadius + 15 then
+            self.hasReentrySlowmo = true
+            self.timeSlip = {timer = 0.6, scale = 0.5}
+        end
+
         if earthDistSq <= M.earthSettleRadius * M.earthSettleRadius then
             expedition.settle(self.expedition)
             self.reentryShake = 0
+            self.reentryHeatAlpha = 0
         end
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
@@ -3102,6 +3123,14 @@ function M:draw()
             love.graphics.setFont(prevFont)
         end
     end
+    if self.reentryHeatAlpha and self.reentryHeatAlpha > 0 then
+        local prevLineWidth = love.graphics.getLineWidth()
+        love.graphics.setColor(1, 0, 0, self.reentryHeatAlpha)
+        love.graphics.setLineWidth(60)
+        love.graphics.rectangle("line", 0, 0, viewport.width, viewport.height)
+        love.graphics.setLineWidth(prevLineWidth)
+    end
+
     self.tinyFont = self.tinyFont or fonts.get(M.devPlaceholderFontSize)
     local previousFooterFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)

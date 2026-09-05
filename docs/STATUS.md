@@ -1,16 +1,16 @@
 ## Current Status
 
-2026-09-05 — INBOX (5)(a) 지구 착륙 진입 지속 흔들림
+2026-09-05 — INBOX (5)(b)(c) 착륙 직전 슬로우모션 및 붉은 비네트 발열 이펙트
 
-- `game/scenes/play.lua`: 지구 거리 < `earthVisualRadius * 3`이면 `self.reentryShake`를 거리 반비례로 갱신 (멀면 약, 가까울수록 강). 기존 `shipShake`와 별도.
-- `game/scenes/play.lua`: 함선 draw x 오프셋에 `math.sin(time*60) * reentryShake` 적용.
-- `game/scenes/play.lua`: Earth settle 트리거 시 `reentryShake = 0`.
-- `game/self_test.lua`: `testReentryShake` — 원거리 0, 진입 구간 >0, 근접 시 증가, settle 시 0, `shipShake` 독립.
+- `game/scenes/play.lua`: 지구 근접 시(거리 < `settleRadius + 15`) `self.timeSlip`을 설정하여 0.6초간 게임 속도를 0.5배로 낮추는 슬로우모션 구현.
+- `game/scenes/play.lua`: `M.reentryHeatVignetteAlpha` 함수를 추가하여 진입 구간에서 붉은 발열 비네트의 투명도를 0에서 0.3까지 증가시키고 화면 전체에 테두리로 그림.
+- `game/self_test.lua`: 슬로우모션 발동, 발열 비네트 알파값의 거리에 따른 증가 및 Settle 후 초기화 테스트 추가.
+- `docs/feedback/INBOX.md`: 항목 (5)를 `## 처리 대기`에서 `## 처리 완료`로 이동.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (5)(b) 착륙 직전 슬로우모션 (거리 < earthRadius * 1.5, 0.6초 dt 0.5배)
+- INBOX (7) 미니맵 줌인 — HUB/중심행성이 보이게
 
 ---
 

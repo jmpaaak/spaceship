@@ -2,15 +2,6 @@
 
 ## 처리 대기
 
-(5) **지구 착륙 시 진입 이펙트 — 길게 흔들리는 대기권 진입 느낌 (사용자 확정):**
-  - 지구 근접 → settle 판정 직전, 일정 거리 안에 들어오면 "착륙 진입" 연출:
-  - 판정: `ship 거리 < earthRadius * 3` 이면 착륙 진입 시작 (settle 거리보다 넓은 구간).
-  - **(a) 지속 흔들림:** ✅ 완료 — `self.reentryShake` 거리 반비례, draw `sin(time*60)*reentryShake` x 오프셋, settle 시 0. `shipShake`와 별도.
-  - **(b) 슬로우모션:** 착륙 직전(거리 < earthRadius * 1.5) 0.6초간 dt를 0.5배로.
-  - **(c) 화면 가장자리 붉은 발열:** 진입 구간에서 화면 가장자리에 반투명 빨간 비네트. 거리에 따라 alpha 0→0.3 증가. draw 마지막에 그리기.
-  - settle 트리거 시점에 `reentryShake = 0` 초기화.
-  - `make verify` GREEN + 커밋: `feat(play): atmospheric reentry shake + heat vignette on Earth landing`
-
 (7) **미니맵 줌인 — HUB/중심행성이 보이게 (사용자 확정):**
   - 현재 `minimap.viewRadius = galaxyCellSize * 2.5` (≈11520px). 은하 디스크가 차트에서 ~10px, hub 행성은 서브픽셀.
   - 변경: `M.viewRadius = world.galaxyCellSize * 0.7` (현재 은하가 차트의 대부분을 채움).
@@ -70,6 +61,16 @@
   - `make verify` GREEN + 커밋: `fix(rcs): single opposite-stick exhaust stream`
 
 ## 처리 완료
+
+(5) **지구 착륙 시 진입 이펙트 — 길게 흔들리는 대기권 진입 느낌 (사용자 확정):**
+  - 지구 근접 → settle 판정 직전, 일정 거리 안에 들어오면 "착륙 진입" 연출:
+  - 판정: `ship 거리 < earthRadius * 3` 이면 착륙 진입 시작 (settle 거리보다 넓은 구간).
+  - **(a) 지속 흔들림:** ✅ 완료 — `self.reentryShake` 거리 반비례, draw `sin(time*60)*reentryShake` x 오프셋, settle 시 0. `shipShake`와 별도.
+  - **(b) 슬로우모션:** 착륙 직전(거리 < earthRadius * 1.5) 0.6초간 dt를 0.5배로.
+  - **(c) 화면 가장자리 붉은 발열:** 진입 구간에서 화면 가장자리에 반투명 빨간 비네트. 거리에 따라 alpha 0→0.3 증가. draw 마지막에 그리기.
+  - settle 트리거 시점에 `reentryShake = 0` 초기화.
+  - `make verify` GREEN + 커밋: `feat(play): atmospheric reentry shake + heat vignette on Earth landing`
+
 
 - **행성 표본 채집 궤도 진입 시 타격감 이펙트 (사용자 확정):** ✅ 완료 — `game/scenes/play.lua`에서 수집 시 타임슬립, 카메라 흔들림, 화면 플래시를 구현함.
   - 행성 수집 반경(`planet.radius + 30`)에 진입하는 순간 다음 효과 동시 발동:

@@ -5007,6 +5007,7 @@ local function testReentryShake()
     scene:update(0)
     assert((scene.reentryShake or 0) == 0,
         "far from Earth must not set reentryShake, got " .. tostring(scene.reentryShake))
+    assert((scene.reentryHeatAlpha or 0) == 0, "far from Earth must not have heat alpha")
 
     local reentryR = PlayScene.earthVisualRadius * 3
     scene.ship.y = PlayScene.earthCenterY - (reentryR - 1)
@@ -5014,12 +5015,31 @@ local function testReentryShake()
     local farShake = scene.reentryShake or 0
     assert(farShake > 0,
         "ship distance < earthRadius*3 must start reentryShake")
+    assert((scene.reentryHeatAlpha or 0) > 0, "must start heat alpha inside reentry range")
+    assert(scene.timeSlip == nil, "no slowmo at start of reentry")
+
+    scene.ship.y = PlayScene.earthCenterY - (PlayScene.earthSettleRadius + 16)
+    scene:update(0)
+    local midShake = scene.reentryShake or 0
+    assert(midShake > farShake, "reentryShake must grow")
+    local midAlpha = scene.reentryHeatAlpha or 0
+    assert(midAlpha > 0, "must have heat alpha")
+    assert(scene.timeSlip == nil, "no slowmo before slowmo radius")
+
+    local slowmoR = PlayScene.earthSettleRadius + 15
+    scene.ship.y = PlayScene.earthCenterY - (slowmoR - 1)
+    scene:update(0)
+    assert(scene.timeSlip, "ship distance < settle+15 must trigger slowmo")
+    assert(scene.timeSlip.scale == 0.5, "slowmo scale must be 0.5")
+    assert(scene.timeSlip.timer == 0.6, "slowmo timer must be 0.6")
+    local nearAlpha = scene.reentryHeatAlpha or 0
+    assert(nearAlpha > midAlpha, "heat alpha must increase")
 
     scene.ship.y = PlayScene.earthCenterY - (PlayScene.earthSettleRadius + 1)
     scene:update(0)
     local nearShake = scene.reentryShake or 0
-    assert(nearShake > farShake,
-        "reentryShake must grow as Earth distance shrinks")
+    assert(nearShake > midShake, "reentryShake must grow as Earth distance shrinks")
+    assert((scene.reentryHeatAlpha or 0) > nearAlpha, "heat alpha must grow as Earth distance shrinks")
 
     scene.ship.x = PlayScene.earthCenterX
     scene.ship.y = PlayScene.earthCenterY
@@ -5028,6 +5048,7 @@ local function testReentryShake()
         "landing on Earth must settle, got " .. tostring(scene.expedition.phase))
     assert((scene.reentryShake or 0) == 0,
         "settle must reset reentryShake to 0")
+    assert((scene.reentryHeatAlpha or 0) == 0, "settle must reset heat alpha to 0")
 
     assert(type(PlayScene.reentryDrawOffsetX) == "function",
         "reentry draw offset helper must be exported")
