@@ -1330,3 +1330,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - Accidental `settlementTouchRows` relaunch `bottom = 1280` overflowed the 200+880 panel; restored to `420 + 165*4 = 1080`.
 - `testEarthShopStartTrap` covers spawn distance, first-frame no-settle, and post-leave settle.
 - `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-05 22:21)
+
+- Collect radius stays `planet.radius + 30` (`PlayScene.collectRadiusPadding = 30`).
+- Undiscovered-planet orbit is a 1px `circle("line")` at alpha `0.3` (range 0.25–0.35). Opaque `planet_rim.png` sprite is skipped (`useCollectOrbitRimSprite = false`).
+- Sparkle / hit-feel / collection trigger unchanged.
+- `testFaintCollectOrbitRing` asserts padding, alpha, line width, no rim sprite, and restored line width.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN.

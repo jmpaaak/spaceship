@@ -1,16 +1,22 @@
 ## Current Status
 
-2026-09-05 — INBOX (14) faint thin collect-orbit ring
-
-- Collect radius stays `planet.radius + 30` (`PlayScene.collectRadiusPadding = 30`).
-- Undiscovered-planet orbit is a 1px `circle("line")` at alpha `0.3` (range 0.25–0.35). Opaque `planet_rim.png` sprite is skipped (`useCollectOrbitRimSprite = false`).
-- Sparkle / hit-feel / collection trigger unchanged.
-- `testFaintCollectOrbitRing` asserts padding, alpha, line width, no rim sprite, and restored line width.
-- `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+- Fixed test failure from previous cycle (`fix(settlement): slot row no longer overlaps shop upgrades`).
+- Preflight `make verify` now fully passes. All modified files are ready to be committed.
 
 ## Next Slice
 
-- INBOX (15)(a): `fix(settlement): slot row no longer overlaps shop upgrades`
+- INBOX (15)(b): `feat(slot): spin cost + miss pays 0`
+- INBOX (15)(c): `feat(tools): slot-editor web UI`
+
+---
+
+## 2026-09-05 — INBOX (15) 지구상점 슬롯 겹침 해소 (test fix)
+
+- `game/scenes/play.lua`: `settlementTouchRows`를 4행에서 5행으로 분리 (hull/steering, yield/ship, gear, slot, relaunch). `gear` 전용 행을 추가하여 겹침 문제 해결.
+- `game/scenes/play.lua`: 상점 드로우 영역 확장에 따라 `M.settlementPanelHeight`를 1045로 늘림. `M.settlementShopLayout` 함수가 `slot`, `slotResult`, `gear`, `scout`, `relaunch` 영역을 반환하도록 추가.
+- `game/scenes/play.lua`: `gear` 터치 시 `"b"` (기어 구매) 키 입력을 발생하도록 매핑.
+- `game/self_test.lua`: 레이아웃 변경(relaunch 버튼 Y좌표 이동 등)에 맞춰 관련 테스트 픽스.
+- `make verify` GREEN.
 
 ---
 

@@ -69,7 +69,7 @@ M.settlementRowStep = 44  -- vertical px between successive text lines in the sh
 M.settlementSummaryRowStep = 40  -- vertical px between summary stat lines
 -- Vertical layout anchors (all in 720×1280 canvas coordinates):
 M.settlementPanelTop = 200
-M.settlementPanelHeight = 880
+M.settlementPanelHeight = 1045
 M.settlementTitleY = 210
 M.settlementSummaryBgTop = 240
 M.settlementSummaryBgHeight = 170
@@ -77,7 +77,7 @@ M.settlementTotalY = 248
 M.settlementSamplesY = 288
 M.settlementPeakAltY = 328
 M.settlementNewBestY = 368
--- Touch rows: 4 rows × 165px each, starting after the summary section.
+-- Touch rows: 5 rows × 165px each, starting after the summary section.
 local settlementTouchRowTop = 420
 local settlementTouchRowHeight = 165
 local settlementTouchRows = {
@@ -96,15 +96,27 @@ local settlementTouchRows = {
             { key = "ship", left = 360, right = 720 },
         },
     },
-    { key = "slot",
+    { key = "gear",
       top = settlementTouchRowTop + settlementTouchRowHeight * 2,
       bottom = settlementTouchRowTop + settlementTouchRowHeight * 3 },
-    { key = "relaunch",
+    { key = "slot",
       top = settlementTouchRowTop + settlementTouchRowHeight * 3,
       bottom = settlementTouchRowTop + settlementTouchRowHeight * 4 },
+    { key = "relaunch",
+      top = settlementTouchRowTop + settlementTouchRowHeight * 4,
+      bottom = settlementTouchRowTop + settlementTouchRowHeight * 5 },
 }
 M.settlementTouchRows = settlementTouchRows
 M.settlementTouchRowHeight = settlementTouchRowHeight
+M.settlementShopLayout = function()
+    return {
+        slot = { top = M.settlementTouchRows[4].top, bottom = M.settlementTouchRows[4].bottom },
+        slotResult = { top = M.settlementTouchRows[4].top, bottom = M.settlementTouchRows[4].bottom },
+        gear = { top = M.settlementTouchRows[3].top, bottom = M.settlementTouchRows[3].bottom },
+        scout = { top = M.settlementTouchRows[2].top, bottom = M.settlementTouchRows[2].bottom },
+        relaunch = { top = M.settlementTouchRows[5].top, bottom = M.settlementTouchRows[5].bottom }
+    }
+end
 
 -- SHIP DESTROYED restart touch target. Unlike EARTH SHOP's four stacked
 -- rows, this phase has a single action (restart), so touchpressed accepts
@@ -2234,6 +2246,8 @@ function M:touchpressed(id, x, y)
                     self:keypressed("y")
                 elseif key == "ship" then
                     self:keypressed("v")
+                elseif key == "gear" then
+                    self:keypressed("b")
                 elseif key == "slot" then
                     self:keypressed("l")
                 elseif key == "relaunch" then
@@ -3157,8 +3171,10 @@ function M:draw()
             local price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
             love.graphics.setColor(0.4, 1, 0.7)
             love.graphics.printf(i18n.t("earth_gear_offer", offer.name, price), fullX, row, fullW, "center")
-            row = row + rowStep
         end
+
+        local r4 = M.settlementTouchRows[4].top
+        row = r4 + 12
         if self.earthShopSlotResult then
             love.graphics.setColor(1, 1, 1, 0.85)
             drawPanelSprite(self.slotResultPanelImage, fullX, row - 2, fullW, rowStep * 2 + 2)
@@ -3177,8 +3193,8 @@ function M:draw()
             love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, row, fullW, "center")
         end
 
-        local r4 = M.settlementTouchRows[4].top
-        row = r4 + 8
+        local r5 = M.settlementTouchRows[5].top
+        row = r5 + 8
         love.graphics.setColor(1, 1, 1, 0.9)
         drawPanelSprite(shopEff.shopNextShip, fullX, row - 2, fullW, rowStep * 3 + 2)
         love.graphics.setColor(1, 0.8, 0.3)
@@ -3189,7 +3205,7 @@ function M:draw()
         row = row + rowStep
         love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
         
-        row = r4 + touchRowHeight - rowStep - 8
+        row = r5 + touchRowHeight - rowStep - 8
         love.graphics.setColor(1, 1, 1, 0.9)
         drawPanelSprite(self.relaunChImage, fullX, row - 2, fullW, rowStep + 4)
         love.graphics.setColor(0.75, 0.9, 1)
