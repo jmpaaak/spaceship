@@ -785,6 +785,22 @@ M.pngColorType = pngColorType
 M.shouldLoadRuntimeSprite = shouldLoadRuntimeSprite
 M.loadSprite = loadSprite
 
+-- Deterministic per-planet visual variation from planet.id.
+-- Returns rotation (radians, 0..2π) and scaleFactor (0.85..1.15).
+-- Same id always gives the same result; different ids give different values.
+function M.planetVariation(planet)
+    if not planet or not planet.id then return 0, 1.0 end
+    -- Simple deterministic hash from the planet id string
+    local idStr = tostring(planet.id)
+    local h = 0
+    for i = 1, #idStr do
+        h = (h * 31 + idStr:byte(i)) % 65521
+    end
+    local rotation = (h % 360) * (math.pi / 180)        -- 0..2π
+    local scaleFactor = 0.85 + (h % 100) / 100 * 0.30   -- 0.85..1.15
+    return rotation, scaleFactor
+end
+
 -- Resolve the planet image path based on starType / hub / shop flags.
 -- Used by self_test to verify wiring without requiring love.graphics.
 function M.planetImagePathForPlanet(planet)
@@ -2581,13 +2597,16 @@ function M:draw()
             end
             if planetSprite then
                 local iw, ih = planetSprite:getDimensions()
-                local scale = (planet.radius * 2) / math.max(iw, ih)
+                local baseScale = (planet.radius * 2) / math.max(iw, ih)
+                -- Per-planet rotation & scale variation from planet id
+                local rot, scaleMul = M.planetVariation(planet)
+                local scale = baseScale * scaleMul
                 -- Light tint: blend toward white so PixelPlanets palette shows through
                 local tR = math.min(1, baseR * 0.35 + 0.65)
                 local tG = math.min(1, baseG * 0.35 + 0.65)
                 local tB = math.min(1, baseB * 0.35 + 0.65)
                 love.graphics.setColor(tR, tG, tB)
-                love.graphics.draw(planetSprite, x, y, 0, scale, scale, iw / 2, ih / 2)
+                love.graphics.draw(planetSprite, x, y, rot, scale, scale, iw / 2, ih / 2)
             else
                 love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
                 love.graphics.circle("fill", x, y, planet.radius)

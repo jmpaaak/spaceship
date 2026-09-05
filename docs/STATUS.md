@@ -1,16 +1,21 @@
 ## Current Status
 
-2026-09-05 — INBOX (12) PixelPlanets 배선 2/n — hub/shop도 pp_<starType> 사용 + MIT 크레딧
+2026-09-05 — INBOX (12) PixelPlanets 배선 3/n — 행성 id 기반 회전/스케일 변주
 
-- `game/scenes/play.lua`: `planetImagePathForPlanet` — hub/shop 행성도 `galaxyStarType`이 있으면 `pp_<starType>.png`를 우선 사용, 없으면 기존 `planet_hub.png`/`planet_shop.png` 폴백.
-- `game/scenes/play.lua`: draw 루프도 동일하게 변경 — hub/shop에서 pp 스프라이트 우선, 전용 스프라이트 폴백.
-- `game/self_test.lua`: hub+starType→pp, hub-only→planet_hub, shop+starType→pp, shop-only→planet_shop 테스트 4개로 확장.
-- `README.md`: Deep-Fold/PixelPlanets MIT 크레딧 추가 (Third-party credits 섹션).
+- `game/scenes/play.lua`: `M.planetVariation(planet)` 함수 추가 — planet.id 문자열에서 결정론적 해시로 rotation(0..2π)과 scaleFactor(0.85..1.15) 산출. 같은 id는 항상 같은 결과, 다른 id는 다른 결과.
+- `game/scenes/play.lua`: draw 루프에서 pp 스프라이트 그릴 때 `planetVariation`으로 얻은 rotation·scaleFactor 적용. 같은 은하 행성은 같은 starType 스프라이트를 쓰되, 개별 회전/크기가 변주됨.
+- `game/self_test.lua`: planetVariation 테스트 — nil/empty→identity, 결정론, 다른 id→다른 값, 범위 검증, hub id 호환.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (12) 남은 조각: 은하 내 행성 id로 회전 프레임/반지름 변주, 같은 은하 동일 타입/팔레트 확인.
+- INBOX (12) 완료 판단 및 처리 완료 이동, 또는 다음 INBOX 항목 착수.
+
+---
+
+## 2026-09-05 — INBOX (12) PixelPlanets 배선 2/n — hub/shop도 pp_<starType> 사용 + MIT 크레딧
+
+- hub/shop 행성도 pp_<starType>.png 우선 사용, 전용 폴백 유지. MIT 크레딧 추가.
 
 ---
 
