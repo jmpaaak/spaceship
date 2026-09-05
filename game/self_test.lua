@@ -491,6 +491,33 @@ local function testMinimap()
         assert(awayView.checkpointDx ~= nil)
     end
 
+    -- (item 10 change A) Always-on hub arrow: even when the hub is inside
+    -- the chart (within viewRadius), the arrow must still appear as long as
+    -- the ship hasn't arrived (distance >= hubRadius*3).
+    local hubObj = world.hubPlanet(foundGalaxy)
+    local arrivalDist = hubObj and hubObj.radius * 3 or 48
+    -- Place ship just outside arrival threshold but within viewRadius
+    local nearHubDist = arrivalDist + 10
+    local nearHubX = foundGalaxy.x + nearHubDist
+    local nearHubY = foundGalaxy.y
+    local nearView = minimap.view(nearHubX, nearHubY)
+    if nearView.checkpointId == foundGalaxy.id then
+        assert(nearView.checkpointBeyond,
+            "hub arrow must show even when hub is inside chart (not arrived)")
+        assert(nearView.checkpointDx ~= nil)
+    end
+
+    -- When the ship IS at the hub (distance < hubRadius*3), arrow hides
+    local atHubX = foundGalaxy.x + 1
+    local atHubY = foundGalaxy.y
+    local atHubView = minimap.view(atHubX, atHubY)
+    if atHubView.checkpointId == foundGalaxy.id and atHubView.checkpointDistance then
+        assert(atHubView.checkpointDistance < arrivalDist,
+            "sanity: ship should be within arrival distance")
+        assert(not atHubView.checkpointBeyond,
+            "hub arrow must hide when ship has arrived at hub")
+    end
+
     -- Galaxy-specific background tint (item 1 part 4): the home solar
     -- system keeps its established navy color, and a different galaxy
     -- must produce a visibly different, deterministic tint.

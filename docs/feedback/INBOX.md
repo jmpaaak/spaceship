@@ -6,7 +6,7 @@
 
 (10) **미니맵: 가장 가까운 HUB를 화살표로 항상 가리킴 + HUB와 중심별 구분 (사용자 확정):**
   - 현재: `checkpointBeyond`가 true일 때만 마젠타 화살표 (`play.lua` `if view.checkpointBeyond`). 차트 안에 hub가 있으면 화살표가 사라짐.
-  - 변경 A — 항상 화살표:
+  - 변경 A — 항상 화살표: ✅ DONE (2026-09-05)
     - `minimap.view()` 에서 `checkpointBeyond` 조건 제거. `nearestCheckpointDirection` 결과가 있으면 **항상** `checkpointDx/Dy` + 화살표 그리기.
     - 화살표는 차트 **림(가장자리)** 에 고정. 플레이어에서 가장 가까운 non-milkyway hub 방향. 홈 은하에 있을 때도 가장 가까운 이웃 HUB를 가리킴.
     - hub에 이미 도착(거리 < hub.radius*3)하면 화살표 숨김 (도착 완료).

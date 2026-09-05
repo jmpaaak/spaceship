@@ -188,7 +188,7 @@ function M.nearestCheckpointDirection(shipX, shipY)
     if nearestDist < 1e-9 then
         return 0, 0, 0, nearest.id
     end
-    return (nearest.x - shipX) / nearestDist, (nearest.y - shipY) / nearestDist, nearestDist, nearest.id
+    return (nearest.x - shipX) / nearestDist, (nearest.y - shipY) / nearestDist, nearestDist, nearest.id, nearest
 end
 
 -- Snapshot of everything PlayScene needs to draw the chart for a ship at
@@ -265,12 +265,17 @@ function M.view(shipX, shipY)
             spiral[#spiral + 1] = { x = mx, y = my, inside = inside, arm = point.arm }
         end
     end
-    -- Off-chart checkpoint direction arrow (item 1): only surfaced when the
-    -- nearest checkpoint galaxy's center falls outside viewRadius, i.e. its
-    -- dot would not already be plotted on the chart.
-    local checkpointDx, checkpointDy, checkpointDist, checkpointId =
+    -- Always-on hub arrow (item 10 change A): show arrow whenever a
+    -- checkpoint exists and the ship hasn't arrived (distance >= hub radius*3).
+    -- Hides only when within arrival distance or no checkpoint found.
+    local checkpointDx, checkpointDy, checkpointDist, checkpointId, checkpointGalaxy =
         M.nearestCheckpointDirection(shipX, shipY)
-    local checkpointBeyond = checkpointDist ~= nil and checkpointDist > M.viewRadius
+    local checkpointBeyond = false
+    if checkpointDist ~= nil then
+        local hubRadius = checkpointGalaxy and world.hubPlanet(checkpointGalaxy)
+        local arrivalThreshold = hubRadius and hubRadius.radius * 3 or 48
+        checkpointBeyond = checkpointDist >= arrivalThreshold
+    end
     return {
         player = { x = 0, y = 0 },
         earth = { x = earthX, y = earthY, inside = earthInside },
