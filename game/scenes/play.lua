@@ -1745,7 +1745,7 @@ function M:update(dt)
                     end
                 end
             end
-            if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] then
+            if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] and not planet.hub and not planet.isShop then
                 self.collided[planet.id] = true
                 local damage = world.collisionDamage(planet)
                 -- Real LOVE runtime capture showed this "-N" damage text

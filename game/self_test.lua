@@ -5351,6 +5351,36 @@ function M.run()
     assert(expedition.launch(wipedReturn))
     assert(wipedReturn.lastLostSampleCount == 0 and wipedReturn.lastLostSampleValue == 0)
 
+    local hubCollisionScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    hubCollisionScene.expedition.phase = "ascending"
+    hubCollisionScene.expedition.durability = 2
+    hubCollisionScene.ship.y = -500
+    nearbyPlanets = world.nearbyPlanets
+    world.nearbyPlanets = function()
+        return { { id = "hub-test", x = 0, y = -500, radius = 7, hub = true, galaxyId = "galaxy-test" } }
+    end
+    hubCollisionScene:update(0)
+    world.nearbyPlanets = nearbyPlanets
+    assert(hubCollisionScene.expedition.durability == 2, "hub planet must not deal collision damage")
+    assert(not hubCollisionScene.collided["hub-test"], "hub planet must not be marked as collided")
+
+    local shopCollisionScene = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    shopCollisionScene.expedition.phase = "ascending"
+    shopCollisionScene.expedition.durability = 2
+    shopCollisionScene.ship.y = -500
+    nearbyPlanets = world.nearbyPlanets
+    world.nearbyPlanets = function()
+        return { { id = "shop-test", x = 0, y = -500, radius = 7, isShop = true, galaxyId = "galaxy-test" } }
+    end
+    shopCollisionScene:update(0)
+    world.nearbyPlanets = nearbyPlanets
+    assert(shopCollisionScene.expedition.durability == 2, "shop planet must not deal collision damage")
+    assert(not shopCollisionScene.collided["shop-test"], "shop planet must not be marked as collided")
+
     local basicSlotRolls = { 1, 6, 10, 6, 10, 1 }
     local nextBasicSlotRoll = 0
     local run = expedition.new({

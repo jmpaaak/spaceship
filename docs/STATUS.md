@@ -1,6 +1,19 @@
 ## Current Status
 
-2026-09-05 — INBOX (1) 상점 UI 텍스트 겹침 수정
+2026-09-05 — INBOX (6) HUB 충돌 게임오버 금지 (지구와 동일 취급)
+
+- `game/scenes/play.lua`: 충돌 판정(`planet.radius + 5`) 내에서 `planet.hub`와 `planet.isShop`일 경우 데미지 로직을 우회하도록 예외 추가 (`not planet.hub and not planet.isShop`).
+- `game/self_test.lua`: 허브 및 상점 행성과의 충돌 시뮬레이션에서 내구도가 감소하지 않고 `collided` 플래그가 설정되지 않음을 단언하는 테스트 추가.
+- `docs/feedback/INBOX.md`: 기완료 항목 (2), (3) 및 방금 완료한 항목 (6)을 `## 처리 대기`에서 `## 처리 완료`로 이동.
+- `make verify` GREEN.
+
+## Next Slice
+
+- INBOX (4) 행성 표본 채집 궤도 진입 시 타격감 이펙트
+
+---
+
+## 2026-09-05 — INBOX (1) 상점 UI 텍스트 겹침 수정
 
 - play.lua: settlementRowStep 28→44, summaryRowStep 32→40
 - play.lua: settlementPanelTop 400→200, panelHeight 420→880
@@ -9,10 +22,6 @@
 - self_test.lua: overlap 방지 assertion 추가 (rowStep >= fontSize+4, summary line gaps >= fontSize, panel contains all rows)
 - self_test.lua: hardcoded touch coordinates 업데이트 (hull y:545→500, ship y:615→670, relaunch y:755→1000)
 - `make verify` GREEN.
-
-## Next Slice
-
-- INBOX (2) 귀환 버튼 제거 + 지구 근접 시 자동 정착
 
 ---
 

@@ -2,20 +2,6 @@
 
 ## 처리 대기
 
-(2) **귀환 버튼 제거 + 지구 근접 시 자동 정착 (사용자 확정):**
-  - 사용자: "귀환 버튼 불필요. 직접 지구로 돌아가서 근접하는 것."
-  - 현재: `beginReturn` → `returning` phase → altitude 자동 감소 → `settle()`. 그리고 별도 귀환 터치 버튼(커밋 `9c6eba8`)이 있음.
-  - 변경:
-    - 귀환 버튼 UI + 터치 핸들러 제거.
-    - `returning` phase 폐지. ascending에서 **직접 지구(0,0) 근처에 도달**하면 settle. 판정: `ship.x^2 + ship.y^2 <= (earthRadius + 30)^2` (중력장과 동일 범위).
-    - `beginReturn()` 호출부 모두 제거. ascending에서 지구 방향으로 직접 조종해서 돌아가는 것.
-    - `returning` phase 관련 HUD 표시("귀환 중" 등) 제거.
-    - 관련 self_test assertion 업데이트.
-  - `make verify` GREEN + 커밋.
-
-(3) **귀환 시 순간이동 수정:**
-  - (2)에서 returning phase 폐지하면 자동 해결. ascending에서 직접 이동하므로 순간이동 없음.
-
 (4) **행성 표본 채집 궤도 진입 시 타격감 이펙트 (사용자 확정):**
   - 행성 수집 반경(`planet.radius + 30`)에 진입하는 순간 다음 효과 동시 발동:
 
@@ -44,16 +30,6 @@
   - **(c) 화면 가장자리 붉은 발열:** 진입 구간에서 화면 가장자리에 반투명 빨간 비네트. 거리에 따라 alpha 0→0.3 증가. draw 마지막에 그리기.
   - settle 트리거 시점에 `reentryShake = 0` 초기화.
   - `make verify` GREEN + 커밋: `feat(play): atmospheric reentry shake + heat vignette on Earth landing`
-
-(6) **HUB 충돌 게임오버 금지 — 지구와 동일 취급 (사용자 확정, 최우선):**
-  - 보고: HUB에 부딪히면 일반 행성처럼 데미지 → 게임오버.
-  - 원인: `play.lua` 행성 루프에서 수집(`radius+30`)과 충돌(`radius+5` + `world.collisionDamage`)이 **모든** 행성에 적용됨. `planet.hub`도 예외 없음.
-  - 변경:
-    - `planet.hub` 및 `planet.isShop` 은 충돌 데미지 블록을 **건너뛴다** (지구처럼 근접=상호작용만).
-    - hub 기존 상호작용 유지: 근접 시 `settleAtHub` + 은하당 1회 `exploreHub` 기어 드롭. shop 모달도 유지.
-    - `self.collided[planet.id]` 를 hub/shop에 세팅하지 말 것 (데미지 경로 자체가 없어야 함).
-    - self_test: hub에 `collisionDamage` 호출/내구도 감소가 일어나지 않음을 단언.
-  - `make verify` GREEN + 커밋: `fix(play): hub/shop planets never deal collision damage`
 
 (7) **미니맵 줌인 — HUB/중심행성이 보이게 (사용자 확정):**
   - 현재 `minimap.viewRadius = galaxyCellSize * 2.5` (≈11520px). 은하 디스크가 차트에서 ~10px, hub 행성은 서브픽셀.
@@ -114,6 +90,31 @@
   - `make verify` GREEN + 커밋: `fix(rcs): single opposite-stick exhaust stream`
 
 ## 처리 완료
+
+(2) **귀환 버튼 제거 + 지구 근접 시 자동 정착 (사용자 확정):**
+  - 사용자: "귀환 버튼 불필요. 직접 지구로 돌아가서 근접하는 것."
+  - 현재: `beginReturn` → `returning` phase → altitude 자동 감소 → `settle()`. 그리고 별도 귀환 터치 버튼(커밋 `9c6eba8`)이 있음.
+  - 변경:
+    - 귀환 버튼 UI + 터치 핸들러 제거.
+    - `returning` phase 폐지. ascending에서 **직접 지구(0,0) 근처에 도달**하면 settle. 판정: `ship.x^2 + ship.y^2 <= (earthRadius + 30)^2` (중력장과 동일 범위).
+    - `beginReturn()` 호출부 모두 제거. ascending에서 지구 방향으로 직접 조종해서 돌아가는 것.
+    - `returning` phase 관련 HUD 표시("귀환 중" 등) 제거.
+    - 관련 self_test assertion 업데이트.
+  - `make verify` GREEN + 커밋.
+
+(3) **귀환 시 순간이동 수정:**
+  - (2)에서 returning phase 폐지하면 자동 해결. ascending에서 직접 이동하므로 순간이동 없음.
+
+(6) **HUB 충돌 게임오버 금지 — 지구와 동일 취급 (사용자 확정, 최우선):**
+  - 보고: HUB에 부딪히면 일반 행성처럼 데미지 → 게임오버.
+  - 원인: `play.lua` 행성 루프에서 수집(`radius+30`)과 충돌(`radius+5` + `world.collisionDamage`)이 **모든** 행성에 적용됨. `planet.hub`도 예외 없음.
+  - 변경:
+    - `planet.hub` 및 `planet.isShop` 은 충돌 데미지 블록을 **건너뛴다** (지구처럼 근접=상호작용만).
+    - hub 기존 상호작용 유지: 근접 시 `settleAtHub` + 은하당 1회 `exploreHub` 기어 드롭. shop 모달도 유지.
+    - `self.collided[planet.id]` 를 hub/shop에 세팅하지 말 것 (데미지 경로 자체가 없어야 함).
+    - self_test: hub에 `collisionDamage` 호출/내구도 감소가 일어나지 않음을 단언.
+  - `make verify` GREEN + 커밋: `fix(play): hub/shop planets never deal collision damage`
+
 
 - ✅ 완료(2026-09-05) **상점(settlement) UI 텍스트 겹침/깨짐 수정:**
   settlementRowStep 28→44, summaryRowStep 32→40, summaryBgHeight 70→170, panelTop 400→200, panelHeight 420→880, touchRowHeight 70→165.

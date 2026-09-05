@@ -472,4 +472,5 @@ function M.backgroundStars(sectorX, sectorY)
     return stars
 end
 
+M.hash = hash
 return M
