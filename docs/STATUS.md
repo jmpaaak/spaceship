@@ -1,19 +1,22 @@
 ## Current Status
 
-2026-09-05 — 모바일 UI 전체 점검 (1): HUD 폰트 8→14px, 행 간격 확대, hudHeight 비례 증가.
+2026-09-05 — 모바일 UI 전체 점검 (2): 미니맵 마커 반경 1.5배 확대.
 
-- `game/scenes/play.lua`:
-  - `M.hudFontSize = 14` (was 8px via smallFont); launch HUD도 14px 사용.
-  - `M.hudLineStep = 18` — HUD 텍스트 행 간격 (was ~10px).
-  - `M.hudGalaxyShift = 16` — 은하 이름 표시 시 추가 높이 (was 10).
-  - `M.launchHudHeight = 58` (was 32); ascending `58`, returning `94`, fallback `40` 등 비례 증가.
-  - 모든 HUD Y좌표 (samplesY, bestY, earthY, returnY, drawStatusWithShield) 14px 폰트에 맞게 재배치.
-- `game/self_test.lua`: hudFontSize 12-14 범위, hudLineStep ≥14, hudGalaxyShift ≥14 어설션 추가.
+- `game/minimap.lua`:
+  - 모든 마커 반경(`markerSunRadius`, `markerGalaxyHomeRadius`, `markerEarthRadius` 등) ×1.5 스케일.
+  - 예: `markerSunRadius` 10.4→15.6, `markerEarthRadius` 8→12, `markerPlayerLineRadius` 9.6→14.4 등.
+- `game/self_test.lua`: 8개 마커 반경이 1.5× 이상인지 어설션 추가.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- 모바일 UI 전체 점검 (2): 미니맵 마커 반경 1.5배 키우기.
+- 모바일 UI 전체 점검 (3): 조이스틱 크기 + 위치 모바일 최적화.
+
+---
+
+## 2026-09-05 모바일 UI 전체 점검 (1)
+
+2026-09-05 — 모바일 UI 전체 점검 (1): HUD 폰트 8→14px, 행 간격 확대, hudHeight 비례 증가.
 
 ---
 

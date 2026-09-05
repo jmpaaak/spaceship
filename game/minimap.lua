@@ -27,22 +27,24 @@ M.viewRadius = world.galaxyCellSize * 2.5
 -- arrow) were still the old 180x320-era pixel sizes. ×4 so they keep the
 -- same screen fraction on the 720x1280 canvas / M.size (which was already
 -- scaled 48 -> 192, i.e. also ×4).
-M.markerSunRadius = 10.4
-M.markerGalaxyHomeRadius = 8.8
+-- Mobile-UI sub-item (2): all marker radii ×1.5 for mobile readability.
+-- Original values in parentheses for reference.
+M.markerSunRadius = 15.6           -- (was 10.4)
+M.markerGalaxyHomeRadius = 13.2    -- (was 8.8)
 -- docs/feedback/INBOX.md item 1 part 2: the checkpoint galaxy marker used to
 -- be a plain filled dot (radius 9.2) plus a big pulsing ring (radius 16,
 -- 20% of the whole mapRadius=80) -- too large relative to the chart and
 -- indistinguishable in shape from an ordinary galaxy dot at a glance.
 -- Shrunk and replaced with a small distinct star glyph (M.starPoints) so it
 -- reads as a special waypoint rather than "a bigger circle".
-M.markerGalaxyHubRadius = 5.6
-M.markerGalaxyHubRingRadius = 16
-M.markerGalaxyPlainRadius = 6
-M.markerEarthRadius = 8
-M.markerPlayerFillRadius = 6.8
-M.markerPlayerLineRadius = 9.6
-M.markerBeyondRadius = 8.8
-M.markerCheckpointTipRadius = 7.2
+M.markerGalaxyHubRadius = 8.4      -- (was 5.6)
+M.markerGalaxyHubRingRadius = 24   -- (was 16)
+M.markerGalaxyPlainRadius = 9      -- (was 6)
+M.markerEarthRadius = 12           -- (was 8)
+M.markerPlayerFillRadius = 10.2    -- (was 6.8)
+M.markerPlayerLineRadius = 14.4    -- (was 9.6)
+M.markerBeyondRadius = 13.2        -- (was 8.8)
+M.markerCheckpointTipRadius = 10.8 -- (was 7.2)
 
 -- Reference "known universe" circle around Earth. This is NOT a collision
 -- wall -- ships may fly arbitrarily far. Past this radius the minimap

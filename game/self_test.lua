@@ -482,6 +482,25 @@ local function testMinimap()
     local otherR2, otherG2, otherB2 = world.galaxyBackgroundColor(foundGalaxy)
     assert(otherR == otherR2 and otherG == otherG2 and otherB == otherB2,
         "galaxy background tint must be deterministic")
+
+    -- Mobile-UI sub-item (2): minimap marker radii must be >= 1.5× the
+    -- original 720×1280-era values for mobile touch readability.
+    assert(minimap.markerSunRadius >= 15.6,
+        "markerSunRadius must be >= 15.6 (1.5× original 10.4)")
+    assert(minimap.markerGalaxyHomeRadius >= 13.2,
+        "markerGalaxyHomeRadius must be >= 13.2 (1.5× original 8.8)")
+    assert(minimap.markerGalaxyHubRadius >= 8.4,
+        "markerGalaxyHubRadius must be >= 8.4 (1.5× original 5.6)")
+    assert(minimap.markerEarthRadius >= 12,
+        "markerEarthRadius must be >= 12 (1.5× original 8)")
+    assert(minimap.markerPlayerFillRadius >= 10.2,
+        "markerPlayerFillRadius must be >= 10.2 (1.5× original 6.8)")
+    assert(minimap.markerPlayerLineRadius >= 14.4,
+        "markerPlayerLineRadius must be >= 14.4 (1.5× original 9.6)")
+    assert(minimap.markerBeyondRadius >= 13.2,
+        "markerBeyondRadius must be >= 13.2 (1.5× original 8.8)")
+    assert(minimap.markerCheckpointTipRadius >= 10.8,
+        "markerCheckpointTipRadius must be >= 10.8 (1.5× original 7.2)")
 end
 
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
