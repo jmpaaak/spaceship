@@ -576,6 +576,55 @@ function M.hudHeight(phase, hud, galaxyShift)
     return 60 + galaxyShift
 end
 
+-- INBOX (16): HUD fill is left-text width only (icons + padding), never a
+-- full-width 720px black band. hudHeight() still anchors the minimap.
+M.hudBackgroundMaxWidth = 280
+M.hudBackgroundPad = 8
+
+function M.hudBackgroundWidth(hud, font)
+    hud = hud or {}
+    local function textW(s)
+        if not s or s == "" then return 0 end
+        if font and font.getWidth then
+            return font:getWidth(s)
+        end
+        return 0
+    end
+    local icon = M.hullIconSize
+    local gap = M.hullIconGap
+    local left = 5
+    local widest = 0
+    local function consider(right)
+        if right > widest then widest = right end
+    end
+    if hud.galaxy then
+        consider(left + icon + gap + textW(hud.galaxy))
+    end
+    local distIconOffset = icon + gap
+    consider(left + distIconOffset + textW(hud.distance) + 8
+        + M.cashIconSize + M.cashIconGap + textW(hud.cash))
+    if hud.samples then
+        consider(left + icon + gap + textW(hud.samples))
+    end
+    if hud.status then
+        consider(left + icon + gap + textW(hud.status))
+    end
+    if hud.best then
+        consider(left + icon + gap + textW(hud.best))
+    end
+    if hud.earth then
+        consider(left + icon + gap + textW(hud.earth))
+    end
+    if hud.returnProgress then
+        consider(left + icon + gap + textW(hud.returnProgress))
+    end
+    local w = widest + M.hudBackgroundPad
+    if w > M.hudBackgroundMaxWidth then
+        return M.hudBackgroundMaxWidth
+    end
+    return w
+end
+
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end
     if hue < 0.66 then return 0.95, 0.55, 0.3 end
@@ -2889,19 +2938,20 @@ function M:draw()
     local isLaunchHud = self.expedition.phase == "launch"
     local galaxyShift = hud.galaxy and M.hudGalaxyShift or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
-    -- Group 8 wiring: hud_panel.png as HUD background; fallback dark rectangle.
-    local shopEff = self.shopEffectImages or {}
-    love.graphics.setColor(1, 1, 1, 0.85)
-    if not drawPanelSprite(shopEff.hudPanel, 0, 0, viewport.width, hudHeight) then
-        love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
-        love.graphics.rectangle("fill", 0, 0, viewport.width, hudHeight)
-    end
     local previousHudFont
     if isLaunchHud then
         -- Mobile-UI sub-item (1): launch HUD now uses the same 14px font as
         -- other phases (was 8px). The smallFont is kept for loadout/settlement.
         previousHudFont = love.graphics.getFont()
         love.graphics.setFont(fonts.get(M.hudFontSize))
+    end
+    -- INBOX (16): left-text width only so stars/planets show on the right.
+    local hudBgWidth = M.hudBackgroundWidth(hud, love.graphics.getFont())
+    local shopEff = self.shopEffectImages or {}
+    love.graphics.setColor(1, 1, 1, 0.85)
+    if not drawPanelSprite(shopEff.hudPanel, 0, 0, hudBgWidth, hudHeight) then
+        love.graphics.setColor(0.02, 0.03, 0.08, 0.85)
+        love.graphics.rectangle("fill", 0, 0, hudBgWidth, hudHeight)
     end
     love.graphics.setColor(0.7, 0.9, 1)
     local hudY = 4

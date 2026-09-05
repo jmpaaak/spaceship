@@ -2,12 +2,14 @@
 
 ## 처리 대기
 
+## 처리 완료
+
 (16) **HUD 가로 검정띠 제거 (사용자 확정, 2026-09-05):**
   - `M:draw`가 `drawPanelSprite(shopEff.hudPanel, 0, 0, viewport.width, hudHeight)` / 폴백 `rectangle("fill", 0, 0, viewport.width, hudHeight)` 로 화면 가로 전체를 덮음. 미니맵 Y는 `hudHeight`에 묶여 있음.
   - 변경: HUD 배경은 **왼쪽 텍스트 폭만큼**만 (대략 텍스트+아이콘+패딩, 최대 ~280px). 오른쪽 별/행성이 비치게. 미니맵은 기존처럼 HUD 아래 우측. `hudHeight()` 숫자 자체는 미니맵 앵커용으로 유지해도 됨 — **full-width fill만 금지**.
   - `make verify` GREEN + 커밋: `fix(hud): stop drawing full-width black HUD band`
 
-## 처리 완료
+  - [2026-09-05] ✅ 완료: `PlayScene.hudBackgroundWidth`가 왼쪽 텍스트+아이콘+패딩 폭을 재고 `hudBackgroundMaxWidth`(280)로 캡. `M:draw` 폴백 rectangle/`drawPanelSprite` dest width가 viewport.width가 아니라 그 폭만 사용. `hudHeight()`는 미니맵 앵커용으로 유지. `testHudBackgroundNotFullWidth` GREEN.
 
 (15) **지구상점 슬롯 — 겹침 해소 + 리스크 + 웹에디터 (사용자 확정, 2026-09-05):**
   - 상점 슬롯이 업글/기어 오퍼와 같은 밴드에 그려져 겹침. `settlementTouchRows[3]`(slot)과 `[4]`(relaunch) 레이아웃을 분리: 슬롯은 전용 행, 결과 패널이 다른 행 텍스트를 덮지 않게.
