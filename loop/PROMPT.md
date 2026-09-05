@@ -52,14 +52,15 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 - Durability 0 performs the full meta wipe, preserving only personal best height.
 - Safe Earth return converts samples/slot rewards to money and permits ship purchase/upgrades.
 
-## AetherAI-only asset rule
+## Asset generation rule (2026-09-05 updated)
 
-- Every final visual asset—ship, Earth, planets, samples, effects, slot symbols, shop icons, backgrounds—must come from the official AetherForgeAI/AetherAI UI/API or the remote GPU ComfyUI pipeline (`http://222.238.86.132:8188`, workflow IDs `7a3eb820-f17d-47ce-a337-da2358c2a0d5` / `5c257929-dff5-4ef4-bd1e-2c99dbbf3dee`).
-- Never crawl, scrape, macro, or automate the AetherAI website.
-- Never generate final art with Python/Pillow, Lua, another image model, or hand-authored raster scripts.
-- 2026-09-03 update: the user human-gate on final art (waiting for manual AetherAI login/export) is removed. The loop may drive the ComfyUI HTTP API (`/prompt`, `/history`, `/view`) directly and self-judge quality (matches the object's intended silhouette/readability, no artifacts, runtime-legible at actual `1864×860` scale) instead of waiting on a manual approval. AetherAI import remains available whenever credentials appear; ComfyUI is an equally official path, not a fallback that needs later re-approval.
-- 2026-09-03 update (generated asset reporting): the moment an AetherAI/ComfyUI asset is applied as final/runtime art (not a candidate), append one line to `docs/GENERATED_ASSET_LOG.md` in the same commit: `YYYY-MM-DDTHH:MM:SS+0900 | <repo-relative/path.png> | <one-line description>`. The 10-minute progress-report cron watches this file for new lines and forwards the actual image to the user. The path must be a real tracked file at that commit (no `.tmp/` or gitignored paths). Do not log candidates/superseded/QA-only art — only what the loop treats as final.
-- Do not invent provenance. Official imports/generations require source/terms URL (AetherAI) or workflow path/prompt/seed/sampler settings (ComfyUI), generation/asset ID or output SHA-256, timestamp, dimensions, and runtime QA in the asset manifest — this is a quality record, not an approval gate.
+- **ComfyUI는 더 이상 사용하지 않는다.** 모든 도트 그래픽 에셋은 다음 두 방식으로 생성한다:
+  - (1) 배경·큰 에셋: Python PIL/Pillow 스크립트 (`tools/` 아래 저장, 50줄 이내, 도형·패턴·노이즈 함수 조합, 수천 줄 하드코딩 픽셀 좌표 금지)
+  - (2) 작은 스프라이트·아이콘: LÖVE `love.graphics`로 그려서 PNG 저장
+- 사용자가 직접 제공하겠다고 한 에셋(함선/지구/행성, 사람 스프라이트)은 자동 생성 금지. 해당 에셋이 올 때까지 기존 다각형 폴백 유지.
+- 라이선스 팩(PixelPlanets stars 등)은 계속 사용.
+- 생성된 에셋을 최종 적용하는 순간, 같은 커밋에서 `docs/GENERATED_ASSET_LOG.md`에 한 줄 append (`YYYY-MM-DDTHH:MM:SS+0900 | <path.png> | <description>`).
+- PIL 스크립트는 `tools/` 아래에 저장해서 재현 가능하게 한다. 같은 seed → 같은 결과.
 - Report applied asset files/manifest paths back to the user (STATUS.md) instead of asking for approval.
 
 ## Safety and scope
