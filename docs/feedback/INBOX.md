@@ -2,14 +2,6 @@
 
 ## 처리 대기
 
-- **[2026-09-05] 행성 팝인/팝아웃 수정 — nearbyPlanets 검색 반경 확대 (사용자 확정):**
-  - 현재: `world.nearbyPlanets(x, y, 1)` — 1섹터(192px) 반경만 검색
-  - 캔버스: 720×1280 → 가장자리에서 행성이 갑자기 생기고 사라짐
-  - 수정: `nearbyPlanets(x, y, 4)` — 4섹터(768px) 검색으로 화면 밖까지 충분히 커버
-  - 동일하게 `nearbyDebris(x, y, 1, time)` → `nearbyDebris(x, y, 4, time)` 도 확대
-  - play.lua draw 루프의 `nearbyPlanets` 호출도 동일 반경
-  - `make verify` GREEN + 커밋
-
 - **[2026-09-05] 상점(settlement) 미도달 — returning→settle 전환 점검 (사용자 보고):**
   - 사용자: "지구로 돌아와도 상점이 안 뜸"
   - `expedition.update` returning 경로: `altitude = max(0, altitude - returnSpeed*dt)` → `altitude==0` 이면 `settle(run)`
@@ -19,6 +11,10 @@
   - `make verify` GREEN + 커밋
 
 ## 처리 완료
+
+- ✅ 완료(2026-09-05) **행성 팝인/팝아웃 수정 — nearbyPlanets 검색 반경 확대:**
+  - play.lua update/draw: `nearbyPlanets(x,y,1)` → `nearbyPlanets(x,y,4)`, `nearbyDebris(x,y,1,t)` → `nearbyDebris(x,y,4,t)` — 4개 호출 전부 수정.
+  - self_test.lua: 반경 캡처 테스트 추가 — rad==4 검증. make verify GREEN.
 
 - ✅ 완료(2026-09-05) **Stellar Origin 수트 시스템 도입 — Balatro 스타일 그룹 시너지:**
   - (1) JSON 스키마: hull_parts.json + engine_parts.json 전체 카드에 suit 배정. gear.lua `M.knownSuits` 추가, 로더 경고.

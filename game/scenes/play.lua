@@ -1607,7 +1607,7 @@ function M:update(dt)
         end
     end
     if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
-        for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
+        for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
             local distanceSquared = dx * dx + dy * dy
             if self.expedition.phase == "ascending"
@@ -1744,7 +1744,7 @@ function M:update(dt)
                 self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
             end
         end
-        for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
+        for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 4, self.time)) do
             local dx, dy = junk.x - self.ship.x, junk.y - self.ship.y
             if dx * dx + dy * dy <= (junk.radius + 5) ^ 2 and not self.collided[junk.id] then
                 self.collided[junk.id] = true
@@ -2275,7 +2275,7 @@ function M:draw()
             love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
         end
     end
-    for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 1)) do
+    for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
         local x, y = math.floor(planet.x - cameraX), math.floor(planet.y - cameraY)
         if x > -24 and x < viewport.width + 24 and y > -24 and y < viewport.height + 24 then
             if not self.discovered[planet.id] then
@@ -2421,7 +2421,7 @@ function M:draw()
             end
         end
     end
-    for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 1, self.time)) do
+    for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 4, self.time)) do
         local x, y = math.floor(junk.x - cameraX), math.floor(junk.y - cameraY)
         if x > -20 and x < viewport.width + 20 and y > -20 and y < viewport.height + 20 then
             local debrisSprite = self.debrisImages and self.debrisImages[junk.kind]

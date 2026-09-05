@@ -1,26 +1,21 @@
 ## Current Status
 
-2026-09-05 — Stellar Origin suit system sub-item 4: HUD synergy display in loadout screen.
+2026-09-05 — 행성 팝인/팝아웃 수정: nearbyPlanets/nearbyDebris 검색 반경 1→4 확대.
 
-- `game/i18n.lua`: Added 7 synergy i18n keys for both `en` and `ko` locales:
-  `synergy_solarSystem`, `synergy_nebulaField`, `synergy_eventHorizon`,
-  `synergy_pulsarBurst`, `synergy_binaryStar`, `synergy_supernova`, `synergy_darkMatter`.
-- `game/scenes/play.lua` `loadoutLines()`: calls `gear.activeSynergies()` and returns
-  `synergies` list of translated label strings (empty when none active).
-- Draw section: renders active synergy labels in dim gold below steering row.
-- `game/self_test.lua`: Added `testStellarSynergyHUD()` — empty loadout = 0 labels;
-  nebula-3 loadout = 1 label matching `i18n.t("synergy_nebulaField")`.
+- `game/scenes/play.lua`: 4개 호출 전부 `nearbyPlanets(x,y,1)` → `nearbyPlanets(x,y,4)`,
+  `nearbyDebris(x,y,1,time)` → `nearbyDebris(x,y,4,time)` 변경. 4섹터(768px) 반경으로
+  720×1280 캔버스 가장자리 밖까지 충분히 커버 — 팝인/팝아웃 현상 해소.
+- `game/self_test.lua`: update() 시 world.nearbyPlanets/nearbyDebris에 전달되는
+  radius 파라미터를 캡처하여 ==4 검증하는 테스트 추가.
 - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX [2026-09-05] sub-item (5): `self_test.lua` coverage (`testStellarSynergies`) is
-  already committed. All 5 sub-items of Stellar Origin are now complete — move the full
-  INBOX item to 처리 완료 in next cycle.
+- INBOX [2026-09-05] 상점(settlement) 미도달 — returning→settle 전환 점검.
 
 ---
 
-## 2026-09-05 PixelPlanets star sprites (cycle result)
+## 2026-09-05 Stellar Origin suit system (cycle result)
 
 - Implemented `drawPixelStar(image, x, y, frameW, frameH, frameCount, frameIdx, size, r, g, b, a)` helper in `game/scenes/play.lua` (exported as `M.drawPixelStar`).
 - `M.new()` loads `assets/space/pixelplanets_stars.png` (17 frames, 9x9) and `assets/space/pixelplanets_stars_special.png` (6 frames, 25x25); both returned on scene instance as `pixelStarsImage` / `pixelStarsSpecialImage`.
