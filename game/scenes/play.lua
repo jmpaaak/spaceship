@@ -64,9 +64,9 @@ M.returnControls = returnControls
 -- canvas with 12px font (was 8px crammed into 70-320 at the top). Touch
 -- rows expanded to 70px each (well above 44pt iOS HIG minimum). Columns
 -- widened to fill the 720px canvas.
-M.settlementFontSize = 11
-M.settlementRowStep = 14  -- vertical px between successive text lines in the shop
-M.settlementSummaryRowStep = 16  -- vertical px between summary stat lines
+M.settlementFontSize = 22
+M.settlementRowStep = 28  -- vertical px between successive text lines in the shop
+M.settlementSummaryRowStep = 32  -- vertical px between summary stat lines
 -- Vertical layout anchors (all in 720×1280 canvas coordinates):
 M.settlementPanelTop = 400
 M.settlementPanelHeight = 420
@@ -169,8 +169,8 @@ M.launchTouchArea = launchTouchArea
 -- Mobile-UI sub-item (1): HUD font enlarged from 8px to 14px; every HUD
 -- band height scales proportionally so text lines never overlap and the
 -- minimap sits below the taller band.
-M.hudFontSize = 14
-M.hudLineStep = 28  -- vertical px between successive HUD text lines
+M.hudFontSize = 22
+M.hudLineStep = 36  -- vertical px between successive HUD text lines
 M.launchHudHeight = 88
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
@@ -179,10 +179,10 @@ M.launchHudHeight = 88
 -- blue crescent peeking out just above the LAUNCH LOADOUT card. Raised the
 -- box top to 202 so it fully covers the disc's topmost extent.
 M.launchLoadoutBoxTop = 750
-M.launchLoadoutRowStep = 22
+M.launchLoadoutRowStep = 32
 -- Mobile-UI sub-item (5): loadout font enlarged from 8px to 12px for
 -- mobile readability on 720×1280 canvas.
-M.launchLoadoutFontSize = 12
+M.launchLoadoutFontSize = 22
 
 -- Mobile-UI sub-item (5): gear slot box dimensions exposed as module
 -- constants (1.5× the old 10×14 boxes) for testability.
@@ -452,7 +452,7 @@ M.hudOddsLineHeight = 0
 -- watermark instead of competing with the message line above it. Smaller
 -- font + lower alpha than the default text keeps it legible but visually
 -- de-emphasized.
-M.devPlaceholderFontSize = 11
+M.devPlaceholderFontSize = 22
 M.devPlaceholderAlpha = 0.4
 
 -- Shared HUD background-box height so the minimap placement (drawMinimap)
@@ -751,7 +751,7 @@ function M.new(options)
     local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
     local specimenStore = options.collectionStore or collectionStore.new()
     if love.graphics then
-        love.graphics.setFont(fonts.get(11))
+        love.graphics.setFont(fonts.get(22))
     end
 
     local shipImagePath = "assets/ship/ship_default.png"
@@ -1092,7 +1092,7 @@ function M:drawGearSlots(y)
     local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
     local startX = math.floor((viewport.width - totalWidth) / 2)
     
-    self.tinyFont = self.tinyFont or fonts.get(11)
+    self.tinyFont = self.tinyFont or fonts.get(22)
     local previousFont = love.graphics.getFont()
     love.graphics.setFont(self.tinyFont)
     
@@ -2940,7 +2940,7 @@ function M:draw()
             love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
             love.graphics.rectangle("fill", panelX, panelY, panelW, panelH)
         end
-        self.destroyedFont = self.destroyedFont or fonts.get(11)
+        self.destroyedFont = self.destroyedFont or fonts.get(22)
         local previousFont = love.graphics.getFont()
         love.graphics.setFont(self.destroyedFont)
         local fullX, fullW = panelX + 16, panelW - 32
