@@ -147,6 +147,11 @@ M.earthCenterX = 0
 M.earthCenterY = 75
 M.earthVisualRadius = 58
 M.earthSettleRadius = 58 + 30  -- 88
+-- Spawn / relaunch outside the settle disk. (0,0) is 75px from Earth
+-- (0,75) — inside radius 88 — so the first ascending frame used to
+-- auto-settle and trap the player in Earth shop at game start.
+M.launchSpawnX = 0
+M.launchSpawnY = 75 - (58 + 30) - 50  -- -63
 -- INBOX (5)(a): atmospheric reentry starts outside settle range.
 M.earthReentryRadius = 58 * 3  -- 174
 M.reentryShakeMax = 6
@@ -835,6 +840,8 @@ end
 function M.new(options)
     options = options or {}
     local ship = shipModule.new()
+    ship.x = M.launchSpawnX
+    ship.y = M.launchSpawnY
     local altitudeStore = options.bestAltitudeStore or bestAltitudeStore.new()
     local specimenStore = options.collectionStore or collectionStore.new()
     if love.graphics then
@@ -1135,6 +1142,7 @@ function M.new(options)
         starDotAccum = 0,         -- accumulator for DoT ticks
         starWellSampled = {},     -- galaxyId → true once sample awarded
         starWellShake = 0,        -- gentle continuous shake while in well
+        hasLeftEarth = false,     -- must leave Earth disk before auto-settle
     }, M)
 end
 
@@ -1729,8 +1737,11 @@ function M:update(dt)
             self.timeSlip = {timer = 0.6, scale = 0.5}
         end
 
-        if earthDistSq <= M.earthSettleRadius * M.earthSettleRadius then
+        if earthDistSq > M.earthSettleRadius * M.earthSettleRadius then
+            self.hasLeftEarth = true
+        elseif self.hasLeftEarth then
             expedition.settle(self.expedition)
+            self.hasLeftEarth = false
             self.reentryShake = 0
             self.reentryHeatAlpha = 0
         end
@@ -2119,8 +2130,9 @@ function M:keypressed(key)
         local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
         if expedition.launch(self.expedition) then
             if relaunching then
-                self.ship.x = 0
-                self.ship.y = 0
+                self.ship.x = M.launchSpawnX
+                self.ship.y = M.launchSpawnY
+                self.hasLeftEarth = false
                 self.verticalOffset = 0
                 self.discovered = {}
                 self.collided = {}

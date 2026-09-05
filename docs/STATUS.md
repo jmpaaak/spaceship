@@ -1,6 +1,21 @@
 ## Current Status
 
-2026-09-05 — INBOX (13) 미니맵 나선 → 동심원 교체
+2026-09-05 — Earth shop start trap: spawn outside settle disk + leave-before-settle gate
+
+- Previous cycle left uncommitted `play.lua`/`self_test.lua` work that spawned the ship at (0,0), inside Earth's settle radius 88, so the first ascending frame auto-settled into Earth shop.
+- `PlayScene.launchSpawnX/Y` = (0, -63), outside `earthSettleRadius`. New scenes and relaunch both use this spawn.
+- Auto-settle now requires `hasLeftEarth` (distance left the settle disk) before re-entry can call `expedition.settle`.
+- Accidental `settlementTouchRows` relaunch `bottom = 1280` overflowed the 200+880 panel; restored to `420 + 165*4 = 1080`.
+- `testEarthShopStartTrap` covers spawn distance, first-frame no-settle, and post-leave settle.
+- `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Next Slice
+
+- `## 처리 대기` 다음 항목 확인 및 작업.
+
+---
+
+## 2026-09-05 — INBOX (13) 미니맵 나선 → 동심원 교체
 
 - `game/minimap.lua`: `spiralArmCount`/`spiralRotation`/`spiralPointsPerArm`/`spiralWindTurns`/`spiralPoints`/`spiralHash` 전부 삭제.
 - 신규 `M.concentricRingCount(galaxy)`: 은하 반지름 기반 2~5 (기존 armCount 테이블 재활용).

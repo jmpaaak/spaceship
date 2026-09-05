@@ -5239,6 +5239,30 @@ local function testReentryShake()
     world.nearbyDebris = savedND
 end
 
+local function testEarthShopStartTrap()
+    local dx = PlayScene.launchSpawnX - PlayScene.earthCenterX
+    local dy = PlayScene.launchSpawnY - PlayScene.earthCenterY
+    local spawnDist = math.sqrt(dx * dx + dy * dy)
+    assert(spawnDist > PlayScene.earthSettleRadius,
+        "launch spawn must sit outside Earth settle radius, dist=" .. spawnDist)
+
+    local scene = PlayScene.new({})
+    assert(scene.expedition.phase == "launch")
+    assert(scene.ship.x == PlayScene.launchSpawnX)
+    assert(scene.ship.y == PlayScene.launchSpawnY)
+    scene.expedition.phase = "ascending"
+    scene:update(0.05)
+    assert(scene.expedition.phase == "ascending",
+        "first ascending frames must not auto-settle into Earth shop")
+
+    scene.hasLeftEarth = true
+    scene.ship.x = PlayScene.earthCenterX
+    scene.ship.y = PlayScene.earthCenterY
+    scene:update(0.05)
+    assert(scene.expedition.phase == "settlement",
+        "returning into the Earth disk after leaving must settle")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 720 and viewport.height == 1280)
@@ -7344,6 +7368,8 @@ function M.run()
         assert(rHub >= 0 and rHub < 2 * math.pi, "hub rotation in range")
         assert(sHub >= 0.85 and sHub <= 1.15, "hub scaleFactor in range")
     end
+
+    testEarthShopStartTrap()
 
     print("SPACESHIP_UNIT_OK")
 end
