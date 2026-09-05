@@ -131,3 +131,6 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-05T02:13:00+0900 | assets/effects/shop_panel.png | 64x64 shop panel corner background
 2026-09-05T02:13:00+0900 | assets/effects/loadout_panel.png | 64x64 loadout panel corner background
 2026-09-05T02:13:00+0900 | assets/effects/destroyed_panel.png | 64x64 destroyed panel corner background
+2026-09-05T18:30:00+0900 | assets/planet/pp_ice.png | INBOX (12): PIL-generated 64x64 ice planet sprite, RGBA, seed 20260905
+2026-09-05T18:30:00+0900 | assets/planet/pp_lava.png | INBOX (12): PIL-generated 64x64 lava planet sprite, RGBA, seed 20260905
+2026-09-05T18:30:00+0900 | assets/planet/pp_dry.png | INBOX (12): PIL-generated 64x64 dry planet sprite, RGBA, seed 20260905

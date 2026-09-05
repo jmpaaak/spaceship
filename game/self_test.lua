@@ -919,6 +919,9 @@ local function testRgbBrokenAssetsUnwired()
         "assets/planet/planet_generic.png",
         "assets/planet/planet_hub.png",
         "assets/planet/planet_shop.png",
+        "assets/planet/pp_ice.png",
+        "assets/planet/pp_lava.png",
+        "assets/planet/pp_dry.png",
         "assets/effects/hud_coin.png",
         "assets/effects/hud_shield.png",
         "assets/effects/hud_speed.png",
@@ -7185,6 +7188,63 @@ function M.run()
         world.sunPosition = savedSP
         world.nearbyPlanets = savedNP
         world.sampleValue = savedSV
+    end
+
+    -- INBOX (12): PixelPlanets planet sprites — first 3 starType PNGs exist,
+    -- are RGBA color type 6, and each galaxyStarType in world module maps
+    -- to one of the 6 expected types.
+    do
+        local PlayScene = require("game.scenes.play")
+        local world = require("game.world")
+        -- Verify first 3 pp_<type> PNG files exist and are color type 6
+        local ppTypes = { "ice", "lava", "dry" }
+        for _, ptype in ipairs(ppTypes) do
+            local path = "assets/planet/pp_" .. ptype .. ".png"
+            local colorType = PlayScene.pngColorType(path)
+            assert(colorType == 6,
+                "pp_" .. ptype .. ".png must be RGBA color type 6, got " .. tostring(colorType))
+        end
+
+        -- Verify world.galaxy starType is always one of the 6 expected types
+        local validTypes = { ice = true, lava = true, dry = true, gas = true, earth = true, bare = true }
+        for gx = -5, 5 do
+            for gy = -5, 5 do
+                local g = world.galaxy(gx, gy)
+                if g then
+                    assert(validTypes[g.starType],
+                        "galaxy starType must be one of 6 known types, got " .. tostring(g.starType))
+                end
+            end
+        end
+
+        -- Verify planets carry galaxyStarType from their galaxy
+        local g = world.galaxy(0, 0)
+        assert(g and g.starType == "earth",
+            "home galaxy must have starType 'earth'")
+        local hub = world.hubPlanet(nil)
+        assert(hub == nil, "milkyway has no hub planet")
+        -- Find a foreign galaxy and check its hub/shop carry starType
+        for gx = -20, 20 do
+            for gy = -20, 20 do
+                local fg = world.galaxy(gx, gy)
+                if fg and fg.id ~= "milkyway" then
+                    local fHub = world.hubPlanet(fg)
+                    assert(fHub.galaxyStarType == fg.starType,
+                        "hub planet must carry parent galaxy starType")
+                    local fShop = world.shopPlanet(fg)
+                    assert(fShop.galaxyStarType == fg.starType,
+                        "shop planet must carry parent galaxy starType")
+                    -- Check a regular planet in this galaxy
+                    local sx, sy = world.sectorAt(fg.x, fg.y)
+                    local planets = world.planets(sx, sy)
+                    for _, p in ipairs(planets) do
+                        assert(p.galaxyStarType == fg.starType,
+                            "regular planet must carry parent galaxy starType")
+                    end
+                    break
+                end
+            end
+        end
     end
 
     print("SPACESHIP_UNIT_OK")
