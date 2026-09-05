@@ -2,6 +2,63 @@
 
 ## 처리 대기
 
+(17) **HUD 정리 — 개발 임시본 제거, 표본금액 HUD 줄 제거, 좌표 좌상단, 아이콘 확대, 겹침 수정 (사용자 확정, 2026-09-06):**
+  - **(a) "개발 임시본" / "DEV PLACEHOLDER" 풋터 완전 제거.** `M.devPlaceholderFontSize`, `M.devPlaceholderAlpha`, `self.tinyFont = fonts.get(...)`, 그리고 `draw()`의 `love.graphics.printf(i18n.t("dev_placeholder"), ...)` 전부 삭제. i18n에서도 `dev_placeholder` 키 제거. `M.devPlaceholderAlpha`가 남으면 컴파일 에러.
+  - **(b) 표본 금액 HUD 줄 제거.** `hud.samples` (현재 `"표본 14  위험 $1736"`)를 HUD에서 삭제. HUD에는 `거리`·`자금`·`H3/3 상승`만 남긴다. `hudLines()`에서 `samples = nil` 고정. `hudHeight()` 계산에서 samples 분기 제거. self_test 갱신.
+  - **(c) `H3/3 상승`(상태 줄)을 좌상단으로.** 지금 스크린샷 `10:-12:1`은 좌표 같은 값인데 의도하지 않은 것. `hud_status_no_slots` 포맷을 `"H%d/%d %s"` (음수 없는 정렬)으로 고치고, 거리·자금 바로 아래 2째줄에 그린다. 좌표가 아닌 hull·phase.
+  - **(d) HUD 아이콘 크기.** `M.hullIconSize = 8` → **16**, `M.cashIconSize = 8` → **16**, `M.hullIconGap = 4` → **6**. 아이콘은 `drawHudSpriteOrPoly`가 그리는데, 스케일 인자가 `M.hullIconSize`라 이 상수만 올리면 자동 확대.
+  - **(e) HUD 줄 겹침 수정.** `M.hudLineStep = 36` → 아이콘 16+간격+폰트 22이면 최소 **26** 이상이어야 함. 현재 36이면 충분한데, 스크린샷에서 겹쳐 보이면 `hudHeight()`가 2줄 기준으로 줄어들었을 수 있음. 확인 후 수정.
+  - `make verify` GREEN + 커밋: `fix(hud): remove dev placeholder, sample risk line, enlarge icons, fix overlap`
+
+(18) **일시정지 버튼 — 우측 상단 (사용자 확정, 2026-09-06):**
+  - ascending 페이즈에서만 우측 상단에 일시정지 ⏸ 아이콘 (44×44 터치 영역).
+  - 탭 → `self.paused = true` 토글. paused면 `dt = 0`, 화면 중앙 `"PAUSED"` / `"일시정지"` 오버레이 + 터치하면 해제.
+  - settlement/destroyed/launch에서는 숨김.
+  - `make verify` GREEN + 커밋: `feat(play): pause button top-right corner`
+
+(19) **행성 텍스트 교체 — 표본가격·데미지 제거, 신규행성 발견 텍스트 + HUB/중심별/부품 텍스트 (사용자 확정, 2026-09-06):**
+  - **(a) 표본 가격(`risk.sampleLabel` "표본 $150")과 데미지(`risk.label` "차량 $5") 레이블 제거.** `collisionRisk()` 결과의 `sampleLabel`/`label`을 그리는 ~L2764–2796 블록 전부 삭제. `collisionRisk()` 함수 자체는 게임 로직(충돌 계산)에 쓰이니 유지.
+  - **(b) 미발견 일반 행성 위에 "신규 행성 발견" 텍스트.** `!self.discovered[planet.id]` 이고 `!planet.hub` 이고 `!planet.isShop`이면 행성 위 `y - planet.radius - 18`에 i18n `"planet_new_discovery"` / `"신규 행성 발견"` 표시. Y를 `sin(self.time * 2) * 3`으로 위아래 살짝 움직임. 색 `(0.7, 0.9, 1, 0.8)`.
+  - **(c) HUB 행성 위에 "HUB" 텍스트** (기존 `hub_label`), 마젠타색 `(0.85, 0.35, 0.95)`. 추가로 `"엔진부품 획득 가능"` / `"Engine part available"` i18n 텍스트를 한 줄 아래에. sin 움직임 동일.
+  - **(d) 중심별(태양) 위에 "중심별" / "Central Star" 텍스트** (새 i18n `"central_star_label"`), 노란색 `(1, 0.85, 0.25)`.
+  - **(e) shop 행성 위에 "SHOP" + "선체부품 획득 가능"** / "Hull part available". 시안색.
+  - `make verify` GREEN + 커밋: `fix(play): replace sample/damage labels with discovery + hub/star/shop labels`
+
+(20) **미니맵 — 은하 클리핑 + 거리 확보 + 체크포인트 색 + 지구/태양 텍스트 (사용자 확정, 2026-09-06):**
+  - **(a) 은하 링이 미니맵 원 바깥으로 넘치면 안 됨.** `love.graphics.stencil` 또는 원형 clip으로 미니맵 디스크 내부만 그리기. 또는 각 ring draw 전에 `distance(cx,cy, ring center) + ring.radius > size/2`이면 skip.
+  - **(b) 인접 은하 겹침 방지.** `world.galaxyAt` 생성 시 은하 간 최소 거리 `galaxyCellSize` (이미 셀 기반이라 기본 1셀 간격). 미니맵 상 시각적으로 겹치면 `viewRadius`를 더 줄이거나 은하 마커 크기 축소.
+  - **(c) 빨간 행성 = 체크포인트.** 맞다면 레전드 확인. 마젠타 다이아몬드가 HUB. 빨강이 별도 마커라면 설명 추가.
+  - **(d) 미니맵에 지구·태양 텍스트 라벨.** 지구 마커 옆에 `"지구(HUB)"` 회색 `(0.6, 0.6, 0.6, 0.7)` 작은 폰트 11px. 태양 마커 옆에 `"항성"` / `"Star"` 같은 색. 미니맵 디스크 내부에서만 보임.
+  - `make verify` GREEN + 커밋: `fix(minimap): clip galaxies inside disc, label Earth/Star`
+
+(21) **거리 = 지구로부터의 함선 거리 (사용자 확정, 2026-09-06):**
+  - 현재 `run.altitude`는 `effectiveClimbSpeed * dt`로 누적하는 가상 고도. 사용자 의도: **거리 = `sqrt((ship.x - earthCenterX)^2 + (ship.y - earthCenterY)^2)`**.
+  - `hudLines()`에서 `hud.distance = i18n.t("hud_distance", math.floor(dist))`로 변경. `dist`는 `M.earthCenterX/Y`와 `self.ship.x/y` 유클리드 거리. `run.altitude`는 표본 가치 계산 등 내부에서 유지해도 되지만 HUD에는 실제 거리 표시.
+  - `bestAltitude` → `bestDistance`로 리네임하거나, 둘 다 유지하고 HUD만 실거리.
+  - `make verify` GREEN + 커밋: `fix(hud): distance shows euclidean distance from Earth, not climb altitude`
+
+(22) **함선 아이디어 — 사용자에게 제안 (논의 필요, 2026-09-06):**
+  - 현재 함선: starter (기본) / scout (속도+10, 체력-1). 속도는 상점에서도 올릴 수 있어서 차별이 약함.
+  - 제안: 함선마다 **상점에서 올릴 수 없는 고유 패시브** 1개. 예:
+    - **Starter "Pioneer"**: 패시브 없음 (밸런스형, 기본 체력 3)
+    - **Scout "Comet"**: 수집 반경 +50% (radius+45 대신 +30) — 행성에 덜 가까이 가도 채집 가능, 충돌 회피 여유
+    - **Tank "Fortress"**: 잔해 데미지 면역 (debris 1딜 → 0) — 잔해 무시하고 직진
+    - **Gambler "Joker"**: 슬롯 STAR 확률 2배 — 상점 도박 특화
+    - **Explorer "Voyager"**: 미니맵 viewRadius 2배 — 먼 은하 HUB를 미리 확인
+  - 이 방향이면 INBOX 스펙으로 확정. 다른 아이디어가 있으면 알려주세요.
+
+(23) **지구 settle 반경 축소 (사용자 확정, 2026-09-06):**
+  - 현재 `M.earthVisualRadius = 58`, `M.earthSettleRadius = 58 + 30 = 88`. 사용자: "지구 영역이 이미지보다 훨씬 큼."
+  - 변경: `M.earthSettleRadius = 58 + 10 = 68`. 마진 30→10. `launchSpawnY`도 재계산 `75 - 68 - 20 = -13` 정도.
+  - reentry radius도 비례 축소: `58 * 2.5 = 145` (기존 `58*3=174`).
+  - self_test의 earthSettleRadius 의존 값 갱신.
+  - `make verify` GREEN + 커밋: `fix(play): shrink Earth settle radius closer to visual radius`
+
+(24) **표본 채집 줌인 + 타임슬립 1.25배 확대 (사용자 확정, 2026-09-06):**
+  - **(a) 채집 순간 카메라 줌인.** `self.collectZoom = { timer = 0.5, scale = 1.35, planetX = planet.x, planetY = planet.y }` — 0.5초간 카메라 스케일을 1.35배로, 줌 중심을 함선과 행성 중점으로. 줌인 덕에 행성이 크게 보이고 플레이어가 충돌 회피 방향을 잡기 쉬움. `love.graphics.scale` 전에 `collectZoom.scale` 곱. timer 소진 시 lerp로 1.0 복귀.
+  - **(b) 타임슬립 0.3배 → 0.24배** (1.25배 느리게). `self.timeSlip = { timer = 0.4, scale = 0.24 }`. 기존 0.3에서 0.06 더 느려짐.
+  - `make verify` GREEN + 커밋: `feat(play): zoom-in on sample collect + slower timeslip`
+
 ## 처리 완료
 
 (16) **HUD 가로 검정띠 제거 (사용자 확정, 2026-09-05):**
