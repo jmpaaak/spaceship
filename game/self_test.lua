@@ -4670,6 +4670,7 @@ end
 -- local here satisfies Lua 5.1 scoping while keeping the 60-upvalue limit
 -- per runGearTests intact (only 1 extra upvalue slot consumed).
 local testStellarSynergies
+local testExpeditionStellarSynergies
 
 -- Module-level gear test suite (kept outside M.run() so M.run() only
 -- consumes 1 upvalue for this reference instead of 47+, staying within
@@ -4726,6 +4727,7 @@ local function runGearTests()
     testEarthSlotProfileRewardVariation()
     testItem15DeadSlotConstantsRemoved()
     testStellarSynergies()
+    testExpeditionStellarSynergies()
 end
 
 -- [2026-09-05] Stellar Origin suit system — M.activeSynergies() unit tests.
@@ -4788,6 +4790,80 @@ testStellarSynergies = function()
             "engine card '" .. part.id .. "' must have a valid suit field, got: " .. tostring(part.suit))
     end
 end
+
+testExpeditionStellarSynergies = function()
+    local expedition = require("game.expedition")
+
+    local function makeCard(id, suit, rarity, effects)
+        return {
+            id = id,
+            suit = suit,
+            rarity = rarity or "common",
+            tags = {},
+            effects = effects or {}
+        }
+    end
+
+    local runNebula = {
+        sampleYieldUpgradeLevel = 2,
+        sampleYieldUpgradeAmount = 0.5,
+        equippedGear = { makeCard("n1", "nebula"), makeCard("n2", "nebula"), makeCard("n3", "nebula") },
+        equippedEngineParts = {}
+    }
+    assert(math.abs(expedition.sampleYieldMultiplier(runNebula) - 3.0) < 0.001, "nebulaField must apply 1.5x")
+
+    local runPulsar = {
+        equippedGear = { makeCard("p1", "pulsar"), makeCard("p2", "pulsar") },
+        equippedEngineParts = {}
+    }
+    local baseBonus = expedition.streakBonusPerStep(runPulsar)
+    local expectedMult = (1 + 2 * baseBonus) * 2
+    assert(math.abs(expedition.streakMultiplier(3, runPulsar) - expectedMult) < 0.001, "pulsarBurst must apply 2x")
+
+    local runDarkMatter = {
+        equippedGear = { makeCard("v1", "void"), makeCard("v2", "void"), makeCard("p1", "pulsar"), makeCard("p2", "pulsar") },
+        equippedEngineParts = {}
+    }
+    local expectedDM = (1 + 2 * baseBonus) * 2 * 1.5
+    assert(math.abs(expedition.streakMultiplier(3, runDarkMatter) - expectedDM) < 0.001, "darkMatter must apply 1.5x on top of 2x")
+
+    local runVoid = {
+        equippedGear = { makeCard("v1", "void"), makeCard("v2", "void"), makeCard("v3", "void") },
+        equippedEngineParts = {}
+    }
+    assert(math.abs(expedition.collisionRadius(runVoid, 100) - 70) < 0.001, "eventHorizon must reduce collision radius by 30%")
+
+    local runSupernova = {
+        equippedGear = {
+            makeCard("s1", "solar"), makeCard("n1", "nebula"), makeCard("v1", "void"), makeCard("p1", "pulsar"),
+            makeCard("leg1", "solar", "legendary", {{type = "climbSpeed", value = 10}}),
+            makeCard("com1", "solar", "common", {{type = "climbSpeed", value = 10}})
+        },
+        equippedEngineParts = {}
+    }
+    local totals = expedition.equippedTotals(runSupernova)
+    assert(totals.climbSpeed == 25, "supernova must boost legendary effect values by 1.5x, got: " .. tostring(totals.climbSpeed))
+
+    local runSettle = {
+        phase = "returning",
+        altitude = 1,
+        returnSpeed = 10,
+        bestAltitude = 100, pendingSampleValue = 0, sampleCount = 0, maxAltitude = 100,
+        money = 100,
+        durability = 1,
+        maxDurability = 5,
+        equippedGear = {
+            makeCard("s1", "solar"), makeCard("s2", "solar"), makeCard("s3", "solar"),
+            makeCard("n1", "nebula"), makeCard("n2", "nebula")
+        },
+        equippedEngineParts = {}
+    }
+    expedition.update(runSettle, 1) -- triggers settle()
+    assert(runSettle.phase == "settlement", "Must reach settlement")
+    assert(runSettle.durability == 2, "solarSystem must heal 1 durability")
+    assert(runSettle.money == 130, "binaryStar must grant 30 money")
+end
+
 
 local function testItem8HubProximitySettle()
     local PlayScene = require("game.scenes.play")

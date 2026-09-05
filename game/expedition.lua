@@ -146,6 +146,15 @@ local function settle(run)
     run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.pendingSampleValue = 0
     run.sampleCount = 0
+    -- Stellar Origin (item 16, 2026-09-05): solarSystem heals 1 durability per
+    -- settlement (capped at maxDurability); binaryStar grants +30 money flat.
+    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    if syn.solarSystem then
+        run.durability = math.min(run.maxDurability, run.durability + 1)
+    end
+    if syn.binaryStar then
+        run.money = run.money + 30
+    end
     -- Item 15(a): slotOpportunities removed from run state.
     run.phase = "settlement"
 end
@@ -520,8 +529,15 @@ end
 
 -- Sample yield scales the money value of every collected sample (not just durability
 -- capacity), giving players a third strategic upgrade axis at EARTH SHOP.
+-- Stellar Origin (item 16, 2026-09-05): nebulaField synergy (nebula 3+) applies an
+-- additional ×1.5 multiplier on top of the upgrade-derived base.
 function M.sampleYieldMultiplier(run)
-    return 1 + run.sampleYieldUpgradeLevel * run.sampleYieldUpgradeAmount
+    local base = 1 + run.sampleYieldUpgradeLevel * run.sampleYieldUpgradeAmount
+    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    if syn.nebulaField then
+        base = base * 1.5
+    end
+    return base
 end
 
 function M.buySampleYieldUpgrade(run)
@@ -640,9 +656,23 @@ function M.streakBonusPerStep(run)
     return gearModule.effectiveStreakBonusPerStep(baseStreakBonusPerStep, combinedGearList(run))
 end
 
+-- Stellar Origin (item 16, 2026-09-05): pulsarBurst (pulsar 2+) doubles the
+-- final streak multiplier; darkMatter (void 2 + pulsar 2) adds an extra +50%
+-- on top of the base computed value. Both are applied AFTER the gear-based
+-- per-step bonus so synergy rewards compound correctly with equipped gear.
 function M.streakMultiplier(streakCount, run)
     if not streakCount or streakCount <= 1 then return 1 end
-    return 1 + (streakCount - 1) * M.streakBonusPerStep(run)
+    local base = 1 + (streakCount - 1) * M.streakBonusPerStep(run)
+    if run then
+        local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+        if syn.pulsarBurst then
+            base = base * 2
+        end
+        if syn.darkMatter then
+            base = base * 1.5
+        end
+    end
+    return base
 end
 
 -- hueKey is the optional hue-family key from world.hueFamily/specimenKind
@@ -777,6 +807,41 @@ function M.effectiveSampleBonus(run)
     if hullAdditive == 0 then return 0 end
     local sellMult = gearModule.totalEffect(combinedGearList(run), "sellMultiplier")
     return hullAdditive * (1 + sellMult / 100)
+end
+
+-- Stellar Origin (item 16, 2026-09-05): supernova (all 4 suits 1+) scales
+-- every equipped legendary card's effect values by ×1.5 before summing.
+-- This is the synergy-aware equivalent of gearModule.aggregateEffects; the
+-- result table has the same shape and is a drop-in replacement for callers
+-- that already have access to a `run` (and therefore know the synergy state).
+function M.aggregateEffectsWithSynergies(run, parts)
+    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    local totals = {}
+    for _, part in ipairs(parts) do
+        local scale = (syn.supernova and part.rarity == "legendary") and 1.5 or 1
+        for _, effect in ipairs(part.effects) do
+            totals[effect.type] = (totals[effect.type] or 0) + effect.value * scale
+        end
+    end
+    return totals
+end
+
+-- Run-level equippedTotals wrapper that incorporates Stellar Origin synergies.
+-- Supernova (all 4 suits 1+) is the only synergy that modifies the raw
+-- aggregated effect totals; the tag-synergy multiplier and sellMultiplier
+-- combine pass from gear.equippedTotals are preserved exactly.
+function M.equippedTotals(run, parts)
+    local combined = parts or combinedGearList(run)
+    local totals = M.aggregateEffectsWithSynergies(run, combined)
+    local multiplier = gearModule.tagSynergyMultiplier(combined)
+    if totals.climbSpeed then
+        totals.climbSpeed = totals.climbSpeed * multiplier
+    end
+    totals.synergyMultiplier = multiplier
+    if totals.sellMultiplier and totals.sampleSellValue then
+        totals.sampleSellValue = totals.sampleSellValue * (1 + totals.sellMultiplier / 100)
+    end
+    return totals
 end
 
 -- Item 10(b)/14(G) wiring: how many one-shot emergency boost charges the
@@ -916,8 +981,20 @@ end
 -- base hitbox radius live in play.lua/world.lua, out of this lane's scope
 -- per loop/PROMPT.md; this establishes the single run-level source of
 -- truth a future consumer will read from, same posture as boostChargeCount.
+-- Stellar Origin (item 16, 2026-09-05): eventHorizon (void 3+) adds an extra
+-- −30 percentage-point collisionRadius reduction on top of any equipped gear.
+-- Since effectiveCollisionRadius reads totalEffect(parts, "collisionRadius")
+-- as an additive percentage, we inject a synthetic extra-30 by scaling the
+-- base radius by the combined (gear + synergy) percentage.
 function M.collisionRadius(run, baseRadius)
-    return gearModule.effectiveCollisionRadius(baseRadius, combinedGearList(run))
+    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    local extraPct = syn.eventHorizon and 30 or 0
+    local combined = combinedGearList(run)
+    local gearPct = gearModule.totalEffect(combined, "collisionRadius")
+    local totalPct = gearPct + extraPct
+    local radius = baseRadius * (1 - totalPct / 100)
+    if radius < 0 then radius = 0 end
+    return radius
 end
 
 -- Item 12's drop RNG (gear.rollRarity / gear.rollEdition), wired into an
