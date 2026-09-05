@@ -437,12 +437,10 @@ function M.stars(sectorX, sectorY)
     local stars = {}
     for i = 1, 18 do
         stars[i] = {
-            -- Use fully independent salts per axis (INBOX item 2, 2026-09-05):
-            -- x uses salt 10001+i, y uses salt 20001+i — completely disjoint
-            -- salt ranges so x and y outputs are statistically independent
-            -- and diagonal patterning cannot arise.
-            x = sectorX * M.sectorSize + hash(sectorX, sectorY, 10001 + i) * M.sectorSize,
-            y = sectorY * M.sectorSize + hash(sectorX, sectorY, 20001 + i) * M.sectorSize,
+            -- Scramble i into both axes independently so consecutive i values
+            -- produce uncorrelated (x, y) pairs instead of a diagonal line.
+            x = sectorX * M.sectorSize + hash(sectorX + i * 7, sectorY, 10001) * M.sectorSize,
+            y = sectorY * M.sectorSize + hash(sectorX, sectorY + i * 13, 20001) * M.sectorSize,
             bright = hash(sectorX, sectorY, 300 + i),
         }
     end
@@ -463,13 +461,11 @@ function M.backgroundStars(sectorX, sectorY)
     local stars = {}
     for i = 1, M.backgroundStarCount do
         stars[i] = {
-            -- Cross-seed x/y to eliminate diagonal patterning: x axis uses
-            -- salt 50001+i, y axis uses salt 60001+i — completely disjoint
-            -- ranges so the two coordinate outputs are statistically independent.
-            -- Salts 50001/60001 keep this set fully disjoint from M.stars()
-            -- which uses salts 10001/20001.
-            x = sectorX * M.sectorSize + hash(sectorX, sectorY, 50001 + i) * M.sectorSize,
-            y = sectorY * M.sectorSize + hash(sectorX, sectorY, 60001 + i) * M.sectorSize,
+            -- Scramble i into x/y axes independently (same fix as M.stars):
+            -- feeding i into the x or y coordinate instead of the salt breaks
+            -- the linear correlation that causes diagonal patterning.
+            x = sectorX * M.sectorSize + hash(sectorX + i * 11, sectorY, 50001) * M.sectorSize,
+            y = sectorY * M.sectorSize + hash(sectorX, sectorY + i * 17, 60001) * M.sectorSize,
             bright = hash(sectorX, sectorY, 30000 + i) * 0.55,
         }
     end
