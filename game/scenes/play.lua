@@ -324,8 +324,8 @@ end
 -- right edge and the status text's left edge, both in internal-canvas
 -- pixels. The status text draw x shifts right by this much whenever the
 -- icon is drawn so the icon never overlaps the "H%d/%d ..." text.
-M.hullIconSize = 8
-M.hullIconGap = 4
+M.hullIconSize = 16
+M.hullIconGap = 6
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- third slice): a small coin icon paired with the CASH readout, mirroring
@@ -352,8 +352,8 @@ end
 
 -- Icon footprint (px) + gap (px) reserved between the coin icon's right
 -- edge and the CASH text's left edge, mirroring M.hullIconSize/hullIconGap.
-M.cashIconSize = 8
-M.cashIconGap = 4
+M.cashIconSize = 16
+M.cashIconGap = 6
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- final slice): a small speedometer-like gauge icon paired with the steering
