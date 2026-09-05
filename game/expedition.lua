@@ -114,13 +114,9 @@ local function refreshShipStats(run)
 end
 
 
--- Safe return is an explicit action (tests / future player input).
-function M.beginReturn(run)
-    if not run or run.phase ~= "ascending" then return false end
-    run.phase = "returning"
-    run.returnDistance = run.maxAltitude
-    return true
-end
+-- Item 2: beginReturn abolished. The returning phase no longer exists;
+-- players steer back to Earth during ascending, and proximity triggers
+-- settle() automatically (play.lua's earthSettleRadius check).
 
 -- Item 9/14 (A) `money` gap: the last of the original five (A) additive
 -- effect types (speed/sampleSellValue/money/climbSpeed/hullDurability) to
@@ -1269,12 +1265,7 @@ end
 function M.update(run, dt)
     if dt <= 0 then return end
 
-    if run.phase == "returning" then
-        run.altitude = math.max(0, run.altitude - run.returnSpeed * dt)
-        if run.altitude == 0 then settle(run) end
-        return
-    end
-
+    -- Item 2: returning phase abolished. Only ascending drives altitude.
     if run.phase ~= "ascending" then return end
 
     run.altitude = run.altitude + M.effectiveClimbSpeed(run) * dt

@@ -136,7 +136,17 @@ M.ascendControls = ascendControls
 -- minimum and easy to hit with a thumb.
 -- Mobile-UI sub-item (7): widened 200→300px, height 44→48px for mobile.
 local ascendReturnButton = { top = 1186, bottom = 1234, left = 210, right = 510 }
+-- Item 2: ascendReturnButton kept as dead layout constant for backwards
+-- compat; the draw/touch code that referenced it is removed.
 M.ascendReturnButton = ascendReturnButton
+
+-- Item 2: Earth proximity auto-settle constants.
+-- Earth world center is (0, 75); visual radius 58px; settle radius
+-- includes a 30px margin matching the gravity/collection range convention.
+M.earthCenterX = 0
+M.earthCenterY = 75
+M.earthVisualRadius = 58
+M.earthSettleRadius = 58 + 30  -- 88
 
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
 -- already accepts any tap on the internal canvas regardless of x/y (see the
@@ -462,9 +472,7 @@ function M.hudHeight(phase, hud, galaxyShift)
     if phase == "launch" then
         return M.launchHudHeight + galaxyShift
     end
-    if hud.returnProgress then
-        return 144 + M.hudPrimaryStatusGap + galaxyShift
-    end
+    -- Item 2: returnProgress branch removed (returning phase abolished).
     if hud.samples then
         return 88 + M.hudPrimaryStatusGap + galaxyShift
     end
@@ -1159,7 +1167,8 @@ end
 
 function M:collisionRisk(planet)
     local phase = self.expedition.phase
-    if phase ~= "ascending" and phase ~= "returning" then return nil end
+    -- Item 2: returning phase abolished; only ascending has collision risk.
+    if phase ~= "ascending" then return nil end
     local damage = world.collisionDamage(planet)
     local lethal = damage >= self.expedition.durability
     local risk = {
@@ -1178,8 +1187,8 @@ end
 function M:approachWarning(planet, planetScreenY, shipScreenY)
     if planet.id and self.collided[planet.id] then return nil end
     local phase = self.expedition.phase
+    -- Item 2: returning phase abolished; only ascending approach warnings.
     local approaching = phase == "ascending" and planetScreenY >= 40 and planetScreenY < shipScreenY
-        or phase == "returning" and planetScreenY > shipScreenY and planetScreenY < viewport.height
     if not approaching then return nil end
     return self:collisionRisk(planet)
 end
@@ -1188,20 +1197,9 @@ function M:hudLines()
     local run = self.expedition
     local samples
     local best
-    local earth
-    local returnProgress
-    if run.phase == "ascending" or run.phase == "returning" then
+    -- Item 2: returning phase abolished; earth/returnProgress HUD lines removed.
+    if run.phase == "ascending" then
         samples = i18n.t("hud_samples", run.sampleCount, run.pendingSampleValue)
-        if run.phase == "returning" then
-            earth = i18n.t("hud_earth", math.ceil(run.altitude))
-            local progress = 1
-            if run.returnDistance > 0 then
-                progress = math.max(0, math.min(1, 1 - run.altitude / run.returnDistance))
-            end
-            local secondsLeft = run.returnSpeed > 0 and math.ceil(run.altitude / run.returnSpeed) or 0
-            returnProgress = i18n.t("hud_return_progress",
-                math.floor(progress * 100 + 0.5), secondsLeft)
-        end
     elseif run.phase == "launch" or run.phase == "settlement" then
         best = i18n.t("hud_personal_best", math.floor(run.bestAltitude))
     end
@@ -1210,8 +1208,6 @@ function M:hudLines()
         cash = i18n.t("hud_cash", run.money),
         samples = samples,
         best = best,
-        earth = earth,
-        returnProgress = returnProgress,
         -- docs/feedback/INBOX.md UI/HUD item 4: the launch phase's slot
         -- forecast (S%02d) is always 0 because no return trip has
         -- Item 11: both launch and non-launch phases now use the same
@@ -1220,7 +1216,7 @@ function M:hudLines()
         -- slotOpportunities is always 0 (dead/misleading UI).
         status = i18n.t("hud_status_no_slots", run.durability,
             run.maxDurability, i18n.phaseAbbrev(run.phase)),
-        galaxy = (run.phase == "ascending" or run.phase == "returning" or run.phase == "launch")
+        galaxy = (run.phase == "ascending" or run.phase == "launch")
             and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name
             or nil,
     }
@@ -1429,7 +1425,7 @@ end
 function M:pollDesktopMouse()
     if os.getenv("GAME_UNIT") == "1" then return end
     if not love.mouse or not love.mouse.isDown then return end
-    if self.expedition.phase ~= "ascending" and self.expedition.phase ~= "returning"
+    if self.expedition.phase ~= "ascending"
         and self.expedition.phase ~= "launch" then
         return
     end
@@ -1502,7 +1498,8 @@ function M:update(dt)
     if self.shopModal then
         return
     end
-    if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
+    -- Item 2: returning phase abolished; only ascending has steering/movement.
+    if self.expedition.phase == "ascending" then
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
         local startX, startOffset = self.ship.x, self.verticalOffset
         local thrustAngle = self.ship.angle
@@ -1563,9 +1560,7 @@ function M:update(dt)
         else
             expedition.update(self.expedition, dt)
         end
-        if self.expedition.phase == "returning" then
-            self.ship.y = -self.expedition.altitude + self.verticalOffset
-        end
+
         self.rcsCooldown = math.max(0, (self.rcsCooldown or 0) - dt)
         local bank = self.steerBank or 0
         local lift = self.steerLift or 0
@@ -1612,11 +1607,8 @@ function M:update(dt)
             end
         end
     end
-    if previousPhase ~= self.expedition.phase and self.expedition.phase == "returning" then
+    if previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
         self:persistBestAltitude()
-        -- Item 11/15(a): in-flight slot count removed from returning message.
-        self.message = i18n.t("returning_message")
-    elseif previousPhase ~= self.expedition.phase and self.expedition.phase == "settlement" then
         self.message = i18n.t("settled_message", self.expedition.lastSettlement, self.expedition.money)
         -- Item 7(c): Roll one Earth-shop gear offer on settlement entry.
         -- Uses gear.earthShopPool to exclude galaxy-exclusive parts (those
@@ -1638,7 +1630,12 @@ function M:update(dt)
             self.earthShopGearOffer = expedition.rollGearOffer(self.expedition, earthPool, rolls)
         end
     end
-    if self.expedition.phase == "ascending" or self.expedition.phase == "returning" then
+    if self.expedition.phase == "ascending" then
+        local dx = self.ship.x - M.earthCenterX
+        local dy = self.ship.y - M.earthCenterY
+        if dx * dx + dy * dy <= M.earthSettleRadius * M.earthSettleRadius then
+            expedition.settle(self.expedition)
+        end
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
             local distanceSquared = dx * dx + dy * dy
@@ -1798,7 +1795,7 @@ function M:update(dt)
             end
         end
     end
-    if self.expedition.phase ~= "ascending" and self.expedition.phase ~= "returning" then
+    if self.expedition.phase ~= "ascending" then
         self.touches = {}
     end
 end
@@ -1957,10 +1954,7 @@ function M:keypressed(key)
             self.message = i18n.t("ascending_message")
         end
     end
-    -- Return-to-Earth: explicit action during ascending phase (keyboard).
-    if key == "r" and self.expedition.phase == "ascending" then
-        expedition.beginReturn(self.expedition)
-    end
+    -- Item 2: Return-to-Earth 'r' keybinding removed. Direct steering only.
 end
 
 -- Mobile-UI sub-item (3): when a touch starts inside the fixed joystick
@@ -1988,27 +1982,11 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "ascending" then
-        -- Return-to-Earth button: tap inside the ascendReturnButton zone
-        -- triggers beginReturn instead of steering.
-        if y >= ascendReturnButton.top and y <= ascendReturnButton.bottom
-            and x >= ascendReturnButton.left and x <= ascendReturnButton.right then
-            expedition.beginReturn(self.expedition)
-            return
-        end
         local ox, oy = joystickOrigin(x, y)
         self.touches[id] = { x = x, y = y, originX = ox, originY = oy }
         return
     end
-    if self.expedition.phase == "returning" then
-        -- Item 15(a): in-flight slot machine removed. The returning phase only
-        -- has steering controls; slot-spin zone removed.
-        local inControlRow = y >= returnControls.top and y <= returnControls.bottom
-        if inControlRow and (x <= returnControls.leftMaxX or x >= returnControls.rightMinX) then
-            local ox, oy = joystickOrigin(x, y)
-            self.touches[id] = { x = x, y = y, originX = ox, originY = oy }
-        end
-        return
-    end
+
     if self.expedition.phase == "settlement" then
         for _, row in ipairs(settlementTouchRows) do
             if y >= row.top and y < row.bottom then
@@ -2068,8 +2046,8 @@ function M:drawJoystickStick()
     local knob = joystick.visualKnobRadius
     -- Mobile-UI sub-item (3): when the player is NOT dragging, show a
     -- faint ghost pad at the fixed anchor so they know where to put their
-    -- thumb. Only in ascending/returning where steering exists.
-    if not ox and (self.expedition.phase == "ascending" or self.expedition.phase == "returning") then
+    -- thumb. Only in ascending where steering exists.
+    if not ox and self.expedition.phase == "ascending" then
         love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha * 0.6)
         if not drawShopIconSprite(self.joystickPadImage, joystick.anchorX, joystick.anchorY, radius * 2) then
             love.graphics.circle("fill", joystick.anchorX, joystick.anchorY, radius)
@@ -2217,11 +2195,7 @@ function M:drawMinimap()
         love.graphics.setColor(1, 0.55, 0.3, 1)
         love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
     end
-    if self.expedition.phase == "returning" then
-        -- Item 15(a): in-flight slot machine removed; the slot-odds line
-        -- (C%/P%/S%/AVG$ readout above the minimap) no longer exists.
-        -- The 10px hudOddsLineHeight reservation was zeroed out accordingly.
-    end
+
     if view.checkpointBeyond then
         -- Nearest off-chart checkpoint galaxy arrow (item 1). Distinct
         -- magenta from the orange Earth-return marker above, and offset
@@ -2999,19 +2973,6 @@ function M:draw()
         love.graphics.printf(i18n.t("tap_start_over"), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
-        self:drawJoystickStick()
-        -- Return-to-Earth button: opaque pill at the bottom of the
-        -- screen so players know they can initiate return.
-        -- Mobile-UI (7): increased opacity 0.7→0.85, text color brighter.
-        love.graphics.setColor(0.15, 0.25, 0.45, 0.85)
-        love.graphics.rectangle("fill", ascendReturnButton.left, ascendReturnButton.top,
-            ascendReturnButton.right - ascendReturnButton.left,
-            ascendReturnButton.bottom - ascendReturnButton.top, 8, 8)
-        love.graphics.setColor(0.75, 0.95, 1, 1)
-        love.graphics.printf(i18n.t("return_to_earth"),
-            ascendReturnButton.left, ascendReturnButton.top + 14,
-            ascendReturnButton.right - ascendReturnButton.left, "center")
-    elseif self.expedition.phase == "returning" then
         self:drawJoystickStick()
     end
     love.graphics.setColor(0.85, 0.9, 1)

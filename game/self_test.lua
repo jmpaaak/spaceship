@@ -56,7 +56,10 @@ local function testJoystick()
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     joystickMoveScene.expedition.phase = "ascending"
-    assert(joystickMoveScene.verticalOffset == 0)
+    assert(joystickMoveScene.verticalOffset == 0)    joystickMoveScene:touchpressed("launch-joy", 90, 280)
+    joystickMoveScene.expedition.altitude = 500
+    joystickMoveScene.ship.y = -500
+
     -- Drag straight down-right from origin (90,10) to (90+maxRadius,10+maxRadius)
     -- normalizes to roughly (0.707, 0.707) at full magnitude.
     joystickMoveScene.touches["stick"] = {
@@ -2714,9 +2717,10 @@ local function testGearMoneyRunWiring()
     -- credit exactly that payout, unmodified (regression baseline matching
     -- every other gear run-wrapper's "unequipped == pre-wiring behavior").
     local bareRun = expedition.new({ money = 0 })
-    bareRun.phase = "returning"
+    bareRun.phase = "ascending"
     bareRun.pendingSampleValue = 40
-        bareRun.altitude = 0
+    bareRun.altitude = 0
+    expedition.settle(bareRun)
     expedition.update(bareRun, 0.001)
     assert(bareRun.money == 40, "an unequipped run's settlement payout must equal pending sample value 40, got " .. tostring(bareRun.money))
 
@@ -2731,8 +2735,10 @@ local function testGearMoneyRunWiring()
     }
     local run = expedition.new({ money = 0 })
     assert(expedition.equipGear(run, "hull", moneyCard))
-    run.phase = "returning"
-    run.pendingSampleValue = 40    run.altitude = 0
+    run.phase = "ascending"
+    run.pendingSampleValue = 40
+    run.altitude = 0
+    expedition.settle(run)
     expedition.update(run, 0.001)
     assert(run.money == 55, "a money +15 hull card must raise the settlement payout from 40 to 55, got " .. tostring(run.money))
 
@@ -2745,8 +2751,10 @@ local function testGearMoneyRunWiring()
         effects = { { type = "money", value = 15 } },
     }
     assert(expedition.equipGear(engineRun, "engine", engineMoneyCard))
-    engineRun.phase = "returning"
-    engineRun.pendingSampleValue = 40    engineRun.altitude = 0
+    engineRun.phase = "ascending"
+    engineRun.pendingSampleValue = 40
+    engineRun.altitude = 0
+    expedition.settle(engineRun)
     expedition.update(engineRun, 0.001)
     assert(engineRun.money == 40, "money effects on an engine-slot part must NOT count toward the settlement bonus (item 9 scopes this stat to hull gear), got " .. tostring(engineRun.money))
 end
@@ -4152,9 +4160,11 @@ local function testHubExploredResetsOnLaunch()
     assert(drop2 == nil, "duplicate exploreHub in same expedition must return nil")
 
     -- Simulate safe return: altitude to 0 drives settle() inside update().
-    run.phase = "returning"
-    run.altitude = 1
-    expedition.update(run, 1) -- altitude reaches 0 -> settle()
+    run.phase = "ascending"
+    expedition.settle(run)
+
+
+
     assert(run.phase == "settlement",
         "update must drive returning run to settlement")
 
@@ -4880,8 +4890,9 @@ testExpeditionStellarSynergies = function()
     assert(totals.climbSpeed == 25, "supernova must boost legendary effect values by 1.5x, got: " .. tostring(totals.climbSpeed))
 
     local runSettle = {
-        phase = "returning",
+        phase = "ascending",
         altitude = 1,
+        climbSpeed = 100,
         returnSpeed = 10,
         bestAltitude = 100, pendingSampleValue = 0, sampleCount = 0, maxAltitude = 100,
         money = 100,
@@ -4893,7 +4904,7 @@ testExpeditionStellarSynergies = function()
         },
         equippedEngineParts = {}
     }
-    expedition.update(runSettle, 1) -- triggers settle()
+    expedition.settle(runSettle)
     assert(runSettle.phase == "settlement", "Must reach settlement")
     assert(runSettle.durability == 2, "solarSystem must heal 1 durability")
     assert(runSettle.money == 130, "binaryStar must grant 30 money")
@@ -4945,14 +4956,14 @@ local function testItem8HubProximitySettle()
     scene.expedition.pendingSampleValue = 50
     scene.expedition.money = 100
     scene.ship.x = 20
-    scene.ship.y = 0
+    scene.ship.y = -500
 
     local savedNearby = world.nearbyPlanets
     
     world.nearbyPlanets = function(x, y, rad)
         return {
-            { id = "normal1", x = 0, y = 0, radius = 10, hub = false },
-            { id = "hub1", x = 1000, y = 1000, radius = 20, hub = true, galaxyId = "g1" }
+            { id = "normal1", x = 0, y = -500, radius = 10, hub = false },
+            { id = "hub1", x = 1000, y = -1000, radius = 20, hub = true, galaxyId = "g1" }
         }
     end
     
@@ -4961,7 +4972,7 @@ local function testItem8HubProximitySettle()
     assert(scene.expedition.money == 100, "Money should remain unchanged")
     
     scene.ship.x = 970
-    scene.ship.y = 1000
+    scene.ship.y = -1000
     scene:update(0.01)
     
     assert(scene.expedition.pendingSampleValue == 0, "Approaching hub planet must clear pendingSampleValue")
@@ -5208,35 +5219,8 @@ function M.run()
         "collisionRisk sampleValue/sampleLabel must apply the SAMPLE YIELD multiplier ("
             .. tostring(yieldWarning.sampleValue) .. " " .. tostring(yieldWarning.sampleLabel) .. ")")
     riskScene.expedition.sampleYieldUpgradeLevel = 0
-    riskScene.expedition.phase = "returning"
-    local returningPlanet = { id = "return-warning", y = -500 }
-    local returningWarning = riskScene:approachWarning(returningPlanet, 205, 185)
-    assert(returningWarning.damage == 2 and not returningWarning.lethal
-        and returningWarning.label == "RISK -2")
-    assert(returningWarning.sampleValue == nil and returningWarning.sampleLabel == nil)
-    local returningLethalWarning = riskScene:approachWarning({ y = -1000 }, 205, 185)
-    assert(returningLethalWarning.damage == 3 and returningLethalWarning.lethal
-        and returningLethalWarning.label == "LETHAL -3")
-    assert(riskScene:approachWarning(returningPlanet, 165, 185) == nil)
-    riskScene.collided[returningPlanet.id] = true
-    assert(riskScene:approachWarning(returningPlanet, 205, 185) == nil)
-    riskScene.expedition.altitude = 725
-    riskScene.expedition.returnDistance = 1000
-    riskScene.expedition.returnSpeed = 45
     riskScene.expedition.sampleCount = 3
     riskScene.expedition.pendingSampleValue = 95
-    local returningHud = riskScene:hudLines()
-    assert(returningHud.samples == "SAMPLES 03  AT RISK $95")
-    assert(returningHud.earth == "EARTH IN 725")
-    assert(returningHud.returnProgress == "RETURN 28%  17s LEFT")
-    -- Item 15(a) follow-up: the returning-phase slot-odds line
-    -- (C%/P%/S%/AVG$ above the minimap) was removed when item-15 abolished
-    -- in-flight slots. The hudOddsLineHeight constant that reserved 10px for
-    -- it is now dead space. The returning HUD height must no longer include it.
-    assert(PlayScene.hudHeight("returning", returningHud, 0)
-        == 144 + PlayScene.hudPrimaryStatusGap,
-        "item-15(a) follow-up: returning HUD height must not reserve dead odds-line space after in-flight slots were abolished: "
-        .. tostring(PlayScene.hudHeight("returning", returningHud, 0)))
 
     -- docs/feedback/INBOX.md UI/HUD item 4: the "개발 임시본"/"DEV PLACEHOLDER"
     -- footer is a permanent dev-only disclaimer, not gameplay info, so it
@@ -5254,8 +5238,7 @@ function M.run()
         "hudLineStep must be >= 14px for mobile line spacing: " .. tostring(PlayScene.hudLineStep))
     assert(PlayScene.hudGalaxyShift and PlayScene.hudGalaxyShift >= 14,
         "hudGalaxyShift must be >= 14px for mobile readability: " .. tostring(PlayScene.hudGalaxyShift))
-    riskScene.expedition.altitude = 250
-    assert(riskScene:hudLines().returnProgress == "RETURN 75%  6s LEFT")
+
     riskScene.expedition.phase = "settlement"
     -- Item 11: slot count (S%02d) is always 0 since item-15 abolished
     -- in-flight slots; the "S00" segment is dead/misleading UI that implies
@@ -5279,7 +5262,7 @@ function M.run()
         "launch-phase status must not show a slot count segment")
     riskScene.expedition.phase = "ascending"
     local ascendingHud = riskScene:hudLines()
-    assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95")
+    assert(ascendingHud.samples == "SAMPLES 03  AT RISK $95", tostring(ascendingHud.samples))
     -- "고도(ALT)" -> "거리(DIST)" relabel (docs/feedback/INBOX.md item 2,
     -- 2026-09-03): the user misread the ALT/CASH line + adjacent fuel
     -- status line as "fuel gates altitude". hud_distance must no longer say
@@ -5342,7 +5325,7 @@ function M.run()
     assert(expedition.buyShip(returnCollisionScene.expedition, "scout"))
     assert(expedition.selectShip(returnCollisionScene.expedition, "scout"))
     assert(expedition.launch(returnCollisionScene.expedition))
-    returnCollisionScene.expedition.phase = "returning"
+    returnCollisionScene.expedition.phase = "ascending"
     returnCollisionScene.expedition.altitude = 500
     returnCollisionScene.expedition.returnDistance = 500
     returnCollisionScene.expedition.durability = 2
@@ -5362,8 +5345,9 @@ function M.run()
     assert(wipedReturn.durabilityUpgradeLevel == 0)
     assert(wipedReturn.selectedShipId == "starter" and not wipedReturn.ownedShips.scout)
     assert(wipedReturn.bestAltitude == 750)
+    print("MSG: ", tostring(returnCollisionScene.message))
     assert(returnCollisionScene.message == "SHIP DESTROYED  BEST 750  META RESET")
-    assert(wipedReturn.lastLostSampleCount == 2 and wipedReturn.lastLostSampleValue == 80)
+    assert(wipedReturn.lastLostSampleCount == 3 and wipedReturn.lastLostSampleValue == 115)
     assert(expedition.launch(wipedReturn))
     assert(wipedReturn.lastLostSampleCount == 0 and wipedReturn.lastLostSampleValue == 0)
 
@@ -5380,12 +5364,8 @@ function M.run()
     assert(run.sampleCount == 1 and run.pendingSampleValue == 75 and run.money == 0)
     expedition.update(run, 1)
     assert(run.phase == "ascending" and run.altitude == 120)
-    assert(expedition.beginReturn(run))
-    assert(run.phase == "returning" and run.altitude == 120)
-    expedition.update(run, 1)
-    assert(run.phase == "returning" and run.altitude == 70)
-    expedition.update(run, 2)
-    assert(run.phase == "settlement" and run.altitude == 0)
+    expedition.settle(run)
+    assert(run.phase == "settlement" and run.altitude == 120)
     assert(run.money == 75 and run.lastSettlement == 75)
     assert(run.lastSampleSettlement == 75)
     assert(run.sampleCount == 0 and run.pendingSampleValue == 0)
@@ -5401,11 +5381,10 @@ function M.run()
     assert(run.lastAltitude == 0)
 
     local lowerRun = expedition.new({ bestAltitude = 500 })
-    lowerRun.phase = "returning"
-    lowerRun.altitude = 5
+    lowerRun.phase = "ascending"
+    lowerRun.altitude = 300
     lowerRun.maxAltitude = 300
-    lowerRun.returnSpeed = 10
-    expedition.update(lowerRun, 1)
+    expedition.settle(lowerRun)
     assert(lowerRun.phase == "settlement" and lowerRun.lastAltitude == 300)
     assert(lowerRun.lastNewBest == false)
     assert(lowerRun.bestAltitude == 500)
@@ -5641,49 +5620,7 @@ function M.run()
     assert(touchScene.ship.x > xBeforeRight,
         "holding right must still increase ship.x while main thrust follows heading")
     touchScene:touchreleased("steer-right")
-    touchScene.expedition.phase = "returning"
-    touchScene.expedition.altitude = 500
-    touchScene.expedition.returnDistance = 500
-    touchScene.expedition.returnSpeed = 0
-    local returnStartX = touchScene.ship.x
-    local idleReturnSteering = touchScene:steeringButtonState()
-    assert(not idleReturnSteering.leftActive and not idleReturnSteering.rightActive)
-    touchScene:touchpressed("return-left", 20, 266)
-    local leftReturnSteering = touchScene:steeringButtonState()
-    assert(leftReturnSteering.leftActive and not leftReturnSteering.rightActive)
-    touchScene:update(1)
-    assert(touchScene.ship.x == returnStartX - 55)
-    touchScene:touchreleased("return-left")
-    local releasedReturnSteering = touchScene:steeringButtonState()
-    assert(not releasedReturnSteering.leftActive and not releasedReturnSteering.rightActive)
-    touchScene:update(1)
-    assert(touchScene.ship.x == returnStartX - 55)
-    local returnSteeredX = touchScene.ship.x
-    touchScene:touchpressed("return-right", 500, 266)
-    local rightReturnSteering = touchScene:steeringButtonState()
-    assert(not rightReturnSteering.leftActive and rightReturnSteering.rightActive)
-    touchScene:update(1)
-    assert(touchScene.ship.x == returnSteeredX + 55)
-    touchScene:touchreleased("return-right")
 
-    world.nearbyPlanets = nearbyPlanets
-
-    local returnAvoidanceScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    returnAvoidanceScene.expedition.phase = "returning"
-    returnAvoidanceScene.expedition.altitude = 500
-    returnAvoidanceScene.expedition.returnDistance = 500
-    returnAvoidanceScene.ship.y = -500
-    local avoidablePlanet = { id = "return-avoid", x = 0, y = -455, radius = 7 }
-    nearbyPlanets = world.nearbyPlanets
-    world.nearbyPlanets = function() return { avoidablePlanet } end
-    returnAvoidanceScene:touchpressed("avoid-left", 20, 266)
-    returnAvoidanceScene:update(1)
-    world.nearbyPlanets = nearbyPlanets
-    assert(returnAvoidanceScene.ship.x == -55)
-    assert(returnAvoidanceScene.expedition.durability == 3)
-    assert(not returnAvoidanceScene.collided[avoidablePlanet.id])
     touchScene.expedition.phase = "settlement"
     touchScene.expedition.money = touchScene.expedition.durabilityUpgradeCost
         + touchScene.expedition.scoutShipCost
@@ -6066,40 +6003,6 @@ function M.run()
     assert(rowTouchScene.expedition.ownedShips.scout and rowTouchScene.expedition.selectedShipId == "scout")
     assert(rowTouchScene.expedition.phase == "ascending")
 
-    -- The returning-phase LEFT/RIGHT/SPIN band was a 24px-tall row (only
-    -- ~24pt at the smallest supported window), well under the same 44pt
-    -- accessibility minimum settlementTouchRows was fixed to meet. Verify
-    -- the widened band clears 44pt and that touches at its top/bottom
-    -- edges (not just its vertical center) still register steering and
-    -- slot input.
-    local returnControls = PlayScene.returnControls
-    assert(returnControls.bottom - returnControls.top >= 34,
-        "returning control band is under the 34px minimum")
-    local returnBandPoints = viewport.canvasPixelsToPoints(
-        returnControls.bottom - returnControls.top, 720, 1280, 1, false)
-    assert(returnBandPoints >= 44,
-        "returning control band is under the 44pt accessibility minimum at scale 1 (" .. returnBandPoints .. "pt)")
-
-    local returnEdgeScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    returnEdgeScene.expedition.phase = "returning"
-    returnEdgeScene.expedition.altitude = 500
-    returnEdgeScene.expedition.returnDistance = 500
-    returnEdgeScene.expedition.returnSpeed = 0
-    local edgeNearbyPlanets = world.nearbyPlanets
-    world.nearbyPlanets = function() return {} end
-    returnEdgeScene:touchpressed("edge-left", 20, returnControls.top)
-    local edgeLeftSteering = returnEdgeScene:steeringButtonState()
-    assert(edgeLeftSteering.leftActive and not edgeLeftSteering.rightActive,
-        "returning band top edge did not register left steering")
-    returnEdgeScene:touchreleased("edge-left")
-    returnEdgeScene:touchpressed("edge-right", 500, returnControls.bottom - 1)
-    local edgeRightSteering = returnEdgeScene:steeringButtonState()
-    assert(not edgeRightSteering.leftActive and edgeRightSteering.rightActive,
-        "returning band bottom edge did not register right steering")
-    returnEdgeScene:touchreleased("edge-right")
-    world.nearbyPlanets = edgeNearbyPlanets
 
     local destroyedArea = PlayScene.destroyedTouchArea
     -- Mobile-UI sub-item (6): destroyed touch area must span the full
@@ -6259,14 +6162,6 @@ function M.run()
                 "item 11: dead in-flight slot key '" .. key ..
                 "' must be removed from i18n (still resolves to a value)")
         end
-        local returnMsg = i18n.t("returning_message")
-        assert(not returnMsg:upper():find("SLOT"),
-            "item 11: returning_message must not contain slot-count language: " .. returnMsg)
-        i18n.setLocale("ko")
-        local returnMsgKo = i18n.t("returning_message")
-        assert(not returnMsgKo:find("슬롯"),
-            "item 11: ko returning_message must not contain 슬롯 slot language: " .. returnMsgKo)
-        i18n.setLocale("en")
     end
 
     -- Item 11(c): dead fuel-upgrade function and run state fields must not exist
@@ -6873,62 +6768,26 @@ function M.run()
             "nearbyDebris search radius must be 4 sectors, got " .. tostring(capturedDebrisRad))
     end
 
-    -- Return-to-Earth button: tapping the ascendReturnButton zone during
-    -- ascending phase triggers beginReturn → returning phase.
+    -- Item 2: Auto-settle on Earth proximity during ascending.
     do
         local rtScene = PlayScene.new({
             bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
         })
-        -- Launch first to reach ascending phase.
         rtScene:touchpressed("launch-rt", 90, 280)
-        assert(rtScene.expedition.phase == "ascending",
-            "should be ascending after launch tap, got " .. rtScene.expedition.phase)
-        rtScene.expedition.altitude = 500
-        rtScene.expedition.maxAltitude = 500
-
-        -- Tap inside the return button zone.
-        local btn = PlayScene.ascendReturnButton
-        local cx = math.floor((btn.left + btn.right) / 2)
-        local cy = math.floor((btn.top + btn.bottom) / 2)
-        rtScene:touchpressed("return-btn", cx, cy)
-        assert(rtScene.expedition.phase == "returning",
-            "tapping return button should start returning, got " .. rtScene.expedition.phase)
-        assert(rtScene.expedition.returnDistance == 500,
-            "returnDistance should equal maxAltitude")
-
-        -- Keyboard shortcut 'r' also triggers return.
-        local rtScene2 = PlayScene.new({
-            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        })
-        rtScene2:touchpressed("launch-rt2", 90, 280)
-        assert(rtScene2.expedition.phase == "ascending")
-        rtScene2.expedition.altitude = 300
-        rtScene2.expedition.maxAltitude = 300
-        rtScene2:keypressed("r")
-        assert(rtScene2.expedition.phase == "returning",
-            "pressing 'r' should start returning, got " .. rtScene2.expedition.phase)
-
-        -- Full loop: return → settle → settlement phase reached.
-        expedition.update(rtScene.expedition, 1000)
+        assert(rtScene.expedition.phase == "ascending", "should be ascending")
+        
+        -- Fly away from Earth
+        rtScene.ship.x = 0
+        rtScene.ship.y = -500
+        rtScene:update(0.1)
+        assert(rtScene.expedition.phase == "ascending", "should stay ascending")
+        
+        -- Fly back to Earth proximity
+        rtScene.ship.x = PlayScene.earthCenterX
+        rtScene.ship.y = PlayScene.earthCenterY - PlayScene.earthSettleRadius + 10
+        rtScene:update(0.1)
         assert(rtScene.expedition.phase == "settlement",
-            "after returning to altitude 0, should be settlement, got " .. rtScene.expedition.phase)
-    end
-
-    -- Mobile-UI sub-item (7): Return to Earth button must meet mobile touch
-    -- target minimums (80×40px per INBOX, iOS HIG 44pt) and be reasonably
-    -- wide for thumb targeting.
-    do
-        local btn = PlayScene.ascendReturnButton
-        local w = btn.right - btn.left
-        local h = btn.bottom - btn.top
-        assert(w >= 80,
-            "return button width must be >= 80px for mobile, got " .. tostring(w))
-        assert(h >= 44,
-            "return button height must be >= 44px (iOS HIG minimum), got " .. tostring(h))
-        -- Button should be centered horizontally on the 720px canvas.
-        local cx = (btn.left + btn.right) / 2
-        assert(math.abs(cx - 360) < 20,
-            "return button should be centered on 720px canvas, center is " .. tostring(cx))
+            "proximity to earth should auto-settle, got " .. rtScene.expedition.phase)
     end
 
     print("SPACESHIP_UNIT_OK")
