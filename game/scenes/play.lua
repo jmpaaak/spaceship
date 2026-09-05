@@ -2206,29 +2206,27 @@ function M:drawMinimap()
     end
     -- Galaxy markers
     for _, galaxy in ipairs(view.galaxies) do
-        if galaxy.inside then
-            if galaxy.id == "milkyway" then
-                love.graphics.setColor(0.25, 0.55, 1, 1)
-                if not drawMinimapSprite(mm.galaxyHome, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius * 2) then
-                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
-                end
-            elseif galaxy.hub then
-                -- Checkpoint galaxy: sprite or pulsing dot+ring
-                local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
-                if mm.checkpointStar then
-                    love.graphics.setColor(0.9, 0.75, 0.3, pulse * 0.7 + 0.3)
-                    drawMinimapSprite(mm.checkpointStar, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius * 3)
-                else
-                    love.graphics.setColor(0.9, 0.75, 0.3)
-                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
-                    love.graphics.setColor(1, 0.95, 0.6, pulse)
-                    love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
-                end
+        if galaxy.id == "milkyway" then
+            love.graphics.setColor(0.25, 0.55, 1, 1)
+            if not drawMinimapSprite(mm.galaxyHome, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHomeRadius * 2) then
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.2)
+            end
+        elseif galaxy.hub then
+            -- Checkpoint galaxy: sprite or pulsing dot+ring
+            local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
+            if mm.checkpointStar then
+                love.graphics.setColor(0.9, 0.75, 0.3, pulse * 0.7 + 0.3)
+                drawMinimapSprite(mm.checkpointStar, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius * 3)
             else
-                love.graphics.setColor(0.9, 0.75, 0.3, 1)
-                if not drawMinimapSprite(mm.galaxyPlain, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius * 2) then
-                    love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
-                end
+                love.graphics.setColor(0.9, 0.75, 0.3)
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
+                love.graphics.setColor(1, 0.95, 0.6, pulse)
+                love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
+            end
+        else
+            love.graphics.setColor(0.9, 0.75, 0.3, 1)
+            if not drawMinimapSprite(mm.galaxyPlain, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyPlainRadius * 2) then
+                love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 1.5)
             end
         end
     end

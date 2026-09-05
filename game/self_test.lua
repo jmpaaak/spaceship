@@ -400,6 +400,13 @@ local function testMinimap()
     assert(nearView.earth.x < 0)
     assert(math.abs(nearView.earth.y) < 1e-6)
 
+    -- Earth must clamp to the minimap rim when the ship is beyond viewRadius.
+    local clampX = minimap.viewRadius + 100
+    local clampView = minimap.view(clampX, 0)
+    local earthDist = math.sqrt(clampView.earth.x ^ 2 + clampView.earth.y ^ 2)
+    assert(math.abs(earthDist - minimap.mapRadius) < 1e-6,
+        "Earth must clamp to the minimap rim when the ship is beyond viewRadius")
+
     -- Past chartRadius there is still no world wall: the readout only
     -- reports how far past the reference circle the ship is, and the
     -- unit vector pointing back toward Earth.
@@ -409,10 +416,6 @@ local function testMinimap()
     assert(farView.beyond)
     assert(math.abs(farView.distanceBeyond - overshoot) < 1e-6)
     assert(farView.returnDx < 0 and math.abs(farView.returnDy) < 1e-6)
-    -- Earth is farther than viewRadius, so its marker clamps to the rim.
-    local earthDist = math.sqrt(farView.earth.x ^ 2 + farView.earth.y ^ 2)
-    assert(math.abs(earthDist - minimap.mapRadius) < 1e-6,
-        "Earth must clamp to the minimap rim when the ship is beyond viewRadius")
 
     -- Projecting a point inside viewRadius must not clamp; a point well
     -- outside must land exactly on the rim.
@@ -480,7 +483,7 @@ local function testMinimap()
     -- PlayScene draws the off-chart arrow toward it.
     local farCheckpointX = foundGalaxy.x
     local farCheckpointY = foundGalaxy.y
-    local awayX = farCheckpointX + minimap.viewRadius * 5
+    local awayX = farCheckpointX + minimap.viewRadius * 1.5
     local awayY = farCheckpointY
     local awayView = minimap.view(awayX, awayY)
     if awayView.checkpointDistance and awayView.checkpointDistance > minimap.viewRadius then

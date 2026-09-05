@@ -2,13 +2,6 @@
 
 ## 처리 대기
 
-(7) **미니맵 줌인 — HUB/중심행성이 보이게 (사용자 확정):**
-  - 현재 `minimap.viewRadius = galaxyCellSize * 2.5` (≈11520px). 은하 디스크가 차트에서 ~10px, hub 행성은 서브픽셀.
-  - 변경: `M.viewRadius = world.galaxyCellSize * 0.7` (현재 은하가 차트의 대부분을 채움).
-  - 이웃 은하는 기존 `project()` 림 클램프로 가장자리에 점으로 유지. `chartRadius` / `galaxyCellRadius` / `checkpointSearchCellRadius` 는 그대로 (오프차트 화살표 유지).
-  - hub 마커(`markerGalaxyHubRadius`)와 sun 마커가 현재 은하 안에서 서로 구분되게 그릴 것.  Milky Way는 Earth + Sun 둘 다 차트에 들어와야 함.
-  - self_test의 viewRadius 의존 assertion (`Earth must clamp…`, `checkpointBeyond`)을 새 스케일에 맞게 수정.
-  - `make verify` GREEN + 커밋: `fix(minimap): zoom in viewRadius 2.5→0.7 cells so hub/sun readable`
 
 (8) **미니맵 나선/링 색 — 전 은하 동일, 태양계 특례 제거 (사용자 확정):**
   - 현재 `play.lua` drawMinimap: milkyway 링/마커만 파랑 `(0.3, 0.55, 0.95)` / `(0.25, 0.55, 1)`, 나머지 은하는 전부 금색 `(0.9, 0.75, 0.3)`.
@@ -61,6 +54,16 @@
   - `make verify` GREEN + 커밋: `fix(rcs): single opposite-stick exhaust stream`
 
 ## 처리 완료
+
+(7) **미니맵 줌인 — HUB/중심행성이 보이게 (사용자 확정):**
+  - 현재 `minimap.viewRadius = galaxyCellSize * 2.5` (≈11520px). 은하 디스크가 차트에서 ~10px, hub 행성은 서브픽셀.
+  - 변경: `M.viewRadius = world.galaxyCellSize * 0.7` (현재 은하가 차트의 대부분을 채움).
+  - 이웃 은하는 기존 `project()` 림 클램프로 가장자리에 점으로 유지. `chartRadius` / `galaxyCellRadius` / `checkpointSearchCellRadius` 는 그대로 (오프차트 화살표 유지).
+  - hub 마커(`markerGalaxyHubRadius`)와 sun 마커가 현재 은하 안에서 서로 구분되게 그릴 것.  Milky Way는 Earth + Sun 둘 다 차트에 들어와야 함.
+  - self_test의 viewRadius 의존 assertion (`Earth must clamp…`, `checkpointBeyond`)을 새 스케일에 맞게 수정.
+  - `make verify` GREEN + 커밋: `fix(minimap): zoom in viewRadius 2.5→0.7 cells so hub/sun readable`
+  - [2026-09-05] 구현 완료: minimap viewRadius를 0.7셀로 줌인, 인접 은하 림 클램프 유지, sun/hub 마커 분리 및 self_test 갱신.
+
 
 (5) **지구 착륙 시 진입 이펙트 — 길게 흔들리는 대기권 진입 느낌 (사용자 확정):**
   - 지구 근접 → settle 판정 직전, 일정 거리 안에 들어오면 "착륙 진입" 연출:

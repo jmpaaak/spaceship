@@ -17,9 +17,9 @@ M.inset = 16
 M.mapRadius = M.size / 2 - M.inset
 
 -- World-unit radius of the chart around the player (how much of the
--- galaxy grid one minimap "screen" covers). ~2.5 galaxy cells so a
--- handful of neighboring galaxies fit as distinct dots.
-M.viewRadius = world.galaxyCellSize * 2.5
+-- galaxy grid one minimap "screen" covers). Zoomed in to 0.7 cells
+-- so the current galaxy fills most of the chart and the hub is distinct.
+M.viewRadius = world.galaxyCellSize * 0.7
 
 -- docs/feedback/INBOX.md "내부 해상도를 발라트로 수준으로 상향" — remaining
 -- decorative px: the small marker dot/ring radii drawn on the minimap
@@ -209,9 +209,13 @@ function M.view(shipX, shipY)
     -- Earth. Earth keeps its own separate marker (projected at world
     -- origin above) so it now reads as one of the orbiting planets rather
     -- than the center.
-    local homeGalaxy = world.galaxy(0, 0)
-    local homeSun = world.sunPosition(homeGalaxy)
-    local sunX, sunY, sunInside = M.project(homeSun.x, homeSun.y, shipX, shipY)
+    local containing = world.galaxyContaining(shipX, shipY)
+    
+    local sunX, sunY, sunInside = nil, nil, nil
+    if containing then
+        local currentSun = world.sunPosition(containing)
+        sunX, sunY, sunInside = M.project(currentSun.x, currentSun.y, shipX, shipY)
+    end
     local galaxies = {}
     local rings = {}
     for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.galaxyCellRadius)) do
@@ -240,7 +244,7 @@ function M.view(shipX, shipY)
     -- orbit (radius 7, matching its position roughly between the inner and
     -- outer decorative rings) is included below so Earth visibly reads as
     -- one of the orbiting bodies around the sun rather than the pivot.
-    if sunInside or math.sqrt(sunX * sunX + sunY * sunY) < M.mapRadius then
+    if sunInside ~= nil and (sunInside or math.sqrt(sunX * sunX + sunY * sunY) < M.mapRadius) then
         for _, radius in ipairs({ 4, 7, 11 }) do
             rings[#rings + 1] = {
                 x = sunX,
@@ -250,7 +254,6 @@ function M.view(shipX, shipY)
             }
         end
     end
-    local containing = world.galaxyContaining(shipX, shipY)
     -- docs/feedback/INBOX.md item 1 part 1: the player's current galaxy
     -- draws its own deterministic spiral-arm shape (instead of the generic
     -- circular disk ring above), and this spiral swaps for a different
@@ -271,7 +274,7 @@ function M.view(shipX, shipY)
     return {
         player = { x = 0, y = 0 },
         earth = { x = earthX, y = earthY, inside = earthInside },
-        sun = { x = sunX, y = sunY, inside = sunInside },
+        sun = sunX and { x = sunX, y = sunY, inside = sunInside } or nil,
         galaxies = galaxies,
         rings = rings,
         spiral = spiral,
