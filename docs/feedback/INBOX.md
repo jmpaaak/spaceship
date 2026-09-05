@@ -2,7 +2,24 @@
 
 ## 처리 대기
 
-(없음 — 다음 사용자 피드백 대기)
+(1) **상점(settlement) UI 텍스트 겹침/깨짐 수정 (사용자 보고, 최우선):**
+  - 스크린샷: "지구 상점" 패널 안에서 텍스트가 겹침 — "합계 $0", "표본 0개 $0", "최고고도 299", 업그레이드 행, 장비 제안 행이 전부 겹쳐서 읽을 수 없음.
+  - 원인: 폰트 사이즈를 22px로 키웠는데 행간(settlementRowStep=28, summaryRowStep=32)과 패널 높이가 안 맞음. 업그레이드 행/장비 행/로드아웃 행이 모두 같은 영역에 겹침.
+  - 수정: settlementRowStep을 44px, summaryRowStep을 40px로. 패널 높이(`settlementPanelHeight`)도 비례 키우기. 각 행의 y좌표를 순차적으로 배치해서 절대 겹치지 않도록. `GAME_CAPTURE_PHASE=settlement` 캡처로 겹침 없음 확인.
+
+(2) **귀환 버튼 제거 + 지구 근접 시 자동 정착 (사용자 확정):**
+  - 사용자: "귀환 버튼 불필요. 직접 지구로 돌아가서 근접하는 것."
+  - 현재: `beginReturn` → `returning` phase → altitude 자동 감소 → `settle()`. 그리고 별도 귀환 터치 버튼(커밋 `9c6eba8`)이 있음.
+  - 변경:
+    - 귀환 버튼 UI + 터치 핸들러 제거.
+    - `returning` phase 폐지. ascending에서 **직접 지구(0,0) 근처에 도달**하면 settle. 판정: `ship.x^2 + ship.y^2 <= (earthRadius + 30)^2` (중력장과 동일 범위).
+    - `beginReturn()` 호출부 모두 제거. ascending에서 지구 방향으로 직접 조종해서 돌아가는 것.
+    - `returning` phase 관련 HUD 표시("귀환 중" 등) 제거.
+    - 관련 self_test assertion 업데이트.
+  - `make verify` GREEN + 커밋.
+
+(3) **귀환 시 순간이동 수정:**
+  - (2)에서 returning phase 폐지하면 자동 해결. ascending에서 직접 이동하므로 순간이동 없음.
 
 ## 처리 완료
 
