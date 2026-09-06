@@ -1140,7 +1140,7 @@ function M.new(options)
     local destroyedPanelImagePath     = "assets/effects/destroyed_panel.png"
     local relaunChImagePath           = "assets/effects/relaunch.png"
     local slotResultPanelImagePath    = "assets/effects/slot_result_panel.png"
-    local slotSpinButtonImagePath     = "assets/effects/slot_spin_button.png"
+    local slotSpinButtonImagePath     = "assets/slot_symbols/spin_button.png"
     -- Group 6 of ComfyUI asset wiring: joystick, specimen banner, star point
     local joystickPadImagePath     = "assets/effects/joystick_pad.png"
     local joystickKnobImagePath    = "assets/effects/joystick_knob.png"

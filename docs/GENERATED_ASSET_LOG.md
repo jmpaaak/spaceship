@@ -147,3 +147,9 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-06T22:00:00+0900 | assets/slot_symbols/harvest.png | INBOX (52a): PIL-generated 32x32 crystal/gem slot symbol, RGBA
 2026-09-06T22:00:00+0900 | assets/slot_symbols/machine.png | INBOX (52a): PIL-generated 96x48 slot machine body frame, RGBA
 2026-09-06T23:00:00+0900 | assets/earth/earth_generic.png | INBOX (60): PIL-generated 128x128 Earth sprite, blue sphere + green continents + white clouds, seed 42
+
+## 2026-09-06: Slot Machine Assets (Balatro-inspired PIL)
+- `tools/gen_slot_machine.py` → `assets/slot_symbols/machine.png` 96×48 RGBA
+- `tools/gen_slot_symbols.py` → `assets/slot_symbols/{money,part,speed,durability,harvest}.png` 32×32 RGBA
+- `tools/gen_slot_spin_button.py` → `assets/slot_symbols/spin_button.png` 96×22 RGBA
+- Style: dark purple body, gold trim, Balatro joker palette
