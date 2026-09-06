@@ -1068,10 +1068,10 @@ function M.new(options)
     })
     -- HUD icon images (group 1 of ComfyUI asset wiring)
     local hudIconImages = loadSpriteMap({
-        cash     = "assets/effects/hud_coin.png",
-        hull     = "assets/effects/hud_shield.png",
+        cash     = "assets/hud/icon_cash.png",
+        hull     = "assets/hud/icon_durability.png",
         speed    = "assets/effects/hud_speed.png",
-        distance = "assets/effects/hud_distance.png",
+        distance = "assets/hud/icon_distance.png",
         best     = "assets/effects/hud_best.png",
         samples  = "assets/effects/hud_samples.png",
         galaxy   = "assets/effects/hud_galaxy.png",

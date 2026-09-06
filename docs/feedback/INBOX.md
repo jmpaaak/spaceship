@@ -2,16 +2,6 @@
 
 ## 처리 대기
 
-(43) **HUD 아이콘 교체 — PIL 생성 (사용자 확정, 2026-09-06):**
-  - 현재 거리/자금/내구도 아이콘이 기존 도트와 스타일 불일치.
-  - `tools/gen_hud_icons.py` PIL 스크립트 (≤50줄)로 3개 생성:
-    - `assets/hud/icon_distance.png`: 16×16 RGBA, 별+화살 모티프 (우주 톤)
-    - `assets/hud/icon_cash.png`: 16×16, 동전/$ 모티프
-    - `assets/hud/icon_durability.png`: 16×16, 방패/하트 모티프
-  - 색조: 어두운 배경에 밝은 시안/골드/초록 — PixelPlanets 스타일과 조화.
-  - `drawHudSpriteOrPoly`에서 기존 폴백 폴리곤 대신 새 PNG 로드.
-  - `make verify` GREEN + 커밋: `feat(hud): PIL-generated distance/cash/durability icons`
-
 (44) **선체 정보 → 미니맵 아래 우측 (사용자 확정, 2026-09-06):**
   - 스크린샷: 선체 정보(선체 3, 선체 LV.0, -55)가 여전히 화면 중앙에 있음.
   - 변경: ascending 때 **미니맵 아래 우측**에 작은 폰트(22px)로 고정:
@@ -31,6 +21,7 @@
   - `make verify` GREEN + 커밋: `fix(play): remove "new planet" floating text above undiscovered planets`
 
 ## 처리 완료
+(43) **HUD 아이콘 교체 — PIL 생성 — 완료 2026-09-06:** `tools/gen_hud_icons.py` PIL 스크립트로 16×16 RGBA 아이콘 3개 생성 (icon_distance/icon_cash/icon_durability). `play.lua` hudIconImages 경로 업데이트. 테스트 16×16 호환. `make verify` GREEN.
 (42) **장착 네모칸 가로→세로 배치 — 완료 2026-09-06:** `drawHudGearSlots` 가로 배열을 세로 1열로 변경. x=5 고정, y를 HUD 아래부터 32px+4px 간격으로 내려감. hull 6칸 → 8px gap → engine 3칸. 총 높이 ~332px. 테스트 갱신 (horizontal width→vertical height assert). `make verify` GREEN.
 (41) **HUD 폰트 크기 — launch 때만 큼, ascending과 동일하게 고정 — 완료 2026-09-06:** `M.hudFontSize` 44→22, `M.hudLineStep` 52→30, icons 32→16px, `hudBackgroundMaxWidth` 500→280. launch-only font override 제거 (`previousHudFont`/`isLaunchHud` 분기). `M.launchHudHeight` 제거. 모든 페이즈에서 init 시 설정된 22px 폰트 사용. `make verify` GREEN.
 (40) **장착장비 패널 → 좌상단 HUD 아래 고정 노출 + 아이템 칸 확대 — 완료 2026-09-06:** `drawHudGearSlots(hudHeight)` 메서드 추가. 32×32px 슬롯 그리드 (hull 6 + engine 3), rarity별 배경색 + 아이콘 오버레이, 빈 슬롯 어두운 테두리. "GEAR"/"장착" 라벨 22px. ascending/returning/launch 때 좌상단 HUD 아래 고정. `make verify` GREEN.

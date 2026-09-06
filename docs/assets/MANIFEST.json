@@ -2536,5 +2536,53 @@
     "width": 150,
     "height": 25,
     "qa": "User-confirmed 2026-09-05: 6 special star frames 25x25 RGBA, verified RGBA mode, wired into play.lua loadSprite as pixelStarsSpecialImage for bright foreground star rendering."
+  },
+  {
+    "path": "assets/hud/icon_distance.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_hud_icons.py",
+    "terms_url": "tools/gen_hud_icons.py",
+    "asset_id": "pil-hud-distance-20260906",
+    "prompt": "PIL-generated 16x16 RGBA distance HUD icon, cyan arrow with star sparkles",
+    "model": "PIL/Pillow",
+    "style": "pixel-art",
+    "settings": "{\"generator\":\"tools/gen_hud_icons.py\",\"method\":\"PIL\"}",
+    "downloaded_at": "2026-09-06T13:30:00+09:00",
+    "sha256": "b16b2fd8a402ed2dd947576997a0fe230a2a63307141385dff9e7317edf844db",
+    "width": 16,
+    "height": 16,
+    "qa": "INBOX (43): PIL-generated 16x16 distance icon, RGBA, transparent corners verified"
+  },
+  {
+    "path": "assets/hud/icon_cash.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_hud_icons.py",
+    "terms_url": "tools/gen_hud_icons.py",
+    "asset_id": "pil-hud-cash-20260906",
+    "prompt": "PIL-generated 16x16 RGBA cash HUD icon, gold coin with $ motif",
+    "model": "PIL/Pillow",
+    "style": "pixel-art",
+    "settings": "{\"generator\":\"tools/gen_hud_icons.py\",\"method\":\"PIL\"}",
+    "downloaded_at": "2026-09-06T13:30:00+09:00",
+    "sha256": "6217514d84ccc1a798cb1a54fb85720f5d5beacd6e17ad598b84121deb147dd2",
+    "width": 16,
+    "height": 16,
+    "qa": "INBOX (43): PIL-generated 16x16 cash icon, RGBA, transparent corners verified"
+  },
+  {
+    "path": "assets/hud/icon_durability.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_hud_icons.py",
+    "terms_url": "tools/gen_hud_icons.py",
+    "asset_id": "pil-hud-durability-20260906",
+    "prompt": "PIL-generated 16x16 RGBA durability HUD icon, green shield with cross",
+    "model": "PIL/Pillow",
+    "style": "pixel-art",
+    "settings": "{\"generator\":\"tools/gen_hud_icons.py\",\"method\":\"PIL\"}",
+    "downloaded_at": "2026-09-06T13:30:00+09:00",
+    "sha256": "3517a06cc509829f4cdf27a99aee2a4f9df44a2e5e0b643a2f7443e3bfa5c706",
+    "width": 16,
+    "height": 16,
+    "qa": "INBOX (43): PIL-generated 16x16 durability icon, RGBA, transparent corners verified"
   }
 ]

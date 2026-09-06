@@ -1164,10 +1164,10 @@ end
 -- Slice 2: distance/best/samples.
 local function testHudIconRegenSlice()
     local paths = {
-        "assets/effects/hud_coin.png",
-        "assets/effects/hud_shield.png",
+        "assets/hud/icon_cash.png",
+        "assets/hud/icon_durability.png",
         "assets/effects/hud_speed.png",
-        "assets/effects/hud_distance.png",
+        "assets/hud/icon_distance.png",
         "assets/effects/hud_best.png",
         "assets/effects/hud_samples.png",
         "assets/effects/hud_galaxy.png",
@@ -1176,19 +1176,21 @@ local function testHudIconRegenSlice()
     }
     for _, path in ipairs(paths) do
         local data = love.image.newImageData(path)
-        assert(data:getWidth() == 32 and data:getHeight() == 32,
-            path .. " must be 32x32, got " .. data:getWidth() .. "x" .. data:getHeight())
+        local w, h = data:getWidth(), data:getHeight()
+        assert((w == 32 and h == 32) or (w == 16 and h == 16),
+            path .. " must be 32x32 or 16x16, got " .. w .. "x" .. h)
         local function cornerAlpha(x, y)
             local _r, _g, _b, a = data:getPixel(x, y)
             return a
         end
+        local maxIdx = w - 1
         assert(cornerAlpha(0, 0) == 0, path .. " top-left corner must be transparent")
-        assert(cornerAlpha(31, 0) == 0, path .. " top-right corner must be transparent")
-        assert(cornerAlpha(0, 31) == 0, path .. " bottom-left corner must be transparent")
-        assert(cornerAlpha(31, 31) == 0, path .. " bottom-right corner must be transparent")
+        assert(cornerAlpha(maxIdx, 0) == 0, path .. " top-right corner must be transparent")
+        assert(cornerAlpha(0, maxIdx) == 0, path .. " bottom-left corner must be transparent")
+        assert(cornerAlpha(maxIdx, maxIdx) == 0, path .. " bottom-right corner must be transparent")
         local opaque, transparent = 0, 0
-        for y = 0, 31 do
-            for x = 0, 31 do
+        for y = 0, maxIdx do
+            for x = 0, maxIdx do
                 local _r, _g, _b, a = data:getPixel(x, y)
                 if a > 0 then
                     opaque = opaque + 1
@@ -1256,10 +1258,10 @@ local function testRgbBrokenAssetsUnwired()
         "assets/planet/pp_gas.png",
         "assets/planet/pp_earth.png",
         "assets/planet/pp_bare.png",
-        "assets/effects/hud_coin.png",
-        "assets/effects/hud_shield.png",
+        "assets/hud/icon_cash.png",
+        "assets/hud/icon_durability.png",
         "assets/effects/hud_speed.png",
-        "assets/effects/hud_distance.png",
+        "assets/hud/icon_distance.png",
         "assets/effects/hud_best.png",
         "assets/effects/hud_samples.png",
         "assets/effects/hud_galaxy.png",
