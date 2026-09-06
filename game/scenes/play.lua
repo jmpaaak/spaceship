@@ -3787,11 +3787,25 @@ function M:draw()
             for i = 1, bigCount do
                 local blockMin = (i - 1) * 10 + 1
                 local blockMax = math.min(i * 10, run.maxDurability)
-                local blockCapacity = 10 -- always draw as if each block holds 10
+                local blockCapacity = 10
                 local blockFilled = math.max(0, math.min(run.durability - blockMin + 1, blockMax - blockMin + 1))
                 if blockFilled >= blockCapacity then
-                    love.graphics.setColor(hpColor(run.durability, run.maxDurability))
+                    -- Full 10x block: filled + diagonal shine stripes
+                    local hr, hg, hb = hpColor(run.durability, run.maxDurability)
+                    love.graphics.setColor(hr, hg, hb)
                     love.graphics.rectangle("fill", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+                    -- Diagonal shine lines (brighter, semi-transparent)
+                    love.graphics.setColor(math.min(1, hr + 0.3), math.min(1, hg + 0.3), math.min(1, hb + 0.3), 0.45)
+                    local sz = M.hpBlockSize
+                    for s = 3, sz, 5 do
+                        love.graphics.line(blockX + s, blockY, blockX, blockY + s)
+                    end
+                    for s = 3, sz, 5 do
+                        love.graphics.line(blockX + sz, blockY + s, blockX + s, blockY + sz)
+                    end
+                    -- Bright border to distinguish from 1x blocks
+                    love.graphics.setColor(math.min(1, hr + 0.2), math.min(1, hg + 0.2), math.min(1, hb + 0.2), 0.8)
+                    love.graphics.rectangle("line", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
                 elseif blockFilled > 0 then
                     -- Partially filled: outline + partial fill
                     love.graphics.setColor(0.3, 0.3, 0.35)
