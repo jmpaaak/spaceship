@@ -5959,7 +5959,8 @@ function M.run()
     end
     local sx, sy = world.sectorAt(-1, -193)
     assert(sx == -1 and sy == -2)
-    assert(world.sampleValue({ y = -500 }) > world.sampleValue({ y = -50 }))
+    assert(world.sampleValue({ y = -500 }) == 1, "flat $1 planet sample value")
+    assert(world.sampleValue({ y = -50 }) == 1, "flat $1 planet sample value (close)")
     assert(world.collisionDamage({ y = -499 }) == 1)
     assert(world.collisionDamage({ y = -500 }) == 2)
     assert(world.collisionDamage({ y = -1500 }) == 4)
@@ -6149,10 +6150,10 @@ function M.run()
     riskScene.expedition.durability = 3
     local warning = riskScene:collisionRisk({ y = -500 })
     assert(warning.damage == 2 and not warning.lethal and warning.label == "RISK -2")
-    assert(warning.sampleValue == 35 and warning.sampleLabel == "SAMPLE $35")
+    assert(warning.sampleValue == 1 and warning.sampleLabel == "SAMPLE $1")
     local lethalWarning = riskScene:collisionRisk({ y = -1000 })
     assert(lethalWarning.damage == 3 and lethalWarning.lethal and lethalWarning.label == "LETHAL -3")
-    assert(lethalWarning.sampleValue == 60 and lethalWarning.sampleLabel == "SAMPLE $60")
+    assert(lethalWarning.sampleValue == 1 and lethalWarning.sampleLabel == "SAMPLE $1")
     -- The SAMPLE YIELD upgrade multiplies the actual money awarded by
     -- expedition.collectSample (see collectSample's `awarded` return value
     -- and its use in PlayScene's floating "+$N" text), but the RISK/SAMPLE
@@ -6160,9 +6161,9 @@ function M.run()
     -- world.sampleValue(planet), ignoring the multiplier. That made the
     -- preview understate the real payout once a player owned any SAMPLE
     -- YIELD level, so it must also apply expedition.sampleYieldMultiplier.
-    riskScene.expedition.sampleYieldUpgradeLevel = 1
+    riskScene.expedition.sampleYieldUpgradeLevel = 4
     local yieldWarning = riskScene:collisionRisk({ y = -500 })
-    assert(yieldWarning.sampleValue == 44 and yieldWarning.sampleLabel == "SAMPLE $44",
+    assert(yieldWarning.sampleValue == 2 and yieldWarning.sampleLabel == "SAMPLE $2",
         "collisionRisk sampleValue/sampleLabel must apply the SAMPLE YIELD multiplier ("
             .. tostring(yieldWarning.sampleValue) .. " " .. tostring(yieldWarning.sampleLabel) .. ")")
     riskScene.expedition.sampleYieldUpgradeLevel = 0
@@ -6306,7 +6307,7 @@ function M.run()
     assert(wipedReturn.bestAltitude == 750)
     print("MSG: ", tostring(returnCollisionScene.message))
     assert(returnCollisionScene.message == "SHIP DESTROYED  BEST 750  META RESET")
-    assert(wipedReturn.lastLostSampleCount == 3 and wipedReturn.lastLostSampleValue == 115)
+    assert(wipedReturn.lastLostSampleCount == 3 and wipedReturn.lastLostSampleValue == 81)
     assert(expedition.launch(wipedReturn))
     assert(wipedReturn.lastLostSampleCount == 0 and wipedReturn.lastLostSampleValue == 0)
 
@@ -6886,16 +6887,16 @@ function M.run()
     assert(#floatingTextScene.floatingTexts == 1)
     assert(math.abs(sampleFloatingText.timer - 0.85) < 1e-9)
     assert(sampleFloatingText.y < startingFloatingY)
-    assert(sampleFloatingText.text == "+$18",
+    assert(sampleFloatingText.text == "+$1",
         "sample floating text must show a partial roll-up value mid-animation: "
             .. tostring(sampleFloatingText.text))
     floatingTextScene:update(0.15)
-    assert(sampleFloatingText.text == "+$35",
+    assert(sampleFloatingText.text == "+$1",
         "sample floating text must reach the full awarded amount once the roll-up duration elapses: "
             .. tostring(sampleFloatingText.text))
     floatingTextScene:update(0.35)
     assert(#floatingTextScene.floatingTexts == 1)
-    assert(sampleFloatingText.text == "+$35", "roll-up value must hold steady after completion")
+    assert(sampleFloatingText.text == "+$1", "roll-up value must hold steady after completion")
     floatingTextScene:update(0.36)
     assert(#floatingTextScene.floatingTexts == 0)
 
@@ -8333,6 +8334,26 @@ function M.run()
         world.resetComets()
 
         print("  INBOX-35 comet system OK")
+    end
+
+    -- INBOX-36: flat $1 planet sample value
+    do
+        print("  [INBOX-36] flat $1 sample value tests...")
+        -- Every planet returns $1 regardless of distance
+        assert(world.sampleValue({ y = 0 }) == 1, "sampleValue at origin must be $1")
+        assert(world.sampleValue({ y = -500 }) == 1, "sampleValue at y=-500 must be $1")
+        assert(world.sampleValue({ y = -2000 }) == 1, "sampleValue at y=-2000 must be $1")
+        assert(world.sampleValue({ x = 1000, y = -1000 }) == 1, "sampleValue at diagonal must be $1")
+        -- sampleTier still distance-based
+        assert(world.sampleTier({ y = -50 }) == "common")
+        assert(world.sampleTier({ y = -500 }) == "rare")
+        assert(world.sampleTier({ y = -1000 }) == "epic")
+        -- collisionDamage still distance-based
+        assert(world.collisionDamage({ y = -499 }) == 1)
+        assert(world.collisionDamage({ y = -500 }) == 2)
+        -- comet = 50x planet = $50
+        assert(world.cometSampleValue({ y = -500 }) == 50, "comet must be 50x flat $1 = $50")
+        print("  INBOX-36 flat $1 sample value OK")
     end
 
     print("SPACESHIP_UNIT_OK")

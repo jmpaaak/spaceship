@@ -445,8 +445,7 @@ end
 M.distanceFromEarth = distanceFromEarth
 
 function M.sampleValue(planet)
-    local distance = distanceFromEarth(planet)
-    return 10 + math.floor(distance / 100) * 5
+    return 1
 end
 
 function M.collisionDamage(planet)

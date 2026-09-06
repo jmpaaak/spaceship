@@ -2,12 +2,6 @@
 
 ## 처리 대기
 
-(36) **행성 기본 표본 보상 $1로 하향 (사용자 확정, 2026-09-06):**
-  - 현재 `sampleValue = 10 + floor(distance/100) * 5`. 가까운 행성도 최소 $10.
-  - 변경: `sampleValue = 1`. 거리 스케일 제거, 모든 행성 고정 $1. 혜성이 $50(=1×50), 위성이 $10(=1×10).
-  - `sampleTier`는 거리 기반 유지 (시각 구분용). `collisionDamage`도 기존 유지.
-  - `make verify` GREEN + 커밋: `fix(world): flat $1 planet sample value`
-
 (37) **위성 시스템 도입 (사용자 확정, 2026-09-06):**
   - 각 행성에 **0~1개** 위성이 행성 주위를 빠르게 공전. `hash(planet.id, 700) > 0.7` → 위성 1개 (30% 확률).
   - 공전 반경: `planet.radius + 15~25px`. 공전 속도: `2π / 3초` (3초에 1바퀴). 반지름 3~5px.
@@ -19,6 +13,9 @@
   - `make verify` GREEN + 커밋: `feat(play): moons orbit planets — fast, mid-reward collectible`
 
 ## 처리 완료
+
+(36) **행성 기본 표본 보상 $1로 하향 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `world.sampleValue()` → 고정 `return 1`. 거리 스케일 제거. `sampleTier`/`collisionDamage` 기존 거리 기반 유지. 혜성 50×$1=$50. 기존 테스트 값 갱신 + INBOX-36 전용 블록 추가. `make verify` GREEN.
 
 (35) **혜성 시스템 도입 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `world.lua`에 comet 시스템 구현 (comets 테이블, spawnComet, cometPosition, tickCometSpawn, nearbyComets, cometSampleValue, cometCollisionDamage, resetComets). 첫 60초 후 보장 스폰, 이후 30초마다 30% 확률. 속도 80-120px/s, 반지름 8-12px. 보상 행성의 50배. `play.lua` 업데이트/드로우 루프에 혜성 수집/충돌 + 꼬리 파티클(노란→빨강) + "혜성"/"Comet" 라벨. i18n `comet_label` 추가. self_test INBOX-35 블록 추가. `make verify` GREEN.
