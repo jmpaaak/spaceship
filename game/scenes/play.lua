@@ -1787,13 +1787,15 @@ function M:update(dt)
         if allStopped then
             self.slotState.spinning = false
             local result = self.earthShopSlotResult
-            self.expedition.money = self.expedition.money + result.reward
-            if result.reward > 0 then
-                self.message = i18n.t("earth_slot_result",
-                    table.concat(result.symbols, " "), result.reward)
-            else
-                self.message = i18n.t("earth_slot_miss",
-                    table.concat(result.symbols, " "))
+            if result then
+                self.expedition.money = self.expedition.money + result.reward
+                if result.reward > 0 then
+                    self.message = i18n.t("earth_slot_result",
+                        table.concat(result.symbols, " "), result.reward)
+                else
+                    self.message = i18n.t("earth_slot_miss",
+                        table.concat(result.symbols, " "))
+                end
             end
         end
     end
@@ -1946,14 +1948,17 @@ function M:update(dt)
             local combined = {}
             for _, p in ipairs(hull) do combined[#combined+1] = p end
             for _, p in ipairs(engine) do combined[#combined+1] = p end
-            local earthPool = gearMod.earthShopPool(combined)
+            -- Hub settlements use full pool (incl. galaxyExclusive);
+            -- Earth uses earthShopPool (excludes galaxyExclusive).
+            local isHub = self.expedition.lastVisitedGalaxyId ~= nil
+            local pool = isHub and combined or gearMod.earthShopPool(combined)
             local rolls = {
                 rarity = math.random(),
                 pick = math.random(),
                 editionChance = math.random(),
                 editionPick = math.random(),
             }
-            self.earthShopGearOffer = expedition.rollGearOffer(self.expedition, earthPool, rolls)
+            self.earthShopGearOffer = expedition.rollGearOffer(self.expedition, pool, rolls)
         end
     end
     if self.expedition.phase == "ascending" then
