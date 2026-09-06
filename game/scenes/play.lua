@@ -2619,20 +2619,7 @@ function M:drawJoystickStick()
     local ox, oy, kx, ky = self:joystickKnob()
     local radius = joystick.visualRadius
     local knob = joystick.visualKnobRadius
-    -- Mobile-UI sub-item (3): when the player is NOT dragging, show a
-    -- faint ghost pad at the fixed anchor so they know where to put their
-    -- thumb. Only in ascending where steering exists.
-    if not ox and self.expedition.phase == "ascending" then
-        love.graphics.setColor(0.35, 0.55, 0.8, joystick.visualFillAlpha * 0.6)
-        if not drawShopIconSprite(self.joystickPadImage, joystick.anchorX, joystick.anchorY, radius * 2) then
-            love.graphics.circle("fill", joystick.anchorX, joystick.anchorY, radius)
-        end
-        love.graphics.setColor(0.65, 0.85, 1, joystick.visualLineAlpha * 0.5)
-        if not self.joystickPadImage then
-            love.graphics.circle("line", joystick.anchorX, joystick.anchorY, radius)
-        end
-        return
-    end
+    -- No ghost pad when not dragging — joystick only appears on touch
     if not ox then return end
     -- Group 6 wiring: joystick_pad.png as the pad background, joystick_knob.png as the cap.
     -- Falls back to filled/outlined circles when images are nil.
