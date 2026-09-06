@@ -2,6 +2,35 @@
 
 ## 처리 대기
 
+(38) **HUD 텍스트 2배 + 한줄씩 + 내구도 네모칸 + 최고기록 (사용자 확정, 2026-09-06):**
+  - **(a) HUD 폰트 2배.** `M.hudFontSize = 22` → **44**. Galmuri11 44px (11×4). `M.hudLineStep`도 비례 확대 (36→52 이상).
+  - **(b) 한 줄에 하나씩.** 현재 거리·자금이 같은 줄에 나란히. 변경:
+    - 1줄: 은하 이름 (있으면)
+    - 2줄: `거리 0088`
+    - 3줄: `자금 $0`
+    - 4줄: 내구도 (네모칸)
+    - 5줄: `최고기록 3227`
+  - **(c) 내구도 = 네모칸 시각화.** `H3/3 발사` 텍스트 대신, `maxDurability`개 네모(12×12px)를 나란히 그림. 현재 HP만큼 채워진 색(초록→노랑→빨강 그라디언트), 빈 칸은 어두운 회색 테두리. `love.graphics.rectangle("fill"/"line")`.
+  - **(d) 최고기록.** `hud.best`를 ascending 때도 표시 (현재 launch/settlement에서만). 은하 이름 바로 다음 줄.
+  - **(e) `hudHeight()` 재계산.** 5줄 × lineStep. `hudBackgroundWidth`도 한 줄 최대 폭 기준.
+  - `make verify` GREEN + 커밋: `fix(hud): 2x font, one-stat-per-line, HP blocks, best record always visible`
+
+(39) **시작 화면 "탭하여 발사" 위치 이동 (사용자 확정, 2026-09-06):**
+  - 현재 화면 맨 아래 `viewport.height - 30`에 고정. 로켓 아이콘 위에.
+  - 변경: **장착장비 패널 위쪽**으로 이동. `M.launchLoadoutBoxTop - 50` 정도. 회색 `(0.6, 0.6, 0.6, 0.7)`. Y를 `sin(self.time * 2) * 4`로 위아래 살짝 움직임.
+  - 로켓 아이콘도 같이 이동하거나 제거.
+  - `make verify` GREEN + 커밋: `fix(launch): move tap-to-launch text above loadout panel with float animation`
+
+(40) **선체 정보 → 미니맵 밑 고정 노출 (사용자 확정, 2026-09-06):**
+  - 현재 launch 페이즈에서 화면 중앙에 `장착 장비` + `선체 3` + `선체 LV.0` + `-55` 등이 나옴.
+  - 변경: ascending 때도 **미니맵 아래 우측**에 작은 폰트(22px)로 고정 노출:
+    - `함선: Pioneer` (또는 Scout 등 현재 함선)
+    - `속도 LV.2` / `내구 LV.1` / `수확 LV.0` 등 업그레이드 레벨
+    - 장착 기어 이름 1~2줄
+  - 각 줄 앞에 정보명 추가 (함선/속도/내구/수확).
+  - launch 페이즈 중앙 패널에서는 기존 loadout 상세 유지하되, ascending에서도 요약이 항상 보이게.
+  - `make verify` GREEN + 커밋: `feat(hud): ship stats summary fixed below minimap during ascending`
+
 (37) **위성 시스템 도입 (사용자 확정, 2026-09-06):**
   - 각 행성에 **0~1개** 위성이 행성 주위를 빠르게 공전. `hash(planet.id, 700) > 0.7` → 위성 1개 (30% 확률).
   - 공전 반경: `planet.radius + 15~25px`. 공전 속도: `2π / 3초` (3초에 1바퀴). 반지름 3~5px.
