@@ -2491,7 +2491,7 @@ function M:keypressed(key)
                 if hubX and hubY then
                     -- Relaunch near the hub planet in the same galaxy
                     self.ship.x = hubX
-                    self.ship.y = hubY - 40  -- spawn just above the hub
+                    self.ship.y = hubY - 80  -- spawn outside the hub collectOrbitRadius
                     self.hasLeftEarth = true  -- already away from Earth
                 else
                     self.ship.x = M.launchSpawnX

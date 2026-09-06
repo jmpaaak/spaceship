@@ -1,12 +1,11 @@
 ## Current Status
 
-- Housekeeping: moved completed INBOX items 48-57 from 처리 대기 to 처리 완료.
-  - All items (48, 49, 50, 51, 53a/b/c, 54, 55, 56, 57) were already implemented and committed in prior cycles.
-  - `make verify` GREEN, no code changes needed.
+- INBOX (58) complete: Fixed a bug where tapping "relaunch" in a hub settlement triggered an instant re-settlement. 
+  - Adjusted the hub relaunch ship spawn position (`self.ship.y = hubY - 80`) to ensure it sits safely outside the hub planet's `collectOrbitRadius`.
 
 ## Next slice
 
-- Process next pending item from `docs/feedback/INBOX.md` (처리 대기 is now empty — wait for new user feedback).
+- Process INBOX (59): 잔해(debris) 랜덤 회전 (Random rotation for debris sprites).
 
 ## Previous
 
