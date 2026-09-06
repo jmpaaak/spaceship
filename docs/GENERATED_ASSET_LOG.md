@@ -140,3 +140,9 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-06T13:30:00+0900 | assets/hud/icon_distance.png | INBOX (43): PIL-generated 16x16 distance HUD icon, cyan arrow+stars, RGBA
 2026-09-06T13:30:00+0900 | assets/hud/icon_cash.png | INBOX (43): PIL-generated 16x16 cash HUD icon, gold coin with $ motif, RGBA
 2026-09-06T13:30:00+0900 | assets/hud/icon_durability.png | INBOX (43): PIL-generated 16x16 durability HUD icon, green shield, RGBA
+2026-09-06T22:00:00+0900 | assets/slot_symbols/money.png | INBOX (52a): PIL-generated 32x32 gold coin slot symbol, RGBA
+2026-09-06T22:00:00+0900 | assets/slot_symbols/part.png | INBOX (52a): PIL-generated 32x32 gear/wrench slot symbol, RGBA
+2026-09-06T22:00:00+0900 | assets/slot_symbols/speed.png | INBOX (52a): PIL-generated 32x32 lightning bolt slot symbol, RGBA
+2026-09-06T22:00:00+0900 | assets/slot_symbols/durability.png | INBOX (52a): PIL-generated 32x32 shield slot symbol, RGBA
+2026-09-06T22:00:00+0900 | assets/slot_symbols/harvest.png | INBOX (52a): PIL-generated 32x32 crystal/gem slot symbol, RGBA
+2026-09-06T22:00:00+0900 | assets/slot_symbols/machine.png | INBOX (52a): PIL-generated 96x48 slot machine body frame, RGBA
