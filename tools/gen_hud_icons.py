@@ -37,17 +37,17 @@ d.point((10, 8), fill=(180, 120, 0, 255))
 d.point((5, 4), fill=(255, 255, 200, 180))
 img.save(os.path.join(OUT, "icon_cash.png"))
 
-# --- icon_durability.png: shield motif (green) ---
+# --- icon_durability.png: heart motif (HP indicator, red/pink) ---
 img = new(); d = ImageDraw.Draw(img)
-# Shield outline
-shield = [(8, 2), (13, 5), (12, 10), (8, 14), (4, 10), (3, 5)]
-d.polygon(shield, fill=(50, 200, 80, 255), outline=(30, 160, 50, 255))
+# Heart shape — two circular lobes + triangle bottom
+d.ellipse([2, 3, 8, 9], fill=(220, 50, 60, 255))
+d.ellipse([7, 3, 13, 9], fill=(220, 50, 60, 255))
+d.polygon([(2, 7), (8, 14), (14, 7)], fill=(220, 50, 60, 255))
 # Inner highlight
-inner = [(8, 4), (11, 6), (10, 9), (8, 12), (6, 9), (5, 6)]
-d.polygon(inner, fill=(80, 230, 110, 255))
-# Cross/plus mark
-d.line([(8, 6), (8, 10)], fill=(200, 255, 200, 255))
-d.line([(6, 8), (10, 8)], fill=(200, 255, 200, 255))
+d.ellipse([4, 4, 7, 7], fill=(255, 100, 110, 255))
+# Shine
+d.point((5, 4), fill=(255, 200, 200, 200))
+d.point((4, 5), fill=(255, 180, 180, 160))
 img.save(os.path.join(OUT, "icon_durability.png"))
 
 print("Generated 3 HUD icons in", OUT)

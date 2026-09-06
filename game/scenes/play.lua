@@ -3808,7 +3808,7 @@ function M:draw()
     do
         local hudIcons = self.hudIconImages or {}
         local iconCenterX = 5 + M.hullIconSize / 2
-        local iconCenterY = hudY + M.hullIconSize / 2
+        local iconCenterY = hudY + M.hudLineStep / 2
         love.graphics.setColor(0.6, 0.85, 1)
         drawHudSpriteOrPoly(hudIcons.hull, M.shieldIconPoints,
             iconCenterX, iconCenterY, M.hullIconSize)
