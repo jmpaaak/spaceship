@@ -2,14 +2,6 @@
 
 ## 처리 대기
 
-(44) **선체 정보 → 미니맵 아래 우측 (사용자 확정, 2026-09-06):**
-  - 스크린샷: 선체 정보(선체 3, 선체 LV.0, -55)가 여전히 화면 중앙에 있음.
-  - 변경: ascending 때 **미니맵 아래 우측**에 작은 폰트(22px)로 고정:
-    - `함선: Pioneer` / `속도 LV.N` / `내구 LV.N` / `수확 LV.N`
-  - 좌표: `x = viewport.width - 미니맵폭 - 패딩`, `y = 미니맵하단 + 8`. 우측 정렬.
-  - launch 중앙 패널은 그대로.
-  - `make verify` GREEN + 커밋: `feat(hud): ship stats summary below minimap right side`
-
 (45) **미니맵 은하 2개 표시 + 링 오퍼시티 (사용자 확정, 2026-09-06):**
   - 스크린샷: 미니맵에 노란 은하 마커 2개, 동심원이 진한 노란색으로 미니맵 경계까지 차 있음.
   - **(a)** (31)에서 이미 INBOX했지만 아직 적용 안 됨. containing이 아닌 은하 마커를 **숨기거나** 미니맵 림에만 작은 점. `galaxyExistenceThreshold` 0.72→**0.85**로 올려 은하 자체 밀도 낮추기.
@@ -21,6 +13,7 @@
   - `make verify` GREEN + 커밋: `fix(play): remove "new planet" floating text above undiscovered planets`
 
 ## 처리 완료
+(44) **선체 정보 → 미니맵 아래 우측 — 완료 2026-09-06:** `drawShipStatsSummary()` 메서드 추가. ascending 때 미니맵 아래 우측에 22px 폰트로 함선명/속도LV/내구LV/수확LV 4줄 우측정렬 표시. settlement/destroyed/launch에서는 비표시. i18n 4키 EN+KO 추가. 테스트 INBOX-44 블록 추가. `make verify` GREEN.
 (43) **HUD 아이콘 교체 — PIL 생성 — 완료 2026-09-06:** `tools/gen_hud_icons.py` PIL 스크립트로 16×16 RGBA 아이콘 3개 생성 (icon_distance/icon_cash/icon_durability). `play.lua` hudIconImages 경로 업데이트. 테스트 16×16 호환. `make verify` GREEN.
 (42) **장착 네모칸 가로→세로 배치 — 완료 2026-09-06:** `drawHudGearSlots` 가로 배열을 세로 1열로 변경. x=5 고정, y를 HUD 아래부터 32px+4px 간격으로 내려감. hull 6칸 → 8px gap → engine 3칸. 총 높이 ~332px. 테스트 갱신 (horizontal width→vertical height assert). `make verify` GREEN.
 (41) **HUD 폰트 크기 — launch 때만 큼, ascending과 동일하게 고정 — 완료 2026-09-06:** `M.hudFontSize` 44→22, `M.hudLineStep` 52→30, icons 32→16px, `hudBackgroundMaxWidth` 500→280. launch-only font override 제거 (`previousHudFont`/`isLaunchHud` 분기). `M.launchHudHeight` 제거. 모든 페이즈에서 init 시 설정된 22px 폰트 사용. `make verify` GREEN.

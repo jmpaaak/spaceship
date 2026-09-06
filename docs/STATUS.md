@@ -1,20 +1,20 @@
 ## Current Status
 
-- INBOX (43) complete: PIL-generated 16×16 HUD icons for distance/cash/durability.
-  - `tools/gen_hud_icons.py`: PIL script (≤50 lines) generates 3 RGBA icons.
-  - `assets/hud/icon_distance.png`: cyan arrow with star sparkles.
-  - `assets/hud/icon_cash.png`: gold coin with $ motif.
-  - `assets/hud/icon_durability.png`: green shield with cross.
-  - `play.lua` hudIconImages updated to load new paths.
-  - Tests updated for 16×16 size + dynamic corner indices.
+- INBOX (44) complete: Ship stats summary below minimap right side during ascending.
+  - `drawShipStatsSummary()` method added to `play.lua`: shows ship name, speed LV, hull LV, harvest LV.
+  - 22px font, right-aligned, positioned below minimap disc with 8px gap.
+  - Only visible during ascending phase (hidden in settlement/destroyed/launch).
+  - i18n keys added: `ship_stats_ship`, `ship_stats_speed`, `ship_stats_hull`, `ship_stats_harvest` (EN + KO).
+  - Test: INBOX-44 block verifies 4 right-aligned lines, correct content, correct x position, no draw during settlement.
   - `make verify` GREEN.
 
 ## Next slice
 
-- INBOX (44): Ship stats summary below minimap right side.
+- INBOX (45): Minimap hide non-containing galaxies + reduce ring opacity.
 
 ## Previous
 
+- INBOX (43) complete: PIL-generated 16×16 HUD icons for distance/cash/durability.
 - INBOX (42) complete: gear slots layout changed from horizontal row to vertical column.
 - INBOX (41) complete: HUD font size unified across all phases (launch = ascending).
 - INBOX (40) complete: Gear slots grid fixed below left HUD stats during ascending/returning/launch.

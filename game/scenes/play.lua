@@ -2805,6 +2805,42 @@ function M:drawMinimap()
     end
 end
 
+-- INBOX-44: ship stats summary below minimap (right-aligned, 22px font).
+-- Shows ship name, speed LV, hull LV, harvest LV during ascending phase.
+M.shipStatsFontSize = 22
+M.shipStatsLineStep = 26
+
+function M:drawShipStatsSummary()
+    local phase = self.expedition.phase
+    if phase ~= "ascending" then return end
+    local run = self.expedition
+    local hud = self:hudLines()
+    local galaxyShift = hud.galaxy and M.hudGalaxyShift or 0
+    local hudHeight = M.hudHeight(phase, hud, galaxyShift)
+    local size = minimap.size
+    -- Minimap center x/y mirrors drawMinimap placement
+    local mmRight = viewport.width - 3
+    local mmBottom = hudHeight + size + 2
+    -- Stats start below minimap with 8px gap, right-aligned
+    local statsY = mmBottom + 8
+    local statsFont = self.shipStatsFont or fonts.get(M.shipStatsFontSize)
+    self.shipStatsFont = statsFont
+    local prevFont = love.graphics.getFont()
+    love.graphics.setFont(statsFont)
+    love.graphics.setColor(0.6, 0.7, 0.8, 0.85)
+    local textW = size  -- use minimap width as text column
+    local textX = mmRight - textW
+    local shipName = string.upper(run.selectedShipId or "starter")
+    love.graphics.printf(i18n.t("ship_stats_ship", shipName), textX, statsY, textW, "right")
+    statsY = statsY + M.shipStatsLineStep
+    love.graphics.printf(i18n.t("ship_stats_speed", run.steeringUpgradeLevel or 0), textX, statsY, textW, "right")
+    statsY = statsY + M.shipStatsLineStep
+    love.graphics.printf(i18n.t("ship_stats_hull", run.durabilityUpgradeLevel or 0), textX, statsY, textW, "right")
+    statsY = statsY + M.shipStatsLineStep
+    love.graphics.printf(i18n.t("ship_stats_harvest", run.sampleYieldUpgradeLevel or 0), textX, statsY, textW, "right")
+    if prevFont then love.graphics.setFont(prevFont) end
+end
+
 function M:draw()
     local galaxy = world.galaxyContaining(self.ship.x, self.ship.y)
     love.graphics.clear(world.galaxyBackgroundColor(galaxy))
@@ -3390,6 +3426,8 @@ function M:draw()
         self:drawHudGearSlots(hudHeight)
     end
     self:drawMinimap()
+    -- INBOX-44: ship stats summary below minimap right side (ascending only)
+    self:drawShipStatsSummary()
     -- Item 9: Star well HUD timer (ascending only, inside well, not yet sampled)
     if self.expedition.phase == "ascending" and self.starWellTimer > 0 then
         local wellGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
