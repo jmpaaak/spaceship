@@ -1945,6 +1945,11 @@ function M:update(dt)
         self.time = self.time + dt  -- keep clock for UI animations
         return
     end
+    -- Gear popup freezes the game too (user 2026-09-07)
+    if self.gearPopup and self.expedition.phase == "ascending" then
+        self.time = self.time + dt
+        return
+    end
     -- Auto-unpause if phase changed away from ascending while paused.
     if self.paused and self.expedition.phase ~= "ascending" then
         self.paused = false
@@ -2475,7 +2480,7 @@ function M:update(dt)
                     if distanceSquared <= moonCollectRadius ^ 2
                         and not self.moonDiscovered[moon.id] then
                         self.moonDiscovered[moon.id] = true
-                        local value = world.moonSampleValue()
+                        local value = world.moonSampleValue(moon)
                         local _, awarded = expedition.collectSample(self.expedition, value, world.hueFamily(moon.hue or 0).key)
                         awarded = awarded or value
                         table.insert(self.floatingTexts, {
@@ -4315,9 +4320,9 @@ function M:draw()
         elseif suitKey == "pulsar" then descKey = "synergy_desc_pulsarBurst"
         end
         if descKey then
-            love.graphics.setFont(fonts.get(11))
-            love.graphics.setColor(0.72, 0.68, 0.82, 0.9)
-            love.graphics.printf(i18n.t(descKey), panelX + 28, panelY + panelH - 36, panelW - 56, "center")
+            love.graphics.setFont(fonts.get(22))
+            love.graphics.setColor(0.72, 0.68, 0.82, 0.85)
+            love.graphics.printf(i18n.t(descKey), panelX + 28, panelY + panelH - 55, panelW - 56, "center")
         end
         love.graphics.setFont(prevPopupFont)
     end

@@ -775,7 +775,9 @@ function M.moonForPlanet(planet, time)
     local orbitRadius = planet.radius + 25 + math.floor(hash(planet.x or 0, planet.y or 0, 701) * 15) -- 25~39
     local moonRadiusBase = 6 + math.floor(hash(planet.x or 0, planet.y or 0, 702) * 6) -- 6~11 (collect radius)
     local moonRadius = math.max(4, math.floor(moonRadiusBase * 0.75)) -- visual 75%
-    local period = 3 -- seconds per orbit
+    -- Vary orbit period: 1.5~5s — faster moons are harder to catch
+    local speedHash = hash(planet.x or 0, planet.y or 0, 704)
+    local period = 1.5 + speedHash * 3.5 -- 1.5~5.0 seconds
     local angle = (time or 0) * (2 * math.pi / period)
     -- Offset phase per planet so moons don't all start at 0
     angle = angle + hash(planet.x or 0, planet.y or 0, 703) * 2 * math.pi
@@ -783,6 +785,8 @@ function M.moonForPlanet(planet, time)
     local my = planet.y + math.sin(angle) * orbitRadius
     -- Moon color: brighter version of planet hue
     local hue = planet.hue or 0.5
+    -- Speed factor for reward: 0.0 (slowest) ~ 1.0 (fastest)
+    local speedFactor = 1.0 - (speedHash) -- inverted: low period = fast = high factor
     return {
         id = (planet.id or "?") .. ":moon",
         x = mx,
@@ -794,11 +798,15 @@ function M.moonForPlanet(planet, time)
         parentId = planet.id,
         parentX = planet.x,
         parentY = planet.y,
+        period = period,
+        speedFactor = speedFactor,
     }
 end
 
-function M.moonSampleValue()
-    return 10
+function M.moonSampleValue(moon)
+    -- Faster moons (lower period) give higher reward: $2~$10
+    local factor = (moon and moon.speedFactor) or 1.0
+    return 2 + math.floor(factor * 8) -- 2~10
 end
 
 function M.moonCollisionDamage(moon)
