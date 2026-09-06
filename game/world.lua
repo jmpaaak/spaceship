@@ -602,10 +602,11 @@ M.cometSpawnChance = 0.30
 M.cometFirstSpawned = false
 
 -- Reset comet state (call on new expedition / phase change)
-function M.resetComets()
+-- startTime: current game clock so the first comet spawns 60s from NOW.
+function M.resetComets(startTime)
     M.comets = {}
     M.cometIdCounter = 0
-    M.cometNextSpawn = 60
+    M.cometNextSpawn = (startTime or 0) + 60
     M.cometFirstSpawned = false
 end
 

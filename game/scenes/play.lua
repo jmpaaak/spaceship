@@ -2511,7 +2511,7 @@ function M:keypressed(key)
                 -- INBOX (37): reset moon state on relaunch
                 self.moonDiscovered = {}
                 self.moonCollided = {}
-                world.resetComets()
+                world.resetComets(self.time)
             end
             self.message = ""
         end
