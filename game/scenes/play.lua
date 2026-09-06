@@ -1991,6 +1991,9 @@ function M:update(dt)
                         r.speed = 0
                         r.stopping = false
                         r.stopped = true
+                        -- Haptic + shake on each reel stop
+                        pcall(love.system.vibrate, 0.03)
+                        self.slotShake = 0.15
                     end
                 end
                 allStopped = false
@@ -2007,9 +2010,26 @@ function M:update(dt)
                 if result.reward > 0 then
                     self.message = i18n.t("earth_slot_result",
                         table.concat(result.symbols, " "), result.reward)
+                    -- WIN: strong haptic + sparkle particles
+                    pcall(love.system.vibrate, 0.12)
+                    self.slotShake = 0.3
+                    for k = 1, 8 do
+                        self.particles[#self.particles + 1] = {
+                            x = viewport.width / 2 + (math.random() - 0.5) * 160,
+                            y = (M.settlementTouchRows[4].top or 600) + 40,
+                            vx = (math.random() - 0.5) * 80,
+                            vy = -40 - math.random() * 50,
+                            timer = 0.7 + math.random() * 0.3,
+                            maxTimer = 1.0,
+                            r = 1, g = 0.85, b = 0.2,
+                            radius = 2 + math.random() * 2,
+                            hud = true,
+                        }
+                    end
                 else
                     self.message = i18n.t("earth_slot_miss",
                         table.concat(result.symbols, " "))
+                    pcall(love.system.vibrate, 0.04)
                 end
             end
         end
@@ -2731,6 +2751,8 @@ function M:keypressed(key)
         local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, { reels = reels })
         self.earthShopSlotResult = result
         self.expedition.money = self.expedition.money - spinCost
+        pcall(love.system.vibrate, 0.05)
+        self.slotShake = 0.1
         self.slotState = {
             spinning = true,
             stopIndex = 1,
@@ -4111,6 +4133,15 @@ function M:draw()
             local slotW = 96 * slotScale
             local mx = fullX + (fullW - slotW) / 2
             local my = row
+            -- Slot shake effect
+            local shakeX, shakeY = 0, 0
+            if (self.slotShake or 0) > 0 then
+                self.slotShake = self.slotShake - (love.timer and love.timer.getDelta() or 0.016)
+                shakeX = (math.random() - 0.5) * 6
+                shakeY = (math.random() - 0.5) * 4
+            end
+            mx = mx + shakeX
+            my = my + shakeY
             if self.slotMachineImage then
                 love.graphics.draw(self.slotMachineImage, mx, my, 0, slotScale, slotScale)
             end
