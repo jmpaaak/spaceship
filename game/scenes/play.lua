@@ -3389,15 +3389,6 @@ function M:draw()
             love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
         end
         local prevEarthFont = love.graphics.getFont()
-        -- Hide checkpoint hints for 3 seconds after leaving Earth
-        local showHints = true
-        if self.expedition.phase == "ascending" and self.hasLeftEarth then
-            local timeSinceLeft = (self.time or 0) - (self.leftEarthTime or 0)
-            if timeSinceLeft < 3.0 then
-                showHints = false
-            end
-        end
-        if showHints then
         love.graphics.setFont(fonts.get(11))
         local sell = i18n.t("checkpoint_hint_sell")
         local repair = i18n.t("checkpoint_hint_repair")
@@ -3405,18 +3396,29 @@ function M:draw()
         local bob = math.sin(self.time * 2) * 3
         local f = love.graphics.getFont()
         local lineH = 14
-        -- During launch phase, draw hints below Earth so they don't cover the ship
+        -- Hints start below Earth after launch, then transition above
+        -- once the ship is far enough away (3s after leaving Earth disk)
         local topY
+        local aboveY = earthY - M.earthVisualRadius - 8 - lineH * 3 + bob
+        local belowY = earthY + M.earthVisualRadius + 8 + bob
         if self.expedition.phase == "launch" then
-            topY = earthY + M.earthVisualRadius + 8 + bob
+            topY = belowY
+        elseif self.hasLeftEarth then
+            local timeSinceLeft = (self.time or 0) - (self.leftEarthTime or 0)
+            if timeSinceLeft < 3.0 then
+                -- Smoothly lerp from below to above over 3 seconds
+                local t = timeSinceLeft / 3.0
+                topY = belowY + (aboveY - belowY) * t
+            else
+                topY = aboveY
+            end
         else
-            topY = earthY - M.earthVisualRadius - 8 - lineH * 3 + bob
+            topY = aboveY
         end
         love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
         love.graphics.print(sell, earthX - f:getWidth(sell) / 2, topY)
         love.graphics.print(repair, earthX - f:getWidth(repair) / 2, topY + lineH)
         love.graphics.print(upgrade, earthX - f:getWidth(upgrade) / 2, topY + lineH * 2)
-        end -- showHints
         love.graphics.setFont(prevEarthFont)
     end
     -- Item 9: Draw star gravity well ring around the central star
