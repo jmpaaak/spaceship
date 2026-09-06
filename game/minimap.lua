@@ -189,7 +189,8 @@ function M.view(shipX, shipY)
         -- Item 20b: only emit the large galaxy boundary ring for the
         -- containing galaxy; neighbouring galaxies skip this ring so
         -- their boundaries don't visually overlap on the minimap.
-        if isContaining then
+        -- User 2026-09-06: milkyway skips ALL rings (no circles at home).
+        if isContaining and galaxy.id ~= "milkyway" then
             local scaled = galaxy.radius * M.mapRadius / M.viewRadius
             rings[#rings + 1] = {
                 id = galaxy.id,

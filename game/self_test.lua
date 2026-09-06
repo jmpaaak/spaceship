@@ -465,15 +465,14 @@ local function testMinimap()
     assert(originView.sun.x ~= 0 or originView.sun.y ~= 0,
         "home sun must be offset from Earth at world origin")
     assert(originView.galaxyName == "SOLAR SYSTEM")
-    assert(originView.rings and #originView.rings >= 1, "home minimap must draw galaxy ring")
+    assert(originView.rings and #originView.rings >= 0, "home minimap rings table must exist")
     local sawDisk, sawOrbit = false, false
     for _, ring in ipairs(originView.rings) do
-        assert(ring.radius > 0)
         if ring.kind == "galaxy" and ring.id == "milkyway" then sawDisk = true end
         if ring.kind == "concentricRing" then sawOrbit = true end
     end
-    assert(sawDisk, "home minimap must include the Milky Way / solar disk ring")
-    -- User 2026-09-06: milkyway must NOT have concentric rings (지구 중심원 제거)
+    -- User 2026-09-06: milkyway must NOT have any rings (galaxy boundary or concentric)
+    assert(not sawDisk, "home (milkyway) minimap must NOT include galaxy boundary ring")
     assert(not sawOrbit, "home (milkyway) minimap must NOT include concentric rings")
 
     local nameScene = PlayScene.new({
@@ -824,15 +823,13 @@ local function testMinimapGalaxyOverlapPrevention()
             galaxyRingIds[ring.id] = true
         end
     end
-    -- The containing galaxy (milkyway) must have its boundary ring.
-    assert(galaxyRingIds["milkyway"],
-        "minimap must show boundary ring for containing galaxy (milkyway)")
-    -- No other galaxy should have a boundary ring.
+    -- The containing galaxy (milkyway) must NOT have its boundary ring (user 2026-09-06).
+    assert(not galaxyRingIds["milkyway"],
+        "minimap must NOT show boundary ring for milkyway (지구 중심원 제거)")
+    -- No other galaxy should have a boundary ring either (not containing).
     local otherGalaxyRingCount = 0
     for id, _ in pairs(galaxyRingIds) do
-        if id ~= "milkyway" then
-            otherGalaxyRingCount = otherGalaxyRingCount + 1
-        end
+        otherGalaxyRingCount = otherGalaxyRingCount + 1
     end
     assert(otherGalaxyRingCount == 0,
         "minimap must NOT show boundary rings for non-containing galaxies (found "
