@@ -3215,6 +3215,21 @@ function M:drawShipStatsSummary()
     statsY = statsY + M.shipStatsLineStep
     local harvestMul = expedition.sampleYieldMultiplier(run)
     love.graphics.printf(i18n.t("ship_stats_harvest", harvestMul), textX, statsY, textW, "right")
+    statsY = statsY + M.shipStatsLineStep
+    -- Active synergies below stats
+    local gearMod = require("game.gear")
+    local syn = gearMod.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    local synergyOrder = {
+        "solarSystem", "nebulaField", "eventHorizon",
+        "pulsarBurst", "binaryStar", "supernova", "darkMatter",
+    }
+    for _, key in ipairs(synergyOrder) do
+        if syn[key] then
+            love.graphics.setColor(1, 0.85, 0.3, 0.9)
+            love.graphics.printf(i18n.t("synergy_" .. key), textX, statsY, textW, "right")
+            statsY = statsY + M.shipStatsLineStep
+        end
+    end
     if prevFont then love.graphics.setFont(prevFont) end
 end
 

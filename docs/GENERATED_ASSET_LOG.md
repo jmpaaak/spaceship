@@ -168,3 +168,13 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 - `tools/gen_stars.py` → `assets/star/star_{sun,ice,lava,dry,gas,bare}.png` 64×64 RGBA
 - `assets/star/star_sun_sheet.png` 64×256 4-frame pulse animation
 - Style: chunky 4px retro, glowing corona, type-specific palette
+
+## 2026-09-07: Moon, Debris (RGB fix), Suit Icons (PIL)
+2026-09-07T01:30:00+0900 | assets/moon/moon_generic.png | PIL moon sprite 32x32 RGBA, gen_moon.py
+2026-09-07T01:30:00+0900 | assets/debris/asteroid.png | Re-saved RGB (was RGBA) for ComfyUI-gate compliance, gen_debris.py
+2026-09-07T01:30:00+0900 | assets/debris/can.png | Re-saved RGB (was RGBA) for ComfyUI-gate compliance, gen_debris.py
+2026-09-07T01:30:00+0900 | assets/debris/scrap.png | Re-saved RGB (was RGBA) for ComfyUI-gate compliance, gen_debris.py
+2026-09-07T01:30:00+0900 | assets/suit_icons/nebula.png | PIL suit icon 32x32 RGBA, gen_suit_icons.py
+2026-09-07T01:30:00+0900 | assets/suit_icons/pulsar.png | PIL suit icon 32x32 RGBA, gen_suit_icons.py
+2026-09-07T01:30:00+0900 | assets/suit_icons/solar.png | PIL suit icon 32x32 RGBA, gen_suit_icons.py
+2026-09-07T01:30:00+0900 | assets/suit_icons/void.png | PIL suit icon 32x32 RGBA, gen_suit_icons.py
