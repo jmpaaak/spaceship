@@ -2506,6 +2506,24 @@ function M:drawMinimap()
         love.graphics.setColor(1, 1, 1, 0.9)
         love.graphics.circle("line", cx + view.player.x, cy + view.player.y, 2.4)
     end
+    -- Item 20d: Earth and Star text labels (11px, grey, inside stencil clip)
+    do
+        local prevFont = love.graphics.getFont()
+        local labelFont = fonts.get(11)
+        love.graphics.setFont(labelFont)
+        love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
+        -- Earth label
+        if view.earth then
+            local ex, ey = cx + view.earth.x, cy + view.earth.y
+            love.graphics.printf(i18n.t("minimap_earth_label"), ex + 4, ey - 6, 80, "left")
+        end
+        -- Star label
+        if view.sun then
+            local sx, sy = cx + view.sun.x, cy + view.sun.y
+            love.graphics.printf(i18n.t("minimap_star_label"), sx + 4, sy - 6, 80, "left")
+        end
+        if prevFont then love.graphics.setFont(prevFont) end
+    end
     -- Item 20a: clear stencil so beyond-chart elements draw outside the disc
     love.graphics.setStencilTest()
     -- Beyond-chart earth-return arrow

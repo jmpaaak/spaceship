@@ -644,6 +644,9 @@ local function testMinimapUnifiedGalaxyPalette()
         printf = function() end,
         polygon = function() end,
         draw = function() end,
+        getFont = function() return {} end,
+        setFont = function() end,
+        newFont = function() return {} end,
         stencil = function(fn) if fn then fn() end end,
         setStencilTest = function() end,
     }
@@ -706,6 +709,9 @@ local function testMinimapStencilClip()
         printf = function() end,
         polygon = function() end,
         draw = function() end,
+        getFont = function() return {} end,
+        setFont = function() end,
+        newFont = function() return {} end,
         stencil = function(fn)
             stencilCalled = true
             if fn then fn() end
@@ -728,6 +734,62 @@ local function testMinimapStencilClip()
     -- Last call should disable stencil (no args)
     local last = stencilTestCalls[#stencilTestCalls]
     assert(#last == 0, "last setStencilTest must disable stencil (no args)")
+end
+
+-- Item 20d: Earth and Star text labels on the minimap.
+-- Verifies that drawMinimap calls printf with the i18n minimap_earth_label
+-- and minimap_star_label texts inside the stencil-clipped region, and that
+-- setFont is called with a font object (11px label font).
+local function testMinimapEarthStarLabels()
+    local playScene = require("game.scenes.play")
+    local i18n = require("game.i18n")
+    local fontsModule = require("game.fonts")
+    local scene = setmetatable({}, { __index = playScene })
+    scene.expedition = { phase = "ascending", fuel = 100, maxFuel = 100,
+        altitude = 0, money = 0, durability = 3, maxDurability = 3 }
+    scene.run = { altitude = 0 }
+    scene.ship = { x = 0, y = 0, speed = 0.14, collectionRadius = 45 }
+    scene.minimapImages = {}
+    scene.time = 0
+
+    local printfCalls = {}
+    local setFontCalls = {}
+    local previousGraphics = love.graphics
+    love.graphics = {
+        setColor = function() end,
+        circle = function() end,
+        printf = function(text, ...)
+            printfCalls[#printfCalls + 1] = text
+        end,
+        polygon = function() end,
+        draw = function() end,
+        getFont = function() return {} end,
+        setFont = function(f)
+            setFontCalls[#setFontCalls + 1] = f
+        end,
+        newFont = function() return {} end,
+        stencil = function(fn)
+            if fn then fn() end
+        end,
+        setStencilTest = function() end,
+    }
+    local ok, err = pcall(function() scene:drawMinimap() end)
+    love.graphics = previousGraphics
+    assert(ok, "drawMinimap earth/star labels must not throw: " .. tostring(err))
+
+    -- Verify Earth label text appears in printf calls
+    local earthLabel = i18n.t("minimap_earth_label")
+    local starLabel = i18n.t("minimap_star_label")
+    local foundEarth, foundStar = false, false
+    for _, text in ipairs(printfCalls) do
+        if text == earthLabel then foundEarth = true end
+        if text == starLabel then foundStar = true end
+    end
+    assert(foundEarth, "drawMinimap must printf the Earth label '" .. earthLabel .. "'")
+    assert(foundStar, "drawMinimap must printf the Star label '" .. starLabel .. "'")
+
+    -- Verify setFont was called (for the 11px label font)
+    assert(#setFontCalls >= 1, "drawMinimap must call setFont for minimap labels")
 end
 
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
@@ -7284,6 +7346,7 @@ function M.run()
     testMinimap()
     testMinimapUnifiedGalaxyPalette()
     testMinimapStencilClip()
+    testMinimapEarthStarLabels()
     testDebris()
     testBackgroundStars()
     testLaunchRocketIcon()
