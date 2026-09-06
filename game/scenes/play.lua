@@ -1228,6 +1228,10 @@ function M.new(options)
         starWellShake = 0,        -- gentle continuous shake while in well
         hasLeftEarth = false,     -- must leave Earth disk before auto-settle
         paused = false,           -- Item 18: pause toggle (ascending only)
+        -- INBOX (35): comet state
+        cometDiscovered = {},     -- comet.id → true
+        cometCollided = {},       -- comet.id → true
+        cometTailParticles = {},  -- tail trail particles for visual effect
     }, M)
 end
 
@@ -2077,6 +2081,58 @@ function M:update(dt)
                 self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
             end
         end
+        -- INBOX (35): comet spawning + collection/collision
+        if self.expedition.phase == "ascending" then
+            world.tickCometSpawn(self.time, self.ship.x, self.ship.y, viewport.width, viewport.height)
+            for _, comet in ipairs(world.nearbyComets(self.ship.x, self.ship.y, self.time, viewport.width, viewport.height)) do
+                local dx, dy = comet.x - self.ship.x, comet.y - self.ship.y
+                local distanceSquared = dx * dx + dy * dy
+                -- Collection: same radius formula as planets (radius + 30)
+                if distanceSquared <= (M.collectOrbitRadius(comet.radius)) ^ 2
+                    and not self.cometDiscovered[comet.id] then
+                    self.cometDiscovered[comet.id] = true
+                    local value = world.cometSampleValue(comet)
+                    local _, awarded = expedition.collectSample(self.expedition, value, "ember")
+                    awarded = awarded or value
+                    table.insert(self.floatingTexts, {
+                        text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
+                        x = comet.x,
+                        y = comet.y,
+                        timer = 1.5,
+                        kind = "sample",
+                        awarded = awarded,
+                        rollupElapsed = 0,
+                    })
+                    self.timeSlip = { timer = 0.4, scale = 0.24 }
+                    self.shipShake = 0.25
+                    self.shipShakeMagnitude = 1.4
+                    self.collectFlash = 0.15
+                    self.collectZoom = { timer = 0.5, scale = 1.12, planetX = comet.x, planetY = comet.y }
+                    self.message = i18n.t("sample_message", awarded, comet.id)
+                end
+                -- Collision damage: same radius as planets (radius + 5)
+                if distanceSquared <= (comet.radius + 5) ^ 2
+                    and not self.cometCollided[comet.id] then
+                    self.cometCollided[comet.id] = true
+                    local damage = world.cometCollisionDamage(comet)
+                    table.insert(self.floatingTexts, {
+                        text = i18n.t("floating_damage_text", damage),
+                        x = self.ship.x + 60,
+                        y = self.ship.y,
+                        timer = 1.0,
+                        kind = "damage",
+                    })
+                    self.shipShake = shipShakeDuration
+                    self.shipShakeMagnitude = 1.4
+                    if expedition.damage(self.expedition, damage) then
+                        self:persistBestAltitude()
+                        self.message = i18n.t("ship_destroyed_message", math.floor(self.expedition.bestAltitude))
+                        break
+                    end
+                    self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
+                end
+            end
+        end
         for _, junk in ipairs(world.nearbyDebris(self.ship.x, self.ship.y, 4, self.time)) do
             local dx, dy = junk.x - self.ship.x, junk.y - self.ship.y
             if dx * dx + dy * dy <= (junk.radius + 5) ^ 2 and not self.collided[junk.id] then
@@ -2263,6 +2319,11 @@ function M:keypressed(key)
                 self.floatingTexts = {}
                 self.earthShopSlotResult = nil
                 self.earthShopGearOffer = nil
+                -- INBOX (35): reset comet state on relaunch
+                self.cometDiscovered = {}
+                self.cometCollided = {}
+                self.cometTailParticles = {}
+                world.resetComets()
             end
             self.message = i18n.t("ascending_message")
         end
@@ -2916,6 +2977,51 @@ function M:draw()
                 love.graphics.circle("fill", x, y, junk.radius)
                 love.graphics.setColor(0.32, 0.3, 0.28)
                 love.graphics.circle("fill", x - junk.radius * 0.3, y - junk.radius * 0.2, junk.radius * 0.45)
+            end
+        end
+    end
+    -- INBOX (35): draw comets with tail particles
+    for _, comet in ipairs(world.nearbyComets(self.ship.x, self.ship.y, self.time, viewport.width, viewport.height)) do
+        local cx, cy = math.floor(comet.x - cameraX), math.floor(comet.y - cameraY)
+        if cx > -60 and cx < viewport.width + 60 and cy > -60 and cy < viewport.height + 60 then
+            -- Draw tail: gradient from yellow to red, length 40-60px behind comet
+            local tailLen = 40 + comet.radius * 2
+            local speed = math.sqrt(comet.vx * comet.vx + comet.vy * comet.vy)
+            local ndx, ndy = 0, 0
+            if speed > 0 then
+                ndx = -comet.vx / speed
+                ndy = -comet.vy / speed
+            end
+            for i = 1, 12 do
+                local t = i / 12
+                local tx = cx + ndx * tailLen * t
+                local ty = cy + ndy * tailLen * t
+                local alpha = (1 - t) * 0.7
+                -- Yellow→red gradient
+                local tr = 1
+                local tg = 0.85 * (1 - t * 0.8)
+                local tb = 0.1 * (1 - t)
+                local pr = math.max(1, comet.radius * (1 - t * 0.6))
+                love.graphics.setColor(tr, tg, tb, alpha)
+                love.graphics.circle("fill", tx, ty, pr)
+            end
+            -- Draw comet body (bright yellow-white)
+            love.graphics.setColor(1, 0.95, 0.7)
+            love.graphics.circle("fill", cx, cy, comet.radius)
+            love.graphics.setColor(1, 1, 0.9)
+            love.graphics.circle("fill", cx - comet.radius * 0.25, cy - comet.radius * 0.25, comet.radius * 0.6)
+            -- Collection ring for undiscovered comets
+            if not self.cometDiscovered[comet.id] then
+                love.graphics.setColor(1, 0.85, 0.25, 0.5)
+                love.graphics.setLineWidth(1)
+                love.graphics.circle("line", cx, cy, M.collectOrbitRadius(comet.radius))
+                -- "혜성!" / "Comet" label with sin bob
+                local font = love.graphics.getFont()
+                local sinBob = math.sin(self.time * 3) * 4
+                local cometStr = i18n.t("comet_label")
+                local lx = clampLabelX(cx, font:getWidth(cometStr), viewport.width)
+                love.graphics.setColor(1, 0.9, 0.3, 0.9)
+                love.graphics.print(cometStr, lx, cy - comet.radius - 18 + sinBob)
             end
         end
     end

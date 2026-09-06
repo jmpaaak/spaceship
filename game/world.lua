@@ -557,4 +557,156 @@ function M.backgroundStars(sectorX, sectorY)
 end
 
 M.hash = hash
+
+---------------------------------------------------------------------------
+-- Comet system (INBOX 35)
+-- Comets are fast-moving, rare, high-reward celestial bodies that appear
+-- during the ascending phase. They spawn from one screen edge and travel
+-- in a straight line to the opposite edge.
+---------------------------------------------------------------------------
+
+M.comets = {}           -- runtime list of active comets
+M.cometIdCounter = 0    -- monotonic id counter
+M.cometNextSpawn = 60   -- first spawn at 60 seconds (guaranteed)
+M.cometSpawnInterval = 30
+M.cometSpawnChance = 0.30
+M.cometFirstSpawned = false
+
+-- Reset comet state (call on new expedition / phase change)
+function M.resetComets()
+    M.comets = {}
+    M.cometIdCounter = 0
+    M.cometNextSpawn = 60
+    M.cometFirstSpawned = false
+end
+
+-- Spawn a comet near the ship's viewport. Returns the new comet or nil.
+-- shipX, shipY = world coords of ship (camera center).
+-- viewW, viewH = viewport dimensions.
+function M.spawnComet(time, shipX, shipY, viewW, viewH)
+    viewW = viewW or 720
+    viewH = viewH or 1280
+    M.cometIdCounter = M.cometIdCounter + 1
+    local id = "comet_" .. M.cometIdCounter
+
+    -- Random radius 8-12
+    local radius = 8 + math.floor(hash(M.cometIdCounter, 77, 9001) * 5)
+
+    -- Random speed 80-120 px/s
+    local speed = 80 + hash(M.cometIdCounter, 88, 9002) * 40
+
+    -- Pick an entry edge (0=left, 1=right, 2=top, 3=bottom)
+    local edge = math.floor(hash(M.cometIdCounter, 99, 9003) * 4)
+    local startX, startY, vx, vy
+    local margin = 40
+    if edge == 0 then       -- enter from left
+        startX = shipX - viewW / 2 - margin
+        startY = shipY - viewH / 2 + hash(M.cometIdCounter, 100, 9004) * viewH
+        vx = speed
+        vy = (hash(M.cometIdCounter, 101, 9005) - 0.5) * speed * 0.3
+    elseif edge == 1 then   -- enter from right
+        startX = shipX + viewW / 2 + margin
+        startY = shipY - viewH / 2 + hash(M.cometIdCounter, 100, 9004) * viewH
+        vx = -speed
+        vy = (hash(M.cometIdCounter, 101, 9005) - 0.5) * speed * 0.3
+    elseif edge == 2 then   -- enter from top
+        startX = shipX - viewW / 2 + hash(M.cometIdCounter, 100, 9004) * viewW
+        startY = shipY - viewH / 2 - margin
+        vx = (hash(M.cometIdCounter, 101, 9005) - 0.5) * speed * 0.3
+        vy = speed
+    else                    -- enter from bottom
+        startX = shipX - viewW / 2 + hash(M.cometIdCounter, 100, 9004) * viewW
+        startY = shipY + viewH / 2 + margin
+        vx = (hash(M.cometIdCounter, 101, 9005) - 0.5) * speed * 0.3
+        vy = -speed
+    end
+
+    local comet = {
+        id = id,
+        spawnTime = time,
+        startX = startX,
+        startY = startY,
+        vx = vx,
+        vy = vy,
+        radius = radius,
+        speed = speed,
+        hue = 0.12, -- yellow-ish
+    }
+    M.comets[#M.comets + 1] = comet
+    return comet
+end
+
+-- Get current world position of a comet at the given time
+function M.cometPosition(comet, time)
+    local dt = time - comet.spawnTime
+    return comet.startX + comet.vx * dt,
+           comet.startY + comet.vy * dt
+end
+
+-- Check spawn timer and potentially spawn a comet.
+-- Returns the spawned comet or nil.
+function M.tickCometSpawn(time, shipX, shipY, viewW, viewH)
+    if time < M.cometNextSpawn then return nil end
+
+    local shouldSpawn = false
+    if not M.cometFirstSpawned then
+        -- First spawn at 60s is guaranteed
+        shouldSpawn = true
+        M.cometFirstSpawned = true
+    else
+        -- 30% chance every 30 seconds after that
+        -- Use a time-based hash for determinism in tests
+        local roll = hash(math.floor(time * 100), 555, 9010)
+        shouldSpawn = roll < M.cometSpawnChance
+    end
+
+    M.cometNextSpawn = M.cometNextSpawn + M.cometSpawnInterval
+
+    if shouldSpawn then
+        return M.spawnComet(time, shipX, shipY, viewW, viewH)
+    end
+    return nil
+end
+
+-- Return comets near (shipX, shipY) with updated positions.
+-- Also prunes comets that have traveled too far off-screen.
+function M.nearbyComets(shipX, shipY, time, viewW, viewH)
+    viewW = viewW or 720
+    viewH = viewH or 1280
+    local nearby = {}
+    local alive = {}
+    local maxDist = math.max(viewW, viewH) * 1.5 -- prune distance
+    for _, comet in ipairs(M.comets) do
+        local cx, cy = M.cometPosition(comet, time)
+        local dx = cx - shipX
+        local dy = cy - shipY
+        local dist = math.sqrt(dx * dx + dy * dy)
+        if dist < maxDist then
+            alive[#alive + 1] = comet
+            nearby[#nearby + 1] = {
+                id = comet.id,
+                x = cx,
+                y = cy,
+                radius = comet.radius,
+                hue = comet.hue,
+                speed = comet.speed,
+                vx = comet.vx,
+                vy = comet.vy,
+            }
+        end
+    end
+    M.comets = alive
+    return nearby
+end
+
+-- Comet sample value: 50x planet sample value at that position
+function M.cometSampleValue(comet)
+    return M.sampleValue(comet) * 50
+end
+
+-- Comet collision damage: same formula as planets
+function M.cometCollisionDamage(comet)
+    return M.collisionDamage(comet)
+end
+
 return M

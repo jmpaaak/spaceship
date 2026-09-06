@@ -2,15 +2,6 @@
 
 ## 처리 대기
 
-(35) **혜성 시스템 도입 (사용자 확정, 2026-09-06):**
-  - ascending 페이즈에서 등장. **첫 1분 후 1회 고정 등장**, 이후 **30초마다 30% 확률**로 스폰.
-  - 속도: 일반 행성 대비 **매우 빠름** (vx/vy ≈ 80~120px/s, 화면 횡단 6~9초). 직선 궤적, 화면 밖에서 진입→반대편으로 퇴장.
-  - 표본 보상: **행성의 50배** (`sampleValue * 50`). 행성 기본 보상은 (36)에서 $1로 변경.
-  - 수집 반경: 행성과 동일 `radius + 30`. 충돌 데미지도 동일. 반지름 8~12px, 꼬리 파티클(노란→빨강 그라데이션, 길이 40~60px).
-  - `world.lua`에 `M.comets` 테이블 + `M.spawnComet(time)` / `M.nearbyComets(shipX, shipY, time)`. play.lua에서 행성과 동일한 수집/충돌 루프.
-  - i18n: `"comet_label"` = `"혜성"` / `"Comet"`. 미발견 혜성 위에 "혜성!" 텍스트 + sin 움직임.
-  - `make verify` GREEN + 커밋: `feat(play): comet system — fast, rare, high-reward celestial body`
-
 (36) **행성 기본 표본 보상 $1로 하향 (사용자 확정, 2026-09-06):**
   - 현재 `sampleValue = 10 + floor(distance/100) * 5`. 가까운 행성도 최소 $10.
   - 변경: `sampleValue = 1`. 거리 스케일 제거, 모든 행성 고정 $1. 혜성이 $50(=1×50), 위성이 $10(=1×10).
@@ -28,6 +19,9 @@
   - `make verify` GREEN + 커밋: `feat(play): moons orbit planets — fast, mid-reward collectible`
 
 ## 처리 완료
+
+(35) **혜성 시스템 도입 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `world.lua`에 comet 시스템 구현 (comets 테이블, spawnComet, cometPosition, tickCometSpawn, nearbyComets, cometSampleValue, cometCollisionDamage, resetComets). 첫 60초 후 보장 스폰, 이후 30초마다 30% 확률. 속도 80-120px/s, 반지름 8-12px. 보상 행성의 50배. `play.lua` 업데이트/드로우 루프에 혜성 수집/충돌 + 꼬리 파티클(노란→빨강) + "혜성"/"Comet" 라벨. i18n `comet_label` 추가. self_test INBOX-35 블록 추가. `make verify` GREEN.
 
 (31) **미니맵 은하 2개 표시 원인 수정 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `minimap.view()` galaxy 엔트리에 `isContaining` 플래그 추가. `play.lua`에서 non-containing 은하 마커(점+다이아몬드) 비표시. containing 은하만 마커·링·허브 그림. `testMinimapGalaxyContainingFlag` 추가. `make verify` GREEN.
