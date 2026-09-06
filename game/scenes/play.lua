@@ -308,6 +308,114 @@ function M.shopModalButtonRects()
     return L.buy, L.skip
 end
 
+-- HUD gear-slot hitboxes (same math as drawHudGearSlots).
+function M.hudGearSlotLayout(hudHeight)
+    local slotSize = M.hudGearSlotSize
+    local gap = M.hudGearSlotGap
+    local groupGap = 8
+    local labelY = (hudHeight or 0) + 2
+    local gridStartY = labelY + M.hudGearLabelFontSize + 4
+    local startX = 5
+    local hull = {}
+    for i = 1, 6 do
+        hull[i] = {
+            x = startX,
+            y = gridStartY + (i - 1) * (slotSize + gap),
+            w = slotSize, h = slotSize,
+        }
+    end
+    local engineLabelY = gridStartY + 6 * (slotSize + gap) + groupGap
+    local engineStartY = engineLabelY + M.hudGearLabelFontSize + 4
+    local engine = {}
+    for i = 1, 3 do
+        engine[i] = {
+            x = startX,
+            y = engineStartY + (i - 1) * (slotSize + gap),
+            w = slotSize, h = slotSize,
+        }
+    end
+    return { hull = hull, engine = engine, labelY = labelY, engineLabelY = engineLabelY }
+end
+
+function M.hitHudGearSlot(scene, x, y)
+    if not scene or not scene.expedition then return nil end
+    local hud = scene.hudLines and scene:hudLines() or {}
+    local hudHeight = M.hudHeight(scene.expedition.phase, hud, 0)
+    local layout = M.hudGearSlotLayout(hudHeight)
+    local hullGear = scene.expedition.equippedGear or {}
+    local engineGear = scene.expedition.equippedEngineParts or {}
+    for i, rect in ipairs(layout.hull) do
+        if x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h then
+            if hullGear[i] then
+                return { part = hullGear[i], category = "hull", index = i, rect = rect }
+            end
+            return nil
+        end
+    end
+    for i, rect in ipairs(layout.engine) do
+        if x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h then
+            if engineGear[i] then
+                return { part = engineGear[i], category = "engine", index = i, rect = rect }
+            end
+            return nil
+        end
+    end
+    return nil
+end
+
+function M.destroyedKeepPartRects(choices)
+    choices = choices or {}
+    local n = #choices
+    if n == 0 then return {} end
+    local size, gap = 72, 12
+    local maxPerRow = 5
+    local cols = math.min(n, maxPerRow)
+    local rows = math.ceil(n / cols)
+    local totalW = cols * size + (cols - 1) * gap
+    local startX = math.floor((720 - totalW) / 2)
+    local y = 500
+    local rects = {}
+    for i = 1, n do
+        local col = (i - 1) % cols
+        local row = math.floor((i - 1) / cols)
+        rects[i] = {
+            x = startX + col * (size + gap),
+            y = y + row * (size + gap),
+            w = size, h = size,
+            choice = choices[i],
+        }
+    end
+    return rects
+end
+
+local function rarityRgb(rarity)
+    if rarity == "legendary" then return 1.00, 0.72, 0.18 end
+    if rarity == "rare" then return 0.35, 0.62, 1.00 end
+    if rarity == "uncommon" then return 0.35, 0.82, 0.45 end
+    return 0.72, 0.74, 0.78
+end
+
+function M.drawBalatroCard(part, x, y, w, h, selected)
+    part = part or {}
+    local rr, rg, rb = rarityRgb(part.rarity)
+    love.graphics.setColor(0.12, 0.10, 0.14, 0.96)
+    love.graphics.rectangle("fill", x, y, w, h, 8, 8)
+    love.graphics.setColor(rr, rg, rb, selected and 1 or 0.85)
+    love.graphics.setLineWidth(selected and 4 or 2)
+    love.graphics.rectangle("line", x, y, w, h, 8, 8)
+    love.graphics.setLineWidth(1)
+    love.graphics.setColor(rr, rg, rb, 0.18)
+    love.graphics.rectangle("fill", x + 4, y + 4, w - 8, 22, 4, 4)
+    local prev = love.graphics.getFont()
+    love.graphics.setFont(fonts.get(11))
+    love.graphics.setColor(rr, rg, rb, 1)
+    love.graphics.printf(i18n.rarityLabel(part.rarity), x + 4, y + 6, w - 8, "center")
+    love.graphics.setFont(fonts.get(22))
+    love.graphics.setColor(1, 0.98, 0.92, 1)
+    love.graphics.printf(i18n.partName(part), x + 6, y + math.floor(h / 2) - 12, w - 12, "center")
+    if prev then love.graphics.setFont(prev) end
+end
+
 -- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
 -- panel caption itself was flagged for removal during the "remove
 -- unnecessary text" review -- the card's own contents (hull/upgrades/
@@ -1291,6 +1399,7 @@ function M.new(options)
         starWellHeatAlpha = 0,    -- red vignette while sampling the central star
         hubHeatAlpha = 0,         -- green vignette approaching a hub checkpoint
         lastHapticTime = 0,
+        gearPopup = nil,          -- equipped-part detail popup {part, category}
         hasLeftEarth = false,     -- must leave Earth disk before auto-settle
         paused = false,           -- Item 18: pause toggle (ascending only)
         -- INBOX (35): comet state
@@ -2429,6 +2538,12 @@ function M:update(dt)
 end
 
 function M:keypressed(key)
+    if self.gearPopup then
+        if key == "escape" or key == "n" or key == "space" then
+            self.gearPopup = nil
+        end
+        return
+    end
     if self.shopModal then
         if key == "y" then
             local ok, err = expedition.buyGearFromShopPlanet(self.expedition, self.shopModal.category, self.shopModal.gear)
@@ -2635,6 +2750,10 @@ local function joystickOrigin(x, y)
 end
 
 function M:touchpressed(id, x, y)
+    if self.gearPopup then
+        self.gearPopup = nil
+        return
+    end
     if self.shopModal then
         local buy, skip = M.shopModalButtonRects()
         if x >= buy.x and x < buy.x + buy.w and y >= buy.y and y < buy.y + buy.h then
@@ -2657,6 +2776,11 @@ function M:touchpressed(id, x, y)
                 expedition.adminUpgrade(self.expedition, btn.kind)
                 return
             end
+        end
+        local hit = M.hitHudGearSlot(self, x, y)
+        if hit then
+            self.gearPopup = hit
+            return
         end
         -- If paused, tapping anywhere else unpauses.
         if self.paused then
@@ -2701,10 +2825,24 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "launch" then
+        local hit = M.hitHudGearSlot(self, x, y)
+        if hit then
+            self.gearPopup = hit
+            return
+        end
         self:keypressed("space")
         return
     end
     if self.expedition.phase == "destroyed" then
+        local choices = self.expedition.keepPartChoices or {}
+        if #choices > 0 then
+            for _, rect in ipairs(M.destroyedKeepPartRects(choices)) do
+                if x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h then
+                    self.expedition.keptPart = rect.choice
+                    return
+                end
+            end
+        end
         local area = destroyedTouchArea
         if x >= area.left and x < area.right and y >= area.top and y < area.bottom then
             self:keypressed("space")
@@ -3112,12 +3250,16 @@ function M:draw()
             love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
         end
         local prevEarthFont = love.graphics.getFont()
-        love.graphics.setFont(fonts.get(22))
-        local hint = i18n.t("checkpoint_hint")
+        love.graphics.setFont(fonts.get(11))
+        local repair = i18n.t("checkpoint_hint_repair")
+        local upgrade = i18n.t("checkpoint_hint_upgrade")
         local bob = math.sin(self.time * 2) * 3
-        local hx = clampLabelX(earthX, love.graphics.getFont():getWidth(hint), viewport.width)
+        local f = love.graphics.getFont()
+        local lineH = 14
+        local topY = earthY - M.earthVisualRadius - 8 - lineH * 2 + bob
         love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
-        love.graphics.print(hint, hx, earthY - M.earthVisualRadius - 28 + bob)
+        love.graphics.print(repair, earthX - f:getWidth(repair) / 2, topY)
+        love.graphics.print(upgrade, earthX - f:getWidth(upgrade) / 2, topY + lineH)
         love.graphics.setFont(prevEarthFont)
     end
     -- Item 9: Draw star gravity well ring around the central star
@@ -3247,25 +3389,27 @@ function M:draw()
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)
             local prevLblFont = love.graphics.getFont()
-            love.graphics.setFont(fonts.get(22))
+            love.graphics.setFont(fonts.get(11))
             local bob = math.sin(self.time * 2) * 3
+            local f = love.graphics.getFont()
+            local lineH = 14
             if planet.hub then
                 if not self.expedition.hubExplored[planet.galaxyId] then
                     local engineStr = i18n.t("engine_part_available")
-                    local lx = clampLabelX(x, love.graphics.getFont():getWidth(engineStr), viewport.width)
                     love.graphics.setColor(0.85, 0.35, 0.95, 0.85)
-                    love.graphics.print(engineStr, lx, y - planet.radius - 48 + bob)
+                    love.graphics.print(engineStr, x - f:getWidth(engineStr) / 2, y - planet.radius - 8 - lineH * 3 + bob)
                 end
-                local hint = i18n.t("checkpoint_hint")
-                local hx = clampLabelX(x, love.graphics.getFont():getWidth(hint), viewport.width)
+                local repair = i18n.t("checkpoint_hint_repair")
+                local upgrade = i18n.t("checkpoint_hint_upgrade")
+                local topY = y - planet.radius - 8 - lineH * 2 + bob
                 love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
-                love.graphics.print(hint, hx, y - planet.radius - 24 + bob)
+                love.graphics.print(repair, x - f:getWidth(repair) / 2, topY)
+                love.graphics.print(upgrade, x - f:getWidth(upgrade) / 2, topY + lineH)
             elseif planet.isShop then
                 if not self.shopVisited[planet.id] then
                     local hullStr = i18n.t("hull_part_available")
-                    local lx = clampLabelX(x, love.graphics.getFont():getWidth(hullStr), viewport.width)
                     love.graphics.setColor(0.3, 0.9, 0.95, 0.85)
-                    love.graphics.print(hullStr, lx, y - planet.radius - 22 + bob)
+                    love.graphics.print(hullStr, x - f:getWidth(hullStr) / 2, y - planet.radius - 8 - lineH + bob)
                 end
             end
             love.graphics.setFont(prevLblFont)
@@ -3779,9 +3923,6 @@ function M:draw()
         
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
-        local loadout = self:loadoutLines()
-        -- Mobile-UI sub-item (6): destroyed panel enlarged for 720×1280 canvas.
-        -- Panel centered vertically with generous row spacing for readability.
         local panelX, panelW = 24, viewport.width - 48
         local panelY, panelH = 340, 560
         love.graphics.setColor(1, 1, 1, 0.94)
@@ -3789,63 +3930,29 @@ function M:draw()
             love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
             love.graphics.rectangle("fill", panelX, panelY, panelW, panelH)
         end
-        self.destroyedFont = self.destroyedFont or fonts.get(22)
         local previousFont = love.graphics.getFont()
-        love.graphics.setFont(self.destroyedFont)
-        local fullX, fullW = panelX + 16, panelW - 32
-        local row = panelY + 20
-        local rowStep = 44
-        local dIconSz = 20  -- destroyed-phase row icon size (mobile-friendly)
-        local dIconGap = 6  -- gap between icon and text
-        love.graphics.setColor(1, 0.55, 0.45)
-        drawHudSpriteOrPoly(self.destroyedTitleIconImage, nil,
-            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
-        love.graphics.printf(i18n.t("ship_destroyed_title"), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
-        row = row + rowStep
-        love.graphics.setColor(1, 0.8, 0.3)
-        drawHudSpriteOrPoly(self.destroyedLostTotalIconImage, nil,
-            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
-        love.graphics.printf(i18n.t("lost_total_line",
-            (self.expedition.lastLostSampleValue or 0)),
-            fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        drawHudSpriteOrPoly(self.destroyedSamplesSettlementIconImage, nil,
-            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
-        love.graphics.printf(i18n.t("samples_settlement_line",
-            self.expedition.lastLostSampleCount or 0, self.expedition.lastLostSampleValue or 0),
-            fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
-        row = row + rowStep
-        -- Item 15/11: spins_settlement_line removed (in-flight slots abolished)
-        love.graphics.setColor(0.6, 0.8, 1)
-        drawHudSpriteOrPoly(self.destroyedPeakDistIconImage, nil,
-            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
-        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastLostAltitude or 0)),
-            fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
-        row = row + rowStep
-        if self.expedition.lastLostNewBest then
-            love.graphics.setColor(1, 0.95, 0.3)
-            drawHudSpriteOrPoly(self.destroyedNewBestIconImage, nil,
-                fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
-            love.graphics.printf(i18n.t("newbest_label"), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
-            row = row + rowStep
+        love.graphics.setFont(fonts.get(33))
+        love.graphics.setColor(0.62, 0.64, 0.68, 0.85)
+        love.graphics.printf(i18n.t("ship_destroyed_title"), panelX, panelY + 36, panelW, "center")
+        love.graphics.setFont(fonts.get(22))
+        love.graphics.setColor(0.7, 0.72, 0.76, 0.85)
+        love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)),
+            panelX, panelY + 92, panelW, "center")
+        local choices = self.expedition.keepPartChoices or {}
+        if #choices > 0 then
+            love.graphics.setColor(0.65, 0.68, 0.72, 0.8)
+            love.graphics.printf(i18n.t("keep_part_hint"), panelX, panelY + 150, panelW, "center")
+            local rects = M.destroyedKeepPartRects(choices)
+            local kept = self.expedition.keptPart
+            for _, rect in ipairs(rects) do
+                local selected = kept and kept.part and rect.choice.part
+                    and kept.part.id == rect.choice.part.id
+                    and kept.category == rect.choice.category
+                M.drawBalatroCard(rect.choice.part, rect.x, rect.y, rect.w, rect.h, selected)
+            end
         end
-        love.graphics.setColor(1, 0.55, 0.45)
-        drawHudSpriteOrPoly(self.destroyedMetaResetIconImage, nil,
-            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
-        love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
-        row = row + rowStep
-        love.graphics.setColor(1, 0.8, 0.3)
-        drawHudSpriteOrPoly(self.destroyedNextShipIconImage, nil,
-            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
-        love.graphics.printf(i18n.t("next_ship_line", loadout.shipLabel), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, fullX, row, fullW, "center")
-        row = row + rowStep
-        drawHudSpriteOrPoly(self.destroyedTapStartOverIconImage, nil,
-            fullX + dIconSz * 0.5, row + dIconSz * 0.5, dIconSz)
-        love.graphics.printf(i18n.t("tap_start_over"), fullX + dIconSz + dIconGap, row, fullW - dIconSz - dIconGap, "center")
+        love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
+        love.graphics.printf(i18n.t("tap_start_over"), panelX, panelY + panelH - 72, panelW, "center")
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()
@@ -3977,6 +4084,38 @@ function M:draw()
         love.graphics.setColor(1, 1, 1)
         love.graphics.printf(i18n.t("shop_modal_skip"), skip.x, skip.y + 16, skip.w, "center")
         love.graphics.setFont(prevFont)
+    end
+    if self.gearPopup and self.gearPopup.part then
+        local part = self.gearPopup.part
+        local rr, rg, rb = rarityRgb(part.rarity)
+        local panelW, panelH = 520, 340
+        local panelX = math.floor((viewport.width - panelW) / 2)
+        local panelY = 360
+        love.graphics.setColor(0, 0, 0, 0.62)
+        love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
+        -- Balatro-like joker card: dark body, rarity-colored chip + gold effects
+        love.graphics.setColor(0.10, 0.08, 0.12, 0.98)
+        love.graphics.rectangle("fill", panelX, panelY, panelW, panelH, 12, 12)
+        love.graphics.setColor(rr, rg, rb, 1)
+        love.graphics.setLineWidth(4)
+        love.graphics.rectangle("line", panelX, panelY, panelW, panelH, 12, 12)
+        love.graphics.setLineWidth(1)
+        love.graphics.setColor(rr, rg, rb, 0.16)
+        love.graphics.rectangle("fill", panelX + 10, panelY + 10, panelW - 20, 44, 6, 6)
+        local prevPopupFont = love.graphics.getFont()
+        love.graphics.setFont(fonts.get(11))
+        local chip = i18n.rarityLabel(part.rarity)
+        local suit = i18n.suitLabel(part.suit)
+        if suit ~= "" then chip = chip .. "  ·  " .. suit end
+        love.graphics.setColor(rr, rg, rb, 1)
+        love.graphics.printf(chip, panelX + 16, panelY + 22, panelW - 32, "center")
+        love.graphics.setFont(fonts.get(33))
+        love.graphics.setColor(1, 0.98, 0.92, 1)
+        love.graphics.printf(i18n.partName(part), panelX + 20, panelY + 70, panelW - 40, "center")
+        love.graphics.setFont(fonts.get(22))
+        love.graphics.setColor(0.95, 0.82, 0.28, 1)
+        love.graphics.printf(i18n.partEffects(part), panelX + 28, panelY + 130, panelW - 56, "center")
+        love.graphics.setFont(prevPopupFont)
     end
     if self.reentryHeatAlpha and self.reentryHeatAlpha > 0 then
         local prevLineWidth = love.graphics.getLineWidth()

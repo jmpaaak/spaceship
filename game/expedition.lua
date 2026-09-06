@@ -245,6 +245,16 @@ M.settle = settle
 local function destroy(run)
     run.phase = "destroyed"
     run.durability = 0
+    -- Snapshot equipped parts so the game-over screen can keep exactly one.
+    local keep = {}
+    for _, part in ipairs(run.equippedGear or {}) do
+        keep[#keep + 1] = { category = "hull", part = part }
+    end
+    for _, part in ipairs(run.equippedEngineParts or {}) do
+        keep[#keep + 1] = { category = "engine", part = part }
+    end
+    run.keepPartChoices = keep
+    run.keptPart = nil
     run.lastLostSampleCount = run.sampleCount
     run.lastLostSampleValue = run.pendingSampleValue
     run.lastLostAltitude = run.maxAltitude
@@ -586,6 +596,13 @@ function M.launch(run)
         run.lastVisitedGalaxyId = nil
         run.lastHubX = nil
         run.lastHubY = nil
+        -- Game over: re-equip the one part the player chose to keep.
+        local kept = run.keptPart
+        run.keepPartChoices = nil
+        run.keptPart = nil
+        if kept and kept.part and kept.category then
+            M.equipGear(run, kept.category, kept.part)
+        end
     end
     run.phase = "ascending"
     return true

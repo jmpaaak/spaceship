@@ -143,11 +143,11 @@ locales.en = {
     spins_settlement_line = "SPINS (%d) $%d",
     peak_alt_line = "PEAK ALT %d",
     tap_relaunch = "TAP: RELAUNCH",
-    ship_destroyed_title = "SHIP DESTROYED",
+    ship_destroyed_title = "GAME OVER",
     lost_total_line = "LOST TOTAL $%d",
-    meta_reset_line = "META RESET  BEST %d",
+    meta_reset_line = "MY BEST %d",
     next_ship_line = "NEXT %s",
-    tap_start_over = "TAP: START OVER",
+    tap_start_over = "TAP TO START OVER",
     minimap_out = "OUT %d",
     minimap_earth_label = "Earth",
     minimap_star_label = "Sun",
@@ -164,6 +164,34 @@ locales.en = {
     engine_part_available = "Engine part available",
     hull_part_available = "Hull part available",
     checkpoint_hint = "hull repair & upgrades",
+    checkpoint_hint_repair = "hull repair",
+    checkpoint_hint_upgrade = "upgrades",
+    game_over_title = "GAME OVER",
+    my_best_record = "MY BEST %d",
+    keep_part_hint = "KEEP ONE PART",
+    rarity_common = "COMMON",
+    rarity_uncommon = "UNCOMMON",
+    rarity_rare = "RARE",
+    rarity_legendary = "LEGENDARY",
+    suit_solar = "SOLAR",
+    suit_nebula = "NEBULA",
+    suit_void = "VOID",
+    suit_pulsar = "PULSAR",
+    effect_speed = "SPEED +%d",
+    effect_hullDurability = "HULL %+d",
+    effect_sampleSellValue = "HARVEST +%d",
+    effect_money = "MONEY +%d",
+    effect_sellMultiplier = "SELL +%d%%",
+    effect_shopDiscount = "SHOP -%d%%",
+    effect_collisionRadius = "HITBOX %+d",
+    effect_detectionRadius = "DETECT %+d",
+    effect_luck = "LUCK +%d",
+    effect_rerollBonus = "REROLL +%d",
+    effect_boostCharge = "BOOST +%d",
+    effect_autoCollect = "AUTO COLLECT",
+    effect_chainTrigger = "CHAIN",
+    effect_insurance = "INSURANCE",
+    effect_streakMultiplier = "STREAK +%d%%",
     comet_label = "Comet",
     moon_label = "Moon",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
@@ -313,11 +341,11 @@ locales.ko = {
     spins_settlement_line = "회전 (%d) $%d",
     peak_alt_line = "최고고도 %d",
     tap_relaunch = "탭: 재발사",
-    ship_destroyed_title = "함선 파괴",
+    ship_destroyed_title = "게임 오버",
     lost_total_line = "손실합계 $%d",
-    meta_reset_line = "초기화  최고 %d",
+    meta_reset_line = "내 최고기록 %d",
     next_ship_line = "다음 %s",
-    tap_start_over = "탭: 다시시작",
+    tap_start_over = "탭하여 다시시작",
     minimap_out = "외부 %d",
     minimap_earth_label = "지구",
     minimap_star_label = "태양",
@@ -334,6 +362,34 @@ locales.ko = {
     engine_part_available = "엔진부품 획득 가능",
     hull_part_available = "선체부품 획득 가능",
     checkpoint_hint = "내구도 회복과 업그레이드",
+    checkpoint_hint_repair = "내구도 회복",
+    checkpoint_hint_upgrade = "업그레이드",
+    game_over_title = "게임 오버",
+    my_best_record = "내 최고기록 %d",
+    keep_part_hint = "부품 하나 유지",
+    rarity_common = "커먼",
+    rarity_uncommon = "언커먼",
+    rarity_rare = "레어",
+    rarity_legendary = "전설",
+    suit_solar = "솔라",
+    suit_nebula = "네뷸라",
+    suit_void = "보이드",
+    suit_pulsar = "펄서",
+    effect_speed = "속도 +%d",
+    effect_hullDurability = "내구 %+d",
+    effect_sampleSellValue = "수확 +%d",
+    effect_money = "자금 +%d",
+    effect_sellMultiplier = "판매 +%d%%",
+    effect_shopDiscount = "상점 -%d%%",
+    effect_collisionRadius = "충돌 %+d",
+    effect_detectionRadius = "탐지 %+d",
+    effect_luck = "행운 +%d",
+    effect_rerollBonus = "리롤 +%d",
+    effect_boostCharge = "부스트 +%d",
+    effect_autoCollect = "자동 채집",
+    effect_chainTrigger = "연쇄",
+    effect_insurance = "보험",
+    effect_streakMultiplier = "연속 +%d%%",
     comet_label = "혜성",
     moon_label = "위성",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
@@ -387,6 +443,42 @@ function M.partName(part)
         return part.nameKo
     end
     return part.name or part.id or "?"
+end
+
+function M.effectLine(effect)
+    if type(effect) ~= "table" then return "" end
+    local key = "effect_" .. tostring(effect.type or "")
+    local table_ = locales[locale] or locales[DEFAULT_LOCALE]
+    local template = table_[key] or locales[DEFAULT_LOCALE][key]
+    if not template then
+        return tostring(effect.type or "?") .. " " .. tostring(effect.value or "")
+    end
+    if template:find("%%") then
+        return string.format(template, effect.value or 0)
+    end
+    return template
+end
+
+function M.partEffects(part)
+    if type(part) ~= "table" or type(part.effects) ~= "table" then return "" end
+    local lines = {}
+    for _, effect in ipairs(part.effects) do
+        lines[#lines + 1] = M.effectLine(effect)
+    end
+    return table.concat(lines, "\n")
+end
+
+function M.rarityLabel(rarity)
+    local key = "rarity_" .. tostring(rarity or "common")
+    local table_ = locales[locale] or locales[DEFAULT_LOCALE]
+    return table_[key] or locales[DEFAULT_LOCALE][key] or tostring(rarity or "")
+end
+
+function M.suitLabel(suit)
+    if not suit or suit == "" then return "" end
+    local key = "suit_" .. tostring(suit)
+    local table_ = locales[locale] or locales[DEFAULT_LOCALE]
+    return table_[key] or locales[DEFAULT_LOCALE][key] or tostring(suit)
 end
 
 function M.shopError(err)
