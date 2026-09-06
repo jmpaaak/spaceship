@@ -1,12 +1,8 @@
 ## Current Status
 
-- INBOX (60) complete: Earth visual radius enlarged + PIL Earth sprite.
-  - `M.earthVisualRadius` 58→90; `earthSettleRadius` unchanged at 68; `earthReentryRadius` unchanged at 145.
-  - Draw scale 116→180 so 128px image renders at ~180px diameter matching new visual radius.
-  - Fallback circle radius updated 58→90.
-  - New `tools/gen_earth.py` (PIL, seed 42) generates 128×128 RGBA Earth sprite replacing old 64×64 ComfyUI version.
-  - Self-test assertion updated to expect earthVisualRadius==90.
-  - Asset manifest + GENERATED_ASSET_LOG.md updated.
+- Fix: asset manifest sha256 for `assets/earth/earth_generic.png` was stale after
+  the INBOX-60 PIL regeneration. Updated hash to match actual file
+  (7b0a977…→matches on-disk). `make verify` now passes (ASSET_MANIFEST_OK).
 
 ## Next slice
 

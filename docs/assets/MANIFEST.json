@@ -174,7 +174,7 @@
       "height": 128
     },
     "downloaded_at": "2026-09-06T18:00:00+09:00",
-    "sha256": "58d006e8903a6b71d1f17bc60a996f5a694c5ff8ba0b4948c887c39c26730d8c",
+    "sha256": "7b0a977834110f6ea1e0bcca0b077a6a75d810429b0bb5c9531fddd99f1df025",
     "width": 128,
     "height": 128,
     "qa": "INBOX 60: 128x128 RGBA PIL Earth sprite, seed 42, tools/gen_earth.py"
