@@ -708,4 +708,47 @@ function M.cometCollisionDamage(comet)
     return M.collisionDamage(comet)
 end
 
+-- ── INBOX-37: Moon (satellite) system ──────────────────────────────
+-- Each planet has a 30% chance of one orbiting moon.
+-- Moon orbits at planet.radius + 15~25px, period 3s, radius 3~5px.
+-- Sample value: 10x planet ($10). Collision damage: same as planet.
+
+function M.planetHasMoon(planet)
+    return hash(planet.x or 0, planet.y or 0, 700) > 0.7
+end
+
+function M.moonForPlanet(planet, time)
+    if not M.planetHasMoon(planet) then return nil end
+    local orbitRadius = planet.radius + 15 + math.floor(hash(planet.x or 0, planet.y or 0, 701) * 11) -- 15~25
+    local moonRadius = 3 + math.floor(hash(planet.x or 0, planet.y or 0, 702) * 3) -- 3~5
+    local period = 3 -- seconds per orbit
+    local angle = (time or 0) * (2 * math.pi / period)
+    -- Offset phase per planet so moons don't all start at 0
+    angle = angle + hash(planet.x or 0, planet.y or 0, 703) * 2 * math.pi
+    local mx = planet.x + math.cos(angle) * orbitRadius
+    local my = planet.y + math.sin(angle) * orbitRadius
+    -- Moon color: brighter version of planet hue
+    local hue = planet.hue or 0.5
+    return {
+        id = (planet.id or "?") .. ":moon",
+        x = mx,
+        y = my,
+        radius = moonRadius,
+        orbitRadius = orbitRadius,
+        hue = hue,
+        parentId = planet.id,
+        parentX = planet.x,
+        parentY = planet.y,
+    }
+end
+
+function M.moonSampleValue()
+    return 10
+end
+
+function M.moonCollisionDamage(moon)
+    -- Use the parent planet position for distance-based damage
+    return M.collisionDamage({ x = moon.parentX, y = moon.parentY })
+end
+
 return M

@@ -1,20 +1,26 @@
 ## Current Status
 
-- INBOX (36) complete: flat $1 planet sample value.
-  - `world.sampleValue()` → fixed `return 1` (was `10 + floor(distance/100)*5`).
-  - `sampleTier` and `collisionDamage` remain distance-based (unchanged).
-  - Comet value: 50 × $1 = $50. (Moon will be 10× = $10 when INBOX-37 lands.)
-  - Updated 5 existing test assertions to match new values; added INBOX-36 dedicated test block.
+- INBOX (37) complete: moon (satellite) system.
+  - `world.planetHasMoon(planet)`: deterministic ~30% chance via `hash(x, y, 700) > 0.7`.
+  - `world.moonForPlanet(planet, time)`: returns orbiting moon table or nil.
+    - Orbit radius: `planet.radius + 15~25px`, period 3s, moon radius 3~5px.
+  - `world.moonSampleValue()` → fixed $10 (10× planet $1).
+  - `world.moonCollisionDamage(moon)` → same distance-based formula as planet (uses parent position).
+  - Collection radius: `moonRadius + 15` (narrower than planets' +30).
+  - Collision radius: `moonRadius + 5` (same formula as planets).
+  - `play.lua`: moon state tracking (`moonDiscovered`, `moonCollided`), reset on relaunch.
+  - `play.lua`: moon drawing — bright hue circle with highlight, collection ring, "Moon"/"위성" label.
+  - i18n: `moon_label` = "Moon" / "위성".
+  - INBOX-37 test block: spawn rate, orbit, sample value, collision damage, i18n.
   - `make verify` GREEN.
 
 ## Next slice
-- INBOX (37): moon system — 0–1 moons per planet, fast orbit, $10 reward.
+- INBOX next pending item (check INBOX.md).
 
 ## Previous
 
+- INBOX (36) complete: flat $1 planet sample value.
+  - `world.sampleValue()` → fixed `return 1`.
+  - Comet value: 50 × $1 = $50.
+
 - INBOX (35) complete: comet system — fast, rare, high-reward celestial body.
-  - `minimap.view()` galaxy entries now carry `isContaining` flag (true for the containing galaxy, false for others).
-  - `play.lua`: galaxy dot markers only drawn for the containing galaxy; non-containing nearby galaxies are hidden entirely (rim marker from INBOX-34b already indicates nearest off-disc galaxy).
-  - Hub markers (magenta diamond) also restricted to containing galaxy only.
-  - Added `testMinimapGalaxyContainingFlag`: verifies exactly one containing galaxy at origin (milkyway), all others have `isContaining == false`.
-  - `make verify` GREEN.

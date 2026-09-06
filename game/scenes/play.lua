@@ -1232,6 +1232,9 @@ function M.new(options)
         cometDiscovered = {},     -- comet.id → true
         cometCollided = {},       -- comet.id → true
         cometTailParticles = {},  -- tail trail particles for visual effect
+        -- INBOX (37): moon state
+        moonDiscovered = {},      -- moon.id → true
+        moonCollided = {},        -- moon.id → true
     }, M)
 end
 
@@ -2081,6 +2084,60 @@ function M:update(dt)
                 self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
             end
         end
+        -- INBOX (37): moon collection/collision
+        if self.expedition.phase == "ascending" then
+            for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
+                local moon = world.moonForPlanet(planet, self.time)
+                if moon then
+                    local dx, dy = moon.x - self.ship.x, moon.y - self.ship.y
+                    local distanceSquared = dx * dx + dy * dy
+                    -- Collection radius: moonRadius + 15 (narrower than planets)
+                    local moonCollectRadius = moon.radius + 15
+                    if distanceSquared <= moonCollectRadius ^ 2
+                        and not self.moonDiscovered[moon.id] then
+                        self.moonDiscovered[moon.id] = true
+                        local value = world.moonSampleValue()
+                        local _, awarded = expedition.collectSample(self.expedition, value, world.hueFamily(moon.hue or 0).key)
+                        awarded = awarded or value
+                        table.insert(self.floatingTexts, {
+                            text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
+                            x = moon.x,
+                            y = moon.y,
+                            timer = 1.5,
+                            kind = "sample",
+                            awarded = awarded,
+                            rollupElapsed = 0,
+                        })
+                        self.timeSlip = { timer = 0.4, scale = 0.24 }
+                        self.shipShake = 0.25
+                        self.shipShakeMagnitude = 1.2
+                        self.collectFlash = 0.15
+                        self.collectZoom = { timer = 0.5, scale = 1.12, planetX = moon.x, planetY = moon.y }
+                        self.message = i18n.t("sample_message", awarded, moon.id)
+                    end
+                    if distanceSquared <= (moon.radius + 5) ^ 2
+                        and not self.moonCollided[moon.id] then
+                        self.moonCollided[moon.id] = true
+                        local damage = world.moonCollisionDamage(moon)
+                        table.insert(self.floatingTexts, {
+                            text = i18n.t("floating_damage_text", damage),
+                            x = self.ship.x + 60,
+                            y = self.ship.y,
+                            timer = 1.0,
+                            kind = "damage",
+                        })
+                        self.shipShake = shipShakeDuration
+                        self.shipShakeMagnitude = 1.2
+                        if expedition.damage(self.expedition, damage) then
+                            self:persistBestAltitude()
+                            self.message = i18n.t("ship_destroyed_message", math.floor(self.expedition.bestAltitude))
+                            break
+                        end
+                        self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
+                    end
+                end
+            end
+        end
         -- INBOX (35): comet spawning + collection/collision
         if self.expedition.phase == "ascending" then
             world.tickCometSpawn(self.time, self.ship.x, self.ship.y, viewport.width, viewport.height)
@@ -2323,6 +2380,9 @@ function M:keypressed(key)
                 self.cometDiscovered = {}
                 self.cometCollided = {}
                 self.cometTailParticles = {}
+                -- INBOX (37): reset moon state on relaunch
+                self.moonDiscovered = {}
+                self.moonCollided = {}
                 world.resetComets()
             end
             self.message = i18n.t("ascending_message")
@@ -2947,6 +3007,40 @@ function M:draw()
                     love.graphics.setColor(0.7, 0.9, 1, 0.8)
                     love.graphics.print(discStr, lx, labelY)
                 end
+            end
+        end
+    end
+    -- INBOX (37): draw moons orbiting planets
+    for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
+        local moon = world.moonForPlanet(planet, self.time)
+        if moon then
+            local mx, my = math.floor(moon.x - cameraX), math.floor(moon.y - cameraY)
+            if mx > -20 and mx < viewport.width + 20 and my > -20 and my < viewport.height + 20 then
+                -- Moon body: bright version of planet hue
+                local baseR, baseG, baseB = planetColor(moon.hue)
+                local brightR = math.min(1, baseR * 0.5 + 0.5)
+                local brightG = math.min(1, baseG * 0.5 + 0.5)
+                local brightB = math.min(1, baseB * 0.5 + 0.5)
+                love.graphics.setColor(brightR, brightG, brightB)
+                love.graphics.circle("fill", mx, my, moon.radius)
+                -- Highlight
+                love.graphics.setColor(math.min(1, brightR + 0.3), math.min(1, brightG + 0.3), math.min(1, brightB + 0.3))
+                love.graphics.circle("fill", mx - moon.radius * 0.25, my - moon.radius * 0.25, moon.radius * 0.5)
+                -- Collection ring if not yet collected
+                if not self.moonDiscovered[moon.id] then
+                    love.graphics.setColor(0.8, 0.9, 1, 0.6)
+                    love.graphics.circle("line", mx, my, moon.radius + 15)
+                    -- Moon label
+                    local font = love.graphics.getFont()
+                    local sinBob = math.sin(self.time * 2) * 3
+                    local moonStr = i18n.t("moon_label")
+                    local lx = clampLabelX(mx, font:getWidth(moonStr), viewport.width)
+                    love.graphics.setColor(0.8, 0.9, 1, 0.8)
+                    love.graphics.print(moonStr, lx, my - moon.radius - 16 + sinBob)
+                end
+                -- Outline
+                love.graphics.setColor(0.9, 0.95, 1, 0.35)
+                love.graphics.circle("line", mx, my, moon.radius + 1)
             end
         end
     end

@@ -31,17 +31,10 @@
   - launch 페이즈 중앙 패널에서는 기존 loadout 상세 유지하되, ascending에서도 요약이 항상 보이게.
   - `make verify` GREEN + 커밋: `feat(hud): ship stats summary fixed below minimap during ascending`
 
-(37) **위성 시스템 도입 (사용자 확정, 2026-09-06):**
-  - 각 행성에 **0~1개** 위성이 행성 주위를 빠르게 공전. `hash(planet.id, 700) > 0.7` → 위성 1개 (30% 확률).
-  - 공전 반경: `planet.radius + 15~25px`. 공전 속도: `2π / 3초` (3초에 1바퀴). 반지름 3~5px.
-  - 표본 보상: **행성의 10배** ($10). 빠르게 돌아서 수집 난이도 높음.
-  - 수집 반경: `moonRadius + 15` (행성보다 좁음). 충돌 데미지: 행성과 동일.
-  - `world.planets()` 반환에 `moons` 서브테이블 추가, 또는 별도 `world.moons(planet, time)`.
-  - play.lua에서 행성 draw 루프 안에서 위성도 draw + 수집/충돌 체크. 위성 색은 행성 hue 기반 밝은 톤.
-  - i18n: `"moon_label"` = `"위성"` / `"Moon"`.
-  - `make verify` GREEN + 커밋: `feat(play): moons orbit planets — fast, mid-reward collectible`
-
 ## 처리 완료
+
+(37) **위성 시스템 도입 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `world.planetHasMoon()` ~30% 확률, `world.moonForPlanet(planet, time)` 공전 궤도 반환. 반경 3~5px, 공전 반경 planet.radius+15~25px, 3초 주기. 표본 보상 $10 (10×행성). 충돌 데미지 행성 동일. 수집 반경 moonRadius+15. play.lua에서 수집/충돌/그리기 통합. i18n `moon_label` 추가. INBOX-37 전용 테스트 블록 추가. `make verify` GREEN.
 
 (36) **행성 기본 표본 보상 $1로 하향 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `world.sampleValue()` → 고정 `return 1`. 거리 스케일 제거. `sampleTier`/`collisionDamage` 기존 거리 기반 유지. 혜성 50×$1=$50. 기존 테스트 값 갱신 + INBOX-36 전용 블록 추가. `make verify` GREEN.
