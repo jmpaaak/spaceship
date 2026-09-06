@@ -3118,12 +3118,6 @@ function M:draw()
                 -- Inner glow
                 love.graphics.setColor(1.0, 0.85, 0.25, pulse * 0.08)
                 love.graphics.circle("fill", sx, sy, world.starRadius)
-                -- (d) Central star label in yellow
-                local starLabel = i18n.t("central_star_label")
-                local font = love.graphics.getFont()
-                local slx = clampLabelX(sx, font:getWidth(starLabel), viewport.width)
-                love.graphics.setColor(1, 0.85, 0.25)
-                love.graphics.print(starLabel, slx, sy - world.starRadius - 18)
             end
         end
     end
@@ -3233,37 +3227,6 @@ function M:draw()
             end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)
-            -- Item 19: planet labels (discovery / HUB / SHOP) above planets
-            do
-                local font = love.graphics.getFont()
-                local sinBob = math.sin(self.time * 2) * 3
-                if planet.hub then
-                    -- (c) HUB label in magenta
-                    local hubStr = i18n.t("hub_label")
-                    local labelY = y - planet.radius - 28 + sinBob
-                    local lx = clampLabelX(x, font:getWidth(hubStr), viewport.width)
-                    love.graphics.setColor(0.85, 0.35, 0.95)
-                    love.graphics.print(hubStr, lx, labelY)
-                    -- Only show "엔진부품 획득 가능" if not yet explored in this galaxy
-                    if not self.expedition.hubExplored[planet.galaxyId] then
-                        local engineStr = i18n.t("engine_part_available")
-                        local lx2 = clampLabelX(x, font:getWidth(engineStr), viewport.width)
-                        love.graphics.setColor(0.85, 0.35, 0.95, 0.8)
-                        love.graphics.print(engineStr, lx2, labelY + 12)
-                    end
-                elseif planet.isShop then
-                    -- (e) SHOP label in cyan
-                    local shopStr = i18n.t("shop_label")
-                    local hullStr = i18n.t("hull_part_available")
-                    local labelY = y - planet.radius - 28 + sinBob
-                    local lx = clampLabelX(x, font:getWidth(shopStr), viewport.width)
-                    love.graphics.setColor(0.3, 0.9, 0.95)
-                    love.graphics.print(shopStr, lx, labelY)
-                    local lx2 = clampLabelX(x, font:getWidth(hullStr), viewport.width)
-                    love.graphics.setColor(0.3, 0.9, 0.95, 0.8)
-                    love.graphics.print(hullStr, lx2, labelY + 12)
-                end
-            end
         end
     end
     -- INBOX (37): draw moons orbiting planets
@@ -3286,13 +3249,6 @@ function M:draw()
                 if not self.moonDiscovered[moon.id] then
                     love.graphics.setColor(0.8, 0.9, 1, 0.6)
                     love.graphics.circle("line", mx, my, moon.radius + 15)
-                    -- Moon label
-                    local font = love.graphics.getFont()
-                    local sinBob = math.sin(self.time * 2) * 3
-                    local moonStr = i18n.t("moon_label")
-                    local lx = clampLabelX(mx, font:getWidth(moonStr), viewport.width)
-                    love.graphics.setColor(0.8, 0.9, 1, 0.8)
-                    love.graphics.print(moonStr, lx, my - moon.radius - 16 + sinBob)
                 end
                 -- Outline
                 love.graphics.setColor(0.9, 0.95, 1, 0.35)
@@ -3365,13 +3321,6 @@ function M:draw()
                 love.graphics.setColor(1, 0.85, 0.25, 0.5)
                 love.graphics.setLineWidth(1)
                 love.graphics.circle("line", cx, cy, M.collectOrbitRadius(comet.radius))
-                -- "혜성!" / "Comet" label with sin bob
-                local font = love.graphics.getFont()
-                local sinBob = math.sin(self.time * 3) * 4
-                local cometStr = i18n.t("comet_label")
-                local lx = clampLabelX(cx, font:getWidth(cometStr), viewport.width)
-                love.graphics.setColor(1, 0.9, 0.3, 0.9)
-                love.graphics.print(cometStr, lx, cy - comet.radius - 18 + sinBob)
             end
         end
     end
