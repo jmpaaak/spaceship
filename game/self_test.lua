@@ -8606,10 +8606,6 @@ function M.run()
         local ok, err = pcall(function() scene:drawShipStatsSummary() end)
         love.graphics = previousGraphics
         assert(ok, "drawShipStatsSummary must not throw: " .. tostring(err))
-        -- Debug: dump printf calls
-        for di, dc in ipairs(printfCalls) do
-            print("    [DEBUG] printf #"..di..": text='"..tostring(dc.text).."' align="..tostring(dc.align))
-        end
         -- Must produce 4 right-aligned printf calls (ship, speed, hull, harvest)
         local rightAligned = 0
         local sawShip, sawSpeed, sawHull, sawHarvest = false, false, false, false
