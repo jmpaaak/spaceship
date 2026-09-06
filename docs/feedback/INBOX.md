@@ -26,7 +26,7 @@
     - `boostCharge` — 부스트 횟수
   - self_test 갱신. `make verify` GREEN + 커밋: `refactor(gear): merge speed stats, remove fuelEfficiency`
 
-(54) **부품 웹에디터 (사용자 확정, 2026-09-06):**
+(54) **부품 웹에디터 + PIL 아이콘 생성 (사용자 확정, 2026-09-06):**
   - `tools/parts-editor/index.html` + `editor.css` + `editor.js` — gear-editor 패턴 복제.
   - 기능:
     - hull_parts.json + engine_parts.json 로드/편집/저장
@@ -37,8 +37,14 @@
     - 부품 추가/삭제/복제 버튼
     - JSON 미리보기 + 다운로드
     - 시너지 미리보기: 같은 suit/tag 조합 시 예상 배율 표시
+    - **부품 아이콘 이미지 표시 + 변경**: 각 부품 카드에 현재 아이콘 PNG 미리보기. 클릭 시 파일 업로드로 교체 가능. 업로드된 이미지는 `assets/parts/<id>.png`로 저장. 없으면 PIL 자동 생성 이미지 사용.
+  - **PIL 부품 아이콘 일괄 생성** (`tools/gen_part_icons.py`, ≤50줄):
+    - hull_parts.json + engine_parts.json 읽어서 부품별 32×32 RGBA PNG 생성.
+    - 모티프: suit별 기본 형태 (solar=원+불꽃, void=다이아몬드, nebula=구름, pulsar=별) + rarity별 색 (common=회색, uncommon=초록, rare=파랑, legendary=금색 테두리).
+    - 출력: `assets/parts/<id>.png`. MANIFEST + GENERATED_ASSET_LOG 등록.
+  - play.lua `drawHudGearSlots`에서 `assets/parts/<id>.png` 로드하여 슬롯에 표시.
   - Makefile에 `make parts-editor` 타겟 (로컬 서버 시작).
-  - `make verify` GREEN + 커밋: `feat(tools): parts-editor web UI for hull and engine parts`
+  - `make verify` GREEN + 커밋 순서: (a) PIL 아이콘 생성 (b) 에디터 UI + 이미지 업로드
 
 (52) **슬롯머신 리디자인 — PIL 심볼 생성 + 터치 릴 스톱 + 새 배당 (사용자 확정, 2026-09-06):**
   - **심볼 5종 PIL 생성** (`tools/gen_slot_symbols.py`, ≤50줄):
