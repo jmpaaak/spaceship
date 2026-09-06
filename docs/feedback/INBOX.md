@@ -2,17 +2,12 @@
 
 ## 처리 대기
 
-(45) **미니맵 은하 2개 표시 + 링 오퍼시티 (사용자 확정, 2026-09-06):**
-  - 스크린샷: 미니맵에 노란 은하 마커 2개, 동심원이 진한 노란색으로 미니맵 경계까지 차 있음.
-  - **(a)** (31)에서 이미 INBOX했지만 아직 적용 안 됨. containing이 아닌 은하 마커를 **숨기거나** 미니맵 림에만 작은 점. `galaxyExistenceThreshold` 0.72→**0.85**로 올려 은하 자체 밀도 낮추기.
-  - **(b)** 동심원 링 알파: 현재 `(0.9, 0.75, 0.3, 0.4)`. **0.4→0.15**로 낮춰서 연하게. galaxy boundary ring도 **0.12** 정도.
-  - `make verify` GREEN + 커밋: `fix(minimap): hide non-containing galaxies, reduce ring opacity`
-
 (46) **"신규 행성 발견" 텍스트 제거 (사용자 확정, 2026-09-06):**
   - (19)(b)에서 추가한 `planet_new_discovery` 텍스트를 draw에서 제거. i18n 키는 남겨도 됨. `collisionRisk` label도 이미 (19)(a)에서 제거됨.
   - `make verify` GREEN + 커밋: `fix(play): remove "new planet" floating text above undiscovered planets`
 
 ## 처리 완료
+(45) **미니맵 은하 밀도 + 링 오퍼시티 — 완료 2026-09-06:** (a) `galaxyExistenceThreshold` 0.82→0.85 (밀도 ~18%→~15%). (b) 동심원 링 알파 0.4→0.15, galaxy boundary ring 알파 0.55→0.12. 비-containing 은하 마커 숨김은 이전 사이클에서 완료. 테스트 갱신 (밀도 <20%, 알파 검증). `make verify` GREEN.
 (44) **선체 정보 → 미니맵 아래 우측 — 완료 2026-09-06:** `drawShipStatsSummary()` 메서드 추가. ascending 때 미니맵 아래 우측에 22px 폰트로 함선명/속도LV/내구LV/수확LV 4줄 우측정렬 표시. settlement/destroyed/launch에서는 비표시. i18n 4키 EN+KO 추가. 테스트 INBOX-44 블록 추가. `make verify` GREEN.
 (43) **HUD 아이콘 교체 — PIL 생성 — 완료 2026-09-06:** `tools/gen_hud_icons.py` PIL 스크립트로 16×16 RGBA 아이콘 3개 생성 (icon_distance/icon_cash/icon_durability). `play.lua` hudIconImages 경로 업데이트. 테스트 16×16 호환. `make verify` GREEN.
 (42) **장착 네모칸 가로→세로 배치 — 완료 2026-09-06:** `drawHudGearSlots` 가로 배열을 세로 1열로 변경. x=5 고정, y를 HUD 아래부터 32px+4px 간격으로 내려감. hull 6칸 → 8px gap → engine 3칸. 총 높이 ~332px. 테스트 갱신 (horizontal width→vertical height assert). `make verify` GREEN.

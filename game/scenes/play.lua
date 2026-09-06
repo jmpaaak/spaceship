@@ -424,7 +424,7 @@ M.drawMinimapSprite = drawMinimapSprite
 -- marker. milkyway used to be blue; that special-case is gone. Earth /
 -- player / return-arrow / checkpoint-arrow / sun keep their own colors.
 function M.galaxyChartLineColor(_galaxyId)
-    return 0.9, 0.75, 0.3, 0.55
+    return 0.9, 0.75, 0.3, 0.12
 end
 
 function M.galaxyChartFillColor(_galaxyId)
@@ -2645,7 +2645,7 @@ function M:drawMinimap()
             end
         elseif ring.kind == "concentricRing" then
             if ring.inside ~= false then
-                love.graphics.setColor(0.9, 0.75, 0.3, 0.4)
+                love.graphics.setColor(0.9, 0.75, 0.3, 0.15)
                 love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
             end
         elseif ring.inside ~= false then

@@ -613,7 +613,7 @@ local function testMinimapUnifiedGalaxyPalette()
     local rOther, gOther, bOther, aOther = PlayScene.galaxyChartLineColor("outer-1-0")
     assert(rHome == 0.9 and gHome == 0.75 and bHome == 0.3,
         "galaxy ring/spiral line color must be gold 0.9, 0.75, 0.3")
-    assert(aHome == 0.55, "galaxy ring line alpha must be 0.55")
+    assert(aHome == 0.12, "galaxy ring line alpha must be 0.12 (INBOX-45b)")
     assert(rHome == rOther and gHome == gOther and bHome == bOther and aHome == aOther,
         "milkyway must not use a different ring/spiral color than other galaxies")
 
@@ -848,13 +848,13 @@ local function testMinimapGalaxyOverlapPrevention()
         "viewRadius should be <= 0.6 * galaxyCellSize for overlap prevention")
 end
 
--- INBOX-34(a): galaxyExistenceThreshold raised to 0.82 to reduce density.
+-- INBOX-34(a)/45(a): galaxyExistenceThreshold raised to 0.85 to reduce density.
 -- INBOX-34(b): minimap view emits nearestGalaxyRimMarker for off-disc galaxies.
 local function testMinimapGalaxyRimMarker()
     local minimapMod = require("game.minimap")
     local worldMod = require("game.world")
-    -- (a) Verify threshold is at least 0.82 (fewer galaxies).
-    -- Count galaxies in a smaller region — density should be < 28% (old was ~28%).
+    -- (a) Verify threshold is at least 0.85 (fewer galaxies).
+    -- Count galaxies in a smaller region — density should be < 20% (old was ~18% at 0.82).
     local galaxyCount = 0
     local totalCells = 0
     for gx = -20, 20 do
@@ -866,10 +866,10 @@ local function testMinimapGalaxyRimMarker()
         end
     end
     local density = galaxyCount / totalCells
-    -- With threshold 0.82, existence requires hash > 0.82, so ~18% density.
-    -- Allow some margin but must be < 0.25 (was ~0.28 with old 0.72 threshold).
-    assert(density < 0.25,
-        string.format("galaxy density should be < 25%% with raised threshold, got %.1f%%", density * 100))
+    -- With threshold 0.85, existence requires hash > 0.85, so ~15% density.
+    -- Allow some margin but must be < 0.20 (was ~18% with 0.82 threshold).
+    assert(density < 0.20,
+        string.format("galaxy density should be < 20%% with raised threshold, got %.1f%%", density * 100))
 
     -- (b) From origin (inside milkyway), nearest non-home galaxy should
     -- produce a rim marker since it is outside the minimap disc.
@@ -8650,6 +8650,18 @@ function M.run()
         end
 
         print("  INBOX-44 ship stats summary below minimap OK")
+    end
+
+    -- INBOX-45: galaxy density ≤ 0.85 threshold, concentric ring alpha 0.15,
+    -- galaxy boundary ring alpha 0.12
+    do
+        local play = require("game.scenes.play")
+        -- (a) galaxyChartLineColor alpha must be <= 0.12
+        local _, _, _, la = play.galaxyChartLineColor("test")
+        assert(la ~= nil and la <= 0.13,
+            string.format("INBOX-45(b): galaxyChartLineColor alpha should be ~0.12, got %s", tostring(la)))
+        -- (b) galaxyExistenceThreshold already tested in testMinimapGalaxyRimMarker
+        print("  INBOX-45 galaxy ring opacity OK")
     end
 
     print("SPACESHIP_UNIT_OK")
