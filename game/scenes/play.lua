@@ -2739,18 +2739,21 @@ function M:drawMinimap()
             local ex, ey = cx + view.earth.x, cy + view.earth.y
             love.graphics.printf(i18n.t("minimap_earth_label"), ex + 4, ey - 6, 80, "left")
         end
-        -- Central star label: use galaxy name for the star (e.g. "태양" for milkyway, galaxy name for others)
+        -- Central star label: use world.starName for the current galaxy
         if view.sun then
             local sx, sy = cx + view.sun.x, cy + view.sun.y
-            local starLabel = isHome and i18n.t("minimap_star_label") or (view.galaxyName or "")
+            local containingGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+            local starLabel = world.starName(containingGalaxy) or ""
             love.graphics.printf(starLabel, sx + 4, sy - 6, 120, "left")
         end
-        -- Hub/checkpoint label next to hub marker
+        -- Hub/checkpoint label: use world.hubStarName for the current galaxy
         for _, hubMk in ipairs(view.hubMarkers or {}) do
             if hubMk.inside ~= false then
                 local hx, hy = cx + hubMk.x, cy + hubMk.y
+                local containingGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+                local hubLabel = world.hubStarName(containingGalaxy) or "HUB"
                 love.graphics.setColor(0.85, 0.35, 0.95, 0.7)
-                love.graphics.printf("HUB", hx + 6, hy - 6, 60, "left")
+                love.graphics.printf(hubLabel, hx + 6, hy - 6, 100, "left")
                 love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
             end
         end

@@ -41,8 +41,20 @@ locales.en = {
         "Hoag's", "Tadpole", "Black Eye", "Sculptor", "Supernova",
         "Orion", "Helix", "Cat's Eye", "Cygnus", "Pegasus"
     },
-    galaxy_suffixes = { "", " II", " III", " IV", " V", " VI", " VII", " VIII" },
-    galaxy_named = "%s%s",
+    galaxy_suffixes = {},
+    galaxy_named = "%s",
+    star_names = {
+        "Sirius", "Vega", "Arcturus", "Rigel", "Betelgeuse",
+        "Aldebaran", "Antares", "Pollux", "Deneb", "Regulus",
+        "Canopus", "Achernar", "Altair", "Spica", "Fomalhaut",
+        "Bellatrix", "Capella", "Procyon", "Castor", "Mizar"
+    },
+    hub_star_names = {
+        "Proxima", "Barnard", "Luyten", "Kapteyn", "Lacaille",
+        "Kruger", "Lalande", "Groombridge", "Teegarden", "Gliese",
+        "Trappist", "Kepler", "Ross", "Wolf", "Epsilon Indi",
+        "Tau Ceti", "61 Cygni", "40 Eridani", "Eta Cassiopeiae", "Delta Pavonis"
+    },
     loadout_ship = "SHIP %s",
     stats_line = "HULL %d",
     upgrades_line = "HULL LV.%d",
@@ -192,8 +204,20 @@ locales.ko = {
         "호그", "올챙이", "검은눈", "조각가", "초신성",
         "오리온", "나선", "고양이눈", "백조", "페가수스"
     },
-    galaxy_suffixes = { "", " II", " III", " IV", " V", " VI", " VII", " VIII" },
-    galaxy_named = "%s%s",
+    galaxy_suffixes = {},
+    galaxy_named = "%s",
+    star_names = {
+        "시리우스", "베가", "아르크투루스", "리겔", "베텔게우스",
+        "알데바란", "안타레스", "폴룩스", "데네브", "레굴루스",
+        "카노푸스", "아케르나르", "알타이르", "스피카", "포말하우트",
+        "벨라트릭스", "카펠라", "프로키온", "카스토르", "미자르"
+    },
+    hub_star_names = {
+        "프록시마", "바나드", "루이텐", "카프타인", "라카유",
+        "크루거", "랄란드", "그룸브리지", "티가든", "글리제",
+        "트라피스트", "케플러", "로스", "볼프", "엡실론 인디",
+        "타우 세티", "백조자리 61", "에리다누스 40", "에타 카시오페이아", "델타 파보니스"
+    },
     loadout_ship = "함선 %s",
     stats_line = "선체 %d",
     upgrades_line = "선체 LV.%d",

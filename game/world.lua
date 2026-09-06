@@ -148,13 +148,37 @@ function M.galaxyName(galaxy_or_gx, gy)
     end
     local names = i18n.t("galaxy_names")
     local suffixes = i18n.t("galaxy_suffixes")
-    if type(names) ~= "table" or type(suffixes) ~= "table" or #names == 0 or #suffixes == 0 then
+    if type(names) ~= "table" or #names == 0 then
         return string.format("GALAXY %d-%d", gx, gy_val)
     end
     local h = math.floor(hash(gx, gy_val, 700) * 1000000)
     local nameIndex = (h % #names) + 1
-    local suffixIndex = (math.floor(h / #names) % #suffixes) + 1
-    return i18n.t("galaxy_named", names[nameIndex], suffixes[suffixIndex])
+    if type(suffixes) == "table" and #suffixes > 0 then
+        local suffixIndex = (math.floor(h / #names) % #suffixes) + 1
+        return i18n.t("galaxy_named", names[nameIndex], suffixes[suffixIndex])
+    end
+    return names[nameIndex]
+end
+
+-- Deterministic central-star name for a galaxy (real star names).
+-- Home galaxy always returns the localized "Sun"/"태양".
+function M.starName(galaxy)
+    if not galaxy then return nil end
+    if galaxy.id == "milkyway" then return i18n.t("minimap_star_label") end
+    local starNames = i18n.t("star_names")
+    if type(starNames) ~= "table" or #starNames == 0 then return "Star" end
+    local h = math.floor(hash(galaxy.gx or 0, galaxy.gy or 0, 750) * 1000000)
+    return starNames[(h % #starNames) + 1]
+end
+
+-- Deterministic hub/checkpoint star name for a galaxy (real star names).
+function M.hubStarName(galaxy)
+    if not galaxy then return nil end
+    if galaxy.id == "milkyway" then return i18n.t("minimap_earth_label") end
+    local hubNames = i18n.t("hub_star_names")
+    if type(hubNames) ~= "table" or #hubNames == 0 then return "HUB" end
+    local h = math.floor(hash(galaxy.gx or 0, galaxy.gy or 0, 760) * 1000000)
+    return hubNames[(h % #hubNames) + 1]
 end
 
 -- Deterministic per-galaxy background tint (docs/feedback/INBOX.md item 1
