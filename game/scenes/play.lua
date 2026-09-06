@@ -1427,6 +1427,7 @@ function M.new(options)
         distanceMilestone = 0,    -- last 1000-step milestone reached
         distanceMilestoneFlash = 0, -- flash timer for milestone effect
         hasLeftEarth = false,     -- must leave Earth disk before auto-settle
+        leftEarthTime = 0,       -- time when ship first left Earth disk
         paused = false,           -- Item 18: pause toggle (ascending only)
         boostActive = nil,        -- { timer, speedMultiplier } when boost is active
         -- INBOX (35): comet state
@@ -2193,6 +2194,9 @@ function M:update(dt)
         end
 
         if earthDistSq > M.earthSettleRadius * M.earthSettleRadius then
+            if not self.hasLeftEarth then
+                self.leftEarthTime = self.time or 0
+            end
             self.hasLeftEarth = true
         elseif self.hasLeftEarth then
             expedition.settle(self.expedition)
@@ -3385,6 +3389,15 @@ function M:draw()
             love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
         end
         local prevEarthFont = love.graphics.getFont()
+        -- Hide checkpoint hints for 3 seconds after leaving Earth
+        local showHints = true
+        if self.expedition.phase == "ascending" and self.hasLeftEarth then
+            local timeSinceLeft = (self.time or 0) - (self.leftEarthTime or 0)
+            if timeSinceLeft < 3.0 then
+                showHints = false
+            end
+        end
+        if showHints then
         love.graphics.setFont(fonts.get(11))
         local sell = i18n.t("checkpoint_hint_sell")
         local repair = i18n.t("checkpoint_hint_repair")
@@ -3403,6 +3416,7 @@ function M:draw()
         love.graphics.print(sell, earthX - f:getWidth(sell) / 2, topY)
         love.graphics.print(repair, earthX - f:getWidth(repair) / 2, topY + lineH)
         love.graphics.print(upgrade, earthX - f:getWidth(upgrade) / 2, topY + lineH * 2)
+        end -- showHints
         love.graphics.setFont(prevEarthFont)
     end
     -- Item 9: Draw star gravity well ring around the central star
