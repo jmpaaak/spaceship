@@ -6742,8 +6742,8 @@ function M.run()
     -- "H:"/"G:" prefixed variants (measured 58-63px via GAME_FONTPROBE) are
     -- drawn in the column instead, without changing the existing full
     -- strings other callers may still rely on.
-    assert(starterNextLaunch.hullActionCompact == "H:LV.0>1 $75")
-    assert(starterNextLaunch.steeringActionCompact == "G:LV.0>1 $65")
+    assert(starterNextLaunch.hullActionCompact == "LV.0>1 $75")
+    assert(starterNextLaunch.steeringActionCompact == "LV.0>1 $65")
     assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
     assert(starterNextLaunch.steeringPreviewCompact == "70")
     -- Same compact treatment for the YIELD/SHIP shared touch row (see
@@ -6753,8 +6753,8 @@ function M.run()
     -- too wide for a 90px column once a "T/V "/"T/Y " prefix and a
     -- side-by-side status line are added, so compact "Y:"/"V:" variants
     -- (measured 38-62px) are drawn in the column instead.
-    assert(starterNextLaunch.yieldActionCompact == "Y:LV.0>1 $60")
-    assert(starterNextLaunch.shipActionCompact == "V:BUY $125")
+    assert(starterNextLaunch.yieldActionCompact == "LV.0>1 $60")
+    assert(starterNextLaunch.shipActionCompact == "BUY $125")
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(balancePreviewNextLaunch.hullStatus == "LEFT $125" and balancePreviewNextLaunch.hullAffordable)

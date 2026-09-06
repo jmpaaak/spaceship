@@ -3593,14 +3593,19 @@ function M:draw()
             love.graphics.printf("SCOUT \226\156\147", shopColumnRightX, row, shopColumnRightW, "center")
         end
         
-        local row = r2 + 3 * rowStep + 4
-        love.graphics.setColor(0.75, 0.9, 1)
-        if nextLaunch.scoutTradeoff[1] then
-            love.graphics.printf(nextLaunch.scoutTradeoff[1], fullX, row, fullW, "center")
-        end
-        row = row + rowStep
-        if nextLaunch.scoutTradeoff[2] then
-            love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
+        -- Scout tradeoff lines: small grey text below the ship purchase slot
+        if not nextLaunch.shipHidden and nextLaunch.scoutTradeoff[1] then
+            local tradeFont = self.shipStatsFont or fonts.get(M.shipStatsFontSize or 22)
+            local prevTradeFont = love.graphics.getFont()
+            love.graphics.setFont(tradeFont)
+            love.graphics.setColor(0.5, 0.5, 0.5, 0.7)
+            local tradeY = r2 + 3 * rowStep + 4
+            love.graphics.printf(nextLaunch.scoutTradeoff[1], shopColumnRightX, tradeY, shopColumnRightW, "center")
+            if nextLaunch.scoutTradeoff[2] then
+                tradeY = tradeY + 20
+                love.graphics.printf(nextLaunch.scoutTradeoff[2], shopColumnRightX, tradeY, shopColumnRightW, "center")
+            end
+            love.graphics.setFont(prevTradeFont)
         end
 
         local r3 = M.settlementTouchRows[3].top
