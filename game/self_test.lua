@@ -8068,6 +8068,88 @@ function M.run()
         print("  INBOX-24 collectZoom + timeslip OK")
     end
 
+    -- INBOX-33: RCS exhaust color and size scale with speed level
+    do
+        -- rcsSpeedLevel mapping
+        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 0 }) == 0, "upgrade 0 → Lv0")
+        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 1 }) == 1, "upgrade 1 → Lv1")
+        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 2 }) == 1, "upgrade 2 → Lv1")
+        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 3 }) == 2, "upgrade 3 → Lv2")
+        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 4 }) == 2, "upgrade 4 → Lv2")
+        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 5 }) == 3, "upgrade 5 → Lv3")
+        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 7 }) == 3, "upgrade 7 → Lv3")
+
+        -- Lv0 scene: default (no upgrades) → white, radius 1.5
+        local lv0Scene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        lv0Scene.expedition.phase = "ascending"
+        lv0Scene.expedition.steeringUpgradeLevel = 0
+        lv0Scene.touches["stick"] = {
+            originX = 90, originY = 160,
+            x = 90 + 40, y = 160,
+        }
+        lv0Scene:update(1)
+        assert(#lv0Scene.particles > 0, "Lv0 must spawn RCS particles")
+        local p0 = lv0Scene.particles[1]
+        assert(p0.r == 1 and p0.g == 1 and p0.b == 1, "Lv0 RCS must be white (1,1,1)")
+        assert(p0.radius == 1.5, "Lv0 RCS radius must be 1.5")
+
+        -- Lv1 scene: upgrade 1 → red, radius 2
+        local lv1Scene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        lv1Scene.expedition.phase = "ascending"
+        lv1Scene.expedition.steeringUpgradeLevel = 1
+        lv1Scene.touches["stick"] = {
+            originX = 90, originY = 160,
+            x = 90 + 40, y = 160,
+        }
+        lv1Scene:update(1)
+        assert(#lv1Scene.particles > 0, "Lv1 must spawn RCS particles")
+        local p1 = lv1Scene.particles[1]
+        assert(p1.r == 1 and p1.g == 0.4 and p1.b == 0.2,
+            "Lv1 RCS must be red (1,0.4,0.2), got " .. p1.r .. "," .. p1.g .. "," .. p1.b)
+        assert(p1.radius == 2, "Lv1 RCS radius must be 2")
+
+        -- Lv2 scene: upgrade 3 → blue, radius 2.5
+        local lv2Scene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        lv2Scene.expedition.phase = "ascending"
+        lv2Scene.expedition.steeringUpgradeLevel = 3
+        lv2Scene.touches["stick"] = {
+            originX = 90, originY = 160,
+            x = 90 + 40, y = 160,
+        }
+        lv2Scene:update(1)
+        assert(#lv2Scene.particles > 0, "Lv2 must spawn RCS particles")
+        local p2 = lv2Scene.particles[1]
+        assert(p2.r == 0.3 and p2.g == 0.5 and p2.b == 1,
+            "Lv2 RCS must be blue (0.3,0.5,1), got " .. p2.r .. "," .. p2.g .. "," .. p2.b)
+        assert(p2.radius == 2.5, "Lv2 RCS radius must be 2.5")
+
+        -- Lv3 scene: upgrade 5 → rainbow (varying hue), radius 3
+        local lv3Scene = PlayScene.new({
+            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+        })
+        lv3Scene.expedition.phase = "ascending"
+        lv3Scene.expedition.steeringUpgradeLevel = 5
+        lv3Scene.touches["stick"] = {
+            originX = 90, originY = 160,
+            x = 90 + 40, y = 160,
+        }
+        lv3Scene:update(1)
+        assert(#lv3Scene.particles > 0, "Lv3 must spawn RCS particles")
+        local p3 = lv3Scene.particles[1]
+        assert(p3.radius == 3, "Lv3 RCS radius must be 3")
+        -- Rainbow: r/g/b should be valid color values in [0,1]
+        assert(p3.r >= 0 and p3.r <= 1 and p3.g >= 0 and p3.g <= 1 and p3.b >= 0 and p3.b <= 1,
+            "Lv3 RCS rainbow color must be valid [0,1] values")
+
+        print("  INBOX-33 RCS exhaust color+size OK")
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

@@ -657,6 +657,16 @@ function M.steeringSpeed(run)
     return gearModule.effectiveSteeringRate(baseRate, run.equippedEngineParts or {})
 end
 
+-- INBOX-33: RCS exhaust visual level derived from steering upgrade count.
+-- Lv0 (no upgrades), Lv1 (1-2), Lv2 (3-4), Lv3 (5+).
+function M.rcsSpeedLevel(run)
+    local lvl = run.steeringUpgradeLevel or 0
+    if lvl >= 5 then return 3
+    elseif lvl >= 3 then return 2
+    elseif lvl >= 1 then return 1
+    else return 0 end
+end
+
 function M.buySteeringUpgrade(run)
     local price = M.shopPrice(run, run.steeringUpgradeCost)
     if run.phase ~= "settlement" or run.money < price then return false end

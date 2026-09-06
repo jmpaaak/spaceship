@@ -1775,6 +1775,30 @@ function M:update(dt)
             -- Single RCS puff in the opposite direction of the stick vector.
             local dirX = -bank / stickMag
             local dirY = -lift / stickMag
+            -- INBOX-33: color + radius scale with speed upgrade level.
+            local rcsLvl = expedition.rcsSpeedLevel(self.expedition)
+            local rcsR, rcsG, rcsB, rcsRad
+            if rcsLvl >= 3 then
+                -- Rainbow: hue cycles over time, offset per particle count
+                local hue = ((self.time or 0) * 3 + #self.particles * 0.2) % 1
+                local h6 = hue * 6
+                local c = 1
+                local x2 = c * (1 - math.abs(h6 % 2 - 1))
+                local hi = math.floor(h6)
+                if hi == 0 then rcsR, rcsG, rcsB = c, x2, 0
+                elseif hi == 1 then rcsR, rcsG, rcsB = x2, c, 0
+                elseif hi == 2 then rcsR, rcsG, rcsB = 0, c, x2
+                elseif hi == 3 then rcsR, rcsG, rcsB = 0, x2, c
+                elseif hi == 4 then rcsR, rcsG, rcsB = x2, 0, c
+                else rcsR, rcsG, rcsB = c, 0, x2 end
+                rcsRad = 3
+            elseif rcsLvl == 2 then
+                rcsR, rcsG, rcsB, rcsRad = 0.3, 0.5, 1, 2.5
+            elseif rcsLvl == 1 then
+                rcsR, rcsG, rcsB, rcsRad = 1, 0.4, 0.2, 2
+            else
+                rcsR, rcsG, rcsB, rcsRad = 1, 1, 1, 1.5
+            end
             self.particles[#self.particles + 1] = {
                 x = self.ship.x + dirX * 6,
                 y = self.ship.y + dirY * 6,
@@ -1782,9 +1806,10 @@ function M:update(dt)
                 vy = dirY * (16 + math.random() * 10),
                 timer = rcsPuffDuration,
                 maxTimer = rcsPuffDuration,
-                r = 0.7,
-                g = 0.88,
-                b = 1,
+                r = rcsR,
+                g = rcsG,
+                b = rcsB,
+                radius = rcsRad,
             }
         end
     end
@@ -2914,7 +2939,7 @@ function M:draw()
             local scale = 3 / math.max(iw, ih)
             love.graphics.draw(sprite, px, py, 0, scale, scale, iw / 2, ih / 2)
         else
-            love.graphics.circle("fill", px, py, 1.5)
+            love.graphics.circle("fill", px, py, particle.radius or 1.5)
         end
     end
     love.graphics.push()

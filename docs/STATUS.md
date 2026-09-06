@@ -1,11 +1,13 @@
 ## Current Status
 
-- INBOX (32) complete: remove verticalOffset ±90 clamp so vertical steering matches horizontal.
-  - Removed `verticalOffsetLimit` constant, `clampVerticalOffset()` function, `verticalOffset` field.
-  - Vertical joystick/keyboard input now moves `ship.y` directly (like `ship.x`), unlimited.
-  - Removed `+ extraDy` from thrust line (was needed only when verticalOffset was separate).
-  - Cleaned up unused `extraDx`, `extraDy`, `extraDistance` locals and `startX`/`startY`.
-  - Updated self_test.lua: checks `ship.y` movement instead of `verticalOffset`.
+- INBOX (33) complete: RCS exhaust color and size scale with speed upgrade level.
+  - Added `expedition.rcsSpeedLevel(run)` → 0/1/2/3 from `steeringUpgradeLevel`.
+  - Lv0 (no upgrades): white (1,1,1), radius 1.5.
+  - Lv1 (upgrades 1-2): red (1,0.4,0.2), radius 2.
+  - Lv2 (upgrades 3-4): blue (0.3,0.5,1), radius 2.5.
+  - Lv3 (upgrades 5+): rainbow (HSV cycling), radius 3.
+  - Draw code uses `particle.radius or 1.5` instead of hardcoded 1.5.
+  - Self-test: INBOX-33 block validates all 4 levels (mapping + scene particle checks).
   - `make verify` GREEN.
 
 ## Next Slice

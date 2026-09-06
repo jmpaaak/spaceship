@@ -2,16 +2,6 @@
 
 ## 처리 대기
 
-(33) **RCS 분출 색상·크기 — 속도 레벨에 따라 변화 (사용자 확정, 2026-09-06):**
-  - 현재 RCS 파티클: 고정 색 `(0.7, 0.88, 1)` 흰-파랑, 고정 크기.
-  - 변경: `expedition.effectiveClimbSpeed(run)` 또는 `steeringSpeed(run)` 기준 레벨 산정.
-    - Lv0 (기본 속도): **흰색** `(1, 1, 1)`, 반지름 1.5
-    - Lv1 (speed 업그레이드 1~2): **빨강** `(1, 0.4, 0.2)`, 반지름 2
-    - Lv2 (speed 3~4): **파랑** `(0.3, 0.5, 1)`, 반지름 2.5
-    - Lv3 (speed 5+): **무지개** — `hue = (self.time * 3 + i * 0.2) % 1` → HSV→RGB, 반지름 3
-  - 파티클 생성 시 `r/g/b` + `radius` 를 레벨에서 결정. draw에서 `love.graphics.circle("fill", px, py, ft.radius or 1.5)`.
-  - `make verify` GREEN + 커밋: `feat(rcs): exhaust color and size scale with speed level`
-
 (34) **미니맵 — 은하 중심 겹침 방지 + 인접 은하 외곽 표기 (사용자 확정, 2026-09-06):**
   - 사용자: "노란 은하 중심 행성들이 붙어있다. 은하 영역이 절대 겹치지 않도록."
   - **(a) 은하 생성 시 겹침 방지.** `world.galaxy(gx,gy)` 생성 후 인접 4방향 은하와 거리 확인: `dist(galaxy1, galaxy2) < (r1 + r2 + padding)`이면 둘 중 뒤 셀을 nil 반환. 또는 `galaxyExistenceThreshold`를 0.82로 올려 밀도 자체를 낮추기.
@@ -35,6 +25,9 @@
   - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
 
 ## 처리 완료
+
+(33) **RCS 분출 색상·크기 — 속도 레벨에 따라 변화 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `expedition.rcsSpeedLevel(run)` 추가 (steeringUpgradeLevel 0→Lv0 white r1.5, 1-2→Lv1 red r2, 3-4→Lv2 blue r2.5, 5+→Lv3 rainbow r3). play.lua 파티클 생성 시 레벨별 색·반지름 적용. draw에서 `particle.radius or 1.5` 사용. self_test INBOX-33 블록 추가. `make verify` GREEN.
 
 (32) **상하 이동 저항 수정 — verticalOffset ±90 clamp 제거 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `verticalOffset` 필드, `clampVerticalOffset()`, `verticalOffsetLimit` 삭제. 상하도 `ship.y += joyDy * speed * dt` 직접 이동 (무제한). `extraDy` 이중 적용 제거. 테스트 업데이트. `make verify` GREEN.
