@@ -446,7 +446,16 @@ local function persistBestAltitude()
 end
 
 function love.focus(focused)
-    if not focused then persistBestAltitude() end
+    if not focused then
+        persistBestAltitude()
+        -- Auto-pause when app loses focus (tab switch, home button)
+        if scenes and scenes.stack and #scenes.stack > 0 then
+            local scene = scenes.stack[#scenes.stack]
+            if scene and scene.expedition and scene.expedition.phase == "ascending" and not scene.paused then
+                scene.paused = true
+            end
+        end
+    end
 end
 
 function love.quit()

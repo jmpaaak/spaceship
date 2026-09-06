@@ -629,7 +629,7 @@ function M.spawnComet(time, shipX, shipY, viewW, viewH)
     local radius = 8 + math.floor(hash(M.cometIdCounter, 77, 9001) * 5)
 
     -- Random speed 80-120 px/s
-    local speed = 80 + hash(M.cometIdCounter, 88, 9002) * 40
+    local speed = (80 + hash(M.cometIdCounter, 88, 9002) * 40) * 3  -- 240-360 px/s (3x)
 
     -- Pick an entry edge (0=left, 1=right, 2=top, 3=bottom)
     local edge = math.floor(hash(M.cometIdCounter, 99, 9003) * 4)

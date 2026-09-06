@@ -170,6 +170,8 @@ locales.en = {
     synergy_darkMatter   = "@ DARK MATTER",
     -- INBOX-40: gear slots HUD label
     hud_gear_label = "GEAR",
+    hud_hull_label = "HULL",
+    hud_engine_label = "ENGINE",
 }
 
 locales.en.phase_abbrev = {
@@ -329,6 +331,8 @@ locales.ko = {
     synergy_darkMatter   = "@ 암흑물질",
     -- INBOX-40: gear slots HUD label
     hud_gear_label = "장착",
+    hud_hull_label = "선체부품",
+    hud_engine_label = "엔진부품",
 }
 
 locales.ko.phase_abbrev = {

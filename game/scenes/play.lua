@@ -1447,13 +1447,13 @@ function M:drawHudGearSlots(hudHeight)
     local gap = M.hudGearSlotGap
     local groupGap = 8
 
-    -- Label above grid
+    -- Hull label
     self.hudGearLabelFont = self.hudGearLabelFont or fonts.get(M.hudGearLabelFontSize)
     local prevFont = love.graphics.getFont()
     love.graphics.setFont(self.hudGearLabelFont)
     local labelY = hudHeight + 2
     love.graphics.setColor(0.5, 0.6, 0.7, 0.7)
-    love.graphics.printf(i18n.t("hud_gear_label"), 5, labelY, 200, "left")
+    love.graphics.printf(i18n.t("hud_hull_label"), 5, labelY, 200, "left")
 
     local gridStartY = labelY + M.hudGearLabelFontSize + 4
     local startX = 5
@@ -1480,8 +1480,11 @@ function M:drawHudGearSlots(hudHeight)
         end
     end
 
-    -- Engine gear slots (below hull with a small gap, same column)
+    -- Engine gear slots (below hull with engine label)
     local engineStartY = gridStartY + hullSlots * (slotSize + gap) + groupGap
+    love.graphics.setColor(0.5, 0.6, 0.7, 0.7)
+    love.graphics.printf(i18n.t("hud_engine_label"), 5, engineStartY, 200, "left")
+    engineStartY = engineStartY + M.hudGearLabelFontSize + 4
     for i = 1, engineSlots do
         local y = engineStartY + (i - 1) * (slotSize + gap)
         local part = engineGear[i]
@@ -3148,14 +3151,17 @@ function M:draw()
                 if planet.hub then
                     -- (c) HUB label in magenta
                     local hubStr = i18n.t("hub_label")
-                    local engineStr = i18n.t("engine_part_available")
                     local labelY = y - planet.radius - 28 + sinBob
                     local lx = clampLabelX(x, font:getWidth(hubStr), viewport.width)
                     love.graphics.setColor(0.85, 0.35, 0.95)
                     love.graphics.print(hubStr, lx, labelY)
-                    local lx2 = clampLabelX(x, font:getWidth(engineStr), viewport.width)
-                    love.graphics.setColor(0.85, 0.35, 0.95, 0.8)
-                    love.graphics.print(engineStr, lx2, labelY + 12)
+                    -- Only show "엔진부품 획득 가능" if not yet explored in this galaxy
+                    if not self.expedition.hubExplored[planet.galaxyId] then
+                        local engineStr = i18n.t("engine_part_available")
+                        local lx2 = clampLabelX(x, font:getWidth(engineStr), viewport.width)
+                        love.graphics.setColor(0.85, 0.35, 0.95, 0.8)
+                        love.graphics.print(engineStr, lx2, labelY + 12)
+                    end
                 elseif planet.isShop then
                     -- (e) SHOP label in cyan
                     local shopStr = i18n.t("shop_label")

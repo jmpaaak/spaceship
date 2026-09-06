@@ -8311,8 +8311,8 @@ function M.run()
         assert(first.id == "comet_1", "First comet id must be comet_1, got " .. tostring(first.id))
         assert(first.radius >= 8 and first.radius <= 12,
             "Comet radius must be 8-12, got " .. first.radius)
-        assert(first.speed >= 80 and first.speed <= 120,
-            "Comet speed must be 80-120, got " .. first.speed)
+        assert(first.speed >= 240 and first.speed <= 360,
+            "Comet speed must be 240-360 (3x), got " .. first.speed)
         assert(world.cometFirstSpawned == true, "firstSpawned must be true after first spawn")
 
         -- (d) cometPosition returns correct position over time
