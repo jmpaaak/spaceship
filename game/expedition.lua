@@ -661,13 +661,45 @@ end
 -- accumulation and joystick steering.
 -- Removed: equippedHullSpeedBonus, steeringSpeed, effectiveClimbSpeed.
 
--- INBOX-33: RCS exhaust visual level derived from steering upgrade count.
--- Lv0 (no upgrades), Lv1 (1-2), Lv2 (3-4), Lv3 (5+).
+-- RCS exhaust: continuous 0–999 speed gradient (user 2026-09-07).
+-- t = clamp(effectiveSpeed / 999, 0, 1)
+-- white→red (t<0.33) → red→blue (t<0.66) → rainbow HSV (t≥0.66)
+-- radius = 1.5 + t * 2.5
+function M.rcsVisual(run, time, particleCount)
+    local speed = M.effectiveSpeed(run)
+    local t = math.min(math.max(speed, 0) / 999, 1)
+    local radius = 1.5 + t * 2.5
+    local r, g, b
+    if t < 0.33 then
+        local u = t / 0.33
+        r, g, b = 1, 1 - 0.6 * u, 1 - 0.8 * u
+    elseif t < 0.66 then
+        local u = (t - 0.33) / 0.33
+        r = 1 - 0.7 * u
+        g = 0.4 + 0.1 * u
+        b = 0.2 + 0.8 * u
+    else
+        local hue = (((time or 0) * 3) + (particleCount or 0) * 0.2) % 1
+        local h6 = hue * 6
+        local c = 1
+        local x2 = c * (1 - math.abs(h6 % 2 - 1))
+        local hi = math.floor(h6)
+        if hi == 0 then r, g, b = c, x2, 0
+        elseif hi == 1 then r, g, b = x2, c, 0
+        elseif hi == 2 then r, g, b = 0, c, x2
+        elseif hi == 3 then r, g, b = 0, x2, c
+        elseif hi == 4 then r, g, b = x2, 0, c
+        else r, g, b = c, 0, x2 end
+    end
+    return r, g, b, radius, t
+end
+
+-- Kept for callers that still want a coarse bucket; derived from 0–999 t.
 function M.rcsSpeedLevel(run)
-    local lvl = run.steeringUpgradeLevel or 0
-    if lvl >= 5 then return 3
-    elseif lvl >= 3 then return 2
-    elseif lvl >= 1 then return 1
+    local _, _, _, _, t = M.rcsVisual(run, 0, 0)
+    if t >= 0.66 then return 3
+    elseif t >= 0.33 then return 2
+    elseif t >= 0.10 then return 1
     else return 0 end
 end
 
@@ -893,8 +925,8 @@ function M.effectiveSpeed(run)
     local engineSpeedRaw = gearModule.aggregateEffects(engineParts).speed or 0
     local engineSpeed = engineSpeedRaw * gearModule.tagSynergyMultiplier(engineParts)
     local shipBonus = run.selectedShipId == "scout" and run.scoutClimbSpeedBonus or 0
-    local base = run.baseSpeed + run.steeringUpgradeLevel * run.steeringUpgradeAmount
-    return base + shipBonus + (gearTotals.speed or 0) + engineSpeed
+    local base = (run.baseSpeed or 0) + (run.steeringUpgradeLevel or 0) * (run.steeringUpgradeAmount or 0)
+    return base + (shipBonus or 0) + (gearTotals.speed or 0) + engineSpeed
 end
 
 -- Item 9/14 economy-stat gap audit: gear.equippedTotals already combines a

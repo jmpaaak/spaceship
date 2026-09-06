@@ -8249,86 +8249,83 @@ function M.run()
         print("  INBOX-24 collectZoom + timeslip OK")
     end
 
-    -- INBOX-33: RCS exhaust color and size scale with speed level
+    -- INBOX-33 / 2026-09-07: RCS exhaust is a continuous 0–999 speed gradient
+    -- white→red (t<0.33) → red→blue (t<0.66) → rainbow (t≥0.66)
+    -- radius = 1.5 + t * 2.5. Rainbow does NOT start at speed ~100.
     do
-        -- rcsSpeedLevel mapping
-        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 0 }) == 0, "upgrade 0 → Lv0")
-        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 1 }) == 1, "upgrade 1 → Lv1")
-        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 2 }) == 1, "upgrade 2 → Lv1")
-        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 3 }) == 2, "upgrade 3 → Lv2")
-        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 4 }) == 2, "upgrade 4 → Lv2")
-        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 5 }) == 3, "upgrade 5 → Lv3")
-        assert(expedition.rcsSpeedLevel({ steeringUpgradeLevel = 7 }) == 3, "upgrade 7 → Lv3")
+        local function vis(speed)
+            return expedition.rcsVisual({
+                baseSpeed = speed,
+                steeringUpgradeLevel = 0,
+                steeringUpgradeAmount = 0,
+                equippedGear = {},
+                equippedEngineParts = {},
+            }, 0, 0)
+        end
+        local r0, g0, b0, rad0, t0 = vis(0)
+        assert(t0 == 0, "speed 0 → t=0")
+        assert(r0 == 1 and g0 == 1 and b0 == 1, "speed 0 RCS must be white")
+        assert(rad0 == 1.5, "speed 0 radius 1.5")
 
-        -- Lv0 scene: default (no upgrades) → white, radius 1.5
+        local _, _, _, rad30, t30 = vis(30)
+        assert(t30 > 0 and t30 < 0.05, "starter speed 30 is still early white→red, t=" .. tostring(t30))
+        assert(rad30 > 1.5 and rad30 < 1.7, "starter radius barely above 1.5")
+
+        local r100, g100, b100, rad100, t100 = vis(100)
+        assert(math.abs(t100 - 100 / 999) < 1e-6)
+        assert(r100 == 1 and g100 < 1 and b100 < 1, "speed 100 is still white→red, not rainbow")
+        assert(rad100 < 2.0, "speed 100 radius still < 2, got " .. rad100)
+
+        local r330, g330, b330, rad330, t330 = vis(330)
+        assert(t330 > 0.32 and t330 < 0.34)
+        assert(r330 > 0.9 and g330 < 0.5 and b330 < 0.3, "speed 330 is red")
+        assert(math.abs(rad330 - (1.5 + t330 * 2.5)) < 1e-6)
+
+        local r660, _, _, rad660, t660 = vis(660)
+        assert(t660 > 0.65 and t660 < 0.67)
+        assert(rad660 > 3.1 and rad660 < 3.2)
+        -- t>=0.66 is rainbow: any valid RGB
+        assert(r660 >= 0 and r660 <= 1)
+
+        local _, _, _, rad999, t999 = vis(999)
+        assert(t999 == 1)
+        assert(rad999 == 4.0, "speed 999 radius 4.0, got " .. rad999)
+
+        local _, _, _, radOver = vis(2000)
+        assert(radOver == 4.0, "speed above 999 clamps")
+
+        -- Scene: starter (~30) must NOT look like the old Lv3 rainbow (radius 3)
         local lv0Scene = PlayScene.new({
             bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
         })
         lv0Scene.expedition.phase = "ascending"
-        lv0Scene.expedition.steeringUpgradeLevel = 0
         lv0Scene.touches["stick"] = {
             originX = 90, originY = 160,
             x = 90 + 40, y = 160,
         }
         lv0Scene:update(1)
-        assert(#lv0Scene.particles > 0, "Lv0 must spawn RCS particles")
+        assert(#lv0Scene.particles > 0, "starter must spawn RCS particles")
         local p0 = lv0Scene.particles[1]
-        assert(p0.r == 1 and p0.g == 1 and p0.b == 1, "Lv0 RCS must be white (1,1,1)")
-        assert(p0.radius == 1.5, "Lv0 RCS radius must be 1.5")
+        assert(p0.radius < 1.8, "starter RCS radius must stay small, got " .. p0.radius)
+        assert(p0.r == 1 and p0.g > 0.85 and p0.b > 0.85,
+            "starter RCS must still look near-white")
 
-        -- Lv1 scene: upgrade 1 → red, radius 2
-        local lv1Scene = PlayScene.new({
+        -- High speed (~700) reaches rainbow size
+        local hiScene = PlayScene.new({
             bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
         })
-        lv1Scene.expedition.phase = "ascending"
-        lv1Scene.expedition.steeringUpgradeLevel = 1
-        lv1Scene.touches["stick"] = {
+        hiScene.expedition.phase = "ascending"
+        hiScene.expedition.baseSpeed = 700
+        hiScene.touches["stick"] = {
             originX = 90, originY = 160,
             x = 90 + 40, y = 160,
         }
-        lv1Scene:update(1)
-        assert(#lv1Scene.particles > 0, "Lv1 must spawn RCS particles")
-        local p1 = lv1Scene.particles[1]
-        assert(p1.r == 1 and p1.g == 0.4 and p1.b == 0.2,
-            "Lv1 RCS must be red (1,0.4,0.2), got " .. p1.r .. "," .. p1.g .. "," .. p1.b)
-        assert(p1.radius == 2, "Lv1 RCS radius must be 2")
+        hiScene:update(1)
+        assert(#hiScene.particles > 0, "high-speed must spawn RCS particles")
+        local pHi = hiScene.particles[1]
+        assert(pHi.radius > 3.0, "speed 700 RCS radius must be rainbow-sized, got " .. pHi.radius)
 
-        -- Lv2 scene: upgrade 3 → blue, radius 2.5
-        local lv2Scene = PlayScene.new({
-            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        })
-        lv2Scene.expedition.phase = "ascending"
-        lv2Scene.expedition.steeringUpgradeLevel = 3
-        lv2Scene.touches["stick"] = {
-            originX = 90, originY = 160,
-            x = 90 + 40, y = 160,
-        }
-        lv2Scene:update(1)
-        assert(#lv2Scene.particles > 0, "Lv2 must spawn RCS particles")
-        local p2 = lv2Scene.particles[1]
-        assert(p2.r == 0.3 and p2.g == 0.5 and p2.b == 1,
-            "Lv2 RCS must be blue (0.3,0.5,1), got " .. p2.r .. "," .. p2.g .. "," .. p2.b)
-        assert(p2.radius == 2.5, "Lv2 RCS radius must be 2.5")
-
-        -- Lv3 scene: upgrade 5 → rainbow (varying hue), radius 3
-        local lv3Scene = PlayScene.new({
-            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        })
-        lv3Scene.expedition.phase = "ascending"
-        lv3Scene.expedition.steeringUpgradeLevel = 5
-        lv3Scene.touches["stick"] = {
-            originX = 90, originY = 160,
-            x = 90 + 40, y = 160,
-        }
-        lv3Scene:update(1)
-        assert(#lv3Scene.particles > 0, "Lv3 must spawn RCS particles")
-        local p3 = lv3Scene.particles[1]
-        assert(p3.radius == 3, "Lv3 RCS radius must be 3")
-        -- Rainbow: r/g/b should be valid color values in [0,1]
-        assert(p3.r >= 0 and p3.r <= 1 and p3.g >= 0 and p3.g <= 1 and p3.b >= 0 and p3.b <= 1,
-            "Lv3 RCS rainbow color must be valid [0,1] values")
-
-        print("  INBOX-33 RCS exhaust color+size OK")
+        print("  INBOX-33 RCS continuous 0-999 gradient OK")
     end
 
     ---------------------------------------------------------------------------
