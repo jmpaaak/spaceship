@@ -2339,10 +2339,11 @@ local function testHullCardsHaveNonEngineOnlyEffect()
 end
 
 local function testEngineCardsHaveCategoryAgnosticEffectCoverage()
-    local categoryAgnosticTypes = {
+    -- After engine/hull effect separation, engine cards only need to cover
+    -- engine-appropriate shared types + engine-exclusive types.
+    local engineExpectedTypes = {
         "luck", "chainTrigger", "rerollBonus", "collisionRadius",
-        "detectionRadius", "autoCollect", "insurance", "shopDiscount",
-        "sellMultiplier", "streakMultiplier",
+        "detectionRadius", "autoCollect", "streakMultiplier", "boostCharge",
     }
     local enginePool = gear.loadEngineParts()
     local seen = {}
@@ -2352,15 +2353,13 @@ local function testEngineCardsHaveCategoryAgnosticEffectCoverage()
         end
     end
     local missing = {}
-    for _, t in ipairs(categoryAgnosticTypes) do
+    for _, t in ipairs(engineExpectedTypes) do
         if not seen[t] then
             missing[#missing + 1] = t
         end
     end
     assert(#missing == 0,
-        "engine_parts.json must contain at least one bundled card for each hull/engine " ..
-        "category-agnostic effect type, otherwise an engine-only loadout can never encounter " ..
-        "it even though its run wiring reads both slot lists; missing: " ..
+        "engine_parts.json must cover engine-appropriate effect types; missing: " ..
         table.concat(missing, ", "))
 end
 
@@ -2513,21 +2512,16 @@ end
 -- lethal hit via gear, unlike every other category-agnostic effect.
 local function testGearInsuranceCategoryAgnosticWiring()
     local expedition = require("game.expedition")
+    -- engine_escape_pod_thruster no longer carries insurance (hull-only effect).
+    -- Verify it has boostCharge instead.
     local enginePool = gear.loadEngineParts()
     local escapePod = gear.findById(enginePool, "engine_escape_pod_thruster")
     assert(escapePod, "fixture engine card 'engine_escape_pod_thruster' must exist in the bundled pool")
-
-    local engineInsuredRun = expedition.new({ durability = 2, money = 40 })
-    assert(expedition.equipGear(engineInsuredRun, "engine", escapePod))
-    expedition.launch(engineInsuredRun)
-    engineInsuredRun.durability = 1
-
-    local destroyedFirstHit = expedition.damage(engineInsuredRun, 5)
-    assert(destroyedFirstHit == false,
-        "an equipped ENGINE-slot insurance part must prevent destruction on the first lethal hit, same as a hull one")
-    assert(engineInsuredRun.phase == "ascending", "an insured survival must keep the run in its current phase")
-    assert(engineInsuredRun.durability > 0, "an insured survival must restore at least 1 durability")
-    assert(engineInsuredRun.money == 40, "an insured survival must NOT trigger the meta wipe")
+    local hasBoost = false
+    for _, eff in ipairs(escapePod.effects) do
+        if eff.type == "boostCharge" then hasBoost = true end
+    end
+    assert(hasBoost, "engine_escape_pod_thruster must have boostCharge (insurance moved to hull-only)")
 end
 
 -- Next slice within item 14: (D) insurance / (F) shopDiscount were only

@@ -599,8 +599,8 @@
       "editions": [],
       "effects": [
         {
-          "type": "chainTrigger",
-          "value": 1
+          "type": "streakMultiplier",
+          "value": 15
         }
       ]
     },
@@ -645,8 +645,8 @@
     {
       "id": "hull_scanner_array",
       "suit": "void",
-      "name": "Scanner Array",
-      "nameKo": "스캐너 배열",
+      "name": "Survey Array",
+      "nameKo": "탐사 배열",
       "icon": "◍",
       "rarity": "common",
       "tags": [
@@ -655,16 +655,16 @@
       "editions": [],
       "effects": [
         {
-          "type": "detectionRadius",
-          "value": 25
+          "type": "sampleSellValue",
+          "value": 4
         }
       ]
     },
     {
       "id": "hull_collector_drone",
       "suit": "nebula",
-      "name": "Collector Drone",
-      "nameKo": "수집 드론",
+      "name": "Harvest Drone",
+      "nameKo": "수확 드론",
       "icon": "◉",
       "rarity": "rare",
       "tags": [
@@ -674,8 +674,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "autoCollect",
-          "value": 1
+          "type": "sampleSellValue",
+          "value": 5
+        },
+        {
+          "type": "money",
+          "value": 8
         }
       ]
     },

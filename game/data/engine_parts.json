@@ -68,8 +68,7 @@
         "economy"
       ],
       "editions": [
-        "irradiated",
-        "crystallized"
+        "irradiated"
       ],
       "effects": [
         {
@@ -77,12 +76,12 @@
           "value": 8
         },
         {
-          "type": "money",
-          "value": 5
+          "type": "boostCharge",
+          "value": 1
         },
         {
-          "type": "sampleSellValue",
-          "value": 3
+          "type": "detectionRadius",
+          "value": 15
         }
       ]
     },
@@ -104,7 +103,7 @@
           "value": 4
         },
         {
-          "type": "money",
+          "type": "speed",
           "value": 2
         }
       ]
@@ -203,7 +202,7 @@
           "value": 2
         },
         {
-          "type": "money",
+          "type": "speed",
           "value": 1
         }
       ]
@@ -255,7 +254,7 @@
           "value": 33
         },
         {
-          "type": "money",
+          "type": "speed",
           "value": 4
         }
       ]
@@ -301,7 +300,7 @@
           "value": 3
         },
         {
-          "type": "money",
+          "type": "speed",
           "value": 1
         }
       ]
@@ -439,8 +438,8 @@
     {
       "id": "engine_escape_pod_thruster",
       "suit": "solar",
-      "name": "Escape Pod Thruster",
-      "nameKo": "탈출 포드 추진기",
+      "name": "Emergency Boost Pod",
+      "nameKo": "비상 부스트 포드",
       "icon": "◚",
       "rarity": "rare",
       "tags": [
@@ -454,16 +453,16 @@
           "value": 3
         },
         {
-          "type": "insurance",
-          "value": 1
+          "type": "boostCharge",
+          "value": 2
         }
       ]
     },
     {
       "id": "engine_freelancer_manifold",
       "suit": "nebula",
-      "name": "Freelancer Manifold",
-      "nameKo": "프리랜서 매니폴드",
+      "name": "Deep Scanner Manifold",
+      "nameKo": "심층 스캔 매니폴드",
       "icon": "◛",
       "rarity": "uncommon",
       "tags": [
@@ -473,16 +472,20 @@
       "editions": [],
       "effects": [
         {
-          "type": "shopDiscount",
-          "value": 15
+          "type": "speed",
+          "value": 4
+        },
+        {
+          "type": "detectionRadius",
+          "value": 25
         }
       ]
     },
     {
       "id": "engine_market_thruster",
       "suit": "nebula",
-      "name": "Market Thruster",
-      "nameKo": "시장 추진기",
+      "name": "Magnet Thruster",
+      "nameKo": "자력 추진기",
       "icon": "◜",
       "rarity": "uncommon",
       "tags": [
@@ -493,11 +496,11 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 5
         },
         {
-          "type": "sellMultiplier",
-          "value": 20
+          "type": "autoCollect",
+          "value": 1
         }
       ]
     },
@@ -571,6 +574,75 @@
         {
           "type": "boostCharge",
           "value": 1
+        }
+      ]
+    },
+    {
+      "id": "engine_safety_bypass",
+      "suit": "solar",
+      "name": "Safety Bypass",
+      "nameKo": "안전 우회 장치",
+      "icon": "◞",
+      "rarity": "uncommon",
+      "tags": [
+        "defense",
+        "economy"
+      ],
+      "editions": [],
+      "effects": [
+        {
+          "type": "speed",
+          "value": 3
+        },
+        {
+          "type": "insurance",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "id": "engine_trade_vent",
+      "suit": "nebula",
+      "name": "Trade Vent",
+      "nameKo": "교역 배기구",
+      "icon": "◟",
+      "rarity": "uncommon",
+      "tags": [
+        "economy",
+        "control"
+      ],
+      "editions": [],
+      "effects": [
+        {
+          "type": "speed",
+          "value": 4
+        },
+        {
+          "type": "shopDiscount",
+          "value": 15
+        }
+      ]
+    },
+    {
+      "id": "engine_profit_turbine",
+      "suit": "nebula",
+      "name": "Profit Turbine",
+      "nameKo": "수익 터빈",
+      "icon": "◠",
+      "rarity": "uncommon",
+      "tags": [
+        "economy",
+        "speed"
+      ],
+      "editions": [],
+      "effects": [
+        {
+          "type": "speed",
+          "value": 4
+        },
+        {
+          "type": "sellMultiplier",
+          "value": 15
         }
       ]
     }
