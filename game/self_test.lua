@@ -8103,9 +8103,9 @@ function M.run()
 
         -- (a) collectZoom is set on sample collection
         -- Simulate by setting it directly (as done in the collection code)
-        scene.collectZoom = { timer = 0.5, scale = 1.35, planetX = 320, planetY = -480 }
+        scene.collectZoom = { timer = 0.5, scale = 1.12, planetX = 320, planetY = -480 }
         assert(scene.collectZoom, "collectZoom must be set")
-        assert(scene.collectZoom.scale == 1.35, "collectZoom scale must be 1.35, got " .. scene.collectZoom.scale)
+        assert(scene.collectZoom.scale == 1.12, "collectZoom scale must be 1.12, got " .. scene.collectZoom.scale)
         assert(scene.collectZoom.timer == 0.5, "collectZoom timer must be 0.5, got " .. scene.collectZoom.timer)
 
         -- Timer ticks down with rawDt

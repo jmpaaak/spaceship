@@ -2,11 +2,6 @@
 
 ## 처리 대기
 
-(29) **채집 줌인 축소 (사용자 확정, 2026-09-06):**
-  - 현재 `collectZoom.scale = 1.35` (35% 줌인). 사용자: "너무 줌인 많이 됨."
-  - 변경: `scale = 1.12` (12% 줌인). 행성이 약간 커 보이되 시야 확보 유지.
-  - `make verify` GREEN + 커밋: `fix(play): reduce collect zoom 1.35→1.12`
-
 (30) **상점 — starter 정보 제거 (사용자 확정, 2026-09-06):**
   - `shopLoadoutLines()` L1499-1503에서 scout 보유+선택 시 `previewShipId = "starter"`, `shipAction = i18n.t("select_starter")`를 보여줌.
   - 변경: scout를 이미 소유+선택했으면 함선 행을 **숨기거나** 현재 함선 이름만 표시 ("SCOUT ✓"). 다음 함선(starter)으로 전환 안내 제거. `scoutTradeoff` 2줄도 이미 scout면 제거.
@@ -19,6 +14,9 @@
   - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
 
 ## 처리 완료
+
+(29) **채집 줌인 축소 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `collectZoom.scale` 1.35→1.12. play.lua + self_test.lua 업데이트. `make verify` GREEN.
 
 (34) **미니맵 — 은하 중심 겹침 방지 + 인접 은하 외곽 표기 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: (a) `galaxyExistenceThreshold` 0.72→0.82 (밀도 ~28%→~18%). 8-connected overlap filter 이미 적용. (b) `minimap.view()` → `nearestGalaxyRimMarker` 추가 (disc 밖 비-home 은하: dx/dy/distance/name/id). play.lua에서 cyan dot + 거리 레이블 disc rim에 그림. `testMinimapGalaxyRimMarker` 추가. `make verify` GREEN.

@@ -1,5 +1,15 @@
 ## Current Status
 
+- INBOX (29) complete: reduced collect zoom scale from 1.35 to 1.12 (12% zoom-in instead of 35%).
+  - play.lua L2038: `collectZoom.scale` changed 1.35→1.12.
+  - self_test.lua: updated INBOX-24 test assertions to match new scale.
+  - `make verify` GREEN.
+
+## Next slice
+- INBOX (30): hide starter ship switch info when scout is already active in shop.
+
+## Previous
+
 - INBOX (34) complete: galaxy overlap prevention + minimap nearest galaxy rim marker.
   - (a) Raised `galaxyExistenceThreshold` from 0.72 to 0.82 (~18% galaxy density, down from ~28%).
   - Galaxy overlap filter (8-connected neighbour suppression) already in place from prior cycle.

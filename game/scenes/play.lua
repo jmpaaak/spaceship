@@ -2035,7 +2035,7 @@ function M:update(dt)
                         self.shipShakeMagnitude = 0.6
                     end
                     self.collectFlash = 0.15
-                    self.collectZoom = { timer = 0.5, scale = 1.35, planetX = planet.x, planetY = planet.y }
+                    self.collectZoom = { timer = 0.5, scale = 1.12, planetX = planet.x, planetY = planet.y }
                     if streakMultiplier and streakMultiplier > 1 then
                         self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
                     else
