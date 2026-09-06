@@ -2153,9 +2153,9 @@ function M:update(dt)
                     self.collectFlash = 0.15
                     self.collectZoom = { timer = 0.5, scale = 1.12, planetX = planet.x, planetY = planet.y }
                     if streakMultiplier and streakMultiplier > 1 then
-                        self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
+                        self.message = ""
                     else
-                        self.message = i18n.t("sample_message", awarded, planet.id)
+                        self.message = ""
                     end
                     local specimenId, specimenLabel = world.specimenKind(planet)
                     if self.collectionStore:record(specimenId) then
@@ -2222,7 +2222,7 @@ function M:update(dt)
                         self.shipShakeMagnitude = 1.2
                         self.collectFlash = 0.15
                         self.collectZoom = { timer = 0.5, scale = 1.12, planetX = moon.x, planetY = moon.y }
-                        self.message = i18n.t("sample_message", awarded, moon.id)
+                        self.message = ""
                     end
                     if distanceSquared <= (moon.radius + 5) ^ 2
                         and not self.moonCollided[moon.id] then
@@ -2274,7 +2274,7 @@ function M:update(dt)
                     self.shipShakeMagnitude = 1.4
                     self.collectFlash = 0.15
                     self.collectZoom = { timer = 0.5, scale = 1.12, planetX = comet.x, planetY = comet.y }
-                    self.message = i18n.t("sample_message", awarded, comet.id)
+                    self.message = ""
                 end
                 -- Collision damage: same radius as planets (radius + 5)
                 if distanceSquared <= (comet.radius + 5) ^ 2
