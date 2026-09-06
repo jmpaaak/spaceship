@@ -2817,14 +2817,24 @@ end
 
 function M:touchpressed(id, x, y)
     if self.gearPopup then
-        self.gearPopup = nil
+        -- Check if tapping another gear slot → switch popup instead of closing
+        local hit = M.hitHudGearSlot(self, x, y)
+        if hit then
+            hit.slotRect = hit.rect
+            self.gearPopup = hit
+            pcall(love.system.vibrate, 0.02)
+        else
+            self.gearPopup = nil
+        end
         return
     end
     if self.shopModal then
         local buy, skip = M.shopModalButtonRects()
         if x >= buy.x and x < buy.x + buy.w and y >= buy.y and y < buy.y + buy.h then
+            pcall(love.system.vibrate, 0.02)
             self:keypressed("y")
         elseif x >= skip.x and x < skip.x + skip.w and y >= skip.y and y < skip.y + skip.h then
+            pcall(love.system.vibrate, 0.02)
             self:keypressed("n")
         end
         return
@@ -2834,6 +2844,7 @@ function M:touchpressed(id, x, y)
         local pb = pauseButton
         if x >= pb.x and x < pb.x + pb.w and y >= pb.y and y < pb.y + pb.h then
             self.paused = not self.paused
+            pcall(love.system.vibrate, 0.02)
             return
         end
         for i, btn in ipairs(adminButtons) do
@@ -2845,7 +2856,10 @@ function M:touchpressed(id, x, y)
         end
         local hit = M.hitHudGearSlot(self, x, y)
         if hit then
+            -- Balatro: tapping another slot switches instantly
+            hit.slotRect = hit.rect
             self.gearPopup = hit
+            pcall(love.system.vibrate, 0.02)
             return
         end
         -- If paused, tapping anywhere else unpauses.
@@ -2893,7 +2907,10 @@ function M:touchpressed(id, x, y)
     if self.expedition.phase == "launch" then
         local hit = M.hitHudGearSlot(self, x, y)
         if hit then
+            -- Balatro: tapping another slot switches instantly
+            hit.slotRect = hit.rect
             self.gearPopup = hit
+            pcall(love.system.vibrate, 0.02)
             return
         end
         self:keypressed("space")
@@ -4265,53 +4282,87 @@ function M:draw()
     if self.gearPopup and self.gearPopup.part then
         local part = self.gearPopup.part
         local rr, rg, rb = rarityRgb(part.rarity)
-        local panelW, panelH = 520, 380
-        local panelX = math.floor((viewport.width - panelW) / 2)
-        local panelY = 360
-        love.graphics.setColor(0, 0, 0, 0.62)
-        love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
-        -- Balatro-like joker card: dark body, rarity-colored chip + gold effects
-        love.graphics.setColor(0.10, 0.08, 0.12, 0.98)
-        love.graphics.rectangle("fill", panelX, panelY, panelW, panelH, 12, 12)
-        love.graphics.setColor(rr, rg, rb, 1)
-        love.graphics.setLineWidth(4)
-        love.graphics.rectangle("line", panelX, panelY, panelW, panelH, 12, 12)
-        love.graphics.setLineWidth(1)
-        -- Rarity chip: sized to fit text, not fixed 44px
-        local prevPopupFont = love.graphics.getFont()
-        love.graphics.setFont(fonts.get(22))
-        local chip = i18n.rarityLabel(part.rarity)
-        local suit = i18n.suitLabel(part.suit)
-        if suit ~= "" then chip = chip .. "  ·  " .. suit end
-        local chipFont = love.graphics.getFont()
-        local chipTextW = chipFont:getWidth(chip)
-        local chipPadX, chipPadY = 24, 8
-        local chipW = chipTextW + chipPadX * 2
-        local chipH = 22 + chipPadY * 2
-        local chipX = panelX + math.floor((panelW - chipW) / 2)
-        local chipY = panelY + 12
-        love.graphics.setColor(rr, rg, rb, 0.22)
-        love.graphics.rectangle("fill", chipX, chipY, chipW, chipH, 6, 6)
-        love.graphics.setColor(rr, rg, rb, 0.6)
-        love.graphics.rectangle("line", chipX, chipY, chipW, chipH, 6, 6)
-        love.graphics.setColor(rr, rg, rb, 1)
-        love.graphics.printf(chip, chipX, chipY + chipPadY, chipW, "center")
-        -- Suit icon left of chip when available
-        local suitIcon = part.suit and self.suitIconImages and self.suitIconImages[part.suit]
-        if suitIcon then
-            local iw, ih = suitIcon:getDimensions()
-            local iconSize = 28
-            local scale = iconSize / math.max(iw, ih)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.draw(suitIcon, chipX - iconSize - 8, chipY + (chipH - iconSize) / 2, 0, scale, scale)
+        -- Balatro-style: small tooltip next to the gear slot, not full-screen overlay
+        -- Find the slot rect for positioning
+        local slotIdx = self.gearPopup.slotIndex or 0
+        local slotRect = self.gearPopup.slotRect
+        local tipW, tipH = 320, 220
+        local tipX, tipY
+        if slotRect then
+            -- Position right of the slot
+            tipX = slotRect.x + slotRect.w + 8
+            tipY = slotRect.y
+            -- Clamp to screen
+            if tipX + tipW > viewport.width - 8 then
+                tipX = slotRect.x - tipW - 8
+            end
+            if tipY + tipH > viewport.height - 8 then
+                tipY = viewport.height - 8 - tipH
+            end
+        else
+            -- Fallback: center like before but smaller
+            tipX = math.floor((viewport.width - tipW) / 2)
+            tipY = 420
         end
-        love.graphics.setFont(fonts.get(33))
-        love.graphics.setColor(1, 0.98, 0.92, 1)
-        love.graphics.printf(i18n.partName(part), panelX + 20, chipY + chipH + 20, panelW - 40, "center")
+        -- Semi-transparent bg (not full overlay)
+        love.graphics.setColor(0, 0, 0, 0.45)
+        love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
+        -- Tooltip body
+        love.graphics.setColor(0.10, 0.08, 0.12, 0.96)
+        love.graphics.rectangle("fill", tipX, tipY, tipW, tipH, 10, 10)
+        love.graphics.setColor(rr, rg, rb, 1)
+        love.graphics.setLineWidth(3)
+        love.graphics.rectangle("line", tipX, tipY, tipW, tipH, 10, 10)
+        love.graphics.setLineWidth(1)
+        local prevPopupFont = love.graphics.getFont()
+        -- Part name (large, white-gold)
         love.graphics.setFont(fonts.get(22))
-        love.graphics.setColor(0.95, 0.82, 0.28, 1)
-        love.graphics.printf(i18n.partEffects(part), panelX + 28, chipY + chipH + 80, panelW - 56, "center")
-        -- Suit synergy hint (condition even if not yet active)
+        love.graphics.setColor(1, 0.98, 0.92, 1)
+        love.graphics.printf(i18n.partName(part), tipX + 12, tipY + 12, tipW - 24, "center")
+        -- Effects with highlighted numbers (gold numbers, white text)
+        local effectsY = tipY + 44
+        love.graphics.setFont(fonts.get(22))
+        for _, eff in ipairs(part.effects or {}) do
+            local line = i18n.effectLine(eff)
+            -- Draw the whole line in gold for the number emphasis
+            love.graphics.setColor(0.95, 0.82, 0.28, 1)
+            love.graphics.printf(line, tipX + 12, effectsY, tipW - 24, "center")
+            effectsY = effectsY + 28
+        end
+        -- Rarity + Suit chips (Balatro round button style)
+        local chipY2 = effectsY + 8
+        local chipFont = fonts.get(22)
+        love.graphics.setFont(chipFont)
+        local rarLabel = i18n.rarityLabel(part.rarity)
+        local rarW = chipFont:getWidth(rarLabel) + 24
+        local rarH = 30
+        local chipsCenterX = tipX + tipW / 2
+        local suitLabel = i18n.suitLabel(part.suit)
+        local hasSuit = suitLabel ~= ""
+        local totalChipW = rarW + (hasSuit and (chipFont:getWidth(suitLabel) + 24 + 8) or 0)
+        local chipStartX = chipsCenterX - totalChipW / 2
+        -- Rarity chip
+        love.graphics.setColor(rr, rg, rb, 0.85)
+        love.graphics.rectangle("fill", chipStartX, chipY2, rarW, rarH, 6, 6)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.printf(rarLabel, chipStartX, chipY2 + 4, rarW, "center")
+        -- Suit chip
+        if hasSuit then
+            local suitColors = {
+                solar = {1, 0.82, 0.2},
+                nebula = {0.7, 0.3, 0.9},
+                void = {0.2, 0.3, 0.8},
+                pulsar = {0.1, 0.85, 0.95},
+            }
+            local sc = suitColors[part.suit] or {0.5, 0.5, 0.5}
+            local suitW = chipFont:getWidth(suitLabel) + 24
+            local suitX = chipStartX + rarW + 8
+            love.graphics.setColor(sc[1], sc[2], sc[3], 0.85)
+            love.graphics.rectangle("fill", suitX, chipY2, suitW, rarH, 6, 6)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.printf(suitLabel, suitX, chipY2 + 4, suitW, "center")
+        end
+        -- Synergy condition hint below chips
         local suitKey = part.suit
         local descKey = nil
         if suitKey == "solar" then descKey = "synergy_desc_solarSystem"
@@ -4320,9 +4371,9 @@ function M:draw()
         elseif suitKey == "pulsar" then descKey = "synergy_desc_pulsarBurst"
         end
         if descKey then
-            love.graphics.setFont(fonts.get(22))
-            love.graphics.setColor(0.72, 0.68, 0.82, 0.85)
-            love.graphics.printf(i18n.t(descKey), panelX + 28, panelY + panelH - 55, panelW - 56, "center")
+            love.graphics.setFont(fonts.get(11))
+            love.graphics.setColor(0.72, 0.68, 0.82, 0.8)
+            love.graphics.printf(i18n.t(descKey), tipX + 12, chipY2 + rarH + 8, tipW - 24, "center")
         end
         love.graphics.setFont(prevPopupFont)
     end
