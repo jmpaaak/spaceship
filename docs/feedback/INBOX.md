@@ -7,6 +7,26 @@
 ## 처리 완료
 
 (24) **표본 채집 줌인 + 타임슬립 1.25배 확대 (사용자 확정, 2026-09-06):**
+
+(25) **잔해(debris) 가시성 — 크기 확대 + 확인 (사용자 확정, 2026-09-06):**
+  - 현재 잔해 반지름: asteroid 3~7px, can 2~3px, scrap 2~4px. 모바일 720×1280에서 거의 안 보임.
+  - 변경: asteroid `minR=8, maxR=16`, can `minR=5, maxR=8`, scrap `minR=5, maxR=10`. 약 2~3배 확대.
+  - 잔해 드리프트 `vx/vy * time`이 시간 경과 시 섹터 바깥으로 밀어내므로, `time` 값을 `time % 30` 같이 래핑하거나, drift를 `sectorSize` 안으로 clamp하여 잔해가 항상 시야에 존재하게.
+  - 색/스프라이트도 확인: `debrisImages.asteroid` 등이 nil이면 폴백 원이 그려지는데, 반지름이 작으면 1px 점.
+  - 함선 고유 패시브 (22번) 확정 시 Fortress 잔해 면역과 연동.
+  - `make verify` GREEN + 커밋: `fix(debris): enlarge debris radius for mobile visibility`
+
+(26) **함선 고유 패시브 시스템 (사용자 확정, 2026-09-06):**
+  - 사용자 확정: 함선마다 상점에서 올릴 수 없는 고유 패시브 1개.
+  - 현재 `selectedShipId` = "starter" | "scout". `refreshShipStats`는 속도/체력만. 확장:
+    - **Starter "Pioneer"**: 패시브 없음 (기본 체력 3, 속도 0)
+    - **Scout "Comet"**: 수집 반경 +50% (`collectRadius = (planet.radius + 30) * 1.5`)
+    - **Tank "Fortress"**: 잔해 데미지 면역 (`debrisDamage = 0`)
+    - **Gambler "Joker"**: 슬롯 STAR 확률 2배 (`starWeightMultiplier = 2`)
+    - **Explorer "Voyager"**: 미니맵 viewRadius 2배
+  - `expedition.lua`에 `M.shipPassive(run)` 추가, `play.lua`에서 수집/잔해/슬롯/미니맵 분기.
+  - 상점에 함선 구매 UI 확장 (현재 scout만). 가격: Comet 200, Fortress 300, Joker 250, Voyager 350.
+  - `make verify` GREEN + 커밋: `feat(ships): unique passive per ship hull`
   - [2026-09-06] ✅ 완료: (a) `collectZoom = {timer=0.5, scale=1.35, planetX, planetY}` — 0.5초 카메라 1.35× 줌인, 함선-행성 중점 기준, lerp 복귀. (b) `timeSlip.scale` 0.3→0.24. 테스트 `INBOX-24 collectZoom + timeslip OK` GREEN.
 
 (23) **지구 settle 반경 축소 (사용자 확정, 2026-09-06):**
