@@ -142,6 +142,16 @@ M.destroyedTouchArea = destroyedTouchArea
 local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
 M.ascendControls = ascendControls
 
+-- Pause button (top-right corner, ascending phase only).
+-- 44×44 touch area with 8px margin from right and top edges.
+local pauseButton = {
+    x = 720 - 44 - 8,  -- 668
+    y = 8,
+    w = 44,
+    h = 44,
+}
+M.pauseButton = pauseButton
+
 -- Ascending-phase RETURN TO EARTH button. A 48px-tall strip at the bottom
 -- of the canvas (above the status message at viewport.height-30=1250).
 -- Centered horizontally, 300px wide — comfortably above the 80×44pt mobile
@@ -1226,6 +1236,7 @@ function M.new(options)
         starWellSampled = {},     -- galaxyId → true once sample awarded
         starWellShake = 0,        -- gentle continuous shake while in well
         hasLeftEarth = false,     -- must leave Earth disk before auto-settle
+        paused = false,           -- Item 18: pause toggle (ascending only)
     }, M)
 end
 
@@ -1641,6 +1652,17 @@ end
 M.clampVerticalOffset = clampVerticalOffset
 
 function M:update(dt)
+    -- Item 18: when paused during ascending, zero dt to freeze game state.
+    -- We still allow time/collectFlash to be updated for visual continuity,
+    -- but the main game tick gets dt=0.
+    if self.paused and self.expedition.phase == "ascending" then
+        self.time = self.time + dt  -- keep clock for UI animations
+        return
+    end
+    -- Auto-unpause if phase changed away from ascending while paused.
+    if self.paused and self.expedition.phase ~= "ascending" then
+        self.paused = false
+    end
     local rawDt = dt
     if self.timeSlip then
         self.timeSlip.timer = self.timeSlip.timer - rawDt
@@ -2256,6 +2278,17 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "ascending" then
+        -- Item 18: pause button check (top-right corner).
+        local pb = pauseButton
+        if x >= pb.x and x < pb.x + pb.w and y >= pb.y and y < pb.y + pb.h then
+            self.paused = not self.paused
+            return
+        end
+        -- If paused, tapping anywhere else unpauses.
+        if self.paused then
+            self.paused = false
+            return
+        end
         local ox, oy = joystickOrigin(x, y)
         self.touches[id] = { x = x, y = y, originX = ox, originY = oy }
         return
@@ -3333,6 +3366,37 @@ function M:draw()
     if self.collectFlash and self.collectFlash > 0 then
         love.graphics.setColor(1, 1, 1, 0.3 * (self.collectFlash / 0.15))
         love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
+    end
+    -- Item 18: Pause button icon (ascending phase only).
+    if self.expedition.phase == "ascending" then
+        local pb = pauseButton
+        local bx, by, bw, bh = pb.x, pb.y, pb.w, pb.h
+        -- Pause icon: two vertical bars, centered in the touch area.
+        local barW = 6
+        local barH = 22
+        local gap = 4
+        local iconCx = bx + bw / 2
+        local iconCy = by + bh / 2
+        if self.paused then
+            love.graphics.setColor(1, 1, 1, 0.9)
+        else
+            love.graphics.setColor(1, 1, 1, 0.5)
+        end
+        love.graphics.rectangle("fill",
+            iconCx - gap / 2 - barW, iconCy - barH / 2, barW, barH)
+        love.graphics.rectangle("fill",
+            iconCx + gap / 2, iconCy - barH / 2, barW, barH)
+    end
+    -- Item 18: Paused overlay.
+    if self.paused and self.expedition.phase == "ascending" then
+        love.graphics.setColor(0, 0, 0, 0.55)
+        love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
+        love.graphics.setColor(1, 1, 1, 0.95)
+        local pauseFont = fonts.get(48)
+        local prevFont = love.graphics.getFont()
+        love.graphics.setFont(pauseFont)
+        love.graphics.printf(i18n.t("paused_label"), 0, viewport.height / 2 - 30, viewport.width, "center")
+        love.graphics.setFont(prevFont)
     end
     if self.shopModal then
         love.graphics.setColor(0, 0, 0, 0.85)

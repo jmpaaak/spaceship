@@ -18,6 +18,7 @@ local locales = {}
 
 locales.en = {
     launch_tap_to_launch = "TAP TO LAUNCH",
+    paused_label = "PAUSED",
     risk_lethal = "LETHAL -%d",
     risk_normal = "RISK -%d",
     sample_value_label = "SAMPLE $%d",
@@ -152,6 +153,7 @@ locales.en.phase_abbrev = {
 
 locales.ko = {
     launch_tap_to_launch = "탭하여 발사",
+    paused_label = "일시정지",
     risk_lethal = "치명 -%d",
     risk_normal = "위험 -%d",
     sample_value_label = "표본 $%d",

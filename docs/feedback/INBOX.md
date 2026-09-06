@@ -2,12 +2,6 @@
 
 ## 처리 대기
 
-(18) **일시정지 버튼 — 우측 상단 (사용자 확정, 2026-09-06):**
-  - ascending 페이즈에서만 우측 상단에 일시정지 ⏸ 아이콘 (44×44 터치 영역).
-  - 탭 → `self.paused = true` 토글. paused면 `dt = 0`, 화면 중앙 `"PAUSED"` / `"일시정지"` 오버레이 + 터치하면 해제.
-  - settlement/destroyed/launch에서는 숨김.
-  - `make verify` GREEN + 커밋: `feat(play): pause button top-right corner`
-
 (19) **행성 텍스트 교체 — 표본가격·데미지 제거, 신규행성 발견 텍스트 + HUB/중심별/부품 텍스트 (사용자 확정, 2026-09-06):**
   - **(a) 표본 가격(`risk.sampleLabel` "표본 $150")과 데미지(`risk.label` "차량 $5") 레이블 제거.** `collisionRisk()` 결과의 `sampleLabel`/`label`을 그리는 ~L2764–2796 블록 전부 삭제. `collisionRisk()` 함수 자체는 게임 로직(충돌 계산)에 쓰이니 유지.
   - **(b) 미발견 일반 행성 위에 "신규 행성 발견" 텍스트.** `!self.discovered[planet.id]` 이고 `!planet.hub` 이고 `!planet.isShop`이면 행성 위 `y - planet.radius - 18`에 i18n `"planet_new_discovery"` / `"신규 행성 발견"` 표시. Y를 `sin(self.time * 2) * 3`으로 위아래 살짝 움직임. 색 `(0.7, 0.9, 1, 0.8)`.
@@ -52,6 +46,9 @@
   - `make verify` GREEN + 커밋: `feat(play): zoom-in on sample collect + slower timeslip`
 
 ## 처리 완료
+
+(18) **일시정지 버튼 — 우측 상단 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: 44×44 터치영역 (668,8), ascending에서만 표시. 탭→paused 토글, paused면 update() early return(dt=0), 화면 중앙 "PAUSED"/"일시정지" 오버레이. 아무 곳 탭→해제. settlement/destroyed/launch에서 숨김. testPauseButton() 추가.
 
 (17) **HUD 정리 — 개발 임시본 제거, 표본금액 HUD 줄 제거, 좌표 좌상단, 아이콘 확대, 겹침 수정 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: (a) devPlaceholder 상수/draw/i18n 전부 삭제. (b) samples HUD 줄 제거 — hudLines/hudHeight/draw에서 samples 분기 삭제, self_test 갱신. (c) hud_status_no_slots 포맷 `"H%d/%d %s"` — 좌상단에 hull+phase. (d) hullIconSize/cashIconSize 8→16, gap 4→6. (e) hudLineStep 16→22.

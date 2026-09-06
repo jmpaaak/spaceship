@@ -1,12 +1,15 @@
 ## Current Status
 
-- INBOX (17) complete: HUD cleanup — all 5 sub-items done.
-  - (a) DEV PLACEHOLDER footer fully removed (constants, draw, i18n).
-  - (b) Samples/risk HUD line removed from hudLines, hudHeight, draw, self_test.
-  - (c) hud_status_no_slots format cleaned to "H%d/%d %s".
-  - (d) HUD icon sizes doubled: hullIconSize/cashIconSize 8→16, gap 4→6.
-  - (e) hudLineStep raised 16→22 to prevent overlap with larger icons.
+- INBOX (18) complete: Pause button — top-right corner during ascending phase.
+  - 44×44 touch area at (668, 8), visible only in ascending phase.
+  - Tap toggles `self.paused`; paused → `update()` returns early (dt=0 effect).
+  - Pause icon: two vertical bars drawn semi-transparent (brighter when active).
+  - Paused overlay: dark scrim + centered "PAUSED" / "일시정지" text (i18n).
+  - Tap anywhere while paused (outside button) also unpauses.
+  - Auto-unpauses when phase changes away from ascending.
+  - Hidden in settlement/destroyed/launch phases.
+  - Tests: testPauseButton() covers toggle, phase gating, update freeze, auto-clear.
 
 ## Next Slice
 
-- INBOX (18): Pause button — top-right corner during ascending phase.
+- INBOX (19): Planet text replacement — remove sample/damage labels, add discovery/hub/star/shop labels.
