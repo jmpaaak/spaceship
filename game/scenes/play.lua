@@ -2631,24 +2631,14 @@ function M:drawMinimap()
         love.graphics.circle("fill", cx, cy, size / 2)
     end, "replace", 1)
     love.graphics.setStencilTest("greater", 0)
-    -- Rings: galaxy rings, orbit rings, and concentric rings (item 13)
+    -- Rings: galaxy boundary ring and concentric rings (item 13)
     for _, ring in ipairs(view.rings or {}) do
-        if ring.kind == "orbit" then
-            love.graphics.setColor(0.85, 0.7, 0.25, 0.55)
-            local ringImg = mm.orbitRing
-            if ringImg then
-                love.graphics.setColor(1, 1, 1, 0.55)
-                local diam = ring.radius * 2
-                drawMinimapSprite(ringImg, cx + ring.x, cy + ring.y, diam)
-            else
-                love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
-            end
-        elseif ring.kind == "concentricRing" then
+        if ring.kind == "concentricRing" then
             if ring.inside ~= false then
                 love.graphics.setColor(0.9, 0.75, 0.3, 0.08)
                 love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
             end
-        elseif ring.inside ~= false then
+        elseif ring.kind == "galaxy" and ring.inside ~= false then
             local ringImg = mm.galaxyRing
             love.graphics.setColor(M.galaxyChartLineColor(ring.id))
             if ringImg then
@@ -2715,10 +2705,12 @@ function M:drawMinimap()
             love.graphics.circle("line", hx, hy, 5)
         end
     end
-    -- Earth marker
-    love.graphics.setColor(0.3, 0.85, 1, 1)
-    if not drawMinimapSprite(mm.earth, cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius * 2) then
-        love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, 2)
+    -- Earth marker: only in the home solar system (milkyway)
+    if view.galaxyName == "SOLAR SYSTEM" or view.galaxyName == i18n.t("galaxy_home") then
+        love.graphics.setColor(0.3, 0.85, 1, 1)
+        if not drawMinimapSprite(mm.earth, cx + view.earth.x, cy + view.earth.y, minimap.markerEarthRadius * 2) then
+            love.graphics.circle("fill", cx + view.earth.x, cy + view.earth.y, 2)
+        end
     end
     -- Player marker
     love.graphics.setColor(1, 1, 1, 1)
@@ -2727,21 +2719,34 @@ function M:drawMinimap()
         love.graphics.setColor(1, 1, 1, 0.9)
         love.graphics.circle("line", cx + view.player.x, cy + view.player.y, 2.4)
     end
-    -- Item 20d: Earth and Star text labels (11px, grey, inside stencil clip)
+    -- Item 20d: minimap text labels (11px, grey, inside stencil clip)
+    -- Earth label only in milkyway; Star label = current galaxy's central star name;
+    -- Hub label = checkpoint planet name (if visible)
     do
         local prevFont = love.graphics.getFont()
         local labelFont = fonts.get(11)
         love.graphics.setFont(labelFont)
         love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
-        -- Earth label
-        if view.earth then
+        -- Earth label (milkyway only)
+        local isHome = view.galaxyName == "SOLAR SYSTEM" or view.galaxyName == i18n.t("galaxy_home")
+        if isHome and view.earth then
             local ex, ey = cx + view.earth.x, cy + view.earth.y
             love.graphics.printf(i18n.t("minimap_earth_label"), ex + 4, ey - 6, 80, "left")
         end
-        -- Star label
+        -- Central star label: use galaxy name for the star (e.g. "태양" for milkyway, galaxy name for others)
         if view.sun then
             local sx, sy = cx + view.sun.x, cy + view.sun.y
-            love.graphics.printf(i18n.t("minimap_star_label"), sx + 4, sy - 6, 80, "left")
+            local starLabel = isHome and i18n.t("minimap_star_label") or (view.galaxyName or "")
+            love.graphics.printf(starLabel, sx + 4, sy - 6, 120, "left")
+        end
+        -- Hub/checkpoint label next to hub marker
+        for _, hubMk in ipairs(view.hubMarkers or {}) do
+            if hubMk.inside ~= false then
+                local hx, hy = cx + hubMk.x, cy + hubMk.y
+                love.graphics.setColor(0.85, 0.35, 0.95, 0.7)
+                love.graphics.printf("HUB", hx + 6, hy - 6, 60, "left")
+                love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
+            end
         end
         if prevFont then love.graphics.setFont(prevFont) end
     end
