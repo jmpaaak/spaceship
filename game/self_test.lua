@@ -792,6 +792,38 @@ local function testMinimapEarthStarLabels()
     assert(#setFontCalls >= 1, "drawMinimap must call setFont for minimap labels")
 end
 
+-- Item 20b: galaxy boundary rings should only appear for the containing
+-- galaxy, not for neighbours, so nearby galaxies don't visually overlap.
+local function testMinimapGalaxyOverlapPrevention()
+    local minimapMod = require("game.minimap")
+    local worldMod = require("game.world")
+    -- Ship at origin (milkyway). View should only have galaxy boundary
+    -- rings for the milkyway, not for any neighbouring galaxy.
+    local view = minimapMod.view(0, 0)
+    local galaxyRingIds = {}
+    for _, ring in ipairs(view.rings or {}) do
+        if ring.kind == "galaxy" then
+            galaxyRingIds[ring.id] = true
+        end
+    end
+    -- The containing galaxy (milkyway) must have its boundary ring.
+    assert(galaxyRingIds["milkyway"],
+        "minimap must show boundary ring for containing galaxy (milkyway)")
+    -- No other galaxy should have a boundary ring.
+    local otherGalaxyRingCount = 0
+    for id, _ in pairs(galaxyRingIds) do
+        if id ~= "milkyway" then
+            otherGalaxyRingCount = otherGalaxyRingCount + 1
+        end
+    end
+    assert(otherGalaxyRingCount == 0,
+        "minimap must NOT show boundary rings for non-containing galaxies (found "
+        .. otherGalaxyRingCount .. " extra)")
+    -- viewRadius should be tighter than old 0.7 to reduce overlap
+    assert(minimapMod.viewRadius <= worldMod.galaxyCellSize * 0.6,
+        "viewRadius should be <= 0.6 * galaxyCellSize for overlap prevention")
+end
+
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
 -- as a lethal planet collision.
 -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): the existing
@@ -7347,6 +7379,7 @@ function M.run()
     testMinimapUnifiedGalaxyPalette()
     testMinimapStencilClip()
     testMinimapEarthStarLabels()
+    testMinimapGalaxyOverlapPrevention()
     testDebris()
     testBackgroundStars()
     testLaunchRocketIcon()

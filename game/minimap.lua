@@ -19,7 +19,9 @@ M.mapRadius = M.size / 2 - M.inset
 -- World-unit radius of the chart around the player (how much of the
 -- galaxy grid one minimap "screen" covers). Zoomed in to 0.7 cells
 -- so the current galaxy fills most of the chart and the hub is distinct.
-M.viewRadius = world.galaxyCellSize * 0.7
+-- Item 20b: reduced from 0.7 to 0.55 to zoom in and prevent adjacent
+-- galaxies from visually overlapping on the minimap disc.
+M.viewRadius = world.galaxyCellSize * 0.55
 
 -- docs/feedback/INBOX.md "내부 해상도를 발라트로 수준으로 상향" — remaining
 -- decorative px: the small marker dot/ring radii drawn on the minimap
@@ -182,16 +184,22 @@ function M.view(shipX, shipY)
             inside = inside,
             hub = galaxy.id ~= "milkyway",
         }
-        local scaled = galaxy.radius * M.mapRadius / M.viewRadius
-        rings[#rings + 1] = {
-            id = galaxy.id,
-            name = world.galaxyName(galaxy),
-            x = mx,
-            y = my,
-            radius = math.max(2, math.min(scaled, M.mapRadius)),
-            kind = "galaxy",
-            inside = inside,
-        }
+        -- Item 20b: only emit the large galaxy boundary ring for the
+        -- containing galaxy; neighbouring galaxies skip this ring so
+        -- their boundaries don't visually overlap on the minimap.
+        local isContaining = containing and galaxy.id == containing.id
+        if isContaining then
+            local scaled = galaxy.radius * M.mapRadius / M.viewRadius
+            rings[#rings + 1] = {
+                id = galaxy.id,
+                name = world.galaxyName(galaxy),
+                x = mx,
+                y = my,
+                radius = math.max(2, math.min(scaled, M.mapRadius)),
+                kind = "galaxy",
+                inside = inside,
+            }
+        end
         -- Item 10 change B: project the offset hub planet so PlayScene can
         -- draw it as a distinct marker (magenta diamond) next to the gold
         -- galaxy-center/sun dot.
