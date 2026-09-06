@@ -1188,6 +1188,26 @@ function M.new(options)
         bare  = "assets/star/star_bare.png",
     }
     local starTypeImages = loadSpriteMap(starImagePaths)
+    -- Rotation sprite sheets (4 frames, 64x256 vertical strip)
+    local starSheetPaths = {
+        sun   = "assets/star/star_sun_sheet.png",
+        ice   = "assets/star/star_ice_sheet.png",
+        lava  = "assets/star/star_lava_sheet.png",
+        dry   = "assets/star/star_dry_sheet.png",
+        gas   = "assets/star/star_gas_sheet.png",
+        bare  = "assets/star/star_bare_sheet.png",
+    }
+    local starSheetImages = loadSpriteMap(starSheetPaths)
+    local planetSheetPaths = {
+        ice   = "assets/planet/pp_ice_sheet.png",
+        lava  = "assets/planet/pp_lava_sheet.png",
+        dry   = "assets/planet/pp_dry_sheet.png",
+        gas   = "assets/planet/pp_gas_sheet.png",
+        earth = "assets/planet/pp_earth_sheet.png",
+        bare  = "assets/planet/pp_bare_sheet.png",
+    }
+    local planetSheetImages = loadSpriteMap(planetSheetPaths)
+    local hubSheetImage = loadSprite("assets/planet/hub_sheet.png")
     local scoutShipImage = loadSprite(scoutShipImagePath)
     local shipSilhouetteImage = loadSprite(shipSilhouetteImagePath)
     local slotMachineImage = loadSprite(slotMachineImagePath)
@@ -1315,6 +1335,9 @@ function M.new(options)
         ppPlanetImagePaths = ppPlanetImagePaths,
         starTypeImages = starTypeImages,
         starImagePaths = starImagePaths,
+        starSheetImages = starSheetImages,
+        planetSheetImages = planetSheetImages,
+        hubSheetImage = hubSheetImage,
         scoutShipImage = scoutShipImage,
         scoutShipImagePath = scoutShipImagePath,
         shipSilhouetteImage = shipSilhouetteImage,
@@ -3444,20 +3467,29 @@ function M:draw()
                 love.graphics.circle("line", sx, sy, world.starWellRadius * 0.7)
                 -- Inner glow
                 love.graphics.setColor(1.0, 0.85, 0.25, pulse * 0.08)
-                -- Draw star sprite if available, else filled circle
-                local starImg = wellGalaxy and wellGalaxy.starType
-                    and self.starTypeImages and self.starTypeImages[wellGalaxy.starType]
-                -- milkyway uses "sun" (earth starType → "sun" for central star)
-                if not starImg and self.starTypeImages then
-                    starImg = self.starTypeImages["sun"]
-                end
-                if starImg then
-                    local iw, ih = starImg:getDimensions()
-                    local starScale = (world.starRadius * 2) / math.max(iw, ih)
+                -- Draw star sprite: prefer rotation sheet (4-frame), fallback to static
+                local starType = (wellGalaxy and wellGalaxy.starType) or "sun"
+                local starSheet = self.starSheetImages and self.starSheetImages[starType]
+                if starSheet then
+                    local sw, sh = starSheet:getDimensions()
+                    local frameH = sw  -- each frame is sw x sw (64x64 in a 64x256 sheet)
+                    local frameCount = math.floor(sh / frameH)
+                    local frameIdx = math.floor((self.time or 0) * 2) % frameCount
+                    local quad = love.graphics.newQuad(0, frameIdx * frameH, sw, frameH, sw, sh)
+                    local starScale = (world.starRadius * 2) / sw
                     love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.draw(starImg, sx, sy, 0, starScale, starScale, iw / 2, ih / 2)
+                    love.graphics.draw(starSheet, quad, sx - world.starRadius, sy - world.starRadius, 0, starScale, starScale)
                 else
-                    love.graphics.circle("fill", sx, sy, world.starRadius)
+                    local starImg = self.starTypeImages and self.starTypeImages[starType]
+                    if not starImg and self.starTypeImages then starImg = self.starTypeImages["sun"] end
+                    if starImg then
+                        local iw, ih = starImg:getDimensions()
+                        local starScale = (world.starRadius * 2) / math.max(iw, ih)
+                        love.graphics.setColor(1, 1, 1, 1)
+                        love.graphics.draw(starImg, sx, sy, 0, starScale, starScale, iw / 2, ih / 2)
+                    else
+                        love.graphics.circle("fill", sx, sy, world.starRadius)
+                    end
                 end
             end
         end
@@ -3529,7 +3561,25 @@ function M:draw()
                 local tG = math.min(1, baseG * 0.35 + 0.65)
                 local tB = math.min(1, baseB * 0.35 + 0.65)
                 love.graphics.setColor(tR, tG, tB)
-                love.graphics.draw(planetSprite, x, y, rot, scale, scale, iw / 2, ih / 2)
+                -- Prefer rotation sheet if available
+                local sheetType = planet.galaxyStarType
+                local sheetImg = nil
+                if planet.hub then
+                    sheetImg = self.hubSheetImage
+                elseif sheetType then
+                    sheetImg = self.planetSheetImages and self.planetSheetImages[sheetType]
+                end
+                if sheetImg then
+                    local sw, sh = sheetImg:getDimensions()
+                    local frameH = sw
+                    local frameCount = math.max(1, math.floor(sh / frameH))
+                    local frameIdx = math.floor((self.time or 0) * 1.5) % frameCount
+                    local quad = love.graphics.newQuad(0, frameIdx * frameH, sw, frameH, sw, sh)
+                    local sScale = (planet.radius * 2) / sw * scaleMul
+                    love.graphics.draw(sheetImg, quad, x - planet.radius * scaleMul, y - planet.radius * scaleMul, rot, sScale, sScale)
+                else
+                    love.graphics.draw(planetSprite, x, y, rot, scale, scale, iw / 2, ih / 2)
+                end
             else
                 love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
                 love.graphics.circle("fill", x, y, planet.radius)
