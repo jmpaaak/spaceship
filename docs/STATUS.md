@@ -1,12 +1,15 @@
 ## Current Status
 
-- Fix: previous cycle left uncommitted star sprite assets (`assets/star/`,
-  `tools/gen_stars.py`) and partially updated collision damage formula
-  (`world.collisionDamage` /2000 gentle scaling). Added 7 star PNG manifest
-  entries to `docs/assets/MANIFEST.json`, fixed duplicate collision damage
-  test assertion in `self_test.lua` (line 8419: y=-500→y=-2000 to match
-  new /2000 formula), wired star sprites into PlayScene draw. `make verify
-  LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
+- Fix: previous cycle left uncommitted RCS exhaust work that crashed
+  `make test` (`expedition.effectiveSpeed` arithmetic on nil
+  `steeringUpgradeAmount` when `rcsSpeedLevel` was called with a stub
+  run table). Finished that slice: `effectiveSpeed` now nil-guards
+  `baseSpeed` / `steeringUpgradeLevel` / `steeringUpgradeAmount` /
+  `scoutClimbSpeedBonus`. RCS exhaust is a continuous 0–999 speed
+  gradient (`rcsVisual`: white→red→blue→rainbow, radius 1.5+t*2.5)
+  instead of discrete upgrade-count buckets; play.lua particles use it.
+  self_test INBOX-33 rewritten for the gradient. `make verify LOVE=…`
+  GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
@@ -15,6 +18,14 @@
 
 ## Previous
 
+- Fix: previous cycle left uncommitted star sprite assets (`assets/star/`,
+  `tools/gen_stars.py`) and partially updated collision damage formula
+  (`world.collisionDamage` /2000 gentle scaling). Added 7 star PNG manifest
+  entries to `docs/assets/MANIFEST.json`, fixed duplicate collision damage
+  test assertion in `self_test.lua` (line 8419: y=-500→y=-2000 to match
+  new /2000 formula), wired star sprites into PlayScene draw. `make verify
+  LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
+
 - Fix: `make verify` failed ASSET_MANIFEST_FAIL — sha256 mismatches for
   `assets/earth/earth_generic.png` and six `assets/planet/pp_*.png` sprites
   (chunky 4px regeneration left stale hashes). Updated
@@ -22,7 +33,7 @@
 
 - INBOX (59) complete: Added random rotation for debris sprites.
 
-- INBOX (58) complete: Fixed a bug where tapping "relaunch" in a hub settlement triggered an instant re-settlement. 
+- INBOX (58) complete: Fixed a bug where tapping "relaunch" in a hub settlement triggered an instant re-settlement.
   - Adjusted the hub relaunch ship spawn position (`self.ship.y = hubY - 80`) to ensure it sits safely outside the hub planet's `collectOrbitRadius`.
 
 - INBOX (52a) complete: PIL-generated slot machine symbol assets (5 symbols + machine body).
