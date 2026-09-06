@@ -4909,8 +4909,8 @@ local function testEarthSlotMachineGalaxyOdds()
     -- COMET weight than solar (higher variance/jackpot, riskier).
     local solarWeights = expedition.earthSlotWeights(nil)
     assert(type(solarWeights) == "table", "earthSlotWeights must return a table")
-    assert(solarWeights.COMET and solarWeights.PLANET and solarWeights.STAR,
-        "earthSlotWeights must include COMET, PLANET, and STAR keys")
+    assert(solarWeights.MONEY and solarWeights.HARVEST,
+        "earthSlotWeights must include new keys")
 
     -- Pick a fringe/void galaxy to compare.
     local fringeGalaxy = nil
@@ -4924,30 +4924,30 @@ local function testEarthSlotMachineGalaxyOdds()
     end
     assert(fringeGalaxy, "at least one of the candidate galaxy IDs must map to fringe or void")
     local fringeWeights = expedition.earthSlotWeights(fringeGalaxy)
-    assert(fringeWeights.STAR > solarWeights.STAR,
+    assert(fringeWeights.HARVEST > solarWeights.HARVEST,
         "fringe/void galaxy STAR weight must exceed solar STAR weight (higher jackpot odds)")
-    assert(fringeWeights.COMET < solarWeights.COMET,
-        "fringe/void galaxy COMET weight must be below solar COMET weight (riskier, less filler)")
+    assert(fringeWeights.MONEY < solarWeights.MONEY,
+        "fringe/void galaxy MONEY weight must be below solar MONEY weight (riskier, less filler)")
 
     -- (3) earthSlotSpin: given deterministic rolls, verifies the correct
     -- symbol is chosen and correct reward returned, using galaxy-specific
     -- weights. Rolls are in [0, totalWeight) for each reel.
-    -- Force a COMET-COMET-COMET triple via a zero roll on each reel
+    -- Force a MONEY-MONEY-MONEY triple via a zero roll on each reel
     -- (COMET is always the first symbol in the iteration order with
     -- cumulative weight starting at COMET's weight, so roll 0 = COMET).
     local run = expedition.new()
-    local solarTotal = solarWeights.COMET + solarWeights.PLANET + solarWeights.STAR
-    -- Roll [0, COMET_weight) forces COMET selection on each reel.
-    local cometRoll = math.floor(solarWeights.COMET / 2)
+    local solarTotal = solarWeights.MONEY + solarWeights.PART + solarWeights.SPEED + solarWeights.DURABILITY + solarWeights.HARVEST
+    -- Roll [0, MONEY_weight) forces COMET selection on each reel.
+    local moneyRoll = math.floor(solarWeights.MONEY / 2)
     local spinResult = expedition.earthSlotSpin(run, nil, {
-        reels = { cometRoll, cometRoll, cometRoll },
+        reels = { moneyRoll, moneyRoll, moneyRoll },
     })
     assert(type(spinResult) == "table", "earthSlotSpin must return a result table")
     assert(spinResult.symbols and #spinResult.symbols == 3, "result must carry a 3-element symbols array")
-    assert(spinResult.symbols[1] == "COMET" and spinResult.symbols[2] == "COMET" and spinResult.symbols[3] == "COMET",
-        "all-zero rolls against solar weights must yield COMET-COMET-COMET triple")
+    assert(spinResult.symbols[1] == "MONEY" and spinResult.symbols[2] == "MONEY" and spinResult.symbols[3] == "MONEY",
+        "all-zero rolls against solar weights must yield MONEY-MONEY-MONEY triple")
     assert(type(spinResult.reward) == "number" and spinResult.reward > 0,
-        "a COMET triple must produce a positive reward")
+        "a MONEY triple must produce a positive reward")
     assert(type(spinResult.totalWeight) == "number" and spinResult.totalWeight == solarTotal,
         "earthSlotSpin must expose the totalWeight used for this spin (for UI roll generation)")
 
@@ -4965,11 +4965,11 @@ local function testEarthSlotMachineGalaxyOdds()
     }
     assert(expedition.equipGear(luckRun, "hull", luckCard))
     local luckySpinResult = expedition.earthSlotSpin(luckRun, nil, {
-        reels = { cometRoll, cometRoll, cometRoll },
+        reels = { moneyRoll, moneyRoll, moneyRoll },
     })
-    assert(luckySpinResult.effectiveStarWeight and luckySpinResult.effectiveStarWeight > solarWeights.STAR,
+    assert(luckySpinResult.effectiveStarWeight and luckySpinResult.effectiveStarWeight > solarWeights.HARVEST,
         "a luck-boosted run must produce a higher STAR weight than the base solar profile: "
-            .. "baseStarWeight=" .. tostring(solarWeights.STAR)
+            .. "baseStarWeight=" .. tostring(solarWeights.HARVEST)
             .. " effectiveStarWeight=" .. tostring(luckySpinResult.effectiveStarWeight))
 
     -- (5) run.lastVisitedGalaxyId: exploreHub records the hub galaxy so the
@@ -5020,7 +5020,7 @@ local function testGearEarthSlotEngineSlotLuckWiring()
     -- Baseline: no gear equipped.
     local bareRun = expedition.new()
     local bareResult = expedition.earthSlotSpin(bareRun, nil, rolls)
-    assert(bareResult.effectiveStarWeight == solarWeights.STAR,
+    assert(bareResult.effectiveStarWeight == solarWeights.HARVEST,
         "bare run must have base STAR weight in earthSlotSpin, got: "
             .. tostring(bareResult.effectiveStarWeight))
 
@@ -5034,9 +5034,9 @@ local function testGearEarthSlotEngineSlotLuckWiring()
     local hullLuckRun = expedition.new()
     assert(expedition.equipGear(hullLuckRun, "hull", luckCard))
     local hullResult = expedition.earthSlotSpin(hullLuckRun, nil, rolls)
-    assert(hullResult.effectiveStarWeight > solarWeights.STAR,
+    assert(hullResult.effectiveStarWeight > solarWeights.HARVEST,
         "hull-slot luck card must boost earthSlotSpin STAR weight (baseline "
-            .. tostring(solarWeights.STAR) .. ", got "
+            .. tostring(solarWeights.HARVEST) .. ", got "
             .. tostring(hullResult.effectiveStarWeight) .. ")")
 
     -- Engine-slot luck: same card in ENGINE slot must produce the same boost.
@@ -5048,10 +5048,10 @@ local function testGearEarthSlotEngineSlotLuckWiring()
     }
     assert(expedition.equipGear(engineLuckRun, "engine", engineCard))
     local engineResult = expedition.earthSlotSpin(engineLuckRun, nil, rolls)
-    assert(engineResult.effectiveStarWeight > solarWeights.STAR,
+    assert(engineResult.effectiveStarWeight > solarWeights.HARVEST,
         "engine-slot luck card must also boost earthSlotSpin STAR weight "
             .. "(earthSlotSpin uses combinedGearList, so engine luck must feed through): "
-            .. "baseline=" .. tostring(solarWeights.STAR)
+            .. "baseline=" .. tostring(solarWeights.HARVEST)
             .. " engineResult=" .. tostring(engineResult.effectiveStarWeight))
 
     -- The boost magnitude should match hull-slot for the same luck value.
@@ -5127,52 +5127,52 @@ local function testEarthSlotProfileRewardVariation()
     local run = expedition.new()
 
     -- STAR is the last symbol in slotSymbols canonical order
-    -- (COMET -> PLANET -> STAR). A roll past COMET+PLANET selects STAR.
+    -- (COMET -> PLANET -> STAR). A roll past MONEY+PART+SPEED+DURABILITY selects STAR.
     local solarWeights = expedition.earthSlotWeights(nil)
-    local solarTotal   = solarWeights.COMET + solarWeights.PLANET + solarWeights.STAR
+    local solarTotal   = solarWeights.MONEY + solarWeights.PART + solarWeights.SPEED + solarWeights.DURABILITY + solarWeights.HARVEST
     local starRoll     = solarTotal - 0.5   -- last bucket = STAR
 
-    -- (a) Solar triple-STAR must equal the legacy global STAR*3 value (75).
+    -- (a) Solar triple-HARVEST must equal the legacy global STAR*3 value (75).
     local solarSpin = expedition.earthSlotSpin(run, nil, {
         reels = { starRoll, starRoll, starRoll },
     })
-    assert(solarSpin.symbols[1] == "STAR" and solarSpin.symbols[2] == "STAR"
-        and solarSpin.symbols[3] == "STAR",
-        "starRoll must select STAR for solar profile, got: "
+    assert(solarSpin.symbols[1] == "HARVEST" and solarSpin.symbols[2] == "HARVEST"
+        and solarSpin.symbols[3] == "HARVEST",
+        "starRoll must select HARVEST for solar profile, got: "
             .. table.concat(solarSpin.symbols, "-"))
-    assert(solarSpin.reward == 75,
-        "solar triple-STAR jackpot must equal the baseline 75, got: "
+    assert(solarSpin.reward == 100,
+        "solar triple-HARVEST jackpot must equal the baseline 100, got: "
             .. tostring(solarSpin.reward))
 
-    -- (b) Void triple-STAR jackpot must EXCEED solar.
+    -- (b) Void triple-HARVEST jackpot must EXCEED solar.
     local voidWeights  = expedition.earthSlotWeights(voidGalaxy)
-    local voidTotal    = voidWeights.COMET + voidWeights.PLANET + voidWeights.STAR
+    local voidTotal    = voidWeights.MONEY + voidWeights.PART + voidWeights.SPEED + voidWeights.DURABILITY + voidWeights.HARVEST
     local voidStarRoll = voidTotal - 0.5
     local voidSpin = expedition.earthSlotSpin(run, voidGalaxy, {
         reels = { voidStarRoll, voidStarRoll, voidStarRoll },
     })
-    assert(voidSpin.symbols[1] == "STAR",
-        "voidStarRoll must select STAR for void profile, got: "
+    assert(voidSpin.symbols[1] == "HARVEST",
+        "voidStarRoll must select HARVEST for void profile, got: "
             .. table.concat(voidSpin.symbols, "-"))
     assert(voidSpin.reward > solarSpin.reward,
-        "void triple-STAR jackpot (" .. tostring(voidSpin.reward)
+        "void triple-HARVEST jackpot (" .. tostring(voidSpin.reward)
             .. ") must exceed solar (" .. tostring(solarSpin.reward) .. ")")
 
-    -- (c) Fringe triple-STAR jackpot: > solar and <= void (gradient).
+    -- (c) Fringe triple-HARVEST jackpot: > solar and <= void (gradient).
     local fringeWeights  = expedition.earthSlotWeights(fringeGalaxy)
-    local fringeTotal    = fringeWeights.COMET + fringeWeights.PLANET + fringeWeights.STAR
+    local fringeTotal    = fringeWeights.MONEY + fringeWeights.PART + fringeWeights.SPEED + fringeWeights.DURABILITY + fringeWeights.HARVEST
     local fringeStarRoll = fringeTotal - 0.5
     local fringeSpin = expedition.earthSlotSpin(run, fringeGalaxy, {
         reels = { fringeStarRoll, fringeStarRoll, fringeStarRoll },
     })
-    assert(fringeSpin.symbols[1] == "STAR",
-        "fringeStarRoll must select STAR for fringe profile, got: "
+    assert(fringeSpin.symbols[1] == "HARVEST",
+        "fringeStarRoll must select HARVEST for fringe profile, got: "
             .. table.concat(fringeSpin.symbols, "-"))
     assert(fringeSpin.reward > solarSpin.reward,
-        "fringe triple-STAR jackpot (" .. tostring(fringeSpin.reward)
+        "fringe triple-HARVEST jackpot (" .. tostring(fringeSpin.reward)
             .. ") must exceed solar (" .. tostring(solarSpin.reward) .. ")")
     assert(fringeSpin.reward <= voidSpin.reward,
-        "fringe triple-STAR jackpot (" .. tostring(fringeSpin.reward)
+        "fringe triple-HARVEST jackpot (" .. tostring(fringeSpin.reward)
             .. ") must be <= void (" .. tostring(voidSpin.reward) .. ")")
 
     -- (d) earthSlotSpin must expose .rewardProfile for UI.
@@ -5189,14 +5189,14 @@ local function testEarthSlotProfileRewardVariation()
     -- (e) Void no-match reward <= solar no-match (risk tradeoff: high ceiling,
     -- same or lower floor — void pays more for wins, not more for misses).
     -- Force a guaranteed COMET-PLANET-COMET mismatch on each profile.
-    local cometRoll  = 0.5                              -- lands in COMET bucket
-    local planetRoll = solarWeights.COMET + 0.5         -- past COMET, in PLANET bucket
+    local moneyRoll  = 0.5                              -- lands in MONEY bucket
+    local partRoll = solarWeights.MONEY + 0.5         -- past COMET, in PART bucket
     local solarMiss  = expedition.earthSlotSpin(run, nil, {
-        reels = { cometRoll, planetRoll, cometRoll },
+        reels = { moneyRoll, partRoll, moneyRoll },
     })
-    local voidPlanetRoll = voidWeights.COMET + 0.5
+    local voidPlanetRoll = voidWeights.MONEY + 0.5
     local voidMiss = expedition.earthSlotSpin(run, voidGalaxy, {
-        reels = { cometRoll, voidPlanetRoll, cometRoll },
+        reels = { moneyRoll, voidPlanetRoll, moneyRoll },
     })
     assert(voidMiss.reward <= solarMiss.reward,
         "void no-match reward (" .. tostring(voidMiss.reward)
@@ -5213,26 +5213,26 @@ local function testSlotSpinCostAndMissPaysZero()
     assert(expedition.slotSpinCost == 10,
         "INBOX 15(b): default slot spin cost must be 10, got: "
             .. tostring(expedition.slotSpinCost))
-    assert(expedition.slotReward({ "COMET", "PLANET", "STAR" }) == 0,
+    assert(expedition.slotReward({ "MONEY", "PART", "SPEED" }) == 0,
         "INBOX 15(b): miss must pay 0, not +$5")
-    assert(expedition.slotReward({ "COMET", "COMET", "PLANET" }) == 15,
-        "INBOX 15(b): pair payout stays 15")
-    assert(expedition.slotReward({ "COMET", "COMET", "COMET" }) == 40,
-        "INBOX 15(b): non-STAR triple payout stays 40")
-    assert(expedition.slotReward({ "STAR", "STAR", "STAR" }) == 75,
-        "INBOX 15(b): STAR jackpot stays 75")
+    assert(expedition.slotReward({ "MONEY", "MONEY", "PART" }) == 3,
+        "INBOX 52(b): pair payout is 3")
+    assert(expedition.slotReward({ "PART", "PART", "PART" }) == 10,
+        "INBOX 52(b): triple payout is 10")
+    assert(expedition.slotReward({ "MONEY", "MONEY", "MONEY" }) == 10,
+        "INBOX 52(b): triple payout is 10")
 
     local run = expedition.new()
     local solarWeights = expedition.earthSlotWeights(nil)
-    local cometRoll = 0.5
-    local planetRoll = solarWeights.COMET + 0.5
-    local starRoll = solarWeights.COMET + solarWeights.PLANET + 0.5
+    local moneyRoll = 0.5
+    local partRoll = solarWeights.MONEY + 0.5
+    local starRoll = solarWeights.MONEY + solarWeights.PART + 0.5
     local missSpin = expedition.earthSlotSpin(run, nil, {
-        reels = { cometRoll, planetRoll, starRoll },
+        reels = { moneyRoll, partRoll, starRoll },
     })
-    assert(missSpin.symbols[1] == "COMET" and missSpin.symbols[2] == "PLANET"
-        and missSpin.symbols[3] == "STAR",
-        "COMET-PLANET-STAR rolls must be a true miss, got: "
+    assert(missSpin.symbols[1] == "MONEY" and missSpin.symbols[2] == "PART"
+        and missSpin.symbols[3] == "SPEED",
+        "MONEY-PART-SPEED rolls must be a true miss, got: "
             .. table.concat(missSpin.symbols, "-"))
     assert(missSpin.reward == 0,
         "INBOX 15(b): earthSlotSpin miss reward must be 0, got: "
@@ -5241,7 +5241,7 @@ local function testSlotSpinCostAndMissPaysZero()
     local originalSpin = expedition.earthSlotSpin
     expedition.earthSlotSpin = function()
         return {
-            symbols = { "COMET", "PLANET", "STAR" },
+            symbols = { "MONEY", "PART", "SPEED" },
             reward = 0,
             totalWeight = 10,
             effectiveStarWeight = 1,
@@ -5254,6 +5254,9 @@ local function testSlotSpinCostAndMissPaysZero()
     missScene.expedition.phase = "settlement"
     missScene.expedition.money = 20
     missScene:keypressed("l")
+    missScene:keypressed("l"); while missScene.slotState and not missScene.slotState.reels[1].stopped do missScene:update(0.1) end
+    missScene:keypressed("l"); while missScene.slotState and not missScene.slotState.reels[2].stopped do missScene:update(0.1) end
+    missScene:keypressed("l"); while missScene.slotState and missScene.slotState.spinning do missScene:update(0.1) end
     assert(missScene.expedition.money == 10,
         "INBOX 15(b): miss must charge spin cost 10 (20-10=10), got: "
             .. tostring(missScene.expedition.money))
@@ -5272,8 +5275,8 @@ local function testSlotSpinCostAndMissPaysZero()
 
     expedition.earthSlotSpin = function()
         return {
-            symbols = { "STAR", "STAR", "STAR" },
-            reward = 75,
+            symbols = { "MONEY", "MONEY", "MONEY" },
+            reward = 100,
             totalWeight = 10,
             effectiveStarWeight = 3,
             rewardProfile = "solar",
@@ -5285,9 +5288,12 @@ local function testSlotSpinCostAndMissPaysZero()
     winScene.expedition.phase = "settlement"
     winScene.expedition.money = 20
     winScene:keypressed("l")
+    winScene:keypressed("l"); while winScene.slotState and not winScene.slotState.reels[1].stopped do winScene:update(0.1) end
+    winScene:keypressed("l"); while winScene.slotState and not winScene.slotState.reels[2].stopped do winScene:update(0.1) end
+    winScene:keypressed("l"); while winScene.slotState and winScene.slotState.spinning do winScene:update(0.1) end
     expedition.earthSlotSpin = originalSpin
-    assert(winScene.expedition.money == 85,
-        "INBOX 15(b): win must be money - cost + reward (20-10+75=85), got: "
+    assert(winScene.expedition.money == 110,
+        "INBOX 15(b): win must be money - cost + reward (20-10+100=85), got: "
             .. tostring(winScene.expedition.money))
 end
 
@@ -5318,10 +5324,8 @@ local function testSlotEditorWebUi()
     local doc = json.decode(contents)
     assert(doc.spinCost == 10, "bundled spinCost default is 10")
     assert(doc.payouts and doc.payouts.miss == 0, "bundled miss payout is 0")
-    assert(doc.payouts.pair == 15 and doc.payouts.triple == 40
-        and doc.payouts.jackpot == 75,
-        "bundled pair/triple/jackpot stay 15/40/75")
-    assert(type(doc.symbols) == "table" and #doc.symbols >= 3,
+    assert(doc.payouts.pair == 3 and doc.payouts.triple == 10, "bundled pair/triple stay 3/10")
+    assert(type(doc.symbols) == "table" and #doc.symbols >= 5,
         "bundled config must list slot symbols")
     assert(doc.profiles and doc.profiles.solar and doc.profiles.fringe
         and doc.profiles.void,
@@ -5335,22 +5339,24 @@ local function testSlotEditorWebUi()
     local loaded, loadErr = expedition.loadSlotConfig()
     assert(loaded, "bundled slot_config.json must load: " .. tostring(loadErr))
     assert(expedition.slotSpinCost == 10)
-    assert(expedition.slotReward({ "COMET", "PLANET", "STAR" }) == 0)
-    assert(expedition.slotReward({ "STAR", "STAR", "STAR" }) == 75)
+    assert(expedition.slotReward({ "MONEY", "PART", "SPEED" }) == 0)
+    assert(expedition.slotReward({ "MONEY", "MONEY", "MONEY" }) == 10)
 
     local custom = [[{
-      "schemaVersion": 1,
+      "schemaVersion": 2,
       "spinCost": 25,
       "symbols": [
-        {"id": "COMET", "name": "Comet", "weight": 5},
-        {"id": "PLANET", "name": "Planet", "weight": 4},
-        {"id": "STAR", "name": "Star", "weight": 1}
+        {"id": "MONEY", "name": "Money", "weight": 6},
+        {"id": "PART", "name": "Part", "weight": 3},
+        {"id": "SPEED", "name": "Speed", "weight": 4},
+        {"id": "DURABILITY", "name": "Durability", "weight": 3},
+        {"id": "HARVEST", "name": "Harvest", "weight": 4}
       ],
-      "payouts": {"miss": 0, "pair": 20, "triple": 50, "jackpot": 100},
+      "payouts": {"miss": 0, "pair": 5, "triple": 15},
       "profiles": {
-        "solar":  {"weights": {"COMET": 5, "PLANET": 4, "STAR": 1}, "multipliers": {"tripleSTAR": 1.0}},
-        "fringe": {"weights": {"COMET": 4, "PLANET": 4, "STAR": 2}, "multipliers": {"tripleSTAR": 1.5}},
-        "void":   {"weights": {"COMET": 3, "PLANET": 4, "STAR": 3}, "multipliers": {"tripleSTAR": 2.0}}
+        "solar":  {"weights": {"MONEY": 6, "PART": 3, "SPEED": 4, "DURABILITY": 3, "HARVEST": 4}, "multipliers": {"tripleMultiplier": 1.0}},
+        "fringe": {"weights": {"MONEY": 5, "PART": 3, "SPEED": 4, "DURABILITY": 3, "HARVEST": 5}, "multipliers": {"tripleMultiplier": 1.5}},
+        "void":   {"weights": {"MONEY": 4, "PART": 4, "SPEED": 4, "DURABILITY": 4, "HARVEST": 4}, "multipliers": {"tripleMultiplier": 2.0}}
       }
     }]]
     local applied, applyErr = expedition.loadSlotConfig({
@@ -5359,10 +5365,10 @@ local function testSlotEditorWebUi()
     assert(applied, "custom slot config must apply: " .. tostring(applyErr))
     assert(expedition.slotSpinCost == 25,
         "custom spinCost must apply, got " .. tostring(expedition.slotSpinCost))
-    assert(expedition.slotReward({ "COMET", "COMET", "PLANET" }) == 20,
+    assert(expedition.slotReward({ "MONEY", "MONEY", "PART" }) == 5,
         "custom pair payout must apply")
-    assert(expedition.slotReward({ "STAR", "STAR", "STAR" }) == 100,
-        "custom jackpot must apply")
+    assert(expedition.slotReward({ "MONEY", "MONEY", "MONEY" }) == 15,
+        "custom triple must apply")
 
     local missingOk = expedition.loadSlotConfig({
         read = function() return nil end,
@@ -5371,7 +5377,7 @@ local function testSlotEditorWebUi()
     assert(expedition.slotSpinCost == 10,
         "missing file restores default spinCost 10, got "
             .. tostring(expedition.slotSpinCost))
-    assert(expedition.slotReward({ "STAR", "STAR", "STAR" }) == 75,
+    assert(expedition.slotReward({ "MONEY", "MONEY", "MONEY" }) == 10,
         "missing file restores default jackpot 75")
 end
 
@@ -7342,7 +7348,7 @@ function M.run()
     -- settlement). The keypressed handler builds a plain-array `rolls`
     -- table but earthSlotSpin expects `rolls.reels`. This caused
     -- earthSlotSpin to always fall back to {0,0,0} reelRolls (always
-    -- COMET-COMET-COMET). Verify:
+    -- MONEY-MONEY-MONEY). Verify:
     --   (1) pressing \"l\" during settlement sets earthShopSlotResult
     --   (2) a winning result adds money and sets message
     --   (3) pressing \"l\" outside settlement is a no-op on earthShopSlotResult
@@ -7358,8 +7364,8 @@ function M.run()
         expedition.earthSlotSpin = function(run, galaxyId, rolls)
             capturedRolls = rolls
             return {
-                symbols = { "STAR", "STAR", "STAR" },
-                reward = 75,
+                symbols = { "MONEY", "MONEY", "MONEY" },
+                reward = 100,
                 totalWeight = 10,
                 effectiveStarWeight = 3,
                 rewardProfile = "solar",
@@ -7375,22 +7381,25 @@ function M.run()
         local spinCost = expedition.slotSpinCost or 10
 
         slotScene:keypressed("l")
+    slotScene:keypressed("l"); while slotScene.slotState and not slotScene.slotState.reels[1].stopped do slotScene:update(0.1) end
+    slotScene:keypressed("l"); while slotScene.slotState and not slotScene.slotState.reels[2].stopped do slotScene:update(0.1) end
+    slotScene:keypressed("l"); while slotScene.slotState and slotScene.slotState.spinning do slotScene:update(0.1) end
 
         expedition.earthSlotSpin = originalSpin  -- restore
 
         assert(slotScene.earthShopSlotResult ~= nil,
             "item 15(b): keypressed('l') during settlement must set earthShopSlotResult")
-        assert(slotScene.earthShopSlotResult.symbols[1] == "STAR",
+        assert(slotScene.earthShopSlotResult.symbols[1] == "MONEY",
             "item 15(b): earthShopSlotResult.symbols must reflect earthSlotSpin return value")
-        assert(slotScene.expedition.money == moneyBefore - spinCost + 75,
+        assert(slotScene.expedition.money == moneyBefore - spinCost + 100,
             "item 15(b): winning spin must be money - cost + reward, expected "
-            .. (moneyBefore - spinCost + 75) .. " got " .. slotScene.expedition.money)
-        assert(slotScene.message ~= nil and slotScene.message:find("%+%$75"),
+            .. (moneyBefore - spinCost + 100) .. " got " .. slotScene.expedition.money)
+        assert(slotScene.message ~= nil and slotScene.message:find("%+%$100"),
             "item 15(b): message must reference the +$75 reward, got: " .. tostring(slotScene.message))
 
         -- (4) The rolls table passed to earthSlotSpin must have a .reels field
         -- (not a plain array). Plain arrays make rolls.reels nil and cause the
-        -- function to silently fall back to {0,0,0} (always COMET-COMET-COMET).
+        -- function to silently fall back to {0,0,0} (always MONEY-MONEY-MONEY).
         assert(capturedRolls ~= nil,
             "item 15(b): earthSlotSpin must be called with a rolls argument")
         assert(type(capturedRolls) == "table",
@@ -7443,8 +7452,8 @@ function M.run()
         local originalSpin = expedition.earthSlotSpin
         expedition.earthSlotSpin = function()
             return {
-                symbols = { "STAR", "STAR", "STAR" },
-                reward = 75,
+                symbols = { "MONEY", "MONEY", "MONEY" },
+                reward = 100,
                 totalWeight = 10,
                 effectiveStarWeight = 3,
                 rewardProfile = "void",
@@ -7456,6 +7465,9 @@ function M.run()
         scene.expedition.phase = "settlement"
         scene.expedition.money = 20
         scene:keypressed("l")
+    scene:keypressed("l"); while scene.slotState and not scene.slotState.reels[1].stopped do scene:update(0.1) end
+    scene:keypressed("l"); while scene.slotState and not scene.slotState.reels[2].stopped do scene:update(0.1) end
+    scene:keypressed("l"); while scene.slotState and scene.slotState.spinning do scene:update(0.1) end
         expedition.earthSlotSpin = originalSpin
         assert(scene.earthShopSlotResult ~= nil,
             "item 15(c): settlement spin must store earthShopSlotResult")

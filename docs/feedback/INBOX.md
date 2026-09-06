@@ -46,31 +46,6 @@
   - Makefile에 `make parts-editor` 타겟 (로컬 서버 시작).
   - `make verify` GREEN + 커밋 순서: (a) PIL 아이콘 생성 (b) 에디터 UI + 이미지 업로드
 
-(52) **슬롯머신 리디자인 — PIL 심볼 생성 + 터치 릴 스톱 + 새 배당 (사용자 확정, 2026-09-06):**
-  - **심볼 5종 PIL 생성** (`tools/gen_slot_symbols.py`, ≤50줄):
-    - `assets/slot_symbols/money.png` 32×32 — 금색 코인/달러 모티프
-    - `assets/slot_symbols/part.png` 32×32 — 기어/렌치 모티프 (부품)
-    - `assets/slot_symbols/speed.png` 32×32 — 번개/화살 모티프
-    - `assets/slot_symbols/durability.png` 32×32 — 방패 모티프
-    - `assets/slot_symbols/harvest.png` 32×32 — 결정/보석 모티프 (수확)
-  - 색조: 어두운 배경에 밝은 도트, PixelPlanets 톤. RGBA, 투명 배경.
-  - **슬롯 본체**: `tools/gen_slot_machine.py` PIL — 3칸 가로 프레임 (96×48 정도), 기계 테두리 + 레버.
-  - **릴 동작**: 3개 릴이 동시에 스핀 시작. 사용자가 **터치할 때마다 릴 1개씩 순서대로 멈춤** (왼→중→오). 멈출 때 감속 애니메이션 (빠르게 → 천천히 → 정지). 3개 다 멈추면 결과 판정.
-  - **배당 (기존 시스템 교체)**:
-    - miss (0 일치): **스핀 비용만 차감** ($10 기본), 보상 없음
-    - 2개 일치: **스핀 비용 × 3** 획득
-    - 3개 일치: **스핀 비용 × 10** 획득
-    - 심볼별 추가 효과:
-      - 💰 돈: 위 배당 그대로 현금
-      - ⚙️ 부품: 2매치 → common 부품 드롭, 3매치 → rare/epic 부품 드롭 (레어도 상승)
-      - ⚡ 속도: 2매치 → 다음 1회 속도 1.5배 버프, 3매치 → 영구 속도 +1
-      - 🛡️ 내구도: 2매치 → HP 1 회복, 3매치 → HP 전체 회복
-      - 💎 수확: 2매치 → 다음 3회 수확량 2배, 3매치 → 다음 10회 수확량 3배
-  - **가중치**: 돈 30%, 부품 15%, 속도 20%, 내구도 15%, 수확 20%. 에디터(slot-editor)에서 조절 가능.
-  - 기존 `slotSymbols = {"COMET","PLANET","STAR"}` + `slotReward` 전부 교체.
-  - `expedition.earthSlotSpin` 리턴에 `stoppedReels`, `matchCount`, `matchSymbol` 추가.
-  - play.lua draw: 슬롯 영역에 3칸 릴 애니메이션. 각 칸에 심볼 PNG 스크롤. 터치 시 `self.slotState.stopNext()`.
-  - `make verify` GREEN + 커밋 순서: (a) PIL 심볼+본체 생성 (b) 릴 스톱 로직 (c) 배당 교체 + draw
 
 (48) **중심별 타이머 텍스트 개선 (사용자 확정, 2026-09-06):**
   - 현재: `"태양 접근 3.2 / 10초"` — 작은 폰트, 화면 하단.
@@ -99,6 +74,33 @@
   - `make verify` GREEN + 커밋: `fix(shop): add rounded box backgrounds to shop menu rows`
 
 ## 처리 완료
+
+(52) **슬롯머신 리디자인 — PIL 심볼 생성 + 터치 릴 스톱 + 새 배당 (사용자 확정, 2026-09-06):**
+  - **심볼 5종 PIL 생성** (`tools/gen_slot_symbols.py`, ≤50줄):
+    - `assets/slot_symbols/money.png` 32×32 — 금색 코인/달러 모티프
+    - `assets/slot_symbols/part.png` 32×32 — 기어/렌치 모티프 (부품)
+    - `assets/slot_symbols/speed.png` 32×32 — 번개/화살 모티프
+    - `assets/slot_symbols/durability.png` 32×32 — 방패 모티프
+    - `assets/slot_symbols/harvest.png` 32×32 — 결정/보석 모티프 (수확)
+  - 색조: 어두운 배경에 밝은 도트, PixelPlanets 톤. RGBA, 투명 배경.
+  - **슬롯 본체**: `tools/gen_slot_machine.py` PIL — 3칸 가로 프레임 (96×48 정도), 기계 테두리 + 레버.
+  - **릴 동작**: 3개 릴이 동시에 스핀 시작. 사용자가 **터치할 때마다 릴 1개씩 순서대로 멈춤** (왼→중→오). 멈출 때 감속 애니메이션 (빠르게 → 천천히 → 정지). 3개 다 멈추면 결과 판정.
+  - **배당 (기존 시스템 교체)**:
+    - miss (0 일치): **스핀 비용만 차감** ($10 기본), 보상 없음
+    - 2개 일치: **스핀 비용 × 3** 획득
+    - 3개 일치: **스핀 비용 × 10** 획득
+    - 심볼별 추가 효과:
+      - 💰 돈: 위 배당 그대로 현금
+      - ⚙️ 부품: 2매치 → common 부품 드롭, 3매치 → rare/epic 부품 드롭 (레어도 상승)
+      - ⚡ 속도: 2매치 → 다음 1회 속도 1.5배 버프, 3매치 → 영구 속도 +1
+      - 🛡️ 내구도: 2매치 → HP 1 회복, 3매치 → HP 전체 회복
+      - 💎 수확: 2매치 → 다음 3회 수확량 2배, 3매치 → 다음 10회 수확량 3배
+  - **가중치**: 돈 30%, 부품 15%, 속도 20%, 내구도 15%, 수확 20%. 에디터(slot-editor)에서 조절 가능.
+  - 기존 `slotSymbols = {"COMET","PLANET","STAR"}` + `slotReward` 전부 교체.
+  - `expedition.earthSlotSpin` 리턴에 `stoppedReels`, `matchCount`, `matchSymbol` 추가.
+  - play.lua draw: 슬롯 영역에 3칸 릴 애니메이션. 각 칸에 심볼 PNG 스크롤. 터치 시 `self.slotState.stopNext()`.
+  - `make verify` GREEN + 커밋 순서: (a) PIL 심볼+본체 생성 (b) 릴 스톱 로직 (c) 배당 교체 + draw
+
 (46) **"신규 행성 발견" 텍스트 제거 — 완료 2026-09-06:** draw에서 `planet_new_discovery` elseif 블록 제거. i18n 키는 유지. `make verify` GREEN.
 (45) **미니맵 은하 밀도 + 링 오퍼시티 — 완료 2026-09-06:** (a) `galaxyExistenceThreshold` 0.82→0.85 (밀도 ~18%→~15%). (b) 동심원 링 알파 0.4→0.15, galaxy boundary ring 알파 0.55→0.12. 비-containing 은하 마커 숨김은 이전 사이클에서 완료. 테스트 갱신 (밀도 <20%, 알파 검증). `make verify` GREEN.
 (44) **선체 정보 → 미니맵 아래 우측 — 완료 2026-09-06:** `drawShipStatsSummary()` 메서드 추가. ascending 때 미니맵 아래 우측에 22px 폰트로 함선명/속도LV/내구LV/수확LV 4줄 우측정렬 표시. settlement/destroyed/launch에서는 비표시. i18n 4키 EN+KO 추가. 테스트 INBOX-44 블록 추가. `make verify` GREEN.

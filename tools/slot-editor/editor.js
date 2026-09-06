@@ -3,18 +3,20 @@
 const KNOWN_PROFILES = ["solar", "fringe", "void"];
 
 let currentConfig = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   spinCost: 10,
   symbols: [
-    {id: "COMET", name: "Comet", weight: 5},
-    {id: "PLANET", name: "Planet", weight: 4},
-    {id: "STAR", name: "Star", weight: 1}
+    {id: "MONEY", name: "Money", weight: 6},
+    {id: "PART", name: "Part", weight: 3},
+    {id: "SPEED", name: "Speed", weight: 4},
+    {id: "DURABILITY", name: "Durability", weight: 3},
+    {id: "HARVEST", name: "Harvest", weight: 4}
   ],
-  payouts: {miss: 0, pair: 15, triple: 40, jackpot: 75},
+  payouts: {miss: 0, pair: 3, triple: 10},
   profiles: {
-    "solar": {weights: {COMET: 5, PLANET: 4, STAR: 1}, multipliers: {tripleSTAR: 1.0}},
-    "fringe": {weights: {COMET: 4, PLANET: 4, STAR: 2}, multipliers: {tripleSTAR: 1.5}},
-    "void": {weights: {COMET: 3, PLANET: 4, STAR: 3}, multipliers: {tripleSTAR: 2.0}}
+    "solar": {weights: {MONEY: 6, PART: 3, SPEED: 4, DURABILITY: 3, HARVEST: 4}, multipliers: {tripleMultiplier: 1.0}},
+    "fringe": {weights: {MONEY: 5, PART: 3, SPEED: 4, DURABILITY: 3, HARVEST: 5}, multipliers: {tripleMultiplier: 1.5}},
+    "void": {weights: {MONEY: 4, PART: 4, SPEED: 4, DURABILITY: 4, HARVEST: 4}, multipliers: {tripleMultiplier: 2.0}}
   }
 };
 
@@ -48,9 +50,9 @@ function renderForm() {
   dom.payoutTriple.value = currentConfig.payouts.triple;
   dom.payoutJackpot.value = currentConfig.payouts.jackpot;
   
-  dom.solarJackpot.value = currentConfig.profiles.solar.multipliers.tripleSTAR;
-  dom.fringeJackpot.value = currentConfig.profiles.fringe.multipliers.tripleSTAR;
-  dom.voidJackpot.value = currentConfig.profiles.void.multipliers.tripleSTAR;
+  dom.solarJackpot.value = currentConfig.profiles.solar.multipliers.tripleMultiplier;
+  dom.fringeJackpot.value = currentConfig.profiles.fringe.multipliers.tripleMultiplier;
+  dom.voidJackpot.value = currentConfig.profiles.void.multipliers.tripleMultiplier;
 
   dom.symbolsList.innerHTML = "";
   currentConfig.symbols.forEach((sym, i) => {
@@ -91,9 +93,9 @@ dom.form.addEventListener("submit", e => {
     currentConfig.payouts.triple = parseInt(dom.payoutTriple.value);
     currentConfig.payouts.jackpot = parseInt(dom.payoutJackpot.value);
     
-    currentConfig.profiles.solar.multipliers.tripleSTAR = parseFloat(dom.solarJackpot.value);
-    currentConfig.profiles.fringe.multipliers.tripleSTAR = parseFloat(dom.fringeJackpot.value);
-    currentConfig.profiles.void.multipliers.tripleSTAR = parseFloat(dom.voidJackpot.value);
+    currentConfig.profiles.solar.multipliers.tripleMultiplier = parseFloat(dom.solarJackpot.value);
+    currentConfig.profiles.fringe.multipliers.tripleMultiplier = parseFloat(dom.fringeJackpot.value);
+    currentConfig.profiles.void.multipliers.tripleMultiplier = parseFloat(dom.voidJackpot.value);
     
     const syms = [];
     document.querySelectorAll("#symbolsList > div").forEach(div => {

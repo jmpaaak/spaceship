@@ -9,8 +9,12 @@
 
 ## Next slice
 
-- INBOX (52b): Slot machine reel stop logic — replace `slotSymbols`/`slotReward` in expedition.lua with new 5-symbol system, touch-to-stop reel mechanics.
+- Process next item from `docs/feedback/INBOX.md` pending list.
 
+## Previous
+
+- INBOX (52b/52c) complete: Slot machine redesign — replaced 3-symbol legacy system with 5-symbol system (MONEY, PART, SPEED, DURABILITY, HARVEST), touch-to-stop reel logic, new payouts (miss=0, pair=3x, triple=10x), and PIL-generated machine frame and symbols.
+- INBOX (52a) complete: PIL-generated 5 slot symbols + machine body.
 ## Previous
 
 - INBOX (47) complete: Hub planets now open full settlement shop (same as Earth).
