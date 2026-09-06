@@ -238,9 +238,9 @@ M.launchTouchArea = launchTouchArea
 -- Mobile-UI sub-item (1): HUD font enlarged from 8px to 14px; every HUD
 -- band height scales proportionally so text lines never overlap and the
 -- minimap sits below the taller band.
-M.hudFontSize = 14
-M.hudLineStep = 22  -- vertical px between successive HUD text lines (item 17e: raised for 16px icons)
-M.launchHudHeight = 88
+M.hudFontSize = 44   -- item 38a: 2× HUD font (was 14)
+M.hudLineStep = 52   -- item 38a: proportional step for 44px font
+M.launchHudHeight = 176  -- item 38a: 2× launch HUD band height
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
 -- at the world origin, radius 58) tops out at y=202, two pixels above the
@@ -326,8 +326,8 @@ end
 -- right edge and the status text's left edge, both in internal-canvas
 -- pixels. The status text draw x shifts right by this much whenever the
 -- icon is drawn so the icon never overlaps the "H%d/%d ..." text.
-M.hullIconSize = 16
-M.hullIconGap = 6
+M.hullIconSize = 32   -- item 38a: 2× icon size for 44px font
+M.hullIconGap = 8     -- item 38a: proportional gap
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- third slice): a small coin icon paired with the CASH readout, mirroring
@@ -354,8 +354,8 @@ end
 
 -- Icon footprint (px) + gap (px) reserved between the coin icon's right
 -- edge and the CASH text's left edge, mirroring M.hullIconSize/hullIconGap.
-M.cashIconSize = 16
-M.cashIconGap = 6
+M.cashIconSize = 32   -- item 38a: 2× icon size for 44px font
+M.cashIconGap = 8     -- item 38a: proportional gap
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- final slice): a small speedometer-like gauge icon paired with the steering
@@ -539,8 +539,8 @@ M.drawPixelStar = drawPixelStar
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
-M.hudPrimaryStatusGap = 6
-M.hudGalaxyShift = 16  -- extra height when galaxy name is shown (was 10)
+M.hudPrimaryStatusGap = 12  -- item 38a: 2× gap
+M.hudGalaxyShift = 52       -- item 38a: one lineStep when galaxy name shown
 
 -- docs/feedback/INBOX.md UI/HUD item 5: the returning-phase slot-odds line
 -- (C%/P%/S%/AVG$ above the minimap) was removed when item-15(a) abolished
@@ -561,14 +561,14 @@ function M.hudHeight(phase, hud, galaxyShift)
     end
     -- Item 2: returnProgress branch removed (returning phase abolished).
     if hud.best then
-        return 88 + galaxyShift
+        return 176 + galaxyShift
     end
-    return 60 + galaxyShift
+    return 120 + galaxyShift
 end
 
 -- INBOX (16): HUD fill is left-text width only (icons + padding), never a
 -- full-width 720px black band. hudHeight() still anchors the minimap.
-M.hudBackgroundMaxWidth = 280
+M.hudBackgroundMaxWidth = 500  -- item 38a: wider for 44px font
 M.hudBackgroundPad = 8
 
 function M.hudBackgroundWidth(hud, font)
@@ -3290,16 +3290,16 @@ function M:draw()
         love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, y)
     end
     if hud.best then
-        drawStatusWithShield(32 + galaxyShift)
+        drawStatusWithShield(64 + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
         -- ComfyUI HUD wiring (group 1): best-altitude icon
-        local bestY = 60 + galaxyShift
+        local bestY = 120 + galaxyShift
         local bestIconSize = M.hullIconSize
         drawHudSpriteOrPoly(hudIcons.best, nil,
             5 + bestIconSize / 2, bestY + bestIconSize / 2, bestIconSize)
         love.graphics.print(hud.best, 5 + bestIconSize + M.hullIconGap, bestY)
     else
-        drawStatusWithShield(32 + galaxyShift)
+        drawStatusWithShield(64 + galaxyShift)
     end
     if isLaunchHud then
         love.graphics.setFont(previousHudFont)

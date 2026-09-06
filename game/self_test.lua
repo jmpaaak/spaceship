@@ -5799,8 +5799,8 @@ end
 
 -- INBOX (16): HUD background covers left text only, never the full 720px band.
 local function testHudBackgroundNotFullWidth()
-    assert(PlayScene.hudBackgroundMaxWidth == 280,
-        "HUD background must cap at ~280px so stars/planets show on the right")
+    assert(PlayScene.hudBackgroundMaxWidth == 500,
+        "HUD background must cap at ~500px for 44px font (item 38a)")
     assert(type(PlayScene.hudBackgroundWidth) == "function",
         "hudBackgroundWidth must measure left-text width for the HUD fill")
     local font = {
@@ -6175,13 +6175,13 @@ function M.run()
         "devPlaceholderFontSize must be removed (item 17a)")
     assert(PlayScene.devPlaceholderAlpha == nil,
         "devPlaceholderAlpha must be removed (item 17a)")
-    -- Mobile-UI sub-item (1): HUD font must be 12-14px for mobile readability.
-    assert(PlayScene.hudFontSize and PlayScene.hudFontSize >= 12 and PlayScene.hudFontSize <= 14,
-        "hudFontSize must be 12-14px for mobile readability: " .. tostring(PlayScene.hudFontSize))
-    assert(PlayScene.hudLineStep and PlayScene.hudLineStep >= 14,
-        "hudLineStep must be >= 14px for mobile line spacing: " .. tostring(PlayScene.hudLineStep))
-    assert(PlayScene.hudGalaxyShift and PlayScene.hudGalaxyShift >= 14,
-        "hudGalaxyShift must be >= 14px for mobile readability: " .. tostring(PlayScene.hudGalaxyShift))
+    -- Item 38a: HUD font doubled to 44px for better mobile readability.
+    assert(PlayScene.hudFontSize and PlayScene.hudFontSize >= 40 and PlayScene.hudFontSize <= 48,
+        "hudFontSize must be 40-48px after item 38a 2x scaling: " .. tostring(PlayScene.hudFontSize))
+    assert(PlayScene.hudLineStep and PlayScene.hudLineStep >= 48,
+        "hudLineStep must be >= 48px after item 38a 2x scaling: " .. tostring(PlayScene.hudLineStep))
+    assert(PlayScene.hudGalaxyShift and PlayScene.hudGalaxyShift >= 48,
+        "hudGalaxyShift must be >= 48px after item 38a 2x scaling: " .. tostring(PlayScene.hudGalaxyShift))
 
     riskScene.expedition.phase = "settlement"
     -- Item 11: slot count (S%02d) is always 0 since item-15 abolished
@@ -6229,8 +6229,8 @@ function M.run()
         "hudLines().cash must read CASH $N: " .. tostring(ascendingHud.cash))
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
-    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 60,
-        "ascending HUD band height must be 60 (no samples line after item 17b)")
+    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 120,
+        "ascending HUD band height must be 120 after item 38a 2x scaling")
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
 
