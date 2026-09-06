@@ -8490,8 +8490,14 @@ function M.run()
             assert(math.abs(d0 - m0.orbitRadius) < 1, "moon must orbit at orbitRadius distance")
         end
 
-        -- (d) moonSampleValue = $10
-        assert(world.moonSampleValue() == 10, "moon sample value must be $10 (10x planet)")
+        -- (d) moonSampleValue: $2~$10 based on speed (faster = higher)
+        local fastMoon = { speedFactor = 1.0 }
+        local slowMoon = { speedFactor = 0.0 }
+        local midMoon = { speedFactor = 0.5 }
+        assert(world.moonSampleValue(fastMoon) == 10, "fastest moon must pay $10, got " .. world.moonSampleValue(fastMoon))
+        assert(world.moonSampleValue(slowMoon) == 2, "slowest moon must pay $2, got " .. world.moonSampleValue(slowMoon))
+        assert(world.moonSampleValue(midMoon) == 6, "mid-speed moon must pay $6, got " .. world.moonSampleValue(midMoon))
+        assert(world.moonSampleValue(nil) == 6, "nil moon defaults to $6")
 
         -- (e) moonCollisionDamage same as planet
         local fakeMoon = { parentX = 0, parentY = -500 }

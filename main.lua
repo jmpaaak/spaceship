@@ -458,6 +458,18 @@ function love.focus(focused)
     end
 end
 
+-- iOS: love.visible fires when the app goes to background (love.focus may not)
+function love.visible(visible)
+    if not visible then
+        if scenes and scenes.stack and #scenes.stack > 0 then
+            local scene = scenes.stack[#scenes.stack]
+            if scene and scene.expedition and scene.expedition.phase == "ascending" and not scene.paused then
+                scene.paused = true
+            end
+        end
+    end
+end
+
 function love.quit()
     persistBestAltitude()
 end

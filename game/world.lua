@@ -805,7 +805,7 @@ end
 
 function M.moonSampleValue(moon)
     -- Faster moons (lower period) give higher reward: $2~$10
-    local factor = (moon and moon.speedFactor) or 1.0
+    local factor = (moon and moon.speedFactor) or 0.5
     return 2 + math.floor(factor * 8) -- 2~10
 end
 
