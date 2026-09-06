@@ -8,10 +8,15 @@
       "nameKo": "고철 장갑판",
       "icon": "▭",
       "rarity": "common",
-      "tags": ["defense"],
+      "tags": [
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullDurability", "value": 1 }
+        {
+          "type": "hullDurability",
+          "value": 1
+        }
       ]
     },
     {
@@ -21,10 +26,15 @@
       "nameKo": "이온 핀",
       "icon": "◭",
       "rarity": "common",
-      "tags": ["speed"],
+      "tags": [
+        "speed"
+      ],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 5 }
+        {
+          "type": "speed",
+          "value": 5
+        }
       ]
     },
     {
@@ -34,10 +44,15 @@
       "nameKo": "화물 포드",
       "icon": "▤",
       "rarity": "common",
-      "tags": ["economy"],
+      "tags": [
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "sampleSellValue", "value": 3 }
+        {
+          "type": "sampleSellValue",
+          "value": 3
+        }
       ]
     },
     {
@@ -47,10 +62,15 @@
       "nameKo": "예비 탱크",
       "icon": "◑",
       "rarity": "uncommon",
-      "tags": ["economy"],
+      "tags": [
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "money", "value": 10 }
+        {
+          "type": "money",
+          "value": 10
+        }
       ]
     },
     {
@@ -60,11 +80,16 @@
       "nameKo": "상승 부스터",
       "icon": "▲",
       "rarity": "uncommon",
-      "tags": ["speed", "altitude"],
+      "tags": [
+        "speed",
+        "altitude"
+      ],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 4 },
-        { "type": "speed", "value": 2 }
+        {
+          "type": "speed",
+          "value": 6
+        }
       ]
     },
     {
@@ -74,11 +99,23 @@
       "nameKo": "반응 장갑",
       "icon": "◈",
       "rarity": "rare",
-      "tags": ["defense", "economy"],
-      "editions": ["irradiated", "crystallized"],
+      "tags": [
+        "defense",
+        "economy"
+      ],
+      "editions": [
+        "irradiated",
+        "crystallized"
+      ],
       "effects": [
-        { "type": "hullDurability", "value": 2 },
-        { "type": "sampleSellValue", "value": 5 }
+        {
+          "type": "hullDurability",
+          "value": 2
+        },
+        {
+          "type": "sampleSellValue",
+          "value": 5
+        }
       ]
     },
     {
@@ -88,10 +125,16 @@
       "nameKo": "아주르 수집기",
       "icon": "◇",
       "rarity": "common",
-      "tags": ["azure", "economy"],
+      "tags": [
+        "azure",
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "sampleSellValue", "value": 2 }
+        {
+          "type": "sampleSellValue",
+          "value": 2
+        }
       ]
     },
     {
@@ -101,10 +144,16 @@
       "nameKo": "엠버 배기구",
       "icon": "◆",
       "rarity": "common",
-      "tags": ["ember", "altitude"],
+      "tags": [
+        "ember",
+        "altitude"
+      ],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 3 }
+        {
+          "type": "speed",
+          "value": 3
+        }
       ]
     },
     {
@@ -114,10 +163,16 @@
       "nameKo": "보이드 렌즈",
       "icon": "◐",
       "rarity": "uncommon",
-      "tags": ["void", "economy"],
+      "tags": [
+        "void",
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "sampleSellValue", "value": 4 }
+        {
+          "type": "sampleSellValue",
+          "value": 4
+        }
       ]
     },
     {
@@ -127,10 +182,16 @@
       "nameKo": "자이로 안정기",
       "icon": "◎",
       "rarity": "common",
-      "tags": ["control", "speed"],
+      "tags": [
+        "control",
+        "speed"
+      ],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 3 }
+        {
+          "type": "speed",
+          "value": 3
+        }
       ]
     },
     {
@@ -140,11 +201,16 @@
       "nameKo": "마이크로 추진기 배열",
       "icon": "▧",
       "rarity": "common",
-      "tags": ["altitude", "speed"],
+      "tags": [
+        "altitude",
+        "speed"
+      ],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 2 },
-        { "type": "speed", "value": 1 }
+        {
+          "type": "speed",
+          "value": 3
+        }
       ]
     },
     {
@@ -154,10 +220,15 @@
       "nameKo": "삭마 코팅",
       "icon": "▨",
       "rarity": "common",
-      "tags": ["defense"],
+      "tags": [
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullDurability", "value": 1 }
+        {
+          "type": "hullDurability",
+          "value": 1
+        }
       ]
     },
     {
@@ -167,11 +238,20 @@
       "nameKo": "태양 돛",
       "icon": "▽",
       "rarity": "uncommon",
-      "tags": ["altitude", "economy"],
+      "tags": [
+        "altitude",
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 3 },
-        { "type": "money", "value": 3 }
+        {
+          "type": "speed",
+          "value": 3
+        },
+        {
+          "type": "money",
+          "value": 3
+        }
       ]
     },
     {
@@ -181,11 +261,20 @@
       "nameKo": "타이탄 프레임",
       "icon": "▣",
       "rarity": "rare",
-      "tags": ["defense", "altitude"],
+      "tags": [
+        "defense",
+        "altitude"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullDurability", "value": 3 },
-        { "type": "climbSpeed", "value": 2 }
+        {
+          "type": "speed",
+          "value": 2
+        },
+        {
+          "type": "hullDurability",
+          "value": 3
+        }
       ]
     },
     {
@@ -195,11 +284,20 @@
       "nameKo": "프리즘 선체",
       "icon": "◭",
       "rarity": "rare",
-      "tags": ["azure", "defense"],
+      "tags": [
+        "azure",
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullDurability", "value": 2 },
-        { "type": "sampleSellValue", "value": 3 }
+        {
+          "type": "hullDurability",
+          "value": 2
+        },
+        {
+          "type": "sampleSellValue",
+          "value": 3
+        }
       ]
     },
     {
@@ -209,10 +307,16 @@
       "nameKo": "엠버 코어",
       "icon": "◉",
       "rarity": "uncommon",
-      "tags": ["ember", "altitude"],
+      "tags": [
+        "ember",
+        "altitude"
+      ],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 5 }
+        {
+          "type": "speed",
+          "value": 5
+        }
       ]
     },
     {
@@ -222,11 +326,20 @@
       "nameKo": "보이드 파편",
       "icon": "◒",
       "rarity": "rare",
-      "tags": ["void", "defense"],
+      "tags": [
+        "void",
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullDurability", "value": 2 },
-        { "type": "sampleSellValue", "value": 4 }
+        {
+          "type": "hullDurability",
+          "value": 2
+        },
+        {
+          "type": "sampleSellValue",
+          "value": 4
+        }
       ]
     },
     {
@@ -236,10 +349,15 @@
       "nameKo": "밸러스트 웨이트",
       "icon": "▬",
       "rarity": "common",
-      "tags": ["defense"],
+      "tags": [
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullDurability", "value": 2 }
+        {
+          "type": "hullDurability",
+          "value": 2
+        }
       ]
     },
     {
@@ -249,10 +367,16 @@
       "nameKo": "항법 비컨",
       "icon": "✦",
       "rarity": "common",
-      "tags": ["control", "economy"],
+      "tags": [
+        "control",
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "money", "value": 5 }
+        {
+          "type": "money",
+          "value": 5
+        }
       ]
     },
     {
@@ -262,11 +386,16 @@
       "nameKo": "별자리 나침반",
       "icon": "✧",
       "rarity": "uncommon",
-      "tags": ["control", "altitude"],
+      "tags": [
+        "control",
+        "altitude"
+      ],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 3 },
-        { "type": "speed", "value": 2 }
+        {
+          "type": "speed",
+          "value": 5
+        }
       ]
     },
     {
@@ -276,12 +405,29 @@
       "nameKo": "양자 합금",
       "icon": "◍",
       "rarity": "legendary",
-      "tags": ["defense", "altitude", "economy"],
-      "editions": ["quantum_flawed", "refined", "irradiated"],
+      "tags": [
+        "defense",
+        "altitude",
+        "economy"
+      ],
+      "editions": [
+        "quantum_flawed",
+        "refined",
+        "irradiated"
+      ],
       "effects": [
-        { "type": "hullDurability", "value": 3 },
-        { "type": "climbSpeed", "value": 4 },
-        { "type": "sampleSellValue", "value": 6 }
+        {
+          "type": "speed",
+          "value": 4
+        },
+        {
+          "type": "hullDurability",
+          "value": 3
+        },
+        {
+          "type": "sampleSellValue",
+          "value": 6
+        }
       ]
     },
     {
@@ -291,11 +437,20 @@
       "nameKo": "아주르 프리즘",
       "icon": "◇",
       "rarity": "rare",
-      "tags": ["azure", "altitude"],
+      "tags": [
+        "azure",
+        "altitude"
+      ],
       "editions": [],
       "effects": [
-        { "type": "climbSpeed", "value": 3 },
-        { "type": "sampleSellValue", "value": 2 }
+        {
+          "type": "speed",
+          "value": 3
+        },
+        {
+          "type": "sampleSellValue",
+          "value": 2
+        }
       ]
     },
     {
@@ -305,10 +460,16 @@
       "nameKo": "엠버 플레이팅",
       "icon": "◆",
       "rarity": "uncommon",
-      "tags": ["ember", "defense"],
+      "tags": [
+        "ember",
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullDurability", "value": 2 }
+        {
+          "type": "hullDurability",
+          "value": 2
+        }
       ]
     },
     {
@@ -318,10 +479,16 @@
       "nameKo": "보이드 축전기",
       "icon": "◐",
       "rarity": "common",
-      "tags": ["void", "speed"],
+      "tags": [
+        "void",
+        "speed"
+      ],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 4 }
+        {
+          "type": "speed",
+          "value": 4
+        }
       ]
     },
     {
@@ -331,10 +498,16 @@
       "nameKo": "비상 구조 비콘",
       "icon": "✚",
       "rarity": "uncommon",
-      "tags": ["defense", "control"],
+      "tags": [
+        "defense",
+        "control"
+      ],
       "editions": [],
       "effects": [
-        { "type": "insurance", "value": 1 }
+        {
+          "type": "insurance",
+          "value": 1
+        }
       ]
     },
     {
@@ -344,10 +517,15 @@
       "nameKo": "교역 허가증",
       "icon": "▥",
       "rarity": "uncommon",
-      "tags": ["economy"],
+      "tags": [
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "shopDiscount", "value": 20 }
+        {
+          "type": "shopDiscount",
+          "value": 20
+        }
       ]
     },
     {
@@ -357,10 +535,16 @@
       "nameKo": "콤보 매트릭스",
       "icon": "▦",
       "rarity": "rare",
-      "tags": ["economy", "control"],
+      "tags": [
+        "economy",
+        "control"
+      ],
       "editions": [],
       "effects": [
-        { "type": "streakMultiplier", "value": 10 }
+        {
+          "type": "streakMultiplier",
+          "value": 10
+        }
       ],
       "galaxyExclusive": true
     },
@@ -371,10 +555,15 @@
       "nameKo": "시세 중개기",
       "icon": "◈",
       "rarity": "uncommon",
-      "tags": ["economy"],
+      "tags": [
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "sellMultiplier", "value": 20 }
+        {
+          "type": "sellMultiplier",
+          "value": 20
+        }
       ]
     },
     {
@@ -384,10 +573,16 @@
       "nameKo": "행운의 부적",
       "icon": "✦",
       "rarity": "rare",
-      "tags": ["control", "void"],
+      "tags": [
+        "control",
+        "void"
+      ],
       "editions": [],
       "effects": [
-        { "type": "luck", "value": 15 }
+        {
+          "type": "luck",
+          "value": 15
+        }
       ]
     },
     {
@@ -397,10 +592,16 @@
       "nameKo": "에코 릴레이",
       "icon": "◎",
       "rarity": "rare",
-      "tags": ["control", "economy"],
+      "tags": [
+        "control",
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "chainTrigger", "value": 1 }
+        {
+          "type": "chainTrigger",
+          "value": 1
+        }
       ]
     },
     {
@@ -410,10 +611,16 @@
       "nameKo": "협상 칩",
       "icon": "◫",
       "rarity": "uncommon",
-      "tags": ["economy", "control"],
+      "tags": [
+        "economy",
+        "control"
+      ],
       "editions": [],
       "effects": [
-        { "type": "rerollBonus", "value": 2 }
+        {
+          "type": "rerollBonus",
+          "value": 2
+        }
       ]
     },
     {
@@ -423,10 +630,16 @@
       "nameKo": "슬립스트림 선체",
       "icon": "◔",
       "rarity": "uncommon",
-      "tags": ["defense", "speed"],
+      "tags": [
+        "defense",
+        "speed"
+      ],
       "editions": [],
       "effects": [
-        { "type": "collisionRadius", "value": 15 }
+        {
+          "type": "collisionRadius",
+          "value": 15
+        }
       ]
     },
     {
@@ -436,10 +649,15 @@
       "nameKo": "스캐너 배열",
       "icon": "◍",
       "rarity": "common",
-      "tags": ["control"],
+      "tags": [
+        "control"
+      ],
       "editions": [],
       "effects": [
-        { "type": "detectionRadius", "value": 25 }
+        {
+          "type": "detectionRadius",
+          "value": 25
+        }
       ]
     },
     {
@@ -449,10 +667,16 @@
       "nameKo": "수집 드론",
       "icon": "◉",
       "rarity": "rare",
-      "tags": ["economy", "control"],
+      "tags": [
+        "economy",
+        "control"
+      ],
       "editions": [],
       "effects": [
-        { "type": "autoCollect", "value": 1 }
+        {
+          "type": "autoCollect",
+          "value": 1
+        }
       ]
     },
     {
@@ -462,11 +686,23 @@
       "nameKo": "성운 단조기",
       "icon": "◈",
       "rarity": "legendary",
-      "tags": ["void", "altitude", "defense"],
-      "editions": ["irradiated"],
+      "tags": [
+        "void",
+        "altitude",
+        "defense"
+      ],
+      "editions": [
+        "irradiated"
+      ],
       "effects": [
-        { "type": "climbSpeed", "value": 5 },
-        { "type": "hullDurability", "value": 2 }
+        {
+          "type": "speed",
+          "value": 5
+        },
+        {
+          "type": "hullDurability",
+          "value": 2
+        }
       ],
       "galaxyExclusive": true
     },
@@ -477,11 +713,23 @@
       "nameKo": "성단 유물",
       "icon": "✦",
       "rarity": "legendary",
-      "tags": ["azure", "economy", "control"],
-      "editions": ["crystallized"],
+      "tags": [
+        "azure",
+        "economy",
+        "control"
+      ],
+      "editions": [
+        "crystallized"
+      ],
       "effects": [
-        { "type": "sampleSellValue", "value": 6 },
-        { "type": "luck", "value": 10 }
+        {
+          "type": "sampleSellValue",
+          "value": 6
+        },
+        {
+          "type": "luck",
+          "value": 10
+        }
       ],
       "galaxyExclusive": true
     }

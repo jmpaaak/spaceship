@@ -81,7 +81,7 @@ local function testJoystick()
     tapHoldScene.touches["hold"] = { x = 20, y = 160, originX = 20, originY = 160 }
     local tapShipXBefore = tapHoldScene.ship.x
     tapHoldScene:update(1)
-    assert(tapHoldScene.ship.x == tapShipXBefore - expedition.steeringSpeed(tapHoldScene.expedition),
+    assert(tapHoldScene.ship.x == tapShipXBefore - expedition.effectiveSpeed(tapHoldScene.expedition),
         "an undragged tap-and-hold touch must still steer via the legacy binary left/right path")
 
     -- Desktop `love .` routes the mouse through the same touch API with
@@ -1483,7 +1483,7 @@ end
 -- docs/feedback/INBOX.md item 9: "부품들의 조합(시너지)이 고도(distance-from-Earth
 -- 점수) 상승 속도/효율에 배가 효과를 내는 것" — combos must multiply, not just add.
 -- This exercises game/gear.lua's pure tag-synergy engine: two equipped parts
--- sharing a tag must yield MORE climbSpeed than the two parts' raw additive
+-- sharing a tag must yield MORE speed than the two parts' raw additive
 -- sum would give alone, and the bundled hull_parts.json card pool must have
 -- grown to the 20-30 range item 9 calls for.
 local function testGearSynergyEngine()
@@ -1498,12 +1498,12 @@ local function testGearSynergyEngine()
     end
 
     -- Pure aggregate: summing effect values of all equipped parts, no synergy.
-    local partA = { id = "a", tags = { "altitude" }, effects = { { type = "climbSpeed", value = 4 } } }
-    local partB = { id = "b", tags = { "altitude" }, effects = { { type = "climbSpeed", value = 8 } } }
+    local partA = { id = "a", tags = { "altitude" }, effects = { { type = "speed", value = 4 } } }
+    local partB = { id = "b", tags = { "altitude" }, effects = { { type = "speed", value = 8 } } }
     local partC = { id = "c", tags = { "economy" }, effects = { { type = "sampleSellValue", value = 5 } } }
 
     local rawTotals = gear.aggregateEffects({ partA, partB })
-    assert(rawTotals.climbSpeed == 12, "raw additive sum must be 12, got " .. tostring(rawTotals.climbSpeed))
+    assert(rawTotals.speed == 12, "raw additive sum must be 12, got " .. tostring(rawTotals.speed))
 
     -- Two parts sharing the "altitude" tag must synergize: the combined
     -- multiplier must exceed 1 (i.e. more than simple addition).
@@ -1514,16 +1514,16 @@ local function testGearSynergyEngine()
     local soloMultiplier = gear.tagSynergyMultiplier({ partA, partC })
     assert(soloMultiplier == 1, "non-overlapping tags must not synergize, got " .. tostring(soloMultiplier))
 
-    -- equippedTotals must apply the multiplier to climbSpeed specifically,
+    -- equippedTotals must apply the multiplier to speed specifically,
     -- so the combo total is strictly greater than the raw additive sum.
     local combo = gear.equippedTotals({ partA, partB })
-    assert(combo.climbSpeed > rawTotals.climbSpeed,
-        "synergized climbSpeed (" .. tostring(combo.climbSpeed) ..
-        ") must exceed raw additive sum (" .. tostring(rawTotals.climbSpeed) .. ")")
+    assert(combo.speed > rawTotals.speed,
+        "synergized speed (" .. tostring(combo.speed) ..
+        ") must exceed raw additive sum (" .. tostring(rawTotals.speed) .. ")")
     assert(combo.synergyMultiplier == sharedMultiplier)
 
-    -- Non-climbSpeed effect types (e.g. sampleSellValue) must remain purely
-    -- additive — synergy in this cycle only amplifies altitude/climb rate.
+    -- Non-speed effect types (e.g. sampleSellValue) must remain purely
+    -- additive — synergy in this cycle only amplifies speed.
     local mixedCombo = gear.equippedTotals({ partA, partC })
     assert(mixedCombo.sampleSellValue == 5, "sampleSellValue must stay additive, got " .. tostring(mixedCombo.sampleSellValue))
 end
@@ -2026,7 +2026,7 @@ local function testGearEffectSchemaExpansion()
     -- Every category (A)~(F) effect type referenced by docs/GEAR_SCHEMA.md
     -- item 14 must be a known, loadable effect type.
     local expectedTypes = {
-        "speed", "sampleSellValue", "money", "climbSpeed", "hullDurability",
+        "speed", "sampleSellValue", "money", "hullDurability",
         "sellMultiplier", "streakMultiplier",
         "luck", "chainTrigger", "rerollBonus",
         "insurance", "collisionRadius",
@@ -2132,7 +2132,7 @@ end
 -- the "역할이 겹치지 않도록" requirement).
 local function testEnginePropulsionSpecialization()
     -- (G) effect types must be known and categorized.
-    for _, t in ipairs({ "fuelEfficiency", "steeringResponsiveness", "boostCharge" }) do
+    for _, t in ipairs({ "fuelEfficiency", "boostCharge" }) do
         assert(gear.knownEffectTypes[t], "effect type '" .. t .. "' must be known (item 10b)")
         assert(gear.effectCategories[t] == "G",
             "effect type '" .. t .. "' must be categorized as (G) propulsion")
@@ -2147,10 +2147,7 @@ local function testEnginePropulsionSpecialization()
     assert(gear.effectiveFuelBurnRate(10, { hugeEffPart }) == 0,
         "fuelEfficiency must clamp burn rate at zero, never negative")
 
-    -- (G) steeringResponsiveness: percentage growth of a base turn rate.
-    local steerPart = { id = "sr", tags = {}, effects = { { type = "steeringResponsiveness", value = 15 } } }
-    assert(math.abs(gear.effectiveSteeringRate(100, { steerPart }) - 115) < 1e-9,
-        "steeringResponsiveness +15%% of base turn rate 100 must be 115")
+    -- (G) steeringResponsiveness: removed in item 53a (merged into speed).
 
     -- (G) boostCharge: discrete non-negative charge count.
     local boostPart = { id = "bc", tags = {}, effects = { { type = "boostCharge", value = 2.7 } } }
@@ -2158,19 +2155,17 @@ local function testEnginePropulsionSpecialization()
     assert(gear.boostChargeCount({}) == 0, "no boostCharge effects must yield zero charges")
 
     -- The bundled engine_parts.json pool must actually use at least one of
-    -- the three (G) types on at least one card each, so the propulsion
+    -- the (G) types on at least one card each, so the propulsion
     -- specialization is real content, not just dead schema.
     local enginePool = gear.loadEngineParts()
-    local sawFuelEff, sawSteering, sawBoost = false, false, false
+    local sawFuelEff, sawBoost = false, false
     for _, part in ipairs(enginePool) do
         for _, effect in ipairs(part.effects) do
             if effect.type == "fuelEfficiency" then sawFuelEff = true end
-            if effect.type == "steeringResponsiveness" then sawSteering = true end
             if effect.type == "boostCharge" then sawBoost = true end
         end
     end
     assert(sawFuelEff, "engine_parts.json must include at least one fuelEfficiency card")
-    assert(sawSteering, "engine_parts.json must include at least one steeringResponsiveness card")
     assert(sawBoost, "engine_parts.json must include at least one boostCharge card")
 
     -- The bundled hull_parts.json pool must stay free of the (G) types —
@@ -2221,27 +2216,18 @@ end
 -- several run-level wrappers are documented (game/self_test.lua's
 -- testGearHullSpeedRunWiring/testGearMoneyRunWiring and
 -- docs/GEAR_SCHEMA.md) as explicitly HULL-ONLY -- an engine-slot card
--- carrying `speed`/`money`/`climbSpeed`/`hullDurability`/`sampleSellValue`
+-- carrying `speed`/`money`/`hullDurability`/`sampleSellValue`
 -- (the (A) additive types item 9 scopes to hull "조커형" gear) contributes
 -- NOTHING when equipped in the engine slot. A bundled engine_parts.json
 -- card whose effects are ENTIRELY drawn from that hull-only set is
 -- therefore live-looking schema but dead-in-practice content: a player can
 -- equip it in its only legal slot category and see zero gameplay effect.
--- Auditing the actual bundled pool finds 9 of engine_parts.json's 14 cards
--- in exactly this state (engine_basic_thruster, engine_afterburner,
--- engine_fusion_core, engine_azure_coolant_jet, engine_ember_burst_valve,
--- engine_void_phase_thruster, engine_solar_sail_flap,
--- engine_burst_capacitor, engine_singularity_drive) -- every single one of
--- the original pre-item-10(b) engine cards, none of which ever got a (G)
--- propulsion-specialization or category-agnostic (C)/(E) effect added
--- alongside their hull-only-scoped stats.
+-- Item 53a: speed is now category-agnostic (effectiveSpeed reads both
+-- hull and engine parts), so it's removed from the hull-only set.
 local function testEngineCardsHaveNonHullOnlyEffect()
-    -- The (A) additive types with documented hull-only run-scope (per
-    -- testGearHullDurabilityRunWiring/testGearHullSpeedRunWiring/
-    -- testGearMoneyRunWiring/testGearRunWiring's climbSpeed synergy scope
-    -- and testGearSurvivalAndEconomyWiring's sampleSellValue scope).
+    -- The (A) additive types with documented hull-only run-scope.
     local hullOnlyTypes = {
-        speed = true, money = true, climbSpeed = true,
+        money = true,
         hullDurability = true, sampleSellValue = true,
     }
     local enginePool = gear.loadEngineParts()
@@ -2260,7 +2246,7 @@ local function testEngineCardsHaveNonHullOnlyEffect()
     end
     assert(#deadCards == 0,
         "every bundled engine_parts.json card must carry at least one effect type that is NOT " ..
-        "hull-only-scoped (speed/money/climbSpeed/hullDurability/sampleSellValue), otherwise the " ..
+        "hull-only-scoped (money/hullDurability/sampleSellValue), otherwise the " ..
         "card contributes nothing when equipped in its only legal (engine) slot; dead cards: " ..
         table.concat(deadCards, ", "))
 end
@@ -2336,7 +2322,7 @@ end
 local function testHullCardsHaveNonEngineOnlyEffect()
     -- The (G) engine-only types
     local engineOnlyTypes = {
-        fuelEfficiency = true, steeringResponsiveness = true, boostCharge = true
+        fuelEfficiency = true, boostCharge = true
     }
     local hullPool = gear.loadHullParts()
     local deadCards = {}
@@ -2390,7 +2376,7 @@ end
 -- run-state module explicitly carved out as an exception in loop/PROMPT.md.
 local function testGearRunWiring()
     local expedition = require("game.expedition")
-    local run = expedition.new({ climbSpeed = 60 })
+    local run = expedition.new({ baseSpeed = 60 })
 
     -- A fresh run starts with an empty, independent hull/engine loadout.
     assert(type(run.equippedGear) == "table" and #run.equippedGear == 0,
@@ -2442,26 +2428,23 @@ local function testGearRunWiring()
 end
 
 -- Item 10(b) propulsion-specialization run wiring for the effects that
--- remain meaningful in flight: steeringResponsiveness and boostCharge.
+-- remain meaningful in flight: engine speed and boostCharge.
 local function testGearPropulsionRunWiring()
     local expedition = require("game.expedition")
     local enginePool = gear.loadEngineParts()
 
 
-    -- steeringResponsiveness: equipping engine_vector_nozzle
-    -- (steeringResponsiveness +15) must raise expedition.steeringSpeed
-    -- beyond the base/upgrade-only formula.
-    local steerRun = expedition.new({ steeringSpeed = 55 })
-    local baseSteering = expedition.steeringSpeed(steerRun)
+    -- Item 53a: engine speed now feeds into expedition.effectiveSpeed.
+    -- Equipping engine_vector_nozzle (speed +19) must raise effectiveSpeed.
+    local steerRun = expedition.new()
+    local baseSteering = expedition.effectiveSpeed(steerRun)
     local vectorCard = gear.findById(enginePool, "engine_vector_nozzle")
     assert(vectorCard, "fixture engine card 'engine_vector_nozzle' must exist in the bundled pool")
     assert(expedition.equipGear(steerRun, "engine", vectorCard))
-    local boostedSteering = expedition.steeringSpeed(steerRun)
+    local boostedSteering = expedition.effectiveSpeed(steerRun)
     assert(boostedSteering > baseSteering,
-        "equipped steeringResponsiveness engine part must raise steeringSpeed: "
+        "equipped engine speed part must raise effectiveSpeed: "
             .. tostring(baseSteering) .. " -> " .. tostring(boostedSteering))
-    assert(math.abs(boostedSteering - baseSteering * 1.15) < 1e-9,
-        "steeringSpeed must apply the equipped steeringResponsiveness percentage")
 
     -- boostCharge: a fresh run with no engine parts must report zero
     -- charges; equipping engine_emergency_boost_pod (boostCharge +2) must
@@ -3071,69 +3054,54 @@ end
 -- (speed/sampleSellValue/money/climbSpeed/hullDurability); climbSpeed,
 -- sampleSellValue and hullDurability are now all wired, but `speed` (a hull
 -- card's contribution to the ship's steering/maneuvering rate, distinct
--- from engine parts' percentage-based `steeringResponsiveness` (G)) has
--- never been read by `M.steeringSpeed(run)` -- every bundled `speed` hull
--- card (7 of them per docs/GEAR_SCHEMA.md/hull_parts.json) is equippable
--- but has zero effect on actual in-flight steering. This test closes that
--- gap the same way hullDurability closed its own: hull-scoped (matching
--- climbSpeed/sampleSellValue/hullDurability's hull-only design), additive
--- on top of the existing base+upgrade formula, stacking with (not
--- replacing) the engine-part percentage multiplier already applied.
+-- Item 53a: effectiveSpeed now reads both hull `speed` and engine `speed`.
+-- Hull cards contribute additively via equippedTotals; engine cards
+-- contribute additively via aggregateEffects + tagSynergyMultiplier.
 local function testGearHullSpeedRunWiring()
     local expedition = require("game.expedition")
 
-    -- No gear equipped: steeringSpeed must equal the unmodified pre-wiring
-    -- base+upgrade formula (regression baseline).
-    local bareRun = expedition.new({ baseSteeringSpeed = 55, steeringUpgradeLevel = 0 })
-    local baseline = expedition.steeringSpeed(bareRun)
-    assert(baseline == 55,
-        "an unequipped fresh run's steeringSpeed must equal baseSteeringSpeed 55, got "
+    -- No gear equipped: effectiveSpeed must equal baseSpeed (default 30).
+    local bareRun = expedition.new()
+    local baseline = expedition.effectiveSpeed(bareRun)
+    assert(baseline == 30,
+        "an unequipped fresh run's effectiveSpeed must equal baseSpeed 30, got "
             .. tostring(baseline))
 
-    -- Equipping a hull card with a `speed` effect must raise steeringSpeed
+    -- Equipping a hull card with a `speed` effect must raise effectiveSpeed
     -- by exactly that additive amount.
     local speedCard = {
         id = "hull-speed-fixture", name = "Thruster Fins", nameKo = "Thruster Fins", icon = "*",
         rarity = "common", tags = {}, editions = {},
         effects = { { type = "speed", value = 8 } },
     }
-    local run = expedition.new({ baseSteeringSpeed = 55, steeringUpgradeLevel = 0 })
+    local run = expedition.new()
     assert(expedition.equipGear(run, "hull", speedCard))
-    local boosted = expedition.steeringSpeed(run)
-    assert(boosted == 63,
-        "equipping a speed +8 hull card must raise steeringSpeed from 55 to 63, got "
+    local boosted = expedition.effectiveSpeed(run)
+    assert(boosted == 38,
+        "equipping a speed +8 hull card must raise effectiveSpeed from 30 to 38, got "
             .. tostring(boosted))
 
-    -- Sanity: an ENGINE-slot card carrying `speed` must NOT count -- item 9
-    -- scopes this additive stat to hull parts (unlike the engine-only (G)
-    -- `steeringResponsiveness` percentage effect it stacks alongside).
-    local engineRun = expedition.new({ baseSteeringSpeed = 55, steeringUpgradeLevel = 0 })
+    -- An ENGINE-slot card carrying `speed` must also count (item 53a unified).
+    local engineRun = expedition.new()
     local engineSpeedCard = {
         id = "engine-speed-fixture", name = "EngineSpeed", nameKo = "EngineSpeed", icon = "*",
         rarity = "common", tags = {}, editions = {},
         effects = { { type = "speed", value = 8 } },
     }
     assert(expedition.equipGear(engineRun, "engine", engineSpeedCard))
-    local engineResult = expedition.steeringSpeed(engineRun)
-    assert(engineResult == 55,
-        "speed effects on an engine-slot part must NOT count toward steeringSpeed "
-            .. "(item 9 scopes this stat to hull gear), got " .. tostring(engineResult))
+    local engineResult = expedition.effectiveSpeed(engineRun)
+    assert(engineResult == 38,
+        "speed effects on an engine-slot part must now count toward effectiveSpeed "
+            .. "(item 53a unified speed), got " .. tostring(engineResult))
 
-    -- Must stack additively with the existing engine-part percentage
-    -- multiplier (gear.effectiveSteeringRate), not replace it: base 55 +
-    -- hull speed 8 = 63, then engine steeringResponsiveness +50% -> 94.5.
-    local stackedRun = expedition.new({ baseSteeringSpeed = 55, steeringUpgradeLevel = 0 })
+    -- Hull and engine speed contributions must stack additively.
+    local stackedRun = expedition.new()
     assert(expedition.equipGear(stackedRun, "hull", speedCard))
-    local steeringPercentCard = {
-        id = "engine-steering-fixture", name = "SteerBoost", nameKo = "SteerBoost", icon = "*",
-        rarity = "common", tags = {}, editions = {},
-        effects = { { type = "steeringResponsiveness", value = 50 } },
-    }
-    assert(expedition.equipGear(stackedRun, "engine", steeringPercentCard))
-    local stacked = expedition.steeringSpeed(stackedRun)
-    assert(math.abs(stacked - 94.5) < 0.001,
-        "hull speed (+8, additive) and engine steeringResponsiveness (+50%, multiplicative) "
-            .. "must both apply, expected 94.5, got " .. tostring(stacked))
+    assert(expedition.equipGear(stackedRun, "engine", engineSpeedCard))
+    local stacked = expedition.effectiveSpeed(stackedRun)
+    assert(stacked == 46,
+        "hull speed (+8) and engine speed (+8) must both add to base 30 for 46, got "
+            .. tostring(stacked))
 end
 
 -- Item 10(b)/9 gap audit: item 10's own text names climb acceleration
@@ -3142,7 +3110,7 @@ end
 -- engine_fusion_core, engine_ion_drive, engine_ember_burst_valve,
 -- engine_void_phase_thruster, engine_solar_sail_flap,
 -- engine_singularity_drive) do carry a `climbSpeed` effect -- but
--- M.effectiveClimbSpeed (the ONLY function that ever reads climbSpeed into
+-- M.effectiveSpeed (the ONLY function that ever reads speed into
 -- run.altitude gain) has only ever read gearModule.equippedTotals(
 -- run.equippedGear), i.e. hull-slot parts. Every engine card's climbSpeed
 -- value is validated, loaded, and even synergy-tagged, but never actually
@@ -3155,41 +3123,41 @@ end
 -- engine slot's own climbSpeed is a plain propulsion stat, matching how
 -- engine steeringResponsiveness/fuelEfficiency are plain percentage
 -- conversions rather than synergy-multiplied.
-local function testGearEngineClimbSpeedRunWiring()
+local function testGearEngineSpeedRunWiring()
     local expedition = require("game.expedition")
 
     -- No gear equipped: baseline (regression guard).
-    local bareRun = expedition.new({ climbSpeed = 20 })
-    assert(expedition.effectiveClimbSpeed(bareRun) == 20,
-        "an unequipped fresh run's effectiveClimbSpeed must equal run.climbSpeed 20, got "
-            .. tostring(expedition.effectiveClimbSpeed(bareRun)))
+    local bareRun = expedition.new({ baseSpeed = 20 })
+    assert(expedition.effectiveSpeed(bareRun) == 20,
+        "an unequipped fresh run's effectiveSpeed must equal run.baseSpeed 20, got "
+            .. tostring(expedition.effectiveSpeed(bareRun)))
 
     -- Equipping an ENGINE-slot card with a `climbSpeed` effect must raise
-    -- effectiveClimbSpeed by exactly that additive amount.
+    -- effectiveSpeed by exactly that additive amount.
     local engineClimbCard = {
         id = "engine-climb-fixture", name = "Climb Thruster", nameKo = "Climb Thruster", icon = "*",
         rarity = "common", tags = {}, editions = {},
-        effects = { { type = "climbSpeed", value = 5 } },
+        effects = { { type = "speed", value = 5 } },
     }
-    local run = expedition.new({ climbSpeed = 20 })
+    local run = expedition.new({ baseSpeed = 20 })
     assert(expedition.equipGear(run, "engine", engineClimbCard))
-    local boosted = expedition.effectiveClimbSpeed(run)
+    local boosted = expedition.effectiveSpeed(run)
     assert(boosted == 25,
-        "equipping an engine climbSpeed +5 card must raise effectiveClimbSpeed from 20 to 25, got "
+        "equipping an engine speed +5 card must raise effectiveSpeed from 20 to 25, got "
             .. tostring(boosted))
 
-    -- Hull and engine climbSpeed contributions must stack additively.
+    -- Hull and engine speed contributions must stack additively.
     local hullClimbCard = {
         id = "hull-climb-fixture", name = "Hull Booster", nameKo = "Hull Booster", icon = "*",
         rarity = "common", tags = {}, editions = {},
-        effects = { { type = "climbSpeed", value = 7 } },
+        effects = { { type = "speed", value = 7 } },
     }
-    local stackedRun = expedition.new({ climbSpeed = 20 })
+    local stackedRun = expedition.new({ baseSpeed = 20 })
     assert(expedition.equipGear(stackedRun, "hull", hullClimbCard))
     assert(expedition.equipGear(stackedRun, "engine", engineClimbCard))
-    local stacked = expedition.effectiveClimbSpeed(stackedRun)
+    local stacked = expedition.effectiveSpeed(stackedRun)
     assert(stacked == 32,
-        "hull climbSpeed +7 and engine climbSpeed +5 must both stack onto base 20 for 32, got "
+        "hull speed +7 and engine speed +5 must both stack onto base 20 for 32, got "
             .. tostring(stacked))
 end
 
@@ -3830,12 +3798,12 @@ end
 -- both bonuses), while editions never create synergy out of thin air for
 -- non-overlapping tags.
 local function testGearIrradiatedSynergyBonusWiring()
-    local baseA = { id = "synA", tags = { "altitude" }, edition = nil, effects = { { type = "climbSpeed", value = 4 } } }
-    local baseB = { id = "synB", tags = { "altitude" }, edition = nil, effects = { { type = "climbSpeed", value = 8 } } }
+    local baseA = { id = "synA", tags = { "altitude" }, edition = nil, effects = { { type = "speed", value = 4 } } }
+    local baseB = { id = "synB", tags = { "altitude" }, edition = nil, effects = { { type = "speed", value = 8 } } }
     local baseline = gear.tagSynergyMultiplier({ baseA, baseB })
 
-    local irradA = { id = "synA2", tags = { "altitude" }, edition = "irradiated", effects = { { type = "climbSpeed", value = 4 } } }
-    local irradB = { id = "synB2", tags = { "altitude" }, edition = nil, effects = { { type = "climbSpeed", value = 8 } } }
+    local irradA = { id = "synA2", tags = { "altitude" }, edition = "irradiated", effects = { { type = "speed", value = 4 } } }
+    local irradB = { id = "synB2", tags = { "altitude" }, edition = nil, effects = { { type = "speed", value = 8 } } }
     local boosted = gear.tagSynergyMultiplier({ irradA, irradB })
     assert(boosted > baseline,
         "an irradiated-edition part in a shared-tag pair must add extra synergy bonus beyond the plain per-pair amount, baseline="
@@ -4333,20 +4301,20 @@ local function testGearEquippedEditionEffectsRunWiring()
     end
     assert(sawDrawback, "equipGear must append quantum_flawed's hullDurability -1 drawback onto the stored effects")
 
-    -- refined halves effects. climbSpeed 8 -> 4; equipped climb speed must
+    -- refined halves effects. speed 8 -> 4; equipped speed must
     -- be base + 4, not base + 8.
     local refinedCard = {
         id = "hull-refined-fixture", name = "Refined", nameKo = "Refined", icon = "*",
         rarity = "uncommon", tags = { "altitude" }, editions = { "refined" },
         edition = "refined",
-        effects = { { type = "climbSpeed", value = 8 } },
+        effects = { { type = "speed", value = 8 } },
     }
     local refinedRun = expedition.new()
-    local baseClimb = expedition.effectiveClimbSpeed(refinedRun)
+    local baseClimb = expedition.effectiveSpeed(refinedRun)
     assert(expedition.equipGear(refinedRun, "hull", refinedCard))
-    local refinedClimb = expedition.effectiveClimbSpeed(refinedRun)
+    local refinedClimb = expedition.effectiveSpeed(refinedRun)
     assert(math.abs(refinedClimb - (baseClimb + 4)) < 1e-9,
-        "equipping a refined card (climbSpeed 8 halved to 4) must add 4 to climb speed, got "
+        "equipping a refined card (speed 8 halved to 4) must add 4 to speed, got "
             .. tostring(refinedClimb) .. " from base " .. tostring(baseClimb))
 
     -- ENGINE-slot editioned card: crystallized on an engine card must
@@ -4481,7 +4449,7 @@ local function testGearQuantumFlawedEngineDrawbackWiring()
             .. tostring(liveRun.maxDurability))
 end
 
--- Item 9/10 gap audit: expedition.effectiveClimbSpeed applies item 9's tag-
+-- Item 9/10 gap audit: expedition.effectiveSpeed applies item 9's tag-
 -- synergy multiplier (gear.equippedTotals -> gear.tagSynergyMultiplier) to
 -- the HULL climbSpeed total, but the engine-slot climbSpeed contribution
 -- (added since the item 10(b)/9 "engine-slot climbSpeed run wiring" slice)
@@ -4504,42 +4472,42 @@ local function testGearEngineSynergyMultiplierWiring()
     -- Pure layer: two engine-slot parts sharing a tag must produce a
     -- multiplier > 1 via gear.tagSynergyMultiplier, exactly like hull parts
     -- (this already passes -- tagSynergyMultiplier itself is category-blind).
-    local sharedA = { id = "eng-syn-a", tags = { "altitude" }, effects = { { type = "climbSpeed", value = 4 } } }
-    local sharedB = { id = "eng-syn-b", tags = { "altitude" }, effects = { { type = "climbSpeed", value = 6 } } }
+    local sharedA = { id = "eng-syn-a", tags = { "altitude" }, effects = { { type = "speed", value = 4 } } }
+    local sharedB = { id = "eng-syn-b", tags = { "altitude" }, effects = { { type = "speed", value = 6 } } }
     local rawMultiplier = gear.tagSynergyMultiplier({ sharedA, sharedB })
     assert(rawMultiplier > 1, "two engine-tag-sharing parts must produce a synergy multiplier above 1 in the pure layer")
 
-    -- Run-level gap: effectiveClimbSpeed must apply that same multiplier to
-    -- the ENGINE slot's climbSpeed total, not just sum it flat.
+    -- Run-level gap: effectiveSpeed must apply that same multiplier to
+    -- the ENGINE slot's speed total, not just sum it flat.
     local run = expedition.new()
     assert(expedition.equipGear(run, "engine", sharedA))
     assert(expedition.equipGear(run, "engine", sharedB))
-    local baseline = run.climbSpeed
-    local actualClimb = expedition.effectiveClimbSpeed(run)
+    local baseline = run.baseSpeed
+    local actualClimb = expedition.effectiveSpeed(run)
     local flatSum = baseline + 4 + 6
     local synergizedSum = baseline + (4 + 6) * rawMultiplier
     assert(math.abs(actualClimb - synergizedSum) < 1e-9,
-        "engine-slot shared-tag synergy must multiply the engine climbSpeed total (expected "
+        "engine-slot shared-tag synergy must multiply the engine speed total (expected "
             .. tostring(synergizedSum) .. ", got " .. tostring(actualClimb)
             .. "); a plain additive sum would give " .. tostring(flatSum))
     assert(actualClimb > flatSum,
-        "engine-slot synergy-multiplied climbSpeed must exceed the plain additive sum, got "
+        "engine-slot synergy-multiplied speed must exceed the plain additive sum, got "
             .. tostring(actualClimb) .. " vs flat " .. tostring(flatSum))
 
     -- No shared tag -> no synergy bonus, engine climb stays a plain sum
     -- (regression: this must not start multiplying unrelated engine cards).
     local noSynRun = expedition.new()
-    local loneA = { id = "eng-lone-a", tags = { "altitude" }, effects = { { type = "climbSpeed", value = 3 } } }
-    local loneB = { id = "eng-lone-b", tags = { "control" }, effects = { { type = "climbSpeed", value = 5 } } }
+    local loneA = { id = "eng-lone-a", tags = { "altitude" }, effects = { { type = "speed", value = 3 } } }
+    local loneB = { id = "eng-lone-b", tags = { "control" }, effects = { { type = "speed", value = 5 } } }
     assert(expedition.equipGear(noSynRun, "engine", loneA))
     assert(expedition.equipGear(noSynRun, "engine", loneB))
-    assert(math.abs(expedition.effectiveClimbSpeed(noSynRun) - (noSynRun.climbSpeed + 3 + 5)) < 1e-9,
+    assert(math.abs(expedition.effectiveSpeed(noSynRun) - (noSynRun.baseSpeed + 3 + 5)) < 1e-9,
         "engine-slot parts with no shared tag must stay a plain additive sum")
 
     -- Bundled engine_fusion_core (irradiated candidate, tags altitude/economy,
-    -- carries climbSpeed) reaches this live: pairing it with another
+    -- carries speed) reaches this live: pairing it with another
     -- altitude-tagged engine card and equipping it WITH the irradiated
-    -- edition applied must yield a strictly larger climbSpeed contribution
+    -- edition applied must yield a strictly larger speed contribution
     -- than the same pairing without the edition.
     local poolCard = gear.findById(gear.loadEngineParts(), "engine_fusion_core")
     assert(poolCard, "fixture engine_fusion_core must exist")
@@ -4548,26 +4516,26 @@ local function testGearEngineSynergyMultiplierWiring()
         if editionId == "irradiated" then canRollIrradiated = true end
     end
     assert(canRollIrradiated, "engine_fusion_core must list irradiated so the live drop path can reach this synergy amplification")
-    local partnerCard = { id = "eng-partner-altitude", tags = { "altitude" }, editions = {}, effects = { { type = "climbSpeed", value = 5 } } }
+    local partnerCard = { id = "eng-partner-altitude", tags = { "altitude" }, editions = {}, effects = { { type = "speed", value = 5 } } }
 
     local plainRun = expedition.new()
     local plainFusionCore = { id = poolCard.id, name = poolCard.name, nameKo = poolCard.nameKo, icon = poolCard.icon,
         rarity = poolCard.rarity, tags = poolCard.tags, editions = poolCard.editions, effects = poolCard.effects }
     assert(expedition.equipGear(plainRun, "engine", plainFusionCore))
     assert(expedition.equipGear(plainRun, "engine", partnerCard))
-    local plainClimb = expedition.effectiveClimbSpeed(plainRun)
+    local plainClimb = expedition.effectiveSpeed(plainRun)
 
     local irradiatedRun = expedition.new()
     local irradiatedFusionCore = { id = poolCard.id, name = poolCard.name, nameKo = poolCard.nameKo, icon = poolCard.icon,
         rarity = poolCard.rarity, tags = poolCard.tags, editions = poolCard.editions,
         edition = "irradiated", effects = poolCard.effects }
     assert(expedition.equipGear(irradiatedRun, "engine", irradiatedFusionCore))
-    assert(expedition.equipGear(irradiatedRun, "engine", { id = "eng-partner-altitude", tags = { "altitude" }, editions = {}, effects = { { type = "climbSpeed", value = 5 } } }))
-    local irradiatedClimb = expedition.effectiveClimbSpeed(irradiatedRun)
+    assert(expedition.equipGear(irradiatedRun, "engine", { id = "eng-partner-altitude", tags = { "altitude" }, editions = {}, effects = { { type = "speed", value = 5 } } }))
+    local irradiatedClimb = expedition.effectiveSpeed(irradiatedRun)
 
     assert(irradiatedClimb > plainClimb,
         "an irradiated engine_fusion_core sharing a synergy tag with another engine card must yield strictly higher "
-            .. "climbSpeed than the same pairing without the edition (plain=" .. tostring(plainClimb)
+            .. "speed than the same pairing without the edition (plain=" .. tostring(plainClimb)
             .. ", irradiated=" .. tostring(irradiatedClimb) .. ")")
 end
 
@@ -4639,7 +4607,7 @@ local function testHubExploredResetsOnLaunch()
     local exPart = {
         id = "test_hub_exclusive", name = "HubEx", nameKo = "허브전용", icon = "▲",
         rarity = "rare", tags = { "altitude" }, editions = {}, galaxyExclusive = true,
-        effects = { { type = "climbSpeed", value = 3 } },
+        effects = { { type = "speed", value = 3 } },
     }
     local run = expedition.new()
     expedition.launch(run)
@@ -4982,7 +4950,7 @@ local function testEarthSlotMachineGalaxyOdds()
     local exPart = {
         id = "hull_test_exclusive", name = "Test", nameKo = "테스트", icon = "▲",
         rarity = "common", tags = { "altitude" }, editions = {}, galaxyExclusive = true,
-        effects = { { type = "climbSpeed", value = 1 } },
+        effects = { { type = "speed", value = 1 } },
     }
     expedition.exploreHub(hubRun, "andromeda", { exPart })
     assert(hubRun.lastVisitedGalaxyId == "andromeda",
@@ -4997,7 +4965,7 @@ local function testEarthSlotMachineGalaxyOdds()
     local exPart2 = {
         id = "hull_test_exclusive2", name = "Test2", nameKo = "테스트2", icon = "◉",
         rarity = "rare", tags = { "void" }, editions = {}, galaxyExclusive = true,
-        effects = { { type = "climbSpeed", value = 2 } },
+        effects = { { type = "speed", value = 2 } },
     }
     expedition.exploreHub(hubRun, "triangulum", { exPart2 })
     assert(hubRun.lastVisitedGalaxyId == "triangulum",
@@ -5416,7 +5384,7 @@ local function runGearTests()
     testGearCollisionRadiusRunWiring()
     testGearHullDurabilityRunWiring()
     testGearHullSpeedRunWiring()
-    testGearEngineClimbSpeedRunWiring()
+    testGearEngineSpeedRunWiring()
     testGearMoneyRunWiring()
     testGearStreakMultiplierWiring()
     testGearChainTriggerConsumptionWiring()
@@ -5556,18 +5524,18 @@ testExpeditionStellarSynergies = function()
     local runSupernova = {
         equippedGear = {
             makeCard("s1", "solar"), makeCard("n1", "nebula"), makeCard("v1", "void"), makeCard("p1", "pulsar"),
-            makeCard("leg1", "solar", "legendary", {{type = "climbSpeed", value = 10}}),
-            makeCard("com1", "solar", "common", {{type = "climbSpeed", value = 10}})
+            makeCard("leg1", "solar", "legendary", {{type = "speed", value = 10}}),
+            makeCard("com1", "solar", "common", {{type = "speed", value = 10}})
         },
         equippedEngineParts = {}
     }
     local totals = expedition.equippedTotals(runSupernova)
-    assert(totals.climbSpeed == 25, "supernova must boost legendary effect values by 1.5x, got: " .. tostring(totals.climbSpeed))
+    assert(totals.speed == 25, "supernova must boost legendary effect values by 1.5x, got: " .. tostring(totals.speed))
 
     local runSettle = {
         phase = "ascending",
         altitude = 1,
-        climbSpeed = 100,
+        baseSpeed = 100,
         returnSpeed = 10,
         bestAltitude = 100, pendingSampleValue = 0, sampleCount = 0, maxAltitude = 100,
         money = 100,
@@ -6398,7 +6366,7 @@ function M.run()
     local basicSlotRolls = { 1, 6, 10, 6, 10, 1 }
     local nextBasicSlotRoll = 0
     local run = expedition.new({
-        climbSpeed = 60,
+        baseSpeed = 60,
         returnSpeed = 50,    })
     assert(run.phase == "launch" and run.altitude == 0)
     assert(expedition.launch(run) and run.phase == "ascending")
@@ -6511,20 +6479,20 @@ function M.run()
         steeringUpgradeAmount = 15,
         money = 40,
     })
-    assert(expedition.steeringSpeed(steeringRun) == 55)
+    assert(expedition.effectiveSpeed(steeringRun) == 30)
     assert(not expedition.buySteeringUpgrade(steeringRun))
     steeringRun.phase = "settlement"
     assert(not expedition.buySteeringUpgrade(steeringRun))
     steeringRun.money = 65
     assert(expedition.buySteeringUpgrade(steeringRun))
     assert(steeringRun.money == 0 and steeringRun.steeringUpgradeLevel == 1)
-    assert(expedition.steeringSpeed(steeringRun) == 70)
+    assert(expedition.effectiveSpeed(steeringRun) == 45)
     assert(expedition.launch(steeringRun) and steeringRun.phase == "ascending")
-    assert(expedition.steeringSpeed(steeringRun) == 70,
+    assert(expedition.effectiveSpeed(steeringRun) == 45,
         "steering upgrade must persist across relaunch like fuel/hull upgrades")
     assert(expedition.damage(steeringRun, steeringRun.durability))
     assert(steeringRun.phase == "destroyed" and steeringRun.steeringUpgradeLevel == 0)
-    assert(expedition.steeringSpeed(steeringRun) == 55,
+    assert(expedition.effectiveSpeed(steeringRun) == 30,
         "steering upgrade must reset to base speed on destruction like the other upgrades")
 
     local steeringMoveScene = PlayScene.new({
@@ -6535,8 +6503,8 @@ function M.run()
     steeringMoveScene.touches["upgraded-steer"] = { x = 500, y = 10 }
     local shipXBefore = steeringMoveScene.ship.x
     steeringMoveScene:update(1)
-    assert(math.abs(steeringMoveScene.ship.x - shipXBefore - 70) < 1e-9,
-        "ascending steering must move the ship at expedition.steeringSpeed(run), not a fixed constant ("
+    assert(math.abs(steeringMoveScene.ship.x - shipXBefore - 45) < 1e-9,
+        "ascending steering must move the ship at expedition.effectiveSpeed(run), not a fixed constant ("
             .. tostring(steeringMoveScene.ship.x - shipXBefore) .. ")")
 
     local steeringShopScene = PlayScene.new({
@@ -6567,7 +6535,7 @@ function M.run()
     assert(not expedition.buyShip(shipShopRun, "scout") and shipShopRun.money == 10)
     assert(expedition.selectShip(shipShopRun, "scout"))
     assert(shipShopRun.selectedShipId == "scout")
-    assert(shipShopRun.maxDurability == 2 and expedition.effectiveClimbSpeed(shipShopRun) == 35)
+    assert(shipShopRun.maxDurability == 2 and expedition.effectiveSpeed(shipShopRun) == 35)
     assert(expedition.launch(shipShopRun) and shipShopRun.durability == 2)
     assert(not expedition.damage(shipShopRun, 1))
     assert(expedition.damage(shipShopRun, 1))
@@ -6651,7 +6619,7 @@ function M.run()
     local leftAscendSteering = touchScene:steeringButtonState()
     assert(leftAscendSteering.leftActive and not leftAscendSteering.rightActive)
     touchScene:update(1)
-    assert(touchScene.ship.x == -55)
+    assert(math.abs(touchScene.ship.x - (-30)) < 1e-9, "expected -30, got " .. string.format("%.17g", touchScene.ship.x))
     touchScene:touchreleased("steer-left")
     local releasedAscendSteering = touchScene:steeringButtonState()
     assert(not releasedAscendSteering.leftActive and not releasedAscendSteering.rightActive)
@@ -6689,7 +6657,7 @@ function M.run()
     assert(starterLoadout.stats == "HULL 3")
     assert(starterLoadout.upgrades == "HULL LV.0")
 
-    assert(starterLoadout.steering == "55")
+    assert(starterLoadout.steering == "30")
     loadoutScene.expedition.phase = "settlement"
     loadoutScene.expedition.money = loadoutScene.expedition.durabilityUpgradeCost
         + loadoutScene.expedition.scoutShipCost
@@ -6703,7 +6671,7 @@ function M.run()
     assert(upgradedLoadout.stats == "HULL 3")
     assert(upgradedLoadout.upgrades == "HULL LV.1")
 
-    assert(upgradedLoadout.steering == "70")
+    assert(upgradedLoadout.steering == "55")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()
@@ -6713,7 +6681,7 @@ function M.run()
         "loadout ship line should be hidden again after a meta-wipe reset")
     assert(resetLoadout.stats == "HULL 3")
     assert(resetLoadout.upgrades == "HULL LV.0")
-    assert(resetLoadout.steering == "55")
+    assert(resetLoadout.steering == "30")
 
     local nextLaunchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -6738,7 +6706,7 @@ function M.run()
     assert(starterNextLaunch.yieldPreview == "YIELD x1.25")
     assert(starterNextLaunch.yieldStatus == "SHORT $60" and not starterNextLaunch.yieldAffordable)
     assert(starterNextLaunch.steeringAction == "T/G STEER LV.0>1 $65")
-    assert(starterNextLaunch.steeringPreview == "70")
+    assert(starterNextLaunch.steeringPreview == "45")
     assert(starterNextLaunch.steeringStatus == "SHORT $65" and not starterNextLaunch.steeringAffordable)
     -- Compact column labels for the HULL/STEERING shared touch row (see
     -- settlementTouchRows: HULL occupies the left half, STEERING the right
@@ -6751,7 +6719,7 @@ function M.run()
     assert(starterNextLaunch.hullActionCompact == "LV.0>1 $75")
     assert(starterNextLaunch.steeringActionCompact == "LV.0>1 $65")
     assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
-    assert(starterNextLaunch.steeringPreviewCompact == "70")
+    assert(starterNextLaunch.steeringPreviewCompact == "45")
     -- Same compact treatment for the YIELD/SHIP shared touch row (see
     -- settlementTouchRows: YIELD occupies the left half, SHIP the right
     -- half). yieldAction ("T/Y YIELD LV.0>1 $60", 92-97px) and shipAction
@@ -6811,7 +6779,7 @@ function M.run()
 
     local destroyedRun = expedition.new({
         durability = 2,
-        climbSpeed = 80,
+        baseSpeed = 80,
         durabilityUpgradeCost = 40,
         money = 140,
     })
@@ -6900,7 +6868,7 @@ function M.run()
     persistedScene.expedition.phase = "settlement"
     assert(persistedScene:hudLines().best == "PERSONAL BEST 0040")
     persistedScene.expedition.phase = "launch"
-    persistedScene.expedition.climbSpeed = 60
+    persistedScene.expedition.baseSpeed = 60
     assert(expedition.launch(persistedScene.expedition))
     persistedScene.expedition.altitude = 60
     persistedScene.expedition.maxAltitude = 60

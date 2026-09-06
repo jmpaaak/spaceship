@@ -304,7 +304,7 @@ function M.new(options)
         sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.25,
         sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 60,
         sampleYieldUpgradeLevel = 0,
-        baseSteeringSpeed = options.steeringSpeed or 55,
+        baseSpeed = options.baseSpeed or options.climbSpeed or 30,
         steeringUpgradeAmount = options.steeringUpgradeAmount or 15,
         steeringUpgradeCost = options.steeringUpgradeCost or 65,
         steeringUpgradeLevel = 0,
@@ -313,8 +313,6 @@ function M.new(options)
         scoutDurabilityBonus = options.scoutDurabilityBonus or -1,
         ownedShips = { starter = true },
         selectedShipId = "starter",
-        climbSpeed = options.climbSpeed or 30,
-        baseClimbSpeed = options.climbSpeed or 30,
         returnSpeed = options.returnSpeed or 45,
         -- Item 15(a): slotDistance / slotOpportunities / slotRandom removed;
         -- in-flight slot machine abolished. earthSlotSpin (item 15(b)) uses
@@ -598,7 +596,7 @@ end
 -- gear.effectiveShopPrice) reduce a base shop price. Exposed as its own
 -- function (not just inlined into each buy* below) so UI/tests can display
 -- the discounted price before a purchase, same pattern as
--- M.effectiveClimbSpeed/M.steeringSpeed above.
+-- M.effectiveSpeed above.
 function M.shopPrice(run, basePrice)
     local parts = {}
     for _, part in ipairs(run.equippedGear or {}) do parts[#parts + 1] = part end
@@ -641,33 +639,10 @@ end
 -- steering speed applied while ascending/returning (game/scenes/play.lua),
 -- giving players a way to spend money on better planet-collision avoidance
 -- rather than capacity or money yield.
--- Item 9/14 (A) gap audit: `speed` was still one of the original five
--- additive (A) effect types (docs/GEAR_SCHEMA.md) whose bundled hull cards
--- (7 of them) were equippable but had zero read-side effect on any run
--- value -- exactly the pattern already found and closed for hullDurability
--- (M.equippedHullDurabilityBonus above) and sampleSellValue/sellMultiplier
--- (M.effectiveSampleBonus below). This wrapper is hull-only (matching
--- climbSpeed/sampleSellValue/hullDurability's hull-scoped design, since
--- item 9 calls these the "선체(조커형)" combo payoff stats) and returns the
--- additive steeringSpeed bonus contributed by equipped hull gear.
-function M.equippedHullSpeedBonus(run)
-    return gearModule.equippedTotals(run.equippedGear or {}).speed or 0
-end
-
--- Item 10(b)/14(G) wiring: engine-part steeringResponsiveness effects
--- multiply the upgrade-derived base steering speed (gear.effectiveSteeringRate
--- is a pure percentage-increase conversion; no equipped engine parts with
--- steeringResponsiveness leaves this identical to the pre-wiring formula).
--- The hull `speed` additive bonus (M.equippedHullSpeedBonus, above) is
--- added to the base+upgrade rate BEFORE the engine percentage multiplier is
--- applied, so hull speed cards and engine steeringResponsiveness cards
--- stack (additive-then-multiplicative), matching every other gear category
--- combination in this run-state layer.
-function M.steeringSpeed(run)
-    local baseRate = run.baseSteeringSpeed + run.steeringUpgradeLevel * run.steeringUpgradeAmount
-        + M.equippedHullSpeedBonus(run)
-    return gearModule.effectiveSteeringRate(baseRate, run.equippedEngineParts or {})
-end
+-- Item 53a: unified effectiveSpeed replaces equippedHullSpeedBonus,
+-- steeringSpeed and effectiveClimbSpeed. One speed for both altitude
+-- accumulation and joystick steering.
+-- Removed: equippedHullSpeedBonus, steeringSpeed, effectiveClimbSpeed.
 
 -- INBOX-33: RCS exhaust visual level derived from steering upgrade count.
 -- Lv0 (no upgrades), Lv1 (1-2), Lv2 (3-4), Lv3 (5+).
@@ -870,15 +845,20 @@ end
 -- engine-slot list only, so hull and engine synergy pairs never cross-
 -- contaminate each other -- a hull/engine pair sharing a tag still
 -- contributes nothing, matching item 10(a)'s slot-category independence),
--- mirroring gearModule.equippedTotals's own multiply-only-climbSpeed shape
--- without pulling in equippedTotals's other hull-only totals.
-function M.effectiveClimbSpeed(run)
+-- Item 53a: unified effectiveSpeed — single speed stat for both altitude
+-- accumulation and joystick steering.  Combines:
+--   base speed (run.baseSpeed) + steering upgrades
+--   + hull gear `speed` (synergy-multiplied via equippedTotals)
+--   + engine gear `speed` (synergy-multiplied via tagSynergyMultiplier)
+--   + scout ship bonus
+function M.effectiveSpeed(run)
     local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
     local engineParts = run.equippedEngineParts or {}
-    local engineClimbRaw = gearModule.aggregateEffects(engineParts).climbSpeed or 0
-    local engineClimb = engineClimbRaw * gearModule.tagSynergyMultiplier(engineParts)
+    local engineSpeedRaw = gearModule.aggregateEffects(engineParts).speed or 0
+    local engineSpeed = engineSpeedRaw * gearModule.tagSynergyMultiplier(engineParts)
     local shipBonus = run.selectedShipId == "scout" and run.scoutClimbSpeedBonus or 0
-    return run.climbSpeed + shipBonus + (gearTotals.climbSpeed or 0) + engineClimb
+    local base = run.baseSpeed + run.steeringUpgradeLevel * run.steeringUpgradeAmount
+    return base + shipBonus + (gearTotals.speed or 0) + engineSpeed
 end
 
 -- Item 9/14 economy-stat gap audit: gear.equippedTotals already combines a
@@ -932,8 +912,8 @@ function M.equippedTotals(run, parts)
     local combined = parts or combinedGearList(run)
     local totals = M.aggregateEffectsWithSynergies(run, combined)
     local multiplier = gearModule.tagSynergyMultiplier(combined)
-    if totals.climbSpeed then
-        totals.climbSpeed = totals.climbSpeed * multiplier
+    if totals.speed then
+        totals.speed = totals.speed * multiplier
     end
     totals.synergyMultiplier = multiplier
     if totals.sellMultiplier and totals.sampleSellValue then
@@ -1373,7 +1353,7 @@ function M.update(run, dt)
     -- Item 2: returning phase abolished. Only ascending drives altitude.
     if run.phase ~= "ascending" then return end
 
-    run.altitude = run.altitude + M.effectiveClimbSpeed(run) * dt
+    run.altitude = run.altitude + M.effectiveSpeed(run) * dt
     run.maxAltitude = math.max(run.maxAltitude, run.altitude)
     run.bestAltitude = math.max(run.bestAltitude, run.altitude)
 end

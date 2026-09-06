@@ -21,11 +21,10 @@ M.enginePartsPath = "game/data/engine_parts.json"
 -- categories; keeping this as an explicit whitelist means malformed/typo'd
 -- effect types in hand-edited JSON fail loudly instead of silently no-op'ing.
 M.knownEffectTypes = {
-    -- (A) additive stat effects, this cycle's original 5.
+    -- (A) additive stat effects (climbSpeed merged into speed, item 53a).
     speed = true,
     sampleSellValue = true,
     money = true,
-    climbSpeed = true,
     hullDurability = true,
     -- (B) multiplicative (item 14) — the synergy payoff axis: these are
     -- percentage bonuses (value 25 == "+25%"), applied AFTER the additive
@@ -52,7 +51,6 @@ M.knownEffectTypes = {
     -- regression instead asserts the *bundled* hull pool stays free of
     -- them so the two card pools read as distinctly-flavored in practice.
     fuelEfficiency = true,
-    steeringResponsiveness = true,
     boostCharge = true,
 }
 
@@ -61,13 +59,13 @@ M.knownEffectTypes = {
 -- effect-type dropdown); M.knownEffectTypes above remains the actual
 -- validation whitelist.
 M.effectCategories = {
-    speed = "A", sampleSellValue = "A", money = "A", climbSpeed = "A", hullDurability = "A",
+    speed = "A", sampleSellValue = "A", money = "A", hullDurability = "A",
     sellMultiplier = "B", streakMultiplier = "B",
     luck = "C", chainTrigger = "C", rerollBonus = "C",
     insurance = "D", collisionRadius = "D",
     detectionRadius = "E", autoCollect = "E",
     shopDiscount = "F",
-    fuelEfficiency = "G", steeringResponsiveness = "G", boostCharge = "G",
+    fuelEfficiency = "G", boostCharge = "G",
 }
 
 M.knownRarities = {
@@ -375,16 +373,16 @@ end
 
 -- Combines aggregateEffects and tagSynergyMultiplier into the final totals
 -- a run should apply: additive effect types are summed first (aggregate
--- totals), then the tag-synergy multiplier is applied ONLY to climbSpeed
--- (the altitude/score-gain stat item 9 explicitly calls out as the combo
--- payoff) — other stats (money, sampleSellValue, speed, hullDurability)
--- stay purely additive this cycle. Also returns the multiplier itself
--- (as `synergyMultiplier`) so callers/tests/UI can display it directly.
+-- totals), then the tag-synergy multiplier is applied ONLY to speed
+-- (the unified movement stat after item 53a's climbSpeed merge) — other
+-- stats (money, sampleSellValue, hullDurability) stay purely additive
+-- this cycle. Also returns the multiplier itself (as `synergyMultiplier`)
+-- so callers/tests/UI can display it directly.
 function M.equippedTotals(parts)
     local totals = M.aggregateEffects(parts)
     local multiplier = M.tagSynergyMultiplier(parts)
-    if totals.climbSpeed then
-        totals.climbSpeed = totals.climbSpeed * multiplier
+    if totals.speed then
+        totals.speed = totals.speed * multiplier
     end
     totals.synergyMultiplier = multiplier
 
@@ -687,15 +685,7 @@ function M.effectiveFuelBurnRate(baseRate, parts)
     return rate
 end
 
--- (G) steeringResponsiveness: percentage growth applied to a base turn/
--- steering rate — "조종 반응성/급회전 판정 향상" (item 6's original steering
--- gear proposal, generalized into item 14's schema).
-function M.effectiveSteeringRate(baseRate, parts)
-    local pct = M.totalEffect(parts, "steeringResponsiveness")
-    local rate = baseRate * (1 + pct / 100)
-    if rate < 0 then rate = 0 end
-    return rate
-end
+-- (G) steeringResponsiveness: removed in item 53a (merged into speed).
 
 -- (G) boostCharge: "긴급 부스트/1회성 소모 아이템" — a discrete charge
 -- count, same non-negative-integer shape as chainTrigger/rerollBonus

@@ -12,7 +12,7 @@ local M = {}
 M.__index = M
 
 -- Omnidirectional movement: both horizontal (ship.x) and vertical (ship.y)
--- are driven directly by joystick/keyboard input at steeringSpeed, with no
+-- are driven directly by joystick/keyboard input at effectiveSpeed, with no
 -- clamping. The old verticalOffset ±90 clamp was removed in item 32 so
 -- vertical steering matches horizontal (unlimited).
 
@@ -1536,7 +1536,7 @@ function M:loadoutLines()
         stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line",
             run.durabilityUpgradeLevel),
-        steering = i18n.t("steer_speed_line", expedition.steeringSpeed(run)),
+        steering = i18n.t("steer_speed_line", expedition.effectiveSpeed(run)),
         synergies = synergyLabels,
     }
 end
@@ -1641,9 +1641,9 @@ function M:shopLoadoutLines()
         steeringActionCompact = i18n.t("steering_action_compact",
             run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
         steeringPreview = i18n.t("steer_speed_line",
-            run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
+            expedition.effectiveSpeed(run) + run.steeringUpgradeAmount),
         steeringPreviewCompact = i18n.t("steering_preview_compact",
-            run.baseSteeringSpeed + (run.steeringUpgradeLevel + 1) * run.steeringUpgradeAmount),
+            expedition.effectiveSpeed(run) + run.steeringUpgradeAmount),
         steeringStatus = steeringStatus,
         steeringAffordable = steeringAffordable,
     }
@@ -1838,14 +1838,15 @@ function M:update(dt)
     end
     -- Item 2: returning phase abolished; only ascending has steering/movement.
     if self.expedition.phase == "ascending" then
+        local xBeforeThrust, yBeforeThrust = self.ship.x, self.ship.y
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
         local thrustAngle = self.ship.angle
         if joyMagnitude > 0 then
-            local speed = expedition.steeringSpeed(self.expedition)
+            local speed = expedition.effectiveSpeed(self.expedition)
             self.ship.x = self.ship.x + joyDx * speed * joyMagnitude * dt
             self.ship.y = self.ship.y + joyDy * speed * joyMagnitude * dt
         else
-            local speed = expedition.steeringSpeed(self.expedition)
+            local speed = expedition.effectiveSpeed(self.expedition)
             self.ship.x = self.ship.x
                 + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
                 * speed * dt
@@ -1871,16 +1872,8 @@ function M:update(dt)
             self.steerBank = 0
             self.steerLift = 0
         end
-        local xBeforeThrust, yBeforeThrust = self.ship.x, self.ship.y
         if thrusting then
-            local altBefore = self.expedition.altitude
             expedition.update(self.expedition, dt)
-            if previousPhase == "ascending" then
-                local step = self.expedition.altitude - altBefore
-                if step < 0 then step = 0 end
-                self.ship.x = self.ship.x + math.cos(thrustAngle) * step
-                self.ship.y = self.ship.y + math.sin(thrustAngle) * step
-            end
             if dt > 0 then
                 self.ship.vx = (self.ship.x - xBeforeThrust) / dt
                 self.ship.vy = (self.ship.y - yBeforeThrust) / dt
@@ -2387,7 +2380,7 @@ function M:keypressed(key)
             self.message = i18n.t(
                 "steering_upgraded_message",
                 self.expedition.steeringUpgradeLevel,
-                expedition.steeringSpeed(self.expedition),
+                expedition.effectiveSpeed(self.expedition),
                 self.expedition.money)
         else
             self.message = purchaseShortfallMessage(self.expedition.money,
