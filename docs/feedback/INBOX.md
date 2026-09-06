@@ -2,13 +2,6 @@
 
 ## 처리 대기
 
-(47) **허브 행성에서 상점 열기 (사용자 확정, 2026-09-06):**
-  - 현재 hub 접근 시 `settleAtHub`(표본 정산) + `exploreHub`(기어 드롭)만 하고 상점 UI가 안 열림.
-  - 변경: hub 접근 시 **지구 상점과 동일한 settlement 페이즈 진입**. `expedition.settle(run)` 호출 → `run.phase = "settlement"`. 슬롯/업그레이드/기어 구매 UI 전부 사용 가능. `settleAtHub` 표본 정산은 settlement 진입 전에 자동 처리.
-  - hub에서 relaunch하면 해당 은하에서 재시작 (ship 위치는 hub 근처).
-  - i18n: `"hub_shop_label"` = `"HUB 상점"` / `"HUB SHOP"`. settlement 타이틀을 hub/earth 구분.
-  - `make verify` GREEN + 커밋: `feat(play): hub planets open full shop like Earth`
-
 (48) **중심별 타이머 텍스트 개선 (사용자 확정, 2026-09-06):**
   - 현재: `"태양 접근 3.2 / 10초"` — 작은 폰트, 화면 하단.
   - 변경:

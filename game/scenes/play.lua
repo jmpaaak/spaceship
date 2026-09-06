@@ -2025,20 +2025,8 @@ function M:update(dt)
                 self.discoveredCount = self.discoveredCount + 1
 
                 if planet.hub then
-                    if self.expedition.pendingSampleValue > 0 then
-                        local payout = expedition.settleAtHub(self.expedition)
-                        if payout and payout > 0 then
-                            table.insert(self.floatingTexts, {
-                                text = i18n.t("floating_hub_settle", payout),
-                                x = planet.x,
-                                y = planet.y - 20,
-                                timer = 3.0,
-                                kind = "sample",
-                                awarded = payout,
-                                rollupElapsed = 0,
-                            })
-                        end
-                    end
+                    -- INBOX (47): hub planets open full settlement shop.
+                    -- 1. exploreHub for gear drop (before settlement changes phase)
                     if not self.expedition.hubExplored[planet.galaxyId] then
                         local gear = require("game.gear")
                         local pool = {}
@@ -2065,6 +2053,14 @@ function M:update(dt)
                             })
                         end
                     end
+                    -- 2. Store hub position for relaunch spawn
+                    self.expedition.lastHubX = planet.x
+                    self.expedition.lastHubY = planet.y
+                    -- 3. Enter full settlement (same as Earth return)
+                    expedition.settle(self.expedition)
+                    self.hasLeftEarth = false
+                    self.reentryShake = 0
+                    self.reentryHeatAlpha = 0
                 elseif planet.isShop then
                     if not self.shopModal then
                         local gearMod = require("game.gear")
@@ -2445,11 +2441,21 @@ function M:keypressed(key)
         -- returning phase no longer triggers a slot spin. Settlement happens
         -- automatically when altitude reaches 0 (expedition.update).
         local relaunching = self.expedition.phase == "settlement" or self.expedition.phase == "destroyed"
+        -- INBOX (47): capture hub position before launch clears it
+        local hubX = self.expedition.lastHubX
+        local hubY = self.expedition.lastHubY
         if expedition.launch(self.expedition) then
             if relaunching then
-                self.ship.x = M.launchSpawnX
-                self.ship.y = M.launchSpawnY
-                self.hasLeftEarth = false
+                if hubX and hubY then
+                    -- Relaunch near the hub planet in the same galaxy
+                    self.ship.x = hubX
+                    self.ship.y = hubY - 40  -- spawn just above the hub
+                    self.hasLeftEarth = true  -- already away from Earth
+                else
+                    self.ship.x = M.launchSpawnX
+                    self.ship.y = M.launchSpawnY
+                    self.hasLeftEarth = false
+                end
                 self.discovered = {}
                 self.collided = {}
                 self.discoveredCount = 0
@@ -3452,7 +3458,7 @@ function M:draw()
             love.graphics.rectangle("fill", 0, M.settlementPanelTop, viewport.width, M.settlementPanelHeight)
         end
 
-        local titleStr = self.expedition.lastVisitedGalaxyId and i18n.t("checkpoint_label") or i18n.t("earth_shop_label")
+        local titleStr = self.expedition.lastVisitedGalaxyId and i18n.t("hub_shop_label") or i18n.t("earth_shop_label")
         if titleStr then
             love.graphics.setColor(1, 0.9, 0.5)
             love.graphics.printf(titleStr, 0, M.settlementTitleY, viewport.width, "center")

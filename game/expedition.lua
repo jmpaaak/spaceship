@@ -270,6 +270,8 @@ local function destroy(run)
     run.boostsUsed = 0
     run.hubExplored = {}
     run.lastVisitedGalaxyId = nil
+    run.lastHubX = nil
+    run.lastHubY = nil
 end
 
 function M.new(options)
@@ -279,6 +281,8 @@ function M.new(options)
         phase = "launch",
         hubExplored = {},
         lastVisitedGalaxyId = nil,
+        lastHubX = nil,
+        lastHubY = nil,
         altitude = 0,
         maxAltitude = 0,
         bestAltitude = options.bestAltitude or 0,
@@ -576,6 +580,8 @@ function M.launch(run)
         -- expedition has no "last visited galaxy" yet and must start at nil.
         run.hubExplored = {}
         run.lastVisitedGalaxyId = nil
+        run.lastHubX = nil
+        run.lastHubY = nil
     end
     run.phase = "ascending"
     return true
