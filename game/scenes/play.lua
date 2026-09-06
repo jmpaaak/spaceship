@@ -1428,6 +1428,7 @@ function M.new(options)
         distanceMilestoneFlash = 0, -- flash timer for milestone effect
         hasLeftEarth = false,     -- must leave Earth disk before auto-settle
         paused = false,           -- Item 18: pause toggle (ascending only)
+        boostActive = nil,        -- { timer, speedMultiplier } when boost is active
         -- INBOX (35): comet state
         cometDiscovered = {},     -- comet.id → true
         cometCollided = {},       -- comet.id → true
@@ -2055,6 +2056,15 @@ function M:update(dt)
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
         local thrustAngle = self.ship.angle
         local speed = expedition.effectiveSpeed(self.expedition)
+        -- Boost active: multiply speed temporarily
+        if self.boostActive then
+            self.boostActive.timer = self.boostActive.timer - dt
+            if self.boostActive.timer <= 0 then
+                self.boostActive = nil
+            else
+                speed = speed * self.boostActive.speedMultiplier
+            end
+        end
         local wellGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
         local wellSun = wellGalaxy and world.sunPosition(wellGalaxy)
         if wellSun then
@@ -2868,6 +2878,15 @@ function M:touchpressed(id, x, y)
             return
         end
         local ox, oy = joystickOrigin(x, y)
+        -- Boost button: tap right side of screen (above joystick zone, below minimap)
+        if x > viewport.width * 0.6 and y > viewport.height * 0.5 and expedition.boostsRemaining(self.expedition) > 0 and not self.boostActive then
+            local ok = expedition.spendBoost(self.expedition)
+            if ok then
+                self.boostActive = { timer = 0.8, speedMultiplier = 3.0 }
+                pcall(love.system.vibrate, 0.1)
+                return
+            end
+        end
         self.touches[id] = { x = x, y = y, originX = ox, originY = oy }
         return
     end
@@ -3133,9 +3152,7 @@ function M:drawMinimap()
         else
             love.graphics.circle("fill", bx, by, 2.2)
         end
-        local label = i18n.t("minimap_out", math.floor(view.distanceBeyond + 0.5))
-        love.graphics.setColor(1, 0.55, 0.3, 1)
-        love.graphics.printf(label, viewport.width - size - 6, cy + size / 2 + 1, size + 4, "right")
+        -- Distance label removed — arrow alone is enough (user 2026-09-07)
     end
 
     if view.checkpointBeyond then
@@ -3228,6 +3245,13 @@ function M:drawShipStatsSummary()
     local harvestMul = expedition.sampleYieldMultiplier(run)
     love.graphics.printf(i18n.t("ship_stats_harvest", harvestMul), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
+    -- Boost charges remaining
+    local boosts = expedition.boostsRemaining(run)
+    if boosts > 0 then
+        love.graphics.setColor(1, 0.6, 0.2, 0.9)
+        love.graphics.printf("BOOST x" .. boosts, textX, statsY, textW, "right")
+        statsY = statsY + M.shipStatsLineStep
+    end
     -- Active synergies below stats
     local gearMod = require("game.gear")
     local syn = gearMod.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
