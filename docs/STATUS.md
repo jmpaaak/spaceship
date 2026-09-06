@@ -1,18 +1,18 @@
 ## Current Status
 
-- INBOX (30) complete: hide starter switch when scout is active in shop.
-  - `shopLoadoutLines()`: when scout is owned+selected, `shipAction`/`shipStatus`/`shipAffordable` are nil, `shipHidden = true`, `scoutTradeoff = {}`.
-  - Draw: ship slot shows "SCOUT ✓" instead of action/preview. scoutTradeoff lines skipped when empty.
-  - Key/touch "v" is a no-op when scout is already selected.
-  - Updated existing self_test assertions + added INBOX-30 coverage.
+- INBOX (31) complete: minimap galaxy 2-marker fix.
+  - `minimap.view()` galaxy entries now carry `isContaining` flag (true for the containing galaxy, false for others).
+  - `play.lua`: galaxy dot markers only drawn for the containing galaxy; non-containing nearby galaxies are hidden entirely (rim marker from INBOX-34b already indicates nearest off-disc galaxy).
+  - Hub markers (magenta diamond) also restricted to containing galaxy only.
+  - Added `testMinimapGalaxyContainingFlag`: verifies exactly one containing galaxy at origin (milkyway), all others have `isContaining == false`.
   - `make verify` GREEN.
 
 ## Next slice
-- INBOX (31): minimap galaxy 2-marker fix — only show containing galaxy rings, dim non-containing markers.
+- Process next pending INBOX item.
 
 ## Previous
 
-- INBOX (34) complete: galaxy overlap prevention + minimap nearest galaxy rim marker.
+- INBOX (30) complete: hide starter switch when scout is active in shop.
   - (a) Raised `galaxyExistenceThreshold` from 0.72 to 0.82 (~18% galaxy density, down from ~28%).
   - Galaxy overlap filter (8-connected neighbour suppression) already in place from prior cycle.
   - (b) `minimap.view()` now emits `nearestGalaxyRimMarker` with `{dx, dy, distance, name, id}` when nearest non-home galaxy is outside the minimap disc.

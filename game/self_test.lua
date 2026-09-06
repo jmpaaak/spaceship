@@ -889,6 +889,30 @@ local function testMinimapGalaxyRimMarker()
     -- (We just verify the field exists and is structured correctly above.)
 end
 
+-- INBOX-31: minimap.view() galaxy entries must carry isContaining flag.
+-- Only the containing galaxy should have isContaining=true; all others false.
+local function testMinimapGalaxyContainingFlag()
+    local minimapMod = require("game.minimap")
+    -- Ship at origin → inside milkyway.
+    local view = minimapMod.view(0, 0)
+    local containingCount = 0
+    local nonContainingCount = 0
+    for _, g in ipairs(view.galaxies) do
+        if g.isContaining then
+            containingCount = containingCount + 1
+            assert(g.id == "milkyway",
+                "containing galaxy at origin must be milkyway, got " .. tostring(g.id))
+        else
+            nonContainingCount = nonContainingCount + 1
+            -- Non-containing galaxies must have isContaining == false (not nil)
+            assert(g.isContaining == false,
+                "non-containing galaxy isContaining must be false, not nil")
+        end
+    end
+    assert(containingCount == 1,
+        "exactly one galaxy should be containing at origin, got " .. containingCount)
+end
+
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
 -- as a lethal planet collision.
 -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): the existing
@@ -7545,6 +7569,7 @@ function M.run()
     testMinimapEarthStarLabels()
     testMinimapGalaxyOverlapPrevention()
     testMinimapGalaxyRimMarker()
+    testMinimapGalaxyContainingFlag()
     testDebris()
     testBackgroundStars()
     testPlanetDiagonalHash()

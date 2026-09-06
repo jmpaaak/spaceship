@@ -176,6 +176,7 @@ function M.view(shipX, shipY)
     local hubMarkers = {}   -- item 10 change B: separate hub markers
     for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.galaxyCellRadius)) do
         local mx, my, inside = M.project(galaxy.x, galaxy.y, shipX, shipY)
+        local isContaining = containing and galaxy.id == containing.id
         galaxies[#galaxies + 1] = {
             id = galaxy.id,
             name = world.galaxyName(galaxy),
@@ -183,11 +184,11 @@ function M.view(shipX, shipY)
             y = my,
             inside = inside,
             hub = galaxy.id ~= "milkyway",
+            isContaining = isContaining or false,
         }
         -- Item 20b: only emit the large galaxy boundary ring for the
         -- containing galaxy; neighbouring galaxies skip this ring so
         -- their boundaries don't visually overlap on the minimap.
-        local isContaining = containing and galaxy.id == containing.id
         if isContaining then
             local scaled = galaxy.radius * M.mapRadius / M.viewRadius
             rings[#rings + 1] = {
@@ -204,7 +205,7 @@ function M.view(shipX, shipY)
         -- draw it as a distinct marker (magenta diamond) next to the gold
         -- galaxy-center/sun dot.
         local hubObj = world.hubPlanet(galaxy)
-        if hubObj then
+        if hubObj and isContaining then
             local hx, hy, hInside = M.project(hubObj.x, hubObj.y, shipX, shipY)
             hubMarkers[#hubMarkers + 1] = {
                 id = galaxy.id,

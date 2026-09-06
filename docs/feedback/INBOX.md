@@ -2,13 +2,10 @@
 
 ## 처리 대기
 
-(31) **미니맵 은하 2개 표시 원인 수정 (사용자 확정, 2026-09-06):**
-  - 현재 milkyway(SOLAR SYSTEM) `radius = galaxyCellSize * 0.9` (≈4147px). 인접 셀의 은하도 `galaxyCellRadius`(2+4=6셀) 안에 들어와서 미니맵에 나옴.
-  - 스크린샷에서 2개: milkyway 동심원 + 인접 은하 동심원이 함께 보임.
-  - 수정: `galaxyExistenceThreshold = 0.72` → **0.82** (28%→18% 은하 존재 확률). 또는 `viewRadius = 0.55`에서 인접 은하 동심원은 `isContaining`일 때만 그리도록 이미 고쳤는데(L190), `nearbyGalaxies`가 galaxy marker(점)를 항상 그리므로 점이 2개 찍힘. galaxy marker(점)도 containing이 아니면 **미니맵 디스크 경계에만** 작게 표시하거나 숨기기.
-  - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
-
 ## 처리 완료
+
+(31) **미니맵 은하 2개 표시 원인 수정 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `minimap.view()` galaxy 엔트리에 `isContaining` 플래그 추가. `play.lua`에서 non-containing 은하 마커(점+다이아몬드) 비표시. containing 은하만 마커·링·허브 그림. `testMinimapGalaxyContainingFlag` 추가. `make verify` GREEN.
 
 (30) **상점 — starter 정보 제거 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: scout 보유+선택 시 `shopLoadoutLines()`에서 `shipAction`/`shipStatus`/`shipAffordable` nil, `shipHidden=true`, `scoutTradeoff={}`. Draw에서 "SCOUT ✓" 표시. "v" 키/터치 no-op. 기존 테스트 갱신 + INBOX-30 커버리지 추가. `make verify` GREEN.

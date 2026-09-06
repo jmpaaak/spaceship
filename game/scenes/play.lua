@@ -2464,11 +2464,14 @@ function M:drawMinimap()
             love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, 2.6)
         end
     end
-    -- Galaxy markers: one gold palette for every galaxy, including milkyway.
-    -- Hub checkpoints still pulse; home uses the same gold fill (Earth/sun
-    -- keep their distinct cyan/yellow markers elsewhere).
+    -- Galaxy markers: only draw the containing galaxy's marker on the minimap.
+    -- Non-containing nearby galaxies are hidden to avoid visual clutter
+    -- (INBOX-31); the rim marker (INBOX-34b) already indicates the nearest
+    -- off-disc galaxy direction.
     for _, galaxy in ipairs(view.galaxies) do
-        if galaxy.hub then
+        if not galaxy.isContaining then
+            -- skip non-containing galaxy markers entirely
+        elseif galaxy.hub then
             -- Checkpoint galaxy: sprite or pulsing dot+ring
             local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
             local fr, fg, fb = M.galaxyChartFillColor(galaxy.id)
