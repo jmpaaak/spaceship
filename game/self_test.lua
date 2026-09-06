@@ -470,10 +470,10 @@ local function testMinimap()
     for _, ring in ipairs(originView.rings) do
         assert(ring.radius > 0)
         if ring.kind == "galaxy" and ring.id == "milkyway" then sawDisk = true end
-        if ring.kind == "orbit" then sawOrbit = true end
+        if ring.kind == "concentricRing" then sawOrbit = true end
     end
     assert(sawDisk, "home minimap must include the Milky Way / solar disk ring")
-    assert(sawOrbit, "home minimap must include sun-centered solar-system orbit rings")
+    assert(sawOrbit, "home minimap must include concentric rings around the central star")
 
     local nameScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },

@@ -215,21 +215,10 @@ function M.view(shipX, shipY)
             }
         end
     end
-    -- Sun-centered solar-system orbits: readable pixel rings around the
-    -- sun marker (true AU scale is sub-pixel on this chart). Earth's own
-    -- orbit (radius 7, matching its position roughly between the inner and
-    -- outer decorative rings) is included below so Earth visibly reads as
-    -- one of the orbiting bodies around the sun rather than the pivot.
-    if sunInside ~= nil and (sunInside or math.sqrt(sunX * sunX + sunY * sunY) < M.mapRadius) then
-        for _, radius in ipairs({ 4, 7, 11 }) do
-            rings[#rings + 1] = {
-                x = sunX,
-                y = sunY,
-                radius = radius,
-                kind = "orbit",
-            }
-        end
-    end
+    -- Sun-centered solar-system orbits removed (user: Earth should not have
+    -- its own concentric circles; only the galaxy's central star has them).
+    -- The concentric rings block below (item 13) draws evenly spaced rings
+    -- around world.sunPosition(containing) which is the correct center.
     -- docs/feedback/INBOX.md item 13: concentric rings for the current galaxy.
     -- Evenly spaced rings from center to galaxy.radius, projected onto the
     -- minimap. Drawn as "line" circles in the gold color.
