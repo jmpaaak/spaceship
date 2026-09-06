@@ -146,6 +146,19 @@ local pauseButton = {
 }
 M.pauseButton = pauseButton
 
+-- Dev admin cheat buttons: stacked below pause (speed / hull / yield).
+local adminButtons = {
+    { kind = "speed", labelKey = "admin_speed" },
+    { kind = "hull",  labelKey = "admin_hull" },
+    { kind = "yield", labelKey = "admin_yield" },
+}
+local function adminButtonRect(index, pauseY)
+    local w, h, gap = 72, 36, 6
+    local x = 720 - w - 8
+    local y = (pauseY or 8) + 44 + 8 + (index - 1) * (h + gap)
+    return x, y, w, h
+end
+
 -- Ascending-phase RETURN TO EARTH button. A 48px-tall strip at the bottom
 -- of the canvas (above the status message at viewport.height-30=1250).
 -- Centered horizontally, 300px wide — comfortably above the 80×44pt mobile
@@ -2561,6 +2574,13 @@ function M:touchpressed(id, x, y)
             self.paused = not self.paused
             return
         end
+        for i, btn in ipairs(adminButtons) do
+            local ax, ay, aw, ah = adminButtonRect(i, pb.y)
+            if x >= ax and x < ax + aw and y >= ay and y < ay + ah then
+                expedition.adminUpgrade(self.expedition, btn.kind)
+                return
+            end
+        end
         -- If paused, tapping anywhere else unpauses.
         if self.paused then
             self.paused = false
@@ -3828,6 +3848,19 @@ function M:draw()
             iconCx - gap / 2 - barW, iconCy - barH / 2, barW, barH)
         love.graphics.rectangle("fill",
             iconCx + gap / 2, iconCy - barH / 2, barW, barH)
+        -- Admin cheat buttons below pause
+        local prevAdminFont = love.graphics.getFont()
+        local adminFont = fonts.get(22)
+        love.graphics.setFont(adminFont)
+        for i, btn in ipairs(adminButtons) do
+            local ax, ay, aw, ah = adminButtonRect(i, pb.y)
+            love.graphics.setColor(0.15, 0.18, 0.28, 0.75)
+            love.graphics.rectangle("fill", ax, ay, aw, ah, 6, 6)
+            love.graphics.setColor(0.85, 0.9, 1, 0.85)
+            love.graphics.rectangle("line", ax, ay, aw, ah, 6, 6)
+            love.graphics.printf(i18n.t(btn.labelKey), ax, ay + 6, aw, "center")
+        end
+        love.graphics.setFont(prevAdminFont)
     end
     -- Item 18: Paused overlay.
     if self.paused and self.expedition.phase == "ascending" then

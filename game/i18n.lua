@@ -177,6 +177,9 @@ locales.en = {
     hud_gear_label = "GEAR",
     hud_hull_label = "HULL",
     hud_engine_label = "ENGINE",
+    admin_speed = "SPD+",
+    admin_hull = "HULL+",
+    admin_yield = "YLD+",
 }
 
 locales.en.phase_abbrev = {
@@ -343,6 +346,9 @@ locales.ko = {
     hud_gear_label = "장착",
     hud_hull_label = "선체부품",
     hud_engine_label = "엔진부품",
+    admin_speed = "속도+",
+    admin_hull = "내구+",
+    admin_yield = "수확+",
 }
 
 locales.ko.phase_abbrev = {

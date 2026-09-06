@@ -662,6 +662,25 @@ function M.buySteeringUpgrade(run)
     return true
 end
 
+-- Dev/admin: free +1 on speed / hull / yield, any phase. No money cost.
+function M.adminUpgrade(run, kind)
+    if kind == "speed" then
+        run.steeringUpgradeLevel = (run.steeringUpgradeLevel or 0) + 1
+        return true
+    elseif kind == "hull" then
+        run.durabilityUpgradeLevel = (run.durabilityUpgradeLevel or 0) + 1
+        local before = run.maxDurability or 0
+        refreshShipStats(run)
+        local gained = (run.maxDurability or 0) - before
+        run.durability = (run.durability or 0) + math.max(gained, run.durabilityUpgradeAmount or 1)
+        return true
+    elseif kind == "yield" then
+        run.sampleYieldUpgradeLevel = (run.sampleYieldUpgradeLevel or 0) + 1
+        return true
+    end
+    return false
+end
+
 -- Ship trade-offs expressed as explicit GAINS/LOSSES rows, matching the
 -- planet-style-editor tool's numeric format (label + signed value) so the
 -- same shape can later describe per-planet-style risk/reward without a
