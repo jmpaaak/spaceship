@@ -4033,33 +4033,32 @@ function M:draw()
         local rowStep = M.settlementRowStep
         local touchRowHeight = M.settlementTouchRowHeight
         
-        -- Helper for drawing touch row columns
+        -- Helper: Balatro-style shop card button
         local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg)
-            local row = rowTop + 8
-            love.graphics.setColor(1, 1, 1, 0.85)
-            drawPanelSprite(actionImg, leftX, row, leftW, rowStep)
-            love.graphics.setColor(0.75, 0.9, 1)
-            love.graphics.printf(actionText, leftX, row, leftW, "center")
-            if iconImg then
-                local iconSz = 10
-                drawShopIconSprite(iconImg, leftX + 8, row + iconSz * 0.5, iconSz)
-            end
-            row = row + rowStep
-            
-            love.graphics.setColor(1, 1, 1, 0.85)
-            drawPanelSprite(statusImg, leftX, row, leftW, rowStep)
-            love.graphics.setColor(isAffordable and 0.45 or 1, isAffordable and 1 or 0.4, isAffordable and 0.55 or 0.35)
-            love.graphics.printf(statusText, leftX, row, leftW, "center")
-            row = row + rowStep
-            
-            love.graphics.setColor(1, 1, 1, 0.85)
-            drawPanelSprite(previewImg, leftX, row, leftW, rowStep)
-            love.graphics.setColor(0.4, 0.85, 1)
-            if string.find(previewText, "SPD") then
-                M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, previewText, leftX, row, leftW)
+            local cardH = touchRowHeight - 16
+            local cardY = rowTop + 8
+            -- Card body (dark rounded rect with colored border)
+            love.graphics.setColor(0.08, 0.06, 0.12, 0.92)
+            love.graphics.rectangle("fill", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
+            -- Border: green if affordable, red if not
+            if isAffordable then
+                love.graphics.setColor(0.3, 0.85, 0.4, 0.8)
             else
-                love.graphics.printf(previewText, leftX, row, leftW, "center")
+                love.graphics.setColor(0.6, 0.25, 0.2, 0.6)
             end
+            love.graphics.setLineWidth(2)
+            love.graphics.rectangle("line", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
+            love.graphics.setLineWidth(1)
+            -- Action text (what you buy)
+            love.graphics.setColor(0.95, 0.92, 0.85, 1)
+            love.graphics.printf(actionText, leftX + 8, cardY + 12, leftW - 16, "center")
+            -- Status (balance/shortfall) — green affordable, red not
+            local statusY = cardY + 12 + 28
+            love.graphics.setColor(isAffordable and 0.45 or 1, isAffordable and 1 or 0.4, isAffordable and 0.55 or 0.35)
+            love.graphics.printf(statusText, leftX + 8, statusY, leftW - 16, "center")
+            -- Preview (what you get)
+            love.graphics.setColor(0.5, 0.85, 1, 0.9)
+            love.graphics.printf(previewText, leftX + 8, statusY + 28, leftW - 16, "center")
         end
 
         local shopIcons = self.shopIconImages or {}

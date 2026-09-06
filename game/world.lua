@@ -229,9 +229,9 @@ end
 -- apply.  dotInterval is the period between 1-HP ticks inside the well.
 -- survivalTime is how long the ship must remain continuously inside the
 -- well to earn the one-time-per-galaxy sample.
-M.starRadius = 24
-M.starWellMultiplier = 4
-M.starWellRadius = M.starRadius * M.starWellMultiplier -- 96
+M.starRadius = 80
+M.starWellMultiplier = 2
+M.starWellRadius = M.starRadius * M.starWellMultiplier -- 160
 M.starDotInterval = 0.5   -- seconds between 1-damage ticks
 M.starSurvivalTime = 10   -- continuous seconds for sample reward
 M.starGravityStrength = 40 -- pull force (px/s²) at starRadius distance (was 120; reduced so edge is escapable)
@@ -271,7 +271,7 @@ function M.hubPlanet(galaxy)
         id = "hub:" .. galaxy.id,
         x = hubX,
         y = hubY,
-        radius = 16 + math.floor(hash(gx, gy, 540) * 8),
+        radius = 40 + math.floor(hash(gx, gy, 540) * 16),
         hue = hash(gx, gy, 550),
         hub = true,
         galaxyId = galaxy.id,
