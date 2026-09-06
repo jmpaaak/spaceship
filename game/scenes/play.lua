@@ -1411,7 +1411,10 @@ function M.new(options)
         starWellHeatAlpha = 0,    -- red vignette while sampling the central star
         hubHeatAlpha = 0,         -- green vignette approaching a hub checkpoint
         lastHapticTime = 0,
+        earthHapticFired = false,
         gearPopup = nil,          -- equipped-part detail popup {part, category}
+        distanceMilestone = 0,    -- last 1000-step milestone reached
+        distanceMilestoneFlash = 0, -- flash timer for milestone effect
         hasLeftEarth = false,     -- must leave Earth disk before auto-settle
         paused = false,           -- Item 18: pause toggle (ascending only)
         -- INBOX (35): comet state
@@ -1574,6 +1577,12 @@ function M:approachWarning(planet, planetScreenY, shipScreenY)
     local approaching = phase == "ascending" and planetScreenY >= 40 and planetScreenY < shipScreenY
     if not approaching then return nil end
     return self:collisionRisk(planet)
+end
+
+function M:hudDistanceRaw()
+    local dx = self.ship.x - M.earthCenterX
+    local dy = self.ship.y - M.earthCenterY
+    return math.sqrt(dx * dx + dy * dy)
 end
 
 function M:hudLines()
@@ -2157,8 +2166,14 @@ function M:update(dt)
         local earthDist = math.sqrt(earthDistSq)
         self.reentryShake = M.reentryShakeFromDistance(earthDist)
         self.reentryHeatAlpha = M.reentryHeatVignetteAlpha(earthDist)
+        -- Vibrate once when first entering Earth proximity, not every frame
         if self.reentryHeatAlpha > 0.04 then
-            pulseHaptic(self, 0.03 + self.reentryHeatAlpha * 0.08)
+            if not self.earthHapticFired then
+                self.earthHapticFired = true
+                pulseHaptic(self, 0.06)
+            end
+        else
+            self.earthHapticFired = false
         end
 
         -- M.earthVisualRadius * 1.5 is 87, but settle is 88. To trigger BEFORE settle,
@@ -2267,8 +2282,12 @@ function M:update(dt)
                 end
             end
             if nearestHubDist < hubRadius then
+                local wasOutside = (self.hubHeatAlpha or 0) <= 0
                 self.hubHeatAlpha = 0.3 * (1 - nearestHubDist / hubRadius)
-                pulseHaptic(self, 0.03 + self.hubHeatAlpha * 0.08)
+                -- Vibrate once on first entry, not every frame
+                if wasOutside then
+                    pulseHaptic(self, 0.06)
+                end
             else
                 self.hubHeatAlpha = math.max(0, (self.hubHeatAlpha or 0) - dt * 1.5)
             end
@@ -3141,14 +3160,15 @@ function M:drawShipStatsSummary()
     statsY = statsY + M.shipStatsLineStep + 4
     -- Ship stats below samples
     love.graphics.setColor(0.6, 0.7, 0.8, 0.85)
-    local shipName = string.upper(run.selectedShipId or "starter")
+    local shipName = i18n.t("ship_name_" .. (run.selectedShipId or "starter"))
     love.graphics.printf(i18n.t("ship_stats_ship", shipName), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
-    love.graphics.printf(i18n.t("ship_stats_speed", run.steeringUpgradeLevel or 0), textX, statsY, textW, "right")
+    love.graphics.printf(i18n.t("ship_stats_speed", expedition.effectiveSpeed(run)), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
-    love.graphics.printf(i18n.t("ship_stats_hull", run.durabilityUpgradeLevel or 0), textX, statsY, textW, "right")
+    love.graphics.printf(i18n.t("ship_stats_hull", run.durability or 0, run.maxDurability or 0), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
-    love.graphics.printf(i18n.t("ship_stats_harvest", run.sampleYieldUpgradeLevel or 0), textX, statsY, textW, "right")
+    local harvestMul = expedition.sampleYieldMultiplier(run)
+    love.graphics.printf(i18n.t("ship_stats_harvest", harvestMul), textX, statsY, textW, "right")
     if prevFont then love.graphics.setFont(prevFont) end
 end
 
@@ -3679,6 +3699,20 @@ function M:draw()
         local distIconSize = M.hullIconSize
         drawHudSpriteOrPoly(hudIconsTmp2.distance, nil,
             5 + distIconSize / 2, hudY + distIconSize / 2, distIconSize)
+        -- Distance milestone flash: gold pulse when crossing 1000-unit boundaries
+        local dist = self:hudDistanceRaw()
+        local currentMilestone = math.floor(dist / 1000)
+        if currentMilestone > (self.distanceMilestone or 0) then
+            self.distanceMilestone = currentMilestone
+            self.distanceMilestoneFlash = 1.0
+        end
+        if (self.distanceMilestoneFlash or 0) > 0 then
+            self.distanceMilestoneFlash = self.distanceMilestoneFlash - (love.timer and love.timer.getDelta() or 0.016)
+            local flash = self.distanceMilestoneFlash
+            love.graphics.setColor(1, 0.85, 0.25, math.max(0, flash * 0.8))
+        else
+            love.graphics.setColor(0.7, 0.9, 1)
+        end
         love.graphics.print(hud.distance, 5 + distIconSize + M.hullIconGap, hudY)
         hudY = hudY + M.hudLineStep
     end
@@ -3701,28 +3735,55 @@ function M:draw()
         drawHudSpriteOrPoly(hudIcons.hull, M.shieldIconPoints,
             iconCenterX, iconCenterY, M.hullIconSize)
         -- Draw HP blocks: maxDurability rectangles, filled for current HP.
+        -- When maxDurability >= 10, use "big blocks" worth 10 HP each + remainder.
         local run = self.expedition
         local blockX = 5 + M.hullIconSize + M.hullIconGap
-        local blockY = hudY + (M.hudLineStep - M.hpBlockSize) / 2  -- vertically center
-        for i = 1, run.maxDurability do
-            if i <= run.durability then
-                -- Color gradient: green(full) → yellow(half) → red(low)
-                local ratio = (i - 1) / math.max(run.maxDurability - 1, 1)
-                if run.durability <= math.ceil(run.maxDurability * 0.33) then
-                    -- All remaining blocks red when HP is critical
-                    love.graphics.setColor(0.9, 0.2, 0.15)
-                elseif run.durability <= math.ceil(run.maxDurability * 0.66) then
-                    love.graphics.setColor(1, 0.85, 0.2)  -- yellow
-                else
-                    love.graphics.setColor(0.2, 0.85, 0.3)  -- green
-                end
-                love.graphics.rectangle("fill", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+        local blockY = hudY + (M.hudLineStep - M.hpBlockSize) / 2
+        local function hpColor(cur, mx)
+            if cur <= math.ceil(mx * 0.33) then
+                return 0.9, 0.2, 0.15
+            elseif cur <= math.ceil(mx * 0.66) then
+                return 1, 0.85, 0.2
             else
-                -- Empty block: dark gray outline
-                love.graphics.setColor(0.3, 0.3, 0.35)
-                love.graphics.rectangle("line", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+                return 0.2, 0.85, 0.3
             end
-            blockX = blockX + M.hpBlockSize + M.hpBlockGap
+        end
+        if run.maxDurability >= 10 then
+            -- Each big block = 10 HP; draw filled/partial/empty
+            local bigCount = math.ceil(run.maxDurability / 10)
+            for i = 1, bigCount do
+                local blockMin = (i - 1) * 10 + 1
+                local blockMax = math.min(i * 10, run.maxDurability)
+                local blockTotal = blockMax - blockMin + 1
+                local blockFilled = math.max(0, math.min(run.durability - blockMin + 1, blockTotal))
+                if blockFilled >= blockTotal then
+                    love.graphics.setColor(hpColor(run.durability, run.maxDurability))
+                    love.graphics.rectangle("fill", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+                elseif blockFilled > 0 then
+                    -- Partially filled: outline + partial fill
+                    love.graphics.setColor(0.3, 0.3, 0.35)
+                    love.graphics.rectangle("line", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+                    local frac = blockFilled / blockTotal
+                    local fillH = math.max(1, math.floor(M.hpBlockSize * frac))
+                    love.graphics.setColor(hpColor(run.durability, run.maxDurability))
+                    love.graphics.rectangle("fill", blockX, blockY + M.hpBlockSize - fillH, M.hpBlockSize, fillH)
+                else
+                    love.graphics.setColor(0.3, 0.3, 0.35)
+                    love.graphics.rectangle("line", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+                end
+                blockX = blockX + M.hpBlockSize + M.hpBlockGap
+            end
+        else
+            for i = 1, run.maxDurability do
+                if i <= run.durability then
+                    love.graphics.setColor(hpColor(run.durability, run.maxDurability))
+                    love.graphics.rectangle("fill", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+                else
+                    love.graphics.setColor(0.3, 0.3, 0.35)
+                    love.graphics.rectangle("line", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+                end
+                blockX = blockX + M.hpBlockSize + M.hpBlockGap
+            end
         end
         hudY = hudY + M.hudLineStep
     end

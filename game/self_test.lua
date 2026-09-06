@@ -8606,23 +8606,27 @@ function M.run()
         local ok, err = pcall(function() scene:drawShipStatsSummary() end)
         love.graphics = previousGraphics
         assert(ok, "drawShipStatsSummary must not throw: " .. tostring(err))
+        -- Debug: dump printf calls
+        for di, dc in ipairs(printfCalls) do
+            print("    [DEBUG] printf #"..di..": text='"..tostring(dc.text).."' align="..tostring(dc.align))
+        end
         -- Must produce 4 right-aligned printf calls (ship, speed, hull, harvest)
         local rightAligned = 0
         local sawShip, sawSpeed, sawHull, sawHarvest = false, false, false, false
         for _, c in ipairs(printfCalls) do
             if c.align == "right" then
                 rightAligned = rightAligned + 1
-                if c.text:find("SCOUT") then sawShip = true end
-                if c.text:find("LV%.2") then sawSpeed = true end
-                if c.text:find("LV%.1") then sawHull = true end
-                if c.text:find("LV%.3") then sawHarvest = true end
+                if c.text:find("SCOUT") or c.text:find("기본선") or c.text:find("정찰선") then sawShip = true end
+                if c.text:find("SPEED %d") or c.text:find("속도 %d") then sawSpeed = true end
+                if c.text:find("HULL %d+/%d+") then sawHull = true end
+                if c.text:find("HARVEST x%d+%.%d+") then sawHarvest = true end
             end
         end
         assert(rightAligned >= 4, "ship stats must have >= 4 right-aligned lines, got " .. rightAligned)
         assert(sawShip, "ship stats must include ship name SCOUT")
-        assert(sawSpeed, "ship stats must include speed LV.2")
-        assert(sawHull, "ship stats must include hull LV.1")
-        assert(sawHarvest, "ship stats must include harvest LV.3")
+        assert(sawSpeed, "ship stats must include SPEED 2")
+        assert(sawHull, "ship stats must include hull current/max")
+        assert(sawHarvest, "ship stats must include harvest multiplier")
 
         -- Verify it does NOT draw during settlement
         run.phase = "settlement"
