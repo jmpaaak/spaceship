@@ -2206,11 +2206,15 @@ function M:update(dt)
                 local sunDist = math.sqrt(sdx * sdx + sdy * sdy)
                 if sunDist < world.starWellRadius then
                     inWell = true
-                    -- Gravity pull: strongest near center, fades to zero at well edge
+                    -- Gravity pull: stronger near center, always escapable
+                    -- Pull can never exceed 80% of helm speed so the player
+                    -- always makes slow progress outward, but near the center
+                    -- it's a real struggle.
                     if sunDist > 1 then
-                        -- Quadratic falloff: pull is zero at wellRadius, max at starRadius
                         local t = math.max(0, 1 - sunDist / world.starWellRadius)
-                        local pullStrength = world.starGravityStrength * t * t
+                        local helmSpeed = world.starWellSpeed(wellGalaxy)
+                        -- Linear in t, capped at 80% of helm so always escapable
+                        local pullStrength = helmSpeed * 0.8 * t
                         local nx, ny = sdx / sunDist, sdy / sunDist
                         self.ship.x = self.ship.x + nx * pullStrength * dt
                         self.ship.y = self.ship.y + ny * pullStrength * dt
