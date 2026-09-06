@@ -2,12 +2,6 @@
 
 ## 처리 대기
 
-(39) **시작 화면 "탭하여 발사" 위치 이동 (사용자 확정, 2026-09-06):**
-  - 현재 화면 맨 아래 `viewport.height - 30`에 고정. 로켓 아이콘 위에.
-  - 변경: **장착장비 패널 위쪽**으로 이동. `M.launchLoadoutBoxTop - 50` 정도. 회색 `(0.6, 0.6, 0.6, 0.7)`. Y를 `sin(self.time * 2) * 4`로 위아래 살짝 움직임.
-  - 로켓 아이콘도 같이 이동하거나 제거.
-  - `make verify` GREEN + 커밋: `fix(launch): move tap-to-launch text above loadout panel with float animation`
-
 (40) **선체 정보 → 미니맵 밑 고정 노출 (사용자 확정, 2026-09-06):**
   - 현재 launch 페이즈에서 화면 중앙에 `장착 장비` + `선체 3` + `선체 LV.0` + `-55` 등이 나옴.
   - 변경: ascending 때도 **미니맵 아래 우측**에 작은 폰트(22px)로 고정 노출:
@@ -19,6 +13,7 @@
   - `make verify` GREEN + 커밋: `feat(hud): ship stats summary fixed below minimap during ascending`
 
 ## 처리 완료
+(39) **시작 화면 "탭하여 발사" 위치 이동 — 완료 2026-09-06:** messageY를 `launchLoadoutBoxTop - 50 + sin(time*2)*4` 플로트로 이동, 텍스트 색 `(0.6,0.6,0.6,0.7)`, 로켓 아이콘 함께 이동. `make verify` GREEN.
 (38) **HUD 텍스트 2배 + 한줄씩 + 내구도 네모칸 + 최고기록 (사용자 확정, 2026-09-06):**
   - **(a) HUD 폰트 2배.** `M.hudFontSize = 22` → **44**. Galmuri11 44px (11×4). `M.hudLineStep`도 비례 확대 (36→52 이상).
   - **(b) 한 줄에 하나씩.** 현재 거리·자금이 같은 줄에 나란히. 변경:

@@ -3619,19 +3619,23 @@ function M:draw()
         self:drawJoystickStick()
     end
     love.graphics.setColor(0.85, 0.9, 1)
-    local messageY = (self.expedition.phase == "settlement" or self.expedition.phase == "destroyed") and 50 or viewport.height - 30
+    local messageY
     if self.expedition.phase == "launch" then
-        -- docs/feedback/INBOX.md UI/HUD item 3: pair the TAP TO LAUNCH
-        -- action with a small rocket icon above it instead of bare text.
-        -- Group 5 wiring: use launch_rocket.png sprite when available,
-        -- fall back to original polygon.
+        -- INBOX (39): "tap to launch" text above the loadout panel with
+        -- gentle float animation; rocket icon moves together.
+        local floatOffset = math.sin(self.time * 2) * 4
+        messageY = M.launchLoadoutBoxTop - 50 + floatOffset
         love.graphics.setColor(1, 0.75, 0.25)
         if not drawHudSpriteOrPoly(self.launchRocketIconImage, M.rocketIconPoints,
                 viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize) then
             love.graphics.polygon("fill", M.rocketIconPoints(
                 viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize))
         end
-        love.graphics.setColor(0.85, 0.9, 1)
+        love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
+    elseif self.expedition.phase == "settlement" or self.expedition.phase == "destroyed" then
+        messageY = 50
+    else
+        messageY = viewport.height - 30
     end
     love.graphics.printf(self.message, 4, messageY, viewport.width - 8, "center")
     -- message_banner icon: draw amber burst-star icon to the left of the message
