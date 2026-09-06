@@ -236,6 +236,19 @@ M.starDotInterval = 0.5   -- seconds between 1-damage ticks
 M.starSurvivalTime = 10   -- continuous seconds for sample reward
 M.starGravityStrength = 120 -- pull force (px/s²) at starRadius distance
 
+-- Slow fixed helm speed while sampling the central star. Farther galaxies
+-- (higher engine-part tiers) get an even slower cap so the 10s dwell is
+-- a real risk instead of a fly-through.
+function M.starWellSpeed(galaxy)
+    if not galaxy or galaxy.id == "milkyway" or ((galaxy.gx or 0) == 0 and (galaxy.gy or 0) == 0) then
+        return 22
+    end
+    local d = math.sqrt((galaxy.gx or 0) ^ 2 + (galaxy.gy or 0) ^ 2)
+    if d < 1.6 then return 14 end
+    if d < 3.2 then return 9 end
+    return 5
+end
+
 -- The "center planet" of a galaxy (docs/GAME_DESIGN.md 이동 방식 개선
 -- 항목 2, "각 은하계의 중심 행성들"). The home galaxy's center is Earth
 -- itself (drawn separately in PlayScene), so milkyway has no extra hub

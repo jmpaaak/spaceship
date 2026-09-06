@@ -1902,12 +1902,19 @@ function M:update(dt)
         local xBeforeThrust, yBeforeThrust = self.ship.x, self.ship.y
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
         local thrustAngle = self.ship.angle
+        local speed = expedition.effectiveSpeed(self.expedition)
+        local wellGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+        local wellSun = wellGalaxy and world.sunPosition(wellGalaxy)
+        if wellSun then
+            local wdx, wdy = wellSun.x - self.ship.x, wellSun.y - self.ship.y
+            if wdx * wdx + wdy * wdy < world.starWellRadius * world.starWellRadius then
+                speed = world.starWellSpeed(wellGalaxy)
+            end
+        end
         if joyMagnitude > 0 then
-            local speed = expedition.effectiveSpeed(self.expedition)
             self.ship.x = self.ship.x + joyDx * speed * joyMagnitude * dt
             self.ship.y = self.ship.y + joyDy * speed * joyMagnitude * dt
         else
-            local speed = expedition.effectiveSpeed(self.expedition)
             self.ship.x = self.ship.x
                 + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
                 * speed * dt
