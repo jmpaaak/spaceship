@@ -24,12 +24,6 @@
   - **(b) 미니맵 인접 은하 외곽 표기.** 현재 `nearestCheckpointDirection`이 화살표만 그림. 추가: 미니맵 디스크 **원 경계 위**에 가장 가까운 비-home 은하의 방향에 작은 마커(점 + 거리 숫자) 표시. `checkpointBeyond`가 true일 때 화살표 옆에 은하 이름도.
   - `make verify` GREEN + 커밋: `fix(minimap): prevent galaxy overlap, show nearest galaxy on disc rim`
 
-(28) **행성 밀도 절반 + 겹침 방지 (사용자 확정, 2026-09-06):**
-  - 현재: `hash(...,1) > 0.70` → 30% 확률 1개, `hash(...,7) > 0.96` → 4% 확률 2개.
-  - 변경: `hash(...,1) > 0.85` → **15%** 확률 1개, `hash(...,7) > 0.98` → **2%** 확률 2개. 약 절반.
-  - 겹침 방지: 같은 섹터에 2개 생성 시 두 행성 간 거리가 `(r1 + r2 + 10)` 미만이면 두 번째를 섹터 반대편으로 재배치하거나 삭제.
-  - `make verify` GREEN + 커밋: `fix(world): halve planet density and prevent overlap`
-
 (29) **채집 줌인 축소 (사용자 확정, 2026-09-06):**
   - 현재 `collectZoom.scale = 1.35` (35% 줌인). 사용자: "너무 줌인 많이 됨."
   - 변경: `scale = 1.12` (12% 줌인). 행성이 약간 커 보이되 시야 확보 유지.
@@ -47,6 +41,9 @@
   - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
 
 ## 처리 완료
+
+(28) **행성 밀도 절반 + 겹침 방지 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `hash(...,1) > 0.70` → `> 0.85` (30%→15%), `hash(...,7) > 0.96` → `> 0.98` (4%→2%). 겹침 방지: 2-planet 섹터에서 dist < (r1+r2+10)이면 두 번째 삭제. 테스트 `testPlanetDensityHalved`, `testPlanetOverlapPrevention` 추가. `make verify` GREEN.
 
 (27) **행성 대각선 패턴 수정 — LCG hash 버그 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `world.planets()` hash 호출에서 `salt+i` 패턴을 `sectorX+i*K, sectorY+i*K2, salt` 패턴으로 변경. radius/hue/x/y 모두 수정. `testPlanetDiagonalHash` 테스트 추가. `make verify` GREEN.

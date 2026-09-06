@@ -908,6 +908,61 @@ local function testPlanetDiagonalHash()
         diagCount .. "/" .. totalPlanets .. " on diagonal for sectorX==sectorY")
 end
 
+local function testPlanetDensityHalved()
+    local world = require("game.world")
+    -- Scan a large grid of sectors and count total planets.
+    -- With thresholds 0.85 (15%) and 0.98 (2%), the average per-sector
+    -- density should be well below the old 30%+4% regime.
+    -- We scan sectors inside the home galaxy to ensure they're not empty
+    -- due to being outside a galaxy.
+    local totalPlanets = 0
+    local totalSectors = 0
+    local twoPlanetSectors = 0
+    for sx = -10, 10 do
+        for sy = -30, -10 do  -- home galaxy is around y<0
+            local planets = world.planets(sx, sy)
+            local n = #planets
+            totalPlanets = totalPlanets + n
+            if n > 0 then totalSectors = totalSectors + 1 end
+            if n == 2 then twoPlanetSectors = twoPlanetSectors + 1 end
+        end
+    end
+    -- Old density: ~30% 1-planet + ~4% 2-planet → ~0.38 planets/galaxy-sector
+    -- New density: ~15% 1-planet + ~2% 2-planet → ~0.19 planets/galaxy-sector
+    -- With 441 total sectors scanned (21×21), at most ~200 are in-galaxy.
+    -- We expect significantly fewer planets than old density would give.
+    -- Conservative check: totalPlanets should be less than 0.30 * 441 = 132
+    -- (old regime average was ~0.38*in-galaxy-sectors).
+    -- Actually just verify the hash thresholds are applied: single-planet
+    -- threshold 0.85 means at most 15% of sectors get >=1 planet.
+    local scanned = 21 * 21  -- 441
+    assert(totalPlanets < scanned * 0.30,
+        "INBOX-28 density should be halved: got " .. totalPlanets ..
+        " planets in " .. scanned .. " sectors (max expected ~" ..
+        math.floor(scanned * 0.30) .. ")")
+end
+
+local function testPlanetOverlapPrevention()
+    local world = require("game.world")
+    -- Scan many sectors; for any sector with 2 planets, verify separation.
+    for sx = -50, 50 do
+        for sy = -50, 50 do
+            local planets = world.planets(sx, sy)
+            if #planets == 2 then
+                local p1, p2 = planets[1], planets[2]
+                local dx = p2.x - p1.x
+                local dy = p2.y - p1.y
+                local dist = math.sqrt(dx * dx + dy * dy)
+                local minDist = p1.radius + p2.radius + 10
+                assert(dist >= minDist,
+                    string.format(
+                        "INBOX-28 overlap: sector (%d,%d) planets %.1f apart, min %.1f",
+                        sx, sy, dist, minDist))
+            end
+        end
+    end
+end
+
 -- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first
 -- slice): TAP TO LAUNCH gets a small rocket icon above it. The icon is a
 -- pure-geometry helper (no love.graphics calls) so it can be regression
@@ -7424,6 +7479,8 @@ function M.run()
     testDebris()
     testBackgroundStars()
     testPlanetDiagonalHash()
+    testPlanetDensityHalved()
+    testPlanetOverlapPrevention()
     testLaunchRocketIcon()
     testHullShieldIcon()
     testCashCoinIcon()

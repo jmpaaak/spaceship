@@ -254,8 +254,8 @@ function M.planets(sectorX, sectorY)
     if not galaxy then
         return {}
     end
-    local count = hash(sectorX, sectorY, 1) > 0.70 and 1 or 0
-    if hash(sectorX, sectorY, 7) > 0.96 then count = 2 end
+    local count = hash(sectorX, sectorY, 1) > 0.85 and 1 or 0
+    if hash(sectorX, sectorY, 7) > 0.98 then count = 2 end
     local planets = {}
     -- Clamp hue within ±0.083 of the galaxy's baseHue so planets in the same
     -- galaxy share a consistent colour mood. (0.083 ≈ 30°/360°)
@@ -274,6 +274,18 @@ function M.planets(sectorX, sectorY)
             galaxyStarType = galaxy.starType,
             galaxyStarTypeIdx = galaxy.starTypeIdx,
         }
+    end
+    -- Overlap prevention: when two planets spawn in the same sector, ensure
+    -- they are at least (r1 + r2 + 10) apart; otherwise drop the second.
+    if #planets == 2 then
+        local p1, p2 = planets[1], planets[2]
+        local dx = p2.x - p1.x
+        local dy = p2.y - p1.y
+        local dist = math.sqrt(dx * dx + dy * dy)
+        local minDist = p1.radius + p2.radius + 10
+        if dist < minDist then
+            planets[2] = nil  -- remove overlapping second planet
+        end
     end
     return planets
 end
