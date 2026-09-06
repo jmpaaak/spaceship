@@ -213,7 +213,7 @@ function M.view(shipX, shipY)
         -- Item 20b: only emit the large galaxy boundary ring for the
         -- containing galaxy; neighbouring galaxies skip this ring so
         -- their boundaries don't visually overlap on the minimap.
-        if isContaining and galaxy.id ~= "milkyway" then
+        if isContaining then
             local scaled = galaxy.radius * M.mapRadius / M.viewRadius
             rings[#rings + 1] = {
                 id = galaxy.id,
@@ -246,10 +246,9 @@ function M.view(shipX, shipY)
     -- docs/feedback/INBOX.md item 13: concentric rings for the current galaxy.
     -- Evenly spaced rings from center to galaxy.radius, projected onto the
     -- minimap. Drawn as "line" circles in the gold color.
-    -- Concentric rings around the central star. Skip milkyway because
-    -- Earth (0,0) and Sun (~553px apart) are indistinguishable on the
-    -- minimap scale, making the rings look Earth-centered.
-    if containing and containing.id ~= "milkyway" then
+    -- Concentric rings around the central star for ALL galaxies including
+    -- milkyway. User confirmed: sun-centered rings must stay. (2026-09-07)
+    if containing then
         local sun = world.sunPosition(containing)
         local ringCount = M.concentricRingCount(containing)
         local sunMx, sunMy, sunInside2 = M.project(sun.x, sun.y, shipX, shipY)
