@@ -3346,7 +3346,13 @@ function M:draw()
         local bob = math.sin(self.time * 2) * 3
         local f = love.graphics.getFont()
         local lineH = 14
-        local topY = earthY - M.earthVisualRadius - 8 - lineH * 3 + bob
+        -- During launch phase, draw hints below Earth so they don't cover the ship
+        local topY
+        if self.expedition.phase == "launch" then
+            topY = earthY + M.earthVisualRadius + 8 + bob
+        else
+            topY = earthY - M.earthVisualRadius - 8 - lineH * 3 + bob
+        end
         love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
         love.graphics.print(sell, earthX - f:getWidth(sell) / 2, topY)
         love.graphics.print(repair, earthX - f:getWidth(repair) / 2, topY + lineH)
@@ -4129,7 +4135,7 @@ function M:draw()
         -- INBOX (39): "tap to launch" text above the loadout panel with
         -- gentle float animation; rocket icon moves together.
         local floatOffset = math.sin(self.time * 2) * 4
-        messageY = M.launchLoadoutBoxTop - 200 + floatOffset
+        messageY = M.launchLoadoutBoxTop - 50 + floatOffset
         love.graphics.setColor(1, 0.75, 0.25)
         if not drawHudSpriteOrPoly(self.launchRocketIconImage, M.rocketIconPoints,
                 viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize) then
