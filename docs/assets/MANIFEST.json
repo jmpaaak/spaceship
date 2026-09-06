@@ -2591,7 +2591,7 @@
     "style": "pixel-art",
     "settings": "{\"generator\":\"tools/gen_slot_symbols.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-06T22:00:00+09:00",
-    "sha256": "2360975667559beeceb5295632c5c435aa8150c98b63a1330c07df43680fb6b3",
+    "sha256": "364aeceadc6f196ad3d37c9994ea7e3e8c0628973dfa8a11bfb17b5dd167f2ff",
     "width": 32,
     "height": 32,
     "qa": "INBOX (52a): PIL-generated 32x32 money slot symbol, RGBA, transparent bg"
@@ -2607,7 +2607,7 @@
     "style": "pixel-art",
     "settings": "{\"generator\":\"tools/gen_slot_symbols.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-06T22:00:00+09:00",
-    "sha256": "142024318bf580e19f35ed28c9560f1457b654d47135f34dfd2a205e758690f3",
+    "sha256": "670f8d65a5eac55a88e02262a3410b0362224fe2115785e030eb76a0e068597e",
     "width": 32,
     "height": 32,
     "qa": "INBOX (52a): PIL-generated 32x32 part slot symbol, RGBA, transparent bg"
@@ -2623,7 +2623,7 @@
     "style": "pixel-art",
     "settings": "{\"generator\":\"tools/gen_slot_symbols.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-06T22:00:00+09:00",
-    "sha256": "02d25337f4a03218837382b46ee7c3d08fd8d32212c811eb4c52f25311e390a7",
+    "sha256": "e527646e21e91e25bb9076507c355df5275153b15e4e25ed91c67cf24d0213e1",
     "width": 32,
     "height": 32,
     "qa": "INBOX (52a): PIL-generated 32x32 speed slot symbol, RGBA, transparent bg"
@@ -2639,7 +2639,7 @@
     "style": "pixel-art",
     "settings": "{\"generator\":\"tools/gen_slot_symbols.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-06T22:00:00+09:00",
-    "sha256": "82c79186ee9eb32ecca7a3aaaa9c4a3dabe650c2cc2296acdc0be552ea2b6501",
+    "sha256": "92f55215966813131d5b9069101fb8bf87b94f1fd52511735846b60c08f5cbf4",
     "width": 32,
     "height": 32,
     "qa": "INBOX (52a): PIL-generated 32x32 durability slot symbol, RGBA, transparent bg"
@@ -2655,7 +2655,7 @@
     "style": "pixel-art",
     "settings": "{\"generator\":\"tools/gen_slot_symbols.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-06T22:00:00+09:00",
-    "sha256": "ec526729239c6d877b72f43095defd60d92f11bfb57aceb53b188d954fe7e218",
+    "sha256": "bcc282cc07a43be10e8b88e4cda78998e4056a4854f91da5de78272f0dd6532c",
     "width": 32,
     "height": 32,
     "qa": "INBOX (52a): PIL-generated 32x32 harvest slot symbol, RGBA, transparent bg"
@@ -2671,9 +2671,25 @@
     "style": "pixel-art",
     "settings": "{\"generator\":\"tools/gen_slot_machine.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-06T22:00:00+09:00",
-    "sha256": "0c4435ebb257808e1b91b0d5e242f37a3075b227a506071d430ec6343a09a50c",
+    "sha256": "cd4d98c229d7d8d8efc869796bee99fa9086ac1418130d53738349afd2932890",
     "width": 96,
     "height": 48,
     "qa": "INBOX (52a): PIL-generated 96x48 slot machine body, RGBA, transparent bg, 3 reel windows"
+  },
+  {
+    "path": "assets/slot_symbols/spin_button.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_slot_spin_button.py",
+    "terms_url": "tools/gen_slot_spin_button.py",
+    "asset_id": "pil-slot-spin-button-20260906",
+    "prompt": "PIL-generated 96x22 RGBA slot spin button with SPIN text",
+    "model": "PIL/Pillow",
+    "style": "pixel-art",
+    "settings": "{\"generator\":\"tools/gen_slot_spin_button.py\",\"method\":\"PIL\"}",
+    "downloaded_at": "2026-09-06T22:00:00+09:00",
+    "sha256": "13577c58136e465865acc7e938624a636c7a422b0363b365b045580e92c6f27e",
+    "width": 96,
+    "height": 22,
+    "qa": "PIL-generated 96x22 spin button, RGBA, transparent bg"
   }
 ]

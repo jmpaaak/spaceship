@@ -1,10 +1,11 @@
 ## Current Status
 
-- Fix: `make verify` failed ASSET_MANIFEST_FAIL — sha256 mismatches for
-  `assets/earth/earth_generic.png` and six `assets/planet/pp_*.png` sprites
-  (chunky 4px regeneration left stale hashes). Updated
-  `docs/assets/MANIFEST.json` to on-disk hashes. `make verify LOVE=…` GREEN:
-  SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
+- Fix: `make verify` failed ASSET_MANIFEST_FAIL — sha256 mismatches for 6
+  `assets/slot_symbols/*.png` files (durability, harvest, machine, money,
+  part, speed) and missing manifest entry for `spin_button.png`. Updated
+  `docs/assets/MANIFEST.json` hashes to match on-disk files and added
+  spin_button entry. `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK,
+  SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
@@ -12,6 +13,11 @@
   is on a clean tree.
 
 ## Previous
+
+- Fix: `make verify` failed ASSET_MANIFEST_FAIL — sha256 mismatches for
+  `assets/earth/earth_generic.png` and six `assets/planet/pp_*.png` sprites
+  (chunky 4px regeneration left stale hashes). Updated
+  `docs/assets/MANIFEST.json` to on-disk hashes.
 
 - INBOX (59) complete: Added random rotation for debris sprites.
 
