@@ -2,6 +2,31 @@
 
 ## 처리 대기
 
+(55) **상점 하단 — 슬롯/기어오퍼/NEXT SCOUT 제거, 재발사+함선선택만 남기기 (사용자 확정, 2026-09-06):**
+  - 상점 draw에서 `settlementTouchRows[3]`(슬롯) 영역: 기어 오퍼 텍스트 + 슬롯머신 + SOLAR ODDS 등 전부 제거.
+  - `settlementTouchRows[5]`(재발사) 영역: NEXT SCOUT/STARTER 텍스트 (`nextLaunch.ship`, `nextLaunch.stats`, `nextLaunch.upgrades`) 제거. `tap_relaunch` 텍스트만 남기기.
+  - Scout tradeoff 텍스트(L3584-3597)도 제거.
+  - 남는 것: 상단 업그레이드 4행(hull/steering/yield/ship) + 재발사 버튼 + 함선 좌우 선택.
+  - 슬롯은 별도 UI로 분리 예정 (52에서 이미 리디자인됨).
+  - `make verify` GREEN + 커밋: `fix(shop): remove slot/gear-offer/next-ship text, keep only relaunch and ship select`
+
+(56) **RCS 색상·크기 — 속도 1~999 연속 그라데이션 (사용자 확정, 2026-09-06):**
+  - 현재 (33) 완료: Lv0~3 4단계 이산 변화. 사용자: 1~999까지 천천히 연속 변화.
+  - 변경: `expedition.effectiveSpeed(run)` 값 기준 `t = math.min(speed / 999, 1)` (0~1).
+    - **색**: `t < 0.33` → 흰(1,1,1)→빨강(1,0.4,0.2) lerp. `t < 0.66` → 빨강→파랑(0.3,0.5,1) lerp. `t >= 0.66` → 무지개 (`hue = (self.time * 3 + i * 0.2) % 1` HSV→RGB).
+    - **크기**: `radius = 1.5 + t * 2.5` (1.5~4.0 연속).
+  - 기존 `rcsSpeedLevel` 4단계 분기 → `t` 연속 보간으로 교체.
+  - `make verify` GREEN + 커밋: `fix(rcs): continuous color/size gradient over speed 1-999`
+
+(57) **배경 별 격자 패턴 개선 (사용자 확정, 2026-09-06):**
+  - 현재 배경 별이 sector/grid 기반으로 생성되어 격자 형태로 규칙적.
+  - 변경: `world.backgroundStars` 또는 play.lua의 별 생성 로직에서:
+    - 별 위치에 hash 기반 jitter 추가: `x += (hash(...) - 0.5) * sectorSize * 0.8`, `y += (hash(...) - 0.5) * sectorSize * 0.8` — 섹터 경계를 벗어나도 OK.
+    - 별 밀도를 섹터 내 고정 수가 아니라 hash 확률 기반으로 (0~3개 랜덤).
+    - 별 크기도 `0.5 + hash * 2` 로 다양화. 밝기(alpha) `0.3 + hash * 0.7`.
+    - 3-round LCG hash 이미 적용됐으니 대각선 패턴은 없을 것.
+  - `make verify` GREEN + 커밋: `fix(world): break grid pattern in background stars with jitter and variable density`
+
 (53) **부품 스탯 통합 + 불필요 효과 제거 (사용자 확정, 2026-09-06):**
   - **(a) climbSpeed + speed + steeringResponsiveness → `speed` 1개로 통합.**
     - `expedition.effectiveClimbSpeed(run)` → `expedition.effectiveSpeed(run)` 리네임. 결과를 조이스틱 이동과 altitude 누적 모두에 사용.
