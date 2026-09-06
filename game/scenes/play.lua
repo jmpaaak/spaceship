@@ -3436,71 +3436,9 @@ function M:draw()
         end
     end
     if self.expedition.phase == "launch" then
-        -- Specimen log strip sits in the empty space between the HUD and
-        -- the LAUNCH LOADOUT card, over the open starfield/Earth view, so
-        -- it never competes with loadout numbers or the TAP TO LAUNCH
-        -- message below the panel.
-        self:drawGearSlots(M.launchLoadoutBoxTop - M.launchGearBoxH - 18)
-        local loadout = self:loadoutLines()
-        -- The card box now extends all the way to the canvas bottom
-        -- (viewport.height) instead of stopping at y=294: a real LÖVE
-        -- runtime capture showed the Earth disc drawn behind the scene
-        -- (radius 58, extending to y=318 for a ship at the world origin)
-        -- peeking out below the old box, directly behind the TAP TO
-        -- LAUNCH message and DEV PLACEHOLDER footer text.
-        local panelX = 12
-        local panelY = M.launchLoadoutBoxTop
-        local panelW = viewport.width - 24
-        local panelH = viewport.height - M.launchLoadoutBoxTop
-        love.graphics.setColor(1, 1, 1, 0.92)
-        if not drawPanelSprite(self.loadoutPanelImage, panelX, panelY, panelW, panelH) then
-            love.graphics.setColor(0.02, 0.03, 0.08, 0.92)
-            love.graphics.rectangle("fill", panelX, panelY, panelW, panelH)
-        end
-        -- Every LOADOUT line now uses the small 8px scene-cached font
-        -- (previously the default 14px font) so the text sizes relative
-        -- to the small circular minimap chart/specimen-strip squares
-        -- above it, with a tightened row step so six lines fit in the
-        -- freed vertical space without overlapping each other or the
-        -- TAP TO LAUNCH message drawn separately below.
-        self.smallFont = self.smallFont or fonts.get(M.launchLoadoutFontSize)
-        local previousLaunchFont = love.graphics.getFont()
-        love.graphics.setFont(self.smallFont)
-        local row = M.launchLoadoutBoxTop + 4
-        local rowStep = M.launchLoadoutRowStep
-        if M.showLaunchLoadoutTitle then
-            love.graphics.setColor(0.7, 0.9, 1)
-            love.graphics.printf(i18n.t("launch_loadout_title"), 16, row, viewport.width - 32, "center")
-            row = row + rowStep
-        end
-        if loadout.ship then
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(loadout.ship, 16, row, viewport.width - 32, "center")
-            row = row + rowStep
-        end
-        love.graphics.setColor(0.4, 0.85, 1)
-        love.graphics.printf(loadout.stats, 16, row, viewport.width - 32, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(loadout.upgrades, 16, row, viewport.width - 32, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.6, 1, 0.85)
-        M.drawCenteredIconText(M.speedIconPoints, M.speedIconSize, M.speedIconGap, loadout.steering, 16, row, viewport.width - 32)
-        if loadout.odds then
-            row = row + rowStep
-            love.graphics.setColor(0.6, 0.8, 1)
-            love.graphics.printf(loadout.odds, 16, row, viewport.width - 32, "center")
-        end
-        -- Stellar Origin sub-item 4: show active suit synergies at the bottom
-        -- of the loadout panel in a dim gold colour, one per row.
-        if loadout.synergies and #loadout.synergies > 0 then
-            love.graphics.setColor(1, 0.85, 0.3, 0.85)
-            for _, label in ipairs(loadout.synergies) do
-                row = row + rowStep
-                love.graphics.printf(label, 16, row, viewport.width - 32, "center")
-            end
-        end
-        love.graphics.setFont(previousLaunchFont)
+        -- Launch screen: just "tap to launch" text, no loadout panel or dark overlay.
+        -- The gear slots on the left HUD and ship stats below minimap
+        -- already show the player's equipment during all phases.
     elseif self.expedition.phase == "settlement" then
         local previousFont = love.graphics.getFont()
         love.graphics.setFont(fonts.get(M.settlementFontSize))
