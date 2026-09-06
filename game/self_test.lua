@@ -8501,10 +8501,10 @@ function M.run()
         assert(i18n.t("hud_gear_label") ~= nil and i18n.t("hud_gear_label") ~= "",
             "hud_gear_label i18n key must exist")
 
-        -- (d) Grid width fits in 720px left side
-        local totalWidth = 6 * (32 + 4) + 8 + 3 * (32 + 4)
-        assert(totalWidth < 400,
-            "gear grid must fit in left portion of 720px canvas, got " .. totalWidth)
+        -- (d) Grid height fits in 1280px canvas (vertical column layout)
+        local totalHeight = 6 * (32 + 4) + 8 + 3 * (32 + 4)
+        assert(totalHeight < 600,
+            "gear grid vertical column must fit in 1280px canvas, got " .. totalHeight)
 
         -- (e) drawHudGearSlots does not throw with a mock scene
         local run = expedition.new({ money = 0 })

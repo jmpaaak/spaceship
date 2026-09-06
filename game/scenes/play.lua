@@ -1450,50 +1450,50 @@ function M:drawHudGearSlots(hudHeight)
     love.graphics.setColor(0.5, 0.6, 0.7, 0.7)
     love.graphics.printf(i18n.t("hud_gear_label"), 5, labelY, 200, "left")
 
-    local gridY = labelY + M.hudGearLabelFontSize + 4
+    local gridStartY = labelY + M.hudGearLabelFontSize + 4
     local startX = 5
 
-    -- Draw hull gear slots
+    -- Draw hull gear slots (vertical column)
     for i = 1, hullSlots do
-        local x = startX + (i - 1) * (slotSize + gap)
+        local y = gridStartY + (i - 1) * (slotSize + gap)
         local part = hullGear[i]
         if part then
             if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0, 0.7)
             elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1, 0.7)
             elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4, 0.7)
             else love.graphics.setColor(0.5, 0.5, 0.5, 0.7) end
-            love.graphics.rectangle("fill", x, gridY, slotSize, slotSize)
+            love.graphics.rectangle("fill", startX, y, slotSize, slotSize)
             -- Small icon overlay (shield shape)
             love.graphics.setColor(1, 1, 1, 0.5)
-            local pts = M.shieldIconPoints(x + slotSize / 2, gridY + slotSize / 2, 8)
+            local pts = M.shieldIconPoints(startX + slotSize / 2, y + slotSize / 2, 8)
             if pts then love.graphics.polygon("fill", pts) end
             love.graphics.setColor(0.1, 0.1, 0.1, 1)
-            love.graphics.rectangle("line", x, gridY, slotSize, slotSize)
+            love.graphics.rectangle("line", startX, y, slotSize, slotSize)
         else
             love.graphics.setColor(0.3, 0.35, 0.45, 0.5)
-            love.graphics.rectangle("line", x, gridY, slotSize, slotSize)
+            love.graphics.rectangle("line", startX, y, slotSize, slotSize)
         end
     end
 
-    -- Engine gear slots (after a small gap)
-    local engineStartX = startX + hullSlots * (slotSize + gap) + groupGap
+    -- Engine gear slots (below hull with a small gap, same column)
+    local engineStartY = gridStartY + hullSlots * (slotSize + gap) + groupGap
     for i = 1, engineSlots do
-        local x = engineStartX + (i - 1) * (slotSize + gap)
+        local y = engineStartY + (i - 1) * (slotSize + gap)
         local part = engineGear[i]
         if part then
             if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0, 0.7)
             elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1, 0.7)
             elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4, 0.7)
             else love.graphics.setColor(0.5, 0.5, 0.5, 0.7) end
-            love.graphics.rectangle("fill", x, gridY, slotSize, slotSize)
+            love.graphics.rectangle("fill", startX, y, slotSize, slotSize)
             -- Engine icon overlay (small gear shape)
             love.graphics.setColor(1, 1, 1, 0.5)
-            love.graphics.circle("fill", x + slotSize / 2, gridY + slotSize / 2, 6)
+            love.graphics.circle("fill", startX + slotSize / 2, y + slotSize / 2, 6)
             love.graphics.setColor(0.1, 0.1, 0.1, 1)
-            love.graphics.rectangle("line", x, gridY, slotSize, slotSize)
+            love.graphics.rectangle("line", startX, y, slotSize, slotSize)
         else
             love.graphics.setColor(0.3, 0.35, 0.45, 0.5)
-            love.graphics.rectangle("line", x, gridY, slotSize, slotSize)
+            love.graphics.rectangle("line", startX, y, slotSize, slotSize)
         end
     end
     if prevFont then love.graphics.setFont(prevFont) end
