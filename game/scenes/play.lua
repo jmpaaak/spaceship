@@ -3115,13 +3115,6 @@ function M:draw()
                     local lx2 = clampLabelX(x, font:getWidth(hullStr), viewport.width)
                     love.graphics.setColor(0.3, 0.9, 0.95, 0.8)
                     love.graphics.print(hullStr, lx2, labelY + 12)
-                elseif not self.discovered[planet.id] then
-                    -- (b) New planet discovery label
-                    local discStr = i18n.t("planet_new_discovery")
-                    local labelY = y - planet.radius - 18 + sinBob
-                    local lx = clampLabelX(x, font:getWidth(discStr), viewport.width)
-                    love.graphics.setColor(0.7, 0.9, 1, 0.8)
-                    love.graphics.print(discStr, lx, labelY)
                 end
             end
         end

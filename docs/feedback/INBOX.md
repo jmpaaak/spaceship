@@ -2,11 +2,8 @@
 
 ## 처리 대기
 
-(46) **"신규 행성 발견" 텍스트 제거 (사용자 확정, 2026-09-06):**
-  - (19)(b)에서 추가한 `planet_new_discovery` 텍스트를 draw에서 제거. i18n 키는 남겨도 됨. `collisionRisk` label도 이미 (19)(a)에서 제거됨.
-  - `make verify` GREEN + 커밋: `fix(play): remove "new planet" floating text above undiscovered planets`
-
 ## 처리 완료
+(46) **"신규 행성 발견" 텍스트 제거 — 완료 2026-09-06:** draw에서 `planet_new_discovery` elseif 블록 제거. i18n 키는 유지. `make verify` GREEN.
 (45) **미니맵 은하 밀도 + 링 오퍼시티 — 완료 2026-09-06:** (a) `galaxyExistenceThreshold` 0.82→0.85 (밀도 ~18%→~15%). (b) 동심원 링 알파 0.4→0.15, galaxy boundary ring 알파 0.55→0.12. 비-containing 은하 마커 숨김은 이전 사이클에서 완료. 테스트 갱신 (밀도 <20%, 알파 검증). `make verify` GREEN.
 (44) **선체 정보 → 미니맵 아래 우측 — 완료 2026-09-06:** `drawShipStatsSummary()` 메서드 추가. ascending 때 미니맵 아래 우측에 22px 폰트로 함선명/속도LV/내구LV/수확LV 4줄 우측정렬 표시. settlement/destroyed/launch에서는 비표시. i18n 4키 EN+KO 추가. 테스트 INBOX-44 블록 추가. `make verify` GREEN.
 (43) **HUD 아이콘 교체 — PIL 생성 — 완료 2026-09-06:** `tools/gen_hud_icons.py` PIL 스크립트로 16×16 RGBA 아이콘 3개 생성 (icon_distance/icon_cash/icon_durability). `play.lua` hudIconImages 경로 업데이트. 테스트 16×16 호환. `make verify` GREEN.
