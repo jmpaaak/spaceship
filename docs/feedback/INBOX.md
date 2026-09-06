@@ -2,6 +2,28 @@
 
 ## 처리 대기
 
+(32) **상하 이동 저항 수정 — verticalOffset ±90 clamp 제거 (사용자 확정, 2026-09-06):**
+  - 원인: 좌우는 `ship.x += speed*dt` (무제한), 상하는 `verticalOffset += speed*dt` → `clampVerticalOffset(±90)`. 90에 닿으면 extraDy=0, `ship.y`는 altitude 기반 `sin(angle)*step`만으로 움직여 steeringSpeed보다 훨씬 느림.
+  - 수정: **`verticalOffset` 제거.** 상하도 좌우와 동일하게 `ship.y += joyDy * speed * dt` 직접 이동. `ship.y`는 무제한. altitude climb은 `ship.y`와 독립적으로 유지하되 HUD 거리는 (21)에서 유클리드 거리로 변경 예정이라 상충 없음.
+  - `extraDy`도 `ship.y - startY`로 단순화. `clampVerticalOffset` 삭제. `verticalOffset` 필드 제거 (relaunch 초기화 포함).
+  - `make verify` GREEN + 커밋: `fix(play): remove verticalOffset clamp so vertical steering matches horizontal`
+
+(33) **RCS 분출 색상·크기 — 속도 레벨에 따라 변화 (사용자 확정, 2026-09-06):**
+  - 현재 RCS 파티클: 고정 색 `(0.7, 0.88, 1)` 흰-파랑, 고정 크기.
+  - 변경: `expedition.effectiveClimbSpeed(run)` 또는 `steeringSpeed(run)` 기준 레벨 산정.
+    - Lv0 (기본 속도): **흰색** `(1, 1, 1)`, 반지름 1.5
+    - Lv1 (speed 업그레이드 1~2): **빨강** `(1, 0.4, 0.2)`, 반지름 2
+    - Lv2 (speed 3~4): **파랑** `(0.3, 0.5, 1)`, 반지름 2.5
+    - Lv3 (speed 5+): **무지개** — `hue = (self.time * 3 + i * 0.2) % 1` → HSV→RGB, 반지름 3
+  - 파티클 생성 시 `r/g/b` + `radius` 를 레벨에서 결정. draw에서 `love.graphics.circle("fill", px, py, ft.radius or 1.5)`.
+  - `make verify` GREEN + 커밋: `feat(rcs): exhaust color and size scale with speed level`
+
+(34) **미니맵 — 은하 중심 겹침 방지 + 인접 은하 외곽 표기 (사용자 확정, 2026-09-06):**
+  - 사용자: "노란 은하 중심 행성들이 붙어있다. 은하 영역이 절대 겹치지 않도록."
+  - **(a) 은하 생성 시 겹침 방지.** `world.galaxy(gx,gy)` 생성 후 인접 4방향 은하와 거리 확인: `dist(galaxy1, galaxy2) < (r1 + r2 + padding)`이면 둘 중 뒤 셀을 nil 반환. 또는 `galaxyExistenceThreshold`를 0.82로 올려 밀도 자체를 낮추기.
+  - **(b) 미니맵 인접 은하 외곽 표기.** 현재 `nearestCheckpointDirection`이 화살표만 그림. 추가: 미니맵 디스크 **원 경계 위**에 가장 가까운 비-home 은하의 방향에 작은 마커(점 + 거리 숫자) 표시. `checkpointBeyond`가 true일 때 화살표 옆에 은하 이름도.
+  - `make verify` GREEN + 커밋: `fix(minimap): prevent galaxy overlap, show nearest galaxy on disc rim`
+
 (28) **행성 밀도 절반 + 겹침 방지 (사용자 확정, 2026-09-06):**
   - 현재: `hash(...,1) > 0.70` → 30% 확률 1개, `hash(...,7) > 0.96` → 4% 확률 2개.
   - 변경: `hash(...,1) > 0.85` → **15%** 확률 1개, `hash(...,7) > 0.98` → **2%** 확률 2개. 약 절반.
