@@ -2664,7 +2664,7 @@ function M:drawMinimap()
     local view = minimap.view(self.ship.x, self.ship.y)
     local size = minimap.size
     local cx = viewport.width - size / 2 - 3
-    local cy = hudHeight + size / 2 + 2
+    local cy = hudHeight + size / 2 + 32  -- extra 30px gap to avoid text overlap
     local mm = self.minimapImages or {}
     -- Background disc: sprite or filled circle
     love.graphics.setColor(1, 1, 1, 1)
@@ -2873,16 +2873,23 @@ function M:drawShipStatsSummary()
     local phase = self.expedition.phase
     if phase ~= "ascending" and phase ~= "launch" then return end
     local run = self.expedition
-    -- Position: right-aligned, starting just below the pause button (y=52+8=60)
     local pb = pauseButton
-    local statsY = pb.y + pb.h + 8  -- 8px below pause button bottom
     local statsFont = self.shipStatsFont or fonts.get(M.shipStatsFontSize)
     self.shipStatsFont = statsFont
     local prevFont = love.graphics.getFont()
     love.graphics.setFont(statsFont)
-    love.graphics.setColor(0.6, 0.7, 0.8, 0.85)
-    local textW = minimap.size  -- use minimap width as text column
+    local textW = minimap.size
     local textX = viewport.width - 3 - textW
+    -- Sample count at the very top (below pause button)
+    local statsY = pb.y + pb.h + 8
+    love.graphics.setColor(0.45, 0.95, 1, 0.6)
+    love.graphics.printf(i18n.t("ship_stats_samples_label"), textX, statsY, textW, "right")
+    statsY = statsY + M.shipStatsLineStep
+    love.graphics.setColor(0.45, 0.95, 1, 0.9)
+    love.graphics.printf(i18n.t("ship_stats_samples", run.sampleCount or 0, run.pendingSampleValue or 0), textX, statsY, textW, "right")
+    statsY = statsY + M.shipStatsLineStep + 4
+    -- Ship stats below samples
+    love.graphics.setColor(0.6, 0.7, 0.8, 0.85)
     local shipName = string.upper(run.selectedShipId or "starter")
     love.graphics.printf(i18n.t("ship_stats_ship", shipName), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
@@ -2891,10 +2898,6 @@ function M:drawShipStatsSummary()
     love.graphics.printf(i18n.t("ship_stats_hull", run.durabilityUpgradeLevel or 0), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
     love.graphics.printf(i18n.t("ship_stats_harvest", run.sampleYieldUpgradeLevel or 0), textX, statsY, textW, "right")
-    statsY = statsY + M.shipStatsLineStep
-    -- Sample count below ship stats
-    love.graphics.setColor(0.45, 0.95, 1, 0.9)
-    love.graphics.printf(i18n.t("ship_stats_samples", run.sampleCount or 0, run.pendingSampleValue or 0), textX, statsY, textW, "right")
     if prevFont then love.graphics.setFont(prevFont) end
 end
 
@@ -3218,7 +3221,7 @@ function M:draw()
                 local iw, ih = debrisSprite:getDimensions()
                 local scale = (junk.radius * 2) / math.max(iw, ih)
                 love.graphics.setColor(1, 1, 1)
-                love.graphics.draw(debrisSprite, x, y, 0, scale, scale, iw / 2, ih / 2)
+                love.graphics.draw(debrisSprite, x, y, junk.rotation or 0, scale, scale, iw / 2, ih / 2)
             elseif junk.kind == "can" then
                 love.graphics.setColor(0.72, 0.76, 0.7)
                 love.graphics.rectangle("fill", x - junk.radius, y - junk.radius * 1.4,

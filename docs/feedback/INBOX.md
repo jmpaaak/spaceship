@@ -2,6 +2,12 @@
 
 ## 처리 대기
 
+(60) **지구 이미지 확대 + PIL 교체 (사용자 확정, 2026-09-06):**
+  - 현재 `M.earthVisualRadius = 58`이지만 실제 이미지가 작아서 반응 영역과 불일치.
+  - 변경: `M.earthVisualRadius = 90` (이미지가 settle 영역에 맞게 큼직하게).
+  - PIL 지구 이미지 생성 (`tools/gen_earth.py`, ≤50줄): 128×128 RGBA, 파란 구체 + 녹색 대륙 + 흰 구름 도트. `assets/earth/earth_generic.png` 교체.
+  - `make verify` GREEN + 커밋: `feat(earth): larger visual radius + PIL pixel-art Earth sprite`
+
 (59) **잔해(debris) 랜덤 회전 (사용자 확정, 2026-09-06):**
   - 현재 잔해 스프라이트가 회전 0으로 그려짐. 자연스럽지 않음.
   - 변경: `world.debris()` 또는 play.lua draw에서 잔해별 고정 회전값 `rotation = hash(id, 970) * 2π` 추가. 추가로 시간에 따라 천천히 회전: `rotation + time * (hash(id, 971) - 0.5) * 2` (초당 ±1rad 자전).
