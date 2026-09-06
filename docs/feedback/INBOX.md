@@ -2,6 +2,44 @@
 
 ## 처리 대기
 
+(53) **부품 스탯 통합 + 불필요 효과 제거 (사용자 확정, 2026-09-06):**
+  - **(a) climbSpeed + speed + steeringResponsiveness → `speed` 1개로 통합.**
+    - `expedition.effectiveClimbSpeed(run)` → `expedition.effectiveSpeed(run)` 리네임. 결과를 조이스틱 이동과 altitude 누적 모두에 사용.
+    - `expedition.steeringSpeed(run)` → `effectiveSpeed(run)` 호출로 대체, 함수 제거.
+    - hull_parts.json / engine_parts.json의 `"climbSpeed"` → `"speed"`, `"steeringResponsiveness"` → `"speed"` (값 합산 후 하나로).
+    - i18n: `"상승"` / `"조종"` 관련 키 → `"속도"` / `"SPEED"`로 통합.
+  - **(b) fuelEfficiency 제거.** 연료 시스템 없음. JSON에서 `"fuelEfficiency"` 효과 전부 삭제. gear.lua 관련 코드 정리.
+  - **(c) 부품 효과 종류 최종 목록:**
+    - `speed` — 이동 속도
+    - `hullDurability` — 최대 내구도
+    - `sampleSellValue` — 표본 판매 가치
+    - `money` — 정산 시 보너스 현금
+    - `sellMultiplier` — 판매 배율 (%)
+    - `luck` — 슬롯/드롭 행운
+    - `shopDiscount` — 상점 할인 (%)
+    - `insurance` — 파괴 시 자원 보존 1회
+    - `streakMultiplier` — 연속 수집 보너스
+    - `chainTrigger` — 수집 시 추가 발동
+    - `collisionRadius` — 충돌 판정 축소
+    - `detectionRadius` — 탐지 반경 확대
+    - `autoCollect` — 자동 수집
+    - `boostCharge` — 부스트 횟수
+  - self_test 갱신. `make verify` GREEN + 커밋: `refactor(gear): merge speed stats, remove fuelEfficiency`
+
+(54) **부품 웹에디터 (사용자 확정, 2026-09-06):**
+  - `tools/parts-editor/index.html` + `editor.css` + `editor.js` — gear-editor 패턴 복제.
+  - 기능:
+    - hull_parts.json + engine_parts.json 로드/편집/저장
+    - 부품별: id, name, nameKo, icon, suit, rarity, tags[], editions[], effects[], galaxyExclusive
+    - 효과 추가/삭제: type 드롭다운 (위 14종) + value 숫자 입력
+    - suit 드롭다운 (solar/void/nebula/pulsar)
+    - rarity 드롭다운 (common/uncommon/rare/legendary)
+    - 부품 추가/삭제/복제 버튼
+    - JSON 미리보기 + 다운로드
+    - 시너지 미리보기: 같은 suit/tag 조합 시 예상 배율 표시
+  - Makefile에 `make parts-editor` 타겟 (로컬 서버 시작).
+  - `make verify` GREEN + 커밋: `feat(tools): parts-editor web UI for hull and engine parts`
+
 (52) **슬롯머신 리디자인 — PIL 심볼 생성 + 터치 릴 스톱 + 새 배당 (사용자 확정, 2026-09-06):**
   - **심볼 5종 PIL 생성** (`tools/gen_slot_symbols.py`, ≤50줄):
     - `assets/slot_symbols/money.png` 32×32 — 금색 코인/달러 모티프
