@@ -2855,9 +2855,12 @@ function M:drawMinimap()
         -- Cyan-ish dot distinct from magenta checkpoint arrow and orange return
         love.graphics.setColor(0.3, 0.9, 0.95, 0.9)
         love.graphics.circle("fill", mx, my, 3.6)
-        -- Distance label (compact, in hundreds of world-pixels)
+        -- Distance label (compact, small 11px font)
+        local prevRimFont = love.graphics.getFont()
+        love.graphics.setFont(fonts.get(11))
         local distLabel = string.format("%.0f", marker.distance / 100)
         love.graphics.printf(distLabel, mx - 20, my + 5, 40, "center")
+        love.graphics.setFont(prevRimFont)
     end
 end
 
