@@ -2,13 +2,6 @@
 
 ## 처리 대기
 
-(20) **미니맵 — 은하 클리핑 + 거리 확보 + 체크포인트 색 + 지구/태양 텍스트 (사용자 확정, 2026-09-06):**
-  - **(a) 은하 링이 미니맵 원 바깥으로 넘치면 안 됨.** `love.graphics.stencil` 또는 원형 clip으로 미니맵 디스크 내부만 그리기. 또는 각 ring draw 전에 `distance(cx,cy, ring center) + ring.radius > size/2`이면 skip.
-  - **(b) 인접 은하 겹침 방지.** `world.galaxyAt` 생성 시 은하 간 최소 거리 `galaxyCellSize` (이미 셀 기반이라 기본 1셀 간격). 미니맵 상 시각적으로 겹치면 `viewRadius`를 더 줄이거나 은하 마커 크기 축소.
-  - **(c) 빨간 행성 = 체크포인트.** 맞다면 레전드 확인. 마젠타 다이아몬드가 HUB. 빨강이 별도 마커라면 설명 추가.
-  - **(d) 미니맵에 지구·태양 텍스트 라벨.** 지구 마커 옆에 `"지구(HUB)"` 회색 `(0.6, 0.6, 0.6, 0.7)` 작은 폰트 11px. 태양 마커 옆에 `"항성"` / `"Star"` 같은 색. 미니맵 디스크 내부에서만 보임.
-  - `make verify` GREEN + 커밋: `fix(minimap): clip galaxies inside disc, label Earth/Star`
-
 (21) **거리 = 지구로부터의 함선 거리 (사용자 확정, 2026-09-06):**
   - 현재 `run.altitude`는 `effectiveClimbSpeed * dt`로 누적하는 가상 고도. 사용자 의도: **거리 = `sqrt((ship.x - earthCenterX)^2 + (ship.y - earthCenterY)^2)`**.
   - `hudLines()`에서 `hud.distance = i18n.t("hud_distance", math.floor(dist))`로 변경. `dist`는 `M.earthCenterX/Y`와 `self.ship.x/y` 유클리드 거리. `run.altitude`는 표본 가치 계산 등 내부에서 유지해도 되지만 HUD에는 실제 거리 표시.
@@ -38,6 +31,9 @@
   - `make verify` GREEN + 커밋: `feat(play): zoom-in on sample collect + slower timeslip`
 
 ## 처리 완료
+
+(20) **미니맵 — 은하 클리핑 + 거리 확보 + 체크포인트 색 + 지구/태양 텍스트 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: (a) `love.graphics.stencil`으로 미니맵 디스크 내부만 렌더링 — 은하 링 overflow 방지. (b) `viewRadius`를 0.55*cellSize로 축소 + 인접 은하 boundary ring 생략으로 겹침 방지. (c) 체크포인트 은하=골드 펄스 별, HUB=마젠타 다이아몬드 — 별도 빨간 마커 없음(확인 완료). (d) Earth(HUB)/Star 텍스트 라벨 11px 회색, stencil 내부에서만 렌더링. 테스트 `testMinimapStencilClip` + `testMinimapEarthStarLabels` 등록·GREEN.
 
 (19) **행성 텍스트 교체 — 표본가격·데미지 제거, 신규행성 발견 텍스트 + HUB/중심별/부품 텍스트 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: (a) sampleLabel/label 그리기 블록 삭제, collisionRisk() 유지. (b) 미발견 일반행성 위 "신규 행성 발견" sin 움직임. (c) HUB 위 "HUB"+"엔진부품 획득 가능" 마젠타. (d) 중심별 위 "중심별" 노란색. (e) SHOP 위 "SHOP"+"선체부품 획득 가능" 시안. i18n 4개 키 en/ko 추가. 테스트 GREEN.

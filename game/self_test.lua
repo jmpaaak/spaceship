@@ -7875,6 +7875,8 @@ function M.run()
         assert(sHub >= 0.85 and sHub <= 1.15, "hub scaleFactor in range")
     end
 
+    testMinimapStencilClip()
+    testMinimapEarthStarLabels()
     testEarthShopStartTrap()
     testFaintCollectOrbitRing()
     testHudBackgroundNotFullWidth()
