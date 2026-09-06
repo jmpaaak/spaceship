@@ -2,6 +2,20 @@
 
 ## 처리 대기
 
+(58) **허브 상점 재발사 버그 수정 (사용자 확정, 2026-09-06):**
+  - 다른 은하계 체크포인트(hub) 행성에서 상점이 열리지만 재발사 탭이 작동 안 함.
+  - 원인 조사: `touchpressed`에서 `key == "relaunch"` → `keypressed("space")` → `expedition.launch(run)`. `launch()`는 `run.phase == "settlement"` 허용. settle()은 `run.phase = "settlement"` 설정. 코드 경로는 맞음.
+  - 가능 원인: (a) `settlementTouchRows[5]` 또는 relaunch 행이 터치 y 좌표 밖에 있음 (루프가 행을 추가/제거하면서 인덱스 어긋남) (b) hub settle 시 상점 패널이 relaunch 행을 가리거나 touch hit test에서 누락.
+  - 수정: hub settlement에서도 relaunch touch가 확실히 작동하도록 디버깅 + 수정. `make verify`에 hub relaunch 테스트 추가.
+  - `make verify` GREEN + 커밋: `fix(play): hub shop relaunch touch must work`
+
+(59) **잔해(debris) 랜덤 회전 (사용자 확정, 2026-09-06):**
+  - 현재 잔해 스프라이트가 회전 0으로 그려짐. 자연스럽지 않음.
+  - 변경: `world.debris()` 또는 play.lua draw에서 잔해별 고정 회전값 `rotation = hash(id, 970) * 2π` 추가. 추가로 시간에 따라 천천히 회전: `rotation + time * (hash(id, 971) - 0.5) * 2` (초당 ±1rad 자전).
+  - draw: `love.graphics.draw(debrisSprite, x, y, rotation, scale, scale, iw/2, ih/2)`.
+  - 폴백 원(`circle("fill")`)에는 회전 불필요.
+  - `make verify` GREEN + 커밋: `feat(play): random rotation for debris sprites`
+
 ## 처리 완료
 
 (55) **상점 하단 — 슬롯/기어오퍼/NEXT SCOUT 제거, 재발사+함선선택만 남기기 (사용자 확정, 2026-09-06):**
