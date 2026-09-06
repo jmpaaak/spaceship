@@ -1,11 +1,12 @@
 ## Current Status
 
-- Fix: `make verify` failed ASSET_MANIFEST_FAIL — sha256 mismatches for 6
-  `assets/slot_symbols/*.png` files (durability, harvest, machine, money,
-  part, speed) and missing manifest entry for `spin_button.png`. Updated
-  `docs/assets/MANIFEST.json` hashes to match on-disk files and added
-  spin_button entry. `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK,
-  SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
+- Fix: previous cycle left uncommitted star sprite assets (`assets/star/`,
+  `tools/gen_stars.py`) and partially updated collision damage formula
+  (`world.collisionDamage` /2000 gentle scaling). Added 7 star PNG manifest
+  entries to `docs/assets/MANIFEST.json`, fixed duplicate collision damage
+  test assertion in `self_test.lua` (line 8419: y=-500→y=-2000 to match
+  new /2000 formula), wired star sprites into PlayScene draw. `make verify
+  LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 

@@ -154,6 +154,16 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 - `tools/gen_slot_spin_button.py` → `assets/slot_symbols/spin_button.png` 96×22 RGBA
 - Style: dark purple body, gold trim, Balatro joker palette
 
+## 2026-09-07: Central Star Sprites (PIL gen_stars.py)
+- `tools/gen_stars.py` → `assets/star/star_sun.png` 64×64 RGBA
+- `tools/gen_stars.py` → `assets/star/star_ice.png` 64×64 RGBA
+- `tools/gen_stars.py` → `assets/star/star_lava.png` 64×64 RGBA
+- `tools/gen_stars.py` → `assets/star/star_dry.png` 64×64 RGBA
+- `tools/gen_stars.py` → `assets/star/star_gas.png` 64×64 RGBA
+- `tools/gen_stars.py` → `assets/star/star_bare.png` 64×64 RGBA
+- `tools/gen_stars.py` → `assets/star/star_sun_sheet.png` 64×256 RGBA (4-frame pulse)
+- Style: chunky 4px retro pixel-art, corona glow layers, per-starType color palettes
+
 ## 2026-09-06: Central Star Sprites (PIL gen_stars.py)
 - `tools/gen_stars.py` → `assets/star/star_{sun,ice,lava,dry,gas,bare}.png` 64×64 RGBA
 - `assets/star/star_sun_sheet.png` 64×256 4-frame pulse animation
