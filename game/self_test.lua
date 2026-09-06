@@ -6198,9 +6198,11 @@ function M.run()
     -- YIELD level, so it must also apply expedition.sampleYieldMultiplier.
     riskScene.expedition.sampleYieldUpgradeLevel = 4
     local yieldWarning = riskScene:collisionRisk({ y = -500 })
-    assert(yieldWarning.sampleValue == 2 and yieldWarning.sampleLabel == "SAMPLE $2",
-        "collisionRisk sampleValue/sampleLabel must apply the SAMPLE YIELD multiplier ("
-            .. tostring(yieldWarning.sampleValue) .. " " .. tostring(yieldWarning.sampleLabel) .. ")")
+    -- planet $1 × sampleYieldMultiplier(level4) → rounded
+    local expectedYieldVal = math.floor(1 * expedition.sampleYieldMultiplier(riskScene.expedition) + 0.5)
+    assert(yieldWarning.sampleValue == expectedYieldVal,
+        "collisionRisk sampleValue must apply the SAMPLE YIELD multiplier ("
+            .. tostring(yieldWarning.sampleValue) .. " expected " .. expectedYieldVal .. ")")
     riskScene.expedition.sampleYieldUpgradeLevel = 0
     riskScene.expedition.sampleCount = 3
     riskScene.expedition.pendingSampleValue = 95
@@ -6521,7 +6523,7 @@ function M.run()
     -- capacity or money yield.
     local steeringRun = expedition.new({
         steeringUpgradeCost = 65,
-        steeringUpgradeAmount = 15,
+        steeringUpgradeAmount = 1,
         money = 40,
     })
     assert(expedition.effectiveSpeed(steeringRun) == 30)
@@ -6531,9 +6533,9 @@ function M.run()
     steeringRun.money = 65
     assert(expedition.buySteeringUpgrade(steeringRun))
     assert(steeringRun.money == 0 and steeringRun.steeringUpgradeLevel == 1)
-    assert(expedition.effectiveSpeed(steeringRun) == 45)
+    assert(expedition.effectiveSpeed(steeringRun) == 31)
     assert(expedition.launch(steeringRun) and steeringRun.phase == "ascending")
-    assert(expedition.effectiveSpeed(steeringRun) == 45,
+    assert(expedition.effectiveSpeed(steeringRun) == 31,
         "steering upgrade must persist across relaunch like fuel/hull upgrades")
     assert(expedition.damage(steeringRun, steeringRun.durability))
     assert(steeringRun.phase == "destroyed" and steeringRun.steeringUpgradeLevel == 0)
@@ -6548,7 +6550,8 @@ function M.run()
     steeringMoveScene.touches["upgraded-steer"] = { x = 500, y = 10 }
     local shipXBefore = steeringMoveScene.ship.x
     steeringMoveScene:update(1)
-    assert(math.abs(steeringMoveScene.ship.x - shipXBefore - 45) < 1e-9,
+    -- steeringUpgradeAmount=1: speed = 30 + 1*1 = 31
+    assert(math.abs(steeringMoveScene.ship.x - shipXBefore - 31) < 1e-9,
         "ascending steering must move the ship at expedition.effectiveSpeed(run), not a fixed constant ("
             .. tostring(steeringMoveScene.ship.x - shipXBefore) .. ")")
 
@@ -6603,12 +6606,12 @@ function M.run()
     shopScene:keypressed("y")
     assert(shopScene.expedition.sampleYieldUpgradeLevel == 1)
     assert(shopScene.expedition.money == 15)
-    assert(shopScene.message == "SAMPLE YIELD UPGRADED  LV.1  x1.25  BALANCE $15")
+    assert(shopScene.message == "SAMPLE YIELD UPGRADED  LV.1  x1.05  BALANCE $15")
     shopScene.expedition.money = 0
     shopScene:keypressed("y")
     assert(shopScene.expedition.sampleYieldUpgradeLevel == 1)
     assert(shopScene.message == string.format("NEED $%d MORE FOR SAMPLE YIELD UPGRADE",
-        shopScene.expedition.sampleYieldUpgradeCost))
+        expedition.upgradeCost(shopScene.expedition, shopScene.expedition.sampleYieldUpgradeCost, shopScene.expedition.sampleYieldUpgradeLevel)))
     shopScene.expedition.money = shopScene.expedition.scoutShipCost + 20
     shopScene:touchpressed("ship", 540, 670)
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
@@ -6638,20 +6641,21 @@ function M.run()
     repeatedUpgradeMessageScene.expedition.money = 250
     repeatedUpgradeMessageScene:keypressed("h")
     repeatedUpgradeMessageScene:keypressed("h")
+    -- durability $10 base: lv0→1 $10, lv1→2 floor(10*1.05+0.5)=$11 → balance 250-10-11=229
     assert(repeatedUpgradeMessageScene.message
-        == "HULL UPGRADED  LV.2  HULL 5  BALANCE $100")
+        == "HULL UPGRADED  LV.2  HULL 5  BALANCE $229")
 
     local shortfallScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     shortfallScene.expedition.phase = "settlement"
-    shortfallScene.expedition.money = 20
+    shortfallScene.expedition.money = 3
     shortfallScene:keypressed("h")
     assert(shortfallScene.expedition.durabilityUpgradeLevel == 0)
-    assert(shortfallScene.message == "NEED $55 MORE FOR HULL UPGRADE")
+    assert(shortfallScene.message == "NEED $7 MORE FOR HULL UPGRADE")
     shortfallScene:touchpressed("ship", 540, 670)
     assert(not shortfallScene.expedition.ownedShips.scout)
-    assert(shortfallScene.message == "NEED $105 MORE FOR SCOUT")
+    assert(shortfallScene.message == "NEED $122 MORE FOR SCOUT")
 
     local touchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -6716,7 +6720,7 @@ function M.run()
     assert(upgradedLoadout.stats == "HULL 3")
     assert(upgradedLoadout.upgrades == "HULL LV.1")
 
-    assert(upgradedLoadout.steering == "55")
+    assert(upgradedLoadout.steering == "81")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()
@@ -6737,22 +6741,22 @@ function M.run()
     assert(starterNextLaunch.stats == "HULL 3")
     assert(starterNextLaunch.upgrades == "HULL LV.0")
 
-    assert(starterNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +10 SPEED")
+    assert(starterNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +50 SPEED")
     assert(starterNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
     assert(starterNextLaunch.shipAction == "BUY SCOUT $125")
     assert(starterNextLaunch.shipPreview == "SCOUT HULL 2")
 
-    assert(starterNextLaunch.hullAction == "T/H HULL LV.0>1 $75")
+    assert(starterNextLaunch.hullAction == "T/H HULL LV.0>1 $10")
     assert(starterNextLaunch.hullPreview == "HULL 4")
 
-    assert(starterNextLaunch.hullStatus == "SHORT $75" and not starterNextLaunch.hullAffordable)
+    assert(starterNextLaunch.hullStatus == "SHORT $10" and not starterNextLaunch.hullAffordable)
     assert(starterNextLaunch.shipStatus == "SHORT $125" and not starterNextLaunch.shipAffordable)
-    assert(starterNextLaunch.yieldAction == "T/Y HARVEST LV.0>1 $60")
-    assert(starterNextLaunch.yieldPreview == "HARVEST x1.25")
-    assert(starterNextLaunch.yieldStatus == "SHORT $60" and not starterNextLaunch.yieldAffordable)
-    assert(starterNextLaunch.steeringAction == "T/G SPEED LV.0>1 $65")
-    assert(starterNextLaunch.steeringPreview == "45")
-    assert(starterNextLaunch.steeringStatus == "SHORT $65" and not starterNextLaunch.steeringAffordable)
+    assert(starterNextLaunch.yieldAction == "T/Y HARVEST LV.0>1 $5")
+    assert(starterNextLaunch.yieldPreview == "HARVEST x1.05")
+    assert(starterNextLaunch.yieldStatus == "SHORT $5" and not starterNextLaunch.yieldAffordable)
+    assert(starterNextLaunch.steeringAction == "T/G SPEED LV.0>1 $5")
+    assert(starterNextLaunch.steeringPreview == "31")
+    assert(starterNextLaunch.steeringStatus == "SHORT $5" and not starterNextLaunch.steeringAffordable)
     -- Compact column labels for the HULL/STEERING shared touch row (see
     -- settlementTouchRows: HULL occupies the left half, STEERING the right
     -- half of one 90px-wide column). The existing hullAction/steeringAction
@@ -6761,10 +6765,10 @@ function M.run()
     -- "H:"/"G:" prefixed variants (measured 58-63px via GAME_FONTPROBE) are
     -- drawn in the column instead, without changing the existing full
     -- strings other callers may still rely on.
-    assert(starterNextLaunch.hullActionCompact == "HULL 3>4 $75")
-    assert(starterNextLaunch.steeringActionCompact == "SPEED 30>45 $65")
+    assert(starterNextLaunch.hullActionCompact == "HULL 3>4 $10")
+    assert(starterNextLaunch.steeringActionCompact == "SPEED 30>31 $5")
     assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
-    assert(starterNextLaunch.steeringPreviewCompact == "45")
+    assert(starterNextLaunch.steeringPreviewCompact == "31")
     -- Same compact treatment for the YIELD/SHIP shared touch row (see
     -- settlementTouchRows: YIELD occupies the left half, SHIP the right
     -- half). yieldAction ("T/Y YIELD LV.0>1 $60", 92-97px) and shipAction
@@ -6772,14 +6776,14 @@ function M.run()
     -- too wide for a 90px column once a "T/V "/"T/Y " prefix and a
     -- side-by-side status line are added, so compact "Y:"/"V:" variants
     -- (measured 38-62px) are drawn in the column instead.
-    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00>x1.25 $60")
+    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00>x1.05 $5")
     assert(starterNextLaunch.shipActionCompact == "BUY $125")
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
-    assert(balancePreviewNextLaunch.hullStatus == "LEFT $125" and balancePreviewNextLaunch.hullAffordable)
+    assert(balancePreviewNextLaunch.hullStatus == "LEFT $190" and balancePreviewNextLaunch.hullAffordable)
     assert(balancePreviewNextLaunch.shipStatus == "LEFT $75" and balancePreviewNextLaunch.shipAffordable)
-    assert(balancePreviewNextLaunch.yieldStatus == "LEFT $140" and balancePreviewNextLaunch.yieldAffordable)
-    assert(balancePreviewNextLaunch.steeringStatus == "LEFT $135" and balancePreviewNextLaunch.steeringAffordable)
+    assert(balancePreviewNextLaunch.yieldStatus == "LEFT $195" and balancePreviewNextLaunch.yieldAffordable)
+    assert(balancePreviewNextLaunch.steeringStatus == "LEFT $195" and balancePreviewNextLaunch.steeringAffordable)
     nextLaunchScene.expedition.money = nextLaunchScene.expedition.durabilityUpgradeCost
         + nextLaunchScene.expedition.scoutShipCost
         + nextLaunchScene.expedition.sampleYieldUpgradeCost
@@ -6787,19 +6791,19 @@ function M.run()
     local reinforcedNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(reinforcedNextLaunch.stats == "HULL 4")
     assert(reinforcedNextLaunch.upgrades == "HULL LV.1")
-    assert(reinforcedNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
+    assert(reinforcedNextLaunch.hullAction == "T/H HULL LV.1>2 $" .. expedition.upgradeCost(nextLaunchScene.expedition, nextLaunchScene.expedition.durabilityUpgradeCost, 1))
     assert(reinforcedNextLaunch.shipPreview == "SCOUT HULL 3")
     nextLaunchScene:keypressed("y")
     local yieldedNextLaunch = nextLaunchScene:shopLoadoutLines()
-    assert(yieldedNextLaunch.yieldAction == "T/Y HARVEST LV.1>2 $60")
-    assert(yieldedNextLaunch.yieldPreview == "HARVEST x1.50")
+    assert(yieldedNextLaunch.yieldAction == "T/Y HARVEST LV.1>2 $" .. expedition.upgradeCost(nextLaunchScene.expedition, nextLaunchScene.expedition.sampleYieldUpgradeCost, 1))
+    assert(yieldedNextLaunch.yieldPreview == "HARVEST x1.10")
     nextLaunchScene:keypressed("v")
     local scoutNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(scoutNextLaunch.ship == "NEXT SCOUT")
     assert(scoutNextLaunch.stats == "HULL 3")
     assert(scoutNextLaunch.upgrades == "HULL LV.1")
 
-    assert(scoutNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
+    assert(scoutNextLaunch.hullAction == "T/H HULL LV.1>2 $" .. expedition.upgradeCost(nextLaunchScene.expedition, nextLaunchScene.expedition.durabilityUpgradeCost, 1))
     assert(scoutNextLaunch.hullPreview == "HULL 4")
 
     assert(scoutNextLaunch.scoutTradeoff[1] == nil, "INBOX-30: scoutTradeoff hidden when scout active")

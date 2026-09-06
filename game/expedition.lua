@@ -309,17 +309,17 @@ function M.new(options)
         baseDurability = baseDurability,
         maxDurability = baseDurability,
         durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
-        durabilityUpgradeCost = options.durabilityUpgradeCost or 75,
+        durabilityUpgradeCost = options.durabilityUpgradeCost or 10,
         durabilityUpgradeLevel = 0,
-        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.25,
-        sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 60,
+        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.05,
+        sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 5,
         sampleYieldUpgradeLevel = 0,
         baseSpeed = options.baseSpeed or options.climbSpeed or 30,
-        steeringUpgradeAmount = options.steeringUpgradeAmount or 15,
-        steeringUpgradeCost = options.steeringUpgradeCost or 65,
+        steeringUpgradeAmount = options.steeringUpgradeAmount or 1,
+        steeringUpgradeCost = options.steeringUpgradeCost or 5,
         steeringUpgradeLevel = 0,
         scoutShipCost = options.scoutShipCost or 125,
-        scoutClimbSpeedBonus = options.scoutClimbSpeedBonus or 10,
+        scoutClimbSpeedBonus = options.scoutClimbSpeedBonus or 50,
         scoutDurabilityBonus = options.scoutDurabilityBonus or -1,
         ownedShips = { starter = true },
         selectedShipId = "starter",
@@ -621,8 +621,14 @@ function M.shopPrice(run, basePrice)
     return gearModule.effectiveShopPrice(basePrice, parts)
 end
 
+-- Upgrade price escalation: base * 1.05^level (user 2026-09-07)
+function M.upgradeCost(run, baseCost, level)
+    return math.floor(baseCost * (1.05 ^ (level or 0)) + 0.5)
+end
+
 function M.buyDurabilityUpgrade(run)
-    local price = M.shopPrice(run, run.durabilityUpgradeCost)
+    local base = M.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)
+    local price = M.shopPrice(run, base)
     if run.phase ~= "settlement" or run.money < price then return false end
     run.money = run.money - price
     run.durabilityUpgradeLevel = run.durabilityUpgradeLevel + 1
@@ -644,7 +650,8 @@ function M.sampleYieldMultiplier(run)
 end
 
 function M.buySampleYieldUpgrade(run)
-    local price = M.shopPrice(run, run.sampleYieldUpgradeCost)
+    local base = M.upgradeCost(run, run.sampleYieldUpgradeCost, run.sampleYieldUpgradeLevel)
+    local price = M.shopPrice(run, base)
     if run.phase ~= "settlement" or run.money < price then return false end
     run.money = run.money - price
     run.sampleYieldUpgradeLevel = run.sampleYieldUpgradeLevel + 1
@@ -704,7 +711,8 @@ function M.rcsSpeedLevel(run)
 end
 
 function M.buySteeringUpgrade(run)
-    local price = M.shopPrice(run, run.steeringUpgradeCost)
+    local base = M.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)
+    local price = M.shopPrice(run, base)
     if run.phase ~= "settlement" or run.money < price then return false end
     run.money = run.money - price
     run.steeringUpgradeLevel = run.steeringUpgradeLevel + 1

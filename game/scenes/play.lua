@@ -1822,10 +1822,10 @@ function M:shopLoadoutLines()
             string.upper(previewShipId), previewDurability),
         hullAction = i18n.t("hull_action_line",
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
-            run.durabilityUpgradeCost),
+            expedition.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)),
         hullActionCompact = i18n.t("hull_action_compact",
             run.maxDurability, run.maxDurability + run.durabilityUpgradeAmount,
-            run.durabilityUpgradeCost),
+            expedition.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)),
         hullPreview = i18n.t("stats_line",
             run.maxDurability + run.durabilityUpgradeAmount),
         hullPreviewCompact = i18n.t("hull_preview_compact",
@@ -1833,21 +1833,23 @@ function M:shopLoadoutLines()
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
         yieldAction = i18n.t("yield_action_line",
-            run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, run.sampleYieldUpgradeCost),
+            run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1,
+            expedition.upgradeCost(run, run.sampleYieldUpgradeCost, run.sampleYieldUpgradeLevel)),
         yieldActionCompact = i18n.t("yield_action_compact",
             expedition.sampleYieldMultiplier(run),
             1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount,
-            run.sampleYieldUpgradeCost),
+            expedition.upgradeCost(run, run.sampleYieldUpgradeCost, run.sampleYieldUpgradeLevel)),
         yieldPreview = i18n.t("yield_preview_line",
             1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount),
         yieldStatus = yieldStatus,
         yieldAffordable = yieldAffordable,
         steeringAction = i18n.t("steering_action_line",
-            run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
+            run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1,
+            expedition.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)),
         steeringActionCompact = i18n.t("steering_action_compact",
             expedition.effectiveSpeed(run),
             expedition.effectiveSpeed(run) + run.steeringUpgradeAmount,
-            run.steeringUpgradeCost),
+            expedition.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)),
         steeringPreview = i18n.t("steer_speed_line",
             expedition.effectiveSpeed(run) + run.steeringUpgradeAmount),
         steeringPreviewCompact = i18n.t("steering_preview_compact",
@@ -3396,25 +3398,8 @@ function M:draw()
         local bob = math.sin(self.time * 2) * 3
         local f = love.graphics.getFont()
         local lineH = 14
-        -- Hints start below Earth after launch, then transition above
-        -- once the ship is far enough away (3s after leaving Earth disk)
-        local topY
-        local aboveY = earthY - M.earthVisualRadius - 8 - lineH * 3 + bob
-        local belowY = earthY + M.earthVisualRadius + 8 + bob
-        if self.expedition.phase == "launch" then
-            topY = belowY
-        elseif self.hasLeftEarth then
-            local timeSinceLeft = (self.time or 0) - (self.leftEarthTime or 0)
-            if timeSinceLeft < 3.0 then
-                -- Smoothly lerp from below to above over 3 seconds
-                local t = timeSinceLeft / 3.0
-                topY = belowY + (aboveY - belowY) * t
-            else
-                topY = aboveY
-            end
-        else
-            topY = aboveY
-        end
+        -- Hints always below Earth/hub body (user 2026-09-07)
+        local topY = earthY + M.earthVisualRadius + 8 + bob
         love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
         love.graphics.print(sell, earthX - f:getWidth(sell) / 2, topY)
         love.graphics.print(repair, earthX - f:getWidth(repair) / 2, topY + lineH)
@@ -3570,12 +3555,12 @@ function M:draw()
                 if not self.expedition.hubExplored[planet.galaxyId] then
                     local engineStr = i18n.t("engine_part_available")
                     love.graphics.setColor(0.85, 0.35, 0.95, 0.85)
-                    love.graphics.print(engineStr, x - f:getWidth(engineStr) / 2, y - planet.radius - 8 - lineH * 4 + bob)
+                    love.graphics.print(engineStr, x - f:getWidth(engineStr) / 2, y + planet.radius + 8 + lineH * 3 + bob)
                 end
                 local sell = i18n.t("checkpoint_hint_sell")
                 local repair = i18n.t("checkpoint_hint_repair")
                 local upgrade = i18n.t("checkpoint_hint_upgrade")
-                local topY = y - planet.radius - 8 - lineH * 3 + bob
+                local topY = y + planet.radius + 8 + bob
                 love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
                 love.graphics.print(sell, x - f:getWidth(sell) / 2, topY)
                 love.graphics.print(repair, x - f:getWidth(repair) / 2, topY + lineH)
