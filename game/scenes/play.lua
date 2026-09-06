@@ -2817,24 +2817,18 @@ M.shipStatsLineStep = 26
 
 function M:drawShipStatsSummary()
     local phase = self.expedition.phase
-    if phase ~= "ascending" then return end
+    if phase ~= "ascending" and phase ~= "launch" then return end
     local run = self.expedition
-    local hud = self:hudLines()
-    local galaxyShift = hud.galaxy and M.hudGalaxyShift or 0
-    local hudHeight = M.hudHeight(phase, hud, galaxyShift)
-    local size = minimap.size
-    -- Minimap center x/y mirrors drawMinimap placement
-    local mmRight = viewport.width - 3
-    local mmBottom = hudHeight + size + 2
-    -- Stats start below minimap with 8px gap, right-aligned
-    local statsY = mmBottom + 8
+    -- Position: right-aligned, starting just below the pause button (y=52+8=60)
+    local pb = pauseButton
+    local statsY = pb.y + pb.h + 8  -- 8px below pause button bottom
     local statsFont = self.shipStatsFont or fonts.get(M.shipStatsFontSize)
     self.shipStatsFont = statsFont
     local prevFont = love.graphics.getFont()
     love.graphics.setFont(statsFont)
     love.graphics.setColor(0.6, 0.7, 0.8, 0.85)
-    local textW = size  -- use minimap width as text column
-    local textX = mmRight - textW
+    local textW = minimap.size  -- use minimap width as text column
+    local textX = viewport.width - 3 - textW
     local shipName = string.upper(run.selectedShipId or "starter")
     love.graphics.printf(i18n.t("ship_stats_ship", shipName), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
