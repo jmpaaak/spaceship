@@ -1811,7 +1811,7 @@ function M:shopLoadoutLines()
             run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
             run.durabilityUpgradeCost),
         hullActionCompact = i18n.t("hull_action_compact",
-            run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
+            run.maxDurability, run.maxDurability + run.durabilityUpgradeAmount,
             run.durabilityUpgradeCost),
         hullPreview = i18n.t("stats_line",
             run.maxDurability + run.durabilityUpgradeAmount),
@@ -1822,7 +1822,9 @@ function M:shopLoadoutLines()
         yieldAction = i18n.t("yield_action_line",
             run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, run.sampleYieldUpgradeCost),
         yieldActionCompact = i18n.t("yield_action_compact",
-            run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, run.sampleYieldUpgradeCost),
+            expedition.sampleYieldMultiplier(run),
+            1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount,
+            run.sampleYieldUpgradeCost),
         yieldPreview = i18n.t("yield_preview_line",
             1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount),
         yieldStatus = yieldStatus,
@@ -1830,7 +1832,9 @@ function M:shopLoadoutLines()
         steeringAction = i18n.t("steering_action_line",
             run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
         steeringActionCompact = i18n.t("steering_action_compact",
-            run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, run.steeringUpgradeCost),
+            expedition.effectiveSpeed(run),
+            expedition.effectiveSpeed(run) + run.steeringUpgradeAmount,
+            run.steeringUpgradeCost),
         steeringPreview = i18n.t("steer_speed_line",
             expedition.effectiveSpeed(run) + run.steeringUpgradeAmount),
         steeringPreviewCompact = i18n.t("steering_preview_compact",
@@ -3165,8 +3169,6 @@ function M:drawShipStatsSummary()
     statsY = statsY + M.shipStatsLineStep
     love.graphics.printf(i18n.t("ship_stats_speed", expedition.effectiveSpeed(run)), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
-    love.graphics.printf(i18n.t("ship_stats_hull", run.durability or 0, run.maxDurability or 0), textX, statsY, textW, "right")
-    statsY = statsY + M.shipStatsLineStep
     local harvestMul = expedition.sampleYieldMultiplier(run)
     love.graphics.printf(i18n.t("ship_stats_harvest", harvestMul), textX, statsY, textW, "right")
     if prevFont then love.graphics.setFont(prevFont) end
@@ -4055,7 +4057,7 @@ function M:draw()
         -- INBOX (39): "tap to launch" text above the loadout panel with
         -- gentle float animation; rocket icon moves together.
         local floatOffset = math.sin(self.time * 2) * 4
-        messageY = M.launchLoadoutBoxTop - 50 + floatOffset
+        messageY = M.launchLoadoutBoxTop - 200 + floatOffset
         love.graphics.setColor(1, 0.75, 0.25)
         if not drawHudSpriteOrPoly(self.launchRocketIconImage, M.rocketIconPoints,
                 viewport.width / 2, messageY - M.launchIconGap, M.launchIconSize) then

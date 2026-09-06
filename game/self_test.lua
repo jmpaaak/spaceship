@@ -472,8 +472,8 @@ local function testMinimap()
         if ring.kind == "concentricRing" then sawOrbit = true end
     end
     -- User 2026-09-06: milkyway must NOT have any rings (galaxy boundary or concentric)
-    assert(not sawDisk, "home (milkyway) minimap must NOT include galaxy boundary ring")
-    assert(not sawOrbit, "home (milkyway) minimap must NOT include concentric rings")
+    assert(sawDisk, "home minimap must include the Milky Way galaxy boundary ring")
+    assert(sawOrbit, "home minimap must include concentric rings around the central star")
 
     local nameScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -630,15 +630,15 @@ local function testMinimapUnifiedGalaxyPalette()
     assert(originView.spiral == nil or (type(originView.spiral) == "table" and #originView.spiral == 0),
         "minimap.view must not produce spiral-arm points (item 13: replaced by concentric rings)")
 
-    -- Home galaxy: no concentric rings
+    -- Home galaxy: concentric rings present (sun-centered, not Earth-centered)
     local sawConcentricAtHome = false
     for _, ring in ipairs(originView.rings or {}) do
         if ring.kind == "concentricRing" then
             sawConcentricAtHome = true
         end
     end
-    assert(not sawConcentricAtHome,
-        "minimap.view at home (milkyway) must NOT include concentricRing entries")
+    assert(sawConcentricAtHome,
+        "minimap.view at home (milkyway) must include concentricRing entries (sun-centered)")
 
     -- concentricRingCount bracket check
     assert(minimap.concentricRingCount(nil) == 2, "nil galaxy => 2 rings")
@@ -824,12 +824,14 @@ local function testMinimapGalaxyOverlapPrevention()
         end
     end
     -- The containing galaxy (milkyway) must NOT have its boundary ring (user 2026-09-06).
-    assert(not galaxyRingIds["milkyway"],
-        "minimap must NOT show boundary ring for milkyway (지구 중심원 제거)")
-    -- No other galaxy should have a boundary ring either (not containing).
+    assert(galaxyRingIds["milkyway"],
+        "minimap must show boundary ring for containing galaxy (milkyway)")
+    -- No OTHER galaxy should have a boundary ring (only containing).
     local otherGalaxyRingCount = 0
     for id, _ in pairs(galaxyRingIds) do
-        otherGalaxyRingCount = otherGalaxyRingCount + 1
+        if id ~= "milkyway" then
+            otherGalaxyRingCount = otherGalaxyRingCount + 1
+        end
     end
     assert(otherGalaxyRingCount == 0,
         "minimap must NOT show boundary rings for non-containing galaxies (found "
@@ -6739,10 +6741,10 @@ function M.run()
 
     assert(starterNextLaunch.hullStatus == "SHORT $75" and not starterNextLaunch.hullAffordable)
     assert(starterNextLaunch.shipStatus == "SHORT $125" and not starterNextLaunch.shipAffordable)
-    assert(starterNextLaunch.yieldAction == "T/Y YIELD LV.0>1 $60")
-    assert(starterNextLaunch.yieldPreview == "YIELD x1.25")
+    assert(starterNextLaunch.yieldAction == "T/Y HARVEST LV.0>1 $60")
+    assert(starterNextLaunch.yieldPreview == "HARVEST x1.25")
     assert(starterNextLaunch.yieldStatus == "SHORT $60" and not starterNextLaunch.yieldAffordable)
-    assert(starterNextLaunch.steeringAction == "T/G STEER LV.0>1 $65")
+    assert(starterNextLaunch.steeringAction == "T/G SPEED LV.0>1 $65")
     assert(starterNextLaunch.steeringPreview == "45")
     assert(starterNextLaunch.steeringStatus == "SHORT $65" and not starterNextLaunch.steeringAffordable)
     -- Compact column labels for the HULL/STEERING shared touch row (see
@@ -6753,8 +6755,8 @@ function M.run()
     -- "H:"/"G:" prefixed variants (measured 58-63px via GAME_FONTPROBE) are
     -- drawn in the column instead, without changing the existing full
     -- strings other callers may still rely on.
-    assert(starterNextLaunch.hullActionCompact == "LV.0>1 $75")
-    assert(starterNextLaunch.steeringActionCompact == "LV.0>1 $65")
+    assert(starterNextLaunch.hullActionCompact == "HULL 3>4 $75")
+    assert(starterNextLaunch.steeringActionCompact == "SPEED 30>45 $65")
     assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
     assert(starterNextLaunch.steeringPreviewCompact == "45")
     -- Same compact treatment for the YIELD/SHIP shared touch row (see
@@ -6764,7 +6766,7 @@ function M.run()
     -- too wide for a 90px column once a "T/V "/"T/Y " prefix and a
     -- side-by-side status line are added, so compact "Y:"/"V:" variants
     -- (measured 38-62px) are drawn in the column instead.
-    assert(starterNextLaunch.yieldActionCompact == "LV.0>1 $60")
+    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00>x1.25 $60")
     assert(starterNextLaunch.shipActionCompact == "BUY $125")
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
@@ -6783,8 +6785,8 @@ function M.run()
     assert(reinforcedNextLaunch.shipPreview == "SCOUT HULL 3")
     nextLaunchScene:keypressed("y")
     local yieldedNextLaunch = nextLaunchScene:shopLoadoutLines()
-    assert(yieldedNextLaunch.yieldAction == "T/Y YIELD LV.1>2 $60")
-    assert(yieldedNextLaunch.yieldPreview == "YIELD x1.50")
+    assert(yieldedNextLaunch.yieldAction == "T/Y HARVEST LV.1>2 $60")
+    assert(yieldedNextLaunch.yieldPreview == "HARVEST x1.50")
     nextLaunchScene:keypressed("v")
     local scoutNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(scoutNextLaunch.ship == "NEXT SCOUT")
@@ -8618,10 +8620,9 @@ function M.run()
                 if c.text:find("HARVEST x%d+%.%d+") then sawHarvest = true end
             end
         end
-        assert(rightAligned >= 4, "ship stats must have >= 4 right-aligned lines, got " .. rightAligned)
-        assert(sawShip, "ship stats must include ship name SCOUT")
-        assert(sawSpeed, "ship stats must include SPEED 2")
-        assert(sawHull, "ship stats must include hull current/max")
+        assert(rightAligned >= 3, "ship stats must have >= 3 right-aligned lines, got " .. rightAligned)
+        assert(sawShip, "ship stats must include ship name")
+        assert(sawSpeed, "ship stats must include SPEED")
         assert(sawHarvest, "ship stats must include harvest multiplier")
 
         -- Verify it does NOT draw during settlement
