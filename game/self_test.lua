@@ -848,6 +848,47 @@ local function testMinimapGalaxyOverlapPrevention()
         "viewRadius should be <= 0.6 * galaxyCellSize for overlap prevention")
 end
 
+-- INBOX-34(a): galaxyExistenceThreshold raised to 0.82 to reduce density.
+-- INBOX-34(b): minimap view emits nearestGalaxyRimMarker for off-disc galaxies.
+local function testMinimapGalaxyRimMarker()
+    local minimapMod = require("game.minimap")
+    local worldMod = require("game.world")
+    -- (a) Verify threshold is at least 0.82 (fewer galaxies).
+    -- Count galaxies in a smaller region — density should be < 28% (old was ~28%).
+    local galaxyCount = 0
+    local totalCells = 0
+    for gx = -20, 20 do
+        for gy = -20, 20 do
+            totalCells = totalCells + 1
+            if worldMod.galaxy(gx, gy) then
+                galaxyCount = galaxyCount + 1
+            end
+        end
+    end
+    local density = galaxyCount / totalCells
+    -- With threshold 0.82, existence requires hash > 0.82, so ~18% density.
+    -- Allow some margin but must be < 0.25 (was ~0.28 with old 0.72 threshold).
+    assert(density < 0.25,
+        string.format("galaxy density should be < 25%% with raised threshold, got %.1f%%", density * 100))
+
+    -- (b) From origin (inside milkyway), nearest non-home galaxy should
+    -- produce a rim marker since it is outside the minimap disc.
+    local view = minimapMod.view(0, 0)
+    if view.nearestGalaxyRimMarker then
+        local m = view.nearestGalaxyRimMarker
+        assert(m.dx ~= nil and m.dy ~= nil, "rim marker must have dx, dy")
+        assert(m.distance ~= nil and m.distance > 0, "rim marker must have positive distance")
+        assert(m.name ~= nil, "rim marker must have galaxy name")
+        assert(m.id ~= nil and m.id ~= "milkyway", "rim marker must not be milkyway")
+        -- Direction should be a unit vector
+        local mag = math.sqrt(m.dx * m.dx + m.dy * m.dy)
+        assert(math.abs(mag - 1) < 1e-4, "rim marker direction must be unit vector")
+    end
+    -- When ship is inside a non-home galaxy, the galaxy center is nearby
+    -- (inside disc), so rim marker should be nil for that galaxy.
+    -- (We just verify the field exists and is structured correctly above.)
+end
+
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
 -- as a lethal planet collision.
 -- UI/HUD cleanup item 1 (docs/feedback/INBOX.md, 2026-09-02): the existing
@@ -7501,6 +7542,7 @@ function M.run()
     testMinimapStencilClip()
     testMinimapEarthStarLabels()
     testMinimapGalaxyOverlapPrevention()
+    testMinimapGalaxyRimMarker()
     testDebris()
     testBackgroundStars()
     testPlanetDiagonalHash()

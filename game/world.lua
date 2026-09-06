@@ -30,7 +30,7 @@ local function galaxyAt(x, y)
 end
 M.galaxyAt = galaxyAt
 
-local galaxyExistenceThreshold = 0.72
+local galaxyExistenceThreshold = 0.82
 
 -- 6 star type names matching the 6 frames of pixelplanets_stars_special.png.
 -- Determined per-galaxy so all special stars inside that galaxy show the same shape.

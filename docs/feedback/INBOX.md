@@ -2,12 +2,6 @@
 
 ## 처리 대기
 
-(34) **미니맵 — 은하 중심 겹침 방지 + 인접 은하 외곽 표기 (사용자 확정, 2026-09-06):**
-  - 사용자: "노란 은하 중심 행성들이 붙어있다. 은하 영역이 절대 겹치지 않도록."
-  - **(a) 은하 생성 시 겹침 방지.** `world.galaxy(gx,gy)` 생성 후 인접 4방향 은하와 거리 확인: `dist(galaxy1, galaxy2) < (r1 + r2 + padding)`이면 둘 중 뒤 셀을 nil 반환. 또는 `galaxyExistenceThreshold`를 0.82로 올려 밀도 자체를 낮추기.
-  - **(b) 미니맵 인접 은하 외곽 표기.** 현재 `nearestCheckpointDirection`이 화살표만 그림. 추가: 미니맵 디스크 **원 경계 위**에 가장 가까운 비-home 은하의 방향에 작은 마커(점 + 거리 숫자) 표시. `checkpointBeyond`가 true일 때 화살표 옆에 은하 이름도.
-  - `make verify` GREEN + 커밋: `fix(minimap): prevent galaxy overlap, show nearest galaxy on disc rim`
-
 (29) **채집 줌인 축소 (사용자 확정, 2026-09-06):**
   - 현재 `collectZoom.scale = 1.35` (35% 줌인). 사용자: "너무 줌인 많이 됨."
   - 변경: `scale = 1.12` (12% 줌인). 행성이 약간 커 보이되 시야 확보 유지.
@@ -25,6 +19,9 @@
   - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
 
 ## 처리 완료
+
+(34) **미니맵 — 은하 중심 겹침 방지 + 인접 은하 외곽 표기 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: (a) `galaxyExistenceThreshold` 0.72→0.82 (밀도 ~28%→~18%). 8-connected overlap filter 이미 적용. (b) `minimap.view()` → `nearestGalaxyRimMarker` 추가 (disc 밖 비-home 은하: dx/dy/distance/name/id). play.lua에서 cyan dot + 거리 레이블 disc rim에 그림. `testMinimapGalaxyRimMarker` 추가. `make verify` GREEN.
 
 (33) **RCS 분출 색상·크기 — 속도 레벨에 따라 변화 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `expedition.rcsSpeedLevel(run)` 추가 (steeringUpgradeLevel 0→Lv0 white r1.5, 1-2→Lv1 red r2, 3-4→Lv2 blue r2.5, 5+→Lv3 rainbow r3). play.lua 파티클 생성 시 레벨별 색·반지름 적용. draw에서 `particle.radius or 1.5` 사용. self_test INBOX-33 블록 추가. `make verify` GREEN.

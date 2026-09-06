@@ -260,6 +260,34 @@ function M.view(shipX, shipY)
         local arrivalThreshold = hubRadius and hubRadius.radius * 3 or 48
         checkpointBeyond = checkpointDist >= arrivalThreshold
     end
+    -- INBOX-34(b): nearest non-home galaxy rim marker.  When the nearest
+    -- non-home galaxy is outside the minimap disc, place a small marker on
+    -- the disc boundary showing direction + distance.  Re-uses the
+    -- checkpoint data already computed above.
+    local nearestGalaxyRimMarker = nil
+    if checkpointId and checkpointDist then
+        -- Project the galaxy center onto the minimap; if it is outside the
+        -- disc, emit a rim marker with direction, distance, and name.
+        local ngx = checkpointGalaxy and checkpointGalaxy.x or 0
+        local ngy = checkpointGalaxy and checkpointGalaxy.y or 0
+        local _, _, ngInside = M.project(ngx, ngy, shipX, shipY)
+        if not ngInside then
+            local ndx, ndy = ngx - shipX, ngy - shipY
+            local ndist = math.sqrt(ndx * ndx + ndy * ndy)
+            local ux, uy = 0, 0
+            if ndist > 1e-9 then
+                ux, uy = ndx / ndist, ndy / ndist
+            end
+            nearestGalaxyRimMarker = {
+                dx = ux,
+                dy = uy,
+                distance = ndist,
+                name = world.galaxyName(checkpointGalaxy),
+                id = checkpointId,
+            }
+        end
+    end
+
     return {
         player = { x = 0, y = 0 },
         earth = { x = earthX, y = earthY, inside = earthInside },
@@ -277,6 +305,7 @@ function M.view(shipX, shipY)
         checkpointDy = checkpointDy,
         checkpointDistance = checkpointDist,
         checkpointId = checkpointId,
+        nearestGalaxyRimMarker = nearestGalaxyRimMarker,
     }
 end
 

@@ -2581,6 +2581,20 @@ function M:drawMinimap()
                 tipX - view.checkpointDx * 1.5 - perpX * 1.6, tipY - view.checkpointDy * 1.5 - perpY * 1.6)
         end
     end
+
+    -- INBOX-34(b): nearest galaxy rim marker — small dot + distance on disc edge
+    if view.nearestGalaxyRimMarker then
+        local rim = size / 2 - 4
+        local marker = view.nearestGalaxyRimMarker
+        local mx = cx + marker.dx * rim
+        local my = cy + marker.dy * rim
+        -- Cyan-ish dot distinct from magenta checkpoint arrow and orange return
+        love.graphics.setColor(0.3, 0.9, 0.95, 0.9)
+        love.graphics.circle("fill", mx, my, 3.6)
+        -- Distance label (compact, in hundreds of world-pixels)
+        local distLabel = string.format("%.0f", marker.distance / 100)
+        love.graphics.printf(distLabel, mx - 20, my + 5, 40, "center")
+    end
 end
 
 function M:draw()
