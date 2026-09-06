@@ -2,6 +2,31 @@
 
 ## 처리 대기
 
+(35) **혜성 시스템 도입 (사용자 확정, 2026-09-06):**
+  - ascending 페이즈에서 등장. **첫 1분 후 1회 고정 등장**, 이후 **30초마다 30% 확률**로 스폰.
+  - 속도: 일반 행성 대비 **매우 빠름** (vx/vy ≈ 80~120px/s, 화면 횡단 6~9초). 직선 궤적, 화면 밖에서 진입→반대편으로 퇴장.
+  - 표본 보상: **행성의 50배** (`sampleValue * 50`). 행성 기본 보상은 (36)에서 $1로 변경.
+  - 수집 반경: 행성과 동일 `radius + 30`. 충돌 데미지도 동일. 반지름 8~12px, 꼬리 파티클(노란→빨강 그라데이션, 길이 40~60px).
+  - `world.lua`에 `M.comets` 테이블 + `M.spawnComet(time)` / `M.nearbyComets(shipX, shipY, time)`. play.lua에서 행성과 동일한 수집/충돌 루프.
+  - i18n: `"comet_label"` = `"혜성"` / `"Comet"`. 미발견 혜성 위에 "혜성!" 텍스트 + sin 움직임.
+  - `make verify` GREEN + 커밋: `feat(play): comet system — fast, rare, high-reward celestial body`
+
+(36) **행성 기본 표본 보상 $1로 하향 (사용자 확정, 2026-09-06):**
+  - 현재 `sampleValue = 10 + floor(distance/100) * 5`. 가까운 행성도 최소 $10.
+  - 변경: `sampleValue = 1`. 거리 스케일 제거, 모든 행성 고정 $1. 혜성이 $50(=1×50), 위성이 $10(=1×10).
+  - `sampleTier`는 거리 기반 유지 (시각 구분용). `collisionDamage`도 기존 유지.
+  - `make verify` GREEN + 커밋: `fix(world): flat $1 planet sample value`
+
+(37) **위성 시스템 도입 (사용자 확정, 2026-09-06):**
+  - 각 행성에 **0~1개** 위성이 행성 주위를 빠르게 공전. `hash(planet.id, 700) > 0.7` → 위성 1개 (30% 확률).
+  - 공전 반경: `planet.radius + 15~25px`. 공전 속도: `2π / 3초` (3초에 1바퀴). 반지름 3~5px.
+  - 표본 보상: **행성의 10배** ($10). 빠르게 돌아서 수집 난이도 높음.
+  - 수집 반경: `moonRadius + 15` (행성보다 좁음). 충돌 데미지: 행성과 동일.
+  - `world.planets()` 반환에 `moons` 서브테이블 추가, 또는 별도 `world.moons(planet, time)`.
+  - play.lua에서 행성 draw 루프 안에서 위성도 draw + 수집/충돌 체크. 위성 색은 행성 hue 기반 밝은 톤.
+  - i18n: `"moon_label"` = `"위성"` / `"Moon"`.
+  - `make verify` GREEN + 커밋: `feat(play): moons orbit planets — fast, mid-reward collectible`
+
 ## 처리 완료
 
 (31) **미니맵 은하 2개 표시 원인 수정 (사용자 확정, 2026-09-06):**
