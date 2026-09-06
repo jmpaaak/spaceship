@@ -1,15 +1,13 @@
 ## Current Status
 
-- INBOX (33) complete: RCS exhaust color and size scale with speed upgrade level.
-  - Added `expedition.rcsSpeedLevel(run)` → 0/1/2/3 from `steeringUpgradeLevel`.
-  - Lv0 (no upgrades): white (1,1,1), radius 1.5.
-  - Lv1 (upgrades 1-2): red (1,0.4,0.2), radius 2.
-  - Lv2 (upgrades 3-4): blue (0.3,0.5,1), radius 2.5.
-  - Lv3 (upgrades 5+): rainbow (HSV cycling), radius 3.
-  - Draw code uses `particle.radius or 1.5` instead of hardcoded 1.5.
-  - Self-test: INBOX-33 block validates all 4 levels (mapping + scene particle checks).
+- INBOX (34a) complete: galaxy overlap prevention.
+  - Refactored `world.galaxy()` into `rawGalaxy()` + overlap filter.
+  - Each galaxy gets `_priority` from its existence hash; home galaxy has `math.huge`.
+  - `M.galaxy()` checks 8-connected neighbours: if `dist < r1 + r2 + 200px padding`, lower-priority galaxy is suppressed (returns nil).
+  - Home galaxy (0,0) is never suppressed.
+  - Added `testGalaxyOverlapPrevention`: scans 60×60 grid, asserts no pair overlaps, home survives, determinism.
   - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (29): reduce collect zoom 1.35 → 1.12.
+- INBOX (34b): minimap nearest galaxy marker on disc rim.

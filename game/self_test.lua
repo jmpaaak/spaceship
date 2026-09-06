@@ -367,6 +367,42 @@ local function testGalaxyStructure()
     end
 end
 
+-- INBOX-34(a): galaxy overlap prevention.  No two surviving galaxies
+-- (after the overlap filter) should have circles closer than the padding.
+local function testGalaxyOverlapPrevention()
+    local world = require("game.world")
+    -- Scan a wide region and collect all surviving galaxies.
+    local galaxies = {}
+    for gx = -30, 30 do
+        for gy = -30, 30 do
+            local g = world.galaxy(gx, gy)
+            if g then galaxies[#galaxies + 1] = g end
+        end
+    end
+    assert(#galaxies >= 2, "must have at least 2 galaxies in a 60×60 scan")
+    -- Pairwise distance check: no two galaxies should overlap.
+    for i = 1, #galaxies do
+        for j = i + 1, #galaxies do
+            local a, b = galaxies[i], galaxies[j]
+            local dx = a.x - b.x
+            local dy = a.y - b.y
+            local dist = math.sqrt(dx * dx + dy * dy)
+            local minDist = a.radius + b.radius
+            assert(dist >= minDist,
+                string.format("galaxies (%d,%d) and (%d,%d) overlap: dist=%.0f < r1+r2=%.0f",
+                    a.gx, a.gy, b.gx, b.gy, dist, minDist))
+        end
+    end
+    -- Home galaxy must always survive.
+    local home = world.galaxy(0, 0)
+    assert(home and home.id == "milkyway", "home galaxy must never be suppressed by overlap filter")
+    -- Determinism: calling galaxy() twice must return the same result.
+    for _, g in ipairs(galaxies) do
+        local g2 = world.galaxy(g.gx, g.gy)
+        assert(g2 and g2.id == g.id, "galaxy overlap filter must be deterministic")
+    end
+end
+
 -- Minimap: galaxy centers + player, plus beyond-chart distance/bearing
 -- (docs/GAME_DESIGN.md 이동 방식 개선 항목 2·3). Own top-level function
 -- for the same 200-local limit as testJoystick.
@@ -7459,6 +7495,7 @@ function M.run()
 
     testJoystick()
     testGalaxyStructure()
+    testGalaxyOverlapPrevention()
     testMinimap()
     testMinimapUnifiedGalaxyPalette()
     testMinimapStencilClip()

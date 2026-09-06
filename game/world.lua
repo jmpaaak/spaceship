@@ -36,9 +36,12 @@ local galaxyExistenceThreshold = 0.72
 -- Determined per-galaxy so all special stars inside that galaxy show the same shape.
 local starTypes = { "ice", "lava", "dry", "gas", "earth", "bare" }
 
--- Deterministically returns the galaxy occupying grid cell (gx, gy), or
--- nil if that cell is empty deep space.
-function M.galaxy(gx, gy)
+-- Minimum gap between two galaxy circles (in world pixels).
+local galaxyOverlapPadding = 200
+
+-- Raw galaxy data without overlap prevention.  Used internally so that the
+-- overlap check can inspect neighbours without infinite recursion.
+local function rawGalaxy(gx, gy)
     if gx == 0 and gy == 0 then
         return {
             id = "milkyway",
@@ -51,9 +54,11 @@ function M.galaxy(gx, gy)
             starType = "earth",       -- home galaxy always uses "earth" star type
             starTypeIdx = 4,          -- 0-based frame index into pixelplanets_stars_special.png
             baseHue = 0.6,            -- consistent hue for home galaxy
+            _priority = math.huge,    -- home always wins overlap contests
         }
     end
-    if hash(gx, gy, 500) <= galaxyExistenceThreshold then
+    local existHash = hash(gx, gy, 500)
+    if existHash <= galaxyExistenceThreshold then
         return nil
     end
     local radius = M.galaxyCellSize * (0.18 + hash(gx, gy, 510) * 0.28)
@@ -76,7 +81,52 @@ function M.galaxy(gx, gy)
         starType = starTypes[starTypeIdx + 1],
         starTypeIdx = starTypeIdx,
         baseHue = baseHue,
+        _priority = existHash,  -- higher hash = higher priority in overlap contests
     }
+end
+
+-- Deterministically returns the galaxy occupying grid cell (gx, gy), or
+-- nil if that cell is empty deep space.  After computing the raw galaxy
+-- we check 8-connected neighbours: if any neighbour's circle overlaps
+-- this one (dist < r1 + r2 + padding) AND has strictly higher priority,
+-- this cell is suppressed to nil.  Home galaxy (0,0) always has highest
+-- priority so it is never suppressed.
+function M.galaxy(gx, gy)
+    local self_g = rawGalaxy(gx, gy)
+    if not self_g then return nil end
+    -- Home galaxy is never suppressed.
+    if gx == 0 and gy == 0 then
+        self_g._priority = nil
+        return self_g
+    end
+    -- Check 8-connected neighbours for overlap.
+    for oy = -1, 1 do
+        for ox = -1, 1 do
+            if not (ox == 0 and oy == 0) then
+                local nb = rawGalaxy(gx + ox, gy + oy)
+                if nb then
+                    local dx = self_g.x - nb.x
+                    local dy = self_g.y - nb.y
+                    local dist = math.sqrt(dx * dx + dy * dy)
+                    if dist < (self_g.radius + nb.radius + galaxyOverlapPadding) then
+                        -- Overlap detected: suppress the lower-priority galaxy.
+                        if nb._priority > self_g._priority then
+                            return nil  -- neighbour wins, suppress self
+                        end
+                        -- If equal priority (extremely unlikely with float hashes),
+                        -- use cell coords as tiebreaker: lower gy wins, then lower gx.
+                        if nb._priority == self_g._priority then
+                            if (nb.gy < gy) or (nb.gy == gy and nb.gx < gx) then
+                                return nil
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    self_g._priority = nil  -- strip internal field before returning
+    return self_g
 end
 
 function M.galaxyName(galaxy_or_gx, gy)
