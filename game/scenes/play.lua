@@ -1297,6 +1297,7 @@ function M.new(options)
         cometTailParticles = {},  -- tail trail particles for visual effect
         -- INBOX (37): moon state
         moonDiscovered = {},      -- moon.id → true
+        shopVisited = {},         -- shop planet.id → true after a successful buy
         moonCollided = {},        -- moon.id → true
     }, M)
 end
@@ -2432,6 +2433,7 @@ function M:keypressed(key)
                     awarded = 0,
                     rollupElapsed = 0,
                 })
+                self.shopVisited[self.shopModal.planet.id] = true
                 self.shopModal = nil
             else
                 self.shopModal.errorText = i18n.shopError(err)
@@ -3100,6 +3102,14 @@ function M:draw()
             love.graphics.circle("fill", earthX - 18, earthY - 18, 15)
             love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
         end
+        local prevEarthFont = love.graphics.getFont()
+        love.graphics.setFont(fonts.get(11))
+        local hint = i18n.t("checkpoint_hint")
+        local bob = math.sin(self.time * 2) * 3
+        local hx = clampLabelX(earthX, love.graphics.getFont():getWidth(hint), viewport.width)
+        love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
+        love.graphics.print(hint, hx, earthY - M.earthVisualRadius - 16 + bob)
+        love.graphics.setFont(prevEarthFont)
     end
     -- Item 9: Draw star gravity well ring around the central star
     do
@@ -3227,6 +3237,29 @@ function M:draw()
             end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)
+            local prevLblFont = love.graphics.getFont()
+            love.graphics.setFont(fonts.get(11))
+            local bob = math.sin(self.time * 2) * 3
+            if planet.hub then
+                if not self.expedition.hubExplored[planet.galaxyId] then
+                    local engineStr = i18n.t("engine_part_available")
+                    local lx = clampLabelX(x, love.graphics.getFont():getWidth(engineStr), viewport.width)
+                    love.graphics.setColor(0.85, 0.35, 0.95, 0.85)
+                    love.graphics.print(engineStr, lx, y - planet.radius - 28 + bob)
+                end
+                local hint = i18n.t("checkpoint_hint")
+                local hx = clampLabelX(x, love.graphics.getFont():getWidth(hint), viewport.width)
+                love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
+                love.graphics.print(hint, hx, y - planet.radius - 14 + bob)
+            elseif planet.isShop then
+                if not self.shopVisited[planet.id] then
+                    local hullStr = i18n.t("hull_part_available")
+                    local lx = clampLabelX(x, love.graphics.getFont():getWidth(hullStr), viewport.width)
+                    love.graphics.setColor(0.3, 0.9, 0.95, 0.85)
+                    love.graphics.print(hullStr, lx, y - planet.radius - 22 + bob)
+                end
+            end
+            love.graphics.setFont(prevLblFont)
         end
     end
     -- INBOX (37): draw moons orbiting planets

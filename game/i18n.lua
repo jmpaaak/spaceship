@@ -163,6 +163,7 @@ locales.en = {
     central_star_label = "Central Star",
     engine_part_available = "Engine part available",
     hull_part_available = "Hull part available",
+    checkpoint_hint = "hull repair & upgrades",
     comet_label = "Comet",
     moon_label = "Moon",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
@@ -332,6 +333,7 @@ locales.ko = {
     central_star_label = "중심별",
     engine_part_available = "엔진부품 획득 가능",
     hull_part_available = "선체부품 획득 가능",
+    checkpoint_hint = "내구도 회복과 업그레이드",
     comet_label = "혜성",
     moon_label = "위성",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
