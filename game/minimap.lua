@@ -214,12 +214,16 @@ function M.view(shipX, shipY)
         -- containing galaxy; neighbouring galaxies skip this ring so
         -- their boundaries don't visually overlap on the minimap.
         if isContaining then
+            -- Galaxy boundary ring centered on the sun (not galaxy center
+            -- which is Earth/origin for milkyway) — user 2026-09-07
+            local sun = world.sunPosition(galaxy)
+            local sunBx, sunBy = M.project(sun.x, sun.y, shipX, shipY)
             local scaled = galaxy.radius * M.mapRadius / M.viewRadius
             rings[#rings + 1] = {
                 id = galaxy.id,
                 name = world.galaxyName(galaxy),
-                x = mx,
-                y = my,
+                x = sunBx,
+                y = sunBy,
                 radius = math.max(2, math.min(scaled, M.mapRadius)),
                 kind = "galaxy",
                 inside = inside,
