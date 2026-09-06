@@ -3616,23 +3616,25 @@ function M:draw()
         row = r4 + 12
         if self.earthShopSlotResult or (self.slotState and self.slotState.spinning) then
             love.graphics.setColor(1, 1, 1, 1)
-            local mx = fullX + (fullW - 96) / 2
+            local slotScale = 2
+            local slotW = 96 * slotScale
+            local mx = fullX + (fullW - slotW) / 2
             local my = row
             if self.slotMachineImage then
-                love.graphics.draw(self.slotMachineImage, mx, my)
+                love.graphics.draw(self.slotMachineImage, mx, my, 0, slotScale, slotScale)
             end
             
             -- Draw Reels
             local rKeys = {"MONEY", "PART", "SPEED", "DURABILITY", "HARVEST"}
             for i = 1, 3 do
-                local rx = mx + 12 + (i - 1) * 24
-                local ry = my + 8
-                love.graphics.setScissor(rx, ry, 20, 32)
+                local rx = mx + 12 * slotScale + (i - 1) * 24 * slotScale
+                local ry = my + 8 * slotScale
+                love.graphics.setScissor(rx, ry, 20 * slotScale, 32 * slotScale)
                 local rState = self.slotState and self.slotState.reels[i]
                 local drawSym = self.earthShopSlotResult and self.earthShopSlotResult.symbols[i] or "MONEY"
                 local yOff = 0
                 if rState then
-                    yOff = rState.y % 32
+                    yOff = (rState.y % 32) * slotScale
                     if not rState.stopped then
                         drawSym = rKeys[math.random(1, #rKeys)]
                     else
@@ -3642,11 +3644,11 @@ function M:draw()
                 
                 local symImg = self.slotSymbolImages and self.slotSymbolImages[drawSym]
                 if symImg then
-                    love.graphics.draw(symImg, rx - 6, ry + yOff - 32)
+                    love.graphics.draw(symImg, rx - 6 * slotScale, ry + yOff - 32 * slotScale, 0, slotScale, slotScale)
                     local nextSym = rState and (not rState.stopped) and rKeys[math.random(1, #rKeys)] or drawSym
                     local nextImg = self.slotSymbolImages and self.slotSymbolImages[nextSym]
                     if nextImg then
-                        love.graphics.draw(nextImg, rx - 6, ry + yOff)
+                        love.graphics.draw(nextImg, rx - 6 * slotScale, ry + yOff, 0, slotScale, slotScale)
                     end
                 else
                     love.graphics.setColor(1,1,1,1)
@@ -3655,7 +3657,7 @@ function M:draw()
                 love.graphics.setScissor()
             end
 
-            row = row + 48
+            row = row + 48 * slotScale
             local profileLabel = self.earthShopSlotResult and M.earthSlotProfileLabel(self.earthShopSlotResult.rewardProfile)
             if profileLabel then
                 love.graphics.setColor(1, 0.55, 0.45)
