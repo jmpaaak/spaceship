@@ -2,6 +2,45 @@
 
 ## 처리 대기
 
+(41) **HUD 폰트 크기 — launch 때만 큼, ascending과 동일하게 고정 (사용자 확정, 2026-09-06):**
+  - 스크린샷: launch 시작 화면에서 HUD가 화면 1/4을 차지. ascending에서는 적절.
+  - 원인: launch HUD가 별도 `launchHudHeight` 또는 다른 폰트를 쓰고 있을 수 있음. 또는 (38)에서 44px가 launch에도 적용.
+  - 변경: **모든 페이즈에서 동일 HUD 폰트/레이아웃 사용.** launch 전용 HUD 분기가 있으면 제거. ascending 때 보이는 크기 그대로 launch에서도.
+  - `make verify` GREEN + 커밋: `fix(hud): same HUD font size across all phases`
+
+(42) **장착 네모칸 가로→세로 배치 (사용자 확정, 2026-09-06):**
+  - 현재 hull 6 + engine 3 = 9칸이 가로로 나열. 스크린샷에서 화면 폭 절반 차지.
+  - 변경: **세로 1열**로 배치. x 고정 (좌측 5~10px), y는 HUD 텍스트 끝 아래부터 32px 간격으로 아래로. 9칸 × 32px = 288px. hull과 engine 사이 4px 간격.
+  - `make verify` GREEN + 커밋: `fix(hud): gear slots vertical column instead of horizontal row`
+
+(43) **HUD 아이콘 교체 — PIL 생성 (사용자 확정, 2026-09-06):**
+  - 현재 거리/자금/내구도 아이콘이 기존 도트와 스타일 불일치.
+  - `tools/gen_hud_icons.py` PIL 스크립트 (≤50줄)로 3개 생성:
+    - `assets/hud/icon_distance.png`: 16×16 RGBA, 별+화살 모티프 (우주 톤)
+    - `assets/hud/icon_cash.png`: 16×16, 동전/$ 모티프
+    - `assets/hud/icon_durability.png`: 16×16, 방패/하트 모티프
+  - 색조: 어두운 배경에 밝은 시안/골드/초록 — PixelPlanets 스타일과 조화.
+  - `drawHudSpriteOrPoly`에서 기존 폴백 폴리곤 대신 새 PNG 로드.
+  - `make verify` GREEN + 커밋: `feat(hud): PIL-generated distance/cash/durability icons`
+
+(44) **선체 정보 → 미니맵 아래 우측 (사용자 확정, 2026-09-06):**
+  - 스크린샷: 선체 정보(선체 3, 선체 LV.0, -55)가 여전히 화면 중앙에 있음.
+  - 변경: ascending 때 **미니맵 아래 우측**에 작은 폰트(22px)로 고정:
+    - `함선: Pioneer` / `속도 LV.N` / `내구 LV.N` / `수확 LV.N`
+  - 좌표: `x = viewport.width - 미니맵폭 - 패딩`, `y = 미니맵하단 + 8`. 우측 정렬.
+  - launch 중앙 패널은 그대로.
+  - `make verify` GREEN + 커밋: `feat(hud): ship stats summary below minimap right side`
+
+(45) **미니맵 은하 2개 표시 + 링 오퍼시티 (사용자 확정, 2026-09-06):**
+  - 스크린샷: 미니맵에 노란 은하 마커 2개, 동심원이 진한 노란색으로 미니맵 경계까지 차 있음.
+  - **(a)** (31)에서 이미 INBOX했지만 아직 적용 안 됨. containing이 아닌 은하 마커를 **숨기거나** 미니맵 림에만 작은 점. `galaxyExistenceThreshold` 0.72→**0.85**로 올려 은하 자체 밀도 낮추기.
+  - **(b)** 동심원 링 알파: 현재 `(0.9, 0.75, 0.3, 0.4)`. **0.4→0.15**로 낮춰서 연하게. galaxy boundary ring도 **0.12** 정도.
+  - `make verify` GREEN + 커밋: `fix(minimap): hide non-containing galaxies, reduce ring opacity`
+
+(46) **"신규 행성 발견" 텍스트 제거 (사용자 확정, 2026-09-06):**
+  - (19)(b)에서 추가한 `planet_new_discovery` 텍스트를 draw에서 제거. i18n 키는 남겨도 됨. `collisionRisk` label도 이미 (19)(a)에서 제거됨.
+  - `make verify` GREEN + 커밋: `fix(play): remove "new planet" floating text above undiscovered planets`
+
 ## 처리 완료
 (40) **장착장비 패널 → 좌상단 HUD 아래 고정 노출 + 아이템 칸 확대 — 완료 2026-09-06:** `drawHudGearSlots(hudHeight)` 메서드 추가. 32×32px 슬롯 그리드 (hull 6 + engine 3), rarity별 배경색 + 아이콘 오버레이, 빈 슬롯 어두운 테두리. "GEAR"/"장착" 라벨 22px. ascending/returning/launch 때 좌상단 HUD 아래 고정. `make verify` GREEN.
 (39) **시작 화면 "탭하여 발사" 위치 이동 — 완료 2026-09-06:** messageY를 `launchLoadoutBoxTop - 50 + sin(time*2)*4` 플로트로 이동, 텍스트 색 `(0.6,0.6,0.6,0.7)`, 로켓 아이콘 함께 이동. `make verify` GREEN.
