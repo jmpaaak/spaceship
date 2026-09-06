@@ -2849,9 +2849,9 @@ function M:drawMinimap()
         love.graphics.printf(distLabel, mx - 20, my + 5, 40, "center")
         love.graphics.setFont(prevRimFont)
     end
+    -- Store minimap bottom for pause button positioning
+    self.minimapBottom = cy + size / 2
 end
-
--- INBOX-44: ship stats summary below minimap (right-aligned, 22px font).
 -- Shows ship name, speed LV, hull LV, harvest LV during ascending phase.
 M.shipStatsFontSize = 22
 M.shipStatsLineStep = 26
@@ -3793,9 +3793,11 @@ function M:draw()
         love.graphics.setColor(1, 1, 1, 0.3 * (self.collectFlash / 0.15))
         love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
     end
-    -- Item 18: Pause button icon (ascending phase only).
+    -- Item 18: Pause button icon (ascending phase only) — below minimap.
     if self.expedition.phase == "ascending" then
+        local mmBot = self.minimapBottom or 300
         local pb = pauseButton
+        pb.y = mmBot + 8  -- dynamic: just below minimap
         local bx, by, bw, bh = pb.x, pb.y, pb.w, pb.h
         -- Pause icon: two vertical bars, centered in the touch area.
         local barW = 6
