@@ -2,6 +2,39 @@
 
 ## 처리 대기
 
+(47) **허브 행성에서 상점 열기 (사용자 확정, 2026-09-06):**
+  - 현재 hub 접근 시 `settleAtHub`(표본 정산) + `exploreHub`(기어 드롭)만 하고 상점 UI가 안 열림.
+  - 변경: hub 접근 시 **지구 상점과 동일한 settlement 페이즈 진입**. `expedition.settle(run)` 호출 → `run.phase = "settlement"`. 슬롯/업그레이드/기어 구매 UI 전부 사용 가능. `settleAtHub` 표본 정산은 settlement 진입 전에 자동 처리.
+  - hub에서 relaunch하면 해당 은하에서 재시작 (ship 위치는 hub 근처).
+  - i18n: `"hub_shop_label"` = `"HUB 상점"` / `"HUB SHOP"`. settlement 타이틀을 hub/earth 구분.
+  - `make verify` GREEN + 커밋: `feat(play): hub planets open full shop like Earth`
+
+(48) **중심별 타이머 텍스트 개선 (사용자 확정, 2026-09-06):**
+  - 현재: `"태양 접근 3.2 / 10초"` — 작은 폰트, 화면 하단.
+  - 변경:
+    - 텍스트: `"중심별 표본 획득까지 6.8초"` / `"Central Star sample in 6.8s"` (남은 시간 = 10 - timer)
+    - i18n 키: `star_well_timer` → `"중심별 표본 획득까지 %.1f초"` / `"Central Star sample in %.1fs"`
+    - 폰트: **33px** (hudFontSize * 0.75). 색: `(1, 0.85, 0.25)` 금색 → 3초 이하에서 `(1, 0.3, 0.2)` 빨강 깜빡임.
+    - 위치: 화면 중앙 상단 (y = hudHeight + 20). `sin(time*6)*2` 떨림.
+  - `make verify` GREEN + 커밋: `fix(hud): star well timer — bigger, gold, countdown to sample`
+
+(49) **위성 수집 반경 1.3배 확대 (사용자 확정, 2026-09-06):**
+  - 현재 `moonCollectRadius = moon.radius + 15`.
+  - 변경: `moonCollectRadius = (moon.radius + 15) * 1.3`. draw 링도 동일하게 `(moon.radius + 15) * 1.3`.
+  - `make verify` GREEN + 커밋: `fix(play): widen moon collect radius by 1.3x`
+
+(50) **장착 슬롯 터치 → 장비 상세 팝업 (사용자 확정, 2026-09-06):**
+  - 좌측 세로 장착 슬롯(32×32) 터치 시 해당 기어의 **이름 + 효과** 팝업 표시.
+  - 팝업: 화면 중앙에 반투명 검정 배경(200×120px) + 기어 이름(금색) + 효과 목록(시안). `self.gearPopup = { gear = ..., timer = 3 }`. 3초 후 자동 닫힘 또는 다른 곳 터치 시 닫힘.
+  - 빈 슬롯 터치는 무시.
+  - `make verify` GREEN + 커밋: `feat(hud): tap gear slot shows name + effects popup`
+
+(51) **상점 메뉴 박스 형태 추가 (사용자 확정, 2026-09-06):**
+  - 현재 상점 터치 행이 텍스트만. 각 행(hull/steering/yield/ship/slot/relaunch)에 **반투명 라운드 박스** 배경 추가.
+  - `love.graphics.rectangle("fill", x, y, w, h, 8, 8)` (8px 라운드). 색 `(0.1, 0.12, 0.2, 0.7)`.
+  - 터치 행 간 4px 간격으로 구분. 선택 가능 행은 밝은 테두리 `(0.4, 0.6, 0.8, 0.5)`.
+  - `make verify` GREEN + 커밋: `fix(shop): add rounded box backgrounds to shop menu rows`
+
 ## 처리 완료
 (46) **"신규 행성 발견" 텍스트 제거 — 완료 2026-09-06:** draw에서 `planet_new_discovery` elseif 블록 제거. i18n 키는 유지. `make verify` GREEN.
 (45) **미니맵 은하 밀도 + 링 오퍼시티 — 완료 2026-09-06:** (a) `galaxyExistenceThreshold` 0.82→0.85 (밀도 ~18%→~15%). (b) 동심원 링 알파 0.4→0.15, galaxy boundary ring 알파 0.55→0.12. 비-containing 은하 마커 숨김은 이전 사이클에서 완료. 테스트 갱신 (밀도 <20%, 알파 검증). `make verify` GREEN.
