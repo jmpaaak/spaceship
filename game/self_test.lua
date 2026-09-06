@@ -644,6 +644,8 @@ local function testMinimapUnifiedGalaxyPalette()
         printf = function() end,
         polygon = function() end,
         draw = function() end,
+        stencil = function(fn) if fn then fn() end end,
+        setStencilTest = function() end,
     }
     local ok, err = pcall(function() scene:drawMinimap() end)
     love.graphics = previousGraphics
@@ -681,6 +683,51 @@ local function testMinimapUnifiedGalaxyPalette()
         end
     end
     assert(sawGold, "drawMinimap must use the unified gold galaxy palette")
+end
+
+-- Item 20a: drawMinimap must set a circular stencil to clip galaxy rings
+-- inside the disc boundary. Verify stencil() and setStencilTest() are called.
+local function testMinimapStencilClip()
+    local playScene = require("game.scenes.play")
+    local scene = setmetatable({}, { __index = playScene })
+    scene.expedition = { phase = "ascending", fuel = 100, maxFuel = 100,
+        altitude = 0, money = 0, durability = 3, maxDurability = 3 }
+    scene.run = { altitude = 0 }
+    scene.ship = { x = 0, y = 0, speed = 0.14, collectionRadius = 45 }
+    scene.minimapImages = {}
+    scene.time = 0
+
+    local stencilCalled = false
+    local stencilTestCalls = {}
+    local previousGraphics = love.graphics
+    love.graphics = {
+        setColor = function() end,
+        circle = function() end,
+        printf = function() end,
+        polygon = function() end,
+        draw = function() end,
+        stencil = function(fn)
+            stencilCalled = true
+            if fn then fn() end
+        end,
+        setStencilTest = function(...)
+            stencilTestCalls[#stencilTestCalls + 1] = { ... }
+        end,
+    }
+    local ok, err = pcall(function() scene:drawMinimap() end)
+    love.graphics = previousGraphics
+    assert(ok, "drawMinimap stencil test must not throw: " .. tostring(err))
+    assert(stencilCalled, "drawMinimap must call love.graphics.stencil for disc clipping")
+    assert(#stencilTestCalls >= 2,
+        "drawMinimap must call setStencilTest at least twice (enable + disable), got "
+        .. #stencilTestCalls)
+    -- First call should enable stencil ("greater", 0)
+    local first = stencilTestCalls[1]
+    assert(first[1] == "greater" and first[2] == 0,
+        "first setStencilTest must be ('greater', 0)")
+    -- Last call should disable stencil (no args)
+    local last = stencilTestCalls[#stencilTestCalls]
+    assert(#last == 0, "last setStencilTest must disable stencil (no args)")
 end
 
 -- Drifting asteroids / junk. Hitting one uses the same destroy/reset path
@@ -7236,6 +7283,7 @@ function M.run()
     testGalaxyStructure()
     testMinimap()
     testMinimapUnifiedGalaxyPalette()
+    testMinimapStencilClip()
     testDebris()
     testBackgroundStars()
     testLaunchRocketIcon()

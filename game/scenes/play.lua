@@ -2408,6 +2408,11 @@ function M:drawMinimap()
         love.graphics.setColor(0.35, 0.55, 0.8, 1)
         love.graphics.circle("line", cx, cy, size / 2)
     end
+    -- Item 20a: stencil clip so galaxy rings cannot overflow the disc
+    love.graphics.stencil(function()
+        love.graphics.circle("fill", cx, cy, size / 2)
+    end, "replace", 1)
+    love.graphics.setStencilTest("greater", 0)
     -- Rings: galaxy rings, orbit rings, and concentric rings (item 13)
     for _, ring in ipairs(view.rings or {}) do
         if ring.kind == "orbit" then
@@ -2501,6 +2506,8 @@ function M:drawMinimap()
         love.graphics.setColor(1, 1, 1, 0.9)
         love.graphics.circle("line", cx + view.player.x, cy + view.player.y, 2.4)
     end
+    -- Item 20a: clear stencil so beyond-chart elements draw outside the disc
+    love.graphics.setStencilTest()
     -- Beyond-chart earth-return arrow
     if view.beyond then
         love.graphics.setColor(1, 0.55, 0.3, 1)
