@@ -146,3 +146,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-06T22:00:00+0900 | assets/slot_symbols/durability.png | INBOX (52a): PIL-generated 32x32 shield slot symbol, RGBA
 2026-09-06T22:00:00+0900 | assets/slot_symbols/harvest.png | INBOX (52a): PIL-generated 32x32 crystal/gem slot symbol, RGBA
 2026-09-06T22:00:00+0900 | assets/slot_symbols/machine.png | INBOX (52a): PIL-generated 96x48 slot machine body frame, RGBA
+2026-09-06T23:00:00+0900 | assets/earth/earth_generic.png | INBOX (60): PIL-generated 128x128 Earth sprite, blue sphere + green continents + white clouds, seed 42

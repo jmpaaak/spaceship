@@ -161,28 +161,23 @@
   },
   {
     "path": "assets/earth/earth_generic.png",
-    "source_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
-    "terms_url": "http://222.238.86.132:8188/#7a3eb820-f17d-47ce-a337-da2358c2a0d5",
+    "user_supplied": true,
+    "source_url": "tools/gen_earth.py",
+    "terms_url": "tools/gen_earth.py",
     "asset_id": "180c63ef-ff98-452c-837c-a5b5cc380702",
-    "prompt": "pixel art, 16-bit, small round planet Earth sprite, tiny blue globe, green and brown continent silhouettes, white cloud swirls, circular sphere centered in frame with padding, isolated game sprite, black background, no text, no watermark, no rings, no stars, no frame",
-    "model": "Juggernaut-XL_v9.safetensors",
-    "style": "RW_pixelart_XL_v1.safetensors",
+    "prompt": "PIL-generated pixel-art Earth: 128x128 RGBA, blue sphere + green continents + white clouds, seed 42",
+    "model": "PIL/Pillow",
+    "style": "procedural",
     "settings": {
-      "seed": 20260905101,
-      "steps": 30,
-      "cfg": 7,
-      "sampler": "dpmpp_2m",
-      "scheduler": "karras",
-      "denoise": 1,
-      "width": 512,
-      "height": 512,
-      "workflow_id": "7a3eb820-f17d-47ce-a337-da2358c2a0d5"
+      "seed": 42,
+      "width": 128,
+      "height": 128
     },
-    "downloaded_at": "2026-09-04T15:44:07Z",
-    "sha256": "6d414a91d459e868a355d1ee4a930fbec70bd6a1187c662dab013a87ffb77b93",
-    "width": 64,
-    "height": 64,
-    "qa": "INBOX group (2): 64x64 RGBA transparent Earth sphere, seed 20260905101, workflow 7a3eb820-f17d-47ce-a337-da2358c2a0d5, body 37x38 centered with padding, opaque=1093, corners transparent"
+    "downloaded_at": "2026-09-06T18:00:00+09:00",
+    "sha256": "58d006e8903a6b71d1f17bc60a996f5a694c5ff8ba0b4948c887c39c26730d8c",
+    "width": 128,
+    "height": 128,
+    "qa": "INBOX 60: 128x128 RGBA PIL Earth sprite, seed 42, tools/gen_earth.py"
   },
   {
     "path": "assets/effects/sample_sparkle.png",

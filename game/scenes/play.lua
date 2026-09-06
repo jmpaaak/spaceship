@@ -161,13 +161,13 @@ M.ascendReturnButton = ascendReturnButton
 -- includes a 30px margin matching the gravity/collection range convention.
 M.earthCenterX = 0
 M.earthCenterY = 75
-M.earthVisualRadius = 58
-M.earthSettleRadius = 58 + 10  -- 68  (INBOX 23: margin 30→10)
+M.earthVisualRadius = 90
+M.earthSettleRadius = 68  -- visual+10 clamped (INBOX 23: margin 30→10; INBOX 60: visual→90, settle unchanged)
 -- Spawn / relaunch outside the settle disk.
 M.launchSpawnX = 0
-M.launchSpawnY = 75 - (58 + 10) - 20  -- -13  (INBOX 23: margin 50→20)
+M.launchSpawnY = 75 - 68 - 20  -- -13  (INBOX 23: margin 50→20)
 -- INBOX (5)(a): atmospheric reentry starts outside settle range.
-M.earthReentryRadius = 145  -- 58 * 2.5  (INBOX 23: shrink from 58*3=174)
+M.earthReentryRadius = 145  -- (INBOX 23: shrink from 174)
 M.reentryShakeMax = 6
 
 -- INBOX (14): undiscovered-planet collect orbit is a faint thin line.
@@ -3006,12 +3006,12 @@ function M:draw()
     if earthY < viewport.height + 64 then
         if self.earthImage then
             local imgW, imgH = self.earthImage:getDimensions()
-            local scale = 116 / math.max(imgW, imgH)
+            local scale = 180 / math.max(imgW, imgH)
             love.graphics.setColor(1, 1, 1)
             love.graphics.draw(self.earthImage, earthX, earthY, 0, scale, scale, imgW / 2, imgH / 2)
         else
             love.graphics.setColor(0.15, 0.45, 0.9)
-            love.graphics.circle("fill", earthX, earthY, 58)
+            love.graphics.circle("fill", earthX, earthY, 90)
             love.graphics.setColor(0.25, 0.8, 0.45)
             love.graphics.circle("fill", earthX - 18, earthY - 18, 15)
             love.graphics.circle("fill", earthX + 21, earthY - 5, 12)

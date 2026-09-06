@@ -1,15 +1,20 @@
 ## Current Status
 
-- INBOX (59) complete: Added random rotation for debris sprites.
-  - `world.debris()` now returns `rotation` (base angle from hash + rotSpeed * time) and `rotSpeed` fields.
-  - `play.lua` draw uses `junk.rotation` for sprite drawing; fallback shapes (circle/rect/polygon) unchanged.
-  - Engine test verifies rotation field exists and changes over time.
+- INBOX (60) complete: Earth visual radius enlarged + PIL Earth sprite.
+  - `M.earthVisualRadius` 58→90; `earthSettleRadius` unchanged at 68; `earthReentryRadius` unchanged at 145.
+  - Draw scale 116→180 so 128px image renders at ~180px diameter matching new visual radius.
+  - Fallback circle radius updated 58→90.
+  - New `tools/gen_earth.py` (PIL, seed 42) generates 128×128 RGBA Earth sprite replacing old 64×64 ComfyUI version.
+  - Self-test assertion updated to expect earthVisualRadius==90.
+  - Asset manifest + GENERATED_ASSET_LOG.md updated.
 
 ## Next slice
 
 - Process next pending INBOX item.
 
 ## Previous
+
+- INBOX (59) complete: Added random rotation for debris sprites.
 
 - INBOX (58) complete: Fixed a bug where tapping "relaunch" in a hub settlement triggered an instant re-settlement. 
   - Adjusted the hub relaunch ship spawn position (`self.ship.y = hubY - 80`) to ensure it sits safely outside the hub planet's `collectOrbitRadius`.

@@ -8130,11 +8130,11 @@ function M.run()
 
     -- INBOX (23): Earth settle radius shrink
     do
-        assert(PlayScene.earthVisualRadius == 58, "earthVisualRadius must be 58")
+        assert(PlayScene.earthVisualRadius == 90, "earthVisualRadius must be 90 (INBOX 60)")
         assert(PlayScene.earthSettleRadius == 68,
-            "earthSettleRadius must be 58+10=68, got " .. PlayScene.earthSettleRadius)
+            "earthSettleRadius must be 68, got " .. PlayScene.earthSettleRadius)
         assert(PlayScene.earthReentryRadius == 145,
-            "earthReentryRadius must be 58*2.5=145, got " .. PlayScene.earthReentryRadius)
+            "earthReentryRadius must be 145, got " .. PlayScene.earthReentryRadius)
         assert(PlayScene.launchSpawnY == -13,
             "launchSpawnY must be 75-68-20=-13, got " .. PlayScene.launchSpawnY)
         -- spawn must still be outside settle radius
