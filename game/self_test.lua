@@ -472,8 +472,8 @@ local function testMinimap()
         if ring.kind == "concentricRing" then sawOrbit = true end
     end
     -- User 2026-09-06: milkyway must NOT have any rings (galaxy boundary or concentric)
-    assert(sawDisk, "home minimap must include the Milky Way galaxy boundary ring")
-    assert(sawOrbit, "home minimap must include concentric rings around the central star")
+    assert(not sawDisk, "home minimap must NOT include Milky Way galaxy boundary ring (looks Earth-centered)")
+    assert(not sawOrbit, "home minimap must NOT include concentric rings in milkyway (looks Earth-centered)")
 
     local nameScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -637,8 +637,8 @@ local function testMinimapUnifiedGalaxyPalette()
             sawConcentricAtHome = true
         end
     end
-    assert(sawConcentricAtHome,
-        "minimap.view at home (milkyway) must include concentricRing entries (sun-centered)")
+    assert(not sawConcentricAtHome,
+        "minimap.view at home (milkyway) must NOT include concentricRing entries (looks Earth-centered)")
 
     -- concentricRingCount bracket check
     assert(minimap.concentricRingCount(nil) == 2, "nil galaxy => 2 rings")
@@ -824,8 +824,8 @@ local function testMinimapGalaxyOverlapPrevention()
         end
     end
     -- The containing galaxy (milkyway) must NOT have its boundary ring (user 2026-09-06).
-    assert(galaxyRingIds["milkyway"],
-        "minimap must show boundary ring for containing galaxy (milkyway)")
+    assert(not galaxyRingIds["milkyway"],
+        "minimap must NOT show boundary ring for milkyway (looks Earth-centered)")
     -- No OTHER galaxy should have a boundary ring (only containing).
     local otherGalaxyRingCount = 0
     for id, _ in pairs(galaxyRingIds) do
