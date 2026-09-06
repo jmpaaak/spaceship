@@ -6062,6 +6062,21 @@ function M.run()
         "ascending HUD band height must be 60 (no samples line after item 17b)")
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
+
+    -- Item 21: HUD distance must show euclidean distance from Earth center,
+    -- not the virtual run.altitude.
+    local distScene21 = PlayScene.new({
+        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
+    })
+    distScene21.expedition.phase = "ascending"
+    distScene21.expedition.altitude = 9999  -- internal altitude differs from ship position
+    distScene21.ship.x = 300
+    distScene21.ship.y = 75 - 400  -- earthCenterY=75, so dy=-400
+    -- euclidean = sqrt(300^2 + 400^2) = 500
+    local hud21 = distScene21:hudLines()
+    assert(hud21.distance == "DIST 0500",
+        "item-21: HUD distance must show euclidean distance from Earth (expected 'DIST 0500', got '"
+        .. tostring(hud21.distance) .. "')")
     riskScene.expedition.altitude = 500
     riskScene.ship.y = -500
     local nearbyPlanets = world.nearbyPlanets

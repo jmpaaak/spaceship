@@ -1,12 +1,11 @@
 ## Current Status
 
-- INBOX (20) complete: Minimap galaxy clipping, overlap prevention, checkpoint colors, Earth/Star labels.
-  - (a) Stencil clip: `love.graphics.stencil` clips all minimap content inside disc boundary.
-  - (b) Overlap prevention: `viewRadius` reduced to 0.55*cellSize; only containing galaxy emits boundary ring.
-  - (c) Checkpoint colors confirmed: gold pulsing star = checkpoint galaxy, magenta diamond = HUB. No separate red marker exists.
-  - (d) Earth(HUB)/Star text labels: 11px grey font, stencil-clipped inside disc.
-  - Tests `testMinimapStencilClip` + `testMinimapEarthStarLabels` registered and GREEN.
+- INBOX (21) complete: HUD distance now shows euclidean distance from Earth center to ship.
+  - `hudLines()` computes `sqrt((ship.x - earthCenterX)^2 + (ship.y - earthCenterY)^2)` instead of virtual `run.altitude`.
+  - `run.altitude` / `bestAltitude` kept for internal sample-value calculations and meta-reset.
+  - Test `distScene21` verifies ship at (300, -325) → Earth(0,75) shows DIST 0500.
+  - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (21): Distance = euclidean distance from Earth (replace virtual altitude on HUD).
+- INBOX (23): Shrink Earth settle radius closer to visual radius (margin 30→10).

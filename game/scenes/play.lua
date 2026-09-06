@@ -1398,8 +1398,12 @@ function M:hudLines()
     if run.phase == "launch" or run.phase == "settlement" then
         best = i18n.t("hud_personal_best", math.floor(run.bestAltitude))
     end
+    -- Item 21: HUD distance = euclidean distance from Earth center to ship.
+    local dx = self.ship.x - M.earthCenterX
+    local dy = self.ship.y - M.earthCenterY
+    local dist = math.sqrt(dx * dx + dy * dy)
     return {
-        distance = i18n.t("hud_distance", math.floor(run.altitude)),
+        distance = i18n.t("hud_distance", math.floor(dist)),
         cash = i18n.t("hud_cash", run.money),
         best = best,
         -- docs/feedback/INBOX.md UI/HUD item 4: the launch phase's slot

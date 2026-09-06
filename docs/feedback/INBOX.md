@@ -2,11 +2,7 @@
 
 ## 처리 대기
 
-(21) **거리 = 지구로부터의 함선 거리 (사용자 확정, 2026-09-06):**
-  - 현재 `run.altitude`는 `effectiveClimbSpeed * dt`로 누적하는 가상 고도. 사용자 의도: **거리 = `sqrt((ship.x - earthCenterX)^2 + (ship.y - earthCenterY)^2)`**.
-  - `hudLines()`에서 `hud.distance = i18n.t("hud_distance", math.floor(dist))`로 변경. `dist`는 `M.earthCenterX/Y`와 `self.ship.x/y` 유클리드 거리. `run.altitude`는 표본 가치 계산 등 내부에서 유지해도 되지만 HUD에는 실제 거리 표시.
-  - `bestAltitude` → `bestDistance`로 리네임하거나, 둘 다 유지하고 HUD만 실거리.
-  - `make verify` GREEN + 커밋: `fix(hud): distance shows euclidean distance from Earth, not climb altitude`
+
 
 (22) **함선 아이디어 — 사용자에게 제안 (논의 필요, 2026-09-06):**
   - 현재 함선: starter (기본) / scout (속도+10, 체력-1). 속도는 상점에서도 올릴 수 있어서 차별이 약함.
@@ -31,6 +27,9 @@
   - `make verify` GREEN + 커밋: `feat(play): zoom-in on sample collect + slower timeslip`
 
 ## 처리 완료
+
+(21) **거리 = 지구로부터의 함선 거리 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `hudLines()` distance를 `run.altitude`(가상 누적 고도) 대신 `sqrt((ship.x - earthCenterX)^2 + (ship.y - earthCenterY)^2)` 유클리드 거리로 변경. `run.altitude`/`bestAltitude`는 내부(표본 가치·메타 리셋 등)에서 그대로 유지, HUD만 실거리 표시. 테스트 `distScene21` 추가(ship (300, -325) → Earth(0,75) 거리=500 확인). `make verify` GREEN.
 
 (20) **미니맵 — 은하 클리핑 + 거리 확보 + 체크포인트 색 + 지구/태양 텍스트 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: (a) `love.graphics.stencil`으로 미니맵 디스크 내부만 렌더링 — 은하 링 overflow 방지. (b) `viewRadius`를 0.55*cellSize로 축소 + 인접 은하 boundary ring 생략으로 겹침 방지. (c) 체크포인트 은하=골드 펄스 별, HUB=마젠타 다이아몬드 — 별도 빨간 마커 없음(확인 완료). (d) Earth(HUB)/Star 텍스트 라벨 11px 회색, stencil 내부에서만 렌더링. 테스트 `testMinimapStencilClip` + `testMinimapEarthStarLabels` 등록·GREEN.
