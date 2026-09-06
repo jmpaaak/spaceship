@@ -8,14 +8,15 @@
   - PIL 지구 이미지 생성 (`tools/gen_earth.py`, ≤50줄): 128×128 RGBA, 파란 구체 + 녹색 대륙 + 흰 구름 도트. `assets/earth/earth_generic.png` 교체.
   - `make verify` GREEN + 커밋: `feat(earth): larger visual radius + PIL pixel-art Earth sprite`
 
+## 처리 완료
+
 (59) **잔해(debris) 랜덤 회전 (사용자 확정, 2026-09-06):**
   - 현재 잔해 스프라이트가 회전 0으로 그려짐. 자연스럽지 않음.
   - 변경: `world.debris()` 또는 play.lua draw에서 잔해별 고정 회전값 `rotation = hash(id, 970) * 2π` 추가. 추가로 시간에 따라 천천히 회전: `rotation + time * (hash(id, 971) - 0.5) * 2` (초당 ±1rad 자전).
   - draw: `love.graphics.draw(debrisSprite, x, y, rotation, scale, scale, iw/2, ih/2)`.
   - 폴백 원(`circle("fill")`)에는 회전 불필요.
   - `make verify` GREEN + 커밋: `feat(play): random rotation for debris sprites`
-
-## 처리 완료
+  - ✅ 완료: world.lua adds rotation/rotSpeed fields; play.lua uses junk.rotation for sprite draw.
 
 (58) **허브 상점 재발사 버그 수정 (사용자 확정, 2026-09-06):**
   - 다른 은하계 체크포인트(hub) 행성에서 상점이 열리지만 재발사 탭이 작동 안 함.

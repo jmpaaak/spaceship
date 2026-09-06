@@ -1,13 +1,18 @@
 ## Current Status
 
-- INBOX (58) complete: Fixed a bug where tapping "relaunch" in a hub settlement triggered an instant re-settlement. 
-  - Adjusted the hub relaunch ship spawn position (`self.ship.y = hubY - 80`) to ensure it sits safely outside the hub planet's `collectOrbitRadius`.
+- INBOX (59) complete: Added random rotation for debris sprites.
+  - `world.debris()` now returns `rotation` (base angle from hash + rotSpeed * time) and `rotSpeed` fields.
+  - `play.lua` draw uses `junk.rotation` for sprite drawing; fallback shapes (circle/rect/polygon) unchanged.
+  - Engine test verifies rotation field exists and changes over time.
 
 ## Next slice
 
-- Process INBOX (59): 잔해(debris) 랜덤 회전 (Random rotation for debris sprites).
+- Process next pending INBOX item.
 
 ## Previous
+
+- INBOX (58) complete: Fixed a bug where tapping "relaunch" in a hub settlement triggered an instant re-settlement. 
+  - Adjusted the hub relaunch ship spawn position (`self.ship.y = hubY - 80`) to ensure it sits safely outside the hub planet's `collectOrbitRadius`.
 
 - INBOX (52a) complete: PIL-generated slot machine symbol assets (5 symbols + machine body).
   - `tools/gen_slot_symbols.py`: generates money/part/speed/durability/harvest 32×32 RGBA PNGs.

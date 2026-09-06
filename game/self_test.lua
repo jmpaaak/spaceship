@@ -1359,6 +1359,17 @@ local function testDebris()
     end
     assert(moved, "debris must drift over time")
 
+    -- sub-test: debris has rotation field that changes over time
+    for i = 1, #driftBase do
+        assert(type(driftBase[i].rotation) == "number", "debris must have rotation field")
+        assert(type(driftBase[i].rotSpeed) == "number", "debris must have rotSpeed field")
+    end
+    local rotated = false
+    for i = 1, #driftBase do
+        if drifted[i].rotation ~= driftBase[i].rotation then rotated = true end
+    end
+    assert(rotated, "debris rotation must change over time")
+
     local nearby = world.nearbyDebris(0, 0, 1)
     assert(type(nearby) == "table")
 

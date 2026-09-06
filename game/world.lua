@@ -430,6 +430,8 @@ function M.debris(sectorX, sectorY, time)
             + hash(sectorX, sectorY, 950 + i) * (M.sectorSize - 32)
         local baseY = sectorY * M.sectorSize + 16
             + hash(sectorX, sectorY, 960 + i) * (M.sectorSize - 32)
+        local baseRotation = hash(sectorX + i, sectorY, 970) * 2 * math.pi
+        local rotSpeed = (hash(sectorX + i, sectorY, 971) - 0.5) * 2  -- ±1 rad/s
         pieces[#pieces + 1] = {
             id = string.format("debris:%d:%d:%d", sectorX, sectorY, i),
             x = baseX + vx * time,
@@ -438,6 +440,8 @@ function M.debris(sectorX, sectorY, time)
             kind = kind,
             vx = vx,
             vy = vy,
+            rotation = baseRotation + rotSpeed * time,
+            rotSpeed = rotSpeed,
         }
     end
     return pieces
