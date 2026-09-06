@@ -329,6 +329,10 @@ end
 M.hullIconSize = 32   -- item 38a: 2× icon size for 44px font
 M.hullIconGap = 8     -- item 38a: proportional gap
 
+-- Item 38c: HP block rendering — small rectangles instead of text status.
+M.hpBlockSize = 12    -- 12×12px per HP block
+M.hpBlockGap = 3      -- gap between blocks
+
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- third slice): a small coin icon paired with the CASH readout, mirroring
 -- shieldIconPoints/rocketIconPoints. Drawn as a flat octagon silhouette
@@ -592,7 +596,11 @@ function M.hudBackgroundWidth(hud, font)
     -- Item 38b: cash is its own line now, not appended after distance.
     consider(left + icon + gap + textW(hud.distance))
     consider(left + icon + gap + textW(hud.cash))
-    if hud.status then
+    -- Item 38c: status uses HP blocks now, so calculate their visual width.
+    if hud.maxDurability then
+        local blocksW = (hud.maxDurability * M.hpBlockSize) + math.max(0, hud.maxDurability - 1) * M.hpBlockGap
+        consider(left + icon + gap + blocksW)
+    elseif hud.status then
         consider(left + icon + gap + textW(hud.status))
     end
     if hud.best then
@@ -1390,11 +1398,8 @@ end
 
 function M:hudLines()
     local run = self.expedition
-    local best
-    -- Item 2: returning phase abolished; earth/returnProgress HUD lines removed.
-    if run.phase == "launch" or run.phase == "settlement" then
-        best = i18n.t("hud_personal_best", math.floor(run.bestAltitude))
-    end
+    -- Item 38d: best record shown in all phases (was launch/settlement only).
+    local best = i18n.t("hud_personal_best", math.floor(run.bestAltitude or 0))
     -- Item 21: HUD distance = euclidean distance from Earth center to ship.
     local dx = self.ship.x - M.earthCenterX
     local dy = self.ship.y - M.earthCenterY
@@ -1414,6 +1419,7 @@ function M:hudLines()
         galaxy = (run.phase == "ascending" or run.phase == "launch")
             and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name
             or nil,
+        maxDurability = run.maxDurability,
     }
 end
 
@@ -3245,6 +3251,16 @@ function M:draw()
         hudY = hudY + M.hudLineStep
         love.graphics.setColor(0.7, 0.9, 1)
     end
+    if hud.best then
+        love.graphics.setColor(1, 0.8, 0.3)
+        local hudIcons = self.hudIconImages or {}
+        local bestIconSize = M.hullIconSize
+        drawHudSpriteOrPoly(hudIcons.best, nil,
+            5 + bestIconSize / 2, hudY + bestIconSize / 2, bestIconSize)
+        love.graphics.print(hud.best, 5 + bestIconSize + M.hullIconGap, hudY)
+        hudY = hudY + M.hudLineStep
+        love.graphics.setColor(0.7, 0.9, 1)
+    end
     -- ComfyUI HUD wiring (group 1): distance icon before distance text
     -- Item 38b: distance is its own line.
     do
@@ -3265,7 +3281,7 @@ function M:draw()
         love.graphics.print(hud.cash, 5 + M.cashIconSize + M.cashIconGap, hudY)
         hudY = hudY + M.hudLineStep
     end
-    -- Item 38b: status (durability) uses sequential hudY.
+    -- Item 38c: durability HP blocks (colored rectangles instead of text).
     do
         local hudIcons = self.hudIconImages or {}
         local iconCenterX = 5 + M.hullIconSize / 2
@@ -3273,17 +3289,30 @@ function M:draw()
         love.graphics.setColor(0.6, 0.85, 1)
         drawHudSpriteOrPoly(hudIcons.hull, M.shieldIconPoints,
             iconCenterX, iconCenterY, M.hullIconSize)
-        love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, hudY)
-        hudY = hudY + M.hudLineStep
-    end
-    if hud.best then
-        love.graphics.setColor(1, 0.8, 0.3)
-        local hudIcons = self.hudIconImages or {}
-        local bestIconSize = M.hullIconSize
-        drawHudSpriteOrPoly(hudIcons.best, nil,
-            5 + bestIconSize / 2, hudY + bestIconSize / 2, bestIconSize)
-        love.graphics.print(hud.best, 5 + bestIconSize + M.hullIconGap, hudY)
+        -- Draw HP blocks: maxDurability rectangles, filled for current HP.
+        local run = self.expedition
+        local blockX = 5 + M.hullIconSize + M.hullIconGap
+        local blockY = hudY + (M.hudLineStep - M.hpBlockSize) / 2  -- vertically center
+        for i = 1, run.maxDurability do
+            if i <= run.durability then
+                -- Color gradient: green(full) → yellow(half) → red(low)
+                local ratio = (i - 1) / math.max(run.maxDurability - 1, 1)
+                if run.durability <= math.ceil(run.maxDurability * 0.33) then
+                    -- All remaining blocks red when HP is critical
+                    love.graphics.setColor(0.9, 0.2, 0.15)
+                elseif run.durability <= math.ceil(run.maxDurability * 0.66) then
+                    love.graphics.setColor(1, 0.85, 0.2)  -- yellow
+                else
+                    love.graphics.setColor(0.2, 0.85, 0.3)  -- green
+                end
+                love.graphics.rectangle("fill", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+            else
+                -- Empty block: dark gray outline
+                love.graphics.setColor(0.3, 0.3, 0.35)
+                love.graphics.rectangle("line", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
+            end
+            blockX = blockX + M.hpBlockSize + M.hpBlockGap
+        end
         hudY = hudY + M.hudLineStep
     end
     if isLaunchHud then

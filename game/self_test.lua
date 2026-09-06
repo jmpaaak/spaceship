@@ -6229,12 +6229,12 @@ function M.run()
         "hudLines().cash must read CASH $N: " .. tostring(ascendingHud.cash))
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
-    -- Item 38b: one stat per line. Ascending with galaxy, without best =
-    -- 4 lines (galaxy, dist, cash, status) → 4 + 4*52 = 212.
-    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 212,
-        "ascending HUD band height must be 212 after item 38b one-stat-per-line: "
+    -- Item 38b+38d: one stat per line. Ascending with galaxy + best (always shown) =
+    -- 5 lines (galaxy, dist, cash, status, best) → 4 + 5*52 = 264.
+    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 264,
+        "ascending HUD band height must be 264 after item 38d best-always: "
         .. tostring(PlayScene.hudHeight("ascending", ascendingHud, 0)))
-    -- Without galaxy: 3 lines (dist, cash, status) → 4 + 3*52 = 160.
+    -- Without galaxy, without best: 3 lines (dist, cash, status) → 4 + 3*52 = 160.
     local noGalaxyHud = { distance = "DIST 0000", cash = "CASH $0", status = "H3/3 ASC" }
     assert(PlayScene.hudHeight("ascending", noGalaxyHud, 0) == 160,
         "ascending HUD (no galaxy) height must be 160: "
@@ -6245,6 +6245,24 @@ function M.run()
     assert(PlayScene.hudHeight("launch", fullHud, 0) == 264,
         "launch HUD (galaxy+best) height must be 264: "
         .. tostring(PlayScene.hudHeight("launch", fullHud, 0)))
+
+    -- Item 38d: best record must be visible in ascending phase too.
+    assert(ascendingHud.best ~= nil,
+        "item 38d: hudLines().best must be non-nil during ascending phase")
+    assert(ascendingHud.best:find("BEST") ~= nil,
+        "item 38d: ascending best line must contain 'BEST': " .. tostring(ascendingHud.best))
+
+    -- Item 38c: durability HP block rendering constants must exist.
+    assert(PlayScene.hpBlockSize and PlayScene.hpBlockSize >= 10,
+        "item 38c: hpBlockSize must exist and be >= 10px: " .. tostring(PlayScene.hpBlockSize))
+    assert(PlayScene.hpBlockGap and PlayScene.hpBlockGap >= 2,
+        "item 38c: hpBlockGap must exist and be >= 2px: " .. tostring(PlayScene.hpBlockGap))
+
+    -- Item 38e: ascending with galaxy + best = 5 lines → 4 + 5*52 = 264.
+    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 264,
+        "item 38e: ascending HUD with galaxy+best must be 264: "
+        .. tostring(PlayScene.hudHeight("ascending", ascendingHud, 0)))
+
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
 
