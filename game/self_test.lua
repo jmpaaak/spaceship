@@ -6710,23 +6710,25 @@ function M.run()
     assert(scoutNextLaunch.hullAction == "T/H HULL LV.1>2 $75")
     assert(scoutNextLaunch.hullPreview == "HULL 4")
 
-    assert(scoutNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +10 SPEED")
-    assert(scoutNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
-    assert(scoutNextLaunch.shipAction == "SELECT STARTER")
-    assert(scoutNextLaunch.shipStatus == "OWNED" and scoutNextLaunch.shipAffordable)
+    assert(scoutNextLaunch.scoutTradeoff[1] == nil, "INBOX-30: scoutTradeoff hidden when scout active")
+    assert(scoutNextLaunch.scoutTradeoff[2] == nil, "INBOX-30: scoutTradeoff hidden when scout active")
+    assert(scoutNextLaunch.shipAction == nil, "INBOX-30: shipAction nil when scout active")
+    assert(scoutNextLaunch.shipHidden == true, "INBOX-30: shipHidden true when scout active")
+    assert(scoutNextLaunch.shipStatus == nil and scoutNextLaunch.shipAffordable == nil,
+        "INBOX-30: no shipStatus/shipAffordable when scout active")
+    -- INBOX-30: pressing "v" when scout is active is a no-op (no starter switch)
     nextLaunchScene:keypressed("v")
+    assert(nextLaunchScene.expedition.selectedShipId == "scout",
+        "INBOX-30: v is no-op when scout active")
     local reselectedNextLaunch = nextLaunchScene:shopLoadoutLines()
-    assert(reselectedNextLaunch.ship == "NEXT STARTER")
-    assert(reselectedNextLaunch.stats == "HULL 4")
-    assert(reselectedNextLaunch.upgrades == "HULL LV.1")
-    assert(reselectedNextLaunch.shipAction == "SELECT SCOUT")
-    assert(nextLaunchScene.message
-        == "STARTER SELECTED  HULL 4")
+    assert(reselectedNextLaunch.shipHidden == true,
+        "INBOX-30: still hidden after v press")
+    -- touch on ship zone is also a no-op
     nextLaunchScene:touchpressed("ship", 540, 670)
-    assert(nextLaunchScene.expedition.selectedShipId == "scout")
-    assert(nextLaunchScene.message
-        == "SCOUT SELECTED  HULL 3")
-    assert(nextLaunchScene:shopLoadoutLines().shipAction == "SELECT STARTER")
+    assert(nextLaunchScene.expedition.selectedShipId == "scout",
+        "INBOX-30: touch ship zone is no-op when scout active")
+    assert(nextLaunchScene:shopLoadoutLines().shipHidden == true,
+        "INBOX-30: still hidden after touch")
 
     local destroyedRun = expedition.new({
         durability = 2,

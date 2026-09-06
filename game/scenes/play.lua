@@ -1484,17 +1484,16 @@ function M:shopLoadoutLines()
     local shipAffordable
     local shipStatus
     local previewShipId
+    local shipHidden = false
     if not run.ownedShips.scout then
         shipAction = i18n.t("buy_scout", run.scoutShipCost)
         shipActionCompact = i18n.t("buy_scout_compact", run.scoutShipCost)
         shipStatus, shipAffordable = purchaseStatus(run.money, run.scoutShipCost)
         previewShipId = "scout"
     elseif run.selectedShipId == "scout" then
-        shipAction = i18n.t("select_starter")
-        shipActionCompact = i18n.t("select_starter_compact")
-        shipAffordable = true
-        shipStatus = i18n.t("owned_label")
-        previewShipId = "starter"
+        -- INBOX-30: scout owned+selected → hide ship row entirely
+        shipHidden = true
+        previewShipId = "scout"
     else
         shipAction = i18n.t("select_scout")
         shipActionCompact = i18n.t("select_scout_compact")
@@ -1515,7 +1514,8 @@ function M:shopLoadoutLines()
         stats = i18n.t("stats_line", run.maxDurability),
         upgrades = i18n.t("upgrades_line",
             run.durabilityUpgradeLevel),
-        scoutTradeoff = self.scoutTradeoffLines(run),
+        scoutTradeoff = shipHidden and {} or self.scoutTradeoffLines(run),
+        shipHidden = shipHidden,
         shipAction = shipAction,
         shipActionCompact = shipActionCompact,
         shipStatus = shipStatus,
@@ -2179,7 +2179,11 @@ function M:keypressed(key)
                     self.expedition.scoutShipCost, i18n.t("item_scout"))
             end
         else
-            local shipId = self.expedition.selectedShipId == "scout" and "starter" or "scout"
+            -- INBOX-30: scout owned+selected → "v" is a no-op (no starter switch)
+            if self.expedition.selectedShipId == "scout" then
+                return
+            end
+            local shipId = "scout"
             expedition.selectShip(self.expedition, shipId)
             self.message = i18n.t("ship_selected_message",
                 string.upper(shipId), self.expedition.maxDurability)
@@ -3257,13 +3261,24 @@ function M:draw()
         local r2 = M.settlementTouchRows[2].top
         local shopIconsYS = self.shopIconImages or {}
         drawShopItem(r2, shopColumnLeftX, shopColumnLeftW, shopEff.yieldAction, shopEff.yieldStatus, shopEff.yieldPreview, nextLaunch.yieldActionCompact, nextLaunch.yieldStatus, nextLaunch.yieldPreview, nextLaunch.yieldAffordable, shopIconsYS.yield)
-        drawShopItem(r2, shopColumnRightX, shopColumnRightW, shopEff.shipAction, shopEff.shipStatus, shopEff.shipPreview, nextLaunch.shipActionCompact, nextLaunch.shipStatus, nextLaunch.shipPreviewCompact, nextLaunch.shipAffordable, shopIconsYS.ship)
+        if not nextLaunch.shipHidden then
+            drawShopItem(r2, shopColumnRightX, shopColumnRightW, shopEff.shipAction, shopEff.shipStatus, shopEff.shipPreview, nextLaunch.shipActionCompact, nextLaunch.shipStatus, nextLaunch.shipPreviewCompact, nextLaunch.shipAffordable, shopIconsYS.ship)
+        else
+            -- INBOX-30: show "SCOUT ✓" label in ship slot when scout is active
+            local row = r2 + 8 + rowStep
+            love.graphics.setColor(0.45, 1, 0.55)
+            love.graphics.printf("SCOUT \226\156\147", shopColumnRightX, row, shopColumnRightW, "center")
+        end
         
         local row = r2 + 3 * rowStep + 4
         love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.scoutTradeoff[1], fullX, row, fullW, "center")
+        if nextLaunch.scoutTradeoff[1] then
+            love.graphics.printf(nextLaunch.scoutTradeoff[1], fullX, row, fullW, "center")
+        end
         row = row + rowStep
-        love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
+        if nextLaunch.scoutTradeoff[2] then
+            love.graphics.printf(nextLaunch.scoutTradeoff[2], fullX, row, fullW, "center")
+        end
 
         local r3 = M.settlementTouchRows[3].top
         row = r3 + 12

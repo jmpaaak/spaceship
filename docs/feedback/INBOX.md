@@ -2,11 +2,6 @@
 
 ## 처리 대기
 
-(30) **상점 — starter 정보 제거 (사용자 확정, 2026-09-06):**
-  - `shopLoadoutLines()` L1499-1503에서 scout 보유+선택 시 `previewShipId = "starter"`, `shipAction = i18n.t("select_starter")`를 보여줌.
-  - 변경: scout를 이미 소유+선택했으면 함선 행을 **숨기거나** 현재 함선 이름만 표시 ("SCOUT ✓"). 다음 함선(starter)으로 전환 안내 제거. `scoutTradeoff` 2줄도 이미 scout면 제거.
-  - `make verify` GREEN + 커밋: `fix(shop): hide starter switch when scout is active`
-
 (31) **미니맵 은하 2개 표시 원인 수정 (사용자 확정, 2026-09-06):**
   - 현재 milkyway(SOLAR SYSTEM) `radius = galaxyCellSize * 0.9` (≈4147px). 인접 셀의 은하도 `galaxyCellRadius`(2+4=6셀) 안에 들어와서 미니맵에 나옴.
   - 스크린샷에서 2개: milkyway 동심원 + 인접 은하 동심원이 함께 보임.
@@ -14,6 +9,9 @@
   - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
 
 ## 처리 완료
+
+(30) **상점 — starter 정보 제거 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: scout 보유+선택 시 `shopLoadoutLines()`에서 `shipAction`/`shipStatus`/`shipAffordable` nil, `shipHidden=true`, `scoutTradeoff={}`. Draw에서 "SCOUT ✓" 표시. "v" 키/터치 no-op. 기존 테스트 갱신 + INBOX-30 커버리지 추가. `make verify` GREEN.
 
 (29) **채집 줌인 축소 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `collectZoom.scale` 1.35→1.12. play.lua + self_test.lua 업데이트. `make verify` GREEN.

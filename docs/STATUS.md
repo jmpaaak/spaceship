@@ -1,12 +1,14 @@
 ## Current Status
 
-- INBOX (29) complete: reduced collect zoom scale from 1.35 to 1.12 (12% zoom-in instead of 35%).
-  - play.lua L2038: `collectZoom.scale` changed 1.35→1.12.
-  - self_test.lua: updated INBOX-24 test assertions to match new scale.
+- INBOX (30) complete: hide starter switch when scout is active in shop.
+  - `shopLoadoutLines()`: when scout is owned+selected, `shipAction`/`shipStatus`/`shipAffordable` are nil, `shipHidden = true`, `scoutTradeoff = {}`.
+  - Draw: ship slot shows "SCOUT ✓" instead of action/preview. scoutTradeoff lines skipped when empty.
+  - Key/touch "v" is a no-op when scout is already selected.
+  - Updated existing self_test assertions + added INBOX-30 coverage.
   - `make verify` GREEN.
 
 ## Next slice
-- INBOX (30): hide starter ship switch info when scout is already active in shop.
+- INBOX (31): minimap galaxy 2-marker fix — only show containing galaxy rings, dim non-containing markers.
 
 ## Previous
 
