@@ -773,7 +773,8 @@ end
 function M.moonForPlanet(planet, time)
     if not M.planetHasMoon(planet) then return nil end
     local orbitRadius = planet.radius + 25 + math.floor(hash(planet.x or 0, planet.y or 0, 701) * 15) -- 25~39
-    local moonRadius = 6 + math.floor(hash(planet.x or 0, planet.y or 0, 702) * 6) -- 6~11
+    local moonRadiusBase = 6 + math.floor(hash(planet.x or 0, planet.y or 0, 702) * 6) -- 6~11 (collect radius)
+    local moonRadius = math.max(4, math.floor(moonRadiusBase * 0.75)) -- visual 75%
     local period = 3 -- seconds per orbit
     local angle = (time or 0) * (2 * math.pi / period)
     -- Offset phase per planet so moons don't all start at 0
@@ -787,6 +788,7 @@ function M.moonForPlanet(planet, time)
         x = mx,
         y = my,
         radius = moonRadius,
+        collectRadius = moonRadiusBase,
         orbitRadius = orbitRadius,
         hue = hue,
         parentId = planet.id,

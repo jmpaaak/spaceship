@@ -2472,8 +2472,8 @@ function M:update(dt)
                 if moon then
                     local dx, dy = moon.x - self.ship.x, moon.y - self.ship.y
                     local distanceSquared = dx * dx + dy * dy
-                    -- Collection radius: moonRadius + 15 (narrower than planets)
-                    local moonCollectRadius = moon.radius + 15
+                    -- Collection radius: uses base (pre-shrink) radius + 15
+                    local moonCollectRadius = (moon.collectRadius or moon.radius) + 15
                     if distanceSquared <= moonCollectRadius ^ 2
                         and not self.moonDiscovered[moon.id] then
                         self.moonDiscovered[moon.id] = true
@@ -2496,7 +2496,7 @@ function M:update(dt)
                         self.collectZoom = { timer = 0.5, scale = 1.12, planetX = moon.x, planetY = moon.y }
                         self.message = ""
                     end
-                    if distanceSquared <= (moon.radius + 5) ^ 2
+                    if distanceSquared <= ((moon.collectRadius or moon.radius) + 5) ^ 2
                         and not self.moonCollided[moon.id] then
                         self.moonCollided[moon.id] = true
                         local damage = world.moonCollisionDamage(moon)
@@ -3472,6 +3472,11 @@ function M:draw()
             local f = love.graphics.getFont()
             local lineH = 14
             if planet.hub then
+                if not self.expedition.hubExplored[planet.galaxyId] then
+                    local engineStr = i18n.t("engine_part_available")
+                    love.graphics.setColor(0.85, 0.35, 0.95, 0.85)
+                    love.graphics.print(engineStr, x - f:getWidth(engineStr) / 2, y - planet.radius - 8 - lineH * 4 + bob)
+                end
                 local sell = i18n.t("checkpoint_hint_sell")
                 local repair = i18n.t("checkpoint_hint_repair")
                 local upgrade = i18n.t("checkpoint_hint_upgrade")
@@ -3509,7 +3514,7 @@ function M:draw()
                 -- Collection ring if not yet collected
                 if not self.moonDiscovered[moon.id] then
                     love.graphics.setColor(0.8, 0.9, 1, 0.6)
-                    love.graphics.circle("line", mx, my, moon.radius + 15)
+                    love.graphics.circle("line", mx, my, (moon.collectRadius or moon.radius) + 15)
                 end
                 -- Outline
                 love.graphics.setColor(0.9, 0.95, 1, 0.35)
