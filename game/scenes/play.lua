@@ -2465,7 +2465,7 @@ function M:keypressed(key)
                 self.moonCollided = {}
                 world.resetComets()
             end
-            self.message = i18n.t("ascending_message")
+            self.message = ""
         end
     end
     -- Item 2: Return-to-Earth 'r' keybinding removed. Direct steering only.
@@ -2838,6 +2838,10 @@ function M:drawShipStatsSummary()
     love.graphics.printf(i18n.t("ship_stats_hull", run.durabilityUpgradeLevel or 0), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
     love.graphics.printf(i18n.t("ship_stats_harvest", run.sampleYieldUpgradeLevel or 0), textX, statsY, textW, "right")
+    statsY = statsY + M.shipStatsLineStep
+    -- Sample count below ship stats
+    love.graphics.setColor(0.45, 0.95, 1, 0.9)
+    love.graphics.printf(i18n.t("ship_stats_samples", run.sampleCount or 0, run.pendingSampleValue or 0), textX, statsY, textW, "right")
     if prevFont then love.graphics.setFont(prevFont) end
 end
 
