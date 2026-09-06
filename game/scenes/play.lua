@@ -270,6 +270,33 @@ M.launchLoadoutFontSize = 22
 M.launchGearBoxW = 15
 M.launchGearBoxH = 21
 
+-- Shop-planet modal layout (720×1280). Titles use 22px Galmuri with 36px
+-- line gaps so Korean HUD font does not collide. Buy/Leave sit centered.
+function M.shopModalLayout()
+    local panelX, panelY = 20, 80
+    local panelW, panelH = 680, 420
+    local titleY = panelY + 28
+    local nameY = titleY + 40
+    local slotsY = nameY + 48
+    local errY = slotsY + 56
+    local btnW, btnH, btnGap = 200, 56, 28
+    local btnY = panelY + panelH - 80
+    local pairW = btnW * 2 + btnGap
+    local buyX = panelX + math.floor((panelW - pairW) / 2)
+    local skipX = buyX + btnW + btnGap
+    return {
+        panelX = panelX, panelY = panelY, panelW = panelW, panelH = panelH,
+        titleY = titleY, nameY = nameY, slotsY = slotsY, errY = errY,
+        buy = { x = buyX, y = btnY, w = btnW, h = btnH },
+        skip = { x = skipX, y = btnY, w = btnW, h = btnH },
+    }
+end
+
+function M.shopModalButtonRects()
+    local L = M.shopModalLayout()
+    return L.buy, L.skip
+end
+
 -- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
 -- panel caption itself was flagged for removal during the "remove
 -- unnecessary text" review -- the card's own contents (hull/upgrades/
@@ -1381,7 +1408,7 @@ function M:drawGearSlots(y)
     end
     
     love.graphics.setColor(0.6, 0.7, 0.8, 0.9)
-    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 14, viewport.width, "center")
+    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 28, viewport.width, "center")
     love.graphics.setFont(previousFont)
 end
 
@@ -2557,13 +2584,11 @@ end
 
 function M:touchpressed(id, x, y)
     if self.shopModal then
-        local btnY = 220
-        if y >= btnY and y <= btnY + 30 then
-            if x >= 15 and x < 85 then
-                self:keypressed("y")
-            elseif x >= 95 and x <= 165 then
-                self:keypressed("n")
-            end
+        local buy, skip = M.shopModalButtonRects()
+        if x >= buy.x and x < buy.x + buy.w and y >= buy.y and y < buy.y + buy.h then
+            self:keypressed("y")
+        elseif x >= skip.x and x < skip.x + skip.w and y >= skip.y and y < skip.y + skip.h then
+            self:keypressed("n")
         end
         return
     end
@@ -3874,41 +3899,42 @@ function M:draw()
         love.graphics.setFont(prevFont)
     end
     if self.shopModal then
+        local L = M.shopModalLayout()
         love.graphics.setColor(0, 0, 0, 0.85)
         love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
-        
+
         love.graphics.setColor(0.08, 0.14, 0.22, 1)
-        love.graphics.rectangle("fill", 10, 30, viewport.width - 20, 240)
+        love.graphics.rectangle("fill", L.panelX, L.panelY, L.panelW, L.panelH, 8, 8)
         love.graphics.setColor(0.3, 0.6, 1, 1)
-        love.graphics.rectangle("line", 10, 30, viewport.width - 20, 240)
-        
+        love.graphics.rectangle("line", L.panelX, L.panelY, L.panelW, L.panelH, 8, 8)
+
+        local prevFont = love.graphics.getFont()
+        local titleFont = fonts.get(22)
+        love.graphics.setFont(titleFont)
         love.graphics.setColor(1, 1, 1)
-        love.graphics.printf(i18n.t("shop_modal_title"), 10, 40, viewport.width - 20, "center")
-        
+        love.graphics.printf(i18n.t("shop_modal_title"), L.panelX, L.titleY, L.panelW, "center")
+
         love.graphics.setColor(0.7, 0.8, 1)
-        love.graphics.printf(i18n.partName(self.shopModal.gear), 10, 60, viewport.width - 20, "center")
-        
-        self:drawGearSlots(100)
-        
-        local btnY = 220
-        love.graphics.setColor(0.2, 0.4, 0.2, 1)
-        love.graphics.rectangle("fill", 15, btnY, 70, 30)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.printf(i18n.t("shop_modal_buy", self.shopModal.price), 15, btnY + 8, 70, "center")
-        
-        love.graphics.setColor(0.4, 0.2, 0.2, 1)
-        love.graphics.rectangle("fill", 95, btnY, 70, 30)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.printf(i18n.t("shop_modal_skip"), 95, btnY + 8, 70, "center")
-        
+        love.graphics.printf(i18n.partName(self.shopModal.gear), L.panelX, L.nameY, L.panelW, "center")
+
+        self:drawGearSlots(L.slotsY)
+
         if self.shopModal.errorText then
-            self.tinyFont = self.tinyFont or fonts.get(10)
-            local prevFont = love.graphics.getFont()
-            love.graphics.setFont(self.tinyFont)
-            love.graphics.setColor(1, 0.3, 0.3)
-            love.graphics.printf(self.shopModal.errorText, 12, 160, viewport.width - 24, "center")
-            love.graphics.setFont(prevFont)
+            love.graphics.setColor(1, 0.35, 0.35)
+            love.graphics.printf(self.shopModal.errorText, L.panelX + 16, L.errY, L.panelW - 32, "center")
         end
+
+        local buy, skip = L.buy, L.skip
+        love.graphics.setColor(0.2, 0.45, 0.22, 1)
+        love.graphics.rectangle("fill", buy.x, buy.y, buy.w, buy.h, 6, 6)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(i18n.t("shop_modal_buy", self.shopModal.price), buy.x, buy.y + 16, buy.w, "center")
+
+        love.graphics.setColor(0.45, 0.2, 0.2, 1)
+        love.graphics.rectangle("fill", skip.x, skip.y, skip.w, skip.h, 6, 6)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf(i18n.t("shop_modal_skip"), skip.x, skip.y + 16, skip.w, "center")
+        love.graphics.setFont(prevFont)
     end
     if self.reentryHeatAlpha and self.reentryHeatAlpha > 0 then
         local prevLineWidth = love.graphics.getLineWidth()
