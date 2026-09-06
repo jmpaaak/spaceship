@@ -1178,6 +1178,16 @@ function M.new(options)
         bare  = "assets/planet/pp_bare.png",
     }
     local ppPlanetImages = loadSpriteMap(ppPlanetImagePaths)
+    -- Central star sprites per starType (PIL gen_stars.py)
+    local starImagePaths = {
+        sun   = "assets/star/star_sun.png",
+        ice   = "assets/star/star_ice.png",
+        lava  = "assets/star/star_lava.png",
+        dry   = "assets/star/star_dry.png",
+        gas   = "assets/star/star_gas.png",
+        bare  = "assets/star/star_bare.png",
+    }
+    local starTypeImages = loadSpriteMap(starImagePaths)
     local scoutShipImage = loadSprite(scoutShipImagePath)
     local shipSilhouetteImage = loadSprite(shipSilhouetteImagePath)
     local slotMachineImage = loadSprite(slotMachineImagePath)
@@ -1295,6 +1305,8 @@ function M.new(options)
         shopPlanetImagePath = shopPlanetImagePath,
         ppPlanetImages = ppPlanetImages,
         ppPlanetImagePaths = ppPlanetImagePaths,
+        starTypeImages = starTypeImages,
+        starImagePaths = starImagePaths,
         scoutShipImage = scoutShipImage,
         scoutShipImagePath = scoutShipImagePath,
         shipSilhouetteImage = shipSilhouetteImage,
@@ -3286,7 +3298,21 @@ function M:draw()
                 love.graphics.circle("line", sx, sy, world.starWellRadius * 0.7)
                 -- Inner glow
                 love.graphics.setColor(1.0, 0.85, 0.25, pulse * 0.08)
-                love.graphics.circle("fill", sx, sy, world.starRadius)
+                -- Draw star sprite if available, else filled circle
+                local starImg = wellGalaxy and wellGalaxy.starType
+                    and self.starTypeImages and self.starTypeImages[wellGalaxy.starType]
+                -- milkyway uses "sun" (earth starType → "sun" for central star)
+                if not starImg and self.starTypeImages then
+                    starImg = self.starTypeImages["sun"]
+                end
+                if starImg then
+                    local iw, ih = starImg:getDimensions()
+                    local starScale = (world.starRadius * 2) / math.max(iw, ih)
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.draw(starImg, sx, sy, 0, starScale, starScale, iw / 2, ih / 2)
+                else
+                    love.graphics.circle("fill", sx, sy, world.starRadius)
+                end
             end
         end
     end
@@ -4105,21 +4131,31 @@ function M:draw()
         love.graphics.setLineWidth(4)
         love.graphics.rectangle("line", panelX, panelY, panelW, panelH, 12, 12)
         love.graphics.setLineWidth(1)
-        love.graphics.setColor(rr, rg, rb, 0.16)
-        love.graphics.rectangle("fill", panelX + 10, panelY + 10, panelW - 20, 44, 6, 6)
+        -- Rarity chip: sized to fit text, not fixed 44px
         local prevPopupFont = love.graphics.getFont()
-        love.graphics.setFont(fonts.get(11))
+        love.graphics.setFont(fonts.get(22))
         local chip = i18n.rarityLabel(part.rarity)
         local suit = i18n.suitLabel(part.suit)
         if suit ~= "" then chip = chip .. "  ·  " .. suit end
+        local chipFont = love.graphics.getFont()
+        local chipTextW = chipFont:getWidth(chip)
+        local chipPadX, chipPadY = 24, 8
+        local chipW = chipTextW + chipPadX * 2
+        local chipH = 22 + chipPadY * 2
+        local chipX = panelX + math.floor((panelW - chipW) / 2)
+        local chipY = panelY + 12
+        love.graphics.setColor(rr, rg, rb, 0.22)
+        love.graphics.rectangle("fill", chipX, chipY, chipW, chipH, 6, 6)
+        love.graphics.setColor(rr, rg, rb, 0.6)
+        love.graphics.rectangle("line", chipX, chipY, chipW, chipH, 6, 6)
         love.graphics.setColor(rr, rg, rb, 1)
-        love.graphics.printf(chip, panelX + 16, panelY + 22, panelW - 32, "center")
+        love.graphics.printf(chip, chipX, chipY + chipPadY, chipW, "center")
         love.graphics.setFont(fonts.get(33))
         love.graphics.setColor(1, 0.98, 0.92, 1)
-        love.graphics.printf(i18n.partName(part), panelX + 20, panelY + 70, panelW - 40, "center")
+        love.graphics.printf(i18n.partName(part), panelX + 20, chipY + chipH + 20, panelW - 40, "center")
         love.graphics.setFont(fonts.get(22))
         love.graphics.setColor(0.95, 0.82, 0.28, 1)
-        love.graphics.printf(i18n.partEffects(part), panelX + 28, panelY + 130, panelW - 56, "center")
+        love.graphics.printf(i18n.partEffects(part), panelX + 28, chipY + chipH + 80, panelW - 56, "center")
         love.graphics.setFont(prevPopupFont)
     end
     if self.reentryHeatAlpha and self.reentryHeatAlpha > 0 then

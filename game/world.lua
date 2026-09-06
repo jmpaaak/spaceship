@@ -493,7 +493,8 @@ end
 
 function M.collisionDamage(planet)
     local distance = distanceFromEarth(planet)
-    return 1 + math.floor(distance / 500)
+    -- Gentle scaling: 1 at Earth, +1 per 2000px (was /500, too steep)
+    return 1 + math.floor(distance / 2000)
 end
 
 function M.sampleTier(planet)

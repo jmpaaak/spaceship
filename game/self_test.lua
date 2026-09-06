@@ -5989,8 +5989,8 @@ function M.run()
     assert(world.sampleValue({ y = -500 }) == 1, "flat $1 planet sample value")
     assert(world.sampleValue({ y = -50 }) == 1, "flat $1 planet sample value (close)")
     assert(world.collisionDamage({ y = -499 }) == 1)
-    assert(world.collisionDamage({ y = -500 }) == 2)
-    assert(world.collisionDamage({ y = -1500 }) == 4)
+    assert(world.collisionDamage({ y = -2000 }) == 2)
+    assert(world.collisionDamage({ y = -4500 }) == 3)
 
     assert(world.sampleTier({ y = -50 }) == "common")
     assert(world.sampleTier({ y = -299 }) == "common")
@@ -6176,9 +6176,9 @@ function M.run()
     riskScene.expedition.altitude = 500
     riskScene.expedition.durability = 3
     local warning = riskScene:collisionRisk({ y = -500 })
-    assert(warning.damage == 2 and not warning.lethal and warning.label == "RISK -2")
+    assert(warning.damage == 1 and not warning.lethal and warning.label == "RISK -1")
     assert(warning.sampleValue == 1 and warning.sampleLabel == "SAMPLE $1")
-    local lethalWarning = riskScene:collisionRisk({ y = -1000 })
+    local lethalWarning = riskScene:collisionRisk({ y = -5000 })
     assert(lethalWarning.damage == 3 and lethalWarning.lethal and lethalWarning.label == "LETHAL -3")
     assert(lethalWarning.sampleValue == 1 and lethalWarning.sampleLabel == "SAMPLE $1")
     -- The SAMPLE YIELD upgrade multiplies the actual money awarded by
@@ -6316,14 +6316,14 @@ function M.run()
     assert(#riskScene.floatingTexts == 0)
     riskScene:update(0)
     world.nearbyPlanets = nearbyPlanets
-    assert(riskScene.expedition.durability == 1)
-    assert(riskScene.message == "COLLISION -2  HULL 1/3")
+    assert(riskScene.expedition.durability == 2)
+    assert(riskScene.message == "COLLISION -1  HULL 2/3")
     local damageFloatingText
     for _, ft in ipairs(riskScene.floatingTexts) do
         if ft.kind == "damage" then damageFloatingText = ft end
     end
     assert(damageFloatingText)
-    assert(damageFloatingText.text == "-2")
+    assert(damageFloatingText.text == "-1")
     -- Offset from ship.x (see play.lua's collision handling) so the damage
     -- text never renders stacked on top of a same-frame sample text.
     assert(damageFloatingText.x == riskScene.ship.x + 60)
@@ -6347,7 +6347,7 @@ function M.run()
     returnCollisionScene.expedition.phase = "ascending"
     returnCollisionScene.expedition.altitude = 500
     returnCollisionScene.expedition.returnDistance = 500
-    returnCollisionScene.expedition.durability = 2
+    returnCollisionScene.expedition.durability = 1
     returnCollisionScene.expedition.sampleCount = 2
     returnCollisionScene.expedition.pendingSampleValue = 80
     returnCollisionScene.ship.y = -500
@@ -8414,9 +8414,9 @@ function M.run()
         assert(world.sampleTier({ y = -50 }) == "common")
         assert(world.sampleTier({ y = -500 }) == "rare")
         assert(world.sampleTier({ y = -1000 }) == "epic")
-        -- collisionDamage still distance-based
+        -- collisionDamage still distance-based (gentle: +1 per 2000px)
         assert(world.collisionDamage({ y = -499 }) == 1)
-        assert(world.collisionDamage({ y = -500 }) == 2)
+        assert(world.collisionDamage({ y = -2000 }) == 2)
         -- comet = 50x planet = $50
         assert(world.cometSampleValue({ y = -500 }) == 50, "comet must be 50x flat $1 = $50")
         print("  INBOX-36 flat $1 sample value OK")

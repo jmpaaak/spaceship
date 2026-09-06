@@ -121,9 +121,12 @@ end
 -- cells. Returns unit-vector dx, dy (0, 0 if none found), the world
 -- distance (nil if none found), and the galaxy id (nil if none found).
 function M.nearestCheckpointDirection(shipX, shipY)
+    local containing = world.galaxyContaining(shipX, shipY)
+    local containingId = containing and containing.id or "milkyway"
     local nearest, nearestDist, nearestHub
     for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.checkpointSearchCellRadius)) do
-        if galaxy.id ~= "milkyway" then
+        -- Skip both milkyway AND the galaxy we're currently inside
+        if galaxy.id ~= "milkyway" and galaxy.id ~= containingId then
             -- Item 10 change B: point toward the offset hub planet, not
             -- galaxy center (the sun).
             local hubObj = world.hubPlanet(galaxy)
