@@ -1,12 +1,14 @@
 ## Current Status
 
-- INBOX (23) complete: Earth settle radius shrunk closer to visual radius.
-  - `earthSettleRadius` 88→68 (margin 30→10), `launchSpawnY` -63→-13 (margin 50→20).
-  - `earthReentryRadius` 174→145 (58*2.5 instead of 58*3).
-  - self_test reentryR updated to use `PlayScene.earthReentryRadius` directly.
-  - New assertion block verifies all three constants + spawn-outside-settle invariant.
+- INBOX (24) complete: sample collect zoom-in + slower timeslip.
+  - (a) `collectZoom = { timer = 0.5, scale = 1.35, planetX, planetY }` set on sample collection.
+    Camera zooms 1.35× toward ship–planet midpoint over 0.5s, lerp back to 1.0.
+    `love.graphics.push/scale` wraps world rendering; HUD stays unzoomed.
+  - (b) `timeSlip.scale` changed from 0.3 to 0.24 (1.25× slower).
+  - Update tick decrements `collectZoom.timer` by rawDt; nils when expired.
+  - Test `INBOX-24 collectZoom + timeslip OK` verifies timer/scale/expiry.
   - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (24): Sample collect zoom-in + timeslip 0.3→0.24.
+- INBOX: check for next pending item.

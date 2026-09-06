@@ -4,12 +4,10 @@
 
 
 
-(24) **표본 채집 줌인 + 타임슬립 1.25배 확대 (사용자 확정, 2026-09-06):**
-  - **(a) 채집 순간 카메라 줌인.** `self.collectZoom = { timer = 0.5, scale = 1.35, planetX = planet.x, planetY = planet.y }` — 0.5초간 카메라 스케일을 1.35배로, 줌 중심을 함선과 행성 중점으로. 줌인 덕에 행성이 크게 보이고 플레이어가 충돌 회피 방향을 잡기 쉬움. `love.graphics.scale` 전에 `collectZoom.scale` 곱. timer 소진 시 lerp로 1.0 복귀.
-  - **(b) 타임슬립 0.3배 → 0.24배** (1.25배 느리게). `self.timeSlip = { timer = 0.4, scale = 0.24 }`. 기존 0.3에서 0.06 더 느려짐.
-  - `make verify` GREEN + 커밋: `feat(play): zoom-in on sample collect + slower timeslip`
-
 ## 처리 완료
+
+(24) **표본 채집 줌인 + 타임슬립 1.25배 확대 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: (a) `collectZoom = {timer=0.5, scale=1.35, planetX, planetY}` — 0.5초 카메라 1.35× 줌인, 함선-행성 중점 기준, lerp 복귀. (b) `timeSlip.scale` 0.3→0.24. 테스트 `INBOX-24 collectZoom + timeslip OK` GREEN.
 
 (23) **지구 settle 반경 축소 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `earthSettleRadius` 88→68 (margin 30→10), `launchSpawnY` -63→-13 (margin 50→20), `earthReentryRadius` 174→145 (58*2.5). self_test `reentryR` updated to use `earthReentryRadius` directly. New INBOX-23 assertion block added. `make verify` GREEN.

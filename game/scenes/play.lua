@@ -1677,6 +1677,12 @@ function M:update(dt)
     if self.collectFlash and self.collectFlash > 0 then
         self.collectFlash = math.max(0, self.collectFlash - rawDt)
     end
+    if self.collectZoom then
+        self.collectZoom.timer = self.collectZoom.timer - rawDt
+        if self.collectZoom.timer <= 0 then
+            self.collectZoom = nil
+        end
+    end
     self.time = self.time + dt
     self:pollDesktopMouse()
     local steering = self:steeringButtonState()
@@ -2014,7 +2020,7 @@ function M:update(dt)
                     })
                     local tier = world.sampleTier(planet)
                     self:spawnSampleParticles(planet.x, planet.y, tier)
-                    self.timeSlip = { timer = 0.4, scale = 0.3 }
+                    self.timeSlip = { timer = 0.4, scale = 0.24 }
                     self.shipShake = 0.25
                     if tier == "epic" then
                         self.shipShakeMagnitude = 1.4
@@ -2024,6 +2030,7 @@ function M:update(dt)
                         self.shipShakeMagnitude = 0.6
                     end
                     self.collectFlash = 0.15
+                    self.collectZoom = { timer = 0.5, scale = 1.35, planetX = planet.x, planetY = planet.y }
                     if streakMultiplier and streakMultiplier > 1 then
                         self.message = i18n.t("sample_streak_message", awarded, streakMultiplier, planet.id)
                     else
@@ -2577,6 +2584,23 @@ function M:draw()
     love.graphics.clear(world.galaxyBackgroundColor(galaxy))
     local shipScreenX, shipScreenY = viewport.width / 2, math.floor(viewport.height * 0.58)
     local cameraX, cameraY = self.ship.x - shipScreenX, self.ship.y - shipScreenY
+    -- INBOX (24)(a): zoom-in on sample collect
+    local collectZoomScale = 1
+    local collectZoomFocusX, collectZoomFocusY = shipScreenX, shipScreenY
+    if self.collectZoom then
+        local t = self.collectZoom.timer / 0.5  -- 1 → 0
+        collectZoomScale = 1 + (self.collectZoom.scale - 1) * t
+        local planetSX = self.collectZoom.planetX - cameraX
+        local planetSY = self.collectZoom.planetY - cameraY
+        collectZoomFocusX = (shipScreenX + planetSX) / 2
+        collectZoomFocusY = (shipScreenY + planetSY) / 2
+    end
+    if collectZoomScale ~= 1 then
+        love.graphics.push()
+        love.graphics.translate(collectZoomFocusX, collectZoomFocusY)
+        love.graphics.scale(collectZoomScale, collectZoomScale)
+        love.graphics.translate(-collectZoomFocusX, -collectZoomFocusY)
+    end
     -- Background image disabled: deep_space_tile.png is not seamless, causing
     -- visible grid lines at edges. Using procedural star layers only.
     -- if self.backgroundImage then ... end
@@ -2960,6 +2984,10 @@ function M:draw()
         end
     end
     love.graphics.pop()
+    -- INBOX (24)(a): end collectZoom transform (before HUD)
+    if collectZoomScale ~= 1 then
+        love.graphics.pop()
+    end
 
     local hud = self:hudLines()
     local isLaunchHud = self.expedition.phase == "launch"
