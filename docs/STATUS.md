@@ -1,10 +1,11 @@
 ## Current Status
 
-- Fix: asset manifest sha256 mismatch for `assets/hud/icon_durability.png`.
-  Previous cycle (53265be) regenerated the durability icon as a heart shape
-  but did not update `docs/assets/MANIFEST.json` with the new hash.
-  Updated manifest sha256 to match actual file
-  (`8bc0a0f73299231677d9dd3fc15085a7c79731766d6263653e1098bfe7bc23d3`).
+- Fix: asset manifest missing entries for 12 sprite sheet PNGs and sha256
+  mismatch for `assets/star/star_sun_sheet.png`.
+  Added manifest entries for `assets/planet/hub_sheet.png`,
+  `assets/planet/pp_{bare,dry,earth,gas,ice,lava}_sheet.png`,
+  `assets/star/star_{bare,dry,gas,ice,lava}_sheet.png`.
+  Fixed `star_sun_sheet.png` sha256 to match actual file on disk.
   `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
   ASSET_MANIFEST_OK.
 
