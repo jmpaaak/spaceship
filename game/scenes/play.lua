@@ -2258,6 +2258,28 @@ function M:update(dt)
                                 awarded = awarded or value,
                                 rollupElapsed = 0,
                             })
+                            -- Engine part drop on star sample (same as hub explore)
+                            local gearMod = require("game.gear")
+                            local enginePool = gearMod.loadEngineParts() or {}
+                            if #enginePool > 0 then
+                                local drop = expedition.exploreHub(self.expedition, galaxy.id, enginePool, {
+                                    editionChance = love.math.random(),
+                                    editionPick = love.math.random()
+                                })
+                                if drop then
+                                    expedition.equipGear(self.expedition, "engine", drop)
+                                    self.gearPopup = { part = drop, category = "engine" }
+                                    table.insert(self.floatingTexts, {
+                                        text = i18n.t("floating_hub_gear", i18n.partName(drop)),
+                                        x = self.ship.x,
+                                        y = self.ship.y - 40,
+                                        timer = 3.0,
+                                        kind = "sample",
+                                        awarded = 0,
+                                        rollupElapsed = 0,
+                                    })
+                                end
+                            end
                         end
                     end
                 end
@@ -3997,22 +4019,10 @@ function M:draw()
             love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, row, fullW, "center")
         end
 
+        -- Row 5: only gray "tap to relaunch" text, nothing else
         local r5 = M.settlementTouchRows[5].top
-        row = r5 + 8
-        love.graphics.setColor(1, 1, 1, 0.9)
-        drawPanelSprite(shopEff.shopNextShip, fullX, row - 2, fullW, rowStep * 3 + 2)
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(nextLaunch.ship, fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(nextLaunch.stats, fullX, row, fullW, "center")
-        row = row + rowStep
-        love.graphics.printf(nextLaunch.upgrades, fullX, row, fullW, "center")
-        
         row = r5 + touchRowHeight - rowStep - 8
-        love.graphics.setColor(1, 1, 1, 0.9)
-        drawPanelSprite(self.relaunChImage, fullX, row - 2, fullW, rowStep + 4)
-        love.graphics.setColor(0.75, 0.9, 1)
+        love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
         love.graphics.printf(i18n.t("tap_relaunch"), fullX, row, fullW, "center")
         
         love.graphics.setFont(previousFont)
