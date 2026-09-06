@@ -1,13 +1,12 @@
 ## Current Status
 
-- INBOX (53b) complete: Removed `fuelEfficiency` effect type (no fuel system).
-  - Stripped all `fuelEfficiency` entries from `engine_parts.json`, `gear.lua`, and `self_test.lua`.
-  - Fixed `engine_cryo_fuel_cell` dead-card regression by adding `speed +3` alongside its existing `money +1`.
-  - All tests pass (`make verify`).
+- Housekeeping: moved completed INBOX items 48-57 from 처리 대기 to 처리 완료.
+  - All items (48, 49, 50, 51, 53a/b/c, 54, 55, 56, 57) were already implemented and committed in prior cycles.
+  - `make verify` GREEN, no code changes needed.
 
 ## Next slice
 
-- Process next pending item from `docs/feedback/INBOX.md`.
+- Process next pending item from `docs/feedback/INBOX.md` (처리 대기 is now empty — wait for new user feedback).
 
 ## Previous
 

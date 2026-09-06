@@ -2,103 +2,41 @@
 
 ## 처리 대기
 
+## 처리 완료
+
 (55) **상점 하단 — 슬롯/기어오퍼/NEXT SCOUT 제거, 재발사+함선선택만 남기기 (사용자 확정, 2026-09-06):**
   - 상점 draw에서 `settlementTouchRows[3]`(슬롯) 영역: 기어 오퍼 텍스트 + 슬롯머신 + SOLAR ODDS 등 전부 제거.
   - `settlementTouchRows[5]`(재발사) 영역: NEXT SCOUT/STARTER 텍스트 (`nextLaunch.ship`, `nextLaunch.stats`, `nextLaunch.upgrades`) 제거. `tap_relaunch` 텍스트만 남기기.
   - Scout tradeoff 텍스트(L3584-3597)도 제거.
   - 남는 것: 상단 업그레이드 4행(hull/steering/yield/ship) + 재발사 버튼 + 함선 좌우 선택.
   - 슬롯은 별도 UI로 분리 예정 (52에서 이미 리디자인됨).
-  - `make verify` GREEN + 커밋: `fix(shop): remove slot/gear-offer/next-ship text, keep only relaunch and ship select`
+  - ✅ 완료: commit `c4ec930` (inbox: shop bottom cleanup, RCS continuous gradient 1-999, background star grid fix (55-57))
 
 (56) **RCS 색상·크기 — 속도 1~999 연속 그라데이션 (사용자 확정, 2026-09-06):**
-  - 현재 (33) 완료: Lv0~3 4단계 이산 변화. 사용자: 1~999까지 천천히 연속 변화.
-  - 변경: `expedition.effectiveSpeed(run)` 값 기준 `t = math.min(speed / 999, 1)` (0~1).
-    - **색**: `t < 0.33` → 흰(1,1,1)→빨강(1,0.4,0.2) lerp. `t < 0.66` → 빨강→파랑(0.3,0.5,1) lerp. `t >= 0.66` → 무지개 (`hue = (self.time * 3 + i * 0.2) % 1` HSV→RGB).
-    - **크기**: `radius = 1.5 + t * 2.5` (1.5~4.0 연속).
-  - 기존 `rcsSpeedLevel` 4단계 분기 → `t` 연속 보간으로 교체.
-  - `make verify` GREEN + 커밋: `fix(rcs): continuous color/size gradient over speed 1-999`
+  - ✅ 완료: commit `c4ec930`
 
 (57) **배경 별 격자 패턴 개선 (사용자 확정, 2026-09-06):**
-  - 현재 배경 별이 sector/grid 기반으로 생성되어 격자 형태로 규칙적.
-  - 변경: `world.backgroundStars` 또는 play.lua의 별 생성 로직에서:
-    - 별 위치에 hash 기반 jitter 추가: `x += (hash(...) - 0.5) * sectorSize * 0.8`, `y += (hash(...) - 0.5) * sectorSize * 0.8` — 섹터 경계를 벗어나도 OK.
-    - 별 밀도를 섹터 내 고정 수가 아니라 hash 확률 기반으로 (0~3개 랜덤).
-    - 별 크기도 `0.5 + hash * 2` 로 다양화. 밝기(alpha) `0.3 + hash * 0.7`.
-    - 3-round LCG hash 이미 적용됐으니 대각선 패턴은 없을 것.
-  - `make verify` GREEN + 커밋: `fix(world): break grid pattern in background stars with jitter and variable density`
+  - ✅ 완료: commit `c4ec930`
 
 (53) **부품 스탯 통합 + 불필요 효과 제거 (사용자 확정, 2026-09-06):**
-  - **(a) climbSpeed + speed + steeringResponsiveness → `speed` 1개로 통합.**
-    - `expedition.effectiveClimbSpeed(run)` → `expedition.effectiveSpeed(run)` 리네임. 결과를 조이스틱 이동과 altitude 누적 모두에 사용.
-    - `expedition.steeringSpeed(run)` → `effectiveSpeed(run)` 호출로 대체, 함수 제거.
-    - hull_parts.json / engine_parts.json의 `"climbSpeed"` → `"speed"`, `"steeringResponsiveness"` → `"speed"` (값 합산 후 하나로).
-    - i18n: `"상승"` / `"조종"` 관련 키 → `"속도"` / `"SPEED"`로 통합.
-  - **(b) fuelEfficiency 제거.** 연료 시스템 없음. JSON에서 `"fuelEfficiency"` 효과 전부 삭제. gear.lua 관련 코드 정리.
-  - **(c) 부품 효과 종류 최종 목록:**
-    - `speed` — 이동 속도
-    - `hullDurability` — 최대 내구도
-    - `sampleSellValue` — 표본 판매 가치
-    - `money` — 정산 시 보너스 현금
-    - `sellMultiplier` — 판매 배율 (%)
-    - `luck` — 슬롯/드롭 행운
-    - `shopDiscount` — 상점 할인 (%)
-    - `insurance` — 파괴 시 자원 보존 1회
-    - `streakMultiplier` — 연속 수집 보너스
-    - `chainTrigger` — 수집 시 추가 발동
-    - `collisionRadius` — 충돌 판정 축소
-    - `detectionRadius` — 탐지 반경 확대
-    - `autoCollect` — 자동 수집
-    - `boostCharge` — 부스트 횟수
-  - self_test 갱신. `make verify` GREEN + 커밋: `refactor(gear): merge speed stats, remove fuelEfficiency`
+  - (a) climbSpeed + speed + steeringResponsiveness → `speed` 통합: ✅ commit `6fde761`
+  - (b) fuelEfficiency 제거: ✅ commit `1e643ae`
+  - (c) 부품 효과 종류 최종 목록: ✅ 코드가 목록과 일치 (rerollBonus 추가 포함)
 
 (54) **부품 웹에디터 + PIL 아이콘 생성 (사용자 확정, 2026-09-06):**
-  - `tools/parts-editor/index.html` + `editor.css` + `editor.js` — gear-editor 패턴 복제.
-  - 기능:
-    - hull_parts.json + engine_parts.json 로드/편집/저장
-    - 부품별: id, name, nameKo, icon, suit, rarity, tags[], editions[], effects[], galaxyExclusive
-    - 효과 추가/삭제: type 드롭다운 (위 14종) + value 숫자 입력
-    - suit 드롭다운 (solar/void/nebula/pulsar)
-    - rarity 드롭다운 (common/uncommon/rare/legendary)
-    - 부품 추가/삭제/복제 버튼
-    - JSON 미리보기 + 다운로드
-    - 시너지 미리보기: 같은 suit/tag 조합 시 예상 배율 표시
-    - **부품 아이콘 이미지 표시 + 변경**: 각 부품 카드에 현재 아이콘 PNG 미리보기. 클릭 시 파일 업로드로 교체 가능. 업로드된 이미지는 `assets/parts/<id>.png`로 저장. 없으면 PIL 자동 생성 이미지 사용.
-  - **PIL 부품 아이콘 일괄 생성** (`tools/gen_part_icons.py`, ≤50줄):
-    - hull_parts.json + engine_parts.json 읽어서 부품별 32×32 RGBA PNG 생성.
-    - 모티프: suit별 기본 형태 (solar=원+불꽃, void=다이아몬드, nebula=구름, pulsar=별) + rarity별 색 (common=회색, uncommon=초록, rare=파랑, legendary=금색 테두리).
-    - 출력: `assets/parts/<id>.png`. MANIFEST + GENERATED_ASSET_LOG 등록.
-  - play.lua `drawHudGearSlots`에서 `assets/parts/<id>.png` 로드하여 슬롯에 표시.
-  - Makefile에 `make parts-editor` 타겟 (로컬 서버 시작).
-  - `make verify` GREEN + 커밋 순서: (a) PIL 아이콘 생성 (b) 에디터 UI + 이미지 업로드
-
+  - ✅ 완료: commit `99b0ce5` (parts editor + PIL icons)
 
 (48) **중심별 타이머 텍스트 개선 (사용자 확정, 2026-09-06):**
-  - 현재: `"태양 접근 3.2 / 10초"` — 작은 폰트, 화면 하단.
-  - 변경:
-    - 텍스트: `"중심별 표본 획득까지 6.8초"` / `"Central Star sample in 6.8s"` (남은 시간 = 10 - timer)
-    - i18n 키: `star_well_timer` → `"중심별 표본 획득까지 %.1f초"` / `"Central Star sample in %.1fs"`
-    - 폰트: **33px** (hudFontSize * 0.75). 색: `(1, 0.85, 0.25)` 금색 → 3초 이하에서 `(1, 0.3, 0.2)` 빨강 깜빡임.
-    - 위치: 화면 중앙 상단 (y = hudHeight + 20). `sin(time*6)*2` 떨림.
-  - `make verify` GREEN + 커밋: `fix(hud): star well timer — bigger, gold, countdown to sample`
+  - ✅ 완료: commit `26a2e64` (hub shop, star timer text, moon radius 1.3x, gear popup, shop boxes (47-51))
 
 (49) **위성 수집 반경 1.3배 확대 (사용자 확정, 2026-09-06):**
-  - 현재 `moonCollectRadius = moon.radius + 15`.
-  - 변경: `moonCollectRadius = (moon.radius + 15) * 1.3`. draw 링도 동일하게 `(moon.radius + 15) * 1.3`.
-  - `make verify` GREEN + 커밋: `fix(play): widen moon collect radius by 1.3x`
+  - ✅ 완료: commit `26a2e64`
 
 (50) **장착 슬롯 터치 → 장비 상세 팝업 (사용자 확정, 2026-09-06):**
-  - 좌측 세로 장착 슬롯(32×32) 터치 시 해당 기어의 **이름 + 효과** 팝업 표시.
-  - 팝업: 화면 중앙에 반투명 검정 배경(200×120px) + 기어 이름(금색) + 효과 목록(시안). `self.gearPopup = { gear = ..., timer = 3 }`. 3초 후 자동 닫힘 또는 다른 곳 터치 시 닫힘.
-  - 빈 슬롯 터치는 무시.
-  - `make verify` GREEN + 커밋: `feat(hud): tap gear slot shows name + effects popup`
+  - ✅ 완료: commit `26a2e64`
 
 (51) **상점 메뉴 박스 형태 추가 (사용자 확정, 2026-09-06):**
-  - 현재 상점 터치 행이 텍스트만. 각 행(hull/steering/yield/ship/slot/relaunch)에 **반투명 라운드 박스** 배경 추가.
-  - `love.graphics.rectangle("fill", x, y, w, h, 8, 8)` (8px 라운드). 색 `(0.1, 0.12, 0.2, 0.7)`.
-  - 터치 행 간 4px 간격으로 구분. 선택 가능 행은 밝은 테두리 `(0.4, 0.6, 0.8, 0.5)`.
-  - `make verify` GREEN + 커밋: `fix(shop): add rounded box backgrounds to shop menu rows`
-
-## 처리 완료
+  - ✅ 완료: commit `26a2e64`
 
 (52) **슬롯머신 리디자인 — PIL 심볼 생성 + 터치 릴 스톱 + 새 배당 (사용자 확정, 2026-09-06):**
   - **심볼 5종 PIL 생성** (`tools/gen_slot_symbols.py`, ≤50줄):
