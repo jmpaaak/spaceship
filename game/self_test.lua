@@ -465,7 +465,7 @@ local function testMinimap()
     assert(originView.sun.x ~= 0 or originView.sun.y ~= 0,
         "home sun must be offset from Earth at world origin")
     assert(originView.galaxyName == "SOLAR SYSTEM")
-    assert(originView.rings and #originView.rings >= 2, "home minimap must draw galaxy/solar rings")
+    assert(originView.rings and #originView.rings >= 1, "home minimap must draw galaxy ring")
     local sawDisk, sawOrbit = false, false
     for _, ring in ipairs(originView.rings) do
         assert(ring.radius > 0)
@@ -473,7 +473,8 @@ local function testMinimap()
         if ring.kind == "concentricRing" then sawOrbit = true end
     end
     assert(sawDisk, "home minimap must include the Milky Way / solar disk ring")
-    assert(sawOrbit, "home minimap must include concentric rings around the central star")
+    -- User 2026-09-06: milkyway must NOT have concentric rings (지구 중심원 제거)
+    assert(not sawOrbit, "home (milkyway) minimap must NOT include concentric rings")
 
     local nameScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -625,20 +626,20 @@ local function testMinimapUnifiedGalaxyPalette()
         "milkyway galaxy marker must use the same gold fill as every other galaxy")
 
     -- Item 13: spiral fields must be absent (or nil), concentric rings present
+    -- for non-home galaxies. Home (milkyway) must NOT have concentric rings.
     local originView = minimap.view(0, 0)
     assert(originView.spiral == nil or (type(originView.spiral) == "table" and #originView.spiral == 0),
         "minimap.view must not produce spiral-arm points (item 13: replaced by concentric rings)")
 
-    local sawConcentricRing = false
+    -- Home galaxy: no concentric rings
+    local sawConcentricAtHome = false
     for _, ring in ipairs(originView.rings or {}) do
         if ring.kind == "concentricRing" then
-            sawConcentricRing = true
-            assert(ring.radius > 0, "concentricRing must have positive radius")
-            assert(ring.id, "concentricRing must carry a galaxy id")
+            sawConcentricAtHome = true
         end
     end
-    assert(sawConcentricRing,
-        "minimap.view must include concentricRing entries in view.rings (item 13)")
+    assert(not sawConcentricAtHome,
+        "minimap.view at home (milkyway) must NOT include concentricRing entries")
 
     -- concentricRingCount bracket check
     assert(minimap.concentricRingCount(nil) == 2, "nil galaxy => 2 rings")
@@ -678,17 +679,10 @@ local function testMinimapUnifiedGalaxyPalette()
     love.graphics = previousGraphics
     assert(ok, "drawMinimap must not throw: " .. tostring(err))
 
-    -- Must have drawn at least the concentric ring circles
-    local expectedConcentricRings = 0
-    for _, ring in ipairs(originView.rings or {}) do
-        if ring.kind == "concentricRing" and ring.inside ~= false then
-            expectedConcentricRings = expectedConcentricRings + 1
-        end
-    end
-    assert(expectedConcentricRings > 0, "home galaxy must have concentric rings on chart")
-    assert(circleCount >= expectedConcentricRings,
-        "drawMinimap must draw concentric ring circles (circleCount="
-            .. circleCount .. " expectedConcentricRings=" .. expectedConcentricRings .. ")")
+    -- Must have drawn circles (disc + galaxy ring at minimum; no concentric at home)
+    assert(circleCount >= 2,
+        "drawMinimap must draw at least disc + galaxy ring circles (circleCount="
+            .. circleCount .. ")")
 
     for _, c in ipairs(colors) do
         local isBlueRing = math.abs(c[1] - 0.3) < 1e-6
