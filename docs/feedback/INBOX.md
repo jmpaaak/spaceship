@@ -2,7 +2,32 @@
 
 ## 처리 대기
 
+(27) **행성 대각선 패턴 수정 — LCG hash 버그 (사용자 확정, 2026-09-06):**
+  - 원인: `world.planets()` L270-271에서 `hash(sectorX, sectorY, 40+i)` / `hash(sectorX, sectorY, 60+i)` — salt에만 `i`를 더하는 LCG 패턴. i 증가 시 출력이 선형 증가 → 대각선 정렬.
+  - 수정: `x = hash(sectorX + i*7, sectorY, 40)`, `y = hash(sectorX, sectorY + i*13, 60)` 방식으로 i를 좌표에 곱해서 섞기. 동일하게 `radius`(salt 20+i), `hue`(salt 80+i) 등도 같은 패턴이면 수정.
+  - `make verify` GREEN + 커밋: `fix(world): scramble hash i into coords to break diagonal planet alignment`
 
+(28) **행성 밀도 절반 + 겹침 방지 (사용자 확정, 2026-09-06):**
+  - 현재: `hash(...,1) > 0.70` → 30% 확률 1개, `hash(...,7) > 0.96` → 4% 확률 2개.
+  - 변경: `hash(...,1) > 0.85` → **15%** 확률 1개, `hash(...,7) > 0.98` → **2%** 확률 2개. 약 절반.
+  - 겹침 방지: 같은 섹터에 2개 생성 시 두 행성 간 거리가 `(r1 + r2 + 10)` 미만이면 두 번째를 섹터 반대편으로 재배치하거나 삭제.
+  - `make verify` GREEN + 커밋: `fix(world): halve planet density and prevent overlap`
+
+(29) **채집 줌인 축소 (사용자 확정, 2026-09-06):**
+  - 현재 `collectZoom.scale = 1.35` (35% 줌인). 사용자: "너무 줌인 많이 됨."
+  - 변경: `scale = 1.12` (12% 줌인). 행성이 약간 커 보이되 시야 확보 유지.
+  - `make verify` GREEN + 커밋: `fix(play): reduce collect zoom 1.35→1.12`
+
+(30) **상점 — starter 정보 제거 (사용자 확정, 2026-09-06):**
+  - `shopLoadoutLines()` L1499-1503에서 scout 보유+선택 시 `previewShipId = "starter"`, `shipAction = i18n.t("select_starter")`를 보여줌.
+  - 변경: scout를 이미 소유+선택했으면 함선 행을 **숨기거나** 현재 함선 이름만 표시 ("SCOUT ✓"). 다음 함선(starter)으로 전환 안내 제거. `scoutTradeoff` 2줄도 이미 scout면 제거.
+  - `make verify` GREEN + 커밋: `fix(shop): hide starter switch when scout is active`
+
+(31) **미니맵 은하 2개 표시 원인 수정 (사용자 확정, 2026-09-06):**
+  - 현재 milkyway(SOLAR SYSTEM) `radius = galaxyCellSize * 0.9` (≈4147px). 인접 셀의 은하도 `galaxyCellRadius`(2+4=6셀) 안에 들어와서 미니맵에 나옴.
+  - 스크린샷에서 2개: milkyway 동심원 + 인접 은하 동심원이 함께 보임.
+  - 수정: `galaxyExistenceThreshold = 0.72` → **0.82** (28%→18% 은하 존재 확률). 또는 `viewRadius = 0.55`에서 인접 은하 동심원은 `isContaining`일 때만 그리도록 이미 고쳤는데(L190), `nearbyGalaxies`가 galaxy marker(점)를 항상 그리므로 점이 2개 찍힘. galaxy marker(점)도 containing이 아니면 **미니맵 디스크 경계에만** 작게 표시하거나 숨기기.
+  - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
 
 ## 처리 완료
 
