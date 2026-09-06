@@ -2867,8 +2867,8 @@ function M:drawShipStatsSummary()
     love.graphics.setFont(statsFont)
     local textW = minimap.size
     local textX = viewport.width - 3 - textW
-    -- Sample count at the very top (below pause button)
-    local statsY = pb.y + pb.h + 8
+    -- Sample count at the very top — aligned with left HUD (hudY=4)
+    local statsY = 4
     love.graphics.setColor(0.45, 0.95, 1, 0.6)
     love.graphics.printf(i18n.t("ship_stats_samples_label"), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
