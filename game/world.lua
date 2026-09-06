@@ -7,6 +7,8 @@ local M = {
 local function hash(x, y, salt)
     local n = (x * 92837111 + y * 689287499 + salt * 283923481) % 2147483647
     n = (n * 48271 + 1) % 2147483647
+    n = ((n * 48271 + 1) % 2147483647)  -- 2nd round
+    n = ((n * 48271 + 1) % 2147483647)  -- 3rd round — breaks LCG linearity
     return n / 2147483647
 end
 
@@ -311,7 +313,7 @@ function M.planets(sectorX, sectorY)
     -- galaxy share a consistent colour mood. (0.083 ≈ 30°/360°)
     local baseHue = galaxy.baseHue or 0.5
     for i = 1, count do
-        local radius = 7 + math.floor(hash(sectorX + i * 7, sectorY + i * 13, 20) * 10)
+        local radius = 14 + math.floor(hash(sectorX + i * 7, sectorY + i * 13, 20) * 20)
         local rawHue = hash(sectorX + i * 11, sectorY + i * 17, 80)
         -- Map rawHue into [baseHue-0.083, baseHue+0.083], wrapping in 0..1
         local hue = (baseHue - 0.083 + rawHue * 0.166) % 1
@@ -719,8 +721,8 @@ end
 
 function M.moonForPlanet(planet, time)
     if not M.planetHasMoon(planet) then return nil end
-    local orbitRadius = planet.radius + 15 + math.floor(hash(planet.x or 0, planet.y or 0, 701) * 11) -- 15~25
-    local moonRadius = 3 + math.floor(hash(planet.x or 0, planet.y or 0, 702) * 3) -- 3~5
+    local orbitRadius = planet.radius + 25 + math.floor(hash(planet.x or 0, planet.y or 0, 701) * 15) -- 25~39
+    local moonRadius = 6 + math.floor(hash(planet.x or 0, planet.y or 0, 702) * 6) -- 6~11
     local period = 3 -- seconds per orbit
     local angle = (time or 0) * (2 * math.pi / period)
     -- Offset phase per planet so moons don't all start at 0

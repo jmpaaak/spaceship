@@ -1335,11 +1335,25 @@ local function testDebris()
     for _ in pairs(sizes) do distinctSizes = distinctSizes + 1 end
     assert(distinctSizes >= 3, "debris must come in several sizes")
 
-    local drifted = world.debris(3, -2, 2)
-    assert(#drifted == #a)
+    local drifted = nil
+    local driftBase = nil
+    -- Find any sector that actually has debris for the drift test
+    for sx = -5, 5 do
+        for sy = -5, 5 do
+            local d0 = world.debris(sx, sy)
+            if #d0 > 0 then
+                driftBase = d0
+                drifted = world.debris(sx, sy, 2)
+                break
+            end
+        end
+        if drifted then break end
+    end
+    assert(driftBase and drifted, "must find at least one sector with debris in -5..5")
+    assert(#drifted == #driftBase)
     local moved = false
-    for i = 1, #a do
-        if drifted[i].x ~= a[i].x or drifted[i].y ~= a[i].y then moved = true end
+    for i = 1, #driftBase do
+        if drifted[i].x ~= driftBase[i].x or drifted[i].y ~= driftBase[i].y then moved = true end
     end
     assert(moved, "debris must drift over time")
 
@@ -8417,9 +8431,9 @@ function M.run()
         local moon = world.moonForPlanet(testPlanet, 0)
         if moon then
             assert(moon.id == testPlanet.id .. ":moon", "moon id must be planet.id .. ':moon'")
-            assert(moon.radius >= 3 and moon.radius <= 5, "moon radius must be 3~5, got " .. tostring(moon.radius))
-            assert(moon.orbitRadius >= testPlanet.radius + 15 and moon.orbitRadius <= testPlanet.radius + 25,
-                "moon orbitRadius must be planet.radius + 15~25, got " .. tostring(moon.orbitRadius))
+            assert(moon.radius >= 6 and moon.radius <= 11, "moon radius must be 6~11, got " .. tostring(moon.radius))
+            assert(moon.orbitRadius >= testPlanet.radius + 25 and moon.orbitRadius <= testPlanet.radius + 39,
+                "moon orbitRadius must be planet.radius + 25~39, got " .. tostring(moon.orbitRadius))
             assert(moon.parentX == testPlanet.x, "moon must store parentX")
             assert(moon.parentY == testPlanet.y, "moon must store parentY")
         end
