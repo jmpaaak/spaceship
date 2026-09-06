@@ -1420,9 +1420,12 @@ function M:hudLines()
         -- slotOpportunities is always 0 (dead/misleading UI).
         status = i18n.t("hud_status_no_slots", run.durability,
             run.maxDurability, i18n.phaseAbbrev(run.phase)),
-        galaxy = (run.phase == "ascending" or run.phase == "launch")
-            and (world.galaxyContaining(self.ship.x, self.ship.y) or {}).name
-            or nil,
+        galaxy = (function()
+            if run.phase ~= "ascending" and run.phase ~= "launch" then return nil end
+            local g = world.galaxyContaining(self.ship.x, self.ship.y)
+            if not g then return nil end
+            return world.galaxyName(g)
+        end)(),
         maxDurability = run.maxDurability,
     }
 end
@@ -2340,7 +2343,7 @@ function M:keypressed(key)
             local ok, err = expedition.buyGearFromShopPlanet(self.expedition, self.shopModal.category, self.shopModal.gear)
             if ok then
                 table.insert(self.floatingTexts, {
-                    text = i18n.t("floating_hub_gear", self.shopModal.gear.name),
+                    text = i18n.t("floating_hub_gear", i18n.partName(self.shopModal.gear)),
                     x = self.shopModal.planet.x,
                     y = self.shopModal.planet.y + 20,
                     timer = 3.0,
@@ -2350,7 +2353,7 @@ function M:keypressed(key)
                 })
                 self.shopModal = nil
             else
-                self.shopModal.errorText = err
+                self.shopModal.errorText = i18n.shopError(err)
             end
         elseif key == "n" then
             self.shopModal = nil
@@ -3850,7 +3853,7 @@ function M:draw()
         love.graphics.printf(i18n.t("shop_modal_title"), 10, 40, viewport.width - 20, "center")
         
         love.graphics.setColor(0.7, 0.8, 1)
-        love.graphics.printf(self.shopModal.gear.name, 10, 60, viewport.width - 20, "center")
+        love.graphics.printf(i18n.partName(self.shopModal.gear), 10, 60, viewport.width - 20, "center")
         
         self:drawGearSlots(100)
         

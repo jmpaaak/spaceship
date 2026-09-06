@@ -132,6 +132,11 @@ locales.en = {
     earth_gear_bought = "GEAR ACQUIRED: %s  BALANCE $%d",
     earth_gear_full = "GEAR SLOTS FULL  SELL EQUIPPED FIRST",
     earth_gear_broke = "NOT ENOUGH MONEY  NEED $%d MORE",
+    shop_err_broke = "NOT ENOUGH MONEY",
+    shop_err_full_hull = "HULL SLOTS FULL",
+    shop_err_full_engine = "ENGINE SLOTS FULL",
+    shop_err_already = "ALREADY EQUIPPED",
+    shop_err_generic = "CANNOT BUY",
     newbest_label = "NEW BEST!",
     total_label = "TOTAL $%d",
     samples_settlement_line = "SAMPLES (%d) $%d",
@@ -293,6 +298,11 @@ locales.ko = {
     earth_gear_bought = "장비 획득: %s  잔액 $%d",
     earth_gear_full = "장비 슬롯 가득  장착 장비 먼저 판매",
     earth_gear_broke = "잔액 부족  $%d 더 필요",
+    shop_err_broke = "잔액이 부족합니다",
+    shop_err_full_hull = "선체부품 슬롯이 가득 찼습니다",
+    shop_err_full_engine = "엔진부품 슬롯이 가득 찼습니다",
+    shop_err_already = "이미 장착한 부품입니다",
+    shop_err_generic = "구매할 수 없습니다",
     newbest_label = "신기록!",
     total_label = "합계 $%d",
     samples_settlement_line = "표본 (%d) $%d",
@@ -361,6 +371,23 @@ function M.t(key, ...)
         return string.format(template, ...)
     end
     return template
+end
+
+function M.partName(part)
+    if type(part) ~= "table" then return tostring(part or "") end
+    if locale == "ko" and type(part.nameKo) == "string" and #part.nameKo > 0 then
+        return part.nameKo
+    end
+    return part.name or part.id or "?"
+end
+
+function M.shopError(err)
+    err = tostring(err or "")
+    if err:find("not enough money", 1, true) then return M.t("shop_err_broke") end
+    if err:find("hull slots are full", 1, true) then return M.t("shop_err_full_hull") end
+    if err:find("engine slots are full", 1, true) then return M.t("shop_err_full_engine") end
+    if err:find("already equipped", 1, true) then return M.t("shop_err_already") end
+    return M.t("shop_err_generic")
 end
 
 function M.phaseAbbrev(phase)

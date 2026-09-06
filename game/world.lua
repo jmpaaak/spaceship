@@ -751,6 +751,8 @@ end
 -- Sample value: 10x planet ($10). Collision damage: same as planet.
 
 function M.planetHasMoon(planet)
+    -- Shop planets sell hull parts — no moons so the shop approach stays clean.
+    if planet and planet.isShop then return false end
     return hash(planet.x or 0, planet.y or 0, 700) > 0.7
 end
 
