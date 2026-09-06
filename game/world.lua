@@ -548,13 +548,15 @@ end
 
 function M.stars(sectorX, sectorY)
     local stars = {}
-    for i = 1, 18 do
-        stars[i] = {
-            -- Scramble i into both axes independently so consecutive i values
-            -- produce uncorrelated (x, y) pairs instead of a diagonal line.
-            x = sectorX * M.sectorSize + hash(sectorX + i * 7, sectorY, 10001) * M.sectorSize,
-            y = sectorY * M.sectorSize + hash(sectorX, sectorY + i * 13, 20001) * M.sectorSize,
-            bright = hash(sectorX, sectorY, 300 + i),
+    local countHash = hash(sectorX * 5 + 3, sectorY * 9 + 1, 9999)
+    local count = 10 + math.floor(countHash * 9)  -- 10 to 18 per sector
+    for i = 1, count do
+        local hx = hash(sectorX * 7 + i * 29, sectorY * 11 + i * 47, 10001 + i * 89)
+        local hy = hash(sectorX * 13 + i * 37, sectorY * 7 + i * 59, 20001 + i * 71)
+        stars[#stars + 1] = {
+            x = (sectorX + hx - 0.15) * M.sectorSize + hx * M.sectorSize * 0.3,
+            y = (sectorY + hy - 0.15) * M.sectorSize + hy * M.sectorSize * 0.3,
+            bright = hash(sectorX + i * 17, sectorY + i * 31, 300 + i * 43),
         }
     end
     return stars
@@ -572,14 +574,18 @@ M.backgroundStarCount = 200
 
 function M.backgroundStars(sectorX, sectorY)
     local stars = {}
-    for i = 1, M.backgroundStarCount do
-        stars[i] = {
-            -- Scramble i into x/y axes independently (same fix as M.stars):
-            -- feeding i into the x or y coordinate instead of the salt breaks
-            -- the linear correlation that causes diagonal patterning.
-            x = sectorX * M.sectorSize + hash(sectorX + i * 11, sectorY, 50001) * M.sectorSize,
-            y = sectorY * M.sectorSize + hash(sectorX, sectorY + i * 17, 60001) * M.sectorSize,
-            bright = hash(sectorX, sectorY, 30000 + i) * 0.55,
+    -- Variable star count per sector (2 to backgroundStarCount) to break regularity
+    local countHash = hash(sectorX * 3 + 7, sectorY * 5 + 13, 49999)
+    local count = 2 + math.floor(countHash * (M.backgroundStarCount - 1))
+    for i = 1, count do
+        -- Heavy jitter: hash feeds unique per-star scrambled coords
+        -- so adjacent sectors produce uncorrelated positions
+        local hx = hash(sectorX * 7 + i * 31, sectorY * 13 + i * 53, 50001 + i * 97)
+        local hy = hash(sectorX * 11 + i * 43, sectorY * 7 + i * 67, 60001 + i * 83)
+        stars[#stars + 1] = {
+            x = (sectorX + hx - 0.15) * M.sectorSize + hx * M.sectorSize * 0.3,
+            y = (sectorY + hy - 0.15) * M.sectorSize + hy * M.sectorSize * 0.3,
+            bright = hash(sectorX + i * 19, sectorY + i * 23, 30000 + i * 41) * 0.55,
         }
     end
     return stars
