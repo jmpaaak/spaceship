@@ -5813,8 +5813,8 @@ end
 
 -- INBOX (16): HUD background covers left text only, never the full 720px band.
 local function testHudBackgroundNotFullWidth()
-    assert(PlayScene.hudBackgroundMaxWidth == 500,
-        "HUD background must cap at ~500px for 44px font (item 38a)")
+    assert(PlayScene.hudBackgroundMaxWidth == 280,
+        "HUD background must cap at ~280px for 22px font (item 41)")
     assert(type(PlayScene.hudBackgroundWidth) == "function",
         "hudBackgroundWidth must measure left-text width for the HUD fill")
     local font = {
@@ -6189,13 +6189,13 @@ function M.run()
         "devPlaceholderFontSize must be removed (item 17a)")
     assert(PlayScene.devPlaceholderAlpha == nil,
         "devPlaceholderAlpha must be removed (item 17a)")
-    -- Item 38a: HUD font doubled to 44px for better mobile readability.
-    assert(PlayScene.hudFontSize and PlayScene.hudFontSize >= 40 and PlayScene.hudFontSize <= 48,
-        "hudFontSize must be 40-48px after item 38a 2x scaling: " .. tostring(PlayScene.hudFontSize))
-    assert(PlayScene.hudLineStep and PlayScene.hudLineStep >= 48,
-        "hudLineStep must be >= 48px after item 38a 2x scaling: " .. tostring(PlayScene.hudLineStep))
-    assert(PlayScene.hudGalaxyShift and PlayScene.hudGalaxyShift >= 48,
-        "hudGalaxyShift must be >= 48px after item 38a 2x scaling: " .. tostring(PlayScene.hudGalaxyShift))
+    -- Item 41: HUD font unified to 22px across all phases (launch = ascending).
+    assert(PlayScene.hudFontSize and PlayScene.hudFontSize == 22,
+        "hudFontSize must be 22px after item 41 unification: " .. tostring(PlayScene.hudFontSize))
+    assert(PlayScene.hudLineStep and PlayScene.hudLineStep >= 26 and PlayScene.hudLineStep <= 34,
+        "hudLineStep must be 26-34px after item 41: " .. tostring(PlayScene.hudLineStep))
+    assert(PlayScene.hudGalaxyShift and PlayScene.hudGalaxyShift >= 26 and PlayScene.hudGalaxyShift <= 34,
+        "hudGalaxyShift must be 26-34px after item 41: " .. tostring(PlayScene.hudGalaxyShift))
 
     riskScene.expedition.phase = "settlement"
     -- Item 11: slot count (S%02d) is always 0 since item-15 abolished
@@ -6243,21 +6243,21 @@ function M.run()
         "hudLines().cash must read CASH $N: " .. tostring(ascendingHud.cash))
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
-    -- Item 38b+38d: one stat per line. Ascending with galaxy + best (always shown) =
-    -- 5 lines (galaxy, dist, cash, status, best) → 4 + 5*52 = 264.
-    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 264,
-        "ascending HUD band height must be 264 after item 38d best-always: "
+    -- Item 41: one stat per line. Ascending with galaxy + best (always shown) =
+    -- 5 lines (galaxy, dist, cash, status, best) → 4 + 5*30 = 154.
+    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 154,
+        "ascending HUD band height must be 154 after item 41: "
         .. tostring(PlayScene.hudHeight("ascending", ascendingHud, 0)))
-    -- Without galaxy, without best: 3 lines (dist, cash, status) → 4 + 3*52 = 160.
+    -- Without galaxy, without best: 3 lines (dist, cash, status) → 4 + 3*30 = 94.
     local noGalaxyHud = { distance = "DIST 0000", cash = "CASH $0", status = "H3/3 ASC" }
-    assert(PlayScene.hudHeight("ascending", noGalaxyHud, 0) == 160,
-        "ascending HUD (no galaxy) height must be 160: "
+    assert(PlayScene.hudHeight("ascending", noGalaxyHud, 0) == 94,
+        "ascending HUD (no galaxy) height must be 94: "
         .. tostring(PlayScene.hudHeight("ascending", noGalaxyHud, 0)))
-    -- With galaxy + best: 5 lines → 4 + 5*52 = 264.
+    -- With galaxy + best: 5 lines → 4 + 5*30 = 154.
     local fullHud = { distance = "DIST 0000", cash = "CASH $0", status = "H3/3 LAUNCH",
         galaxy = "SOLAR SYSTEM", best = "BEST 0000" }
-    assert(PlayScene.hudHeight("launch", fullHud, 0) == 264,
-        "launch HUD (galaxy+best) height must be 264: "
+    assert(PlayScene.hudHeight("launch", fullHud, 0) == 154,
+        "launch HUD (galaxy+best) height must be 154: "
         .. tostring(PlayScene.hudHeight("launch", fullHud, 0)))
 
     -- Item 38d: best record must be visible in ascending phase too.
@@ -6272,9 +6272,9 @@ function M.run()
     assert(PlayScene.hpBlockGap and PlayScene.hpBlockGap >= 2,
         "item 38c: hpBlockGap must exist and be >= 2px: " .. tostring(PlayScene.hpBlockGap))
 
-    -- Item 38e: ascending with galaxy + best = 5 lines → 4 + 5*52 = 264.
-    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 264,
-        "item 38e: ascending HUD with galaxy+best must be 264: "
+    -- Item 41: ascending with galaxy + best = 5 lines → 4 + 5*30 = 154.
+    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 154,
+        "item 41: ascending HUD with galaxy+best must be 154: "
         .. tostring(PlayScene.hudHeight("ascending", ascendingHud, 0)))
 
     assert(ascendingHud.earth == nil)

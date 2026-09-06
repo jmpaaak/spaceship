@@ -238,9 +238,8 @@ M.launchTouchArea = launchTouchArea
 -- Mobile-UI sub-item (1): HUD font enlarged from 8px to 14px; every HUD
 -- band height scales proportionally so text lines never overlap and the
 -- minimap sits below the taller band.
-M.hudFontSize = 44   -- item 38a: 2× HUD font (was 14)
-M.hudLineStep = 52   -- item 38a: proportional step for 44px font
-M.launchHudHeight = 176  -- item 38a: 2× launch HUD band height
+M.hudFontSize = 22   -- item 41: same font across all phases (was 44 launch-only)
+M.hudLineStep = 30   -- item 41: proportional step for 22px font
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
 -- at the world origin, radius 58) tops out at y=202, two pixels above the
@@ -326,8 +325,8 @@ end
 -- right edge and the status text's left edge, both in internal-canvas
 -- pixels. The status text draw x shifts right by this much whenever the
 -- icon is drawn so the icon never overlaps the "H%d/%d ..." text.
-M.hullIconSize = 32   -- item 38a: 2× icon size for 44px font
-M.hullIconGap = 8     -- item 38a: proportional gap
+M.hullIconSize = 16   -- item 41: icon size matching 22px font (was 32)
+M.hullIconGap = 4     -- item 41: proportional gap (was 8)
 
 -- Item 38c: HP block rendering — small rectangles instead of text status.
 M.hpBlockSize = 12    -- 12×12px per HP block
@@ -358,8 +357,8 @@ end
 
 -- Icon footprint (px) + gap (px) reserved between the coin icon's right
 -- edge and the CASH text's left edge, mirroring M.hullIconSize/hullIconGap.
-M.cashIconSize = 32   -- item 38a: 2× icon size for 44px font
-M.cashIconGap = 8     -- item 38a: proportional gap
+M.cashIconSize = 16   -- item 41: icon size matching 22px font (was 32)
+M.cashIconGap = 4     -- item 41: proportional gap (was 8)
 
 -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
 -- final slice): a small speedometer-like gauge icon paired with the steering
@@ -543,8 +542,8 @@ M.drawPixelStar = drawPixelStar
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
 -- the primary distance/cash row visually separate from secondary status.
-M.hudPrimaryStatusGap = 12  -- item 38a: 2× gap
-M.hudGalaxyShift = 52       -- item 38a: one lineStep when galaxy name shown
+M.hudPrimaryStatusGap = 6   -- item 41: gap matching 22px font (was 12)
+M.hudGalaxyShift = 30       -- item 41: one lineStep when galaxy name shown (was 52)
 
 -- docs/feedback/INBOX.md UI/HUD item 5: the returning-phase slot-odds line
 -- (C%/P%/S%/AVG$ above the minimap) was removed when item-15(a) abolished
@@ -571,7 +570,7 @@ end
 
 -- INBOX (16): HUD fill is left-text width only (icons + padding), never a
 -- full-width 720px black band. hudHeight() still anchors the minimap.
-M.hudBackgroundMaxWidth = 500  -- item 38a: wider for 44px font
+M.hudBackgroundMaxWidth = 280  -- item 41: narrower for 22px font (was 500)
 M.hudBackgroundPad = 8
 
 function M.hudBackgroundWidth(hud, font)
@@ -3296,16 +3295,10 @@ function M:draw()
     end
 
     local hud = self:hudLines()
-    local isLaunchHud = self.expedition.phase == "launch"
     local galaxyShift = hud.galaxy and M.hudGalaxyShift or 0
     local hudHeight = M.hudHeight(self.expedition.phase, hud, galaxyShift)
-    local previousHudFont
-    if isLaunchHud then
-        -- Mobile-UI sub-item (1): launch HUD now uses the same 14px font as
-        -- other phases (was 8px). The smallFont is kept for loadout/settlement.
-        previousHudFont = love.graphics.getFont()
-        love.graphics.setFont(fonts.get(M.hudFontSize))
-    end
+    -- Item 41: no per-phase font override; all phases use the default 22px font
+    -- set at init, ensuring launch and ascending HUD look identical.
     -- INBOX (16): left-text width only so stars/planets show on the right.
     local hudBgWidth = M.hudBackgroundWidth(hud, love.graphics.getFont())
     local shopEff = self.shopEffectImages or {}
@@ -3391,9 +3384,7 @@ function M:draw()
         end
         hudY = hudY + M.hudLineStep
     end
-    if isLaunchHud then
-        love.graphics.setFont(previousHudFont)
-    end
+
     -- INBOX-40: gear slots grid below left HUD stats (ascending/returning/launch)
     if self.expedition.phase ~= "settlement" and self.expedition.phase ~= "destroyed" then
         self:drawHudGearSlots(hudHeight)

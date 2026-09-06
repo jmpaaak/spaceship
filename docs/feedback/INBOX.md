@@ -2,12 +2,6 @@
 
 ## 처리 대기
 
-(41) **HUD 폰트 크기 — launch 때만 큼, ascending과 동일하게 고정 (사용자 확정, 2026-09-06):**
-  - 스크린샷: launch 시작 화면에서 HUD가 화면 1/4을 차지. ascending에서는 적절.
-  - 원인: launch HUD가 별도 `launchHudHeight` 또는 다른 폰트를 쓰고 있을 수 있음. 또는 (38)에서 44px가 launch에도 적용.
-  - 변경: **모든 페이즈에서 동일 HUD 폰트/레이아웃 사용.** launch 전용 HUD 분기가 있으면 제거. ascending 때 보이는 크기 그대로 launch에서도.
-  - `make verify` GREEN + 커밋: `fix(hud): same HUD font size across all phases`
-
 (42) **장착 네모칸 가로→세로 배치 (사용자 확정, 2026-09-06):**
   - 현재 hull 6 + engine 3 = 9칸이 가로로 나열. 스크린샷에서 화면 폭 절반 차지.
   - 변경: **세로 1열**로 배치. x 고정 (좌측 5~10px), y는 HUD 텍스트 끝 아래부터 32px 간격으로 아래로. 9칸 × 32px = 288px. hull과 engine 사이 4px 간격.
@@ -42,6 +36,7 @@
   - `make verify` GREEN + 커밋: `fix(play): remove "new planet" floating text above undiscovered planets`
 
 ## 처리 완료
+(41) **HUD 폰트 크기 — launch 때만 큼, ascending과 동일하게 고정 — 완료 2026-09-06:** `M.hudFontSize` 44→22, `M.hudLineStep` 52→30, icons 32→16px, `hudBackgroundMaxWidth` 500→280. launch-only font override 제거 (`previousHudFont`/`isLaunchHud` 분기). `M.launchHudHeight` 제거. 모든 페이즈에서 init 시 설정된 22px 폰트 사용. `make verify` GREEN.
 (40) **장착장비 패널 → 좌상단 HUD 아래 고정 노출 + 아이템 칸 확대 — 완료 2026-09-06:** `drawHudGearSlots(hudHeight)` 메서드 추가. 32×32px 슬롯 그리드 (hull 6 + engine 3), rarity별 배경색 + 아이콘 오버레이, 빈 슬롯 어두운 테두리. "GEAR"/"장착" 라벨 22px. ascending/returning/launch 때 좌상단 HUD 아래 고정. `make verify` GREEN.
 (39) **시작 화면 "탭하여 발사" 위치 이동 — 완료 2026-09-06:** messageY를 `launchLoadoutBoxTop - 50 + sin(time*2)*4` 플로트로 이동, 텍스트 색 `(0.6,0.6,0.6,0.7)`, 로켓 아이콘 함께 이동. `make verify` GREEN.
 (38) **HUD 텍스트 2배 + 한줄씩 + 내구도 네모칸 + 최고기록 (사용자 확정, 2026-09-06):**

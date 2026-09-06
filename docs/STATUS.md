@@ -1,21 +1,18 @@
 ## Current Status
 
-- INBOX (40) complete: Gear slots grid fixed below left HUD stats during ascending/returning/launch.
-  - Added `drawHudGearSlots(hudHeight)` method: 32×32px slot grid (hull 6 + engine 3).
-  - Filled slots show rarity-tinted background + icon overlay; empty slots show dim outline.
-  - "GEAR" / "장착" label in 22px above the grid.
-  - Called from draw() after HUD stats, before minimap.
-  - i18n key `hud_gear_label` (EN + KO).
-  - INBOX-40 test block in self_test.lua.
+- INBOX (41) complete: HUD font size unified across all phases (launch = ascending).
+  - `M.hudFontSize` 44→22, `M.hudLineStep` 52→30, icons 32→16px, background max 500→280px.
+  - Removed launch-only font override (`previousHudFont` / `isLaunchHud` font branch).
+  - Removed unused `M.launchHudHeight`.
+  - All phases now use the default 22px font set at init — no per-phase branching.
+  - Updated self_test assertions (hudHeight values, font size range).
   - `make verify` GREEN.
 
 ## Next slice
 
-- INBOX (41): next pending item from INBOX.md.
+- INBOX (42): gear slot layout change from horizontal to vertical column.
 
 ## Previous
 
-- INBOX (39) complete: Moved "Tap to Launch" text and rocket icon above the loadout panel.
-- INBOX (38) complete: HUD text 2x scaling, one stat per line, durability blocks, and best record.
-- INBOX (37) complete: Moon system implementation.
+- INBOX (40) complete: Gear slots grid fixed below left HUD stats during ascending/returning/launch.
 - INBOX (36) complete: flat $1 planet sample value.
