@@ -1424,6 +1424,82 @@ function M:hudLines()
 end
 
 
+-- INBOX-40: gear slots grid constants for the HUD (below left stats).
+-- 32×32px slots, hull 6 + engine 3 = 9 max, horizontal row, with a
+-- small "GEAR" label above the grid in 22px font.
+M.hudGearSlotSize = 32
+M.hudGearSlotGap  = 4
+M.hudGearLabelFontSize = 22
+
+-- INBOX-40: draw the equipped gear grid below the left HUD stats band.
+-- Called from draw() for non-settlement/destroyed phases.
+function M:drawHudGearSlots(hudHeight)
+    local run = self.expedition
+    local hullGear = run.equippedGear or {}
+    local engineGear = run.equippedEngineParts or {}
+    local hullSlots = 6
+    local engineSlots = 3
+    local slotSize = M.hudGearSlotSize
+    local gap = M.hudGearSlotGap
+    local groupGap = 8
+
+    -- Label above grid
+    self.hudGearLabelFont = self.hudGearLabelFont or fonts.get(M.hudGearLabelFontSize)
+    local prevFont = love.graphics.getFont()
+    love.graphics.setFont(self.hudGearLabelFont)
+    local labelY = hudHeight + 2
+    love.graphics.setColor(0.5, 0.6, 0.7, 0.7)
+    love.graphics.printf(i18n.t("hud_gear_label"), 5, labelY, 200, "left")
+
+    local gridY = labelY + M.hudGearLabelFontSize + 4
+    local startX = 5
+
+    -- Draw hull gear slots
+    for i = 1, hullSlots do
+        local x = startX + (i - 1) * (slotSize + gap)
+        local part = hullGear[i]
+        if part then
+            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0, 0.7)
+            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1, 0.7)
+            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4, 0.7)
+            else love.graphics.setColor(0.5, 0.5, 0.5, 0.7) end
+            love.graphics.rectangle("fill", x, gridY, slotSize, slotSize)
+            -- Small icon overlay (shield shape)
+            love.graphics.setColor(1, 1, 1, 0.5)
+            local pts = M.shieldIconPoints(x + slotSize / 2, gridY + slotSize / 2, 8)
+            if pts then love.graphics.polygon("fill", pts) end
+            love.graphics.setColor(0.1, 0.1, 0.1, 1)
+            love.graphics.rectangle("line", x, gridY, slotSize, slotSize)
+        else
+            love.graphics.setColor(0.3, 0.35, 0.45, 0.5)
+            love.graphics.rectangle("line", x, gridY, slotSize, slotSize)
+        end
+    end
+
+    -- Engine gear slots (after a small gap)
+    local engineStartX = startX + hullSlots * (slotSize + gap) + groupGap
+    for i = 1, engineSlots do
+        local x = engineStartX + (i - 1) * (slotSize + gap)
+        local part = engineGear[i]
+        if part then
+            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0, 0.7)
+            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1, 0.7)
+            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4, 0.7)
+            else love.graphics.setColor(0.5, 0.5, 0.5, 0.7) end
+            love.graphics.rectangle("fill", x, gridY, slotSize, slotSize)
+            -- Engine icon overlay (small gear shape)
+            love.graphics.setColor(1, 1, 1, 0.5)
+            love.graphics.circle("fill", x + slotSize / 2, gridY + slotSize / 2, 6)
+            love.graphics.setColor(0.1, 0.1, 0.1, 1)
+            love.graphics.rectangle("line", x, gridY, slotSize, slotSize)
+        else
+            love.graphics.setColor(0.3, 0.35, 0.45, 0.5)
+            love.graphics.rectangle("line", x, gridY, slotSize, slotSize)
+        end
+    end
+    if prevFont then love.graphics.setFont(prevFont) end
+end
+
 function M:loadoutLines()
     local run = self.expedition
     -- Stellar Origin sub-item 4: collect active synergy display labels.
@@ -3317,6 +3393,10 @@ function M:draw()
     end
     if isLaunchHud then
         love.graphics.setFont(previousHudFont)
+    end
+    -- INBOX-40: gear slots grid below left HUD stats (ascending/returning/launch)
+    if self.expedition.phase ~= "settlement" and self.expedition.phase ~= "destroyed" then
+        self:drawHudGearSlots(hudHeight)
     end
     self:drawMinimap()
     -- Item 9: Star well HUD timer (ascending only, inside well, not yet sampled)

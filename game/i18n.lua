@@ -149,6 +149,8 @@ locales.en = {
     synergy_binaryStar   = "x BINARY STAR",
     synergy_supernova    = "+ SUPERNOVA",
     synergy_darkMatter   = "@ DARK MATTER",
+    -- INBOX-40: gear slots HUD label
+    hud_gear_label = "GEAR",
 }
 
 locales.en.phase_abbrev = {
@@ -287,6 +289,8 @@ locales.ko = {
     synergy_binaryStar   = "x 쌍성",
     synergy_supernova    = "+ 초신성",
     synergy_darkMatter   = "@ 암흑물질",
+    -- INBOX-40: gear slots HUD label
+    hud_gear_label = "장착",
 }
 
 locales.ko.phase_abbrev = {

@@ -2,15 +2,8 @@
 
 ## 처리 대기
 
-(40) **장착장비 패널 → 좌상단 HUD 아래 고정 노출 + 아이템 칸 확대 (사용자 확정, 2026-09-06):**
-  - ~~미니맵 아래 우측~~ → **좌상단 HUD 텍스트(거리/자금/내구도/최고기록) 바로 아래**에 고정.
-  - ascending 때도 항상 보임. launch 중앙 패널은 그대로 유지 (상세 정보용).
-  - 장착 기어를 **네모 슬롯 그리드**로 표시. 슬롯 크기: **32×32px** (기존 아이콘 ~9px 대비 대폭 확대). 빈 슬롯은 어두운 테두리, 장착 슬롯은 기어 아이콘 + 배경색(rarity별 틴트). hull 슬롯 6개 + engine 슬롯 3개 = 최대 9칸, 가로 배치 (720px 좌측에 충분).
-  - 각 슬롯 아래/옆에 기어 이름은 생략 (공간 절약). 탭하면 상세 팝업은 미래 과제.
-  - 정보명 라벨: `"장착"` / `"GEAR"` 작은 폰트(22px)로 슬롯 위에.
-  - `make verify` GREEN + 커밋: `feat(hud): gear slots grid fixed below HUD stats on left`
-
 ## 처리 완료
+(40) **장착장비 패널 → 좌상단 HUD 아래 고정 노출 + 아이템 칸 확대 — 완료 2026-09-06:** `drawHudGearSlots(hudHeight)` 메서드 추가. 32×32px 슬롯 그리드 (hull 6 + engine 3), rarity별 배경색 + 아이콘 오버레이, 빈 슬롯 어두운 테두리. "GEAR"/"장착" 라벨 22px. ascending/returning/launch 때 좌상단 HUD 아래 고정. `make verify` GREEN.
 (39) **시작 화면 "탭하여 발사" 위치 이동 — 완료 2026-09-06:** messageY를 `launchLoadoutBoxTop - 50 + sin(time*2)*4` 플로트로 이동, 텍스트 색 `(0.6,0.6,0.6,0.7)`, 로켓 아이콘 함께 이동. `make verify` GREEN.
 (38) **HUD 텍스트 2배 + 한줄씩 + 내구도 네모칸 + 최고기록 (사용자 확정, 2026-09-06):**
   - **(a) HUD 폰트 2배.** `M.hudFontSize = 22` → **44**. Galmuri11 44px (11×4). `M.hudLineStep`도 비례 확대 (36→52 이상).
