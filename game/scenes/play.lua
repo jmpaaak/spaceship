@@ -556,14 +556,13 @@ M.hudOddsLineHeight = 0
 -- and the actual text draw (draw) never disagree about how tall the top
 -- HUD band is.
 function M.hudHeight(phase, hud, galaxyShift)
-    if phase == "launch" then
-        return M.launchHudHeight + galaxyShift
-    end
-    -- Item 2: returnProgress branch removed (returning phase abolished).
-    if hud.best then
-        return 176 + galaxyShift
-    end
-    return 120 + galaxyShift
+    -- Item 38b: one stat per line. Count lines: dist + cash + status = 3 base,
+    -- +1 if galaxy, +1 if best. Height = 4 + lines * hudLineStep.
+    -- galaxyShift is no longer used (galaxy is counted as a line), kept for API compat.
+    local lines = 3  -- distance, cash, status
+    if hud and hud.galaxy then lines = lines + 1 end
+    if hud and hud.best then lines = lines + 1 end
+    return 4 + lines * M.hudLineStep
 end
 
 -- INBOX (16): HUD fill is left-text width only (icons + padding), never a
@@ -590,9 +589,9 @@ function M.hudBackgroundWidth(hud, font)
     if hud.galaxy then
         consider(left + icon + gap + textW(hud.galaxy))
     end
-    local distIconOffset = icon + gap
-    consider(left + distIconOffset + textW(hud.distance) + 8
-        + M.cashIconSize + M.cashIconGap + textW(hud.cash))
+    -- Item 38b: cash is its own line now, not appended after distance.
+    consider(left + icon + gap + textW(hud.distance))
+    consider(left + icon + gap + textW(hud.cash))
     if hud.status then
         consider(left + icon + gap + textW(hud.status))
     end
@@ -3247,59 +3246,45 @@ function M:draw()
         love.graphics.setColor(0.7, 0.9, 1)
     end
     -- ComfyUI HUD wiring (group 1): distance icon before distance text
+    -- Item 38b: distance is its own line.
     do
         local hudIconsTmp2 = self.hudIconImages or {}
         local distIconSize = M.hullIconSize
         drawHudSpriteOrPoly(hudIconsTmp2.distance, nil,
             5 + distIconSize / 2, hudY + distIconSize / 2, distIconSize)
         love.graphics.print(hud.distance, 5 + distIconSize + M.hullIconGap, hudY)
+        hudY = hudY + M.hudLineStep
     end
-    -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
-    -- third slice): pair the CASH readout with a small coin icon, mirroring
-    -- the shield icon paired with the hull status line below. The coin sits
-    -- right after the DIST text (measured via the currently active HUD
-    -- font, so this works for both the 14px default and the launch phase's
-    -- 8px small font) with the CASH text shifted right of the coin's
-    -- footprint so nothing overlaps.
-    local distanceWidth = love.graphics.getFont():getWidth(hud.distance)
-    -- Distance text now starts after the distance icon, so cash icon needs
-    -- to account for the distance icon prefix too.
-    local distIconOffset = M.hullIconSize + M.hullIconGap
-    local cashIconCenterX = 5 + distIconOffset + distanceWidth + 8 + M.cashIconSize / 2
-    local cashIconCenterY = hudY + (love.graphics.getFont():getHeight() / 2)
-    love.graphics.setColor(1, 0.85, 0.3)
-    -- ComfyUI HUD wiring (group 1): use hud_coin.png if loaded, else polygon
-    local hudIcons = self.hudIconImages or {}
-    drawHudSpriteOrPoly(hudIcons.cash, M.coinIconPoints,
-        cashIconCenterX, cashIconCenterY, M.cashIconSize)
-    love.graphics.setColor(0.7, 0.9, 1)
-    love.graphics.print(hud.cash,
-        5 + distIconOffset + distanceWidth + 8 + M.cashIconSize + M.cashIconGap, hudY)
-    -- docs/feedback/INBOX.md UI/HUD item 3 (icon-based HUD simplification,
-    -- second slice): pair the hull-durability status text with a small
-    -- shield icon drawn just to its left, then shift the text right by
-    -- the icon's footprint so it never overlaps the shield.
-    local function drawStatusWithShield(y)
+    -- Item 38b: cash is its own line (was combined with distance).
+    do
+        love.graphics.setColor(1, 0.85, 0.3)
+        local hudIcons = self.hudIconImages or {}
+        drawHudSpriteOrPoly(hudIcons.cash, M.coinIconPoints,
+            5 + M.cashIconSize / 2, hudY + M.cashIconSize / 2, M.cashIconSize)
+        love.graphics.setColor(0.7, 0.9, 1)
+        love.graphics.print(hud.cash, 5 + M.cashIconSize + M.cashIconGap, hudY)
+        hudY = hudY + M.hudLineStep
+    end
+    -- Item 38b: status (durability) uses sequential hudY.
+    do
+        local hudIcons = self.hudIconImages or {}
         local iconCenterX = 5 + M.hullIconSize / 2
-        local iconCenterY = y + M.hullIconSize / 2
+        local iconCenterY = hudY + M.hullIconSize / 2
         love.graphics.setColor(0.6, 0.85, 1)
-        -- ComfyUI HUD wiring (group 1): use hud_shield.png if loaded, else polygon
         drawHudSpriteOrPoly(hudIcons.hull, M.shieldIconPoints,
             iconCenterX, iconCenterY, M.hullIconSize)
         love.graphics.setColor(0.7, 0.9, 1)
-        love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, y)
+        love.graphics.print(hud.status, 5 + M.hullIconSize + M.hullIconGap, hudY)
+        hudY = hudY + M.hudLineStep
     end
     if hud.best then
-        drawStatusWithShield(64 + galaxyShift)
         love.graphics.setColor(1, 0.8, 0.3)
-        -- ComfyUI HUD wiring (group 1): best-altitude icon
-        local bestY = 120 + galaxyShift
+        local hudIcons = self.hudIconImages or {}
         local bestIconSize = M.hullIconSize
         drawHudSpriteOrPoly(hudIcons.best, nil,
-            5 + bestIconSize / 2, bestY + bestIconSize / 2, bestIconSize)
-        love.graphics.print(hud.best, 5 + bestIconSize + M.hullIconGap, bestY)
-    else
-        drawStatusWithShield(64 + galaxyShift)
+            5 + bestIconSize / 2, hudY + bestIconSize / 2, bestIconSize)
+        love.graphics.print(hud.best, 5 + bestIconSize + M.hullIconGap, hudY)
+        hudY = hudY + M.hudLineStep
     end
     if isLaunchHud then
         love.graphics.setFont(previousHudFont)

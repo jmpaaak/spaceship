@@ -6229,8 +6229,22 @@ function M.run()
         "hudLines().cash must read CASH $N: " .. tostring(ascendingHud.cash))
     assert(PlayScene.hudPrimaryStatusGap and PlayScene.hudPrimaryStatusGap > 0,
         "PlayScene.hudPrimaryStatusGap must exist and separate DIST/CASH from the fuel status line")
-    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 120,
-        "ascending HUD band height must be 120 after item 38a 2x scaling")
+    -- Item 38b: one stat per line. Ascending with galaxy, without best =
+    -- 4 lines (galaxy, dist, cash, status) → 4 + 4*52 = 212.
+    assert(PlayScene.hudHeight("ascending", ascendingHud, 0) == 212,
+        "ascending HUD band height must be 212 after item 38b one-stat-per-line: "
+        .. tostring(PlayScene.hudHeight("ascending", ascendingHud, 0)))
+    -- Without galaxy: 3 lines (dist, cash, status) → 4 + 3*52 = 160.
+    local noGalaxyHud = { distance = "DIST 0000", cash = "CASH $0", status = "H3/3 ASC" }
+    assert(PlayScene.hudHeight("ascending", noGalaxyHud, 0) == 160,
+        "ascending HUD (no galaxy) height must be 160: "
+        .. tostring(PlayScene.hudHeight("ascending", noGalaxyHud, 0)))
+    -- With galaxy + best: 5 lines → 4 + 5*52 = 264.
+    local fullHud = { distance = "DIST 0000", cash = "CASH $0", status = "H3/3 LAUNCH",
+        galaxy = "SOLAR SYSTEM", best = "BEST 0000" }
+    assert(PlayScene.hudHeight("launch", fullHud, 0) == 264,
+        "launch HUD (galaxy+best) height must be 264: "
+        .. tostring(PlayScene.hudHeight("launch", fullHud, 0)))
     assert(ascendingHud.earth == nil)
     assert(ascendingHud.returnProgress == nil)
 
