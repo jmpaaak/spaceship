@@ -2271,17 +2271,19 @@ function M:update(dt)
                                     editionPick = love.math.random()
                                 })
                                 if drop then
-                                    expedition.equipGear(self.expedition, "engine", drop)
-                                    self.gearPopup = { part = drop, category = "engine" }
-                                    table.insert(self.floatingTexts, {
-                                        text = i18n.t("floating_hub_gear", i18n.partName(drop)),
-                                        x = self.ship.x,
-                                        y = self.ship.y - 40,
-                                        timer = 3.0,
-                                        kind = "sample",
-                                        awarded = 0,
-                                        rollupElapsed = 0,
-                                    })
+                                    local ok = expedition.equipGear(self.expedition, "engine", drop)
+                                    if ok then
+                                        self.gearPopup = { part = drop, category = "engine" }
+                                        table.insert(self.floatingTexts, {
+                                            text = i18n.t("floating_hub_gear", i18n.partName(drop)),
+                                            x = self.ship.x,
+                                            y = self.ship.y - 40,
+                                            timer = 3.0,
+                                            kind = "sample",
+                                            awarded = 0,
+                                            rollupElapsed = 0,
+                                        })
+                                    end
                                 end
                             end
                         end
@@ -2348,18 +2350,20 @@ function M:update(dt)
                         if drop then
                             local cat = "hull"
                             if gear.findById(engine, drop.id) then cat = "engine" end
-                            expedition.equipGear(self.expedition, cat, drop)
-                            -- Show Balatro-style part detail popup on acquisition
-                            self.gearPopup = { part = drop, category = cat }
-                            table.insert(self.floatingTexts, {
-                                text = i18n.t("floating_hub_gear", i18n.partName(drop)),
-                                x = planet.x,
-                                y = planet.y + 20,
-                                timer = 3.0,
-                                kind = "sample",
-                                awarded = 0,
-                                rollupElapsed = 0,
-                            })
+                            local ok = expedition.equipGear(self.expedition, cat, drop)
+                            if ok then
+                                -- Show Balatro-style part detail popup on acquisition
+                                self.gearPopup = { part = drop, category = cat }
+                                table.insert(self.floatingTexts, {
+                                    text = i18n.t("floating_hub_gear", i18n.partName(drop)),
+                                    x = planet.x,
+                                    y = planet.y + 20,
+                                    timer = 3.0,
+                                    kind = "sample",
+                                    awarded = 0,
+                                    rollupElapsed = 0,
+                                })
+                            end
                         end
                     end
                     -- 2. Store hub position for relaunch spawn
