@@ -234,7 +234,7 @@ M.starWellMultiplier = 4
 M.starWellRadius = M.starRadius * M.starWellMultiplier -- 96
 M.starDotInterval = 0.5   -- seconds between 1-damage ticks
 M.starSurvivalTime = 10   -- continuous seconds for sample reward
-M.starGravityStrength = 120 -- pull force (px/s²) at starRadius distance
+M.starGravityStrength = 40 -- pull force (px/s²) at starRadius distance (was 120; reduced so edge is escapable)
 
 -- Slow fixed helm speed while sampling the central star. Farther galaxies
 -- (higher engine-part tiers) get an even slower cap so the 10s dwell is

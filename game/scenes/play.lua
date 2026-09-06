@@ -2175,9 +2175,11 @@ function M:update(dt)
                 local sunDist = math.sqrt(sdx * sdx + sdy * sdy)
                 if sunDist < world.starWellRadius then
                     inWell = true
-                    -- Gravity pull: inversely proportional to distance
+                    -- Gravity pull: strongest near center, fades to zero at well edge
                     if sunDist > 1 then
-                        local pullStrength = world.starGravityStrength * (world.starRadius / sunDist)
+                        -- Quadratic falloff: pull is zero at wellRadius, max at starRadius
+                        local t = math.max(0, 1 - sunDist / world.starWellRadius)
+                        local pullStrength = world.starGravityStrength * t * t
                         local nx, ny = sdx / sunDist, sdy / sunDist
                         self.ship.x = self.ship.x + nx * pullStrength * dt
                         self.ship.y = self.ship.y + ny * pullStrength * dt
@@ -3123,7 +3125,7 @@ function M:drawShipStatsSummary()
     love.graphics.printf(i18n.t("ship_stats_samples_label"), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep
     love.graphics.setColor(0.45, 0.95, 1, 0.9)
-    love.graphics.printf(i18n.t("ship_stats_samples", run.sampleCount or 0, run.pendingSampleValue or 0), textX, statsY, textW, "right")
+    love.graphics.printf(i18n.t("ship_stats_samples", run.pendingSampleValue or 0), textX, statsY, textW, "right")
     statsY = statsY + M.shipStatsLineStep + 4
     -- Ship stats below samples
     love.graphics.setColor(0.6, 0.7, 0.8, 0.85)
@@ -3175,8 +3177,8 @@ function M:draw()
     -- with the foreground streaks or gameplay elements.
     local bgCameraX, bgCameraY = cameraX * 0.4, cameraY * 0.4
     local bsx, bsy = world.sectorAt(bgCameraX, bgCameraY)
-    for oy = -1, 1 do
-        for ox = -1, 1 do
+    for oy = -2, 2 do
+        for ox = -2, 2 do
             for _, star in ipairs(world.backgroundStars(bsx + ox, bsy + oy)) do
                 local x, y = math.floor(star.x - bgCameraX), math.floor(star.y - bgCameraY)
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
@@ -3207,8 +3209,8 @@ function M:draw()
             end
         end
     end
-    for oy = -1, 1 do
-        for ox = -1, 1 do
+    for oy = -2, 2 do
+        for ox = -2, 2 do
             for _, star in ipairs(world.stars(sx + ox, sy + oy)) do
                 local x, y = math.floor(star.x - cameraX), math.floor(star.y - cameraY)
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
@@ -3255,15 +3257,17 @@ function M:draw()
         end
         local prevEarthFont = love.graphics.getFont()
         love.graphics.setFont(fonts.get(11))
+        local sell = i18n.t("checkpoint_hint_sell")
         local repair = i18n.t("checkpoint_hint_repair")
         local upgrade = i18n.t("checkpoint_hint_upgrade")
         local bob = math.sin(self.time * 2) * 3
         local f = love.graphics.getFont()
         local lineH = 14
-        local topY = earthY - M.earthVisualRadius - 8 - lineH * 2 + bob
+        local topY = earthY - M.earthVisualRadius - 8 - lineH * 3 + bob
         love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
-        love.graphics.print(repair, earthX - f:getWidth(repair) / 2, topY)
-        love.graphics.print(upgrade, earthX - f:getWidth(upgrade) / 2, topY + lineH)
+        love.graphics.print(sell, earthX - f:getWidth(sell) / 2, topY)
+        love.graphics.print(repair, earthX - f:getWidth(repair) / 2, topY + lineH)
+        love.graphics.print(upgrade, earthX - f:getWidth(upgrade) / 2, topY + lineH * 2)
         love.graphics.setFont(prevEarthFont)
     end
     -- Item 9: Draw star gravity well ring around the central star
@@ -3398,12 +3402,14 @@ function M:draw()
             local f = love.graphics.getFont()
             local lineH = 14
             if planet.hub then
+                local sell = i18n.t("checkpoint_hint_sell")
                 local repair = i18n.t("checkpoint_hint_repair")
                 local upgrade = i18n.t("checkpoint_hint_upgrade")
-                local topY = y - planet.radius - 8 - lineH * 2 + bob
+                local topY = y - planet.radius - 8 - lineH * 3 + bob
                 love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
-                love.graphics.print(repair, x - f:getWidth(repair) / 2, topY)
-                love.graphics.print(upgrade, x - f:getWidth(upgrade) / 2, topY + lineH)
+                love.graphics.print(sell, x - f:getWidth(sell) / 2, topY)
+                love.graphics.print(repair, x - f:getWidth(repair) / 2, topY + lineH)
+                love.graphics.print(upgrade, x - f:getWidth(upgrade) / 2, topY + lineH * 2)
             elseif planet.isShop then
                 if not self.shopVisited[planet.id] then
                     local hullStr = i18n.t("hull_part_available")
