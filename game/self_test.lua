@@ -5492,7 +5492,7 @@ local function testReentryShake()
         "far from Earth must not set reentryShake, got " .. tostring(scene.reentryShake))
     assert((scene.reentryHeatAlpha or 0) == 0, "far from Earth must not have heat alpha")
 
-    local reentryR = PlayScene.earthVisualRadius * 3
+    local reentryR = PlayScene.earthReentryRadius
     scene.ship.y = PlayScene.earthCenterY - (reentryR - 1)
     scene:update(0)
     local farShake = scene.reentryShake or 0
@@ -7917,6 +7917,23 @@ function M.run()
                 "shop_label i18n key missing for " .. loc)
         end
         i18n.setLocale("en")
+    end
+
+    -- INBOX (23): Earth settle radius shrink
+    do
+        assert(PlayScene.earthVisualRadius == 58, "earthVisualRadius must be 58")
+        assert(PlayScene.earthSettleRadius == 68,
+            "earthSettleRadius must be 58+10=68, got " .. PlayScene.earthSettleRadius)
+        assert(PlayScene.earthReentryRadius == 145,
+            "earthReentryRadius must be 58*2.5=145, got " .. PlayScene.earthReentryRadius)
+        assert(PlayScene.launchSpawnY == -13,
+            "launchSpawnY must be 75-68-20=-13, got " .. PlayScene.launchSpawnY)
+        -- spawn must still be outside settle radius
+        local dx = PlayScene.launchSpawnX - PlayScene.earthCenterX
+        local dy = PlayScene.launchSpawnY - PlayScene.earthCenterY
+        local spawnDist = math.sqrt(dx * dx + dy * dy)
+        assert(spawnDist > PlayScene.earthSettleRadius,
+            "spawn must be outside settle radius, dist=" .. spawnDist .. " settle=" .. PlayScene.earthSettleRadius)
     end
 
     print("SPACESHIP_UNIT_OK")

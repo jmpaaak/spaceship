@@ -1,11 +1,12 @@
 ## Current Status
 
-- INBOX (21) complete: HUD distance now shows euclidean distance from Earth center to ship.
-  - `hudLines()` computes `sqrt((ship.x - earthCenterX)^2 + (ship.y - earthCenterY)^2)` instead of virtual `run.altitude`.
-  - `run.altitude` / `bestAltitude` kept for internal sample-value calculations and meta-reset.
-  - Test `distScene21` verifies ship at (300, -325) → Earth(0,75) shows DIST 0500.
+- INBOX (23) complete: Earth settle radius shrunk closer to visual radius.
+  - `earthSettleRadius` 88→68 (margin 30→10), `launchSpawnY` -63→-13 (margin 50→20).
+  - `earthReentryRadius` 174→145 (58*2.5 instead of 58*3).
+  - self_test reentryR updated to use `PlayScene.earthReentryRadius` directly.
+  - New assertion block verifies all three constants + spawn-outside-settle invariant.
   - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX (23): Shrink Earth settle radius closer to visual radius (margin 30→10).
+- INBOX (24): Sample collect zoom-in + timeslip 0.3→0.24.

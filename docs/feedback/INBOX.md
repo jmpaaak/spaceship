@@ -4,29 +4,18 @@
 
 
 
-(22) **함선 아이디어 — 사용자에게 제안 (논의 필요, 2026-09-06):**
-  - 현재 함선: starter (기본) / scout (속도+10, 체력-1). 속도는 상점에서도 올릴 수 있어서 차별이 약함.
-  - 제안: 함선마다 **상점에서 올릴 수 없는 고유 패시브** 1개. 예:
-    - **Starter "Pioneer"**: 패시브 없음 (밸런스형, 기본 체력 3)
-    - **Scout "Comet"**: 수집 반경 +50% (radius+45 대신 +30) — 행성에 덜 가까이 가도 채집 가능, 충돌 회피 여유
-    - **Tank "Fortress"**: 잔해 데미지 면역 (debris 1딜 → 0) — 잔해 무시하고 직진
-    - **Gambler "Joker"**: 슬롯 STAR 확률 2배 — 상점 도박 특화
-    - **Explorer "Voyager"**: 미니맵 viewRadius 2배 — 먼 은하 HUB를 미리 확인
-  - 이 방향이면 INBOX 스펙으로 확정. 다른 아이디어가 있으면 알려주세요.
-
-(23) **지구 settle 반경 축소 (사용자 확정, 2026-09-06):**
-  - 현재 `M.earthVisualRadius = 58`, `M.earthSettleRadius = 58 + 30 = 88`. 사용자: "지구 영역이 이미지보다 훨씬 큼."
-  - 변경: `M.earthSettleRadius = 58 + 10 = 68`. 마진 30→10. `launchSpawnY`도 재계산 `75 - 68 - 20 = -13` 정도.
-  - reentry radius도 비례 축소: `58 * 2.5 = 145` (기존 `58*3=174`).
-  - self_test의 earthSettleRadius 의존 값 갱신.
-  - `make verify` GREEN + 커밋: `fix(play): shrink Earth settle radius closer to visual radius`
-
 (24) **표본 채집 줌인 + 타임슬립 1.25배 확대 (사용자 확정, 2026-09-06):**
   - **(a) 채집 순간 카메라 줌인.** `self.collectZoom = { timer = 0.5, scale = 1.35, planetX = planet.x, planetY = planet.y }` — 0.5초간 카메라 스케일을 1.35배로, 줌 중심을 함선과 행성 중점으로. 줌인 덕에 행성이 크게 보이고 플레이어가 충돌 회피 방향을 잡기 쉬움. `love.graphics.scale` 전에 `collectZoom.scale` 곱. timer 소진 시 lerp로 1.0 복귀.
   - **(b) 타임슬립 0.3배 → 0.24배** (1.25배 느리게). `self.timeSlip = { timer = 0.4, scale = 0.24 }`. 기존 0.3에서 0.06 더 느려짐.
   - `make verify` GREEN + 커밋: `feat(play): zoom-in on sample collect + slower timeslip`
 
 ## 처리 완료
+
+(23) **지구 settle 반경 축소 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `earthSettleRadius` 88→68 (margin 30→10), `launchSpawnY` -63→-13 (margin 50→20), `earthReentryRadius` 174→145 (58*2.5). self_test `reentryR` updated to use `earthReentryRadius` directly. New INBOX-23 assertion block added. `make verify` GREEN.
+
+(22) **함선 아이디어 — 사용자에게 제안 (논의 필요, 2026-09-06):**
+  - [2026-09-06] human-gated: 사용자 응답 대기 중. 코드 작업 없음 — 사용자가 방향을 확정하면 스펙화.
 
 (21) **거리 = 지구로부터의 함선 거리 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `hudLines()` distance를 `run.altitude`(가상 누적 고도) 대신 `sqrt((ship.x - earthCenterX)^2 + (ship.y - earthCenterY)^2)` 유클리드 거리로 변경. `run.altitude`/`bestAltitude`는 내부(표본 가치·메타 리셋 등)에서 그대로 유지, HUD만 실거리 표시. 테스트 `distScene21` 추가(ship (300, -325) → Earth(0,75) 거리=500 확인). `make verify` GREEN.

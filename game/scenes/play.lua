@@ -168,14 +168,12 @@ M.ascendReturnButton = ascendReturnButton
 M.earthCenterX = 0
 M.earthCenterY = 75
 M.earthVisualRadius = 58
-M.earthSettleRadius = 58 + 30  -- 88
--- Spawn / relaunch outside the settle disk. (0,0) is 75px from Earth
--- (0,75) — inside radius 88 — so the first ascending frame used to
--- auto-settle and trap the player in Earth shop at game start.
+M.earthSettleRadius = 58 + 10  -- 68  (INBOX 23: margin 30→10)
+-- Spawn / relaunch outside the settle disk.
 M.launchSpawnX = 0
-M.launchSpawnY = 75 - (58 + 30) - 50  -- -63
+M.launchSpawnY = 75 - (58 + 10) - 20  -- -13  (INBOX 23: margin 50→20)
 -- INBOX (5)(a): atmospheric reentry starts outside settle range.
-M.earthReentryRadius = 58 * 3  -- 174
+M.earthReentryRadius = 145  -- 58 * 2.5  (INBOX 23: shrink from 58*3=174)
 M.reentryShakeMax = 6
 
 -- INBOX (14): undiscovered-planet collect orbit is a faint thin line.
