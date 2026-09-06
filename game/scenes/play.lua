@@ -3812,7 +3812,7 @@ function M:draw()
     end
     if self.reentryHeatAlpha and self.reentryHeatAlpha > 0 then
         local prevLineWidth = love.graphics.getLineWidth()
-        love.graphics.setColor(1, 0, 0, self.reentryHeatAlpha)
+        love.graphics.setColor(0.2, 1, 0.4, self.reentryHeatAlpha)
         love.graphics.setLineWidth(60)
         love.graphics.rectangle("line", 0, 0, viewport.width, viewport.height)
         love.graphics.setLineWidth(prevLineWidth)
