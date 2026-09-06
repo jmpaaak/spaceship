@@ -220,6 +220,15 @@ function M.reentryHeatVignetteAlpha(dist)
     return 0.3 * (1 - dist / radius)
 end
 
+local function pulseHaptic(self, intensity)
+    -- iOS Love2D Studio / LÖVE 11: love.system.vibrate exists on mobile.
+    if not love or not love.system or not love.system.vibrate then return end
+    local now = self.time or 0
+    if now - (self.lastHapticTime or 0) < 0.22 then return end
+    self.lastHapticTime = now
+    pcall(love.system.vibrate, intensity or 0.04)
+end
+
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
 -- already accepts any tap on the internal canvas regardless of x/y (see the
 -- "launch" branch below), so the functional touch target has always spanned
@@ -1277,6 +1286,9 @@ function M.new(options)
         starDotAccum = 0,         -- accumulator for DoT ticks
         starWellSampled = {},     -- galaxyId → true once sample awarded
         starWellShake = 0,        -- gentle continuous shake while in well
+        starWellHeatAlpha = 0,    -- red vignette while sampling the central star
+        hubHeatAlpha = 0,         -- green vignette approaching a hub checkpoint
+        lastHapticTime = 0,
         hasLeftEarth = false,     -- must leave Earth disk before auto-settle
         paused = false,           -- Item 18: pause toggle (ascending only)
         -- INBOX (35): comet state
@@ -2014,6 +2026,9 @@ function M:update(dt)
         local earthDist = math.sqrt(earthDistSq)
         self.reentryShake = M.reentryShakeFromDistance(earthDist)
         self.reentryHeatAlpha = M.reentryHeatVignetteAlpha(earthDist)
+        if self.reentryHeatAlpha > 0.04 then
+            pulseHaptic(self, 0.03 + self.reentryHeatAlpha * 0.08)
+        end
 
         -- M.earthVisualRadius * 1.5 is 87, but settle is 88. To trigger BEFORE settle,
         -- use a slightly larger radius, e.g. M.earthSettleRadius + 15 (103).
@@ -2048,8 +2063,10 @@ function M:update(dt)
                         self.ship.x = self.ship.x + nx * pullStrength * dt
                         self.ship.y = self.ship.y + ny * pullStrength * dt
                     end
-                    -- Gentle continuous shake
+                    -- Gentle continuous shake + red vignette like Earth reentry
                     self.starWellShake = 0.4
+                    self.starWellHeatAlpha = math.max(0.08, 0.32 * (1 - sunDist / world.starWellRadius))
+                    pulseHaptic(self, 0.05)
                     -- DoT damage accumulator
                     self.starDotAccum = self.starDotAccum + dt
                     while self.starDotAccum >= world.starDotInterval do
@@ -2097,6 +2114,30 @@ function M:update(dt)
                 self.starWellTimer = 0
                 self.starDotAccum = 0
                 self.starWellShake = math.max(0, (self.starWellShake or 0) - dt * 2)
+                self.starWellHeatAlpha = math.max(0, (self.starWellHeatAlpha or 0) - dt * 1.5)
+            end
+        end
+        -- Hub checkpoint proximity: same green vignette + haptic as Earth
+        do
+            local nearestHubDist = math.huge
+            local hubRadius = 80
+            for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
+                if planet.hub then
+                    local hdx = planet.x - self.ship.x
+                    local hdy = planet.y - self.ship.y
+                    local hd = math.sqrt(hdx * hdx + hdy * hdy)
+                    local range = math.max(planet.radius * 3, 90)
+                    if hd < nearestHubDist then
+                        nearestHubDist = hd
+                        hubRadius = range
+                    end
+                end
+            end
+            if nearestHubDist < hubRadius then
+                self.hubHeatAlpha = 0.3 * (1 - nearestHubDist / hubRadius)
+                pulseHaptic(self, 0.03 + self.hubHeatAlpha * 0.08)
+            else
+                self.hubHeatAlpha = math.max(0, (self.hubHeatAlpha or 0) - dt * 1.5)
             end
         end
         for _, planet in ipairs(world.nearbyPlanets(self.ship.x, self.ship.y, 4)) do
@@ -3531,10 +3572,20 @@ function M:draw()
     if self.expedition.phase == "ascending" and self.starWellTimer > 0 then
         local wellGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
         if wellGalaxy and not self.starWellSampled[wellGalaxy.id] then
-            love.graphics.setColor(1.0, 0.6, 0.2)
+            local remain = math.max(0, world.starSurvivalTime - self.starWellTimer)
+            local starLabel = world.starName(wellGalaxy) or i18n.t("central_star_label")
+            local prevWellFont = love.graphics.getFont()
+            love.graphics.setFont(fonts.get(33))
+            if remain <= 3 then
+                love.graphics.setColor(1.0, 0.25, 0.2)
+            else
+                love.graphics.setColor(1.0, 0.75, 0.25)
+            end
+            local bob = math.sin(self.time * 6) * 2
             love.graphics.printf(
-                i18n.t("star_well_timer", self.starWellTimer, world.starSurvivalTime),
-                0, viewport.height - 60, viewport.width, "center")
+                i18n.t("star_well_timer", starLabel, remain),
+                0, viewport.height - 72 + bob, viewport.width, "center")
+            love.graphics.setFont(prevWellFont)
         end
     end
     if self.expedition.phase == "launch" then
@@ -3939,6 +3990,20 @@ function M:draw()
     if self.reentryHeatAlpha and self.reentryHeatAlpha > 0 then
         local prevLineWidth = love.graphics.getLineWidth()
         love.graphics.setColor(0.2, 1, 0.4, self.reentryHeatAlpha)
+        love.graphics.setLineWidth(60)
+        love.graphics.rectangle("line", 0, 0, viewport.width, viewport.height)
+        love.graphics.setLineWidth(prevLineWidth)
+    end
+    if self.hubHeatAlpha and self.hubHeatAlpha > 0 then
+        local prevLineWidth = love.graphics.getLineWidth()
+        love.graphics.setColor(0.2, 1, 0.4, self.hubHeatAlpha)
+        love.graphics.setLineWidth(60)
+        love.graphics.rectangle("line", 0, 0, viewport.width, viewport.height)
+        love.graphics.setLineWidth(prevLineWidth)
+    end
+    if self.starWellHeatAlpha and self.starWellHeatAlpha > 0 then
+        local prevLineWidth = love.graphics.getLineWidth()
+        love.graphics.setColor(1, 0.25, 0.1, self.starWellHeatAlpha)
         love.graphics.setLineWidth(60)
         love.graphics.rectangle("line", 0, 0, viewport.width, viewport.height)
         love.graphics.setLineWidth(prevLineWidth)
