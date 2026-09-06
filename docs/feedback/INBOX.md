@@ -2,12 +2,6 @@
 
 ## 처리 대기
 
-(32) **상하 이동 저항 수정 — verticalOffset ±90 clamp 제거 (사용자 확정, 2026-09-06):**
-  - 원인: 좌우는 `ship.x += speed*dt` (무제한), 상하는 `verticalOffset += speed*dt` → `clampVerticalOffset(±90)`. 90에 닿으면 extraDy=0, `ship.y`는 altitude 기반 `sin(angle)*step`만으로 움직여 steeringSpeed보다 훨씬 느림.
-  - 수정: **`verticalOffset` 제거.** 상하도 좌우와 동일하게 `ship.y += joyDy * speed * dt` 직접 이동. `ship.y`는 무제한. altitude climb은 `ship.y`와 독립적으로 유지하되 HUD 거리는 (21)에서 유클리드 거리로 변경 예정이라 상충 없음.
-  - `extraDy`도 `ship.y - startY`로 단순화. `clampVerticalOffset` 삭제. `verticalOffset` 필드 제거 (relaunch 초기화 포함).
-  - `make verify` GREEN + 커밋: `fix(play): remove verticalOffset clamp so vertical steering matches horizontal`
-
 (33) **RCS 분출 색상·크기 — 속도 레벨에 따라 변화 (사용자 확정, 2026-09-06):**
   - 현재 RCS 파티클: 고정 색 `(0.7, 0.88, 1)` 흰-파랑, 고정 크기.
   - 변경: `expedition.effectiveClimbSpeed(run)` 또는 `steeringSpeed(run)` 기준 레벨 산정.
@@ -41,6 +35,9 @@
   - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
 
 ## 처리 완료
+
+(32) **상하 이동 저항 수정 — verticalOffset ±90 clamp 제거 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `verticalOffset` 필드, `clampVerticalOffset()`, `verticalOffsetLimit` 삭제. 상하도 `ship.y += joyDy * speed * dt` 직접 이동 (무제한). `extraDy` 이중 적용 제거. 테스트 업데이트. `make verify` GREEN.
 
 (28) **행성 밀도 절반 + 겹침 방지 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: `hash(...,1) > 0.70` → `> 0.85` (30%→15%), `hash(...,7) > 0.96` → `> 0.98` (4%→2%). 겹침 방지: 2-planet 섹터에서 dist < (r1+r2+10)이면 두 번째 삭제. 테스트 `testPlanetDensityHalved`, `testPlanetOverlapPrevention` 추가. `make verify` GREEN.

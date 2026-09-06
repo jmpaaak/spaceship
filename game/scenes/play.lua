@@ -11,16 +11,10 @@ local fonts = require("game.fonts")
 local M = {}
 M.__index = M
 
--- Omnidirectional movement, slice 1 (docs/GAME_DESIGN.md 이동 방식 개선 항목
--- 1, "조이스틱을 통해 전방향으로 이동 가능함"): the ship's horizontal
--- steering (self.ship.x) already used the full expedition.steeringSpeed
--- axis. This adds a vertical maneuvering axis (self.verticalOffset) driven
--- by the same joystick's Y component so a player can dodge/collect in any
--- direction around the auto-advancing flight line. Slice 2 (은하계 기반
--- 우주 구조, per user's agreed plan) will replace the automatic altitude
--- line with real free-roam position entirely.
-local verticalOffsetLimit = 90
-M.verticalOffsetLimit = verticalOffsetLimit
+-- Omnidirectional movement: both horizontal (ship.x) and vertical (ship.y)
+-- are driven directly by joystick/keyboard input at steeringSpeed, with no
+-- clamping. The old verticalOffset ±90 clamp was removed in item 32 so
+-- vertical steering matches horizontal (unlimited).
 
 -- Keyboard yaw rate (rad/s). No angular clamp — holding left/right
 -- spins the ship continuously. Stick heading uses atan2 of the drag
@@ -1219,7 +1213,6 @@ function M.new(options)
         shipShakeMagnitude = sampleTierShakeMultiplier("common"),
         reentryShake = 0,
         touches = {},
-        verticalOffset = 0,
         rcsCooldown = 0,
         message = i18n.t("launch_tap_to_launch"),
         -- Item 15(b): Earth shop slot state. Holds the last earthSlotSpin
@@ -1646,13 +1639,6 @@ function M:pollDesktopMouse()
     end
 end
 
-local function clampVerticalOffset(value)
-    if value > verticalOffsetLimit then return verticalOffsetLimit end
-    if value < -verticalOffsetLimit then return -verticalOffsetLimit end
-    return value
-end
-M.clampVerticalOffset = clampVerticalOffset
-
 function M:update(dt)
     -- Item 18: when paused during ascending, zero dt to freeze game state.
     -- We still allow time/collectFlash to be updated for visual continuity,
@@ -1726,26 +1712,20 @@ function M:update(dt)
     -- Item 2: returning phase abolished; only ascending has steering/movement.
     if self.expedition.phase == "ascending" then
         local joyDx, joyDy, joyMagnitude = self:joystickVector()
-        local startX, startOffset = self.ship.x, self.verticalOffset
         local thrustAngle = self.ship.angle
         if joyMagnitude > 0 then
             local speed = expedition.steeringSpeed(self.expedition)
             self.ship.x = self.ship.x + joyDx * speed * joyMagnitude * dt
-            self.verticalOffset = clampVerticalOffset(
-                self.verticalOffset + joyDy * speed * joyMagnitude * dt)
+            self.ship.y = self.ship.y + joyDy * speed * joyMagnitude * dt
         else
             local speed = expedition.steeringSpeed(self.expedition)
             self.ship.x = self.ship.x
                 + ((steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0))
                 * speed * dt
-            self.verticalOffset = clampVerticalOffset(
-                self.verticalOffset
+            self.ship.y = self.ship.y
                     + ((steering.downActive and 1 or 0) - (steering.upActive and 1 or 0))
-                    * speed * dt)
+                    * speed * dt
         end
-        local extraDx = self.ship.x - startX
-        local extraDy = self.verticalOffset - startOffset
-        local extraDistance = math.sqrt(extraDx * extraDx + extraDy * extraDy)
         local steeringHoriz = (steering.rightActive and 1 or 0) - (steering.leftActive and 1 or 0)
         local steeringVert = (steering.downActive and 1 or 0) - (steering.upActive and 1 or 0)
         local thrusting = joyMagnitude > 0 or steeringHoriz ~= 0 or steeringVert ~= 0
@@ -1772,7 +1752,7 @@ function M:update(dt)
                 local step = self.expedition.altitude - altBefore
                 if step < 0 then step = 0 end
                 self.ship.x = self.ship.x + math.cos(thrustAngle) * step
-                self.ship.y = self.ship.y + math.sin(thrustAngle) * step + extraDy
+                self.ship.y = self.ship.y + math.sin(thrustAngle) * step
             end
             if dt > 0 then
                 self.ship.vx = (self.ship.x - xBeforeThrust) / dt
@@ -2248,7 +2228,6 @@ function M:keypressed(key)
                 self.ship.x = M.launchSpawnX
                 self.ship.y = M.launchSpawnY
                 self.hasLeftEarth = false
-                self.verticalOffset = 0
                 self.discovered = {}
                 self.collided = {}
                 self.discoveredCount = 0

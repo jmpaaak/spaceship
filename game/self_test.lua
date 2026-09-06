@@ -47,16 +47,13 @@ local function testJoystick()
         "touchZoneRadius must be >= 100px for easy thumb target: " .. tostring(joystick.touchZoneRadius))
 
     -- A dragged touch (originX/originY set away from the current x/y) must
-    -- move the ship diagonally: horizontal speed on ship.x same as before,
-    -- plus a new vertical maneuvering offset (self.verticalOffset) applied
-    -- on top of the automatic altitude line, scaled by the same
-    -- expedition.steeringSpeed(run) used for left/right so STEERING upgrades
-    -- also improve joystick responsiveness.
+    -- move the ship diagonally: horizontal speed on ship.x, vertical speed
+    -- directly on ship.y (no clamp — item 32 removed verticalOffset).
     local joystickMoveScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
     })
     joystickMoveScene.expedition.phase = "ascending"
-    assert(joystickMoveScene.verticalOffset == 0)    joystickMoveScene:touchpressed("launch-joy", 90, 280)
+    joystickMoveScene:touchpressed("launch-joy", 90, 280)
     joystickMoveScene.expedition.altitude = 500
     joystickMoveScene.ship.y = -500
 
@@ -66,20 +63,12 @@ local function testJoystick()
         originX = 90, originY = 10,
         x = 90 + joystick.maxRadius, y = 10 + joystick.maxRadius,
     }
-    local shipXBefore, verticalBefore = joystickMoveScene.ship.x, joystickMoveScene.verticalOffset
+    local shipXBefore, shipYBefore = joystickMoveScene.ship.x, joystickMoveScene.ship.y
     joystickMoveScene:update(1)
     assert(joystickMoveScene.ship.x > shipXBefore, "joystick drag with a positive x component must move ship.x right")
-    assert(joystickMoveScene.verticalOffset > verticalBefore,
-        "joystick drag with a positive y component must increase verticalOffset")
-    assert(math.abs(joystickMoveScene.ship.x - shipXBefore) - math.abs(joystickMoveScene.verticalOffset - verticalBefore)
-        < 1e-6, "a 45-degree drag must move x and verticalOffset by equal magnitudes")
-
-    -- verticalOffset must clamp so joystick-driven vertical maneuvering
-    -- can't push the ship arbitrarily far from the automatic altitude line.
-    joystickMoveScene.verticalOffset = PlayScene.verticalOffsetLimit - 1
-    joystickMoveScene:update(1)
-    assert(joystickMoveScene.verticalOffset == PlayScene.verticalOffsetLimit,
-        "verticalOffset must clamp at PlayScene.verticalOffsetLimit")
+    assert(joystickMoveScene.ship.y > shipYBefore,
+        "joystick drag with a positive y component must move ship.y downward")
+    -- item 32: vertical movement is unlimited (no clamp), same as horizontal
 
     -- A plain tap-and-hold touch (no drag away from its origin) must keep
     -- using the legacy binary left/right steering exactly as before, so
@@ -94,7 +83,6 @@ local function testJoystick()
     tapHoldScene:update(1)
     assert(tapHoldScene.ship.x == tapShipXBefore - expedition.steeringSpeed(tapHoldScene.expedition),
         "an undragged tap-and-hold touch must still steer via the legacy binary left/right path")
-    assert(tapHoldScene.verticalOffset == 0, "an undragged touch must not move verticalOffset")
 
     -- Desktop `love .` routes the mouse through the same touch API with
     -- id "mouse". Press then drag past the deadzone must produce a
