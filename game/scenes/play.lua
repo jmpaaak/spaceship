@@ -2286,8 +2286,10 @@ function M:update(dt)
                             local cat = "hull"
                             if gear.findById(engine, drop.id) then cat = "engine" end
                             expedition.equipGear(self.expedition, cat, drop)
+                            -- Show Balatro-style part detail popup on acquisition
+                            self.gearPopup = { part = drop, category = cat }
                             table.insert(self.floatingTexts, {
-                                text = i18n.t("floating_hub_gear", drop.name),
+                                text = i18n.t("floating_hub_gear", i18n.partName(drop)),
                                 x = planet.x,
                                 y = planet.y + 20,
                                 timer = 3.0,
@@ -2548,6 +2550,8 @@ function M:keypressed(key)
         if key == "y" then
             local ok, err = expedition.buyGearFromShopPlanet(self.expedition, self.shopModal.category, self.shopModal.gear)
             if ok then
+                -- Show Balatro-style part detail popup on purchase
+                self.gearPopup = { part = self.shopModal.gear, category = self.shopModal.category }
                 table.insert(self.floatingTexts, {
                     text = i18n.t("floating_hub_gear", i18n.partName(self.shopModal.gear)),
                     x = self.shopModal.planet.x,
@@ -3394,11 +3398,6 @@ function M:draw()
             local f = love.graphics.getFont()
             local lineH = 14
             if planet.hub then
-                if not self.expedition.hubExplored[planet.galaxyId] then
-                    local engineStr = i18n.t("engine_part_available")
-                    love.graphics.setColor(0.85, 0.35, 0.95, 0.85)
-                    love.graphics.print(engineStr, x - f:getWidth(engineStr) / 2, y - planet.radius - 8 - lineH * 3 + bob)
-                end
                 local repair = i18n.t("checkpoint_hint_repair")
                 local upgrade = i18n.t("checkpoint_hint_upgrade")
                 local topY = y - planet.radius - 8 - lineH * 2 + bob
