@@ -3600,9 +3600,10 @@ function M:draw()
                     love.graphics.setColor(math.min(1, brightR + 0.3), math.min(1, brightG + 0.3), math.min(1, brightB + 0.3))
                     love.graphics.circle("fill", mx - moon.radius * 0.25, my - moon.radius * 0.25, moon.radius * 0.5)
                 end
-                -- Collection ring if not yet collected
+                -- Collection ring: white (slow) → red (fast) based on speedFactor
                 if not self.moonDiscovered[moon.id] then
-                    love.graphics.setColor(0.8, 0.9, 1, 0.6)
+                    local sf = moon.speedFactor or 0.5
+                    love.graphics.setColor(1, 1 - sf * 0.7, 1 - sf * 0.8, 0.6)
                     love.graphics.circle("line", mx, my, (moon.collectRadius or moon.radius) + 15)
                 end
                 -- Outline
