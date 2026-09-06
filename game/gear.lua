@@ -50,7 +50,6 @@ M.knownEffectTypes = {
     -- nothing prevents a hull card from using them; item 10's self_test
     -- regression instead asserts the *bundled* hull pool stays free of
     -- them so the two card pools read as distinctly-flavored in practice.
-    fuelEfficiency = true,
     boostCharge = true,
 }
 
@@ -65,7 +64,7 @@ M.effectCategories = {
     insurance = "D", collisionRadius = "D",
     detectionRadius = "E", autoCollect = "E",
     shopDiscount = "F",
-    fuelEfficiency = "G", boostCharge = "G",
+    boostCharge = "G",
 }
 
 M.knownRarities = {
@@ -675,15 +674,7 @@ end
 -- wiring without duplicating logic.
 -- ---------------------------------------------------------------------
 
--- (G) fuelEfficiency: percentage reduction applied to a base fuel-burn (or
--- equivalent maneuver-cost) rate, clamped so a stack of efficiency cards
--- can approach but never invert into a negative burn rate.
-function M.effectiveFuelBurnRate(baseRate, parts)
-    local pct = M.totalEffect(parts, "fuelEfficiency")
-    local rate = baseRate * (1 - pct / 100)
-    if rate < 0 then rate = 0 end
-    return rate
-end
+-- (G) fuelEfficiency: removed in item 53b (no fuel system).
 
 -- (G) steeringResponsiveness: removed in item 53a (merged into speed).
 

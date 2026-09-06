@@ -1,12 +1,13 @@
 ## Current Status
 
-- INBOX (53a) complete: Unified climbSpeed, steeringSpeed, and steeringResponsiveness into a single `speed` stat (`effectiveSpeed`).
-  - Fixed joystick coasting physics to correctly preserve stored velocity when releasing the stick while ascending.
-  - Tests pass and changes committed.
+- INBOX (53b) complete: Removed `fuelEfficiency` effect type (no fuel system).
+  - Stripped all `fuelEfficiency` entries from `engine_parts.json`, `gear.lua`, and `self_test.lua`.
+  - Fixed `engine_cryo_fuel_cell` dead-card regression by adding `speed +3` alongside its existing `money +1`.
+  - All tests pass (`make verify`).
 
 ## Next slice
 
-- Process next item from `docs/feedback/INBOX.md` pending list (INBOX 53b).
+- Process next pending item from `docs/feedback/INBOX.md`.
 
 ## Previous
 

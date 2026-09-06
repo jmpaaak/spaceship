@@ -2132,20 +2132,13 @@ end
 -- the "역할이 겹치지 않도록" requirement).
 local function testEnginePropulsionSpecialization()
     -- (G) effect types must be known and categorized.
-    for _, t in ipairs({ "fuelEfficiency", "boostCharge" }) do
+    for _, t in ipairs({ "boostCharge" }) do
         assert(gear.knownEffectTypes[t], "effect type '" .. t .. "' must be known (item 10b)")
         assert(gear.effectCategories[t] == "G",
             "effect type '" .. t .. "' must be categorized as (G) propulsion")
     end
 
-    -- (G) fuelEfficiency: percentage reduction of a base burn rate, clamped
-    -- at zero.
-    local effPart = { id = "fe", tags = {}, effects = { { type = "fuelEfficiency", value = 20 } } }
-    assert(math.abs(gear.effectiveFuelBurnRate(10, { effPart }) - 8) < 1e-9,
-        "fuelEfficiency -20%% of base burn rate 10 must be 8")
-    local hugeEffPart = { id = "fe2", tags = {}, effects = { { type = "fuelEfficiency", value = 500 } } }
-    assert(gear.effectiveFuelBurnRate(10, { hugeEffPart }) == 0,
-        "fuelEfficiency must clamp burn rate at zero, never negative")
+    -- (G) fuelEfficiency: removed in item 53b (no fuel system).
 
     -- (G) steeringResponsiveness: removed in item 53a (merged into speed).
 
@@ -2158,14 +2151,12 @@ local function testEnginePropulsionSpecialization()
     -- the (G) types on at least one card each, so the propulsion
     -- specialization is real content, not just dead schema.
     local enginePool = gear.loadEngineParts()
-    local sawFuelEff, sawBoost = false, false
+    local sawBoost = false
     for _, part in ipairs(enginePool) do
         for _, effect in ipairs(part.effects) do
-            if effect.type == "fuelEfficiency" then sawFuelEff = true end
             if effect.type == "boostCharge" then sawBoost = true end
         end
     end
-    assert(sawFuelEff, "engine_parts.json must include at least one fuelEfficiency card")
     assert(sawBoost, "engine_parts.json must include at least one boostCharge card")
 
     -- The bundled hull_parts.json pool must stay free of the (G) types —
@@ -2322,7 +2313,7 @@ end
 local function testHullCardsHaveNonEngineOnlyEffect()
     -- The (G) engine-only types
     local engineOnlyTypes = {
-        fuelEfficiency = true, boostCharge = true
+        boostCharge = true
     }
     local hullPool = gear.loadHullParts()
     local deadCards = {}
@@ -3539,7 +3530,7 @@ local function testGearCrystallizedSellPremiumWiring()
         id = "engine_crystal_sell_fixture", name = "ECrystal", nameKo = "엔진결정", icon = "◆",
         rarity = "rare", tags = { "economy" }, editions = { "crystallized" },
         edition = "crystallized",
-        effects = { { type = "fuelEfficiency", value = 5 } },
+        effects = { { type = "boostCharge", value = 1 } },
     }
     local engineRun = expedition.new({ money = 0 })
     local hullKeep = {
@@ -3630,7 +3621,7 @@ local function testGearBuyEconomyWiring()
     local rareEngineCard = {
         id = "engine_test_thruster", name = "Test Thruster", nameKo = "테스트 추진기", icon = "◬",
         rarity = "rare", tags = { "speed" }, editions = {},
-        effects = { { type = "fuelEfficiency", value = 10 } },
+        effects = { { type = "boostCharge", value = 1 } },
     }
     local engineOk, enginePrice = expedition.buyGear(engineShopRun, "engine", rareEngineCard)
     assert(engineOk and enginePrice == 54)
@@ -3774,7 +3765,7 @@ local function testGearShopPlanetPurchaseWiring()
     local rareEngineCard = {
         id = "engine_shopplanet_fixture", name = "Engine Fixture", nameKo = "엔진 픽스처", icon = "◬",
         rarity = "rare", tags = { "speed" }, editions = {},
-        effects = { { type = "fuelEfficiency", value = 10 } },
+        effects = { { type = "boostCharge", value = 1 } },
     }
     local engineOk = expedition.buyGearFromShopPlanet(engineRun, "engine", rareEngineCard)
     assert(engineOk, "buying an engine card from a shop planet must succeed")
@@ -3922,7 +3913,7 @@ local function testGearNoSlotCostEngineSlotWiring()
         local ok = enginePartsModule.equip(loadout, "engine", {
             id = "engine_fixture_" .. i, name = "Fixture", nameKo = "픽스처", icon = "*",
             rarity = "common", edition = nil, tags = {}, editions = {},
-            effects = { { type = "fuelEfficiency", value = 1 } },
+            effects = { { type = "boostCharge", value = 1 } },
         })
         assert(ok, "filling the engine loadout to its normal capacity must succeed")
     end
@@ -3933,7 +3924,7 @@ local function testGearNoSlotCostEngineSlotWiring()
     local rejectOk, rejectErr = enginePartsModule.equip(loadout, "engine", {
         id = "engine_fixture_overflow", name = "Overflow", nameKo = "오버플로우", icon = "*",
         rarity = "common", edition = nil, tags = {}, editions = {},
-        effects = { { type = "fuelEfficiency", value = 1 } },
+        effects = { { type = "boostCharge", value = 1 } },
     })
     assert(not rejectOk and rejectErr, "a normal engine card must still be rejected once the engine loadout is at capacity")
 
@@ -3943,7 +3934,7 @@ local function testGearNoSlotCostEngineSlotWiring()
     local refinedOk = enginePartsModule.equip(loadout, "engine", {
         id = "engine_fixture_refined", name = "Refined Fixture", nameKo = "정제된 픽스처", icon = "*",
         rarity = "common", edition = "refined", tags = {}, editions = {},
-        effects = { { type = "fuelEfficiency", value = 0.5 } },
+        effects = { { type = "boostCharge", value = 1 } },
     })
     assert(refinedOk, "a noSlotCost (refined-edition) card must be equippable in the ENGINE category even when it is otherwise full")
     assert(#loadout.engine == enginePartsModule.engineSlotCount + 1,
