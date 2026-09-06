@@ -2645,7 +2645,7 @@ function M:drawMinimap()
             end
         elseif ring.kind == "concentricRing" then
             if ring.inside ~= false then
-                love.graphics.setColor(0.9, 0.75, 0.3, 0.15)
+                love.graphics.setColor(0.9, 0.75, 0.3, 0.08)
                 love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
             end
         elseif ring.inside ~= false then

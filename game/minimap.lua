@@ -21,7 +21,7 @@ M.mapRadius = M.size / 2 - M.inset
 -- so the current galaxy fills most of the chart and the hub is distinct.
 -- Item 20b: reduced from 0.7 to 0.55 to zoom in and prevent adjacent
 -- galaxies from visually overlapping on the minimap disc.
-M.viewRadius = world.galaxyCellSize * 0.55
+M.viewRadius = world.galaxyCellSize * 0.35
 
 -- docs/feedback/INBOX.md "내부 해상도를 발라트로 수준으로 상향" — remaining
 -- decorative px: the small marker dot/ring radii drawn on the minimap
