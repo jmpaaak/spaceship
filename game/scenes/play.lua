@@ -1194,6 +1194,14 @@ function M.new(options)
     local slotSymbolImages = loadSpriteMap(slotSymbolImagePaths)
     local shopIconImages = loadSpriteMap(shopIconImagePaths)
     local debrisImages = loadSpriteMap(debrisImagePaths)
+    local moonImage = loadSprite("assets/moon/moon_generic.png")
+    local cometImage = loadSprite("assets/comet/comet_generic.png")
+    local suitIconImages = loadSpriteMap({
+        solar = "assets/suit_icons/solar.png",
+        nebula = "assets/suit_icons/nebula.png",
+        void = "assets/suit_icons/void.png",
+        pulsar = "assets/suit_icons/pulsar.png",
+    })
     -- Floating text icon images (group 4 of ComfyUI asset wiring)
     local floatingSampleIconImage = loadSprite(floatingSampleIconImagePath)
     local floatingDamageIconImage = loadSprite(floatingDamageIconImagePath)
@@ -1318,6 +1326,9 @@ function M.new(options)
         shopIconImagePaths = shopIconImagePaths,
         debrisImages = debrisImages,
         debrisImagePaths = debrisImagePaths,
+        moonImage = moonImage,
+        cometImage = cometImage,
+        suitIconImages = suitIconImages,
         hudIconImages = hudIconImages,
         minimapImages = minimapImages,
         planetEffectImages = planetEffectImages,
@@ -3538,16 +3549,25 @@ function M:draw()
         if moon then
             local mx, my = math.floor(moon.x - cameraX), math.floor(moon.y - cameraY)
             if mx > -20 and mx < viewport.width + 20 and my > -20 and my < viewport.height + 20 then
-                -- Moon body: bright version of planet hue
-                local baseR, baseG, baseB = planetColor(moon.hue)
-                local brightR = math.min(1, baseR * 0.5 + 0.5)
-                local brightG = math.min(1, baseG * 0.5 + 0.5)
-                local brightB = math.min(1, baseB * 0.5 + 0.5)
-                love.graphics.setColor(brightR, brightG, brightB)
-                love.graphics.circle("fill", mx, my, moon.radius)
-                -- Highlight
-                love.graphics.setColor(math.min(1, brightR + 0.3), math.min(1, brightG + 0.3), math.min(1, brightB + 0.3))
-                love.graphics.circle("fill", mx - moon.radius * 0.25, my - moon.radius * 0.25, moon.radius * 0.5)
+                local moonSprite = self.moonImage
+                if moonSprite then
+                    local iw, ih = moonSprite:getDimensions()
+                    local scale = (moon.radius * 2) / math.max(iw, ih)
+                    local baseR, baseG, baseB = planetColor(moon.hue)
+                    love.graphics.setColor(math.min(1, baseR * 0.4 + 0.7),
+                                           math.min(1, baseG * 0.4 + 0.7),
+                                           math.min(1, baseB * 0.4 + 0.7))
+                    love.graphics.draw(moonSprite, mx, my, 0, scale, scale, iw / 2, ih / 2)
+                else
+                    local baseR, baseG, baseB = planetColor(moon.hue)
+                    local brightR = math.min(1, baseR * 0.5 + 0.5)
+                    local brightG = math.min(1, baseG * 0.5 + 0.5)
+                    local brightB = math.min(1, baseB * 0.5 + 0.5)
+                    love.graphics.setColor(brightR, brightG, brightB)
+                    love.graphics.circle("fill", mx, my, moon.radius)
+                    love.graphics.setColor(math.min(1, brightR + 0.3), math.min(1, brightG + 0.3), math.min(1, brightB + 0.3))
+                    love.graphics.circle("fill", mx - moon.radius * 0.25, my - moon.radius * 0.25, moon.radius * 0.5)
+                end
                 -- Collection ring if not yet collected
                 if not self.moonDiscovered[moon.id] then
                     love.graphics.setColor(0.8, 0.9, 1, 0.6)
@@ -3614,11 +3634,18 @@ function M:draw()
                 love.graphics.setColor(tr, tg, tb, alpha)
                 love.graphics.circle("fill", tx, ty, pr)
             end
-            -- Draw comet body (bright yellow-white)
-            love.graphics.setColor(1, 0.95, 0.7)
-            love.graphics.circle("fill", cx, cy, comet.radius)
-            love.graphics.setColor(1, 1, 0.9)
-            love.graphics.circle("fill", cx - comet.radius * 0.25, cy - comet.radius * 0.25, comet.radius * 0.6)
+            -- Draw comet body (sprite if available, else bright yellow-white disc)
+            if self.cometImage then
+                local iw, ih = self.cometImage:getDimensions()
+                local scale = (comet.radius * 2) / math.max(iw, ih)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.draw(self.cometImage, cx, cy, 0, scale, scale, iw / 2, ih / 2)
+            else
+                love.graphics.setColor(1, 0.95, 0.7)
+                love.graphics.circle("fill", cx, cy, comet.radius)
+                love.graphics.setColor(1, 1, 0.9)
+                love.graphics.circle("fill", cx - comet.radius * 0.25, cy - comet.radius * 0.25, comet.radius * 0.6)
+            end
             -- Collection ring for undiscovered comets
             if not self.cometDiscovered[comet.id] then
                 love.graphics.setColor(1, 0.85, 0.25, 0.5)
@@ -4248,7 +4275,7 @@ function M:draw()
     if self.gearPopup and self.gearPopup.part then
         local part = self.gearPopup.part
         local rr, rg, rb = rarityRgb(part.rarity)
-        local panelW, panelH = 520, 340
+        local panelW, panelH = 520, 380
         local panelX = math.floor((viewport.width - panelW) / 2)
         local panelY = 360
         love.graphics.setColor(0, 0, 0, 0.62)
@@ -4279,12 +4306,34 @@ function M:draw()
         love.graphics.rectangle("line", chipX, chipY, chipW, chipH, 6, 6)
         love.graphics.setColor(rr, rg, rb, 1)
         love.graphics.printf(chip, chipX, chipY + chipPadY, chipW, "center")
+        -- Suit icon left of chip when available
+        local suitIcon = part.suit and self.suitIconImages and self.suitIconImages[part.suit]
+        if suitIcon then
+            local iw, ih = suitIcon:getDimensions()
+            local iconSize = 28
+            local scale = iconSize / math.max(iw, ih)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(suitIcon, chipX - iconSize - 8, chipY + (chipH - iconSize) / 2, 0, scale, scale)
+        end
         love.graphics.setFont(fonts.get(33))
         love.graphics.setColor(1, 0.98, 0.92, 1)
         love.graphics.printf(i18n.partName(part), panelX + 20, chipY + chipH + 20, panelW - 40, "center")
         love.graphics.setFont(fonts.get(22))
         love.graphics.setColor(0.95, 0.82, 0.28, 1)
         love.graphics.printf(i18n.partEffects(part), panelX + 28, chipY + chipH + 80, panelW - 56, "center")
+        -- Suit synergy hint (condition even if not yet active)
+        local suitKey = part.suit
+        local descKey = nil
+        if suitKey == "solar" then descKey = "synergy_desc_solarSystem"
+        elseif suitKey == "nebula" then descKey = "synergy_desc_nebulaField"
+        elseif suitKey == "void" then descKey = "synergy_desc_eventHorizon"
+        elseif suitKey == "pulsar" then descKey = "synergy_desc_pulsarBurst"
+        end
+        if descKey then
+            love.graphics.setFont(fonts.get(11))
+            love.graphics.setColor(0.72, 0.68, 0.82, 0.9)
+            love.graphics.printf(i18n.t(descKey), panelX + 28, panelY + panelH - 36, panelW - 56, "center")
+        end
         love.graphics.setFont(prevPopupFont)
     end
     if self.reentryHeatAlpha and self.reentryHeatAlpha > 0 then

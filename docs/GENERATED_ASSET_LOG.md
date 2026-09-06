@@ -178,3 +178,7 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-07T01:30:00+0900 | assets/suit_icons/pulsar.png | PIL suit icon 32x32 RGBA, gen_suit_icons.py
 2026-09-07T01:30:00+0900 | assets/suit_icons/solar.png | PIL suit icon 32x32 RGBA, gen_suit_icons.py
 2026-09-07T01:30:00+0900 | assets/suit_icons/void.png | PIL suit icon 32x32 RGBA, gen_suit_icons.py
+2026-09-07T01:22:00+0900 | assets/comet/comet_generic.png | PIL comet head 32x32 RGBA, gen_comet.py
+2026-09-07T01:22:00+0900 | assets/debris/asteroid.png | PIL asteroid restored to 32x32 RGBA (stars must show through), gen_debris.py
+2026-09-07T01:22:00+0900 | assets/debris/can.png | PIL can restored to 32x32 RGBA, gen_debris.py
+2026-09-07T01:22:00+0900 | assets/debris/scrap.png | PIL scrap restored to 32x32 RGBA, gen_debris.py

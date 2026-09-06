@@ -1225,9 +1225,6 @@ local function testRgbBrokenAssetsUnwired()
         "assets/slot_symbols/comet.png",
         "assets/slot_symbols/planet.png",
         "assets/slot_symbols/star.png",
-        "assets/debris/asteroid.png",
-        "assets/debris/can.png",
-        "assets/debris/scrap.png",
         "assets/backgrounds/deep_space_tile.png",
     }
     for _, path in ipairs(rgbPaths) do
@@ -1260,6 +1257,15 @@ local function testRgbBrokenAssetsUnwired()
         "assets/effects/hud_galaxy.png",
         "assets/effects/hud_return.png",
         "assets/effects/hud_earth.png",
+        "assets/debris/asteroid.png",
+        "assets/debris/can.png",
+        "assets/debris/scrap.png",
+        "assets/moon/moon_generic.png",
+        "assets/comet/comet_generic.png",
+        "assets/suit_icons/solar.png",
+        "assets/suit_icons/nebula.png",
+        "assets/suit_icons/void.png",
+        "assets/suit_icons/pulsar.png",
     }
     for _, path in ipairs(rgbaKeepers) do
         assert(PlayScene.pngColorType(path) == 6,
@@ -5412,6 +5418,7 @@ end
 -- an empty loadout produces no synergies. Pure: only uses gear.lua tables,
 -- no love.* calls.
 testStellarSynergies = function()
+    local i18n = require("game.i18n")
     -- Helper: build a minimal stub card with a given suit.
     local function card(suit)
         return { id = "stub_" .. suit, suit = suit, tags = {}, effects = {} }
@@ -5452,6 +5459,11 @@ testStellarSynergies = function()
     for _ in pairs(empty) do emptySynergyCount = emptySynergyCount + 1 end
     assert(emptySynergyCount == 0,
         "empty loadout must produce no synergies, got count: " .. emptySynergyCount)
+
+    assert(i18n.t("synergy_desc_solarSystem") ~= "synergy_desc_solarSystem",
+        "synergy_desc_solarSystem i18n key must exist")
+    assert(i18n.t("synergy_desc_nebulaField") ~= "synergy_desc_nebulaField",
+        "synergy_desc_nebulaField i18n key must exist")
 
     -- Bundled JSON cards all have suit field (no [WARN] paths expected from loader in prod).
     local hullPool, hullErr = gear.loadHullParts()
