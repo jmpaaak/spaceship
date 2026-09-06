@@ -174,8 +174,8 @@ M.ascendReturnButton = ascendReturnButton
 -- includes a 30px margin matching the gravity/collection range convention.
 M.earthCenterX = 0
 M.earthCenterY = 75
-M.earthVisualRadius = 90
-M.earthSettleRadius = 68  -- visual+10 clamped (INBOX 23: margin 30→10; INBOX 60: visual→90, settle unchanged)
+M.earthVisualRadius = 68  -- 90 * 0.75 (user 2026-09-06)
+M.earthSettleRadius = 68
 -- Spawn / relaunch outside the settle disk.
 M.launchSpawnX = 0
 M.launchSpawnY = 75 - 68 - 20  -- -13  (INBOX 23: margin 50→20)
@@ -221,12 +221,14 @@ function M.reentryHeatVignetteAlpha(dist)
 end
 
 local function pulseHaptic(self, intensity)
-    -- iOS Love2D Studio / LÖVE 11: love.system.vibrate exists on mobile.
+    -- Sustained rumble, not staccato taps. LÖVE 11 vibrate(seconds);
+    -- refresh just before the previous rumble ends so it feels continuous.
     if not love or not love.system or not love.system.vibrate then return end
     local now = self.time or 0
-    if now - (self.lastHapticTime or 0) < 0.22 then return end
+    if now - (self.lastHapticTime or 0) < 0.55 then return end
     self.lastHapticTime = now
-    pcall(love.system.vibrate, intensity or 0.04)
+    local dur = math.max(0.45, math.min(0.7, (intensity or 0.04) * 8))
+    pcall(love.system.vibrate, dur)
 end
 
 -- LAUNCH phase's TAP TO LAUNCH touch target. touchpressed for this phase
@@ -3099,23 +3101,23 @@ function M:draw()
     if earthY < viewport.height + 64 then
         if self.earthImage then
             local imgW, imgH = self.earthImage:getDimensions()
-            local scale = 180 / math.max(imgW, imgH)
+            local scale = (M.earthVisualRadius * 2) / math.max(imgW, imgH)
             love.graphics.setColor(1, 1, 1)
             love.graphics.draw(self.earthImage, earthX, earthY, 0, scale, scale, imgW / 2, imgH / 2)
         else
             love.graphics.setColor(0.15, 0.45, 0.9)
-            love.graphics.circle("fill", earthX, earthY, 90)
+            love.graphics.circle("fill", earthX, earthY, M.earthVisualRadius)
             love.graphics.setColor(0.25, 0.8, 0.45)
             love.graphics.circle("fill", earthX - 18, earthY - 18, 15)
             love.graphics.circle("fill", earthX + 21, earthY - 5, 12)
         end
         local prevEarthFont = love.graphics.getFont()
-        love.graphics.setFont(fonts.get(11))
+        love.graphics.setFont(fonts.get(22))
         local hint = i18n.t("checkpoint_hint")
         local bob = math.sin(self.time * 2) * 3
         local hx = clampLabelX(earthX, love.graphics.getFont():getWidth(hint), viewport.width)
         love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
-        love.graphics.print(hint, hx, earthY - M.earthVisualRadius - 16 + bob)
+        love.graphics.print(hint, hx, earthY - M.earthVisualRadius - 28 + bob)
         love.graphics.setFont(prevEarthFont)
     end
     -- Item 9: Draw star gravity well ring around the central star
@@ -3245,19 +3247,19 @@ function M:draw()
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)
             local prevLblFont = love.graphics.getFont()
-            love.graphics.setFont(fonts.get(11))
+            love.graphics.setFont(fonts.get(22))
             local bob = math.sin(self.time * 2) * 3
             if planet.hub then
                 if not self.expedition.hubExplored[planet.galaxyId] then
                     local engineStr = i18n.t("engine_part_available")
                     local lx = clampLabelX(x, love.graphics.getFont():getWidth(engineStr), viewport.width)
                     love.graphics.setColor(0.85, 0.35, 0.95, 0.85)
-                    love.graphics.print(engineStr, lx, y - planet.radius - 28 + bob)
+                    love.graphics.print(engineStr, lx, y - planet.radius - 48 + bob)
                 end
                 local hint = i18n.t("checkpoint_hint")
                 local hx = clampLabelX(x, love.graphics.getFont():getWidth(hint), viewport.width)
                 love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
-                love.graphics.print(hint, hx, y - planet.radius - 14 + bob)
+                love.graphics.print(hint, hx, y - planet.radius - 24 + bob)
             elseif planet.isShop then
                 if not self.shopVisited[planet.id] then
                     local hullStr = i18n.t("hull_part_available")

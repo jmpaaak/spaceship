@@ -8130,7 +8130,7 @@ function M.run()
 
     -- INBOX (23): Earth settle radius shrink
     do
-        assert(PlayScene.earthVisualRadius == 90, "earthVisualRadius must be 90 (INBOX 60)")
+        assert(PlayScene.earthVisualRadius == 68, "earthVisualRadius must be 68 (75% of 90)")
         assert(PlayScene.earthSettleRadius == 68,
             "earthSettleRadius must be 68, got " .. PlayScene.earthSettleRadius)
         assert(PlayScene.earthReentryRadius == 145,
