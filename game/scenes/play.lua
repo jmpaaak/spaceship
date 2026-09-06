@@ -3162,6 +3162,20 @@ function M:drawMinimap()
         love.graphics.printf(distLabel, mx - 20, my + 5, 40, "center")
         love.graphics.setFont(prevRimFont)
     end
+    -- Second galaxy rim marker (other direction when between galaxies)
+    if view.secondGalaxyRimMarker then
+        local rim = size / 2 - 4
+        local marker = view.secondGalaxyRimMarker
+        local mx = cx + marker.dx * rim
+        local my = cy + marker.dy * rim
+        love.graphics.setColor(0.9, 0.7, 0.3, 0.8)
+        love.graphics.circle("fill", mx, my, 3.0)
+        local prevRimFont2 = love.graphics.getFont()
+        love.graphics.setFont(fonts.get(11))
+        local distLabel2 = string.format("%.0f", marker.distance / 100)
+        love.graphics.printf(distLabel2, mx - 20, my + 5, 40, "center")
+        love.graphics.setFont(prevRimFont2)
+    end
     -- Store minimap bottom for pause button positioning
     self.minimapBottom = cy + size / 2
 end

@@ -123,30 +123,51 @@ end
 function M.nearestCheckpointDirection(shipX, shipY)
     local containing = world.galaxyContaining(shipX, shipY)
     local containingId = containing and containing.id or "milkyway"
-    local nearest, nearestDist, nearestHub
+    -- Collect the TWO nearest non-home galaxies (may include containing)
+    local candidates = {}
     for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.checkpointSearchCellRadius)) do
-        -- Skip both milkyway AND the galaxy we're currently inside
-        if galaxy.id ~= "milkyway" and galaxy.id ~= containingId then
-            -- Item 10 change B: point toward the offset hub planet, not
-            -- galaxy center (the sun).
+        if galaxy.id ~= "milkyway" then
             local hubObj = world.hubPlanet(galaxy)
             local tx, ty = hubObj and hubObj.x or galaxy.x, hubObj and hubObj.y or galaxy.y
             local dx, dy = tx - shipX, ty - shipY
             local dist = math.sqrt(dx * dx + dy * dy)
-            if not nearestDist or dist < nearestDist then
-                nearest, nearestDist, nearestHub = galaxy, dist, hubObj
-            end
+            candidates[#candidates + 1] = { galaxy = galaxy, dist = dist, hub = hubObj }
+        end
+    end
+    table.sort(candidates, function(a, b) return a.dist < b.dist end)
+    -- Primary: nearest non-containing (skip the one we're inside)
+    local nearest, nearestDist, nearestHub
+    -- Secondary: the other closest one (could be containing)
+    local second, secondDist, secondHub
+    for _, c in ipairs(candidates) do
+        if not nearest and c.galaxy.id ~= containingId then
+            nearest, nearestDist, nearestHub = c.galaxy, c.dist, c.hub
+        elseif not second and c.galaxy.id ~= (nearest and nearest.id) then
+            second, secondDist, secondHub = c.galaxy, c.dist, c.hub
+        end
+        if nearest and second then break end
+    end
+    -- If no non-containing found, use the closest overall
+    if not nearest and #candidates > 0 then
+        nearest = candidates[1].galaxy
+        nearestDist = candidates[1].dist
+        nearestHub = candidates[1].hub
+        if #candidates > 1 then
+            second = candidates[2].galaxy
+            secondDist = candidates[2].dist
+            secondHub = candidates[2].hub
         end
     end
     if not nearest then
-        return 0, 0, nil, nil
+        return 0, 0, nil, nil, nil, nil
     end
     local tx = nearestHub and nearestHub.x or nearest.x
     local ty = nearestHub and nearestHub.y or nearest.y
-    if nearestDist < 1e-9 then
-        return 0, 0, 0, nearest.id, nearest
+    local dx1, dy1 = 0, 0
+    if nearestDist and nearestDist > 1e-9 then
+        dx1, dy1 = (tx - shipX) / nearestDist, (ty - shipY) / nearestDist
     end
-    return (tx - shipX) / nearestDist, (ty - shipY) / nearestDist, nearestDist, nearest.id, nearest
+    return dx1, dy1, nearestDist, nearest.id, nearest, second
 end
 
 -- Snapshot of everything PlayScene needs to draw the chart for a ship at
@@ -248,7 +269,7 @@ function M.view(shipX, shipY)
     -- Always-on hub arrow (item 10 change A): show arrow whenever a
     -- checkpoint exists and the ship hasn't arrived (distance >= hub radius*3).
     -- Hides only when within arrival distance or no checkpoint found.
-    local checkpointDx, checkpointDy, checkpointDist, checkpointId, checkpointGalaxy =
+    local checkpointDx, checkpointDy, checkpointDist, checkpointId, checkpointGalaxy, secondGalaxy =
         M.nearestCheckpointDirection(shipX, shipY)
     local checkpointBeyond = false
     if checkpointDist ~= nil then
@@ -284,6 +305,28 @@ function M.view(shipX, shipY)
         end
     end
 
+    -- Second-nearest galaxy rim marker (shows both directions when between galaxies)
+    local secondGalaxyRimMarker = nil
+    if secondGalaxy then
+        local sgx, sgy = secondGalaxy.x, secondGalaxy.y
+        local _, _, sgInside = M.project(sgx, sgy, shipX, shipY)
+        if not sgInside then
+            local sdx, sdy = sgx - shipX, sgy - shipY
+            local sdist = math.sqrt(sdx * sdx + sdy * sdy)
+            local sux, suy = 0, 0
+            if sdist > 1e-9 then
+                sux, suy = sdx / sdist, sdy / sdist
+            end
+            secondGalaxyRimMarker = {
+                dx = sux,
+                dy = suy,
+                distance = sdist,
+                name = world.galaxyName(secondGalaxy),
+                id = secondGalaxy.id,
+            }
+        end
+    end
+
     return {
         player = { x = 0, y = 0 },
         earth = { x = earthX, y = earthY, inside = earthInside },
@@ -302,6 +345,7 @@ function M.view(shipX, shipY)
         checkpointDistance = checkpointDist,
         checkpointId = checkpointId,
         nearestGalaxyRimMarker = nearestGalaxyRimMarker,
+        secondGalaxyRimMarker = secondGalaxyRimMarker,
     }
 end
 
