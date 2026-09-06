@@ -1,15 +1,14 @@
 ## Current Status
 
-- INBOX (18) complete: Pause button — top-right corner during ascending phase.
-  - 44×44 touch area at (668, 8), visible only in ascending phase.
-  - Tap toggles `self.paused`; paused → `update()` returns early (dt=0 effect).
-  - Pause icon: two vertical bars drawn semi-transparent (brighter when active).
-  - Paused overlay: dark scrim + centered "PAUSED" / "일시정지" text (i18n).
-  - Tap anywhere while paused (outside button) also unpauses.
-  - Auto-unpauses when phase changes away from ascending.
-  - Hidden in settlement/destroyed/launch phases.
-  - Tests: testPauseButton() covers toggle, phase gating, update freeze, auto-clear.
+- INBOX (19) complete: Planet text replacement — all 5 sub-items done.
+  - (a) Removed sample price (`risk.sampleLabel`) and damage (`risk.label`) drawing block from planet rendering. `collisionRisk()` function kept intact for game logic.
+  - (b) Undiscovered normal planets show "신규 행성 발견" / "New Planet" label with sin(time*2)*3 bobbing, color (0.7, 0.9, 1, 0.8).
+  - (c) HUB planets show "HUB" + "엔진부품 획득 가능" / "Engine part available" in magenta (0.85, 0.35, 0.95), sin bobbing.
+  - (d) Central star shows "중심별" / "Central Star" label in yellow (1, 0.85, 0.25) above star radius.
+  - (e) SHOP planets show "SHOP" + "선체부품 획득 가능" / "Hull part available" in cyan (0.3, 0.9, 0.95), sin bobbing.
+  - New i18n keys: planet_new_discovery, central_star_label, engine_part_available, hull_part_available (en + ko).
+  - Tests: i18n key existence validated for both locales. make verify GREEN.
 
 ## Next Slice
 
-- INBOX (19): Planet text replacement — remove sample/damage labels, add discovery/hub/star/shop labels.
+- INBOX (20): Minimap — galaxy clipping + distance + checkpoint color + Earth/Star labels.

@@ -2,14 +2,6 @@
 
 ## 처리 대기
 
-(19) **행성 텍스트 교체 — 표본가격·데미지 제거, 신규행성 발견 텍스트 + HUB/중심별/부품 텍스트 (사용자 확정, 2026-09-06):**
-  - **(a) 표본 가격(`risk.sampleLabel` "표본 $150")과 데미지(`risk.label` "차량 $5") 레이블 제거.** `collisionRisk()` 결과의 `sampleLabel`/`label`을 그리는 ~L2764–2796 블록 전부 삭제. `collisionRisk()` 함수 자체는 게임 로직(충돌 계산)에 쓰이니 유지.
-  - **(b) 미발견 일반 행성 위에 "신규 행성 발견" 텍스트.** `!self.discovered[planet.id]` 이고 `!planet.hub` 이고 `!planet.isShop`이면 행성 위 `y - planet.radius - 18`에 i18n `"planet_new_discovery"` / `"신규 행성 발견"` 표시. Y를 `sin(self.time * 2) * 3`으로 위아래 살짝 움직임. 색 `(0.7, 0.9, 1, 0.8)`.
-  - **(c) HUB 행성 위에 "HUB" 텍스트** (기존 `hub_label`), 마젠타색 `(0.85, 0.35, 0.95)`. 추가로 `"엔진부품 획득 가능"` / `"Engine part available"` i18n 텍스트를 한 줄 아래에. sin 움직임 동일.
-  - **(d) 중심별(태양) 위에 "중심별" / "Central Star" 텍스트** (새 i18n `"central_star_label"`), 노란색 `(1, 0.85, 0.25)`.
-  - **(e) shop 행성 위에 "SHOP" + "선체부품 획득 가능"** / "Hull part available". 시안색.
-  - `make verify` GREEN + 커밋: `fix(play): replace sample/damage labels with discovery + hub/star/shop labels`
-
 (20) **미니맵 — 은하 클리핑 + 거리 확보 + 체크포인트 색 + 지구/태양 텍스트 (사용자 확정, 2026-09-06):**
   - **(a) 은하 링이 미니맵 원 바깥으로 넘치면 안 됨.** `love.graphics.stencil` 또는 원형 clip으로 미니맵 디스크 내부만 그리기. 또는 각 ring draw 전에 `distance(cx,cy, ring center) + ring.radius > size/2`이면 skip.
   - **(b) 인접 은하 겹침 방지.** `world.galaxyAt` 생성 시 은하 간 최소 거리 `galaxyCellSize` (이미 셀 기반이라 기본 1셀 간격). 미니맵 상 시각적으로 겹치면 `viewRadius`를 더 줄이거나 은하 마커 크기 축소.
@@ -46,6 +38,9 @@
   - `make verify` GREEN + 커밋: `feat(play): zoom-in on sample collect + slower timeslip`
 
 ## 처리 완료
+
+(19) **행성 텍스트 교체 — 표본가격·데미지 제거, 신규행성 발견 텍스트 + HUB/중심별/부품 텍스트 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: (a) sampleLabel/label 그리기 블록 삭제, collisionRisk() 유지. (b) 미발견 일반행성 위 "신규 행성 발견" sin 움직임. (c) HUB 위 "HUB"+"엔진부품 획득 가능" 마젠타. (d) 중심별 위 "중심별" 노란색. (e) SHOP 위 "SHOP"+"선체부품 획득 가능" 시안. i18n 4개 키 en/ko 추가. 테스트 GREEN.
 
 (18) **일시정지 버튼 — 우측 상단 (사용자 확정, 2026-09-06):**
   - [2026-09-06] ✅ 완료: 44×44 터치영역 (668,8), ascending에서만 표시. 탭→paused 토글, paused면 update() early return(dt=0), 화면 중앙 "PAUSED"/"일시정지" 오버레이. 아무 곳 탭→해제. settlement/destroyed/launch에서 숨김. testPauseButton() 추가.

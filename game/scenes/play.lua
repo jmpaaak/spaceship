@@ -2661,6 +2661,12 @@ function M:draw()
                 -- Inner glow
                 love.graphics.setColor(1.0, 0.85, 0.25, pulse * 0.08)
                 love.graphics.circle("fill", sx, sy, world.starRadius)
+                -- (d) Central star label in yellow
+                local starLabel = i18n.t("central_star_label")
+                local font = love.graphics.getFont()
+                local slx = clampLabelX(sx, font:getWidth(starLabel), viewport.width)
+                love.graphics.setColor(1, 0.85, 0.25)
+                love.graphics.print(starLabel, slx, sy - world.starRadius - 18)
             end
         end
     end
@@ -2770,59 +2776,39 @@ function M:draw()
             end
             love.graphics.setColor(0.9, 0.95, 1, 0.45)
             love.graphics.circle("line", x, y, planet.radius + 2)
-            local risk = self:approachWarning(planet, y, shipScreenY)
-            if risk then
+            -- Item 19: planet labels (discovery / HUB / SHOP) above planets
+            do
                 local font = love.graphics.getFont()
-                local previewY
-                local pe5 = self.planetEffectImages or {}
-                if risk.sampleLabel then
-                    previewY = math.max(48, y - planet.radius - 24)
-                    love.graphics.setColor(0.45, 0.95, 1)
-                    local lx = clampLabelX(x, font:getWidth(risk.sampleLabel), viewport.width)
-                    -- planet_sample.png icon to the left of sample value label
-                    local iconSize = 9
-                    if pe5.sampleValue then
-                        drawPlanetEffectSprite(pe5.sampleValue, lx - iconSize * 0.5 - 1, previewY + iconSize * 0.5, iconSize, 0.45, 0.95, 1, 1)
-                        love.graphics.setColor(0.45, 0.95, 1)
-                    end
-                    love.graphics.print(risk.sampleLabel, lx, previewY)
-                    previewY = previewY + 11
-                else
-                    previewY = math.max(72, y - planet.radius - 12)
-                end
-                if risk.lethal then
-                    love.graphics.setColor(1, 0.3, 0.25)
-                else
-                    love.graphics.setColor(1, 0.8, 0.25)
-                end
-                local rlx = clampLabelX(x, font:getWidth(risk.label), viewport.width)
-                -- planet_risk.png icon to the left of risk label
-                local rIconSize = 9
-                local rr, rg, rb = risk.lethal and 1 or 1, risk.lethal and 0.3 or 0.8, risk.lethal and 0.25 or 0.25
-                if pe5.risk then
-                    drawPlanetEffectSprite(pe5.risk, rlx - rIconSize * 0.5 - 1, previewY + rIconSize * 0.5, rIconSize, rr, rg, rb, 1)
-                    if risk.lethal then
-                        love.graphics.setColor(1, 0.3, 0.25)
-                    else
-                        love.graphics.setColor(1, 0.8, 0.25)
-                    end
-                end
-                love.graphics.print(risk.label, rlx, previewY)
-            end
-            -- sub-item (4): hub/shop planet label above undiscovered planets
-            if not self.discovered[planet.id] then
-                local planetLabel = nil
+                local sinBob = math.sin(self.time * 2) * 3
                 if planet.hub then
-                    planetLabel = i18n.t("hub_label")
+                    -- (c) HUB label in magenta
+                    local hubStr = i18n.t("hub_label")
+                    local engineStr = i18n.t("engine_part_available")
+                    local labelY = y - planet.radius - 28 + sinBob
+                    local lx = clampLabelX(x, font:getWidth(hubStr), viewport.width)
+                    love.graphics.setColor(0.85, 0.35, 0.95)
+                    love.graphics.print(hubStr, lx, labelY)
+                    local lx2 = clampLabelX(x, font:getWidth(engineStr), viewport.width)
+                    love.graphics.setColor(0.85, 0.35, 0.95, 0.8)
+                    love.graphics.print(engineStr, lx2, labelY + 12)
                 elseif planet.isShop then
-                    planetLabel = i18n.t("shop_label")
-                end
-                if planetLabel then
-                    local font = love.graphics.getFont()
-                    local labelY = y - planet.radius - 14
-                    local lx = clampLabelX(x, font:getWidth(planetLabel), viewport.width)
-                    love.graphics.setColor(0.95, 0.85, 0.4, 0.9)
-                    love.graphics.print(planetLabel, lx, labelY)
+                    -- (e) SHOP label in cyan
+                    local shopStr = i18n.t("shop_label")
+                    local hullStr = i18n.t("hull_part_available")
+                    local labelY = y - planet.radius - 28 + sinBob
+                    local lx = clampLabelX(x, font:getWidth(shopStr), viewport.width)
+                    love.graphics.setColor(0.3, 0.9, 0.95)
+                    love.graphics.print(shopStr, lx, labelY)
+                    local lx2 = clampLabelX(x, font:getWidth(hullStr), viewport.width)
+                    love.graphics.setColor(0.3, 0.9, 0.95, 0.8)
+                    love.graphics.print(hullStr, lx2, labelY + 12)
+                elseif not self.discovered[planet.id] then
+                    -- (b) New planet discovery label
+                    local discStr = i18n.t("planet_new_discovery")
+                    local labelY = y - planet.radius - 18 + sinBob
+                    local lx = clampLabelX(x, font:getWidth(discStr), viewport.width)
+                    love.graphics.setColor(0.7, 0.9, 1, 0.8)
+                    love.graphics.print(discStr, lx, labelY)
                 end
             end
         end

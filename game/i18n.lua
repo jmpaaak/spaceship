@@ -133,6 +133,10 @@ locales.en = {
     minimap_out = "OUT %d",
     hub_label = "HUB",
     shop_label = "SHOP",
+    planet_new_discovery = "New Planet",
+    central_star_label = "Central Star",
+    engine_part_available = "Engine part available",
+    hull_part_available = "Hull part available",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
     synergy_solarSystem  = "☀ SOLAR SYSTEM",
     synergy_nebulaField  = "* NEBULA FIELD",
@@ -263,6 +267,10 @@ locales.ko = {
     minimap_out = "외부 %d",
     hub_label = "HUB",
     shop_label = "SHOP",
+    planet_new_discovery = "신규 행성 발견",
+    central_star_label = "중심별",
+    engine_part_available = "엔진부품 획득 가능",
+    hull_part_available = "선체부품 획득 가능",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
     synergy_solarSystem  = "☀ 태양계 시너지",
     synergy_nebulaField  = "* 성운 지대",
