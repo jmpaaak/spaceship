@@ -3787,16 +3787,16 @@ function M:draw()
             for i = 1, bigCount do
                 local blockMin = (i - 1) * 10 + 1
                 local blockMax = math.min(i * 10, run.maxDurability)
-                local blockTotal = blockMax - blockMin + 1
-                local blockFilled = math.max(0, math.min(run.durability - blockMin + 1, blockTotal))
-                if blockFilled >= blockTotal then
+                local blockCapacity = 10 -- always draw as if each block holds 10
+                local blockFilled = math.max(0, math.min(run.durability - blockMin + 1, blockMax - blockMin + 1))
+                if blockFilled >= blockCapacity then
                     love.graphics.setColor(hpColor(run.durability, run.maxDurability))
                     love.graphics.rectangle("fill", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
                 elseif blockFilled > 0 then
                     -- Partially filled: outline + partial fill
                     love.graphics.setColor(0.3, 0.3, 0.35)
                     love.graphics.rectangle("line", blockX, blockY, M.hpBlockSize, M.hpBlockSize)
-                    local frac = blockFilled / blockTotal
+                    local frac = blockFilled / blockCapacity
                     local fillH = math.max(1, math.floor(M.hpBlockSize * frac))
                     love.graphics.setColor(hpColor(run.durability, run.maxDurability))
                     love.graphics.rectangle("fill", blockX, blockY + M.hpBlockSize - fillH, M.hpBlockSize, fillH)
