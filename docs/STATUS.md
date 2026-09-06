@@ -1,14 +1,13 @@
 ## Current Status
 
-- INBOX (24) complete: sample collect zoom-in + slower timeslip.
-  - (a) `collectZoom = { timer = 0.5, scale = 1.35, planetX, planetY }` set on sample collection.
-    Camera zooms 1.35× toward ship–planet midpoint over 0.5s, lerp back to 1.0.
-    `love.graphics.push/scale` wraps world rendering; HUD stays unzoomed.
-  - (b) `timeSlip.scale` changed from 0.3 to 0.24 (1.25× slower).
-  - Update tick decrements `collectZoom.timer` by rawDt; nils when expired.
-  - Test `INBOX-24 collectZoom + timeslip OK` verifies timer/scale/expiry.
+- INBOX (27) complete: fix diagonal planet alignment from LCG hash bug.
+  - `world.planets()` lines 263-271: changed `hash(sectorX, sectorY, salt+i)` pattern
+    to `hash(sectorX + i*K, sectorY + i*K2, salt)` for radius, hue, x, y.
+  - This scrambles `i` into the coordinate inputs instead of the salt, breaking the
+    linear correlation that caused planets to align on diagonals when sectorX==sectorY.
+  - Test `testPlanetDiagonalHash` verifies no diagonal alignment for sectors (1,1)..(20,20).
   - `make verify` GREEN.
 
 ## Next Slice
 
-- INBOX: check for next pending item.
+- INBOX (28): halve planet density + overlap prevention.

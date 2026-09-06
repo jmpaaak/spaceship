@@ -261,14 +261,14 @@ function M.planets(sectorX, sectorY)
     -- galaxy share a consistent colour mood. (0.083 ≈ 30°/360°)
     local baseHue = galaxy.baseHue or 0.5
     for i = 1, count do
-        local radius = 7 + math.floor(hash(sectorX, sectorY, 20 + i) * 10)
-        local rawHue = hash(sectorX, sectorY, 80 + i)
+        local radius = 7 + math.floor(hash(sectorX + i * 7, sectorY + i * 13, 20) * 10)
+        local rawHue = hash(sectorX + i * 11, sectorY + i * 17, 80)
         -- Map rawHue into [baseHue-0.083, baseHue+0.083], wrapping in 0..1
         local hue = (baseHue - 0.083 + rawHue * 0.166) % 1
         planets[#planets + 1] = {
             id = string.format("%d:%d:%d", sectorX, sectorY, i),
-            x = sectorX * M.sectorSize + 24 + hash(sectorX, sectorY, 40 + i) * (M.sectorSize - 48),
-            y = sectorY * M.sectorSize + 24 + hash(sectorX, sectorY, 60 + i) * (M.sectorSize - 48),
+            x = sectorX * M.sectorSize + 24 + hash(sectorX + i * 7, sectorY, 40) * (M.sectorSize - 48),
+            y = sectorY * M.sectorSize + 24 + hash(sectorX, sectorY + i * 13, 60) * (M.sectorSize - 48),
             radius = radius,
             hue = hue,
             galaxyStarType = galaxy.starType,

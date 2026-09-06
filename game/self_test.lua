@@ -882,6 +882,32 @@ local function testBackgroundStars()
         "backgroundStars x/y must use independent salts: too many on the diagonal for sectorX==sectorY")
 end
 
+-- INBOX-27: planet hash must scramble i into coords to break diagonal alignment.
+-- When sectorX==sectorY, planet x/y offsets within the sector must NOT be equal
+-- (which would place them on the 45° diagonal). With the fixed hashing that
+-- mixes i into the coordinate inputs, they differ.
+local function testPlanetDiagonalHash()
+    local world = require("game.world")
+    -- Pick several sectors where sectorX == sectorY; these maximally expose
+    -- the old salt-only pattern because sectorX*A + sectorY*B collapses to
+    -- the same value regardless of which coefficient is used.
+    local totalPlanets = 0
+    local diagCount = 0
+    for s = 1, 20 do
+        local planets = world.planets(s, s)
+        for _, p in ipairs(planets) do
+            totalPlanets = totalPlanets + 1
+            local ox = p.x - s * world.sectorSize
+            local oy = p.y - s * world.sectorSize
+            if math.abs(ox - oy) < 1e-6 then diagCount = diagCount + 1 end
+        end
+    end
+    -- With independent hashing at most 1 planet may land on the diagonal by chance.
+    assert(diagCount <= 1,
+        "INBOX-27 planets x/y must use independent hash inputs: " ..
+        diagCount .. "/" .. totalPlanets .. " on diagonal for sectorX==sectorY")
+end
+
 -- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first
 -- slice): TAP TO LAUNCH gets a small rocket icon above it. The icon is a
 -- pure-geometry helper (no love.graphics calls) so it can be regression
@@ -7397,6 +7423,7 @@ function M.run()
     testMinimapGalaxyOverlapPrevention()
     testDebris()
     testBackgroundStars()
+    testPlanetDiagonalHash()
     testLaunchRocketIcon()
     testHullShieldIcon()
     testCashCoinIcon()

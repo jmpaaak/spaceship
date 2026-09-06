@@ -2,11 +2,6 @@
 
 ## 처리 대기
 
-(27) **행성 대각선 패턴 수정 — LCG hash 버그 (사용자 확정, 2026-09-06):**
-  - 원인: `world.planets()` L270-271에서 `hash(sectorX, sectorY, 40+i)` / `hash(sectorX, sectorY, 60+i)` — salt에만 `i`를 더하는 LCG 패턴. i 증가 시 출력이 선형 증가 → 대각선 정렬.
-  - 수정: `x = hash(sectorX + i*7, sectorY, 40)`, `y = hash(sectorX, sectorY + i*13, 60)` 방식으로 i를 좌표에 곱해서 섞기. 동일하게 `radius`(salt 20+i), `hue`(salt 80+i) 등도 같은 패턴이면 수정.
-  - `make verify` GREEN + 커밋: `fix(world): scramble hash i into coords to break diagonal planet alignment`
-
 (28) **행성 밀도 절반 + 겹침 방지 (사용자 확정, 2026-09-06):**
   - 현재: `hash(...,1) > 0.70` → 30% 확률 1개, `hash(...,7) > 0.96` → 4% 확률 2개.
   - 변경: `hash(...,1) > 0.85` → **15%** 확률 1개, `hash(...,7) > 0.98` → **2%** 확률 2개. 약 절반.
@@ -30,6 +25,9 @@
   - `make verify` GREEN + 커밋: `fix(minimap): only show containing galaxy rings, dim non-containing markers`
 
 ## 처리 완료
+
+(27) **행성 대각선 패턴 수정 — LCG hash 버그 (사용자 확정, 2026-09-06):**
+  - [2026-09-06] ✅ 완료: `world.planets()` hash 호출에서 `salt+i` 패턴을 `sectorX+i*K, sectorY+i*K2, salt` 패턴으로 변경. radius/hue/x/y 모두 수정. `testPlanetDiagonalHash` 테스트 추가. `make verify` GREEN.
 
 (24) **표본 채집 줌인 + 타임슬립 1.25배 확대 (사용자 확정, 2026-09-06):**
 
