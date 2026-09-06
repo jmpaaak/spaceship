@@ -3823,21 +3823,49 @@ function M:draw()
         local distIconSize = M.hullIconSize
         drawHudSpriteOrPoly(hudIconsTmp2.distance, nil,
             5 + distIconSize / 2, hudY + distIconSize / 2, distIconSize)
-        -- Distance milestone flash: gold pulse when crossing 1000-unit boundaries
+        -- Distance milestone flash: Balatro-style punch + sparkle when crossing 1000-unit boundaries
         local dist = self:hudDistanceRaw()
         local currentMilestone = math.floor(dist / 1000)
         if currentMilestone > (self.distanceMilestone or 0) then
             self.distanceMilestone = currentMilestone
             self.distanceMilestoneFlash = 1.0
+            -- Spawn sparkle particles around the distance text
+            for k = 1, 6 do
+                local px = 5 + distIconSize + M.hullIconGap + math.random(0, 120)
+                local py = hudY + math.random(-8, 8)
+                self.particles[#self.particles + 1] = {
+                    x = px, y = py,
+                    vx = (math.random() - 0.5) * 40,
+                    vy = -20 - math.random() * 30,
+                    timer = 0.6 + math.random() * 0.3,
+                    maxTimer = 0.9,
+                    r = 1, g = 0.85 + math.random() * 0.15, b = 0.2,
+                    radius = 1.5 + math.random() * 1.5,
+                    hud = true, -- flag: drawn in screen space, not world space
+                }
+            end
+            pcall(love.system.vibrate, 0.04)
         end
         if (self.distanceMilestoneFlash or 0) > 0 then
-            self.distanceMilestoneFlash = self.distanceMilestoneFlash - (love.timer and love.timer.getDelta() or 0.016)
-            local flash = self.distanceMilestoneFlash
-            love.graphics.setColor(1, 0.85, 0.25, math.max(0, flash * 0.8))
+            local dt2 = love.timer and love.timer.getDelta() or 0.016
+            self.distanceMilestoneFlash = self.distanceMilestoneFlash - dt2
+            local flash = math.max(0, self.distanceMilestoneFlash)
+            -- Scale punch: text grows then shrinks back
+            local punchScale = 1.0 + flash * 0.4  -- 1.4x at start, 1.0x at end
+            local textX2 = 5 + distIconSize + M.hullIconGap
+            local textCenterX = textX2 + 60
+            local textCenterY = hudY + 11
+            love.graphics.push()
+            love.graphics.translate(textCenterX, textCenterY)
+            love.graphics.scale(punchScale, punchScale)
+            love.graphics.translate(-textCenterX, -textCenterY)
+            love.graphics.setColor(1, 0.85, 0.25, 0.6 + flash * 0.4)
+            love.graphics.print(hud.distance, textX2, hudY)
+            love.graphics.pop()
         else
             love.graphics.setColor(0.7, 0.9, 1)
+            love.graphics.print(hud.distance, 5 + distIconSize + M.hullIconGap, hudY)
         end
-        love.graphics.print(hud.distance, 5 + distIconSize + M.hullIconGap, hudY)
         hudY = hudY + M.hudLineStep
     end
     -- Item 38b: cash is its own line (was combined with distance).
