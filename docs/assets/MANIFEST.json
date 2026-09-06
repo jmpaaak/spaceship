@@ -174,7 +174,7 @@
       "height": 128
     },
     "downloaded_at": "2026-09-06T18:00:00+09:00",
-    "sha256": "7b0a977834110f6ea1e0bcca0b077a6a75d810429b0bb5c9531fddd99f1df025",
+    "sha256": "e1a09a02381fe5dbb56b10558d54e13708b0270feab4b025e08bc59c9726e447",
     "width": 128,
     "height": 128,
     "qa": "INBOX 60: 128x128 RGBA PIL Earth sprite, seed 42, tools/gen_earth.py"
@@ -2115,7 +2115,7 @@
     "style": "pixel-art procedural sphere",
     "settings": "{\"generator\":\"tools/gen_pixelplanet.py\",\"type\":\"ice\",\"seed\":20260905,\"size\":64,\"license\":\"MIT\"}",
     "downloaded_at": "2026-09-05T18:30:00+09:00",
-    "sha256": "d90fa3aa1a0bd5a027f2285d2ce0224733e7052b29c8e33cfe2c7b3e4bb262b7",
+    "sha256": "89f9f45809da9884b26cd22d3fc44b27f54d9d240a82779a6534dbe236a82a70",
     "width": 64,
     "height": 64,
     "qa": "INBOX (12): PIL-generated 64x64 ice planet sprite, RGBA, seed 20260905, verified sha256 match"
@@ -2131,7 +2131,7 @@
     "style": "pixel-art procedural sphere",
     "settings": "{\"generator\":\"tools/gen_pixelplanet.py\",\"type\":\"lava\",\"seed\":20260905,\"size\":64,\"license\":\"MIT\"}",
     "downloaded_at": "2026-09-05T18:30:00+09:00",
-    "sha256": "4859768fca781c23144630afc2c048cc41d9943d03e44151818ca7b2b5bf21fe",
+    "sha256": "8ebd0bb1bccfd1ceaef408b275cf756713e316555ef2036e45565d3075a3b4be",
     "width": 64,
     "height": 64,
     "qa": "INBOX (12): PIL-generated 64x64 lava planet sprite, RGBA, seed 20260905, verified sha256 match"
@@ -2147,7 +2147,7 @@
     "style": "pixel-art procedural sphere",
     "settings": "{\"generator\":\"tools/gen_pixelplanet.py\",\"type\":\"dry\",\"seed\":20260905,\"size\":64,\"license\":\"MIT\"}",
     "downloaded_at": "2026-09-05T18:30:00+09:00",
-    "sha256": "9825b767f937c653f8166ad3b4793b7f56c82d8805087d987a48f42129714ff3",
+    "sha256": "f85e065414adbdadee27942487ff691c5d465461aaaf75e4866ca90a890c46bc",
     "width": 64,
     "height": 64,
     "qa": "INBOX (12): PIL-generated 64x64 dry planet sprite, RGBA, seed 20260905, verified sha256 match"
@@ -2163,7 +2163,7 @@
     "style": "pixel-art procedural sphere",
     "settings": "{\"generator\":\"tools/gen_pixelplanet.py\",\"type\":\"gas\",\"seed\":20260905,\"size\":64,\"license\":\"MIT\"}",
     "downloaded_at": "2026-09-05T18:38:41+09:00",
-    "sha256": "4296db6ca79845c34d038b03535b888f618ccecc475e873ec76a8120ecb4830c",
+    "sha256": "971bd78ab5f201dea1d713dea95e6796264a32f4d86604b388d004ba04582086",
     "width": 64,
     "height": 64,
     "qa": "INBOX (12): PIL-generated 64x64 gas planet sprite, RGBA, seed 20260905, verified sha256 match"
@@ -2179,7 +2179,7 @@
     "style": "pixel-art procedural sphere",
     "settings": "{\"generator\":\"tools/gen_pixelplanet.py\",\"type\":\"earth\",\"seed\":20260905,\"size\":64,\"license\":\"MIT\"}",
     "downloaded_at": "2026-09-05T18:38:41+09:00",
-    "sha256": "a036dd41f2946a5b3082dcb12e110f711667869133e4f7df4661ddb73aa6b3af",
+    "sha256": "af2fa1da049416dfc270d9c3801b11b615a49271f03235011a89d5032abee21f",
     "width": 64,
     "height": 64,
     "qa": "INBOX (12): PIL-generated 64x64 earth planet sprite, RGBA, seed 20260905, verified sha256 match"
@@ -2195,7 +2195,7 @@
     "style": "pixel-art procedural sphere",
     "settings": "{\"generator\":\"tools/gen_pixelplanet.py\",\"type\":\"bare\",\"seed\":20260905,\"size\":64,\"license\":\"MIT\"}",
     "downloaded_at": "2026-09-05T18:38:41+09:00",
-    "sha256": "4555a218e3c719eb1d4862c85998458875ee546e6fd213dc06449f0e0eb9c44c",
+    "sha256": "995ba75d3b0fa16fbedd2e5acee98b81ea0b51ebe6c4fc60f0b8fb8b6b14bae3",
     "width": 64,
     "height": 64,
     "qa": "INBOX (12): PIL-generated 64x64 bare planet sprite, RGBA, seed 20260905, verified sha256 match"

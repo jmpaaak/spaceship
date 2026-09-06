@@ -1,12 +1,15 @@
 ## Current Status
 
-- Fix: asset manifest sha256 for `assets/earth/earth_generic.png` was stale after
-  the INBOX-60 PIL regeneration. Updated hash to match actual file
-  (7b0a977…→matches on-disk). `make verify` now passes (ASSET_MANIFEST_OK).
+- Fix: `make verify` failed ASSET_MANIFEST_FAIL — sha256 mismatches for
+  `assets/earth/earth_generic.png` and six `assets/planet/pp_*.png` sprites
+  (chunky 4px regeneration left stale hashes). Updated
+  `docs/assets/MANIFEST.json` to on-disk hashes. `make verify LOVE=…` GREEN:
+  SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item.
+- Process next pending INBOX item. Do not start until this cycle's commit
+  is on a clean tree.
 
 ## Previous
 
