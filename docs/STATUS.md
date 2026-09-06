@@ -1,20 +1,16 @@
 ## Current Status
 
-- Fix: previous cycle left uncommitted RCS exhaust work that crashed
-  `make test` (`expedition.effectiveSpeed` arithmetic on nil
-  `steeringUpgradeAmount` when `rcsSpeedLevel` was called with a stub
-  run table). Finished that slice: `effectiveSpeed` now nil-guards
-  `baseSpeed` / `steeringUpgradeLevel` / `steeringUpgradeAmount` /
-  `scoutClimbSpeedBonus`. RCS exhaust is a continuous 0–999 speed
-  gradient (`rcsVisual`: white→red→blue→rainbow, radius 1.5+t*2.5)
-  instead of discrete upgrade-count buckets; play.lua particles use it.
-  self_test INBOX-33 rewritten for the gradient. `make verify LOVE=…`
-  GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
+- Fix: asset manifest sha256 mismatch for `assets/hud/icon_durability.png`.
+  Previous cycle (53265be) regenerated the durability icon as a heart shape
+  but did not update `docs/assets/MANIFEST.json` with the new hash.
+  Updated manifest sha256 to match actual file
+  (`8bc0a0f73299231677d9dd3fc15085a7c79731766d6263653e1098bfe7bc23d3`).
+  `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
+  ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item. Do not start until this cycle's commit
-  is on a clean tree.
+- Process next pending INBOX item.
 
 ## Previous
 

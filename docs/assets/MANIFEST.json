@@ -2557,7 +2557,7 @@
     "style": "pixel-art",
     "settings": "{\"generator\":\"tools/gen_hud_icons.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-06T13:30:00+09:00",
-    "sha256": "3517a06cc509829f4cdf27a99aee2a4f9df44a2e5e0b643a2f7443e3bfa5c706",
+    "sha256": "8bc0a0f73299231677d9dd3fc15085a7c79731766d6263653e1098bfe7bc23d3",
     "width": 16,
     "height": 16,
     "qa": "INBOX (43): PIL-generated 16x16 durability icon, RGBA, transparent corners verified"
