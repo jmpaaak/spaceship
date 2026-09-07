@@ -10267,7 +10267,6 @@ function M.run()
     end
 
     require("game.tests.sfx").run()
-
     print("SPACESHIP_UNIT_OK")
 end
 
