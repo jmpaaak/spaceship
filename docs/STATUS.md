@@ -1,4 +1,9 @@
 ## Current Status
+- INBOX (45): harvest upgrade +5% per buy; durability buy fills the new cell.
+  - `game/expedition.lua`: default `sampleYieldUpgradeAmount` 0.01→0.05. Shop copy becomes `HARVEST x1.00 -> x1.05`.
+  - `buyDurabilityUpgrade`: after `refreshShipStats`, current `durability` += gained max (capped at max). Earth shop is not a full heal.
+  - Test `game/tests/harvest_hull_upgrade.lua` GREEN. play.lua untouched.
+
 - INBOX 61(42): game-wide BGM is one looping Space orchestral track.
   - `game/bgm.lua`: `tracks = { assets/sfx/space_orchestral.mp3 }`, `looping = true`, headless `love.audio` nil guard kept.
   - i18n EN/KO `title_bgm_credit` = `BGM: Space — lasercheese (CC-BY 3.0)`. Title still starts BGM on enter; `main.lua` still calls `bgm.update()`.
@@ -131,4 +136,4 @@
 
 ## Next slice
 
-- Process next pending items in INBOX.md (e.g., UI adjustments, balance tweaks, or new features now that `play.lua` is more manageable).
+- INBOX (46): scout card compact title + climb +120 / hull −50% of current max.

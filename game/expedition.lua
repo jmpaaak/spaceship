@@ -337,7 +337,7 @@ function M.new(options)
         durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
         durabilityUpgradeCost = options.durabilityUpgradeCost or 10,
         durabilityUpgradeLevel = 0,
-        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.01,
+        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.05,
         sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 5,
         sampleYieldUpgradeLevel = 0,
         baseSpeed = options.baseSpeed or options.climbSpeed or 60,
@@ -663,7 +663,14 @@ function M.buyDurabilityUpgrade(run)
     if run.phase ~= "settlement" or run.money < price then return false end
     run.money = run.money - price
     run.durabilityUpgradeLevel = run.durabilityUpgradeLevel + 1
+    local beforeMax = run.maxDurability or 0
     refreshShipStats(run)
+    -- INBOX (45): fill the newly added cell; Earth shop is not a full heal.
+    local gained = (run.maxDurability or 0) - beforeMax
+    run.durability = math.min(
+        run.maxDurability,
+        (run.durability or 0) + math.max(gained, run.durabilityUpgradeAmount or 1)
+    )
     return true
 end
 

@@ -4,7 +4,31 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
+  (46) **정찰선 카드: '구매' → '정찰선 구매', 속도 +120 / 내구 -50%** (msg `1546488266650554368`)
+    - 담당: `game/i18n.lua` `buy_scout_compact` + `game/expedition.lua` scout 보너스.
+    - KO compact 제목 `정찰선 구매`. EN `SCOUT`.
+    - `scoutClimbSpeedBonus` 50→**120**. 내구는 고정 -1이 아니라 **현재 max의 50%** (`floor(maxDurability * 0.5)` 차감, 최소 1 남김).
+
+  (47) **슬롯 릴 아이콘이 칸 안에서 안 보임** (msg `1546488266650554368`)
+    - 담당: `game/scenes/play_shop.lua` 릴 드로우. `setScissor(rx,ry,…)`가 게임좌표라 모바일 `translate+scale` 이후 화면좌표와 불일치 → 창만 잘림.
+    - `love.graphics.transformPoint`로 스크린 좌표 변환 후 scissor. 아이콘 없으면 텍스트 폴백을 창 안에 크게.
+
+  (48) **도움말(?) 열면 일시정지** (msg `1546489668617379900` 후속)
+    - 담당: `game/scenes/play.lua` `M:update` + `play_help.lua`.
+    - `helpOverlayOpen`이면 `paused`와 같이 `update` early-return (`self.time` 정지). 일시정지 메뉴는 띄우지 않음 (도움말 패널만).
+    - 아무 곳 탭으로 닫으면 다시 진행.
+
+  (49) **홈(타이틀)에 초기 함선 에셋 + 앱 아이콘** (msg `1546490925700612096`)
+    - 담당: `game/scenes/title.lua` + `conf.lua` `t.window.icon` (play.lua 금지).
+    - 타이틀이 횡하니까 `assets/ship/ship_default.png`를 Jimmy's 위에 크게 그림 (nearest, 중심).
+    - 같은 함선을 정사각 아이콘 `assets/icon.png` (256)로 만들어 `t.window.icon`에 지정.
+
 ## 처리 완료
+(45) **수확 업그레이드 +1%가 너무 작음 + 내구 업그레이드가 빈 칸만 추가** (msg `1546489668617379900`)
+  - 완료: `game/expedition.lua` default `sampleYieldUpgradeAmount` 0.01→0.05. Shop preview `x1.00 -> x1.05` / after buy `x1.10`.
+  - `buyDurabilityUpgrade` now +1 maxDurability AND +1 current durability (new cell filled, capped at max; not a full heal).
+  - Test `game/tests/harvest_hull_upgrade.lua` GREEN. play.lua untouched.
+
 (61) **Discord 2026-09-07 미완 요청 복구 — 전체 완료:**
   - 소항목 (8)-(44) 전부 구현·커밋 완료. 선체/엔진 아이콘, 미니맵 림, 일시정지 정지, 별 팝인, 게임오버 keep-one, 파편, 행성 폴백, 슬롯 전용 풀, 허브 구입 버튼, 게임오버 재시작 중앙, HUB 슬롯 위치, 슬롯 속도 보상 분리, 장비 제안 [B] 제거, 일시정지 메뉴+타이틀, DANGER 텍스트, 리더보드, 체크포인트 부활+메인홈, 슬롯 은하 비례, 에셋 스튜디오 sprite-gen, 행운%+헬프, 타이틀 Jimmy's, 허브 겹침 방지, 시너지 표기, 슬롯 5심볼, SFX 3종, 허브 내구 회복 제거+hullRegen, gear-editor 시너지+수트, BGM 플레이리스트, BGM Space orchestral, gear-editor 엔진탭, 발라트로 조커식 다양화, gear-editor KO/EN 토글.
 

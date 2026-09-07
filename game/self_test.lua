@@ -7161,7 +7161,7 @@ function M.run()
     assert(starterNextLaunch.hullStatus == "SHORT $10" and not starterNextLaunch.hullAffordable)
     assert(starterNextLaunch.shipStatus == "SHORT $125" and not starterNextLaunch.shipAffordable)
     assert(starterNextLaunch.yieldAction == "T/Y HARVEST LV.0>1 $5")
-    assert(starterNextLaunch.yieldPreview == "HARVEST x1.01")
+    assert(starterNextLaunch.yieldPreview == "HARVEST x1.05")
     assert(starterNextLaunch.yieldStatus == "SHORT $5" and not starterNextLaunch.yieldAffordable)
     assert(starterNextLaunch.steeringAction == "T/G SPEED LV.0>1 $5")
     assert(starterNextLaunch.steeringPreview == "61")
@@ -7185,7 +7185,7 @@ function M.run()
     -- too wide for a 90px column once a "T/V "/"T/Y " prefix and a
     -- side-by-side status line are added, so compact "Y:"/"V:" variants
     -- (measured 38-62px) are drawn in the column instead.
-    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00 -> x1.01 $5")
+    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00 -> x1.05 $5")
     assert(starterNextLaunch.shipActionCompact == "BUY $125")
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
@@ -7205,7 +7205,7 @@ function M.run()
     nextLaunchScene:keypressed("y")
     local yieldedNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(yieldedNextLaunch.yieldAction == "T/Y HARVEST LV.1>2 $" .. expedition.upgradeCost(nextLaunchScene.expedition, nextLaunchScene.expedition.sampleYieldUpgradeCost, 1))
-    assert(yieldedNextLaunch.yieldPreview == "HARVEST x1.02")
+    assert(yieldedNextLaunch.yieldPreview == "HARVEST x1.10")
     nextLaunchScene:keypressed("v")
     local scoutNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(scoutNextLaunch.ship == "NEXT SCOUT")
@@ -10091,6 +10091,7 @@ function M.run()
 
     require("game.tests.bgm").run()
     require("game.tests.binary_star").run()
+    require("game.tests.harvest_hull_upgrade").run()
 
     -- INBOX 61(25): slot cost/rewards scale with galaxy distance
     -- slotTier = 1 + floor(galaxyDistance / galaxyCellSize)
