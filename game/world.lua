@@ -428,34 +428,44 @@ function M.debris(sectorX, sectorY, time)
         elseif kindRoll < 0.44 then
             kind = "scrap"
         end
-        local minR, maxR = 5, 9   -- asteroid (orig 3-7, ~x1.3)
+        local minR, maxR = 4, 6   -- asteroid — no large chunks
         if kind == "can" then
-            minR, maxR = 3, 4     -- (orig 2-3, ~x1.3)
+            minR, maxR = 3, 4
         elseif kind == "scrap" then
-            minR, maxR = 3, 5     -- (orig 2-4, ~x1.3)
+            minR, maxR = 3, 5
         end
         local radius = minR + math.floor(hash(sectorX, sectorY, 920 + i) * (maxR - minR + 1))
         local ang = hash(sectorX, sectorY, 930 + i) * 2 * math.pi
         local spd = 6 + hash(sectorX, sectorY, 932 + i) * 10
         local vx = math.cos(ang) * spd
         local vy = math.sin(ang) * spd
+        -- Start position: offset so piece enters from outside the sector boundary.
+        -- At time=0, piece is at (-margin) along its velocity direction from its
+        -- base position, so it drifts INTO the sector over time and never pops
+        -- into existence mid-screen.
+        local margin = M.sectorSize * 0.6
+        local startOffX = -math.cos(ang) * margin
+        local startOffY = -math.sin(ang) * margin
         local baseX = sectorX * M.sectorSize + 16
             + hash(sectorX, sectorY, 950 + i) * (M.sectorSize - 32)
+            + startOffX
         local baseY = sectorY * M.sectorSize + 16
             + hash(sectorX, sectorY, 960 + i) * (M.sectorSize - 32)
+            + startOffY
         local baseRotation = hash(sectorX + i, sectorY, 970) * 2 * math.pi
         local rotSpeed = (hash(sectorX + i, sectorY, 971) - 0.5) * 2  -- ±1 rad/s
-        local wrapPeriod = 20 + hash(sectorX + i * 3, sectorY + i * 5, 975) * 25  -- 20~45s per piece
-        local wrappedTime = time % wrapPeriod
+        -- No wrapping — pieces drift continuously from outside the sector.
+        -- nearbyDebris scan radius (4 sectors) covers enough that pieces
+        -- drifting out of their home sector are still returned by a neighbor.
         pieces[#pieces + 1] = {
             id = string.format("debris:%d:%d:%d", sectorX, sectorY, i),
-            x = baseX + vx * wrappedTime,
-            y = baseY + vy * wrappedTime,
+            x = baseX + vx * time,
+            y = baseY + vy * time,
             radius = radius,
             kind = kind,
             vx = vx,
             vy = vy,
-            rotation = baseRotation + rotSpeed * wrappedTime,
+            rotation = baseRotation + rotSpeed * time,
             rotSpeed = rotSpeed,
         }
     end
