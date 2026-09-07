@@ -229,6 +229,15 @@ local function settle(run)
     run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.pendingSampleValue = 0
     run.sampleCount = 0
+    -- INBOX 61(24): save last checkpoint position for respawn after destruction.
+    -- If lastHubX is set, the player settled at a hub; otherwise at Earth.
+    if run.lastHubX and run.lastHubY then
+        run.lastCheckpointX = run.lastHubX
+        run.lastCheckpointY = run.lastHubY
+    else
+        run.lastCheckpointX = 0
+        run.lastCheckpointY = 75  -- Earth center y
+    end
     -- INBOX 61(5): solarSystem now grants +1 maxDurability on settle (not +1 HP
     -- heal, which was useless because launch() restores to maxDurability).
     -- binaryStar grants +30 money flat.
@@ -292,6 +301,18 @@ local function destroy(run)
     run.lastVisitedGalaxyId = nil
     run.lastHubX = nil
     run.lastHubY = nil
+    -- INBOX 61(24): lastCheckpointX/Y is intentionally NOT reset here.
+    -- After destruction the player respawns at their last visited checkpoint
+    -- (hub or Earth), preserving only personal best height + checkpoint.
+end
+
+-- INBOX 61(24): Returns the last checkpoint position (hub or Earth).
+-- After destruction, the ship respawns here instead of always at Earth.
+function M.lastCheckpointOrEarth(run)
+    if run.lastCheckpointX and run.lastCheckpointY then
+        return run.lastCheckpointX, run.lastCheckpointY
+    end
+    return 0, 75  -- Earth default
 end
 
 function M.new(options)
@@ -303,6 +324,9 @@ function M.new(options)
         lastVisitedGalaxyId = nil,
         lastHubX = nil,
         lastHubY = nil,
+        -- INBOX 61(24): last checkpoint position for respawn after destruction.
+        lastCheckpointX = nil,
+        lastCheckpointY = nil,
         altitude = 0,
         maxAltitude = 0,
         bestAltitude = options.bestAltitude or 0,

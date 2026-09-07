@@ -3020,9 +3020,27 @@ function M:keypressed(key)
         -- INBOX (47): capture hub position before launch clears it
         local hubX = self.expedition.lastHubX
         local hubY = self.expedition.lastHubY
+        -- INBOX 61(24): capture checkpoint position before launch clears hub fields
+        local wasDestroyed = self.expedition.phase == "destroyed"
+        local cpX, cpY = expedition.lastCheckpointOrEarth(self.expedition)
         if expedition.launch(self.expedition) then
             if relaunching then
-                if hubX and hubY then
+                if wasDestroyed then
+                    -- INBOX 61(24): after destruction, respawn at last checkpoint
+                    -- (could be a hub or Earth). The checkpoint is preserved
+                    -- across destroy, unlike lastHubX/Y which is wiped.
+                    if cpX == 0 and cpY == 75 then
+                        -- Earth checkpoint: use standard launch spawn
+                        self.ship.x = M.launchSpawnX
+                        self.ship.y = M.launchSpawnY
+                        self.hasLeftEarth = false
+                    else
+                        -- Hub checkpoint: spawn near the checkpoint
+                        self.ship.x = cpX
+                        self.ship.y = cpY - 80
+                        self.hasLeftEarth = true
+                    end
+                elseif hubX and hubY then
                     -- Relaunch near the hub planet in the same galaxy
                     self.ship.x = hubX
                     self.ship.y = hubY - 80  -- spawn outside the hub collectOrbitRadius

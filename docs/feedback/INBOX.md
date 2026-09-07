@@ -72,7 +72,8 @@
   (24) **게임오버 → 마지막 체크포인트 부활 + 메인홈 구성** (msg `1546397935804223528`, 정정 `1546398416471457792`)
     - 현재: 게임오버 → 아이템 1개만 keep → 지구(0,75)에서 리스타트, 모든 돈/업그레이드/장비 리셋.
     - 변경: **마지막 방문 체크포인트(허브/지구)에서 부활**. 단 돈·업그레이드·장비는 **기존대로 전부 리셋** + **keep-one(아이템 1개 선택) 유지**. 달라지는 건 **부활 위치만** (지구 고정 → 마지막 체크포인트).
-    - `run.lastCheckpointPosition = {x, y, galaxyId}` settle/settleAtHub 시 저장. `destroy` → ship 위치를 `lastCheckpointPosition`으로, 나머지(돈/업그레이드/장비) 리셋은 현행 유지.
+    - ~~`run.lastCheckpointPosition = {x, y, galaxyId}` settle/settleAtHub 시 저장. `destroy` → ship 위치를 `lastCheckpointPosition`으로, 나머지(돈/업그레이드/장비) 리셋은 현행 유지.~~
+    - 완료(a): `lastCheckpointX/Y` added to run state. `settle()` saves Earth or hub position. `destroy()` preserves checkpoint. `lastCheckpointOrEarth(run)` helper. `play.lua` uses checkpoint for destroy respawn. Test INBOX-61(24) GREEN.
     - **새 게임**: 메인홈에서 `새 게임` = 전체 리셋 + 지구 시작. `이어서 하기` = 마지막 체크포인트.
     - 타이틀 메뉴 최종 구성: `이어서 하기` / `새 게임` / `리더보드` / `설정`.
 
