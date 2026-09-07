@@ -10,33 +10,6 @@
   프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-  (3) **슬롯 UI: 레버 중복 제거, 크게 당김, 릴 정지마다 이펙트, 카피**
-    - `tools/gen_slot_machine.py`의 본체 PNG에 빨간 레버가 이미 그려져 있고 play.lua가 두 번째 레버를 그림 → **PNG 레버 삭제** 또는 코드 레버만.
-    - 터치마다 레버가 크게 내려갔다 올라옴 (`slotLeverPull`, 이동량 지금보다 훨씬 크게).
-    - 릴 하나 멈출 때마다 haptic 0.03 + `slotShake` + 짧은 스파클.
-    - 머신 아래 두 줄, 크게(22px), 세로 가운데:
-      `탭하여 룰렛 도전!`
-      `$10`
-    - i18n `earth_slot_spin_prompt` / `tap_relaunch`: `"탭: …"` → `"탭하여 재발사"` / `"탭하여 룰렛 도전!"`.
-
-  (4) **상점 카드 4줄, 세로 가운데, 내구도/정찰선 카피**
-    - 모든 카드 텍스트 **세로 가운데**. Galmuri 11 배수만.
-    - 내구도 카드:
-      `내구도`  (지금 `내구` → **내구도**)
-      `3 -> 4`
-      `$10`
-      `잔액 $125`  (부족이면 `부족 $N`)
-    - 정찰선 카드:
-      `정찰선 구매`
-      `+100 속도, -50% 내구도`  (현재 코드는 +50 SPEED / -1 HULL — **카피를 이 문구로**. 수치 밸런스는 코드 `scoutClimbSpeedBonus`/`scoutDurabilityBonus`와 맞출지, 카피만 바꿀지: **카피를 사용자 문구 그대로**, 속도 보너스가 50이면 `+50 속도, -1 내구도`가 정직. 사용자가 `+100 속도, -50% 내구도`를 명시했으므로 **표시 문구는 그대로** 쓰고 scout 보너스를 speed +100 / hull 50% 로 맞출지 한 사이클에서 결정 — 권장: 표시=실제. 실제를 +50/-1 유지하면 표시도 `+50 속도, -1 내구도`.
-    - `>` 대신 ` -> `. compact i18n + `drawShopItem` 파서 동시 수정.
-    - 카드 밖 scout tradeoff 회색 두 줄 제거 (카드 2번째 줄로 이동).
-
-  (5) **솔라 3+ 착지 HP+1 이득 없음**
-    - `launch()`가 `durability = maxDurability`로 풀회복해서 착지 힐이 무의미.
-    - 착지 시너지를 **출발 후 첫 피격 전에만 의미 있게**: 권장 (a) 착지 힐을 없애고 `착지 시 최대내구 +1 (다음 출발에 반영)` 또는 (b) 재출발 풀회복 폐지, 착지한 HP로 다시 나감.
-    - 사용자 질문 취지 = 착지 힐이 헛효과. **(a) maxDurability+1 on settle** 가 풀회복과 공존 가능. i18n `synergy_desc_solarSystem`도 맞춤.
-
   (6) **시너지 팝업 두 줄 + 기호 제거 + 보이드 채집 +30%**
     - HUD/팝업 이름에서 `☀ * # ~ x + @` 접두 기호 **전부 삭제**.
     - KO 이름: `태양계 시너지` / `성운 지대` / `사건의 지평선` / `펄서 폭발` / `쌍성` / `초신성` / `암흑물질`.
@@ -96,6 +69,15 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+
+(61.5) **솔라 3+ 착지 HP+1 이득 없음 → maxDurability+1:**
+  - 완료: `expedition.settle()` solarSystem synergy changed from +1 HP heal (useless because launch() restores to maxDurability) to +1 maxDurability. i18n EN/KO updated. testINBOX61_5 verifies maxDurability increase survives through launch.
+
+(61.4) **상점 카드 4줄, 세로 가운데, 내구도/정찰선 카피:**
+  - 완료: 내구→내구도, >→->, scout tradeoff in-card, 4-line vertical center layout, external grey lines removed. testINBOX61_4 passing.
+
+(61.3) **슬롯 UI: 레버 중복 제거, 크게 당김, 릴 정지마다 이펙트, 카피:**
+  - 완료: PNG lever removed from gen_slot_machine.py, code-only lever with *150 pull. Sparkle particles on reel stop. haptic 0.03. i18n 탭하여 format. testINBOX61_3 passing.
 
 (61.2) **슬롯 2/3매치 차등 + 전설 금지 + 중복 $10 환불 + 슬롯 풀이면 교체:**
   - 완료: earthSlotSpin PART branch pool에 hull+engine 양쪽 포함. 2매치=common/uncommon, 3매치=rare/legendary 래리티 게이트 동작 확인. 중복 환불·교체 UI 기존 코드 정상. testEarthSlotSpinPartRarityGate 테스트 추가 (engine pool 포함 검증).

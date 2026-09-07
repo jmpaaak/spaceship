@@ -228,11 +228,13 @@ local function settle(run)
     run.lastNewBest = run.bestAltitude > (run.launchBestAltitude or 0)
     run.pendingSampleValue = 0
     run.sampleCount = 0
-    -- Stellar Origin (item 16, 2026-09-05): solarSystem heals 1 durability per
-    -- settlement (capped at maxDurability); binaryStar grants +30 money flat.
+    -- INBOX 61(5): solarSystem now grants +1 maxDurability on settle (not +1 HP
+    -- heal, which was useless because launch() restores to maxDurability).
+    -- binaryStar grants +30 money flat.
     local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
     if syn.solarSystem then
-        run.durability = math.min(run.maxDurability, run.durability + 1)
+        run.maxDurability = (run.maxDurability or 3) + 1
+        run.durability = math.min(run.durability + 1, run.maxDurability)
     end
     if syn.binaryStar then
         run.money = run.money + 30

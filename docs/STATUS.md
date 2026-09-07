@@ -1,24 +1,20 @@
 ## Current Status
 
-- INBOX 61(4): Shop card 4-line layout, vertical centering, copy fixes.
-  - i18n: `내구` → `내구도` in `hull_action_compact` and `hull_preview_compact` (KO).
-  - Arrow format: `>` → ` -> ` in all compact action strings (EN+KO: hull, steering, yield).
-  - New `scout_tradeoff_compact` i18n key: EN `"+%d SPEED, %d HULL"`, KO `"+%d 속도, %d 내구도"`.
-  - `drawShopItem` now renders 4 lines vertically centered: title / values or desc / price / balance.
-  - Ship (scout) card 2nd line shows tradeoff via `shipTradeoffLine` from `shopLoadoutLines`.
-  - Removed external scout tradeoff grey lines below ship card (moved into card).
-  - Added testINBOX61_4: verifies 내구도 copy, -> arrow format, scout_tradeoff_compact, 4-line layout, no external tradeoff lines.
+- INBOX 61(5): solarSystem synergy settle effect changed from +1 HP heal to +1 maxDurability.
+  - `expedition.settle()`: solarSystem now does `maxDurability += 1` (persists through launch's full heal).
+  - i18n EN: "3+ SOLAR: +1 max HP on land", KO: "솔라 3+: 착지 시 최대내구 +1".
+  - Updated existing synergy settle test (maxDurability 5→6 assertion).
+  - Added testINBOX61_5: verifies i18n copy, maxDurability increase on settle, persistence through launch.
+  - Moved items (3), (4), (5) from 처리 대기 to 처리 완료 in INBOX.md.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item (61.5 or next sub-item).
+- Process next pending INBOX item (61.6 or next sub-item).
 
 ## Previous
 
-- Fixed prior-cycle uncommitted slot machine UX polish: sparkle particles on reel stop, larger lever pull animation, Korean i18n updates (spin prompt / relaunch), regenerated machine.png without lever graphic (now drawn in code), updated MANIFEST sha256.
-- Fixed trailing whitespace flagged by preflight git diff check.
-- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
+- INBOX 61(4): Shop card 4-line layout, vertical centering, copy fixes.
 
 - Fix: previous cycle left uncommitted star sprite assets (`assets/star/`,
   `tools/gen_stars.py`) and partially updated collision damage formula
