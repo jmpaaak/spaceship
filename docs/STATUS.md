@@ -1,21 +1,17 @@
 ## Current Status
-- INBOX 61(23): Leaderboard button + scene + local server.
-  - Added LEADERBOARD button to TitleScene (between CONTINUE and SETTINGS).
-  - New `game/scenes/leaderboard.lua`: fetches GET /scores?limit=20 from local HTTP server, displays top 20 with rank/name/altitude, graceful fallback when server unreachable.
-  - New `game/game_config.lua`: `leaderboardUrl = "http://127.0.0.1:8770"`.
-  - New `tools/leaderboard_server.py`: minimal HTTP server (port 8770), POST /score, GET /scores, JSON file storage.
-  - i18n keys added (EN+KO): title_leaderboard, leaderboard_title, leaderboard_empty, leaderboard_back, leaderboard_rank, leaderboard_loading, leaderboard_error.
-  - `main.lua` wired: title scene onLeaderboard → LeaderboardScene, back → goToTitle.
-  - Minimal JSON parser `_parseScores` for headless/luasocket environments.
-  - Test `INBOX-61(23)` verifies: i18n keys, button rect ordering, tap callbacks, scene creation, _parseScores, game_config, escape-key back.
+- INBOX 61(23b): Leaderboard score auto-POST on settle/destroy.
+  - New `game/leaderboard_client.lua`: `submitScore(name, bestAltitude)` fire-and-forget POST via `love.thread`+luasocket. `isNewBest(run)` helper.
+  - `play.lua:persistBestAltitude()` now calls `leaderboardClient.submitScore` when `isNewBest` is true. Since both settle and destroy (via `expedition.damage`) route through `persistBestAltitude()`, both paths are covered.
+  - Headless/test mode: silent skip (no love.thread). Server unreachable: silent skip.
+  - Test `INBOX-61(23b)` verifies: module API, isNewBest logic (true/false/equal), headless safety, PlayScene loads with require.
   - `make verify LOVE=…` GREEN.
 
 ## Next slice
 
-- INBOX 61(23) remaining: wire score POST on bestAltitude update (settle/destroy), or move to (24) checkpoint respawn.
+- INBOX 61(24): Game-over → last-checkpoint respawn + main home menu composition.
 
 ## Previous
-- INBOX 61(22): DANGER warning text near central star gravity well.
+- INBOX 61(23a): Leaderboard button + scene + local server.
   - When ship approaches within `starWellRadius * 1.5` of the central star, 4 blinking red "DANGER" texts orbit the well ring boundary, slowly rotating.
   - Blink frequency: sin(t*6) pulse. Text drawn at 4 cardinal angles offset by `t*0.3` radians for slow rotation.
   - `world.starDangerTextMultiplier = 1.5` defines the approach threshold.

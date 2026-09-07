@@ -8,6 +8,7 @@ local joystick = require("game.joystick")
 local minimap = require("game.minimap")
 local i18n = require("game.i18n")
 local fonts = require("game.fonts")
+local leaderboardClient = require("game.leaderboard_client")
 local M = {}
 M.__index = M
 
@@ -1591,7 +1592,13 @@ function M:spawnSampleParticles(x, y, tier)
 end
 
 function M:persistBestAltitude()
-    return self.bestAltitudeStore:save(self.expedition.bestAltitude)
+    local saved = self.bestAltitudeStore:save(self.expedition.bestAltitude)
+    -- INBOX 61(23) remaining: auto-post score on settle/destroy when best
+    -- altitude was updated. Fire-and-forget; silent on server failure.
+    if leaderboardClient.isNewBest(self.expedition) then
+        leaderboardClient.submitScore("Player", self.expedition.bestAltitude)
+    end
+    return saved
 end
 
 -- Draws equipped gear slots (Item 6): up to 6 hull parts and 3 engine parts
