@@ -492,6 +492,31 @@ function init() {
   wireSaveFsa();
   wireDownload();
   wireForm();
+  // Auto-load both JSON files when served via HTTP (gear-editor server)
+  autoLoadDefaults();
+}
+
+async function autoLoadDefaults() {
+  const hullPath = "/gear-editor/data/hull_parts.json";
+  const enginePath = "/gear-editor/data/engine_parts.json";
+  try {
+    const resp = await fetch(hullPath);
+    if (resp.ok) {
+      const doc = await resp.json();
+      loadDocument(doc, "hull_parts.json");
+      setStatus("Auto-loaded hull_parts.json — " + doc.parts.length + " card(s).", "ok");
+      return;
+    }
+  } catch (_) { /* not served via HTTP, ignore */ }
+  try {
+    const resp = await fetch(enginePath);
+    if (resp.ok) {
+      const doc = await resp.json();
+      loadDocument(doc, "engine_parts.json");
+      setStatus("Auto-loaded engine_parts.json — " + doc.parts.length + " card(s).", "ok");
+      return;
+    }
+  } catch (_) { /* ignore */ }
   setStatus("Open a hull_parts.json or engine_parts.json file to begin.");
 }
 
