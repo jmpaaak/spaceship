@@ -186,3 +186,6 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-07T16:03:00+0900 | assets/part_icons/hull_auto_welder.png | PIL-generated part icon hull_auto_welder
 2026-09-07T16:03:00+0900 | assets/part_icons/hull_nano_mesh.png | PIL-generated part icon hull_nano_mesh
 2026-09-07T16:03:00+0900 | assets/part_icons/hull_repair_drone.png | PIL-generated part icon hull_repair_drone
+2026-09-07T16:26:00+0900 | assets/sfx/galaxy_discover.mp3 | user-provided SFX, new galaxy discover / ≤5-cell approach (19s)
+2026-09-07T16:26:00+0900 | assets/sfx/star_sample.mp3 | user-provided SFX, central-star sample dwell loop (11s)
+2026-09-07T16:26:00+0900 | assets/sfx/collision.mp3 | Pixabay Deep Impact Sound Effect (BryanSantosBreton, Content License, id 176434), collision oneshot (7s)

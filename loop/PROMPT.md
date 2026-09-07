@@ -28,6 +28,12 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 - 큰 기능: (a)/(b)/(c) 중 한 소항목, 또는 한 파일의 한 동작만. GREEN+커밋 전에 다음 소항목을 시작하지 마라.
 - 이 사이클 턴 한도 안에 커밋할 수 없으면 범위를 더 줄여라. 미커밋으로 턴을 다 쓰는 것은 금지 — 중간이라도 동작하는 조각을 커밋하라.
 
+**중요 — 거대 단일 파일 금지 + INBOX 최대 병렬 (2026-09-07):** 원본 `docs/MODULE_STRUCTURE.md`.
+- 800줄/80KB를 넘는 Lua에 기능을 붙이지 마라. 그 사이클은 모듈 분리만. `play.lua`/`self_test.lua`를 더 키우지 마라. 슬라이스 = 모듈 1개.
+- 처리 대기를 **파일/모듈이 안 겹치는 단위로 최대로** 워크트리 병렬화한다. 겹치면 분리 후 병렬.
+- JSON/`tools/`/순수 `game/*.lua`처럼 이미 독립인 항목은 모듈화를 기다리지 말고 즉시 WT.
+- INBOX 항목에는 담당 모듈 경로를 적는다. 안 적으면 전부 `play.lua`에 붙어 1레인이 된다.
+
 
 ## Required workflow
 

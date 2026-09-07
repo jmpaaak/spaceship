@@ -125,6 +125,33 @@
     - 본 제목 `우주선` / `SPACESHIP` (기존 큰 폰트).
     - i18n `title_author = "Jimmy's"` (EN/KO 동일). `title_game_name` 유지.
 
+  (32) **거대 파일 금지 + INBOX 최대 병렬** (사용자 2026-09-07)
+    - 원본: `docs/MODULE_STRUCTURE.md`. 800줄/80KB Lua에 기능 붙이지 말 것. 슬라이스=모듈 1개.
+    - `play.lua`(≈5059줄)를 `game/scenes/play_hud.lua` / `play_slot.lua` / `play_shop.lua` / `play_boost.lua` / `play_help.lua` / `play_gameover.lua` / `play_joystick.lua` 로 분리한 뒤에야 (22)(28)(29) 병렬 가능.
+    - 처리 대기를 **파일이 안 겹치는 단위로 최대로** 워크트리 병렬. 담당 모듈 경로를 각 항목에 적을 것.
+    - **즉시 WT 가능 (모듈화 대기 없음):** (26) JSON+`game/gear.lua`, (27) `tools/asset-studio`+`serve_editors.py`, (36) `assets/sfx`+`game/sfx.lua`.
+
+  (33) **허브와 중심별 절대 겹침 금지 + 중심별 스프라이트 이상** (msg `1546414575241396264`)
+    - 담당: `game/world.lua` `hubPlanet` (play.lua 드로우 금지).
+    - 허브 디스크와 중심별(`starRadius=80`)이 절대 겹치지 않게: `dist >= starRadius + hub.radius + padding`(≥40). 현재 `max(80, radius*0.18)`는 태양 r=80과 허브 r=40~56이 겹침.
+    - 중심별 스프라이트가 초록 X 쿼드/시트 버그(원형 마스크·회전 중심). 시트면 프레임 쿼드가 몸통을 덮게. NASA/청키 원형만.
+
+  (34) **시너지 표기가 팝업에 없음** (msg `1546413969718378588`)
+    - 담당: `game/scenes/play.lua` gearPopup 하단 (모듈화 후 `play_hud.lua`). 이름+설명 두 줄, 기호 금지.
+
+  (35) **슬롯 실제 결과가 3심볼만** (아이들 5종 아이콘은 있음)
+    - 담당: `game/expedition.lua` `earthSlotSpin` + play 스핀 호출.
+    - `math.random(1,10)` vs 가중치 합 20 → DURABILITY/HARVEST 미추첨. `random()*totalWeight`로.
+
+  (36) **SFX 3종** (msg `1546415750342770748` + Pixabay 충돌)
+    - 담당: **새** `game/sfx.lua` (play.lua에 붙이지 말 것). 에셋 이미 `assets/sfx/`.
+    - `galaxy_discover.mp3` — 새 은하 발견 또는 은하까지 거리 ≤5셀일 때 1회.
+    - `star_sample.mp3` — 중심별 표본 추출 진행 중 루프, 우물 벗어나면 stop.
+    - `collision.mp3` — Pixabay "Deep Impact Sound Effect" (BryanSantosBreton, Content License, id 176434). 행성/파편 충돌 시 원샷.
+
+  (31b) **허브 내구 회복 제거 + hullRegen 부품** (msg `1546411887430991913`)
+    - 담당: `game/expedition.lua` launch 힐 스킵 + `game/gear.lua` hullRegen + `game/data/hull_parts.json`. 허브 UI 힌트는 play.lua라 모듈 분리 후 또는 루프 dirty가 아니면.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
