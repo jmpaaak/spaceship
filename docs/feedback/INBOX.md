@@ -83,6 +83,15 @@
     - HUD에 스핀 비용 표시는 이미 `spinCost` 읽으므로 자동 반영.
     - `tripleMultiplier` (solar 1.0 / fringe 1.5 / void 2.0)는 tier 위에 추가로 곱해짐.
 
+  (26) **부품 밸런스: common 스탯 상향 + uncommon 이상 발라트로 +/× 배수 체계** (msg `1546406578733842492`)
+    - common: 단일 효과, 값 최소 5 이상, 평균 ~10. 지금 1~3짜리 효과는 전부 5~12로.
+    - uncommon: **+배수** (`addMultiplier`). 기존 효과에 **고정값 추가** (예: `speed +8` + `luck +5`). 복합 효과 2개.
+    - rare: **×배수** (`scaleMultiplier`). 효과값이 **비율 곱**으로 동작 (예: `speed ×1.5`, `harvest ×1.3`). 새 effect type `"multiply"` 추가하거나, value를 `{"flat": N, "mult": M}` 구조로.
+    - legendary: **+배수 AND ×배수** 복합 (예: `speed +10, harvest ×2.0`).
+    - `gear.lua` `totalEffect` / `equippedTotals`가 flat sum + mult product를 분리 계산하도록: `final = (base + sum_of_flat) * product_of_mult`.
+    - JSON 스키마: `effects[].mode = "flat"|"multiply"` (기본 "flat", 기존 호환). `expedition.effectiveSpeed` 등에서 곱 적용.
+    - hull_parts.json / engine_parts.json 전수 재조정. `tools/gear-editor`에서 mode 필드 편집 가능하게.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
