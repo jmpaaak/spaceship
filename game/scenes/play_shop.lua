@@ -24,6 +24,40 @@ end
 PS.rarityRgb = rarityRgb
 
 ---------------------------------------------------------------------------
+-- reelWindowToScissor — convert game-space reel window to screen scissor.
+-- love.graphics.setScissor is screen-space; after main.lua translate+scale
+-- a game-coord scissor clips the wrong region (empty window on mobile).
+---------------------------------------------------------------------------
+function PS.reelWindowToScissor(rx, ry, rw, rh, transformPoint)
+    transformPoint = transformPoint or (love.graphics and love.graphics.transformPoint)
+    if type(transformPoint) ~= "function" then
+        return rx, ry, rw, rh
+    end
+    local sx, sy = transformPoint(rx, ry)
+    local sx2, sy2 = transformPoint(rx + rw, ry + rh)
+    local x = math.min(sx, sx2)
+    local y = math.min(sy, sy2)
+    return x, y, math.abs(sx2 - sx), math.abs(sy2 - sy)
+end
+
+-- Large in-window letter when a reel icon image is missing.
+function PS.drawReelFallbackText(symbol, rx, ry, rw, rh)
+    local letter = string.sub(tostring(symbol or "?"), 1, 1)
+    local prevFont = love.graphics.getFont()
+    local size = math.max(18, math.floor(rh * 0.72))
+    local ok, font = pcall(function()
+        return fonts.get(size)
+    end)
+    if ok and font then
+        love.graphics.setFont(font)
+    end
+    local fh = (love.graphics.getFont() and love.graphics.getFont():getHeight()) or size
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.printf(letter, rx, ry + (rh - fh) / 2, rw, "center")
+    if prevFont then love.graphics.setFont(prevFont) end
+end
+
+---------------------------------------------------------------------------
 -- drawSettlementOverlay(self) — settlement shop UI
 ---------------------------------------------------------------------------
 function PS.drawSettlementOverlay(self)
@@ -202,7 +236,8 @@ function PS.drawSettlementOverlay(self)
             for i = 1, 3 do
                 local rx = mx + (8 + (i - 1) * 28) * slotScale
                 local ry = my + 8 * slotScale
-                love.graphics.setScissor(rx, ry, reelWindowW, reelWindowH)
+                local sx, sy, sw, sh = PS.reelWindowToScissor(rx, ry, reelWindowW, reelWindowH)
+                love.graphics.setScissor(sx, sy, sw, sh)
                 local rState = self.slotState and self.slotState.reels[i]
                 local drawSym = self.earthShopSlotResult and self.earthShopSlotResult.symbols[i] or "MONEY"
                 local yOff = 0
@@ -223,8 +258,7 @@ function PS.drawSettlementOverlay(self)
                     love.graphics.draw(symImg, rx + symOffX, ry + symOffY + yOff - reelWindowH, 0, symScale, symScale)
                     love.graphics.draw(symImg, rx + symOffX, ry + symOffY + yOff, 0, symScale, symScale)
                 else
-                    love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.printf(string.sub(drawSym, 1, 1), rx, ry + yOff, reelWindowW, "center")
+                    PS.drawReelFallbackText(drawSym, rx, ry, reelWindowW, reelWindowH)
                 end
                 love.graphics.setScissor()
             end
@@ -243,6 +277,8 @@ function PS.drawSettlementOverlay(self)
             for i = 1, 3 do
                 local rx = mx + (8 + (i - 1) * 28) * slotScale
                 local ry = my + 8 * slotScale
+                local sx, sy, sw, sh = PS.reelWindowToScissor(rx, ry, reelWindowW, reelWindowH)
+                love.graphics.setScissor(sx, sy, sw, sh)
                 local symImg = self.slotSymbolImages and self.slotSymbolImages[rKeys[i]]
                 if symImg then
                     local symScale = reelWindowW / symSize * 0.85
@@ -250,7 +286,10 @@ function PS.drawSettlementOverlay(self)
                     local symOffY = (reelWindowH - symSize * symScale) / 2
                     love.graphics.setColor(1, 1, 1, pulse)
                     love.graphics.draw(symImg, rx + symOffX, ry + symOffY, 0, symScale, symScale)
+                else
+                    PS.drawReelFallbackText(rKeys[i], rx, ry, reelWindowW, reelWindowH)
                 end
+                love.graphics.setScissor()
             end
         end
 
@@ -520,6 +559,8 @@ end
 function PS.install(M)
     _M = M
     M.rarityRgb               = rarityRgb
+    M.reelWindowToScissor      = PS.reelWindowToScissor
+    M.drawReelFallbackText     = PS.drawReelFallbackText
     M.drawSettlementOverlay    = PS.drawSettlementOverlay
     M.shopModalLayout          = PS.shopModalLayout
     M.shopModalButtonRects     = PS.shopModalButtonRects

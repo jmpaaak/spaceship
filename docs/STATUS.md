@@ -1,4 +1,9 @@
 ## Current Status
+- INBOX (47): slot reel icons clipped because scissor used game coords after translate+scale.
+  - `game/scenes/play_shop.lua`: `reelWindowToScissor` maps the reel window with `love.graphics.transformPoint` then `setScissor` (spinning + idle).
+  - Missing icon: `drawReelFallbackText` draws a large letter centered in the window.
+  - Test `game/tests/slot_reel_scissor.lua` GREEN. play.lua untouched.
+
 - Preflight FAIL fix: `assets/icon.png` had no `docs/assets/MANIFEST.json` entry.
   - Cataloged 256×256 RGBA PNG (sha256 `d04ad9b4…e08a`) as user_supplied PIL/ship-derived window icon.
   - `conf.lua` `t.window.icon = "assets/icon.png"`. Title ship art for INBOX (49) is still pending.
@@ -149,4 +154,4 @@
 
 ## Next slice
 
-- INBOX (47): Fix slot reel icons being clipped out of bounds.
+- INBOX (48): help overlay (`?`) must freeze play time like pause, without opening the pause menu.

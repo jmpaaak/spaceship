@@ -4,11 +4,6 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-  
-  (47) **슬롯 릴 아이콘이 칸 안에서 안 보임** (msg `1546488266650554368`)
-    - 담당: `game/scenes/play_shop.lua` 릴 드로우. `setScissor(rx,ry,…)`가 게임좌표라 모바일 `translate+scale` 이후 화면좌표와 불일치 → 창만 잘림.
-    - `love.graphics.transformPoint`로 스크린 좌표 변환 후 scissor. 아이콘 없으면 텍스트 폴백을 창 안에 크게.
-
   (48) **도움말(?) 열면 일시정지** (msg `1546489668617379900` 후속)
     - 담당: `game/scenes/play.lua` `M:update` + `play_help.lua`.
     - `helpOverlayOpen`이면 `paused`와 같이 `update` early-return (`self.time` 정지). 일시정지 메뉴는 띄우지 않음 (도움말 패널만).
@@ -24,6 +19,11 @@
     - collect: Luke.RUSTLTD 8bit coin1 CC0. slot: rubberduck retro_coin_01 CC0. boost: rubberduck rocket_01 CC0.
 
 ## 처리 완료
+(47) **슬롯 릴 아이콘이 칸 안에서 안 보임** (msg `1546488266650554368`)
+  - 완료: `play_shop.lua` `reelWindowToScissor` converts reel window via `love.graphics.transformPoint` before `setScissor` (spin + idle).
+  - Missing icon: `drawReelFallbackText` draws a large letter centered in the reel window.
+  - Test `game/tests/slot_reel_scissor.lua` GREEN. play.lua untouched.
+
 (45) **수확 업그레이드 +1%가 너무 작음 + 내구 업그레이드가 빈 칸만 추가** (msg `1546489668617379900`)
   - 완료: `game/expedition.lua` default `sampleYieldUpgradeAmount` 0.01→0.05. Shop preview `x1.00 -> x1.05` / after buy `x1.10`.
   - `buyDurabilityUpgrade` now +1 maxDurability AND +1 current durability (new cell filled, capped at max; not a full heal).
