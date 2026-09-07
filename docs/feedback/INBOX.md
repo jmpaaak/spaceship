@@ -7,6 +7,14 @@
   아래는 그날 Discord에서 지시됐지만 `## 처리 대기`가 비어 루프가 IDLE이었던 항목.
   한 사이클 = 아래 소항목 **하나** + `GAME_HEADLESS=1 GAME_UNIT=1` GREEN + 커밋.
   `play.lua`가 루프에 dirty면 직접 수정 금지 — 이 INBOX만 소비.
+  프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
+
+  (1) **에셋 스튜디오 웹에디터** (msg `1546328787166306395`, 사용자: "만들고 있는거야? 아니면 대기열에 있는거야?" → **둘 다 아니었음**, 지금 큐에 넣음)
+    - `tools/asset-studio/` **없음**. `tools/parts-editor/` **없음**. 있는 건 `tools/gear-editor/`, `tools/slot-editor/`, `tools/gen_*.py`.
+    - sprite-gen (`aldegad/sprite-gen`) + PerfectPixel (`theamusing/perfectPixel`, 사용자 표기 PixelPerpect) + 기존 PIL을 **하나의 웹에디터**로.
+    - 게임 **모든** 에셋 허브 (부품만이 아님). 파이프라인: 업로드/URL/프롬프트 → sprite-gen → PerfectPixel 그리드·양자화 → 청키 4px NEAREST → `assets/` 저장 + `docs/GENERATED_ASSET_LOG.md` + `docs/assets/MANIFEST.json`.
+    - 로컬 정적 HTML+JS (gear-editor 패턴). ComfyUI 금지. 캐릭터/함선/지구 사용자 제공분은 생성 대상 아님.
+    - 부품 웹에디터는 재작업 아님: `tools/gear-editor/` + INBOX (54) 처리 완료.
 
   (2) **슬롯 2/3매치 차등 + 전설 금지 + 중복 $10 환불 + 슬롯 풀이면 교체**
     - 2매치에서 전설 부품 나오면 안 됨. 2매치=common/uncommon, 3매치=rare/legendary.
@@ -73,13 +81,27 @@
     - 배경(parallax 0.4)과 전경 모두 **뷰포트+마진을 sectorSize로 나눈 범위**로 스캔 (`ceil((h/2)/192)+2` 이상, 최소 ±4).
     - 별 위치가 섹터 밖으로 넘치므로(−0.15..+0.15 오버플로) 스캔을 더 넓혀야 경계에서 안 꺼짐.
 
-  (12) **게임오버 keep-one: 효과 보여준 뒤 예/아니오, 텍스트가 카드 밖으로 넘치지 않게**
+  (12) **게임오버 keep-one: 효과 보여준 뒤 예/아니오, 텍스트가 카드 밖으로 넘치지 않게** (msg `1546345736046649477`)
     - 지금 72×72 카드 + 22px 이름이 줄바꿈으로 카드 밖으로 (`자이 / 로 / 안정 / 기`).
     - 카드는 이름만 11px, 카드 안에 클립.
     - 탭 → 즉시 keep 확정 금지. **효과 팝업**(이름, 효과 줄, 등급, 수트, 시너지 두 줄) + `예` / `아니오`. 예=keptPart, 아니오=팝업 닫고 다시 고름.
     - 예/아니오 터치 ≥44px.
 
+  (13) **우주파편이 안 나옴** (msg `1546346519039316009`)
+    - 원인: `world.debris`가 `x = baseX + vx * time` (래핑 없음). `self.time` 누적되면 섹터가 비고 `nearbyDebris(..., 4)` 밖으로 날아감. 반지름도 아직 3–7/2–3/2–4 (모바일 최소 asteroid 8–16, can 5–8, scrap 5–10 미적용). vx/vy가 sign-only 4대각.
+    - 수정: drift `time % 30` 또는 섹터 안 wrap. 반지름 확대. `ang = hash*2π` 연속 방향. 테스트: t=300에도 nearby origin에 debris > 0, radius 하한.
+
+  (14) **행성이 초록 원 폴백** (msg `1546335441580462130` — "행성들 에셋이 없는 것 같은데")
+    - `pp_*` / `*_sheet.png`는 디스크에 RGBA로 있음. 런타임이 시트를 못 타면 `circle("fill")` 초록 구체.
+    - 원인 후보: `loadSprite` RGB 게이트, `planetSheetImages[galaxyStarType]` nil, 원형 마스크 실패.
+    - 수정: 실제 로드 실패 경로를 테스트로 고정하고 시트가 그려지게. 미발견 채집 링은 남기되 본체는 시트.
+
+  (15) **슬롯 전용 부품 풀** (msg `1546328085643796550` — "슬롯머신에서만 뽑을 수 있는 부품들도 몇개 마련해줘")
+    - 지금 PART 매치는 `loadHullParts()` 랜덤 → 상점/허브와 같은 풀, 2매치 전설 가능.
+    - `galaxyExclusive`처럼 `slotExclusive: true` 카드 수종을 hull+engine JSON에 추가. Earth shop / hub explore 제외, 슬롯 PART만. (2) rarity 게이트와 같이.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
+  이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
   (1) **에셋 스튜디오 웹에디터** (msg `1546328787166306395`, 사용자: "만들고 있는거야? 아니면 대기열에 있는거야?" → **둘 다 아니었음**, 지금 큐에 넣음)

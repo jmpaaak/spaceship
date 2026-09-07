@@ -2046,18 +2046,40 @@ function M:update(dt)
                     self.expedition.sampleYieldUpgradeLevel = (self.expedition.sampleYieldUpgradeLevel or 0) + 1
                     self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n수확 +" .. string.format("%.2f", rv)
                 elseif rt == "part" then
-                    -- Drop a random gear part from the slot-exclusive pool
-                    local gearMod = require("game.gear")
-                    local pool = gearMod.loadHullParts()
-                    if pool and #pool > 0 then
-                        local drop = pool[math.random(1, #pool)]
-                        local ok = expedition.equipGear(self.expedition, "hull", drop)
-                        if ok then
-                            self.gearPopup = { part = drop, category = "hull" }
+                    local drop = result.rewardPart
+                    if drop then
+                        local alreadyEquipped = false
+                        for _, p in ipairs(self.expedition.equippedGear or {}) do
+                            if p.id == drop.id then alreadyEquipped = true; break end
                         end
-                        self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n" .. i18n.partName(drop)
+                        for _, p in ipairs(self.expedition.equippedEngineParts or {}) do
+                            if p.id == drop.id then alreadyEquipped = true; break end
+                        end
+                        local spinCost = expedition.slotSpinCost or 10
+                        if alreadyEquipped then
+                            self.expedition.money = self.expedition.money + spinCost
+                            self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n" .. i18n.partName(drop) .. "\n(중복 환불 +$" .. spinCost .. ")"
+                        else
+                            local gearMod = require("game.gear")
+                            local engineParts = require("game.engine_parts")
+                            local isEngine = gearMod.findById(gearMod.loadEngineParts() or {}, drop.id)
+                            local cat = isEngine and "engine" or "hull"
+                            local isFull = (cat == "hull" and engineParts.isFull(self.expedition.gearLoadout, "hull"))
+                                or (cat == "engine" and engineParts.isFull(self.expedition.gearLoadout, "engine"))
+                            
+                            if isFull then
+                                self.shopModal = { gear = drop, category = cat, price = 0, isReplacement = true }
+                                self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n" .. i18n.partName(drop) .. "\n(교체 대기중)"
+                            else
+                                local ok = expedition.equipGear(self.expedition, cat, drop)
+                                if ok then
+                                    self.gearPopup = { part = drop, category = cat }
+                                end
+                                self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n" .. i18n.partName(drop)
+                            end
+                        end
                     else
-                        self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n부품 획득!"
+                        self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n부품 획득 실패!"
                     end
                 end
                 if won then
@@ -2866,6 +2888,33 @@ local function joystickOrigin(x, y)
     return x, y
 end
 
+function M.hitShopModalGearSlot(scene, x, y)
+    local L = M.shopModalLayout()
+    local hullSlots, engineSlots = 6, 3
+    local boxW, boxH, gap, groupGap = M.launchGearBoxW, M.launchGearBoxH, 5, 12
+    local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
+    local startX = math.floor((viewport.width - totalWidth) / 2)
+    local sy = L.slotsY
+    if y >= sy and y < sy + boxH then
+        local hullGear = scene.expedition.equippedGear or {}
+        for i = 1, hullSlots do
+            local sx = startX + (i - 1) * (boxW + gap)
+            if x >= sx and x < sx + boxW then
+                if hullGear[i] then return { part = hullGear[i], category = "hull", index = i } end
+            end
+        end
+        local engineStartX = startX + (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap
+        local engineGear = scene.expedition.equippedEngineParts or {}
+        for i = 1, engineSlots do
+            local sx = engineStartX + (i - 1) * (boxW + gap)
+            if x >= sx and x < sx + boxW then
+                if engineGear[i] then return { part = engineGear[i], category = "engine", index = i } end
+            end
+        end
+    end
+    return nil
+end
+
 function M:touchpressed(id, x, y)
     if self.gearPopup then
         -- Check if tapping another gear slot → switch popup instead of closing
@@ -2880,12 +2929,26 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.shopModal then
+        local slotHit = M.hitShopModalGearSlot(self, x, y)
+        if slotHit and self.shopModal.isReplacement and slotHit.category == self.shopModal.category then
+            -- Replace gear
+            pcall(love.system.vibrate, 0.05)
+            local expeditionMod = require("game.expedition")
+            local list = slotHit.category == "engine" and self.expedition.equippedEngineParts or self.expedition.equippedGear
+            table.remove(list, slotHit.index)
+            expeditionMod.equipGear(self.expedition, slotHit.category, self.shopModal.gear)
+            self.shopModal = nil
+            self.slotResultMessage = (self.slotResultMessage or "") .. "\n(교체 완료)"
+            return
+        end
+
         local buy, skip = M.shopModalButtonRects()
-        if x >= buy.x and x < buy.x + buy.w and y >= buy.y and y < buy.y + buy.h then
+        if not self.shopModal.isReplacement and x >= buy.x and x < buy.x + buy.w and y >= buy.y and y < buy.y + buy.h then
             pcall(love.system.vibrate, 0.02)
             self:keypressed("y")
         elseif x >= skip.x and x < skip.x + skip.w and y >= skip.y and y < skip.y + skip.h then
             pcall(love.system.vibrate, 0.02)
+            if self.shopModal.isReplacement then self.shopModal = nil end
             self:keypressed("n")
         end
         return
@@ -4431,7 +4494,11 @@ function M:draw()
         local titleFont = fonts.get(22)
         love.graphics.setFont(titleFont)
         love.graphics.setColor(1, 1, 1)
-        love.graphics.printf(i18n.t("shop_modal_title"), L.panelX, L.titleY, L.panelW, "center")
+        if self.shopModal.isReplacement then
+            love.graphics.printf("교체할 장착 칸을 탭하세요", L.panelX, L.titleY, L.panelW, "center")
+        else
+            love.graphics.printf(i18n.t("shop_modal_title"), L.panelX, L.titleY, L.panelW, "center")
+        end
 
         love.graphics.setColor(0.7, 0.8, 1)
         love.graphics.printf(i18n.partName(self.shopModal.gear), L.panelX, L.nameY, L.panelW, "center")
@@ -4444,15 +4511,21 @@ function M:draw()
         end
 
         local buy, skip = L.buy, L.skip
-        love.graphics.setColor(0.2, 0.45, 0.22, 1)
-        love.graphics.rectangle("fill", buy.x, buy.y, buy.w, buy.h, 6, 6)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.printf(i18n.t("shop_modal_buy", self.shopModal.price), buy.x, buy.y + 16, buy.w, "center")
+        if not self.shopModal.isReplacement then
+            love.graphics.setColor(0.2, 0.45, 0.22, 1)
+            love.graphics.rectangle("fill", buy.x, buy.y, buy.w, buy.h, 6, 6)
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.printf(i18n.t("shop_modal_buy", self.shopModal.price), buy.x, buy.y + 16, buy.w, "center")
+        end
 
         love.graphics.setColor(0.45, 0.2, 0.2, 1)
         love.graphics.rectangle("fill", skip.x, skip.y, skip.w, skip.h, 6, 6)
         love.graphics.setColor(1, 1, 1)
-        love.graphics.printf(i18n.t("shop_modal_skip"), skip.x, skip.y + 16, skip.w, "center")
+        if self.shopModal.isReplacement then
+            love.graphics.printf("버리기", skip.x, skip.y + 16, skip.w, "center")
+        else
+            love.graphics.printf(i18n.t("shop_modal_skip"), skip.x, skip.y + 16, skip.w, "center")
+        end
         love.graphics.setFont(prevFont)
     end
     if self.gearPopup and self.gearPopup.part then

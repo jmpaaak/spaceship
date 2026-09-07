@@ -1373,6 +1373,23 @@ function M.earthSlotSpin(run, galaxyId, rolls)
         elseif matchSymbol == "PART" then
             rewardType = "part"
             rewardValue = 0
+            local gearMod = require("game.gear")
+            local basePool = gearMod.loadHullParts()
+            local filteredPool = {}
+            for _, p in ipairs(basePool) do
+                if matchCount == 2 and (p.rarity == "common" or p.rarity == "uncommon") then
+                    filteredPool[#filteredPool + 1] = p
+                elseif matchCount == 3 and (p.rarity == "rare" or p.rarity == "legendary") then
+                    filteredPool[#filteredPool + 1] = p
+                end
+            end
+            local partRolls = {
+                rarity = rolls and rolls.partRarity or 0,
+                pick = rolls and rolls.partPick or 0,
+                editionChance = rolls and rolls.partEditionChance or 1,
+                editionPick = rolls and rolls.partEditionPick or 0,
+            }
+            rewardPart = M.rollGearOffer(run, filteredPool, partRolls)
         end
         -- MONEY match stays as money reward
     end
@@ -1382,6 +1399,7 @@ function M.earthSlotSpin(run, galaxyId, rolls)
         rewardType = rewardType,
         rewardValue = rewardValue,
         rewardMultiplier = rewardMultiplier,
+        rewardPart = rewardPart,
         totalWeight = total,
         effectiveHarvestWeight = effectiveHarvestWeight,
         effectiveStarWeight = effectiveHarvestWeight,
