@@ -6939,8 +6939,8 @@ function M.run()
     -- "H:"/"G:" prefixed variants (measured 58-63px via GAME_FONTPROBE) are
     -- drawn in the column instead, without changing the existing full
     -- strings other callers may still rely on.
-    assert(starterNextLaunch.hullActionCompact == "HULL 3>4 $10")
-    assert(starterNextLaunch.steeringActionCompact == "SPEED 30>31 $5")
+    assert(starterNextLaunch.hullActionCompact == "HULL 3 -> 4 $10")
+    assert(starterNextLaunch.steeringActionCompact == "SPEED 30 -> 31 $5")
     assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
     assert(starterNextLaunch.steeringPreviewCompact == "31")
     -- Same compact treatment for the YIELD/SHIP shared touch row (see
@@ -6950,7 +6950,7 @@ function M.run()
     -- too wide for a 90px column once a "T/V "/"T/Y " prefix and a
     -- side-by-side status line are added, so compact "Y:"/"V:" variants
     -- (measured 38-62px) are drawn in the column instead.
-    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00>x1.01 $5")
+    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00 -> x1.01 $5")
     assert(starterNextLaunch.shipActionCompact == "BUY $125")
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
@@ -9061,6 +9061,53 @@ function M.run()
         assert(src:find("slotLeverPull * 150", 1, true) or src:find("slotLeverPull *150", 1, true),
             "INBOX 61(3): lever pull multiplier must be 150 (large pull), not 50")
         print("  INBOX-61(3) slot lever/i18n OK")
+    end
+
+    -- INBOX 61(4): shop card 4-line, vertical center, 내구도 copy, arrow format
+    do
+        local i18n = require("game.i18n")
+        -- KO: 내구 → 내구도 in hull_action_compact and hull_preview_compact
+        i18n.setLocale("ko")
+        local koHullAction = i18n.t("hull_action_compact", 3, 4, 10)
+        assert(koHullAction:find("내구도", 1, true),
+            "INBOX 61(4): KO hull_action_compact must say 내구도, got: " .. koHullAction)
+        local koHullPreview = i18n.t("hull_preview_compact", 4)
+        assert(koHullPreview:find("내구도", 1, true),
+            "INBOX 61(4): KO hull_preview_compact must say 내구도, got: " .. koHullPreview)
+        -- > replaced with ->
+        assert(koHullAction:find("->", 1, true),
+            "INBOX 61(4): KO hull_action_compact must use -> not >, got: " .. koHullAction)
+        i18n.setLocale("en")
+        local enHullAction = i18n.t("hull_action_compact", 3, 4, 10)
+        assert(enHullAction:find("->", 1, true),
+            "INBOX 61(4): EN hull_action_compact must use -> not >, got: " .. enHullAction)
+        local enSpeedAction = i18n.t("steering_action_compact", 30, 31, 5)
+        assert(enSpeedAction:find("->", 1, true),
+            "INBOX 61(4): EN steering_action_compact must use -> not >, got: " .. enSpeedAction)
+        local enYieldAction = i18n.t("yield_action_compact", 1.0, 1.1, 5)
+        assert(enYieldAction:find("->", 1, true),
+            "INBOX 61(4): EN yield_action_compact must use -> not >, got: " .. enYieldAction)
+
+        -- Scout buy compact must include tradeoff desc line
+        i18n.setLocale("ko")
+        local koBuyScout = i18n.t("buy_scout_compact", 125)
+        -- scout_tradeoff_compact key should exist
+        local koScoutTradeoff = i18n.t("scout_tradeoff_compact", 50, -1)
+        assert(koScoutTradeoff:find("속도", 1, true),
+            "INBOX 61(4): KO scout_tradeoff_compact must mention 속도, got: " .. koScoutTradeoff)
+        assert(koScoutTradeoff:find("내구도", 1, true),
+            "INBOX 61(4): KO scout_tradeoff_compact must mention 내구도, got: " .. koScoutTradeoff)
+
+        -- drawShopItem 4-line vertical centering: source must reference 4 lines
+        local src = love.filesystem.read("game/scenes/play.lua")
+        assert(src:find("4 lines", 1, true) or src:find("numLines") or src:find("lineCount"),
+            "INBOX 61(4): drawShopItem must reference 4-line or numLines layout")
+        -- External scout tradeoff lines should no longer be drawn
+        assert(not src:find("Scout tradeoff lines:", 1, true),
+            "INBOX 61(4): external scout tradeoff grey lines should be removed from drawSettlement")
+
+        i18n.setLocale("en")
+        print("  INBOX-61(4) shop card copy/layout OK")
     end
 
     print("SPACESHIP_UNIT_OK")

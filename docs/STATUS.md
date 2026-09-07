@@ -1,18 +1,18 @@
 ## Current Status
 
-- INBOX 61(3): Slot UI — lever pull larger, i18n colon-free format.
-  - Lever pull multiplier tripled: `slotLeverPull * 50` → `* 150` for dramatic pull animation.
-  - EN i18n: `earth_slot_spin_prompt` = "TAP TO SPIN!" (was "TAP: EARTH SLOT SPIN"), `tap_relaunch` = "TAP TO RELAUNCH" (was "TAP: RELAUNCH").
-  - KO i18n already correct from prior cycle ("탭하여 룰렛 도전!" / "탭하여 재발사").
-  - PNG has no lever (confirmed pixel scan) — code lever is the only one, no duplication.
-  - Reel-stop haptic/shake/sparkles already present from prior cycle.
-  - 22px two-line text below machine already present.
-  - Added testINBOX61_3: verifies EN/KO i18n format + lever multiplier.
+- INBOX 61(4): Shop card 4-line layout, vertical centering, copy fixes.
+  - i18n: `내구` → `내구도` in `hull_action_compact` and `hull_preview_compact` (KO).
+  - Arrow format: `>` → ` -> ` in all compact action strings (EN+KO: hull, steering, yield).
+  - New `scout_tradeoff_compact` i18n key: EN `"+%d SPEED, %d HULL"`, KO `"+%d 속도, %d 내구도"`.
+  - `drawShopItem` now renders 4 lines vertically centered: title / values or desc / price / balance.
+  - Ship (scout) card 2nd line shows tradeoff via `shipTradeoffLine` from `shopLoadoutLines`.
+  - Removed external scout tradeoff grey lines below ship card (moved into card).
+  - Added testINBOX61_4: verifies 내구도 copy, -> arrow format, scout_tradeoff_compact, 4-line layout, no external tradeoff lines.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item (61.4 or next sub-item).
+- Process next pending INBOX item (61.5 or next sub-item).
 
 ## Previous
 

@@ -1834,6 +1834,8 @@ function M:shopLoadoutLines()
         shipActionCompact = shipActionCompact,
         shipStatus = shipStatus,
         shipAffordable = shipAffordable,
+        shipTradeoffLine = (not shipHidden) and i18n.t("scout_tradeoff_compact",
+            run.scoutClimbSpeedBonus, run.scoutDurabilityBonus) or "",
         shipPreview = i18n.t("ship_preview_line",
             string.upper(previewShipId), previewDurability),
         shipPreviewCompact = i18n.t("ship_preview_compact",
@@ -4163,8 +4165,8 @@ function M:draw()
         local touchRowHeight = M.settlementTouchRowHeight
         
         -- Helper: Balatro-style shop card button with hover effect
-        -- actionText format: "HULL 3>4 $10" or "SPEED 30>31 $5" etc.
-        local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg, isHovered)
+        -- 4 lines vertically centered: title / desc / price / balance
+        local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg, isHovered, descLine)
             local cardH = touchRowHeight - 16
             local cardY = rowTop + 8
             love.graphics.setColor(0.08, 0.06, 0.12, 0.92)
@@ -4178,29 +4180,44 @@ function M:draw()
             love.graphics.rectangle("line", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
             love.graphics.setLineWidth(1)
             -- Parse: extract label, values, price from actionText
-            -- e.g. "HULL 3>4 $10" → label="내구도", values="3 > 4", price="$10"
+            -- e.g. "HULL 3 -> 4 $10" → label="내구도", values="3 -> 4", price="$10"
             local actionLabel = actionText
+            local valuesLabel = ""
             local priceLabel = ""
             local priceStart = string.find(actionText, "%$%d")
             if priceStart then
-                actionLabel = string.sub(actionText, 1, priceStart - 2)
                 priceLabel = string.sub(actionText, priceStart)
+                local beforePrice = string.sub(actionText, 1, priceStart - 2)
+                -- Split label from values at first digit or sign
+                local splitAt = string.find(beforePrice, "[%d%+%-x]")
+                if splitAt then
+                    actionLabel = string.sub(beforePrice, 1, splitAt - 1):match("^(.-)%s*$") or ""
+                    valuesLabel = string.sub(beforePrice, splitAt):match("^%s*(.-)%s*$") or ""
+                else
+                    actionLabel = beforePrice
+                end
             end
-            -- Line 1: label (white)
-            local lineY = cardY + 14
+            -- Use descLine override for 2nd line if provided (e.g. scout tradeoff)
+            if descLine and descLine ~= "" then
+                valuesLabel = descLine
+            end
+            -- 4 lines vertically centered in card, 22px font, ~26px line height
+            local numLines = 4
+            local lineH = 26
+            local totalTextH = numLines * lineH
+            local startY = cardY + math.floor((cardH - totalTextH) / 2)
+            -- Line 1: title (white)
             love.graphics.setColor(1, 0.95, 0.9, 1)
-            love.graphics.printf(actionLabel, leftX + 8, lineY, leftW - 16, "center")
-            -- Line 2: price (gold, larger emphasis)
-            lineY = lineY + 28
+            love.graphics.printf(actionLabel, leftX + 8, startY, leftW - 16, "center")
+            -- Line 2: values or desc (light grey)
+            love.graphics.setColor(0.75, 0.75, 0.8, 0.9)
+            love.graphics.printf(valuesLabel, leftX + 8, startY + lineH, leftW - 16, "center")
+            -- Line 3: price (gold)
             love.graphics.setColor(1, 0.85, 0.25, 1)
-            love.graphics.printf(priceLabel, leftX + 8, lineY, leftW - 16, "center")
-            -- Line 3: balance (small 11px, subtle)
-            lineY = lineY + 28
-            local prevSmFont = love.graphics.getFont()
-            love.graphics.setFont(fonts.get(11))
+            love.graphics.printf(priceLabel, leftX + 8, startY + lineH * 2, leftW - 16, "center")
+            -- Line 4: balance (subtle)
             love.graphics.setColor(isAffordable and 0.5 or 0.9, isAffordable and 0.9 or 0.35, isAffordable and 0.6 or 0.3, 0.7)
-            love.graphics.printf(statusText, leftX + 8, lineY, leftW - 16, "center")
-            love.graphics.setFont(prevSmFont)
+            love.graphics.printf(statusText, leftX + 8, startY + lineH * 3, leftW - 16, "center")
         end
 
         local shopIcons = self.shopIconImages or {}
@@ -4212,27 +4229,12 @@ function M:draw()
         local shopIconsYS = self.shopIconImages or {}
         drawShopItem(r2, shopColumnLeftX, shopColumnLeftW, shopEff.yieldAction, shopEff.yieldStatus, shopEff.yieldPreview, nextLaunch.yieldActionCompact, nextLaunch.yieldStatus, nextLaunch.yieldPreview, nextLaunch.yieldAffordable, shopIconsYS.yield, self.hoverRow == 2 and self.hoverCol == "left")
         if not nextLaunch.shipHidden then
-            drawShopItem(r2, shopColumnRightX, shopColumnRightW, shopEff.shipAction, shopEff.shipStatus, shopEff.shipPreview, nextLaunch.shipActionCompact, nextLaunch.shipStatus, nextLaunch.shipPreviewCompact, nextLaunch.shipAffordable, shopIconsYS.ship, self.hoverRow == 2 and self.hoverCol == "right")
+            drawShopItem(r2, shopColumnRightX, shopColumnRightW, shopEff.shipAction, shopEff.shipStatus, shopEff.shipPreview, nextLaunch.shipActionCompact, nextLaunch.shipStatus, nextLaunch.shipPreviewCompact, nextLaunch.shipAffordable, shopIconsYS.ship, self.hoverRow == 2 and self.hoverCol == "right", nextLaunch.shipTradeoffLine)
         else
             -- INBOX-30: show "SCOUT ✓" label in ship slot when scout is active
             local row = r2 + 8 + rowStep
             love.graphics.setColor(0.45, 1, 0.55)
             love.graphics.printf("SCOUT \226\156\147", shopColumnRightX, row, shopColumnRightW, "center")
-        end
-        
-        -- Scout tradeoff lines: small grey text below the ship purchase slot
-        if not nextLaunch.shipHidden and nextLaunch.scoutTradeoff[1] then
-            local tradeFont = self.shipStatsFont or fonts.get(M.shipStatsFontSize or 22)
-            local prevTradeFont = love.graphics.getFont()
-            love.graphics.setFont(tradeFont)
-            love.graphics.setColor(0.5, 0.5, 0.5, 0.7)
-            local tradeY = r2 + 3 * rowStep + 4
-            love.graphics.printf(nextLaunch.scoutTradeoff[1], shopColumnRightX, tradeY, shopColumnRightW, "center")
-            if nextLaunch.scoutTradeoff[2] then
-                tradeY = tradeY + 20
-                love.graphics.printf(nextLaunch.scoutTradeoff[2], shopColumnRightX, tradeY, shopColumnRightW, "center")
-            end
-            love.graphics.setFont(prevTradeFont)
         end
 
         local r3 = M.settlementTouchRows[3].top
