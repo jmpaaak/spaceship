@@ -28,9 +28,7 @@
 
   ~~(16) **허브 은하 추가 구입 메뉴 버튼** → 완료~~
 
-  (17) **게임오버: 아이템 없으면 "탭하여 다시시작" 세로 가운데** (msg `1546390979194519602`)
-    - `keepPartChoices`가 비어 있으면 카드·힌트 없이 빈 화면. "탭하여 다시시작"을 `panelY + panelH/2`로.
-    - 아이템 있으면 기존 하단 위치 유지.
+  ~~(17) **게임오버: 아이템 없으면 \"탭하여 다시시작\" 세로 가운데** → 완료 (destroyedRestartTextY helper, panelY+panelH/2-11 centering, test INBOX-61(17) OK)~~
 
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.

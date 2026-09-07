@@ -1,15 +1,21 @@
 ## Current Status
+- INBOX 61(17): destroyed screen empty keep-choices layout.
+  - Extracted `M.destroyedPanelY`, `M.destroyedPanelH`, `M.destroyedRestartTextY(hasChoices)` from hardcoded draw values in play.lua.
+  - When `keepPartChoices` is empty: "TAP TO START OVER" is vertically centered in the destroyed panel (`panelY + panelH/2 - 11`).
+  - When `keepPartChoices` has items: text stays at bottom (`panelY + panelH - 72`).
+  - Test `INBOX-61(17)` verifies both Y positions and ordering.
+  - `make verify LOVE=…` GREEN.
+
+## Next slice
+
+- Process next pending INBOX item (15: slot-exclusive parts pool — add test coverage).
+
+## Previous
 - INBOX 61(14): Planet fallback sprite loading fix.
   - Replaced `love.filesystem.read(path)` with `love.filesystem.newFile` and `file:read(33)` in `pngColorType`. This fixes memory/large string issues on mobile Android devices that caused `pngColorType` to return nil, triggering the green circle fallback for perfectly valid RGBA planet sheets.
   - Fixed a rotation bug in planet sheet rendering: `love.graphics.draw` now correctly rotates around the sheet center (`sw / 2, frameH / 2`) instead of wildly swinging around the top-left corner.
   - Added test coverage in `self_test.lua` to mock `love.filesystem.read` and `io.open` failures (simulating the mobile environment) to guarantee `pngColorType` successfully loads planet sheets using `love.filesystem.newFile`.
   - Verified tests pass (`make verify LOVE=...`).
-
-## Next slice
-
-- Process next pending INBOX item (15: slot-exclusive parts pool).
-
-## Previous
 - INBOX 61(16): hub restock gear button.
   - `expedition.hubRestock(run, pool, rolls)`: pay $5 to re-roll gear offer at
     hub settlement shops only (lastVisitedGalaxyId required, Earth excluded).

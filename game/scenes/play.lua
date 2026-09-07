@@ -368,6 +368,21 @@ function M.hitHudGearSlot(scene, x, y)
     return nil
 end
 
+-- INBOX 61(17): destroyed-panel layout constants
+M.destroyedPanelY = 340
+M.destroyedPanelH = 560
+
+-- Returns the Y position for "TAP TO START OVER" text on the destroyed screen.
+-- When keepPartChoices is empty, center vertically in the panel.
+-- When keepPartChoices has items, position near the bottom.
+function M.destroyedRestartTextY(hasChoices)
+    if hasChoices then
+        return M.destroyedPanelY + M.destroyedPanelH - 72
+    else
+        return M.destroyedPanelY + math.floor(M.destroyedPanelH / 2) - 11
+    end
+end
+
 function M.destroyedKeepPartRects(choices)
     choices = choices or {}
     local n = #choices
@@ -4530,7 +4545,7 @@ function M:draw()
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
         local panelX, panelW = 24, viewport.width - 48
-        local panelY, panelH = 340, 560
+        local panelY, panelH = M.destroyedPanelY, M.destroyedPanelH
         love.graphics.setColor(1, 1, 1, 0.94)
         if not drawPanelSprite(self.destroyedPanelImage, panelX, panelY, panelW, panelH) then
             love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
@@ -4557,11 +4572,11 @@ function M:draw()
                 M.drawBalatroCard(rect.choice.part, rect.x, rect.y, rect.w, rect.h, selected)
             end
             love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
-            love.graphics.printf(i18n.t("tap_start_over"), panelX, panelY + panelH - 72, panelW, "center")
+            love.graphics.printf(i18n.t("tap_start_over"), panelX, M.destroyedRestartTextY(true), panelW, "center")
         else
             -- No items to keep: center the restart prompt vertically
             love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
-            love.graphics.printf(i18n.t("tap_start_over"), panelX, panelY + panelH / 2 - 11, panelW, "center")
+            love.graphics.printf(i18n.t("tap_start_over"), panelX, M.destroyedRestartTextY(false), panelW, "center")
         end
         -- INBOX 61(12): keep-one confirm popup overlay
         if self.keepPartConfirm and self.keepPartConfirm.part then
