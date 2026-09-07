@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Generate 6 central-star sprites (64×64, RGBA) — one per galaxy starType.
-Chunky 4px retro style matching planet sprites. Each star has a glowing
-corona, surface texture, and type-specific color palette."""
-import os, math
-from PIL import Image, ImageDraw, ImageFilter
+"""Generate 6 central-star sprites (128×128, RGBA) — one per galaxy starType.
+Chunky 4px retro style: draw at 32×32 then upscale NEAREST to 128×128.
+Also generates star_sun_sheet.png (128×512, 4 frames) for animation.
+Strict circle mask applied after upscale."""
+import os, math, random
+from PIL import Image, ImageDraw
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "assets", "star")
 os.makedirs(OUT, exist_ok=True)
-S = 64
-BLOCK = 4  # chunky pixel size
+S = 128          # final sprite size
+B = 4            # block size → draw at S//B = 32
+ss = S // B      # 32
 
 TYPES = {
     "sun":  {"core": (255, 220, 60), "mid": (255, 180, 30), "corona": (255, 140, 20), "glow": (255, 100, 10)},
@@ -19,53 +21,63 @@ TYPES = {
     "bare": {"core": (240, 240, 240), "mid": (200, 200, 210), "corona": (160, 160, 180), "glow": (120, 120, 150)},
 }
 
+def apply_circle_mask(img):
+    """Zero any pixel outside the inscribed circle (strict: dist > r → alpha=0)."""
+    w, h = img.size
+    cx, cy = w / 2, h / 2
+    r = min(cx, cy) - 1.0   # 1px transparent border
+    px = img.load()
+    for y in range(h):
+        for x in range(w):
+            if math.sqrt((x - cx + 0.5) ** 2 + (y - cy + 0.5) ** 2) > r:
+                px[x, y] = (0, 0, 0, 0)
+    return img
+
 def gen_star(name, pal):
-    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    img = Image.new("RGBA", (ss, ss), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    cx, cy = S // 2, S // 2
-    # Corona glow layers
-    for r, alpha, col in [(28, 40, pal["glow"]), (24, 70, pal["corona"]), (20, 140, pal["mid"])]:
-        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col + (alpha,))
+    cx, cy = ss // 2, ss // 2  # 16
+    # Corona glow layers (scaled from 64→32, halve all radii)
+    for r_draw, alpha, col in [(14, 40, pal["glow"]), (12, 70, pal["corona"]), (10, 140, pal["mid"])]:
+        d.ellipse([cx - r_draw, cy - r_draw, cx + r_draw, cy + r_draw], fill=col + (alpha,))
     # Core
-    d.ellipse([cx - 16, cy - 16, cx + 16, cy + 16], fill=pal["core"] + (255,))
-    # Surface spots (darker patches)
-    import random
+    d.ellipse([cx - 8, cy - 8, cx + 8, cy + 8], fill=pal["core"] + (255,))
+    # Surface spots
     rng = random.Random(hash(name) % 2**32)
     for _ in range(5):
-        sx = cx + rng.randint(-10, 10)
-        sy = cy + rng.randint(-10, 10)
-        sr = rng.randint(2, 5)
+        sx = cx + rng.randint(-5, 5)
+        sy = cy + rng.randint(-5, 5)
+        sr = rng.randint(1, 3)
         dist = math.sqrt((sx - cx)**2 + (sy - cy)**2)
-        if dist + sr < 16:
-            r, g, b = pal["mid"]
-            d.ellipse([sx - sr, sy - sr, sx + sr, sy + sr], fill=(r, g, b, 180))
+        if dist + sr < 8:
+            r2, g2, b2 = pal["mid"]
+            d.ellipse([sx - sr, sy - sr, sx + sr, sy + sr], fill=(r2, g2, b2, 180))
     # Highlight
-    d.ellipse([cx - 10, cy - 12, cx - 2, cy - 4], fill=(255, 255, 255, 100))
-    # Pixelize to chunky 4px blocks
-    small = img.resize((S // BLOCK, S // BLOCK), Image.NEAREST)
-    img = small.resize((S, S), Image.NEAREST)
-    img.save(os.path.join(OUT, f"star_{name}.png"))
+    d.ellipse([cx - 5, cy - 6, cx - 1, cy - 2], fill=(255, 255, 255, 100))
+    # Upscale NEAREST then apply strict circle mask
+    out = img.resize((S, S), Image.Resampling.NEAREST)
+    apply_circle_mask(out)
+    out.save(os.path.join(OUT, f"star_{name}.png"))
 
 for name, pal in TYPES.items():
     gen_star(name, pal)
 
-# Also generate a 4-frame simple "pulse" sprite sheet (64×256) for animation
-# Each frame is the same star at slightly different corona alpha
-sheet = Image.new("RGBA", (S, S * 4), (0, 0, 0, 0))
+# 4-frame pulse sheet (128×512) for sun — used by gen_star_sheets for sun variant
 pal = TYPES["sun"]
+sheet = Image.new("RGBA", (S, S * 4), (0, 0, 0, 0))
 for frame in range(4):
-    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    img = Image.new("RGBA", (ss, ss), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    cx, cy = S // 2, S // 2
-    pulse = 30 + frame * 15
-    d.ellipse([cx - 28, cy - 28, cx + 28, cy + 28], fill=pal["glow"] + (pulse,))
-    d.ellipse([cx - 24, cy - 24, cx + 24, cy + 24], fill=pal["corona"] + (60 + frame * 20,))
-    d.ellipse([cx - 20, cy - 20, cx + 20, cy + 20], fill=pal["mid"] + (140,))
-    d.ellipse([cx - 16, cy - 16, cx + 16, cy + 16], fill=pal["core"] + (255,))
-    d.ellipse([cx - 10, cy - 12, cx - 2, cy - 4], fill=(255, 255, 255, 100))
-    small = img.resize((S // BLOCK, S // BLOCK), Image.NEAREST)
-    img = small.resize((S, S), Image.NEAREST)
-    sheet.paste(img, (0, frame * S))
+    cx, cy = ss // 2, ss // 2
+    pulse = 15 + frame * 7
+    d.ellipse([cx - 14, cy - 14, cx + 14, cy + 14], fill=pal["glow"] + (pulse,))
+    d.ellipse([cx - 12, cy - 12, cx + 12, cy + 12], fill=pal["corona"] + (30 + frame * 10,))
+    d.ellipse([cx - 10, cy - 10, cx + 10, cy + 10], fill=pal["mid"] + (140,))
+    d.ellipse([cx - 8,  cy - 8,  cx + 8,  cy + 8],  fill=pal["core"] + (255,))
+    d.ellipse([cx - 5,  cy - 6,  cx - 1,  cy - 2],  fill=(255, 255, 255, 100))
+    frame_img = img.resize((S, S), Image.Resampling.NEAREST)
+    apply_circle_mask(frame_img)
+    sheet.paste(frame_img, (0, frame * S))
 sheet.save(os.path.join(OUT, "star_sun_sheet.png"))
 
-print("Generated 6 star sprites + 1 animation sheet in", OUT)
+print(f"Generated 6 star sprites (128×128) + sun sheet (128×512) in {OUT}")
