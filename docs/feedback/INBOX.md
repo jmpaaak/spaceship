@@ -86,13 +86,8 @@
     - ~~`tripleMultiplier` (solar 1.0 / fringe 1.5 / void 2.0)는 tier 위에 추가로 곱해짐.~~
     - 완료: `slotTier`/`slotSpinCostFor`/`galaxyDistance` in expedition. Named `galaxy:gx:gy` → hypot(gx,gy)*cellSize. SPEED/DURABILITY/HARVEST * tier. HUD/spin/refund use `slotSpinCostFor`. Test INBOX-61(25) GREEN.
 
-  (27) **에셋 스튜디오 sprite-gen 서버 연동** (msg `1546408506700337213`)
-    - 현재: 업로드 이미지 → PerfectPixel → 4px chunky만 동작. 프롬프트 → xorshift 노이즈 스텁(AI 아님).
-    - `aldegad/sprite-gen`은 Python 패키지 — 브라우저 JS에서 못 돌림.
-    - `serve_editors.py`에 `POST /api/sprite-gen` 엔드포인트 추가: `{"prompt": "...", "width": 32, "height": 32}` → sprite-gen Python 호출 → PNG base64 응답.
-    - `pip install sprite-gen` (또는 venv). 없으면 PIL 폴백(procedural shapes).
-    - `editor.js` `generateFromPrompt()` → `fetch("/api/sprite-gen", {method:"POST", body:JSON})` → 서버 결과를 sourceCanvas에 표시.
-    - 업로드 이미지 기반 sprite-gen도: `POST /api/sprite-gen` with `image` base64 + `prompt` → 이미지 컨디셔닝.
+  ~~(27) **에셋 스튜디오 sprite-gen 서버 연동** (msg `1546408506700337213`)~~
+    - 완료: `tools/serve_editors.py` POST `/api/sprite-gen` `{prompt,width,height,image?}` → PNG base64. Tries `sprite-gen` package, else deterministic PIL shapes. `editor.js` `generateFromPromptAsync` fetch + local fallback. Test `tools.test_serve_editors` GREEN.
 
   (28) **부스트 버튼 UI + 부스트 중 RCS 강화** (msg `1546408800070934598`)
     - 우측 하단에 **BOOST 버튼** 시각적으로 표시 (44×44 이상, 충전 수 표시, 0이면 비활성 회색).
@@ -176,10 +171,23 @@
     - Hull | Engine 탭. 엔진 탭 **첫 클릭**에 `/gear-editor/data/engine_parts.json` (현재 적용본) fetch.
     - 두 풀을 메모리에 따로 보관. 파일 피커는 덮어쓰기용으로 유지.
 
+  (44) **발라트로 조커식 부품 효과 다양화** (namu.wiki Balatro/조커 카드#s-6, 사용자 2026-09-07)
+    - 담당: `game/data/hull_parts.json` + `game/data/engine_parts.json` + `game/gear.lua` `validatePart` (play.lua 금지, self_test 거대파일 금지).
+    - (26)은 수치 +/×만 맞춤. 카드들이 속도/내구/수확 클론. 조커처럼 **한 장 = 한 정체성**.
+    - 새 효과 타입 추가 금지 (`gear.lua` 이미 800줄+). 기존 타입만 재배치.
+    - 선체: +칩=hullDurability, 경제=sampleSellValue/money/shopDiscount/sellMultiplier, 생존=insurance/hullRegen/collisionRadius, 확률=luck/rerollBonus, 스케일=streakMultiplier.
+    - 엔진: 기동=speed/boostCharge, 특수=autoCollect/chainTrigger/detectionRadius, 공유=luck/rerollBonus/collisionRadius/streakMultiplier. **헐-온리 효과(shopDiscount/sellMultiplier/insurance/money/sampleSellValue/hullDurability) 엔진에서 제거.**
+    - 착지 트리거 부품 효과 넣지 말 것 (시너지 solarSystem·binary와 중복, INBOX 41).
+    - 로더가 `effects[].mode`를 버리고 있음 → `validatePart`가 `flat|multiply` persist. 없으면 rare ×카드가 로딩 후 전부 flat.
+    - 픽스처 유지: `hull_emergency_beacon` insurance>0, `hull_trade_license` shopDiscount=20. 엔진 풀에 luck/chainTrigger/rerollBonus/collisionRadius/detectionRadius/autoCollect/streakMultiplier/boostCharge 각 ≥1.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+(61.27) **에셋 스튜디오 sprite-gen 서버 연동:**
+  - 완료: `tools/serve_editors.py` serves the repo and `POST /api/sprite-gen`. Prompt → PNG base64 (`sprite-gen` if installed, else PIL procedural). Optional `image` base64 conditions the fallback. `tools/asset-studio/editor.js` fetches the endpoint; file:// falls back to the local xorshift still. `python3 -m unittest tools.test_serve_editors -v` GREEN.
+
   ~~(26) **부품 밸런스: common 스탯 상향 + uncommon 이상 발라트로 +/× 배수 체계**~~ (msg `1546406578733842492`)
     - common: 단일 효과, 값 최소 5 이상, 평균 ~10. 지금 1~3짜리 효과는 전부 5~12로.
     - uncommon: **+배수** (`addMultiplier`). 기존 효과에 **고정값 추가** (예: `speed +8` + `luck +5`). 복합 효과 2개.

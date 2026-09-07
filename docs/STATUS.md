@@ -1,4 +1,11 @@
 ## Current Status
+- INBOX 61(27): Asset Studio sprite-gen server.
+  - New `tools/serve_editors.py`: static repo server + `POST /api/sprite-gen` `{prompt, width, height, image?}`.
+  - Tries Python `sprite-gen`; missing/fail → deterministic PIL procedural PNG (same prompt → same pixels). Optional base64 `image` conditions the fallback.
+  - `tools/asset-studio/editor.js` `generateFromPromptAsync` fetches `/api/sprite-gen` and paints sourceCanvas; unreachable server uses the old local xorshift still.
+  - Test `tools.test_serve_editors` GREEN (PNG decode, 400 on missing prompt, image conditioning, determinism). `make test` now runs that unittest.
+  - play.lua / self_test.lua untouched.
+
 - INBOX 61(26) (c): Gear part balance and tier differentiation (hull_parts.json / engine_parts.json rebalance).
   - Common cards rebalanced to always feature a single flat effect, boosted to a 5~12 minimum value range, enforcing their identity as solid foundational pieces.
   - Uncommon cards rebalanced to precisely dual flat effects (guaranteed combination).
@@ -50,4 +57,4 @@
 
 ## Next slice
 
-- INBOX 61(26c): hull_parts.json / engine_parts.json 전수 재조정 (common minimum 5, uncommon multi-flat, rare mult, legendary mixed).
+- INBOX 61(30) title Sid Meier-style "Jimmy's 우주선" (`game/scenes/title.lua` + i18n; play.lua 금지), or 61(40) gear-editor KO/EN toggle. 61(28)/(29) wait on play.lua module split.

@@ -1,13 +1,13 @@
 // asset-studio: static, dependency-free hub for every game asset
 // (not just parts). gear-editor pattern: open index.html, no server, no npm.
 //
-// Pipeline this cycle (browser-side scaffold):
-//   upload / URL / prompt → sprite-gen prompt sidecar → PerfectPixel
+// Pipeline:
+//   upload / URL / prompt → POST /api/sprite-gen → PerfectPixel
 //   grid · quantize → chunky 4px NEAREST → PNG + GENERATED_ASSET_LOG
 //   line + MANIFEST.json entry (download; overwrite into the repo).
 //
-// sprite-gen (aldegad/sprite-gen) and PerfectPixel (theamusing/perfectPixel)
-// stay named stages. This file does not call it. Character / ship /
+// sprite-gen (aldegad/sprite-gen) runs on tools/serve_editors.py
+// (PIL fallback if the package is missing). Character / ship /
 // Earth remain user-supplied and are blocked as destinations.
 
 const BLOCKED_PREFIXES = [
@@ -82,7 +82,7 @@ function hashPrompt(text) {
   return h >>> 0;
 }
 
-// PIL-equivalent procedural still: same prompt → same pixels (no ML framework).
+// Local PIL-equivalent still used only when /api/sprite-gen is unreachable.
 function generateFromPrompt(prompt) {
   const canvas = document.createElement("canvas");
   canvas.width = 32;
@@ -116,6 +116,53 @@ function generateFromPrompt(prompt) {
     }
   }
   return canvas;
+}
+
+function canvasToPngDataUrl(canvas) {
+  try {
+    return canvas.toDataURL("image/png");
+  } catch (err) {
+    return null;
+  }
+}
+
+function loadImageFromDataUrl(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Could not decode sprite-gen PNG"));
+    img.src = url;
+  });
+}
+
+async function requestSpriteGen(prompt, extra) {
+  const body = Object.assign({ prompt: prompt, width: 32, height: 32 }, extra || {});
+  const resp = await fetch("/api/sprite-gen", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    let detail = "";
+    try { detail = await resp.text(); } catch (e) { detail = ""; }
+    throw new Error("sprite-gen HTTP " + resp.status + (detail ? (": " + detail) : ""));
+  }
+  const data = await resp.json();
+  if (!data || !data.png_b64) throw new Error("sprite-gen response missing png_b64");
+  return loadImageFromDataUrl("data:image/png;base64," + data.png_b64);
+}
+
+async function generateFromPromptAsync(prompt) {
+  const extra = {};
+  if (sourceImage && sourceKind === "upload") {
+    extra.image = canvasToPngDataUrl(els.sourceCanvas) || undefined;
+  }
+  try {
+    return await requestSpriteGen(prompt, extra);
+  } catch (err) {
+    setStatus("sprite-gen server unavailable (" + err.message + "); using local PIL-equivalent fallback.", "error");
+    return generateFromPrompt(prompt);
+  }
 }
 
 function fileToImage(file) {
@@ -289,7 +336,7 @@ async function runPipeline() {
     return;
   }
   if (!sourceImage) {
-    const promptStill = generateFromPrompt(prompt);
+    const promptStill = await generateFromPromptAsync(prompt);
     sourceImage = promptStill;
     sourceKind = sourceKind || "prompt";
     sourceName = sourceName || "prompt";
@@ -375,13 +422,19 @@ function wire() {
       setStatus(err.message, "error");
     }
   });
-  els.promptBtn.addEventListener("click", () => {
+  els.promptBtn.addEventListener("click", async () => {
     const prompt = (els.promptInput.value || "").trim();
     if (!prompt) {
       setStatus("Write a sprite-gen prompt first.", "error");
       return;
     }
-    onSourceReady(generateFromPrompt(prompt), "prompt", "prompt");
+    try {
+      setStatus("Requesting /api/sprite-gen…");
+      const still = await generateFromPromptAsync(prompt);
+      onSourceReady(still, "prompt", "prompt");
+    } catch (err) {
+      setStatus(err.message, "error");
+    }
   });
   els.processBtn.addEventListener("click", () => {
     runPipeline().catch((err) => setStatus(err.message, "error"));
