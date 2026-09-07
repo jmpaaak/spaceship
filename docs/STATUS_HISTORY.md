@@ -1360,3 +1360,16 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/scenes/play_shop.lua`: `reelWindowToScissor` maps the reel window with `love.graphics.transformPoint` then `setScissor` (spinning + idle).
   - Missing icon: `drawReelFallbackText` draws a large letter centered in the window.
   - Test `game/tests/slot_reel_scissor.lua` GREEN. play.lua untouched.
+
+## Archived from STATUS.md (2026-09-07 21:53)
+
+- INBOX (48): help overlay (`?`) freezes play time like pause, without the pause menu.
+  - `play_help.lua`: `shouldFreezeUpdate` is true while `helpOverlayOpen`.
+  - `play.lua` `M:update` early-returns (self.time / ship frozen); `paused` stays false so HUD pause menu is not drawn.
+  - Tap anywhere still closes overlay via existing `touchpressed` path, then time resumes.
+  - Test `game/tests/help_overlay_pause.lua` GREEN.
+
+- Preflight FAIL fix: `assets/icon.png` had no `docs/assets/MANIFEST.json` entry.
+  - Cataloged 256×256 RGBA PNG (sha256 `d04ad9b4…e08a`) as user_supplied PIL/ship-derived window icon.
+  - `conf.lua` `t.window.icon = "assets/icon.png"`. Title ship art for INBOX (49) is still pending.
+  - `python3 tools/verify_asset_manifest.py` + `make verify LOVE=/Users/jm/.local/bin/love` GREEN.

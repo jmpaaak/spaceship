@@ -4591,10 +4591,10 @@
       "height": 256,
       "source": "assets/ship/ship_default.png"
     },
-    "downloaded_at": "2026-09-07T21:10:14+09:00",
-    "sha256": "d04ad9b4b76f2cbe753ff5070fb55ae78a327c7ff4f36e5760e9f18a55a3e08a",
+    "downloaded_at": "2026-09-07T21:45:00+09:00",
+    "sha256": "d5a956ecf014dd57646e802449b8269700709af9f9c9a0d8877143c5caa6dd99",
     "width": 256,
     "height": 256,
-    "qa": "256x256 RGBA window icon leftover from prior cycle; sha256 matches on-disk PNG"
+    "qa": "256x256 RGBA window icon: cropped ship_default nearest-upscaled x4 onto navy square via tools/gen_app_icon.py"
   }
 ]

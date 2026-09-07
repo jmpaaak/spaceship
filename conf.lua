@@ -12,7 +12,6 @@ function love.conf(t)
     t.window.highdpi = true
     t.window.vsync = 1
     t.window.msaa = 0
-    t.window.icon = "assets/icon.png"
     t.modules.audio = not headless
     t.modules.window = not headless
     t.modules.graphics = not headless

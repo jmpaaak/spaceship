@@ -1,14 +1,15 @@
 ## Current Status
+- INBOX (49): title starter ship above Jimmy's + 256 window icon.
+  - `title.lua` `shipLayout`: `assets/ship/ship_default.png`, nearest ×7, centered, y=488-h-24 so it sits above Jimmy's.
+  - `conf.lua` `t.window.icon = "assets/icon.png"` once.
+  - `assets/icon.png` regenerated 256×256 RGBA via `tools/gen_app_icon.py` (cropped ship nearest ×4 on navy). sha256 `d5a956ec…dd99`.
+  - Test `game/tests/title_ship_icon.lua` GREEN. play.lua untouched except self_test require.
+
 - INBOX (48): help overlay (`?`) freezes play time like pause, without the pause menu.
   - `play_help.lua`: `shouldFreezeUpdate` is true while `helpOverlayOpen`.
   - `play.lua` `M:update` early-returns (self.time / ship frozen); `paused` stays false so HUD pause menu is not drawn.
   - Tap anywhere still closes overlay via existing `touchpressed` path, then time resumes.
   - Test `game/tests/help_overlay_pause.lua` GREEN.
-
-- Preflight FAIL fix: `assets/icon.png` had no `docs/assets/MANIFEST.json` entry.
-  - Cataloged 256×256 RGBA PNG (sha256 `d04ad9b4…e08a`) as user_supplied PIL/ship-derived window icon.
-  - `conf.lua` `t.window.icon = "assets/icon.png"`. Title ship art for INBOX (49) is still pending.
-  - `python3 tools/verify_asset_manifest.py` + `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
 
 - INBOX (45): harvest upgrade +5% per buy; durability buy fills the new cell.
   - `game/expedition.lua`: default `sampleYieldUpgradeAmount` 0.01→0.05. Shop copy becomes `HARVEST x1.00 -> x1.05`.
@@ -155,6 +156,6 @@
 
 ## Next slice
 
-- INBOX (49): title ship art (`assets/ship/ship_default.png` above Jimmy's) + window icon already cataloged.
+- INBOX (50): collect / slot / boost SFX wiring (`game/sfx.lua`).
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

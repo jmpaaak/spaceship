@@ -4,16 +4,15 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-  (49) **홈(타이틀)에 초기 함선 에셋 + 앱 아이콘** (msg `1546490925700612096`)
-    - 담당: `game/scenes/title.lua` + `conf.lua` `t.window.icon` (play.lua 금지).
-    - 타이틀이 횡하니까 `assets/ship/ship_default.png`를 Jimmy's 위에 크게 그림 (nearest, 중심).
-    - 같은 함선을 정사각 아이콘 `assets/icon.png` (256)로 만들어 `t.window.icon`에 지정.
-
   (50) **표본 획득 / 슬롯 / 부스트 SFX** (OOB 2026-09-07)
     - 담당: `game/sfx.lua` + collect/slot/boost 호출.
     - collect: Luke.RUSTLTD 8bit coin1 CC0. slot: rubberduck retro_coin_01 CC0. boost: rubberduck rocket_01 CC0.
 
 ## 처리 완료
+(49) **홈(타이틀)에 초기 함선 에셋 + 앱 아이콘** (msg `1546490925700612096`)
+  - 완료: `title.lua` `shipLayout` draws `assets/ship/ship_default.png` at nearest ×7, horizontally centered, above Jimmy's (y=488). `conf.lua` `t.window.icon = "assets/icon.png"` once. Icon regenerated 256×256 RGBA via `tools/gen_app_icon.py` (cropped ship nearest ×4 on navy).
+  - Test `game/tests/title_ship_icon.lua` GREEN. play.lua untouched except self_test require.
+
 (48) **도움말(?) 열면 일시정지** (msg `1546489668617379900` 후속)
   - 완료: `play_help.lua` `shouldFreezeUpdate` returns true when `helpOverlayOpen`. `play.lua` `M:update` early-returns (self.time frozen) without setting `paused` (pause menu stays closed). Tap anywhere already closed overlay via existing touch path.
   - Test `game/tests/help_overlay_pause.lua` GREEN.

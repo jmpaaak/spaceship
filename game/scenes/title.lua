@@ -48,6 +48,24 @@ function M._generateStars(count)
     return stars
 end
 
+-- INBOX (49): starter ship sits large, nearest, centered above Jimmy's (y=488).
+function M.shipLayout(iw, ih)
+    iw = iw or 64
+    ih = ih or 64
+    local scale = 7
+    local w = iw * scale
+    local h = ih * scale
+    return {
+        path = "assets/ship/ship_default.png",
+        filter = "nearest",
+        scale = scale,
+        x = (viewport.width - w) / 2,
+        y = 488 - h - 24,
+        w = w,
+        h = h,
+    }
+end
+
 function M:buttonRects()
     local cx = viewport.width / 2
     local bx = cx - M.buttonW / 2
@@ -84,7 +102,7 @@ function M:draw()
         love.graphics.rectangle("fill", star.x, star.y, star.size, star.size)
     end
 
-    -- Starter ship above the title (user 2026-09-07: home felt empty)
+    -- Starter ship above Jimmy's (INBOX 49: large, nearest, centered)
     if not self.shipImage and love.graphics and love.graphics.newImage then
         local ok, img = pcall(love.graphics.newImage, "assets/ship/ship_default.png")
         if ok and img then
@@ -94,11 +112,9 @@ function M:draw()
     end
     if self.shipImage then
         local iw, ih = self.shipImage:getWidth(), self.shipImage:getHeight()
-        local scale = 4
-        local sx = (viewport.width - iw * scale) / 2
-        local sy = 220
+        local layout = M.shipLayout(iw, ih)
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(self.shipImage, sx, sy, 0, scale, scale)
+        love.graphics.draw(self.shipImage, layout.x, layout.y, 0, layout.scale, layout.scale)
     end
 
     -- Author credit (Sid Meier's Civilization style): small grey above title

@@ -190,6 +190,7 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-07T16:26:00+0900 | assets/sfx/star_sample.mp3 | user-provided SFX, central-star sample dwell loop (11s)
 2026-09-07T16:26:00+0900 | assets/sfx/collision.mp3 | Pixabay Deep Impact Sound Effect (BryanSantosBreton, Content License, id 176434), collision oneshot (7s)
 2026-09-07T21:10:14+0900 | assets/icon.png | 256x256 RGBA app/window icon (starter ship on navy square), wired as t.window.icon in conf.lua
+2026-09-07T21:45:00+0900 | assets/icon.png | 256x256 RGBA window icon: cropped ship_default nearest x4 onto navy square, tools/gen_app_icon.py
 2026-09-07T21:16:00+0900 | assets/sfx/collect.wav | Luke.RUSTLTD 8bit coin1 CC0, sample pickup
 2026-09-07T21:16:00+0900 | assets/sfx/slot_spin.ogg | rubberduck retro_coin_01 CC0, slot spin
 2026-09-07T21:16:00+0900 | assets/sfx/boost.ogg | rubberduck rocket_01 CC0, boost whoosh
