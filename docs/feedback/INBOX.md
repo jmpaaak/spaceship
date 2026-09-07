@@ -144,9 +144,7 @@
   ~~(40) **gear-editor 부품 이름·설명 한글 + KO/EN 토글** (msg `1546415792424488970` 후속)~~
     - 완료: 툴바 KO|EN 토글 + localStorage `gear-editor-locale`. KO=nameKo + effect/rarity/suit/synergy KO, EN=name + i18n EN. 기호 없음. Test `tools.test_gear_editor_locale` GREEN.
 
-  (41) **쌍성 시너지 착지 +$30 농장 금지** (OOB 2026-09-07)
-    - 담당: `game/expedition.lua` settle binaryStar + `game/i18n.lua` synergy_desc_binaryStar.
-    - 착지 반복으로 돈 벌지 못하게. 착지 +$30 제거. 대체: 표본 판매 시 +30% (`sellMultiplier`) 또는 은하당 1회만. 권장 판매 +30%.
+
 
   ~~(38) **타이틀/게임 BGM 플레이리스트**~~ (msg `1546416154589925406`, 추가 `another-space-background-track`)
     - 담당: **새** `game/bgm.lua` + `game/scenes/title.lua` (play.lua 금지). `main.lua` update에서 `bgm.update()` 한 줄.
@@ -170,6 +168,8 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+(61.41) **쌍성 시너지 착지 +$30 농장 금지** (OOB 2026-09-07)
+  - 완료: `game/expedition.lua`의 `settle` 및 `settleAtHub`에서 착지 시 고정금액 +30 대신 `pendingSampleValue` * 1.3 (+30%)을 적용하도록 변경. `i18n.lua` 텍스트 수정 완료. `INBOX-61(41)` 테스트 GREEN.
 (61.42) **게임 배경음 Space orchestral:**
   - 완료: `game/bgm.lua` 플레이리스트를 lasercheese "Space (orchestral)" 한 곡 루프로 교체. 트랙 `assets/sfx/space_orchestral.mp3`. `title_bgm_credit` EN/KO = `BGM: Space — lasercheese (CC-BY 3.0)`. `game/tests/bgm.lua` + `GAME_HEADLESS=1 GAME_UNIT=1` GREEN. play.lua 미수정.
 

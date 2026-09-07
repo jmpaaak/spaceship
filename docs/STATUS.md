@@ -72,6 +72,12 @@
   - Added test coverage in `self_test.lua` while ensuring `GAME_HEADLESS=1` runs skip `love.audio`.
   - Test `INBOX-61(38)` GREEN.
 
+- INBOX 61(41): binaryStar settle farm limit
+  - Modified `game/expedition.lua` to remove flat +$30 reward on settle.
+  - Added 1.3x multiplier to sample payouts (`pendingSampleValue`) during `settle()` and `settleAtHub()` when `binaryStar` synergy is active.
+  - Updated `game/i18n.lua` to match EN/KO texts ("sell +30%" / "판매 +30%").
+  - Test `INBOX-61(41)` in `game/tests/binary_star.lua` GREEN.
+
 ## Next slice
 
-- INBOX 61(41) binaryStar settle farm (`game/expedition.lua` + `game/i18n.lua`), or 61(33) hub/star overlap (`game/world.lua`), or 61(36) SFX (`game/sfx.lua`). 61(28)/(29) wait on play.lua module split.
+- INBOX 61(33) hub/star overlap (`game/world.lua`), or 61(36) SFX (`game/sfx.lua`). 61(28)/(29) wait on play.lua module split.

@@ -220,7 +220,9 @@ function M.equippedHullMoneyBonus(run)
 end
 
 local function settle(run)
-    run.lastSampleSettlement = run.pendingSampleValue
+    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    local sampleMult = syn.binaryStar and 1.3 or 1.0
+    run.lastSampleSettlement = math.floor(run.pendingSampleValue * sampleMult + 0.5)
     local payout = run.lastSampleSettlement + M.equippedHullMoneyBonus(run)
     run.money = run.money + payout
     run.lastSettlement = payout
@@ -240,14 +242,10 @@ local function settle(run)
     end
     -- INBOX 61(5): solarSystem now grants +1 maxDurability on settle (not +1 HP
     -- heal, which was useless because launch() restores to maxDurability).
-    -- binaryStar grants +30 money flat.
     local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
     if syn.solarSystem then
         run.maxDurability = (run.maxDurability or 3) + 1
         run.durability = math.min(run.durability + 1, run.maxDurability)
-    end
-    if syn.binaryStar then
-        run.money = run.money + 30
     end
     -- Item 15(a): slotOpportunities removed from run state.
     run.phase = "settlement"
@@ -1282,7 +1280,9 @@ end
 -- into money without ending the flight phase (unlike full Earth return).
 -- Does NOT trigger M.equippedHullMoneyBonus (that remains Earth-only).
 function M.settleAtHub(run)
-    local payout = run.pendingSampleValue
+    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    local sampleMult = syn.binaryStar and 1.3 or 1.0
+    local payout = math.floor(run.pendingSampleValue * sampleMult + 0.5)
     if payout > 0 then
         run.money = run.money + payout
         run.pendingSampleValue = 0

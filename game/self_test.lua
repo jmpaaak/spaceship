@@ -5915,7 +5915,7 @@ testExpeditionStellarSynergies = function()
         durability = 1,
         maxDurability = 5,
         equippedGear = {
-            makeCard("s1", "solar"), makeCard("s2", "solar"), makeCard("s3", "solar"),
+            makeCard("s1", "solar", "common", {{type = "sampleSellValue", value = 10}}), makeCard("s2", "solar"), makeCard("s3", "solar"),
             makeCard("n1", "nebula"), makeCard("n2", "nebula")
         },
         equippedEngineParts = {}
@@ -5925,7 +5925,7 @@ testExpeditionStellarSynergies = function()
     -- INBOX 61(5): solarSystem now grants +1 maxDurability (not just heal)
     assert(runSettle.maxDurability == 6, "solarSystem must increase maxDurability from 5 to 6, got: " .. tostring(runSettle.maxDurability))
     assert(runSettle.durability == 2, "solarSystem must also heal +1 durability (1→2)")
-    assert(runSettle.money == 130, "binaryStar must grant 30 money")
+    assert(runSettle.money == 100, "binaryStar must not grant flat money")
 end
 
 -- [2026-09-05] Stellar Origin sub-item 4: loadoutLines() synergy HUD test.
@@ -10045,6 +10045,7 @@ function M.run()
 
 
     require("game.tests.bgm").run()
+    require("game.tests.binary_star").run()
 
     -- INBOX 61(25): slot cost/rewards scale with galaxy distance
     -- slotTier = 1 + floor(galaxyDistance / galaxyCellSize)

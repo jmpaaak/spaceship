@@ -215,7 +215,7 @@ locales.en = {
     synergy_desc_nebulaField  = "3+ NEBULA: harvest x1.5",
     synergy_desc_eventHorizon = "3+ VOID: collect +30%",
     synergy_desc_pulsarBurst  = "2+ PULSAR: streak x2",
-    synergy_desc_binaryStar   = "2S+2N: +30$ on land",
+    synergy_desc_binaryStar   = "2S+2N: sell +30%",
     synergy_desc_supernova    = "ALL 4: legendary x1.5",
     synergy_desc_darkMatter   = "2V+2P: streak +50%",
     -- INBOX-40: gear slots HUD label
@@ -447,7 +447,7 @@ locales.ko = {
     synergy_desc_nebulaField  = "네뷸라 3+: 수확 x1.5",
     synergy_desc_eventHorizon = "보이드 3+: 채집 +30%",
     synergy_desc_pulsarBurst  = "펄서 2+: 연속 x2",
-    synergy_desc_binaryStar   = "솔라2+네뷸라2: 착지 +$30",
+    synergy_desc_binaryStar   = "솔라2+네뷸라2: 판매 +30%",
     synergy_desc_supernova    = "4수트: 전설 x1.5",
     synergy_desc_darkMatter   = "보이드2+펄서2: 연속 +50%",
     -- INBOX-40: gear slots HUD label
