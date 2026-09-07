@@ -4,11 +4,7 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-  (46) **정찰선 카드: '구매' → '정찰선 구매', 속도 +120 / 내구 -50%** (msg `1546488266650554368`)
-    - 담당: `game/i18n.lua` `buy_scout_compact` + `game/expedition.lua` scout 보너스.
-    - KO compact 제목 `정찰선 구매`. EN `SCOUT`.
-    - `scoutClimbSpeedBonus` 50→**120**. 내구는 고정 -1이 아니라 **현재 max의 50%** (`floor(maxDurability * 0.5)` 차감, 최소 1 남김).
-
+  
   (47) **슬롯 릴 아이콘이 칸 안에서 안 보임** (msg `1546488266650554368`)
     - 담당: `game/scenes/play_shop.lua` 릴 드로우. `setScissor(rx,ry,…)`가 게임좌표라 모바일 `translate+scale` 이후 화면좌표와 불일치 → 창만 잘림.
     - `love.graphics.transformPoint`로 스크린 좌표 변환 후 scissor. 아이콘 없으면 텍스트 폴백을 창 안에 크게.
@@ -22,6 +18,10 @@
     - 담당: `game/scenes/title.lua` + `conf.lua` `t.window.icon` (play.lua 금지).
     - 타이틀이 횡하니까 `assets/ship/ship_default.png`를 Jimmy's 위에 크게 그림 (nearest, 중심).
     - 같은 함선을 정사각 아이콘 `assets/icon.png` (256)로 만들어 `t.window.icon`에 지정.
+
+  (50) **표본 획득 / 슬롯 / 부스트 SFX** (OOB 2026-09-07)
+    - 담당: `game/sfx.lua` + collect/slot/boost 호출.
+    - collect: Luke.RUSTLTD 8bit coin1 CC0. slot: rubberduck retro_coin_01 CC0. boost: rubberduck rocket_01 CC0.
 
 ## 처리 완료
 (45) **수확 업그레이드 +1%가 너무 작음 + 내구 업그레이드가 빈 칸만 추가** (msg `1546489668617379900`)
@@ -581,3 +581,9 @@
   - 부품 추가 (hull): common `hull_nano_mesh` 0.2/s, uncommon `hull_repair_drone` 0.5/s, rare `hull_auto_welder` 1.0/s.
   - i18n `effect_hullRegen` EN `"REGEN +%.1f/s"` / KO `"회복 +%.1f/초"`.
   - `tools/gen_part_icons.py` 재실행.
+(46) **정찰선 카드: '구매' → '정찰선 구매', 속도 +120 / 내구 -50%** (msg `1546488266650554368`)
+    - 담당: `game/i18n.lua` `buy_scout_compact` + `game/expedition.lua` scout 보너스.
+    - KO compact 제목 `정찰선 구매`. EN `SCOUT`.
+    - `scoutClimbSpeedBonus` 50→**120**. 내구는 고정 -1이 아니라 **현재 max의 50%** (`floor(maxDurability * 0.5)` 차감, 최소 1 남김).
+    - ✅ 완료: commit (will be pushed)
+

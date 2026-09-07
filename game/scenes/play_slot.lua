@@ -1,6 +1,7 @@
 local i18n = require("game.i18n")
 local expedition = require("game.expedition")
 local viewport = require("game.viewport")
+local sfx = require("game.sfx")
 
 local PS = {}
 local _M
@@ -153,6 +154,7 @@ function PS:spinSlotMachine()
     })
     self.earthShopSlotResult = result
     self.expedition.money = self.expedition.money - spinCost
+    sfx.play("slot_spin")
     pcall(love.system.vibrate, 0.05)
     self.slotShake = 0.1
     self.slotLeverPull = 1.0  -- lever pull animation

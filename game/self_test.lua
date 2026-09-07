@@ -6982,7 +6982,6 @@ function M.run()
         durability = 3,
         scoutShipCost = 90,
         scoutClimbSpeedBonus = 5,
-        scoutDurabilityBonus = -1,
         money = 100,
     })
     assert(not expedition.buyShip(shipShopRun, "scout"))
@@ -7037,7 +7036,7 @@ function M.run()
     assert(scoutHullMessageScene.expedition.selectedShipId == "scout")
     scoutHullMessageScene:keypressed("h")
     assert(scoutHullMessageScene.expedition.durabilityUpgradeLevel == 1
-        and scoutHullMessageScene.expedition.maxDurability == 3)
+        and scoutHullMessageScene.expedition.maxDurability == 2)
     assert(scoutHullMessageScene.expedition.money == 20)
     assert(scoutHullMessageScene.message == "")
 
@@ -7126,10 +7125,10 @@ function M.run()
     assert(expedition.buySteeringUpgrade(loadoutScene.expedition))
     local upgradedLoadout = loadoutScene:loadoutLines()
     assert(upgradedLoadout.ship == "SHIP SCOUT")
-    assert(upgradedLoadout.stats == "HULL 3")
+    assert(upgradedLoadout.stats == "HULL 2")
     assert(upgradedLoadout.upgrades == "HULL LV.1")
 
-    assert(upgradedLoadout.steering == "111")
+    assert(upgradedLoadout.steering == "181")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()
@@ -7150,7 +7149,7 @@ function M.run()
     assert(starterNextLaunch.stats == "HULL 3")
     assert(starterNextLaunch.upgrades == "HULL LV.0")
 
-    assert(starterNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +50 SPEED")
+    assert(starterNextLaunch.scoutTradeoff[1] == "SCOUT GAINS +120 SPEED")
     assert(starterNextLaunch.scoutTradeoff[2] == "LOSSES -1 HULL")
     assert(starterNextLaunch.shipAction == "BUY SCOUT $125")
     assert(starterNextLaunch.shipPreview == "SCOUT HULL 2")
@@ -7186,7 +7185,7 @@ function M.run()
     -- side-by-side status line are added, so compact "Y:"/"V:" variants
     -- (measured 38-62px) are drawn in the column instead.
     assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00 -> x1.05 $5")
-    assert(starterNextLaunch.shipActionCompact == "BUY $125")
+    assert(starterNextLaunch.shipActionCompact == "SCOUT $125")
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(balancePreviewNextLaunch.hullStatus == "LEFT $190" and balancePreviewNextLaunch.hullAffordable)
@@ -7201,7 +7200,7 @@ function M.run()
     assert(reinforcedNextLaunch.stats == "HULL 4")
     assert(reinforcedNextLaunch.upgrades == "HULL LV.1")
     assert(reinforcedNextLaunch.hullAction == "T/H HULL LV.1>2 $" .. expedition.upgradeCost(nextLaunchScene.expedition, nextLaunchScene.expedition.durabilityUpgradeCost, 1))
-    assert(reinforcedNextLaunch.shipPreview == "SCOUT HULL 3")
+    assert(reinforcedNextLaunch.shipPreview == "SCOUT HULL 2")
     nextLaunchScene:keypressed("y")
     local yieldedNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(yieldedNextLaunch.yieldAction == "T/Y HARVEST LV.1>2 $" .. expedition.upgradeCost(nextLaunchScene.expedition, nextLaunchScene.expedition.sampleYieldUpgradeCost, 1))
@@ -7209,11 +7208,11 @@ function M.run()
     nextLaunchScene:keypressed("v")
     local scoutNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(scoutNextLaunch.ship == "NEXT SCOUT")
-    assert(scoutNextLaunch.stats == "HULL 3")
+    assert(scoutNextLaunch.stats == "HULL 2")
     assert(scoutNextLaunch.upgrades == "HULL LV.1")
 
     assert(scoutNextLaunch.hullAction == "T/H HULL LV.1>2 $" .. expedition.upgradeCost(nextLaunchScene.expedition, nextLaunchScene.expedition.durabilityUpgradeCost, 1))
-    assert(scoutNextLaunch.hullPreview == "HULL 4")
+    assert(scoutNextLaunch.hullPreview == "HULL 3")
 
     assert(scoutNextLaunch.scoutTradeoff[1] == nil, "INBOX-30: scoutTradeoff hidden when scout active")
     assert(scoutNextLaunch.scoutTradeoff[2] == nil, "INBOX-30: scoutTradeoff hidden when scout active")

@@ -2,6 +2,7 @@ local i18n = require("game.i18n")
 local expedition = require("game.expedition")
 local fonts = require("game.fonts")
 local viewport = require("game.viewport")
+local sfx = require("game.sfx")
 
 local PB = {}
 local _M
@@ -101,6 +102,7 @@ function PB:hitBoostButton(x, y)
             local ok = expedition.spendBoost(self.expedition)
             if ok then
                 self.boostActive = { timer = 0.8, speedMultiplier = 3.0 }
+                sfx.play("boost")
                 pcall(love.system.vibrate, 0.1)
             end
         end

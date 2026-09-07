@@ -8,6 +8,9 @@ function M.run()
     assert(sfx.defs.galaxy_discover, "INBOX 61(36): galaxy_discover def missing")
     assert(sfx.defs.star_sample,     "INBOX 61(36): star_sample def missing")
     assert(sfx.defs.collision,       "INBOX 61(36): collision def missing")
+    assert(sfx.defs.collect,         "INBOX 61(50): collect def missing")
+    assert(sfx.defs.slot_spin,       "INBOX 61(50): slot_spin def missing")
+    assert(sfx.defs.boost,           "INBOX 61(50): boost def missing")
     assert(sfx.defs.galaxy_discover.path == "assets/sfx/galaxy_discover.mp3",
         "INBOX 61(36): galaxy_discover path")
     assert(sfx.defs.star_sample.path == "assets/sfx/star_sample.mp3",

@@ -139,6 +139,14 @@
   - `play.lua` size reduced significantly. Extraction of major independent systems complete.
   - Tests pass (`make verify LOVE=...` GREEN).
 
+- INBOX (46): Scout card update
+  - Replaced fixed `-1` scout hull penalty with a dynamic calculation: `-math.floor(maxDurability * 0.5)` (minimum 1 remaining) via `expedition.getScoutDurabilityBonus(run)`.
+  - Updated `scoutClimbSpeedBonus` from `50` to `120`.
+  - Updated translation strings for EN `SCOUT $%d` and KO `정찰선 구매 $%d` in `buy_scout_compact`.
+  - Refactored shop preview logic in `play.lua` to calculate dynamic `nextMaxDurability` correctly when scout is selected, ensuring the `HULL` previews reflect the percentage-based tradeoff accurately.
+  - Assertions in `self_test.lua` adjusted to expect correct scaled stat previews.
+  - Tests pass (`make verify LOVE=...` GREEN).
+
 ## Next slice
 
-- INBOX (46): scout card compact title + climb +120 / hull −50% of current max.
+- INBOX (47): Fix slot reel icons being clipped out of bounds.

@@ -190,10 +190,21 @@ local function equippedHullDurabilityBonus(run)
 end
 M.equippedHullDurabilityBonus = equippedHullDurabilityBonus
 
+function M.getScoutDurabilityBonus(run)
+    local baseAndGearD = run.baseDurability
+        + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
+        + equippedHullDurabilityBonus(run)
+    local bonus = -math.floor(baseAndGearD * 0.5)
+    if baseAndGearD + bonus < 1 then
+        bonus = 1 - baseAndGearD
+    end
+    return bonus
+end
+
 local function refreshShipStats(run)
     local durabilityBonus = 0
     if run.selectedShipId == "scout" then
-        durabilityBonus = run.scoutDurabilityBonus
+        durabilityBonus = M.getScoutDurabilityBonus(run)
     end
     run.maxDurability = run.baseDurability + durabilityBonus
         + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
@@ -346,8 +357,7 @@ function M.new(options)
         steeringUpgradeLevel = 0,
         slotSpeedBonus = 0,
         scoutShipCost = options.scoutShipCost or 125,
-        scoutClimbSpeedBonus = options.scoutClimbSpeedBonus or 50,
-        scoutDurabilityBonus = options.scoutDurabilityBonus or -1,
+        scoutClimbSpeedBonus = options.scoutClimbSpeedBonus or 120,
         ownedShips = { starter = true },
         selectedShipId = "starter",
         returnSpeed = options.returnSpeed or 45,
@@ -784,7 +794,7 @@ function M.shipTradeoff(run, shipId)
     if shipId == "scout" then
         return {
             gains = { { label = "SPEED", value = string.format("%+d", run.scoutClimbSpeedBonus) } },
-            losses = { { label = "HULL", value = string.format("%+d", run.scoutDurabilityBonus) } },
+            losses = { { label = "HULL", value = string.format("%+d", M.getScoutDurabilityBonus(run)) } },
         }
     end
     return { gains = {}, losses = {} }

@@ -30,6 +30,7 @@ function M.new(options)
         -- Background star field (simple)
         stars = M._generateStars(120),
         starTimer = 0,
+        shipImage = nil,
     }, M)
 end
 
@@ -81,6 +82,23 @@ function M:draw()
         local alpha = star.brightness * (0.5 + 0.5 * math.sin(self.starTimer * star.twinkleSpeed))
         love.graphics.setColor(1, 1, 1, alpha)
         love.graphics.rectangle("fill", star.x, star.y, star.size, star.size)
+    end
+
+    -- Starter ship above the title (user 2026-09-07: home felt empty)
+    if not self.shipImage and love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, "assets/ship/ship_default.png")
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            self.shipImage = img
+        end
+    end
+    if self.shipImage then
+        local iw, ih = self.shipImage:getWidth(), self.shipImage:getHeight()
+        local scale = 4
+        local sx = (viewport.width - iw * scale) / 2
+        local sy = 220
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(self.shipImage, sx, sy, 0, scale, scale)
     end
 
     -- Author credit (Sid Meier's Civilization style): small grey above title

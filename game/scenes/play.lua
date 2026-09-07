@@ -1811,12 +1811,33 @@ function M:shopLoadoutLines()
     end
     local previewDurability = run.baseDurability
         + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
+        + expedition.equippedHullDurabilityBonus(run)
     if previewShipId == "scout" then
-        previewDurability = previewDurability + run.scoutDurabilityBonus
+        previewDurability = previewDurability + expedition.getScoutDurabilityBonus(run)
     end
     local hullStatus, hullAffordable = purchaseStatus(run.money, run.durabilityUpgradeCost)
     local yieldStatus, yieldAffordable = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
     local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
+
+    local nextBaseAndGear = run.baseDurability
+        + (run.durabilityUpgradeLevel + 1) * run.durabilityUpgradeAmount
+        + expedition.equippedHullDurabilityBonus(run)
+    local nextMaxDurability = nextBaseAndGear
+    if run.selectedShipId == "scout" then
+        local bonus = -math.floor(nextBaseAndGear * 0.5)
+        if nextBaseAndGear + bonus < 1 then bonus = 1 - nextBaseAndGear end
+        nextMaxDurability = nextBaseAndGear + bonus
+    end
+
+    local hullAction = i18n.t("hull_action_line",
+        run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
+        expedition.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel))
+    local hullActionCompact = i18n.t("hull_action_compact",
+        run.maxDurability, nextMaxDurability,
+        expedition.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel))
+    local hullPreview = i18n.t("stats_line", nextMaxDurability)
+    local hullPreviewCompact = i18n.t("hull_preview_compact", nextMaxDurability)
+
     return {
         ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
         stats = i18n.t("stats_line", run.maxDurability),
@@ -1829,21 +1850,15 @@ function M:shopLoadoutLines()
         shipStatus = shipStatus,
         shipAffordable = shipAffordable,
         shipTradeoffLine = (not shipHidden) and i18n.t("scout_tradeoff_compact",
-            run.scoutClimbSpeedBonus, run.scoutDurabilityBonus) or "",
+            run.scoutClimbSpeedBonus, expedition.getScoutDurabilityBonus(run)) or "",
         shipPreview = i18n.t("ship_preview_line",
             string.upper(previewShipId), previewDurability),
         shipPreviewCompact = i18n.t("ship_preview_compact",
             string.upper(previewShipId), previewDurability),
-        hullAction = i18n.t("hull_action_line",
-            run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
-            expedition.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)),
-        hullActionCompact = i18n.t("hull_action_compact",
-            run.maxDurability, run.maxDurability + run.durabilityUpgradeAmount,
-            expedition.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)),
-        hullPreview = i18n.t("stats_line",
-            run.maxDurability + run.durabilityUpgradeAmount),
-        hullPreviewCompact = i18n.t("hull_preview_compact",
-            run.maxDurability + run.durabilityUpgradeAmount),
+        hullAction = hullAction,
+        hullActionCompact = hullActionCompact,
+        hullPreview = hullPreview,
+        hullPreviewCompact = hullPreviewCompact,
         hullStatus = hullStatus,
         hullAffordable = hullAffordable,
         yieldAction = i18n.t("yield_action_line",
@@ -2365,6 +2380,7 @@ function M:update(dt)
                     local hueKey = world.hueFamily(planet.hue or 0).key
                     local _, awarded, streakMultiplier = expedition.collectSample(self.expedition, value, hueKey)
                     awarded = awarded or value
+                    sfx.play("collect")
                     table.insert(self.floatingTexts, {
                         text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
                         x = planet.x,
@@ -2443,6 +2459,7 @@ function M:update(dt)
                         local value = world.moonSampleValue(moon)
                         local _, awarded = expedition.collectSample(self.expedition, value, world.hueFamily(moon.hue or 0).key)
                         awarded = awarded or value
+                        sfx.play("collect")
                         table.insert(self.floatingTexts, {
                             text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
                             x = moon.x,
@@ -2495,6 +2512,7 @@ function M:update(dt)
                     local value = world.cometSampleValue(comet)
                     local _, awarded = expedition.collectSample(self.expedition, value, "ember")
                     awarded = awarded or value
+                    sfx.play("collect")
                     table.insert(self.floatingTexts, {
                         text = i18n.t("floating_sample_gain", rollupAmount(awarded, 0, sampleRollupDuration)),
                         x = comet.x,
