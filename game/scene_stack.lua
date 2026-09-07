@@ -2,6 +2,9 @@ local M = {}
 
 function M.new(initial)
     assert(initial, "initial scene is required")
+    -- Call enter so title BGM (and any other enter-hook) fires on first
+    -- boot, not only after sceneStack.switch from leaderboard/etc.
+    if initial.enter then initial:enter() end
     return { current = initial }
 end
 

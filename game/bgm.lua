@@ -11,9 +11,18 @@ M.isPlaying = false
 
 function M.start()
     if not love.audio or not love.audio.newSource then return end
-    if M.isPlaying then return end
-    M.isPlaying = true
+    -- Retry if a previous start never actually began playback (iOS blocks
+    -- AudioContext until the first user gesture). Don't treat a failed
+    -- first attempt as already playing.
+    if M.currentSource then
+        local ok, playing = pcall(function() return M.currentSource:isPlaying() end)
+        if ok and playing then
+            M.isPlaying = true
+            return
+        end
+    end
     M.playTrack(M.currentIndex)
+    M.isPlaying = M.currentSource ~= nil
 end
 
 function M.playTrack(index)

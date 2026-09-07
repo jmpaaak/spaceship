@@ -134,6 +134,9 @@ function M:_drawButton(rect, label, enabled)
 end
 
 function M:touchpressed(id, x, y)
+    -- iOS/Love2D Studio: AudioContext is locked until a user gesture.
+    -- Retry BGM here so the first tap (even a miss) unlocks playback.
+    bgm.start()
     local rects = self:buttonRects()
     -- Continue (only if save exists)
     if self.hasSave and self:_hitRect(rects.continue_, x, y) then
@@ -163,6 +166,7 @@ function M:_hitRect(rect, x, y)
 end
 
 function M:keypressed(key)
+    bgm.start()
     if key == "return" or key == "space" then
         local handler = self.onNewGame or self.onStart
         if handler then handler() end
