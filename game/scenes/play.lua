@@ -133,17 +133,7 @@ end
 local destroyedTouchArea = { top = 0, bottom = 1280, left = 0, right = 720 }
 M.destroyedTouchArea = destroyedTouchArea
 
--- Ascending-phase HOLD LEFT/HOLD RIGHT steering buttons. touchpressed for
--- this phase already accepts a tap anywhere on the internal canvas (no y
--- restriction; see the "ascending" branch below), so the *functional*
--- touch target already spans the full 180x320 canvas -- far beyond the
--- 44pt accessibility minimum. This constant only documents/tests the
--- *visual* button box drawn on screen, which was a 24px-tall row
--- (254-278, only ~24pt at the smallest supported window, integer scale 1,
--- 1x device pixel ratio) -- under the same 44pt bar returnControls and
--- settlementTouchRows were widened to meet. Widened to match
--- returnControls exactly (244-288, 44 canvas px) for visual consistency,
--- even though it does not gate touch acceptance.
+-- ascendControls: visual button box for the ascending steering area (doc/test only).
 local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
 M.ascendControls = ascendControls
 
@@ -506,18 +496,8 @@ end
 -- future cycle can re-enable it cheaply if real-device feedback disagrees.
 M.showLaunchLoadoutTitle = false
 
--- docs/feedback/INBOX.md UI/HUD item 3 (아이콘 기반 HUD 간소화, first slice):
--- the launch phase's "TAP TO LAUNCH"/"탭하여 발사" action was a bare text
--- line with no visual affordance beyond the words themselves. Drawing a
--- small upward-pointing rocket silhouette directly above the message
--- gives the tap target an icon+short-text pairing (the pattern the
--- feedback asked for hull/cash/speed too, to follow in later slices)
--- without needing any AetherAI-gated final art -- this is DEV PLACEHOLDER
--- Lua-shape geometry, not a final visual asset.
---
--- Pure function (no love.graphics calls) so game/self_test.lua can verify
--- the point geometry deterministically headless; draw() feeds the
--- returned flat {x1,y1,x2,y2,...} list straight into love.graphics.polygon.
+-- Rocket icon polygon points for the launch screen (DEV PLACEHOLDER geometry).
+-- Pure function (no love.graphics calls) so self_test.lua can verify headless.
 function M.rocketIconPoints(cx, cy, size)
     local halfWidth = size * 0.35
     local noseY = cy - size * 0.6
@@ -1614,93 +1594,7 @@ end
 -- displayed as Balatro-style card icons in the launch screen, replacing the
 -- old specimen log.
 function M:drawGearSlots(y)
-    local hullSlots = 6
-    local engineSlots = 3
-    local boxW = M.launchGearBoxW
-    local boxH = M.launchGearBoxH
-    local gap = 5
-    local groupGap = 12
-    
-    local run = self.expedition
-    local hullGear = run.equippedGear or {}
-    local engineGear = run.equippedEngineParts or {}
-
-    local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
-    local startX = math.floor((viewport.width - totalWidth) / 2)
-    
-    self.tinyFont = self.tinyFont or fonts.get(22)
-    local previousFont = love.graphics.getFont()
-    love.graphics.setFont(self.tinyFont)
-    
-    for i = 1, hullSlots do
-        local x = startX + (i - 1) * (boxW + gap)
-        local part = hullGear[i]
-        if part then
-            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
-            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1)
-            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
-            else love.graphics.setColor(0.7, 0.7, 0.7) end
-            love.graphics.rectangle("fill", x, y, boxW, boxH)
-            
-            -- Part icon (replaces shield fallback)
-            local icon = getPartIcon(part.id)
-            if icon then
-                love.graphics.setColor(1, 1, 1, 0.8)
-                local iw, ih = icon:getDimensions()
-                local sc = (math.min(boxW, boxH) - 2) / math.max(iw, ih)
-                love.graphics.draw(icon, x + boxW/2, y + boxH/2, 0, sc, sc, iw/2, ih/2)
-            end
-            
-            if part.edition and part.edition ~= "base" then
-                love.graphics.setColor(1, 1, 0.5, 0.8)
-                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
-            else
-                love.graphics.setColor(0.1, 0.1, 0.1, 1)
-                love.graphics.rectangle("line", x, y, boxW, boxH)
-            end
-        else
-            love.graphics.setColor(0.3, 0.35, 0.45, 0.6)
-            love.graphics.rectangle("line", x, y, boxW, boxH)
-        end
-    end
-    
-    local engineStartX = startX + (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap
-    
-    for i = 1, engineSlots do
-        local x = engineStartX + (i - 1) * (boxW + gap)
-        local part = engineGear[i]
-        if part then
-            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
-            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1)
-            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
-            else love.graphics.setColor(0.7, 0.7, 0.7) end
-            love.graphics.rectangle("fill", x, y, boxW, boxH)
-            
-            -- Part icon (replaces rocket fallback)
-            local icon = getPartIcon(part.id)
-            if icon then
-                love.graphics.setColor(1, 1, 1, 0.8)
-                local iw, ih = icon:getDimensions()
-                local sc = (math.min(boxW, boxH) - 2) / math.max(iw, ih)
-                love.graphics.draw(icon, x + boxW/2, y + boxH/2, 0, sc, sc, iw/2, ih/2)
-            end
-            
-            if part.edition and part.edition ~= "base" then
-                love.graphics.setColor(1, 1, 0.5, 0.8)
-                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
-            else
-                love.graphics.setColor(0.1, 0.1, 0.1, 1)
-                love.graphics.rectangle("line", x, y, boxW, boxH)
-            end
-        else
-            love.graphics.setColor(0.45, 0.35, 0.3, 0.6)
-            love.graphics.rectangle("line", x, y, boxW, boxH)
-        end
-    end
-    
-    love.graphics.setColor(0.6, 0.7, 0.8, 0.9)
-    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 28, viewport.width, "center")
-    love.graphics.setFont(previousFont)
+    return playHud.drawGearSlots(self, M, y)
 end
 
 function M:collisionRisk(planet)
@@ -1755,47 +1649,14 @@ function M:drawHudGearSlots(hudHeight)
 end
 
 function M:loadoutLines()
-    local run = self.expedition
-    -- Stellar Origin sub-item 4: collect active synergy display labels.
-    local gearMod = require("game.gear")
-    local syn = gearMod.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
-    -- Ordered list so the display is deterministic.
-    local synergyOrder = {
-        "solarSystem", "nebulaField", "eventHorizon",
-        "pulsarBurst", "binaryStar", "supernova", "darkMatter",
-    }
-    local synergyLabels = {}
-    for _, key in ipairs(synergyOrder) do
-        if syn[key] then
-            synergyLabels[#synergyLabels + 1] = i18n.t("synergy_" .. key)
-        end
-    end
-    return {
-        -- docs/feedback/INBOX.md UI/HUD item 4: naming the current ship is
-        -- meaningless dead text while STARTER is the only hull ever
-        -- owned (there is no choice to announce). Only show the ship
-        -- line once a second ship (scout) has actually been purchased,
-        -- when "which ship is selected" becomes real information.
-        ship = run.ownedShips.scout
-            and i18n.t("loadout_ship", string.upper(run.selectedShipId))
-            or nil,
-        -- shipLabel is always present (used by the destroyed-screen
-        -- "NEXT %s" line, which needs to name the fresh loadout even when
-        -- it is the single default STARTER hull).
-        shipLabel = string.upper(run.selectedShipId),
-        stats = i18n.t("stats_line", run.maxDurability),
-        upgrades = i18n.t("upgrades_line",
-            run.durabilityUpgradeLevel),
-        steering = i18n.t("steer_speed_line", expedition.effectiveSpeed(run)),
-        synergies = synergyLabels,
-    }
+    return playHud.loadoutLines(self, M)
 end
-
 
 local function purchaseStatus(money, cost)
     if money >= cost then return i18n.t("purchase_left", money - cost), true end
     return i18n.t("purchase_short", cost - money), false
 end
+M.purchaseStatus = purchaseStatus
 
 -- Formats the SCOUT ship trade-off using the same explicit
 -- "GAINS <label> <value>" / "LOSSES <label> <value>" numeric format the
@@ -1816,108 +1677,13 @@ function M.scoutTradeoffLines(run)
 end
 
 function M:shopLoadoutLines()
-    local run = self.expedition
-    local shipAction
-    local shipActionCompact
-    local shipAffordable
-    local shipStatus
-    local previewShipId
-    local shipHidden = false
-    if not run.ownedShips.scout then
-        shipAction = i18n.t("buy_scout", run.scoutShipCost)
-        shipActionCompact = i18n.t("buy_scout_compact", run.scoutShipCost)
-        shipStatus, shipAffordable = purchaseStatus(run.money, run.scoutShipCost)
-        previewShipId = "scout"
-    elseif run.selectedShipId == "scout" then
-        -- INBOX-30: scout owned+selected → hide ship row entirely
-        shipHidden = true
-        previewShipId = "scout"
-    else
-        shipAction = i18n.t("select_scout")
-        shipActionCompact = i18n.t("select_scout_compact")
-        shipAffordable = true
-        shipStatus = i18n.t("owned_label")
-        previewShipId = "scout"
-    end
-    local previewDurability = run.baseDurability
-        + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
-    if previewShipId == "scout" then
-        previewDurability = previewDurability + run.scoutDurabilityBonus
-    end
-    local hullStatus, hullAffordable = purchaseStatus(run.money, run.durabilityUpgradeCost)
-    local yieldStatus, yieldAffordable = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
-    local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
-    return {
-        ship = i18n.t("next_ship_label", string.upper(run.selectedShipId)),
-        stats = i18n.t("stats_line", run.maxDurability),
-        upgrades = i18n.t("upgrades_line",
-            run.durabilityUpgradeLevel),
-        scoutTradeoff = shipHidden and {} or self.scoutTradeoffLines(run),
-        shipHidden = shipHidden,
-        shipAction = shipAction,
-        shipActionCompact = shipActionCompact,
-        shipStatus = shipStatus,
-        shipAffordable = shipAffordable,
-        shipTradeoffLine = (not shipHidden) and i18n.t("scout_tradeoff_compact",
-            run.scoutClimbSpeedBonus, run.scoutDurabilityBonus) or "",
-        shipPreview = i18n.t("ship_preview_line",
-            string.upper(previewShipId), previewDurability),
-        shipPreviewCompact = i18n.t("ship_preview_compact",
-            string.upper(previewShipId), previewDurability),
-        hullAction = i18n.t("hull_action_line",
-            run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1,
-            expedition.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)),
-        hullActionCompact = i18n.t("hull_action_compact",
-            run.maxDurability, run.maxDurability + run.durabilityUpgradeAmount,
-            expedition.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)),
-        hullPreview = i18n.t("stats_line",
-            run.maxDurability + run.durabilityUpgradeAmount),
-        hullPreviewCompact = i18n.t("hull_preview_compact",
-            run.maxDurability + run.durabilityUpgradeAmount),
-        hullStatus = hullStatus,
-        hullAffordable = hullAffordable,
-        yieldAction = i18n.t("yield_action_line",
-            run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1,
-            expedition.upgradeCost(run, run.sampleYieldUpgradeCost, run.sampleYieldUpgradeLevel)),
-        yieldActionCompact = i18n.t("yield_action_compact",
-            expedition.sampleYieldMultiplier(run),
-            1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount,
-            expedition.upgradeCost(run, run.sampleYieldUpgradeCost, run.sampleYieldUpgradeLevel)),
-        yieldPreview = i18n.t("yield_preview_line",
-            1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount),
-        yieldStatus = yieldStatus,
-        yieldAffordable = yieldAffordable,
-        steeringAction = i18n.t("steering_action_line",
-            run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1,
-            expedition.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)),
-        steeringActionCompact = i18n.t("steering_action_compact",
-            expedition.effectiveSpeed(run),
-            expedition.effectiveSpeed(run) + run.steeringUpgradeAmount,
-            expedition.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)),
-        steeringPreview = i18n.t("steer_speed_line",
-            expedition.effectiveSpeed(run) + run.steeringUpgradeAmount),
-        steeringPreviewCompact = i18n.t("steering_preview_compact",
-            expedition.effectiveSpeed(run) + run.steeringUpgradeAmount),
-        steeringStatus = steeringStatus,
-        steeringAffordable = steeringAffordable,
-    }
+    return playShop.shopLoadoutLines(self, M)
 end
-
-
 function M:steeringButtonState()
     return playJoystick.steeringButtonState(self)
 end
 
--- Omnidirectional joystick vector (docs/GAME_DESIGN.md 이동 방식 개선 항목 1):
--- reads the drag distance of any active touch from its press origin
--- (game/joystick.lua) so the ship can move in any direction, not just
--- along the left/right axis. Touches that haven't been dragged past the
--- deadzone (including every touch created directly in tests without an
--- origin, and simple taps that never moved) report magnitude 0, so
--- callers should fall back to the legacy binary left/right steering in
--- that case -- this keeps existing tap-and-hold controls working exactly
--- as before while adding full-direction control once a player actually
--- drags.
+-- Delegated to play_joystick.lua.
 function M:joystickVector()
     return playJoystick.joystickVector(self)
 end

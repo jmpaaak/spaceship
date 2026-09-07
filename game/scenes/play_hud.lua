@@ -355,4 +355,81 @@ function M.drawShipStatsSummary(self, P)
     if prevFont then love.graphics.setFont(prevFont) end
 end
 
+-- Draw the launch-screen gear slot grid (horizontal row, hull + engine).
+-- y: top y coordinate for the slot row.
+function M.drawGearSlots(self, P, y)
+    local hullSlots   = 6
+    local engineSlots = 3
+    local boxW = P.launchGearBoxW
+    local boxH = P.launchGearBoxH
+    local gap = 5
+    local groupGap = 12
+    local run       = self.expedition
+    local hullGear   = run.equippedGear or {}
+    local engineGear = run.equippedEngineParts or {}
+    local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
+    local startX = math.floor((viewport.width - totalWidth) / 2)
+    self.tinyFont = self.tinyFont or fonts.get(22)
+    local previousFont = love.graphics.getFont()
+    love.graphics.setFont(self.tinyFont)
+
+    local function drawOneSlot(part, x, isEngine)
+        if part then
+            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
+            elseif part.rarity == "rare"   then love.graphics.setColor(0.3, 0.6, 1)
+            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
+            else love.graphics.setColor(0.7, 0.7, 0.7) end
+            love.graphics.rectangle("fill", x, y, boxW, boxH)
+            local icon = P.getPartIcon(part.id)
+            if icon then
+                love.graphics.setColor(1, 1, 1, 0.8)
+                local iw, ih = icon:getDimensions()
+                local sc = (math.min(boxW, boxH) - 2) / math.max(iw, ih)
+                love.graphics.draw(icon, x + boxW/2, y + boxH/2, 0, sc, sc, iw/2, ih/2)
+            end
+            if part.edition and part.edition ~= "base" then
+                love.graphics.setColor(1, 1, 0.5, 0.8)
+                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
+            else
+                love.graphics.setColor(0.1, 0.1, 0.1, 1)
+                love.graphics.rectangle("line", x, y, boxW, boxH)
+            end
+        else
+            love.graphics.setColor(isEngine and 0.45 or 0.3, isEngine and 0.35 or 0.35, isEngine and 0.3 or 0.45, 0.6)
+            love.graphics.rectangle("line", x, y, boxW, boxH)
+        end
+    end
+
+    for i = 1, hullSlots do
+        drawOneSlot(hullGear[i], startX + (i - 1) * (boxW + gap), false)
+    end
+    local engineStartX = startX + (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap
+    for i = 1, engineSlots do
+        drawOneSlot(engineGear[i], engineStartX + (i - 1) * (boxW + gap), true)
+    end
+    love.graphics.setColor(0.6, 0.7, 0.8, 0.9)
+    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 28, viewport.width, "center")
+    love.graphics.setFont(previousFont)
+end
+
+-- Build loadout summary lines for the launch/settlement screens.
+function M.loadoutLines(self, P)
+    local run = self.expedition
+    local gearMod = require("game.gear")
+    local syn = gearMod.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    local synergyOrder = {"solarSystem","nebulaField","eventHorizon","pulsarBurst","binaryStar","supernova","darkMatter"}
+    local synergyLabels = {}
+    for _, key in ipairs(synergyOrder) do
+        if syn[key] then synergyLabels[#synergyLabels + 1] = i18n.t("synergy_" .. key) end
+    end
+    return {
+        ship = run.ownedShips.scout and i18n.t("loadout_ship", string.upper(run.selectedShipId)) or nil,
+        shipLabel = string.upper(run.selectedShipId),
+        stats = i18n.t("stats_line", run.maxDurability),
+        upgrades = i18n.t("upgrades_line", run.durabilityUpgradeLevel),
+        steering = i18n.t("steer_speed_line", expedition.effectiveSpeed(run)),
+        synergies = synergyLabels,
+    }
+end
+
 return M

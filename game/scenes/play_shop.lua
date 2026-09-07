@@ -252,4 +252,62 @@ function M.drawSettlement(self, P)
     love.graphics.setFont(previousFont)
 end
 
+-- shopLoadoutLines is also needed by the settlement draw; keep it here.
+-- Compute all the shop action/status lines from the expedition state.
+-- self: PlayScene; P: play module for purchaseStatus helper.
+function M.shopLoadoutLines(self, P)
+    local run = self.expedition
+    local i18n2  = require("game.i18n")
+    local expedition2 = require("game.expedition")
+    local purchaseStatus = P.purchaseStatus
+    local shipAction, shipActionCompact, shipAffordable, shipStatus, previewShipId
+    local shipHidden = false
+    if not run.ownedShips.scout then
+        shipAction        = i18n2.t("buy_scout", run.scoutShipCost)
+        shipActionCompact = i18n2.t("buy_scout_compact", run.scoutShipCost)
+        shipStatus, shipAffordable = purchaseStatus(run.money, run.scoutShipCost)
+        previewShipId = "scout"
+    elseif run.selectedShipId == "scout" then
+        shipHidden    = true
+        previewShipId = "scout"
+    else
+        shipAction        = i18n2.t("select_scout")
+        shipActionCompact = i18n2.t("select_scout_compact")
+        shipAffordable    = true
+        shipStatus        = i18n2.t("owned_label")
+        previewShipId     = "scout"
+    end
+    local previewDurability = run.baseDurability + run.durabilityUpgradeLevel * run.durabilityUpgradeAmount
+    if previewShipId == "scout" then previewDurability = previewDurability + run.scoutDurabilityBonus end
+    local hullStatus,     hullAffordable     = purchaseStatus(run.money, run.durabilityUpgradeCost)
+    local yieldStatus,    yieldAffordable    = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
+    local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
+    return {
+        ship = i18n2.t("next_ship_label", string.upper(run.selectedShipId)),
+        stats = i18n2.t("stats_line", run.maxDurability),
+        upgrades = i18n2.t("upgrades_line", run.durabilityUpgradeLevel),
+        scoutTradeoff = shipHidden and {} or self.scoutTradeoffLines(run),
+        shipHidden = shipHidden,
+        shipAction = shipAction, shipActionCompact = shipActionCompact,
+        shipStatus = shipStatus, shipAffordable = shipAffordable,
+        shipTradeoffLine = (not shipHidden) and i18n2.t("scout_tradeoff_compact", run.scoutClimbSpeedBonus, run.scoutDurabilityBonus) or "",
+        shipPreview = i18n2.t("ship_preview_line", string.upper(previewShipId), previewDurability),
+        shipPreviewCompact = i18n2.t("ship_preview_compact", string.upper(previewShipId), previewDurability),
+        hullAction = i18n2.t("hull_action_line", run.durabilityUpgradeLevel, run.durabilityUpgradeLevel + 1, expedition2.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)),
+        hullActionCompact = i18n2.t("hull_action_compact", run.maxDurability, run.maxDurability + run.durabilityUpgradeAmount, expedition2.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)),
+        hullPreview = i18n2.t("stats_line", run.maxDurability + run.durabilityUpgradeAmount),
+        hullPreviewCompact = i18n2.t("hull_preview_compact", run.maxDurability + run.durabilityUpgradeAmount),
+        hullStatus = hullStatus, hullAffordable = hullAffordable,
+        yieldAction = i18n2.t("yield_action_line", run.sampleYieldUpgradeLevel, run.sampleYieldUpgradeLevel + 1, expedition2.upgradeCost(run, run.sampleYieldUpgradeCost, run.sampleYieldUpgradeLevel)),
+        yieldActionCompact = i18n2.t("yield_action_compact", expedition2.sampleYieldMultiplier(run), 1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount, expedition2.upgradeCost(run, run.sampleYieldUpgradeCost, run.sampleYieldUpgradeLevel)),
+        yieldPreview = i18n2.t("yield_preview_line", 1 + (run.sampleYieldUpgradeLevel + 1) * run.sampleYieldUpgradeAmount),
+        yieldStatus = yieldStatus, yieldAffordable = yieldAffordable,
+        steeringAction = i18n2.t("steering_action_line", run.steeringUpgradeLevel, run.steeringUpgradeLevel + 1, expedition2.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)),
+        steeringActionCompact = i18n2.t("steering_action_compact", expedition2.effectiveSpeed(run), expedition2.effectiveSpeed(run) + run.steeringUpgradeAmount, expedition2.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)),
+        steeringPreview = i18n2.t("steer_speed_line", expedition2.effectiveSpeed(run) + run.steeringUpgradeAmount),
+        steeringPreviewCompact = i18n2.t("steering_preview_compact", expedition2.effectiveSpeed(run) + run.steeringUpgradeAmount),
+        steeringStatus = steeringStatus, steeringAffordable = steeringAffordable,
+    }
+end
+
 return M
