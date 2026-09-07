@@ -8,12 +8,6 @@
   한 사이클 = 아래 소항목 **하나** + `GAME_HEADLESS=1 GAME_UNIT=1` GREEN + 커밋.
   `play.lua`가 루프에 dirty면 직접 수정 금지 — 이 INBOX만 소비.
 
-  (1) **에셋 스튜디오 웹에디터** (msg `1546328787166306395`, 사용자: "만들고 있는거야? 아니면 대기열에 있는거야?" → **둘 다 아니었음**, 지금 큐에 넣음)
-    - `tools/asset-studio/` **없음**. `tools/parts-editor/` **없음**. 있는 건 `tools/gear-editor/`, `tools/slot-editor/`, `tools/gen_*.py`.
-    - sprite-gen (`aldegad/sprite-gen`) + PerfectPixel (`theamusing/perfectPixel`, 사용자 표기 PixelPerpect) + 기존 PIL을 **하나의 웹에디터**로.
-    - 게임 **모든** 에셋 허브 (부품만이 아님). 파이프라인: 업로드/URL/프롬프트 → sprite-gen → PerfectPixel 그리드·양자화 → 청키 4px NEAREST → `assets/` 저장 + `docs/GENERATED_ASSET_LOG.md` + `docs/assets/MANIFEST.json`.
-    - 로컬 정적 HTML+JS (gear-editor 패턴). ComfyUI 금지. 캐릭터/함선/지구 사용자 제공분은 생성 대상 아님.
-
   (2) **슬롯 2/3매치 차등 + 전설 금지 + 중복 $10 환불 + 슬롯 풀이면 교체**
     - 2매치에서 전설 부품 나오면 안 됨. 2매치=common/uncommon, 3매치=rare/legendary.
     - 이미 장착한 부품이 나오면 **스핀비 $10 환불** (돈만, 부품 미장착).
@@ -88,6 +82,12 @@
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
 
 ## 처리 완료
+  (1) **에셋 스튜디오 웹에디터** (msg `1546328787166306395`, 사용자: "만들고 있는거야? 아니면 대기열에 있는거야?" → **둘 다 아니었음**, 지금 큐에 넣음)
+    - `tools/asset-studio/` **없음**. `tools/parts-editor/` **없음**. 있는 건 `tools/gear-editor/`, `tools/slot-editor/`, `tools/gen_*.py`.
+    - sprite-gen (`aldegad/sprite-gen`) + PerfectPixel (`theamusing/perfectPixel`, 사용자 표기 PixelPerpect) + 기존 PIL을 **하나의 웹에디터**로.
+    - 게임 **모든** 에셋 허브 (부품만이 아님). 파이프라인: 업로드/URL/프롬프트 → sprite-gen → PerfectPixel 그리드·양자화 → 청키 4px NEAREST → `assets/` 저장 + `docs/GENERATED_ASSET_LOG.md` + `docs/assets/MANIFEST.json`.
+    - 로컬 정적 HTML+JS (gear-editor 패턴). ComfyUI 금지. 캐릭터/함선/지구 사용자 제공분은 생성 대상 아님.
+
 
 (60) **지구 이미지 확대 + PIL 교체 (사용자 확정, 2026-09-06):**
   - 현재 `M.earthVisualRadius = 58`이지만 실제 이미지가 작아서 반응 영역과 불일치.

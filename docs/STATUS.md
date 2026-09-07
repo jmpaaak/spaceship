@@ -1,16 +1,11 @@
 ## Current Status
 
-- Finish prior-cycle uncommitted shop UX: Earth settlement hull/yield/
-  steering/scout purchases no longer write banner copy (`self.message =
-  ""`) because shop cards already show level, hull, and price. Removed
-  unused `purchaseShortfallMessage`. Tests now assert empty banners while
-  still checking money/level/hull side effects.
-- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
-  ASSET_MANIFEST_OK.
+- INBOX (61)(1) complete: scaffolded `tools/asset-studio/`, a local static HTML+JS web editor to generate game assets without ComfyUI. The editor acts as an all-game asset hub with a `upload/URL/prompt -> sprite-gen -> PerfectPixel -> chunky 4px NEAREST` pipeline.
+- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item.
+- Process next pending INBOX item (61)(2): Slot machine payout tweaks (legendary gating, $10 refund, full slot replacement).
 
 ## Previous
 
