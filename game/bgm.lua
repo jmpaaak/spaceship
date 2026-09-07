@@ -32,7 +32,7 @@ function M.playTrack(index)
     if not ok or not src then return end
 
     src:setLooping(M.looping == true)
-    src:setVolume(0.45)
+    src:setVolume(0.25)
     src:play()
     M.currentSource = src
 end

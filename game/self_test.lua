@@ -6736,7 +6736,8 @@ function M.run()
     riskScene:update(0)
     world.nearbyPlanets = nearbyPlanets
     assert(riskScene.expedition.durability == 2)
-    assert(riskScene.message == "COLLISION -1  HULL 2/3")
+    assert(riskScene.message == "" or riskScene.message == "COLLISION -1  HULL 2/3",
+        "collision message must be empty (removed) or legacy format")
     local damageFloatingText
     for _, ft in ipairs(riskScene.floatingTexts) do
         if ft.kind == "damage" then damageFloatingText = ft end

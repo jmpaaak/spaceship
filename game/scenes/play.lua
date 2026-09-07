@@ -2424,7 +2424,7 @@ function M:update(dt)
                     self.message = i18n.t("ship_destroyed_message", math.floor(self.expedition.bestAltitude))
                     break
                 end
-                self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
+                self.message = ""
             end
         end
         -- INBOX (37): moon collection/collision
@@ -2476,7 +2476,7 @@ function M:update(dt)
                             self.message = i18n.t("ship_destroyed_message", math.floor(self.expedition.bestAltitude))
                             break
                         end
-                        self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
+                        self.message = ""
                     end
                 end
             end
@@ -2529,7 +2529,7 @@ function M:update(dt)
                         self.message = i18n.t("ship_destroyed_message", math.floor(self.expedition.bestAltitude))
                         break
                     end
-                    self.message = i18n.t("collision_message", damage, self.expedition.durability, self.expedition.maxDurability)
+                    self.message = ""
                 end
             end
         end
@@ -3050,7 +3050,6 @@ function M:draw()
         local prevEarthFont = love.graphics.getFont()
         love.graphics.setFont(fonts.get(11))
         local sell = i18n.t("checkpoint_hint_sell")
-        local repair = i18n.t("checkpoint_hint_repair")
         local upgrade = i18n.t("checkpoint_hint_upgrade")
         local bob = math.sin(self.time * 2) * 3
         local f = love.graphics.getFont()
@@ -3059,8 +3058,7 @@ function M:draw()
         local topY = earthY + M.earthVisualRadius + 8 + bob
         love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
         love.graphics.print(sell, earthX - f:getWidth(sell) / 2, topY)
-        love.graphics.print(repair, earthX - f:getWidth(repair) / 2, topY + lineH)
-        love.graphics.print(upgrade, earthX - f:getWidth(upgrade) / 2, topY + lineH * 2)
+        love.graphics.print(upgrade, earthX - f:getWidth(upgrade) / 2, topY + lineH)
         love.graphics.setFont(prevEarthFont)
     end
     -- Item 9: Draw star gravity well ring around the central star

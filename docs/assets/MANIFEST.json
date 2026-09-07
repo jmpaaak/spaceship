@@ -4536,5 +4536,25 @@
     "width": 32,
     "height": 32,
     "qa": "PIL part icon, gen_part_icons.py"
+  },
+  {
+    "path": "assets/effects/boost_icon.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_part_icons.py",
+    "terms_url": "tools/gen_part_icons.py",
+    "asset_id": "effect-boost-icon-001",
+    "prompt": "PIL-generated boost icon: 32x32 RGBA, speed boost effect indicator",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 32,
+      "height": 32
+    },
+    "downloaded_at": "2026-09-07T20:02:12+09:00",
+    "sha256": "52336a4004495d8f7655d0fcb91fcf2ab7b64e0e08a55c2c2661415454b2bdd3",
+    "width": 32,
+    "height": 32,
+    "qa": "32x32 RGBA boost effect icon"
   }
 ]

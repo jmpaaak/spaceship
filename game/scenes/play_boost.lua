@@ -61,7 +61,6 @@ function PB:drawBoostButton()
     if self.expedition.phase ~= "ascending" then return end
 
     local w, h = 54, 54
-    -- position: bottom right, above joystick if joystick takes up left.
     local bx = viewport.width - w - 16
     local by = viewport.height - h - 16
     
@@ -79,19 +78,30 @@ function PB:drawBoostButton()
     love.graphics.setColor(r, g, b, 0.8)
     love.graphics.rectangle("fill", bx, by, w, h, 8, 8)
     
-    love.graphics.setColor(1, 1, 1, 1)
-    local prevFont = love.graphics.getFont()
-    
-    love.graphics.setFont(fonts.get(22))
-    love.graphics.printf("BOOST", bx, by + 8, w, "center")
-    
-    if remaining > 0 then
-        love.graphics.printf(tostring(remaining), bx, by + 28, w, "center")
-    else
-        love.graphics.setColor(0.7, 0.7, 0.7, 1)
-        love.graphics.printf("0", bx, by + 28, w, "center")
+    -- Draw boost icon instead of text
+    local boostIcon = self.boostIcon
+    if not boostIcon and love.graphics and love.graphics.newImage then
+        local ok, img = pcall(love.graphics.newImage, "assets/effects/boost_icon.png")
+        if ok and img then
+            img:setFilter("nearest", "nearest")
+            self.boostIcon = img
+            boostIcon = img
+        end
     end
-    love.graphics.setFont(prevFont)
+    if boostIcon then
+        love.graphics.setColor(1, 1, 1, 1)
+        local iw, ih = boostIcon:getWidth(), boostIcon:getHeight()
+        local scale = math.min((w - 8) / iw, (h - 16) / ih)
+        love.graphics.draw(boostIcon, bx + (w - iw * scale) / 2, by + 4, 0, scale, scale)
+    end
+    -- Remaining count below icon
+    if remaining > 0 then
+        love.graphics.setColor(1, 1, 1, 1)
+        local prevFont = love.graphics.getFont()
+        love.graphics.setFont(fonts.get(11))
+        love.graphics.printf(tostring(remaining), bx, by + h - 14, w, "center")
+        love.graphics.setFont(prevFont)
+    end
 end
 
 ---------------------------------------------------------------------------
