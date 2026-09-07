@@ -10043,6 +10043,24 @@ function M.run()
         print("  INBOX-61(24b) title menu composition OK")
     end
 
+
+    -- INBOX 61(38): title/game BGM playlist
+    do
+        local TitleScene = require("game.scenes.title")
+        local bgm = require("game.bgm")
+        assert(bgm.tracks[1] == "assets/sfx/title_bgm.mp3", "track 1")
+        assert(bgm.tracks[2] == "assets/sfx/observing_the_star.ogg", "track 2")
+        local i18n = require("game.i18n")
+        i18n.setLocale("en")
+        local credit = i18n.t("title_bgm_credit")
+        assert(credit:find("FoxSynergy", 1, true) and credit:find("yd (CC0)", 1, true), "credit text")
+        
+        local title = TitleScene.new({})
+        title:enter()
+        if love.audio and love.audio.newSource then assert(bgm.isPlaying, "bgm should start on title enter") end
+        print("  INBOX-61(38) title BGM playlist OK")
+    end
+
     -- INBOX 61(25): slot cost/rewards scale with galaxy distance
     -- slotTier = 1 + floor(galaxyDistance / galaxyCellSize)
     -- spinCost = $10 * slotTier; SPEED/DURABILITY/HARVEST scale with tier

@@ -8,6 +8,7 @@ local i18n = require("game.i18n")
 local fonts = require("game.fonts")
 
 local M = {}
+local bgm = require("game.bgm")
 M.__index = M
 
 -- Button layout constants (720×1280 canvas)
@@ -113,6 +114,10 @@ function M:draw()
     self:_drawButton(rects.leaderboard, i18n.t("title_leaderboard"), true)
     -- SETTINGS button (stub, always enabled visually)
     self:_drawButton(rects.settings, i18n.t("title_settings"), true)
+
+    love.graphics.setFont(fonts.get(11))
+    love.graphics.setColor(0.55, 0.55, 0.58, 0.7)
+    love.graphics.printf(i18n.t("title_bgm_credit"), 8, viewport.height - 28, viewport.width - 16, "center")
 end
 
 function M:_drawButton(rect, label, enabled)
@@ -162,6 +167,10 @@ function M:keypressed(key)
         local handler = self.onNewGame or self.onStart
         if handler then handler() end
     end
+end
+
+function M:enter()
+    bgm.start()
 end
 
 return M

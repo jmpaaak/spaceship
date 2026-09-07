@@ -155,6 +155,24 @@
   (37) ~~**gear-editor에 시너지 표기/수트 편집 없음** (msg `1546415792424488970`)~~
     - 완료: 상단 시너지 7종 패널 + 카드 Suit 셀렉트/칩. `KNOWN_SUITS` ↔ `gear.knownSuits`. 기호 없음. Test INBOX-61(37) GREEN.
 
+  (40) **gear-editor 부품 이름·설명 한글 + KO/EN 토글** (msg `1546415792424488970` 후속)
+    - 담당: `tools/gear-editor/` (play.lua 금지). JSON `nameKo`는 이미 전원 있음 — 그리드가 `part.name`만 써서 영어로 보임.
+    - 툴바 KO | EN 토글 (localStorage). KO면 카드 이름=`nameKo`, 효과 줄=i18n `effect_*` KO, 레어도/수트/시너지 한글.
+    - EN이면 name + i18n EN. 시너지 7종도 로케일 전환. 기호 금지.
+
+  (41) **쌍성 시너지 착지 +$30 농장 금지** (OOB 2026-09-07)
+    - 담당: `game/expedition.lua` settle binaryStar + `game/i18n.lua` synergy_desc_binaryStar.
+    - 착지 반복으로 돈 벌지 못하게. 착지 +$30 제거. 대체: 표본 판매 시 +30% (`sellMultiplier`) 또는 은하당 1회만. 권장 판매 +30%.
+
+  ~~(38) **타이틀/게임 BGM 플레이리스트**~~ (msg `1546416154589925406`, 추가 `another-space-background-track`)
+    - 담당: **새** `game/bgm.lua` + `game/scenes/title.lua` (play.lua 금지). `main.lua` update에서 `bgm.update()` 한 줄.
+    - 트랙 1: FoxSynergy "Blue Space" v0.95 MP3, CC-BY 3.0 — `assets/sfx/title_bgm.mp3`
+    - 트랙 2: yd "ObservingTheStar" OGG, CC0 — `assets/sfx/observing_the_star.ogg`
+    - 한 곡이 끝나면 다음 곡. 개별 루프 금지. 타이틀 enter에서 start, 플레이 중에도 유지(leave에서 stop 하지 않음).
+    - 헤드리스 `love.audio` nil 가드.
+    - 크레딧 11px: `BGM: Blue Space — FoxSynergy (CC-BY 3.0) / Observing the Star — yd (CC0)`
+    - 완료: `game/bgm.lua` 생성, 플레이리스트 루프, title scene enter에서 start, main update 연동. i18n 크레딧 적용. Test INBOX-61(38) GREEN.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 

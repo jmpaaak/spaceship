@@ -32,6 +32,13 @@
   - Documented `mode` in `docs/GEAR_SCHEMA.md`.
   - Test suite (INBOX-61(26) infra part) GREEN. Code infrastructure complete.
 
+- INBOX 61(38): Title/Game BGM playlist
+  - Implemented `game/bgm.lua` to handle playlist looping between `title_bgm.mp3` and `observing_the_star.ogg`.
+  - Hooked `bgm.update()` in `main.lua` and `bgm.start()` in `title.lua:enter()`. Playback continues seamlessly during gameplay.
+  - Added CC-BY/CC0 BGM credit texts in `title.lua` and `i18n.lua`.
+  - Added test coverage in `self_test.lua` while ensuring `GAME_HEADLESS=1` runs skip `love.audio`.
+  - Test `INBOX-61(38)` GREEN.
+
 ## Next slice
 
 - INBOX 61(26c): hull_parts.json / engine_parts.json 전수 재조정 (common minimum 5, uncommon multi-flat, rare mult, legendary mixed).

@@ -411,7 +411,10 @@ function love.load()
     end
 end
 
+local bgm = require("game.bgm")
+
 function love.update(dt)
+    bgm.update()
     if scenes then sceneStack.update(scenes, math.min(dt, 1 / 20)) end
 end
 
