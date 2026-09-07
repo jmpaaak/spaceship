@@ -1374,7 +1374,9 @@ function M.earthSlotSpin(run, galaxyId, rolls)
             rewardType = "part"
             rewardValue = 0
             local gearMod = require("game.gear")
-            local basePool = gearMod.loadHullParts()
+            local basePool = {}
+            for _, p in ipairs(gearMod.loadHullParts() or {}) do basePool[#basePool + 1] = p end
+            for _, p in ipairs(gearMod.loadEngineParts() or {}) do basePool[#basePool + 1] = p end
             local filteredPool = {}
             for _, p in ipairs(basePool) do
                 if matchCount == 2 and (p.rarity == "common" or p.rarity == "uncommon") then

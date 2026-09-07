@@ -10,12 +10,6 @@
   프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-  (2) **슬롯 2/3매치 차등 + 전설 금지 + 중복 $10 환불 + 슬롯 풀이면 교체**
-    - 2매치에서 전설 부품 나오면 안 됨. 2매치=common/uncommon, 3매치=rare/legendary.
-    - 이미 장착한 부품이 나오면 **스핀비 $10 환불** (돈만, 부품 미장착).
-    - 선체/엔진 슬롯이 가득이면 하나를 버리고 새 부품을 얻는다 (교체 UI: 장착 칸 탭 → 버릴 칸 선택).
-    - `earthSlotSpin` PART 분기는 `rollGearOffer` + rarity 게이트. 랜덤 `loadHullParts()[math.random]` 금지.
-
   (3) **슬롯 UI: 레버 중복 제거, 크게 당김, 릴 정지마다 이펙트, 카피**
     - `tools/gen_slot_machine.py`의 본체 PNG에 빨간 레버가 이미 그려져 있고 play.lua가 두 번째 레버를 그림 → **PNG 레버 삭제** 또는 코드 레버만.
     - 터치마다 레버가 크게 내려갔다 올라옴 (`slotLeverPull`, 이동량 지금보다 훨씬 크게).
@@ -102,6 +96,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+
+(61.2) **슬롯 2/3매치 차등 + 전설 금지 + 중복 $10 환불 + 슬롯 풀이면 교체:**
+  - 완료: earthSlotSpin PART branch pool에 hull+engine 양쪽 포함. 2매치=common/uncommon, 3매치=rare/legendary 래리티 게이트 동작 확인. 중복 환불·교체 UI 기존 코드 정상. testEarthSlotSpinPartRarityGate 테스트 추가 (engine pool 포함 검증).
 
 (61.1) **에셋 스튜디오 웹에디터 (사용자 확정, 2026-09-07):**
   - 완료: `tools/asset-studio/` 정적 HTML+JS 웹에디터 구현.

@@ -1,20 +1,22 @@
 ## Current Status
 
-- Fixed prior-cycle uncommitted slot machine UX polish: sparkle particles on reel stop, larger lever pull animation, Korean i18n updates (spin prompt / relaunch), regenerated machine.png without lever graphic (now drawn in code), updated MANIFEST sha256.
-- Fixed trailing whitespace flagged by preflight git diff check.
+- INBOX 61(2): Slot 2/3-match rarity gate, duplicate refund, full-slot replacement.
+  - Fixed: earthSlotSpin PART branch pool now includes both hull AND engine parts (was hull-only).
+  - Rarity gate (2-match=common/uncommon, 3-match=rare/legendary) already correct.
+  - Duplicate part → $10 refund already correct.
+  - Full slot → replacement UI (shopModal) already correct.
+  - Added testEarthSlotSpinPartRarityGate: verifies rarity gate at expedition level + engine parts in pool.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item.
+- Process next pending INBOX item (61.3 or next sub-item).
 
 ## Previous
 
-- Fix: 12 star asset SHA256 mismatches in MANIFEST.json (star_bare,
-  star_dry, star_gas, star_ice, star_lava, star_sun — both .png and
-  _sheet.png). Updated all hashes to match on-disk files.
-- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
-  ASSET_MANIFEST_OK.
+- Fixed prior-cycle uncommitted slot machine UX polish: sparkle particles on reel stop, larger lever pull animation, Korean i18n updates (spin prompt / relaunch), regenerated machine.png without lever graphic (now drawn in code), updated MANIFEST sha256.
+- Fixed trailing whitespace flagged by preflight git diff check.
+- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 - Fix: previous cycle left uncommitted star sprite assets (`assets/star/`,
   `tools/gen_stars.py`) and partially updated collision damage formula
