@@ -1,14 +1,17 @@
 ## Current Status
-- INBOX 61(17): destroyed screen empty keep-choices layout.
-  - Extracted `M.destroyedPanelY`, `M.destroyedPanelH`, `M.destroyedRestartTextY(hasChoices)` from hardcoded draw values in play.lua.
-  - When `keepPartChoices` is empty: "TAP TO START OVER" is vertically centered in the destroyed panel (`panelY + panelH/2 - 11`).
-  - When `keepPartChoices` has items: text stays at bottom (`panelY + panelH - 72`).
-  - Test `INBOX-61(17)` verifies both Y positions and ordering.
+- INBOX 61(15): slot-exclusive parts — test coverage + docs + editor.
+  - Test `testSlotExclusivePartsWiring`: bundled JSON ≥2 slotExclusive per pool,
+    `earthShopPool` excludes them, `slotPool` returns only them,
+    `earthSlotSpin` PART 2-/3-match picks from slot-exclusive ids,
+    gear-editor round-trips `slotExclusive`, GEAR_SCHEMA.md documents it.
+  - `docs/GEAR_SCHEMA.md`: Card-shape example + field table entry for `slotExclusive`.
+  - `tools/gear-editor`: `fieldSlotExclusive` checkbox, `cacheEls`/`openForm`/`collectFormPart`/card label.
   - `make verify LOVE=…` GREEN.
 
 ## Next slice
 
-- Process next pending INBOX item (15: slot-exclusive parts pool — add test coverage).
+- INBOX 61(15) is fully done (code + JSON + tests + schema + editor). Move to 처리 완료.
+- Process next pending INBOX item in 처리 대기.
 
 ## Previous
 - INBOX 61(14): Planet fallback sprite loading fix.

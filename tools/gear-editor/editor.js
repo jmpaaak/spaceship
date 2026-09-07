@@ -79,7 +79,7 @@ function cacheEls() {
     "downloadBtn", "newCardBtn", "statusBar", "grid", "formPanel",
     "formTitle", "cardForm", "fieldId", "fieldName", "fieldNameKo",
     "fieldIcon", "fieldRarity", "rarityPreview", "fieldTags",
-    "fieldEditions", "fieldGalaxyExclusive", "effectsList", "addEffectBtn", "saveCardBtn",
+    "fieldEditions", "fieldGalaxyExclusive", "fieldSlotExclusive", "effectsList", "addEffectBtn", "saveCardBtn",
     "deleteCardBtn", "cancelBtn", "formError", "editionPreviewContainer", "economyPreviewContainer"
   ].forEach((id) => { els[id] = document.getElementById(id); });
 }
@@ -248,7 +248,7 @@ function renderGrid() {
     card.innerHTML = `
       <div class="icon">${escapeHtml(part.icon || "?")}</div>
       <div class="name">${escapeHtml(part.name || part.id)}</div>
-      <div class="rarity-label">${escapeHtml(part.rarity || "?")}${part.galaxyExclusive ? " · galaxy exclusive" : ""}</div>
+      <div class="rarity-label">${escapeHtml(part.rarity || "?")}${part.galaxyExclusive ? " · galaxy exclusive" : ""}${part.slotExclusive ? " · slot exclusive" : ""}</div>
       <div class="effects">${(part.effects || []).map((e) => `<div>${escapeHtml(e.type)} ${e.value >= 0 ? "+" : ""}${e.value}</div>`).join("")}</div>
     `;
     card.addEventListener("click", () => openForm(part.id));
@@ -330,6 +330,7 @@ function openForm(id) {
     els.fieldTags.value = (part.tags || []).join(", ");
     els.fieldEditions.value = (part.editions || []).join(", ");
     els.fieldGalaxyExclusive.checked = part.galaxyExclusive === true;
+    els.fieldSlotExclusive.checked = part.slotExclusive === true;
     (part.effects || []).forEach((e) => addEffectRow(e.type, e.value));
     els.deleteCardBtn.style.display = "";
   }
@@ -440,6 +441,7 @@ function collectFormPart() {
     tags,
     editions,
     galaxyExclusive: els.fieldGalaxyExclusive.checked,
+    slotExclusive: els.fieldSlotExclusive.checked,
     effects,
   };
 }

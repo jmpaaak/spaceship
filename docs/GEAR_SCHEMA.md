@@ -42,6 +42,7 @@ Both files share the exact same document/card schema below.
   "tags": ["defense"],
   "editions": [],
   "galaxyExclusive": false,
+  "slotExclusive": false,
   "effects": [
     { "type": "hullDurability", "value": 1 }
   ]
@@ -58,6 +59,7 @@ Both files share the exact same document/card schema below.
 | `tags`     | array of strings  | no       | Free-form synergy/category tags (e.g. `"speed"`, `"economy"`, `"defense"`, `"altitude"`). Reserved for the item 9 synergy engine to match combos against. |
 | `editions` | array of strings  | no       | Item 12's "부수 효과" (edition) pool this specific card can roll into (e.g. `"radioactive"`). Empty array means no editions defined yet. |
 | `galaxyExclusive` | boolean     | no       | Item 7 acquisition path. When `true`, `gear.earthShopPool` (Earth shop) excludes the card and `expedition.exploreHub` can grant it as a once-per-galaxy hub drop. Omitted or `false` means the card is generic and may appear in Earth shop. `game/gear.lua`'s `validatePart` treats any non-`true` value as `false`. |
+| `slotExclusive` | boolean     | no       | INBOX 61(15) slot-only acquisition. When `true`, `gear.earthShopPool` and hub/shop-planet pools all exclude the card; it can only be obtained via the Earth slot machine's PART match (`gear.slotPool`). Omitted or `false` means normal availability. |
 | `effects`  | array of Effect   | yes      | At least one entry. See below. |
 
 ## Effect shape

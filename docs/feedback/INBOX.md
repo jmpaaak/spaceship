@@ -22,9 +22,7 @@
 
   ~~(14) **행성이 초록 원 폴백** (msg `1546335441580462130` — "행성들 에셋이 없는 것 같은데")~~ → 완료 (pngColorType 메모리 실패 수정 및 시트 회전 중심 버그 픽스)
 
-  (15) **슬롯 전용 부품 풀** (msg `1546328085643796550` — "슬롯머신에서만 뽑을 수 있는 부품들도 몇개 마련해줘")
-    - 지금 PART 매치는 `loadHullParts()` 랜덤 → 상점/허브와 같은 풀, 2매치 전설 가능.
-    - `galaxyExclusive`처럼 `slotExclusive: true` 카드 수종을 hull+engine JSON에 추가. Earth shop / hub explore 제외, 슬롯 PART만. (2) rarity 게이트와 같이.
+  ~~(15) **슬롯 전용 부품 풀** → 완료 (slotExclusive JSON 2+2 cards, gear.slotPool/earthShopPool filtering, earthSlotSpin prefers slot pool, gear-editor round-trip, GEAR_SCHEMA.md documented, testSlotExclusivePartsWiring GREEN)~~
 
   ~~(16) **허브 은하 추가 구입 메뉴 버튼** → 완료~~
 
