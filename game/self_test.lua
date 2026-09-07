@@ -10186,6 +10186,24 @@ function M.run()
         print("  INBOX-61(31) hub no-heal + hullRegen OK")
     end
 
+    -- INBOX-61(36): SFX module loads and declares the 3 expected sounds.
+    do
+        local sfx = require("game.sfx")
+        local count = 0
+        for _ in pairs(sfx.sounds) do count = count + 1 end
+        assert(count == 3, "sfx.sounds must have exactly 3 entries, got " .. tostring(count))
+        local expected = { "galaxy_discover", "star_sample", "collision" }
+        for _, name in ipairs(expected) do
+            assert(sfx.sounds[name], "sfx.sounds must have key: " .. name)
+            local path = sfx.sounds[name]
+            if love.filesystem and love.filesystem.getInfo then
+                assert(love.filesystem.getInfo(path, "file"),
+                    "sfx asset must exist on disk: " .. path)
+            end
+        end
+        print("  INBOX-61(36) SFX module OK")
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 
