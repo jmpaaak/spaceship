@@ -26,7 +26,7 @@ locales.en = {
     hud_earth = "EARTH IN %d",
     hud_return_progress = "RETURN %d%%  %ds LEFT",
     hud_personal_best = "PERSONAL BEST %04d",
-    hud_distance = "DIST %04d",
+    hud_distance = "DIST %d",
     hud_cash = "CASH $%d",
     -- Item 11: S%02d (slotOpportunities) removed — item-15 abolished in-flight
     -- slots so this segment was always "S00" (dead/misleading). hud_status and
@@ -239,7 +239,7 @@ locales.ko = {
     hud_earth = "지구까지 %d",
     hud_return_progress = "귀환 %d%%  %d초",
     hud_personal_best = "최고기록 %04d",
-    hud_distance = "거리 %04d",
+    hud_distance = "거리 %d",
     hud_cash = "자금 $%d",
     -- Item 11: S%02d (slotOpportunities) removed — item-15 abolished in-flight
     -- slots so this segment was always "S00" (dead/misleading). hud_status and

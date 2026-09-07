@@ -2060,38 +2060,6 @@ function M:update(dt)
         end
     end
     self:pollDesktopMouse()
-    -- Settlement hover tracking for mouse/touch
-    if self.expedition.phase == "settlement" then
-        local mx, my = nil, nil
-        if love.mouse and love.mouse.getPosition and love.graphics and love.graphics.getDimensions then
-            local rmx, rmy = love.mouse.getPosition()
-            local ww, wh = love.graphics.getDimensions()
-            mx, my = viewport.toGame(rmx, rmy, ww, wh, false)
-        end
-        self.hoverRow = nil
-        self.hoverCol = nil
-        if mx and my then
-            for i, row in ipairs(settlementTouchRows) do
-                if my >= row.top and my < row.bottom then
-                    self.hoverRow = i
-                    if row.columns then
-                        for _, col in ipairs(row.columns) do
-                            if mx >= col.left and mx < col.right then
-                                self.hoverCol = col.key == "hull" and "left" or "right"
-                                break
-                            end
-                        end
-                    else
-                        self.hoverCol = mx < viewport.width / 2 and "left" or "right"
-                    end
-                    break
-                end
-            end
-        end
-    else
-        self.hoverRow = nil
-        self.hoverCol = nil
-    end
     local steering = self:steeringButtonState()
     local previousPhase = self.expedition.phase
     for i = #self.floatingTexts, 1, -1 do
@@ -4145,22 +4113,14 @@ function M:draw()
         local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg, isHovered)
             local cardH = touchRowHeight - 16
             local cardY = rowTop + 8
-            local cx2 = leftX + leftW / 2
-            local cy2 = cardY + cardH / 2
-            if isHovered then
-                love.graphics.push()
-                love.graphics.translate(cx2, cy2)
-                love.graphics.scale(1.05, 1.05)
-                love.graphics.translate(-cx2, -cy2)
-            end
-            love.graphics.setColor(isHovered and 0.12 or 0.08, isHovered and 0.10 or 0.06, isHovered and 0.18 or 0.12, 0.92)
+            love.graphics.setColor(0.08, 0.06, 0.12, 0.92)
             love.graphics.rectangle("fill", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
             if isAffordable then
-                love.graphics.setColor(0.3, isHovered and 1.0 or 0.85, 0.4, isHovered and 1.0 or 0.8)
+                love.graphics.setColor(0.3, 0.85, 0.4, 0.8)
             else
-                love.graphics.setColor(isHovered and 0.8 or 0.6, 0.25, 0.2, isHovered and 0.8 or 0.6)
+                love.graphics.setColor(0.6, 0.25, 0.2, 0.6)
             end
-            love.graphics.setLineWidth(isHovered and 3 or 2)
+            love.graphics.setLineWidth(2)
             love.graphics.rectangle("line", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
             love.graphics.setLineWidth(1)
             -- Parse: extract label, values, price from actionText
@@ -4187,9 +4147,6 @@ function M:draw()
             love.graphics.setColor(isAffordable and 0.5 or 0.9, isAffordable and 0.9 or 0.35, isAffordable and 0.6 or 0.3, 0.7)
             love.graphics.printf(statusText, leftX + 8, lineY, leftW - 16, "center")
             love.graphics.setFont(prevSmFont)
-            if isHovered then
-                love.graphics.pop()
-            end
         end
 
         local shopIcons = self.shopIconImages or {}

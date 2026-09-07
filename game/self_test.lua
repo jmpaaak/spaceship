@@ -5799,7 +5799,7 @@ local function testHudBackgroundNotFullWidth()
         getHeight = function() return 14 end,
     }
     local hud = {
-        distance = "DIST 0000",
+        distance = "DIST 0",
         cash = "CASH $0",
         status = "H3/3 LAUNCH",
         best = "PERSONAL BEST 0000",
@@ -6272,12 +6272,12 @@ function M.run()
         "ascending HUD band height must be 154 after item 41: "
         .. tostring(PlayScene.hudHeight("ascending", ascendingHud, 0)))
     -- Without galaxy, without best: 3 lines (dist, cash, status) → 4 + 3*30 = 94.
-    local noGalaxyHud = { distance = "DIST 0000", cash = "CASH $0", status = "H3/3 ASC" }
+    local noGalaxyHud = { distance = "DIST 0", cash = "CASH $0", status = "H3/3 ASC" }
     assert(PlayScene.hudHeight("ascending", noGalaxyHud, 0) == 94,
         "ascending HUD (no galaxy) height must be 94: "
         .. tostring(PlayScene.hudHeight("ascending", noGalaxyHud, 0)))
     -- With galaxy + best: 5 lines → 4 + 5*30 = 154.
-    local fullHud = { distance = "DIST 0000", cash = "CASH $0", status = "H3/3 LAUNCH",
+    local fullHud = { distance = "DIST 0", cash = "CASH $0", status = "H3/3 LAUNCH",
         galaxy = "SOLAR SYSTEM", best = "BEST 0000" }
     assert(PlayScene.hudHeight("launch", fullHud, 0) == 154,
         "launch HUD (galaxy+best) height must be 154: "
@@ -6314,8 +6314,8 @@ function M.run()
     distScene21.ship.y = 75 - 400  -- earthCenterY=75, so dy=-400
     -- euclidean = sqrt(300^2 + 400^2) = 500
     local hud21 = distScene21:hudLines()
-    assert(hud21.distance == "DIST 0500",
-        "item-21: HUD distance must show euclidean distance from Earth (expected 'DIST 0500', got '"
+    assert(hud21.distance == "DIST 500",
+        "item-21: HUD distance must show euclidean distance from Earth (expected 'DIST 500', got '"
         .. tostring(hud21.distance) .. "')")
     riskScene.expedition.altitude = 500
     riskScene.ship.y = -500
