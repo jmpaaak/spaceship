@@ -1353,3 +1353,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 ## Archived from STATUS.md (2026-09-05 22:51)
 
 ## Next Slice
+
+## Archived from STATUS.md (2026-09-07 21:43)
+
+- INBOX (47): slot reel icons clipped because scissor used game coords after translate+scale.
+  - `game/scenes/play_shop.lua`: `reelWindowToScissor` maps the reel window with `love.graphics.transformPoint` then `setScissor` (spinning + idle).
+  - Missing icon: `drawReelFallbackText` draws a large letter centered in the window.
+  - Test `game/tests/slot_reel_scissor.lua` GREEN. play.lua untouched.

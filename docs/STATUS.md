@@ -1,8 +1,9 @@
 ## Current Status
-- INBOX (47): slot reel icons clipped because scissor used game coords after translate+scale.
-  - `game/scenes/play_shop.lua`: `reelWindowToScissor` maps the reel window with `love.graphics.transformPoint` then `setScissor` (spinning + idle).
-  - Missing icon: `drawReelFallbackText` draws a large letter centered in the window.
-  - Test `game/tests/slot_reel_scissor.lua` GREEN. play.lua untouched.
+- INBOX (48): help overlay (`?`) freezes play time like pause, without the pause menu.
+  - `play_help.lua`: `shouldFreezeUpdate` is true while `helpOverlayOpen`.
+  - `play.lua` `M:update` early-returns (self.time / ship frozen); `paused` stays false so HUD pause menu is not drawn.
+  - Tap anywhere still closes overlay via existing `touchpressed` path, then time resumes.
+  - Test `game/tests/help_overlay_pause.lua` GREEN.
 
 - Preflight FAIL fix: `assets/icon.png` had no `docs/assets/MANIFEST.json` entry.
   - Cataloged 256×256 RGBA PNG (sha256 `d04ad9b4…e08a`) as user_supplied PIL/ship-derived window icon.
@@ -154,4 +155,6 @@
 
 ## Next slice
 
-- INBOX (48): help overlay (`?`) must freeze play time like pause, without opening the pause menu.
+- INBOX (49): title ship art (`assets/ship/ship_default.png` above Jimmy's) + window icon already cataloged.
+
+> 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

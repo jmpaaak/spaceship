@@ -1,5 +1,5 @@
 -- play_help.lua  — INBOX 61(29): Help (?) button + overlay
--- Provides: drawHelpButton, drawHelpOverlay, hitHelpButton
+-- Provides: drawHelpButton, drawHelpOverlay, hitHelpButton, shouldFreezeUpdate
 local i18n = require("game.i18n")
 local fonts = require("game.fonts")
 local viewport = require("game.viewport")
@@ -50,6 +50,13 @@ function PH.drawHelpButton(self)
     end
     love.graphics.printf("?", hb.x, cy - 11, hb.w, "center")
     love.graphics.setFont(prevFont)
+end
+
+---------------------------------------------------------------------------
+-- shouldFreezeUpdate(self) — INBOX (48): freeze like pause, no pause menu
+---------------------------------------------------------------------------
+function PH.shouldFreezeUpdate(self)
+    return self.helpOverlayOpen == true
 end
 
 ---------------------------------------------------------------------------
@@ -118,10 +125,11 @@ end
 ---------------------------------------------------------------------------
 function PH.install(M)
     _M = M
-    M.helpButtonRect   = PH.helpButtonRect
-    M.hitHelpButton    = PH.hitHelpButton
-    M.drawHelpButton   = PH.drawHelpButton
-    M.drawHelpOverlay  = PH.drawHelpOverlay
+    M.helpButtonRect      = PH.helpButtonRect
+    M.hitHelpButton       = PH.hitHelpButton
+    M.drawHelpButton      = PH.drawHelpButton
+    M.drawHelpOverlay     = PH.drawHelpOverlay
+    M.shouldFreezeUpdate  = PH.shouldFreezeUpdate
 end
 
 return PH

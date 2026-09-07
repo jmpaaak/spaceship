@@ -4,11 +4,6 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-  (48) **도움말(?) 열면 일시정지** (msg `1546489668617379900` 후속)
-    - 담당: `game/scenes/play.lua` `M:update` + `play_help.lua`.
-    - `helpOverlayOpen`이면 `paused`와 같이 `update` early-return (`self.time` 정지). 일시정지 메뉴는 띄우지 않음 (도움말 패널만).
-    - 아무 곳 탭으로 닫으면 다시 진행.
-
   (49) **홈(타이틀)에 초기 함선 에셋 + 앱 아이콘** (msg `1546490925700612096`)
     - 담당: `game/scenes/title.lua` + `conf.lua` `t.window.icon` (play.lua 금지).
     - 타이틀이 횡하니까 `assets/ship/ship_default.png`를 Jimmy's 위에 크게 그림 (nearest, 중심).
@@ -19,6 +14,10 @@
     - collect: Luke.RUSTLTD 8bit coin1 CC0. slot: rubberduck retro_coin_01 CC0. boost: rubberduck rocket_01 CC0.
 
 ## 처리 완료
+(48) **도움말(?) 열면 일시정지** (msg `1546489668617379900` 후속)
+  - 완료: `play_help.lua` `shouldFreezeUpdate` returns true when `helpOverlayOpen`. `play.lua` `M:update` early-returns (self.time frozen) without setting `paused` (pause menu stays closed). Tap anywhere already closed overlay via existing touch path.
+  - Test `game/tests/help_overlay_pause.lua` GREEN.
+
 (47) **슬롯 릴 아이콘이 칸 안에서 안 보임** (msg `1546488266650554368`)
   - 완료: `play_shop.lua` `reelWindowToScissor` converts reel window via `love.graphics.transformPoint` before `setScissor` (spin + idle).
   - Missing icon: `drawReelFallbackText` draws a large letter centered in the reel window.

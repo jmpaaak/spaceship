@@ -1926,6 +1926,10 @@ function M:update(dt)
     if self.gearPopup and self.expedition.phase == "ascending" then
         return
     end
+    -- INBOX (48): help overlay freezes like pause; pause menu stays closed.
+    if self:shouldFreezeUpdate() then
+        return
+    end
     -- Auto-unpause if phase changed away from ascending while paused.
     if self.paused and self.expedition.phase ~= "ascending" then
         self.paused = false
