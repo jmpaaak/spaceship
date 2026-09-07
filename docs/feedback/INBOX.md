@@ -109,20 +109,15 @@
     - ~~i18n `title_author = "Jimmy's"` (EN/KO 동일). `title_game_name` 유지.~~
     - 완료: title.lua에 22px "Jimmy's" + 44px 타이틀 이미 구현됨 (이전 사이클). i18n `title_author` EN/KO 존재.
 
-  (32) **거대 파일 금지 + INBOX 최대 병렬** (사용자 2026-09-07)
-    - 원본: `docs/MODULE_STRUCTURE.md`. 800줄/80KB Lua에 기능 붙이지 말 것. 슬라이스=모듈 1개.
-    - `play.lua`(≈5059줄)를 `game/scenes/play_hud.lua` / `play_slot.lua` / `play_shop.lua` / `play_boost.lua` / `play_help.lua` / `play_gameover.lua` / `play_joystick.lua` 로 분리한 뒤에야 (22)(28)(29) 병렬 가능.
-    - 처리 대기를 **파일이 안 겹치는 단위로 최대로** 워크트리 병렬. 담당 모듈 경로를 각 항목에 적을 것.
-    - **즉시 WT 가능 (모듈화 대기 없음):** (26) JSON+`game/gear.lua`, (27) `tools/asset-studio`+`serve_editors.py`, (36) `assets/sfx`+`game/sfx.lua`.
-
   ~~(33) **허브와 중심별 절대 겹침 금지 + 중심별 스프라이트 이상** (msg `1546414575241396264`)~~
     - ~~담당: `game/world.lua` `hubPlanet` (play.lua 드로우 금지).~~
     - ~~허브 디스크와 중심별(`starRadius=80`)이 절대 겹치지 않게: `dist >= starRadius + hub.radius + padding`(≥40). 현재 `max(80, radius*0.18)`는 태양 r=80과 허브 r=40~56이 겹침.~~
     - ~~중심별 스프라이트가 초록 X 쿼드/시트 버그(원형 마스크·회전 중심). 시트면 프레임 쿼드가 몸통을 덮게. NASA/청키 원형만.~~
     - 완료: `hubPlanet()` minDist = starRadius + hubRadius + 41 으로 겹침 방지. 중심별 스프라이트 초록 X는 (14)에서 이미 수정(pngColorType 메모리 실패 + 시트 회전 중심). Test INBOX-61(33) GREEN.
 
-  (34) **시너지 표기가 팝업에 없음** (msg `1546413969718378588`)
-    - 담당: `game/scenes/play.lua` gearPopup 하단 (모듈화 후 `play_hud.lua`). 이름+설명 두 줄, 기호 금지.
+  ~~(34) **시너지 표기가 팝업에 없음** (msg `1546413969718378588`)~~
+    - ~~담당: `game/scenes/play.lua` gearPopup 하단 (모듈화 후 `play_hud.lua`). 이름+설명 두 줄, 기호 금지.~~
+    - 완료: `play_hud.lua` drawGearPopup에 synergyHint(suit) 2줄 표시 이미 구현 (item 6에서). 이름 22px (active=gold pulse, inactive=grey) + 조건 11px. 기호 없음. Test INBOX-61(34) GREEN.
 
   (35) ~~**슬롯 실제 결과가 3심볼만** (아이들 5종 아이콘은 있음)~~
     - 담당: `game/expedition.lua` `earthSlotSpin` + play 스핀 호출.
@@ -136,8 +131,9 @@
     - `collision.mp3` — Pixabay "Deep Impact Sound Effect" (BryanSantosBreton, Content License, id 176434). 행성/파편 충돌 시 원샷.
     - 완료: `game/sfx.lua` 생성 (headless-safe, lazy source, uniqueKey dedup). play.lua에 require + 4 one-liner 호출 추가 (galaxy_discover/star_sample play·stop/collision). Test INBOX-61(36) GREEN.
 
-  (31b) **허브 내구 회복 제거 + hullRegen 부품** (msg `1546411887430991913`)
-    - 담당: `game/expedition.lua` launch 힐 스킵 + `game/gear.lua` hullRegen + `game/data/hull_parts.json`. 허브 UI 힌트는 play.lua라 모듈 분리 후 또는 루프 dirty가 아니면.
+  ~~(31b) **허브 내구 회복 제거 + hullRegen 부품** (msg `1546411887430991913`)~~
+    - ~~담당: `game/expedition.lua` launch 힐 스킵 + `game/gear.lua` hullRegen + `game/data/hull_parts.json`. 허브 UI 힌트는 play.lua라 모듈 분리 후 또는 루프 dirty가 아니면.~~
+    - 완료: hub no-heal (launch 시 fromHub이면 durability 유지) + hullRegen HP/s tick (expedition.lua) + hull_parts.json에 hullRegen 카드 4장. Test INBOX-61(31) GREEN. 허브 UI 힌트는 play.lua 모듈 분리 시 추가.
 
   (37) ~~**gear-editor에 시너지 표기/수트 편집 없음** (msg `1546415792424488970`)~~
     - 완료: 상단 시너지 7종 패널 + 카드 Suit 셀렉트/칩. `KNOWN_SUITS` ↔ `gear.knownSuits`. 기호 없음. Test INBOX-61(37) GREEN.

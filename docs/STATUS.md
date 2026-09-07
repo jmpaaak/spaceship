@@ -121,5 +121,14 @@
 
 ## Next slice
 
-- Continue play.lua modularization: extract icon polygon helpers + sprite draw helpers into `play_icons.lua` (~150 lines), or joystick input into `play_joystick.lua` (~100 lines).
-- Once play.lua < 800 lines, unblock INBOX items (29), (34), (31b).
+- INBOX 61(32) (completed): `play_slot.lua` and `play_joystick.lua` extraction.
+  - Created `game/scenes/play_slot.lua` to extract slot machine spin and update logic.
+  - Created `game/scenes/play_joystick.lua` to extract joystick touch handling, drawing, and mouse polling.
+  - Updated `play.lua` to delegate slot logic (`updateSlotMachine`, `spinSlotMachine`) and joystick logic (`joystickVector`, `joystickKnob`, `joystickOrigin`, `pollDesktopMouse`).
+  - Adjusted `self_test.lua` INBOX 61(3) test to properly include `play_slot.lua` in its source check for `slotLeverPull`.
+  - `play.lua` size reduced significantly. Extraction of major independent systems complete.
+  - Tests pass (`make verify LOVE=...` GREEN).
+
+## Next slice
+
+- Process next pending items in INBOX.md (e.g., UI adjustments, balance tweaks, or new features now that `play.lua` is more manageable).

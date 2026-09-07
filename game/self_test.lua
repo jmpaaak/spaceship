@@ -9304,11 +9304,12 @@ function M.run()
         assert(koRelaunch:find("탭하여", 1, true),
             "INBOX 61(3): tap_relaunch KO must start with 탭하여, got: " .. koRelaunch)
         -- Lever pull multiplier: code sets slotLeverPull = 1.0 for snappy pull
-        local leverSrc = love.filesystem.read("game/scenes/play.lua")
-                      or love.filesystem.read("game/scenes/play_shop.lua")
-                      or ""
+        local src1 = love.filesystem.read("game/scenes/play.lua") or ""
+        local src2 = love.filesystem.read("game/scenes/play_shop.lua") or ""
+        local src3 = love.filesystem.read("game/scenes/play_slot.lua") or ""
+        local leverSrc = src1 .. src2 .. src3
         assert(leverSrc:find("slotLeverPull", 1, true),
-            "INBOX 61(3): play.lua or play_shop.lua must reference slotLeverPull")
+            "INBOX 61(3): must reference slotLeverPull")
         print("  INBOX-61(3) slot lever/i18n OK")
     end
 
@@ -10382,6 +10383,29 @@ function M.run()
         assert(helpSrc:find("drawHelpButton"),
             "INBOX 61(29): play_help.lua must contain drawHelpButton")
         print("  INBOX-61(29) help overlay + luck % + ? button OK")
+    end
+
+    -- INBOX 61(34) synergy display in gear popup
+    do
+        local i18n = require("game.i18n")
+        i18n.setLocale("en")
+        -- synergyHint must return name+desc for known suits
+        for _, suit in ipairs({"solar", "nebula", "void", "pulsar"}) do
+            local h = i18n.synergyHint(suit)
+            assert(type(h) == "table", "INBOX 61(34): synergyHint(" .. suit .. ") must be table")
+            assert(h.name and #h.name > 0, "INBOX 61(34): synergyHint(" .. suit .. ").name empty")
+            assert(h.desc and #h.desc > 0, "INBOX 61(34): synergyHint(" .. suit .. ").desc empty")
+            -- No symbol prefixes (☀ * # ~ etc.)
+            assert(not h.name:find("^[☀*#~x+@]"),
+                "INBOX 61(34): synergy name must not start with symbol: " .. h.name)
+        end
+        -- play_hud.lua must draw synergy hint in popup (name + desc two lines)
+        local hudSrc = love.filesystem.read("game/scenes/play_hud.lua") or ""
+        assert(hudSrc:find("synergyHint"), "INBOX 61(34): play_hud.lua must use synergyHint")
+        assert(hudSrc:find("hint%.name"), "INBOX 61(34): play_hud.lua must draw hint.name")
+        assert(hudSrc:find("hint%.desc"), "INBOX 61(34): play_hud.lua must draw hint.desc")
+        i18n.setLocale("en")
+        print("  INBOX-61(34) synergy display in gear popup OK")
     end
 
     require("game.tests.sfx").run()
