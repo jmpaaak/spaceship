@@ -106,6 +106,12 @@
   - `play.lua` now purely delegates all shop/settlement/destroyed overlay logic to `play_shop.lua`.
   - Tests pass (`make verify LOVE=...` GREEN).
 
+- INBOX 61(28): Boost button UI & Boost FX
+  - Created `game/scenes/play_boost.lua` to extract boost logic and avoid bloating `play.lua`.
+  - Added BOOST button UI in bottom-right corner with charge counter.
+  - Enhanced RCS particles during boost (golden color, 2.5x radius, faster spawn).
+  - Added vertical speed lines visual effect during boost.
+
 ## Next slice
 
-- INBOX 61(34) synergy popup text in gearPopup, or 61(28) boost button UI. (34) wait on play_hud.lua module split.
+- INBOX-61(29): 행운 % 표시 + 헬프(?) 아이콘 + 게임 설명 패널 (play_help.lua 분리)

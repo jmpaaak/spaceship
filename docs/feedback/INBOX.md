@@ -89,10 +89,6 @@
   ~~(27) **에셋 스튜디오 sprite-gen 서버 연동** (msg `1546408506700337213`)~~
     - 완료: `tools/serve_editors.py` POST `/api/sprite-gen` `{prompt,width,height,image?}` → PNG base64. Tries `sprite-gen` package, else deterministic PIL shapes. `editor.js` `generateFromPromptAsync` fetch + local fallback. Test `tools.test_serve_editors` GREEN.
 
-  (28) **부스트 버튼 UI + 부스트 중 RCS 강화** (msg `1546408800070934598`)
-    - 우측 하단에 **BOOST 버튼** 시각적으로 표시 (44×44 이상, 충전 수 표시, 0이면 비활성 회색).
-    - 부스트 활성 중 RCS 파티클: radius ×2.5, 속도 ×2, 스폰 쿨다운 0.045→0.02, 색상 금빛 `(1, 0.85, 0.3)` 오버라이드.
-    - 부스트 활성 중 화면 가장자리에 짧은 속도선(speed lines) 이펙트 추가.
 
   (29) **행운 % 표시 + 헬프(?) 아이콘 + 게임 설명** (msg `1546409329245036554`)
     - 행운 수치를 **퍼센트**로 표시 (`luck +10` → `행운 +10%`). `i18n effect_luck` 포맷 `"행운 +%d%%"` / `"LUCK +%d%%"`.
@@ -172,6 +168,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+(61.28) **부스트 버튼 UI + 부스트 중 RCS 강화:**
+  - 완료: `game/scenes/play_boost.lua` 분리 생성. BOOST 버튼 우측 하단 배치 및 터치 연동 (`expedition.spendBoost`). 부스트 중 RCS 금빛 + 크기/속도 증가 + 속도선 이펙트 추가. play.lua 의존성 최소화.
+
 (61.33) **허브와 중심별 절대 겹침 금지 + 중심별 스프라이트 이상:**
   - 완료: `world.lua` `hubPlanet()` minDist = starRadius + hubRadius + 41 으로 허브 디스크가 중심별과 겹치지 않게 보장. 중심별 스프라이트 초록 X 버그는 (14)에서 이미 수정(pngColorType + 시트 회전 중심). Test INBOX-61(33) GREEN.
 
