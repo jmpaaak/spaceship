@@ -199,16 +199,16 @@ locales.en = {
     comet_label = "Comet",
     moon_label = "Moon",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
-    synergy_solarSystem  = "☀ SOLAR SYSTEM",
-    synergy_nebulaField  = "* NEBULA FIELD",
-    synergy_eventHorizon = "# EVENT HORIZON",
-    synergy_pulsarBurst  = "~ PULSAR BURST",
-    synergy_binaryStar   = "x BINARY STAR",
-    synergy_supernova    = "+ SUPERNOVA",
-    synergy_darkMatter   = "@ DARK MATTER",
+    synergy_solarSystem  = "SOLAR SYSTEM",
+    synergy_nebulaField  = "NEBULA FIELD",
+    synergy_eventHorizon = "EVENT HORIZON",
+    synergy_pulsarBurst  = "PULSAR BURST",
+    synergy_binaryStar   = "BINARY STAR",
+    synergy_supernova    = "SUPERNOVA",
+    synergy_darkMatter   = "DARK MATTER",
     synergy_desc_solarSystem  = "3+ SOLAR: +1 max HP on land",
     synergy_desc_nebulaField  = "3+ NEBULA: harvest x1.5",
-    synergy_desc_eventHorizon = "3+ VOID: collect -30%",
+    synergy_desc_eventHorizon = "3+ VOID: collect +30%",
     synergy_desc_pulsarBurst  = "2+ PULSAR: streak x2",
     synergy_desc_binaryStar   = "2S+2N: +30$ on land",
     synergy_desc_supernova    = "ALL 4: legendary x1.5",
@@ -220,6 +220,7 @@ locales.en = {
     admin_speed = "SPD+",
     admin_hull = "HULL+",
     admin_yield = "YLD+",
+    effect_label = "Effect",
 }
 
 locales.en.phase_abbrev = {
@@ -408,16 +409,16 @@ locales.ko = {
     comet_label = "혜성",
     moon_label = "위성",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
-    synergy_solarSystem  = "☀ 태양계 시너지",
-    synergy_nebulaField  = "* 성운 지대",
-    synergy_eventHorizon = "# 사건 지평선",
-    synergy_pulsarBurst  = "~ 펄서 폭발",
-    synergy_binaryStar   = "x 쌍성",
-    synergy_supernova    = "+ 초신성",
-    synergy_darkMatter   = "@ 암흑물질",
+    synergy_solarSystem  = "태양계 시너지",
+    synergy_nebulaField  = "성운 지대",
+    synergy_eventHorizon = "사건의 지평선",
+    synergy_pulsarBurst  = "펄서 폭발",
+    synergy_binaryStar   = "쌍성",
+    synergy_supernova    = "초신성",
+    synergy_darkMatter   = "암흑물질",
     synergy_desc_solarSystem  = "솔라 3+: 착지 시 최대내구 +1",
     synergy_desc_nebulaField  = "네뷸라 3+: 수확 x1.5",
-    synergy_desc_eventHorizon = "보이드 3+: 채집 -30%",
+    synergy_desc_eventHorizon = "보이드 3+: 채집 +30%",
     synergy_desc_pulsarBurst  = "펄서 2+: 연속 x2",
     synergy_desc_binaryStar   = "솔라2+네뷸라2: 착지 +$30",
     synergy_desc_supernova    = "4수트: 전설 x1.5",
@@ -429,6 +430,7 @@ locales.ko = {
     admin_speed = "속도+",
     admin_hull = "내구+",
     admin_yield = "수확+",
+    effect_label = "효과",
 }
 
 locales.ko.phase_abbrev = {
@@ -515,8 +517,11 @@ local suitSynergyKeys = {
 
 function M.synergyHint(suit)
     local key = suitSynergyKeys[suit]
-    if not key then return "" end
-    return M.t("synergy_" .. key) .. "  " .. M.t("synergy_desc_" .. key)
+    if not key then return { name = "", desc = "" } end
+    return {
+        name = M.t("synergy_" .. key) .. " " .. M.t("effect_label"),
+        desc = M.t("synergy_desc_" .. key),
+    }
 end
 
 function M.shopError(err)

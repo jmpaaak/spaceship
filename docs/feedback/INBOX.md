@@ -10,16 +10,6 @@
   프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-  (6) **시너지 팝업 두 줄 + 기호 제거 + 보이드 채집 +30%**
-    - HUD/팝업 이름에서 `☀ * # ~ x + @` 접두 기호 **전부 삭제**.
-    - KO 이름: `태양계 시너지` / `성운 지대` / `사건의 지평선` / `펄서 폭발` / `쌍성` / `초신성` / `암흑물질`.
-    - 팝업 시너지 힌트 **두 줄** (11px 말고 조건은 22px 가능하면 22):
-      `사건의 지평선 효과`
-      `보이드 3+: 채집 +30%`
-    - `i18n.synergyHint`가 한 줄 `"name  desc"` 반환하는 현재 구현을 `{name, desc}` 또는 `"name 효과\ndesc"` 로.
-    - 사용자 카피: 보이드는 **채집 +30%** (지금 코드 `eventHorizon`은 collisionRadius −30% = 히트박스 축소). **표시와 효과를 채집 반경 +30%로 통일** (`collectOrbitRadius` / moon collect). `synergy_desc_eventHorizon` EN/KO 모두 `collect +30%` / `채집 +30%`. 기존 −30% 테스트(`collisionRadius 100→70`) 갱신.
-    - 활성 시너지면 팝업 해당 줄 강조 (금색 펄스/글로우). 미활성이면 회색.
-
   (7) **등급·수트 칩 각 한 줄**
     - 팝업에서 커먼/보이드가 가로 나란히 → **세로 스택** (등급 한 줄, 수트 한 줄).
 
@@ -69,6 +59,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+
+(61.6) **시너지 팝업 두 줄 + 기호 제거 + 보이드 채집 +30%:**
+  - 완료: Removed ☀ * # ~ x + @ prefix symbols from all synergy names (EN+KO). Updated KO names (사건의 지평선 etc.). `i18n.synergyHint` returns `{name, desc}` table. Popup: 22px name line + 11px desc line, gold pulse if active, grey if not. eventHorizon changed from collisionRadius −30% to collectOrbitRadius +30%. `expedition.collectOrbitRadius(run, base)` added. Tests all GREEN.
 
 (61.5) **솔라 3+ 착지 HP+1 이득 없음 → maxDurability+1:**
   - 완료: `expedition.settle()` solarSystem synergy changed from +1 HP heal (useless because launch() restores to maxDurability) to +1 maxDurability. i18n EN/KO updated. testINBOX61_5 verifies maxDurability increase survives through launch.

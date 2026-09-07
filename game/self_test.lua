@@ -5633,12 +5633,32 @@ testStellarSynergies = function()
     assert(i18n.t("synergy_desc_nebulaField") ~= "synergy_desc_nebulaField",
         "synergy_desc_nebulaField i18n key must exist")
     local nebulaHint = i18n.synergyHint("nebula")
-    assert(nebulaHint:find(i18n.t("synergy_nebulaField"), 1, true),
-        "synergyHint(nebula) must prefix the synergy name, got: " .. tostring(nebulaHint))
-    assert(nebulaHint:find(i18n.t("synergy_desc_nebulaField"), 1, true),
-        "synergyHint(nebula) must include the condition text, got: " .. tostring(nebulaHint))
-    assert(i18n.synergyHint(nil) == "" and i18n.synergyHint("unknown") == "",
-        "synergyHint must return empty for missing/unknown suit")
+    assert(type(nebulaHint) == "table",
+        "synergyHint must return a table, got: " .. type(nebulaHint))
+    assert(nebulaHint.name and nebulaHint.name:find(i18n.t("synergy_nebulaField"), 1, true),
+        "synergyHint(nebula).name must contain the synergy name, got: " .. tostring(nebulaHint.name))
+    assert(nebulaHint.desc and nebulaHint.desc:find(i18n.t("synergy_desc_nebulaField"), 1, true),
+        "synergyHint(nebula).desc must contain the condition text, got: " .. tostring(nebulaHint.desc))
+    local nilHint = i18n.synergyHint(nil)
+    local unknownHint = i18n.synergyHint("unknown")
+    assert(type(nilHint) == "table" and nilHint.name == "" and nilHint.desc == "",
+        "synergyHint(nil) must return {name='', desc=''}")
+    assert(type(unknownHint) == "table" and unknownHint.name == "" and unknownHint.desc == "",
+        "synergyHint('unknown') must return {name='', desc=''}")
+
+    -- INBOX item 6: synergy names must not start with prefix symbols
+    local prefixPats = { "^☀ ", "^%* ", "^# ", "^~ ", "^x ", "^%+ ", "^@ " }
+    for _, lang in ipairs({"en", "ko"}) do
+        i18n.setLocale(lang)
+        for _, synKey in ipairs({"solarSystem","nebulaField","eventHorizon","pulsarBurst","binaryStar","supernova","darkMatter"}) do
+            local name = i18n.t("synergy_" .. synKey)
+            for _, pat in ipairs(prefixPats) do
+                assert(not name:find(pat),
+                    lang .. " synergy_" .. synKey .. " must not start with prefix symbol, got: " .. name)
+            end
+        end
+    end
+    i18n.setLocale("en")  -- restore default
 
     -- Bundled JSON cards all have suit field (no [WARN] paths expected from loader in prod).
     local hullPool, hullErr = gear.loadHullParts()
@@ -5695,7 +5715,16 @@ testExpeditionStellarSynergies = function()
         equippedGear = { makeCard("v1", "void"), makeCard("v2", "void"), makeCard("v3", "void") },
         equippedEngineParts = {}
     }
-    assert(math.abs(expedition.collisionRadius(runVoid, 100) - 70) < 0.001, "eventHorizon must reduce collision radius by 30%")
+    -- eventHorizon no longer modifies collisionRadius; gear-only CR still works
+    assert(math.abs(expedition.collisionRadius(runVoid, 100) - 100) < 0.001,
+        "eventHorizon must NOT reduce collision radius (moved to collectOrbitRadius)")
+    -- eventHorizon (void 3+) now grants +30% collectOrbitRadius
+    assert(math.abs(expedition.collectOrbitRadius(runVoid, 100) - 130) < 0.001,
+        "eventHorizon must increase collect orbit radius by 30%")
+    -- Without void 3+, collectOrbitRadius is unchanged
+    local runNoVoid = { equippedGear = {}, equippedEngineParts = {} }
+    assert(math.abs(expedition.collectOrbitRadius(runNoVoid, 100) - 100) < 0.001,
+        "collectOrbitRadius without eventHorizon must equal base")
 
     local runSupernova = {
         equippedGear = {

@@ -1137,20 +1137,23 @@ end
 -- base hitbox radius live in play.lua/world.lua, out of this lane's scope
 -- per loop/PROMPT.md; this establishes the single run-level source of
 -- truth a future consumer will read from, same posture as boostChargeCount.
--- Stellar Origin (item 16, 2026-09-05): eventHorizon (void 3+) adds an extra
--- −30 percentage-point collisionRadius reduction on top of any equipped gear.
--- Since effectiveCollisionRadius reads totalEffect(parts, "collisionRadius")
--- as an additive percentage, we inject a synthetic extra-30 by scaling the
--- base radius by the combined (gear + synergy) percentage.
+-- Stellar Origin (item 16, 2026-09-05): eventHorizon (void 3+) increases
+-- the collection orbit radius by +30%, making sample/moon pickup easier.
+-- INBOX item 6 (2026-09-07): changed from collisionRadius −30% to
+-- collectOrbitRadius +30% per user request.
 function M.collisionRadius(run, baseRadius)
-    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
-    local extraPct = syn.eventHorizon and 30 or 0
     local combined = combinedGearList(run)
     local gearPct = gearModule.totalEffect(combined, "collisionRadius")
-    local totalPct = gearPct + extraPct
-    local radius = baseRadius * (1 - totalPct / 100)
+    local radius = baseRadius * (1 - gearPct / 100)
     if radius < 0 then radius = 0 end
     return radius
+end
+
+-- eventHorizon (void 3+) synergy: +30% collect orbit radius.
+function M.collectOrbitRadius(run, baseCollectRadius)
+    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
+    local bonus = syn.eventHorizon and 0.30 or 0
+    return baseCollectRadius * (1 + bonus)
 end
 
 -- Item 12's drop RNG (gear.rollRarity / gear.rollEdition), wired into an

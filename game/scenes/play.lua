@@ -190,8 +190,13 @@ M.collectOrbitRingAlpha = 0.3
 M.collectOrbitRingLineWidth = 1
 M.useCollectOrbitRimSprite = false
 
-function M.collectOrbitRadius(planetRadius)
-    return (planetRadius or 0) + M.collectRadiusPadding
+function M.collectOrbitRadius(planetRadius, run)
+    local base = (planetRadius or 0) + M.collectRadiusPadding
+    if run then
+        local expedition = require("game.expedition")
+        return expedition.collectOrbitRadius(run, base)
+    end
+    return base
 end
 
 function M.reentryDrawOffsetX(time, magnitude)
@@ -2444,7 +2449,7 @@ function M:update(dt)
             local dx, dy = planet.x - self.ship.x, planet.y - self.ship.y
             local distanceSquared = dx * dx + dy * dy
             if self.expedition.phase == "ascending"
-                and distanceSquared <= (M.collectOrbitRadius(planet.radius)) ^ 2
+                and distanceSquared <= (M.collectOrbitRadius(planet.radius, self.expedition)) ^ 2
                 and not self.discovered[planet.id] then
                 self.discovered[planet.id] = true
                 self.discoveredCount = self.discoveredCount + 1
@@ -2650,7 +2655,7 @@ function M:update(dt)
                 local dx, dy = comet.x - self.ship.x, comet.y - self.ship.y
                 local distanceSquared = dx * dx + dy * dy
                 -- Collection: same radius formula as planets (radius + 30)
-                if distanceSquared <= (M.collectOrbitRadius(comet.radius)) ^ 2
+                if distanceSquared <= (M.collectOrbitRadius(comet.radius, self.expedition)) ^ 2
                     and not self.cometDiscovered[comet.id] then
                     self.cometDiscovered[comet.id] = true
                     local value = world.cometSampleValue(comet)
@@ -4631,12 +4636,38 @@ function M:draw()
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.printf(suitLabel, suitX, chipY2 + 4, suitW, "center")
         end
-        -- Synergy name + condition below chips (user 2026-09-07)
+        -- Synergy hint: two lines (name at 22px, desc at 11px) (INBOX item 6)
         local hint = i18n.synergyHint(part.suit)
-        if hint ~= "" then
+        if hint.name ~= "" then
+            local gearMod = require("game.gear")
+            local syn = gearMod.activeSynergies(
+                self.expedition.equippedGear or {},
+                self.expedition.equippedEngineParts or {})
+            local suitSynergyKeys = {
+                solar = "solarSystem", nebula = "nebulaField",
+                void = "eventHorizon", pulsar = "pulsarBurst",
+            }
+            local synKey = suitSynergyKeys[part.suit]
+            local isActive = synKey and syn[synKey]
+            local hintY = chipY2 + rarH + 8
+            -- Line 1: synergy name (22px, gold pulse if active, grey if not)
+            love.graphics.setFont(fonts.get(22))
+            if isActive then
+                local pulse = 0.7 + 0.3 * math.sin((self.uiTime or self.time or 0) * 3)
+                love.graphics.setColor(1.0, 0.85, 0.3, pulse)
+            else
+                love.graphics.setColor(0.55, 0.55, 0.55, 0.7)
+            end
+            love.graphics.printf(hint.name, tipX + 12, hintY, tipW - 24, "center")
+            -- Line 2: condition desc (11px)
+            local nameH = fonts.get(22):getHeight()
             love.graphics.setFont(fonts.get(11))
-            love.graphics.setColor(0.72, 0.68, 0.82, 0.8)
-            love.graphics.printf(hint, tipX + 12, chipY2 + rarH + 8, tipW - 24, "center")
+            if isActive then
+                love.graphics.setColor(1.0, 0.92, 0.5, 0.9)
+            else
+                love.graphics.setColor(0.55, 0.55, 0.55, 0.6)
+            end
+            love.graphics.printf(hint.desc, tipX + 12, hintY + nameH + 2, tipW - 24, "center")
         end
         love.graphics.setFont(prevPopupFont)
     end
