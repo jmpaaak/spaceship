@@ -3377,8 +3377,8 @@ function M:drawMinimap()
         local marker = view.secondGalaxyRimMarker
         local mx = cx + marker.dx * rim
         local my = cy + marker.dy * rim
-        love.graphics.setColor(0.3, 0.9, 0.95, 0.45)
-        love.graphics.circle("fill", mx, my, 2.6)
+        love.graphics.setColor(unpack(M.rimMarker2Color))
+        love.graphics.circle("fill", mx, my, M.rimMarker2Radius)
         local prevRimFont2 = love.graphics.getFont()
         love.graphics.setFont(fonts.get(11))
         local distLabel2 = string.format("%.0f", marker.distance / 100)

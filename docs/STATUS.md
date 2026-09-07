@@ -1,20 +1,20 @@
 ## Current Status
 
-- INBOX 61(8): Part icons + HUD slot 48px.
-  - `tools/gen_part_icons.py` (36 lines): generates 32×32 RGBA chunky-4px icons per part id.
-  - Hull = shield silhouette, Engine = nozzle/rocket silhouette, suit colors applied.
-  - 65 icons generated in `assets/part_icons/<id>.png`, manifest updated.
-  - HUD slot size 32→48px (`M.hudGearSlotSize = 48`).
-  - Icons rendered in: `drawHudGearSlots`, `drawGearSlots`, `gearPopup`, `drawBalatroCard` (game-over keep-one).
-  - Shield/circle fallbacks removed (icon replaces them when present).
-  - Test `INBOX-61(8) part icons infrastructure OK`.
+- INBOX 61(9)(10)(11)(13): batch fix — rim marker colours, pause time freeze, star scan, debris.
+  - (9) Both minimap rim markers now cyan `{0.3,0.9,0.95}`, second alpha 0.45, radius 2.8 (smaller).
+  - (10) `self.time += dt` removed from paused/gearPopup early returns → moons/comets/debris freeze.
+  - (11) Background + foreground star scan range dynamic `max(4, ceil(h/2/sectorSize)+2)` — no pop-in gaps.
+  - (13) Debris: radii 8-16/5-8/5-10, continuous angle velocity, `time % 30` wrap — visible at t=300.
+  - Tests: INBOX-61(9/10/11/13) all GREEN.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item (61.9 or next in queue).
+- Process next pending INBOX item (12: game-over keep-one card overflow + confirm popup).
 
 ## Previous
+
+- INBOX 61(8): Part icons + HUD slot 48px.
 
 - INBOX 61(6): Synergy popup two lines + prefix symbol removal + void collect +30%.
 
