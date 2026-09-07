@@ -265,14 +265,16 @@ function M.hubPlanet(galaxy)
     -- hash-deterministic angle at ~18% of galaxy.radius (min 80 wu) from
     -- the center, inside the inner spiral but clearly not at the sun.
     local angle = hash(gx, gy, 580) * math.pi * 2
-    local dist = math.max(80, galaxy.radius * 0.18)
+    local hubRadius = 40 + math.floor(hash(gx, gy, 540) * 16)
+    local minDist = M.starRadius + hubRadius + 40
+    local dist = math.max(minDist, galaxy.radius * 0.18)
     local hubX = galaxy.x + math.cos(angle) * dist
     local hubY = galaxy.y + math.sin(angle) * dist
     return {
         id = "hub:" .. galaxy.id,
         x = hubX,
         y = hubY,
-        radius = 40 + math.floor(hash(gx, gy, 540) * 16),
+        radius = hubRadius,
         hue = hash(gx, gy, 550),
         hub = true,
         galaxyId = galaxy.id,

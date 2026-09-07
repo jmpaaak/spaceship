@@ -10186,6 +10186,38 @@ function M.run()
         print("  INBOX-61(31) hub no-heal + hullRegen OK")
     end
 
+    -- INBOX-61(33): hub planet must never overlap the central star.
+    do
+        local function testHubStarNoOverlap()
+            local testCoords = {
+                { gx = 1,  gy = 0  },
+                { gx = -2, gy = 3  },
+                { gx = 5,  gy = -1 },
+                { gx = 0,  gy = 2  },
+                { gx = -3, gy = -3 },
+            }
+            for _, coord in ipairs(testCoords) do
+                local galaxy = world.galaxy(coord.gx, coord.gy)
+                if galaxy and galaxy.id ~= "milkyway" then
+                    local hub = world.hubPlanet(galaxy)
+                    assert(hub, "hubPlanet must return a planet for non-home galaxy")
+                    -- Sun center is the galaxy origin (galaxy.x, galaxy.y)
+                    local dx = hub.x - galaxy.x
+                    local dy = hub.y - galaxy.y
+                    local centerDist = math.sqrt(dx * dx + dy * dy)
+                    local minRequired = world.starRadius + hub.radius + 40
+                    assert(centerDist >= minRequired,
+                        string.format(
+                            "INBOX-61(33): hub overlaps star at gx=%d,gy=%d: dist=%.1f < required=%.1f (starRadius=%d hubRadius=%d)",
+                            coord.gx, coord.gy, centerDist, minRequired,
+                            world.starRadius, hub.radius))
+                end
+            end
+            print("  INBOX-61(33) hub-star no overlap OK")
+        end
+        testHubStarNoOverlap()
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 
