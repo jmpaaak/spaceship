@@ -2,6 +2,91 @@
 
 ## 처리 대기
 
+(61) **Discord 2026-09-07 미완 요청 복구 (사용자 확정, 인터럽트 복구):**
+  채팅 히스토리는 사라지지 않음. 다만 긴 턴이 `/stop`·압축·새 메시지로 끊기면 **진행 중이던 코드 작업만** 드롭됨.
+  아래는 그날 Discord에서 지시됐지만 `## 처리 대기`가 비어 루프가 IDLE이었던 항목.
+  한 사이클 = 아래 소항목 **하나** + `GAME_HEADLESS=1 GAME_UNIT=1` GREEN + 커밋.
+  `play.lua`가 루프에 dirty면 직접 수정 금지 — 이 INBOX만 소비.
+
+  (1) **에셋 스튜디오 웹에디터** (msg `1546328787166306395`, 사용자: "만들고 있는거야? 아니면 대기열에 있는거야?" → **둘 다 아니었음**, 지금 큐에 넣음)
+    - `tools/asset-studio/` **없음**. `tools/parts-editor/` **없음**. 있는 건 `tools/gear-editor/`, `tools/slot-editor/`, `tools/gen_*.py`.
+    - sprite-gen (`aldegad/sprite-gen`) + PerfectPixel (`theamusing/perfectPixel`, 사용자 표기 PixelPerpect) + 기존 PIL을 **하나의 웹에디터**로.
+    - 게임 **모든** 에셋 허브 (부품만이 아님). 파이프라인: 업로드/URL/프롬프트 → sprite-gen → PerfectPixel 그리드·양자화 → 청키 4px NEAREST → `assets/` 저장 + `docs/GENERATED_ASSET_LOG.md` + `docs/assets/MANIFEST.json`.
+    - 로컬 정적 HTML+JS (gear-editor 패턴). ComfyUI 금지. 캐릭터/함선/지구 사용자 제공분은 생성 대상 아님.
+
+  (2) **슬롯 2/3매치 차등 + 전설 금지 + 중복 $10 환불 + 슬롯 풀이면 교체**
+    - 2매치에서 전설 부품 나오면 안 됨. 2매치=common/uncommon, 3매치=rare/legendary.
+    - 이미 장착한 부품이 나오면 **스핀비 $10 환불** (돈만, 부품 미장착).
+    - 선체/엔진 슬롯이 가득이면 하나를 버리고 새 부품을 얻는다 (교체 UI: 장착 칸 탭 → 버릴 칸 선택).
+    - `earthSlotSpin` PART 분기는 `rollGearOffer` + rarity 게이트. 랜덤 `loadHullParts()[math.random]` 금지.
+
+  (3) **슬롯 UI: 레버 중복 제거, 크게 당김, 릴 정지마다 이펙트, 카피**
+    - `tools/gen_slot_machine.py`의 본체 PNG에 빨간 레버가 이미 그려져 있고 play.lua가 두 번째 레버를 그림 → **PNG 레버 삭제** 또는 코드 레버만.
+    - 터치마다 레버가 크게 내려갔다 올라옴 (`slotLeverPull`, 이동량 지금보다 훨씬 크게).
+    - 릴 하나 멈출 때마다 haptic 0.03 + `slotShake` + 짧은 스파클.
+    - 머신 아래 두 줄, 크게(22px), 세로 가운데:
+      `탭하여 룰렛 도전!`
+      `$10`
+    - i18n `earth_slot_spin_prompt` / `tap_relaunch`: `"탭: …"` → `"탭하여 재발사"` / `"탭하여 룰렛 도전!"`.
+
+  (4) **상점 카드 4줄, 세로 가운데, 내구도/정찰선 카피**
+    - 모든 카드 텍스트 **세로 가운데**. Galmuri 11 배수만.
+    - 내구도 카드:
+      `내구도`  (지금 `내구` → **내구도**)
+      `3 -> 4`
+      `$10`
+      `잔액 $125`  (부족이면 `부족 $N`)
+    - 정찰선 카드:
+      `정찰선 구매`
+      `+100 속도, -50% 내구도`  (현재 코드는 +50 SPEED / -1 HULL — **카피를 이 문구로**. 수치 밸런스는 코드 `scoutClimbSpeedBonus`/`scoutDurabilityBonus`와 맞출지, 카피만 바꿀지: **카피를 사용자 문구 그대로**, 속도 보너스가 50이면 `+50 속도, -1 내구도`가 정직. 사용자가 `+100 속도, -50% 내구도`를 명시했으므로 **표시 문구는 그대로** 쓰고 scout 보너스를 speed +100 / hull 50% 로 맞출지 한 사이클에서 결정 — 권장: 표시=실제. 실제를 +50/-1 유지하면 표시도 `+50 속도, -1 내구도`.
+    - `>` 대신 ` -> `. compact i18n + `drawShopItem` 파서 동시 수정.
+    - 카드 밖 scout tradeoff 회색 두 줄 제거 (카드 2번째 줄로 이동).
+
+  (5) **솔라 3+ 착지 HP+1 이득 없음**
+    - `launch()`가 `durability = maxDurability`로 풀회복해서 착지 힐이 무의미.
+    - 착지 시너지를 **출발 후 첫 피격 전에만 의미 있게**: 권장 (a) 착지 힐을 없애고 `착지 시 최대내구 +1 (다음 출발에 반영)` 또는 (b) 재출발 풀회복 폐지, 착지한 HP로 다시 나감.
+    - 사용자 질문 취지 = 착지 힐이 헛효과. **(a) maxDurability+1 on settle** 가 풀회복과 공존 가능. i18n `synergy_desc_solarSystem`도 맞춤.
+
+  (6) **시너지 팝업 두 줄 + 기호 제거 + 보이드 채집 +30%**
+    - HUD/팝업 이름에서 `☀ * # ~ x + @` 접두 기호 **전부 삭제**.
+    - KO 이름: `태양계 시너지` / `성운 지대` / `사건의 지평선` / `펄서 폭발` / `쌍성` / `초신성` / `암흑물질`.
+    - 팝업 시너지 힌트 **두 줄** (11px 말고 조건은 22px 가능하면 22):
+      `사건의 지평선 효과`
+      `보이드 3+: 채집 +30%`
+    - `i18n.synergyHint`가 한 줄 `"name  desc"` 반환하는 현재 구현을 `{name, desc}` 또는 `"name 효과\ndesc"` 로.
+    - 사용자 카피: 보이드는 **채집 +30%** (지금 코드 `eventHorizon`은 collisionRadius −30% = 히트박스 축소). **표시와 효과를 채집 반경 +30%로 통일** (`collectOrbitRadius` / moon collect). `synergy_desc_eventHorizon` EN/KO 모두 `collect +30%` / `채집 +30%`. 기존 −30% 테스트(`collisionRadius 100→70`) 갱신.
+    - 활성 시너지면 팝업 해당 줄 강조 (금색 펄스/글로우). 미활성이면 회색.
+
+  (7) **등급·수트 칩 각 한 줄**
+    - 팝업에서 커먼/보이드가 가로 나란히 → **세로 스택** (등급 한 줄, 수트 한 줄).
+
+  (8) **선체/엔진 부품 아이콘**
+    - HUD 슬롯 48px (지금 32). 사용자: "UI 이미지가 들어갈거니까 충분히 크게".
+    - `tools/gen_part_icons.py` ≤50줄, 32×32 RGBA 청키 4px, 부품 id별 1장 `assets/part_icons/<id>.png`.
+    - 선체=장갑/판/실드 실루엣, 엔진=노즐/로켓 실루엣, 수트 색(solar금/nebula자/void남/pulsar시안).
+    - `drawHudGearSlots` / `drawGearSlots` / `gearPopup` / 게임오버 keep-one 카드에 아이콘 표시. 폴백 방패/원 금지(아이콘 있을 때).
+
+  (9) **미니맵 두 번째 은하 림 = 같은 색, 알파만 낮게**
+    - 지금 1번 cyan `(0.3,0.9,0.95,0.9)`, 2번 금 `(0.9,0.7,0.3,0.8)`.
+    - 2번도 cyan, alpha ~0.45, 점 약간 작게.
+
+  (10) **일시정지 시 위성·혜성·혜성 스폰 타이머 정지**
+    - `update` paused/gearPopup 분기가 `self.time += dt` 후 return → `moonForPlanet(..., self.time)` / `tickCometSpawn(self.time, ...)` 가 계속 움직임.
+    - paused/popup 동안 **self.time 증가 금지**. UI 펄스만 별도 `uiTime` 쓰거나 dt=0.
+
+  (11) **배경 별 일부 영역 팝인/팝아웃**
+    - `sectorSize=192`, 스캔 `oy/ox = -2..2` (5×5=960px) < 캔버스 세로 1280 → 위아래 빈 띠.
+    - 배경(parallax 0.4)과 전경 모두 **뷰포트+마진을 sectorSize로 나눈 범위**로 스캔 (`ceil((h/2)/192)+2` 이상, 최소 ±4).
+    - 별 위치가 섹터 밖으로 넘치므로(−0.15..+0.15 오버플로) 스캔을 더 넓혀야 경계에서 안 꺼짐.
+
+  (12) **게임오버 keep-one: 효과 보여준 뒤 예/아니오, 텍스트가 카드 밖으로 넘치지 않게**
+    - 지금 72×72 카드 + 22px 이름이 줄바꿈으로 카드 밖으로 (`자이 / 로 / 안정 / 기`).
+    - 카드는 이름만 11px, 카드 안에 클립.
+    - 탭 → 즉시 keep 확정 금지. **효과 팝업**(이름, 효과 줄, 등급, 수트, 시너지 두 줄) + `예` / `아니오`. 예=keptPart, 아니오=팝업 닫고 다시 고름.
+    - 예/아니오 터치 ≥44px.
+
+  검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
+
 ## 처리 완료
 
 (60) **지구 이미지 확대 + PIL 교체 (사용자 확정, 2026-09-06):**
