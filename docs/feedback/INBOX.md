@@ -132,11 +132,12 @@
     - ~~`math.random(1,10)` vs 가중치 합 20 → DURABILITY/HARVEST 미추첨. `random()*totalWeight`로.~~
     - 완료: `earthSlotTotalWeight(run, galaxyId)` helper added to expedition.lua (luck-aware). play.lua now generates reels with `math.random(0, tw-1)` instead of `math.random(1,10)`. All 5 symbols reachable. Test INBOX-61(35) GREEN.
 
-  (36) **SFX 3종** (msg `1546415750342770748` + Pixabay 충돌)
+  (36) ~~**SFX 3종**~~ (msg `1546415750342770748` + Pixabay 충돌)
     - 담당: **새** `game/sfx.lua` (play.lua에 붙이지 말 것). 에셋 이미 `assets/sfx/`.
     - `galaxy_discover.mp3` — 새 은하 발견 또는 은하까지 거리 ≤5셀일 때 1회.
     - `star_sample.mp3` — 중심별 표본 추출 진행 중 루프, 우물 벗어나면 stop.
     - `collision.mp3` — Pixabay "Deep Impact Sound Effect" (BryanSantosBreton, Content License, id 176434). 행성/파편 충돌 시 원샷.
+    - 완료: `game/sfx.lua` 생성 (headless-safe, lazy source, uniqueKey dedup). play.lua에 require + 4 one-liner 호출 추가 (galaxy_discover/star_sample play·stop/collision). Test INBOX-61(36) GREEN.
 
   (31b) **허브 내구 회복 제거 + hullRegen 부품** (msg `1546411887430991913`)
     - 담당: `game/expedition.lua` launch 힐 스킵 + `game/gear.lua` hullRegen + `game/data/hull_parts.json`. 허브 UI 힌트는 play.lua라 모듈 분리 후 또는 루프 dirty가 아니면.

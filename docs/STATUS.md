@@ -92,6 +92,13 @@
   - Fix: added `expedition.earthSlotTotalWeight(run, galaxyId)` helper (luck-aware) to compute effective totalWeight. `play.lua` now uses `math.random(0, tw-1)` for proper uniform distribution over all 5 symbols.
   - Test INBOX-61(35) in `game/self_test.lua`: sweeps all roll values 0..tw-1 and asserts all 5 symbols reachable. Also verifies luck increases totalWeight. GREEN.
 
+- INBOX 61(36): SFX 3종 module
+  - Created `game/sfx.lua` — standalone SFX module with headless-safe API (no-op when `love.audio` is nil).
+  - Three effects: `galaxy_discover` (oneshot, dedup by galaxy id), `star_sample` (loop while in star well), `collision` (oneshot on planet hit).
+  - Lazy source creation, uniqueKey dedup for galaxy_discover, `resetGuards()`/`releaseAll()` cleanup API.
+  - `play.lua` integration: 1 require + 4 one-liner calls (galaxy discover, star_sample play/stop, collision).
+  - Test `game/tests/sfx.lua` registered in self_test: defs validation, headless safety, dedup guards, reset. GREEN.
+
 ## Next slice
 
-- INBOX 61(36) SFX (`game/sfx.lua`), or 61(34) synergy popup text, or 61(28) boost button. 61(28)/(29) wait on play.lua module split.
+- INBOX 61(34) synergy popup text in gearPopup, or 61(28) boost button UI, or 61(31b) hub no-heal + hullRegen parts. 61(28)/(29) wait on play.lua module split.

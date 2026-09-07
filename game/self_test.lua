@@ -10253,6 +10253,8 @@ function M.run()
         print("  INBOX-61(35) slot weighted random covers all 5 symbols OK")
     end
 
+    require("game.tests.sfx").run()
+
     print("SPACESHIP_UNIT_OK")
 end
 

@@ -9,6 +9,7 @@ local minimap = require("game.minimap")
 local i18n = require("game.i18n")
 local fonts = require("game.fonts")
 local leaderboardClient = require("game.leaderboard_client")
+local sfx = require("game.sfx")
 local M = {}
 M.__index = M
 
@@ -2290,6 +2291,8 @@ function M:update(dt)
             end
         end
         local wellGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+        -- INBOX 61(36): galaxy discover SFX — once per galaxy
+        if wellGalaxy then sfx.play("galaxy_discover", wellGalaxy.id) end
         local wellSun = wellGalaxy and world.sunPosition(wellGalaxy)
         if wellSun then
             local wdx, wdy = wellSun.x - self.ship.x, wellSun.y - self.ship.y
@@ -2445,7 +2448,7 @@ function M:update(dt)
                 local sunDist = math.sqrt(sdx * sdx + sdy * sdy)
                 if sunDist < world.starWellRadius then
                     inWell = true
-                    -- Gravity pull: stronger near center, always escapable
+                    sfx.play("star_sample")
                     -- Pull can never exceed 80% of helm speed so the player
                     -- always makes slow progress outward, but near the center
                     -- it's a real struggle.
@@ -2530,6 +2533,7 @@ function M:update(dt)
                 end
             end
             if not inWell then
+                sfx.stop("star_sample")
                 self.starWellTimer = 0
                 self.starDotAccum = 0
                 self.starWellShake = math.max(0, (self.starWellShake or 0) - dt * 2)
@@ -2691,7 +2695,7 @@ function M:update(dt)
             if distanceSquared <= (planet.radius + 5) ^ 2 and not self.collided[planet.id] and not planet.hub and not planet.isShop then
                 self.collided[planet.id] = true
                 local damage = world.collisionDamage(planet)
-                -- Real LOVE runtime capture showed this "-N" damage text
+                sfx.play("collision")
                 -- rendering stacked directly on top of the green "+$N"
                 -- sample text when both fire on the same update (ship and
                 -- planet positions coincide closely enough to cross both
