@@ -5103,8 +5103,8 @@ local function testEarthSlotProfileRewardVariation()
         and solarSpin.symbols[3] == "HARVEST",
         "starRoll must select HARVEST for solar profile, got: "
             .. table.concat(solarSpin.symbols, "-"))
-    assert(solarSpin.reward == 100,
-        "solar triple-HARVEST jackpot must equal the baseline 100, got: "
+    assert(solarSpin.rewardType == "harvest" and solarSpin.reward == 0,
+        "solar triple-HARVEST must be harvest type (not money), got: "
             .. tostring(solarSpin.reward))
 
     -- (b) Void triple-HARVEST jackpot must EXCEED solar.
@@ -5117,9 +5117,8 @@ local function testEarthSlotProfileRewardVariation()
     assert(voidSpin.symbols[1] == "HARVEST",
         "voidStarRoll must select HARVEST for void profile, got: "
             .. table.concat(voidSpin.symbols, "-"))
-    assert(voidSpin.reward > solarSpin.reward,
-        "void triple-HARVEST jackpot (" .. tostring(voidSpin.reward)
-            .. ") must exceed solar (" .. tostring(solarSpin.reward) .. ")")
+    assert(voidSpin.rewardType == "harvest",
+        "void triple-HARVEST must be harvest type, got " .. tostring(voidSpin.rewardType))
 
     -- (c) Fringe triple-HARVEST jackpot: > solar and <= void (gradient).
     local fringeWeights  = expedition.earthSlotWeights(fringeGalaxy)
@@ -5131,12 +5130,10 @@ local function testEarthSlotProfileRewardVariation()
     assert(fringeSpin.symbols[1] == "HARVEST",
         "fringeStarRoll must select HARVEST for fringe profile, got: "
             .. table.concat(fringeSpin.symbols, "-"))
-    assert(fringeSpin.reward > solarSpin.reward,
-        "fringe triple-HARVEST jackpot (" .. tostring(fringeSpin.reward)
-            .. ") must exceed solar (" .. tostring(solarSpin.reward) .. ")")
-    assert(fringeSpin.reward <= voidSpin.reward,
-        "fringe triple-HARVEST jackpot (" .. tostring(fringeSpin.reward)
-            .. ") must be <= void (" .. tostring(voidSpin.reward) .. ")")
+    assert(fringeSpin.rewardType == "harvest",
+        "fringe triple-HARVEST must be harvest type, got " .. tostring(fringeSpin.rewardType))
+    assert(fringeSpin.rewardType == voidSpin.rewardType,
+        "fringe and void must have same rewardType, got " .. tostring(fringeSpin.rewardType))
 
     -- (d) earthSlotSpin must expose .rewardProfile for UI.
     assert(solarSpin.rewardProfile == "solar",
@@ -7450,18 +7447,11 @@ function M.run()
     do
         local PlayScene = require("game.scenes.play")
         assert(type(PlayScene.earthSlotProfileLabel) == "function",
-            "item 15(c): PlayScene.earthSlotProfileLabel must exist so draw() can show the ODDS badge")
-
-        assert(PlayScene.earthSlotProfileLabel("solar") == "SOLAR ODDS",
-            "item 15(c): string rewardProfile 'solar' must format as 'SOLAR ODDS'")
-        assert(PlayScene.earthSlotProfileLabel("fringe") == "FRINGE ODDS",
-            "item 15(c): string rewardProfile 'fringe' must format as 'FRINGE ODDS'")
-        assert(PlayScene.earthSlotProfileLabel("void") == "VOID ODDS",
-            "item 15(c): string rewardProfile 'void' must format as 'VOID ODDS'")
-        assert(PlayScene.earthSlotProfileLabel(nil) == nil,
-            "item 15(c): nil rewardProfile must return nil (no badge)")
-        assert(PlayScene.earthSlotProfileLabel("") == nil,
-            "item 15(c): empty rewardProfile must return nil (no badge)")
+            "item 15(c): PlayScene.earthSlotProfileLabel must exist")
+        -- SOLAR ODDS label removed (user 2026-09-07)
+        assert(PlayScene.earthSlotProfileLabel("solar") == nil)
+        assert(PlayScene.earthSlotProfileLabel(nil) == nil)
+        assert(PlayScene.earthSlotProfileLabel("") == nil)
 
         -- Settlement "l" spin stores the string rewardProfile from earthSlotSpin;
         -- the helper must produce a badge from that stored result.
@@ -7491,8 +7481,8 @@ function M.run()
         assert(type(scene.earthShopSlotResult.rewardProfile) == "string",
             "item 15(c): earthSlotSpin rewardProfile is a string, not a table with .name")
         local badge = PlayScene.earthSlotProfileLabel(scene.earthShopSlotResult.rewardProfile)
-        assert(badge == "VOID ODDS",
-            "item 15(c): badge from stored string rewardProfile must be 'VOID ODDS', got: "
+        assert(badge == nil,
+            "item 15(c): ODDS label removed, badge must be nil, got: "
             .. tostring(badge))
     end
 

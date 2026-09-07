@@ -1472,10 +1472,7 @@ end
 -- is no profile so draw() can skip the badge without a `.name` lookup
 -- that would always be nil on a string.
 function M.earthSlotProfileLabel(rewardProfile)
-    if type(rewardProfile) ~= "string" or rewardProfile == "" then
-        return nil
-    end
-    return string.upper(rewardProfile) .. " ODDS"
+    return nil -- removed: user found "SOLAR ODDS" confusing
 end
 
 -- Spawns a tier-scaled burst of short-lived particles at (x, y) using the
@@ -2031,11 +2028,43 @@ function M:update(dt)
             self.slotState.spinning = false
             local result = self.earthShopSlotResult
             if result then
-                self.expedition.money = self.expedition.money + result.reward
-                if result.reward > 0 then
-                    self.slotResultMessage = i18n.t("earth_slot_result",
-                        table.concat(result.symbols, " "), result.reward)
-                    -- WIN: strong haptic + sparkle particles
+                local rt = result.rewardType or "money"
+                local rv = result.rewardValue or 0
+                local won = rt ~= "money" or rv > 0
+                if rt == "money" then
+                    self.expedition.money = self.expedition.money + result.reward
+                    if result.reward > 0 then
+                        self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n+$" .. result.reward
+                    else
+                        self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n꽝"
+                    end
+                elseif rt == "speed" then
+                    self.expedition.steeringUpgradeLevel = self.expedition.steeringUpgradeLevel + rv
+                    self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n속도 +" .. rv
+                elseif rt == "durability" then
+                    self.expedition.durabilityUpgradeLevel = (self.expedition.durabilityUpgradeLevel or 0) + rv
+                    self.expedition.maxDurability = (self.expedition.maxDurability or 3) + rv
+                    self.expedition.durability = math.min(self.expedition.durability + rv, self.expedition.maxDurability)
+                    self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n내구 +" .. rv
+                elseif rt == "harvest" then
+                    self.expedition.sampleYieldUpgradeLevel = (self.expedition.sampleYieldUpgradeLevel or 0) + 1
+                    self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n수확 +" .. string.format("%.2f", rv)
+                elseif rt == "part" then
+                    -- Drop a random gear part from the slot-exclusive pool
+                    local gearMod = require("game.gear")
+                    local pool = gearMod.loadHullParts()
+                    if pool and #pool > 0 then
+                        local drop = pool[math.random(1, #pool)]
+                        local ok = expedition.equipGear(self.expedition, "hull", drop)
+                        if ok then
+                            self.gearPopup = { part = drop, category = "hull" }
+                        end
+                        self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n" .. i18n.partName(drop)
+                    else
+                        self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n부품 획득!"
+                    end
+                end
+                if won then
                     pcall(love.system.vibrate, 0.12)
                     self.slotShake = 0.3
                     for k = 1, 8 do
@@ -2052,8 +2081,6 @@ function M:update(dt)
                         }
                     end
                 else
-                    self.slotResultMessage = i18n.t("earth_slot_miss",
-                        table.concat(result.symbols, " "))
                     pcall(love.system.vibrate, 0.04)
                 end
             end
@@ -2778,6 +2805,7 @@ function M:keypressed(key)
         self.expedition.money = self.expedition.money - spinCost
         pcall(love.system.vibrate, 0.05)
         self.slotShake = 0.1
+        self.slotLeverPull = 1.0  -- lever pull animation
         self.slotState = {
             spinning = true,
             startTime = self.time or 0,
@@ -4197,22 +4225,24 @@ function M:draw()
             if self.slotMachineImage then
                 love.graphics.draw(self.slotMachineImage, mx, my, 0, slotScale, slotScale)
             end
-            -- Lever animation
-            local leverX = mx + 96 * slotScale + 2
-            local leverBaseY = my + 4 * slotScale
+            -- Lever: red handle that pulls down on each spin touch
+            local leverX = mx + 91 * slotScale
+            local leverTopY = my + 4 * slotScale
+            local leverBotY = my + 40 * slotScale
             local leverPull = 0
-            if self.slotState and self.slotState.spinning then
-                local elapsed = (self.time or 0) - (self.slotState.startTime or 0)
-                if elapsed < 0.3 then
-                    leverPull = math.sin(elapsed / 0.3 * math.pi) * 20 * slotScale / 3
-                end
+            if self.slotLeverPull and self.slotLeverPull > 0 then
+                leverPull = self.slotLeverPull * 20
+                self.slotLeverPull = self.slotLeverPull - (love.timer and love.timer.getDelta() or 0.016) * 3
+                if self.slotLeverPull < 0 then self.slotLeverPull = 0 end
             end
-            love.graphics.setColor(0.9, 0.15, 0.1)
-            love.graphics.circle("fill", leverX, leverBaseY + leverPull, 6)
-            love.graphics.setColor(0.5, 0.5, 0.5)
-            love.graphics.setLineWidth(3)
-            love.graphics.line(leverX, my + 2 * slotScale, leverX, leverBaseY + leverPull)
+            -- Lever rod (grey)
+            love.graphics.setColor(0.55, 0.55, 0.55)
+            love.graphics.setLineWidth(4)
+            love.graphics.line(leverX, leverTopY, leverX, leverBotY + leverPull)
             love.graphics.setLineWidth(1)
+            -- Lever ball (red, big)
+            love.graphics.setColor(0.9, 0.15, 0.1)
+            love.graphics.circle("fill", leverX, leverBotY + leverPull, 10)
 
             -- Draw reels (spinning or static icons)
             if self.earthShopSlotResult or (self.slotState and self.slotState.spinning) then

@@ -1356,13 +1356,34 @@ function M.earthSlotSpin(run, galaxyId, rolls)
     end
     local rewardMultiplier = earthSlotReward(symbols, profile)
     local spinCost = M.slotSpinCost or 10
+    -- Symbol-specific rewards instead of money-only
+    local rewardType = "money"
+    local rewardValue = spinCost * rewardMultiplier
+    local rewardPart = nil
+    if matchCount >= 2 and matchSymbol then
+        if matchSymbol == "SPEED" then
+            rewardType = "speed"
+            rewardValue = matchCount == 3 and 3 or 1
+        elseif matchSymbol == "DURABILITY" then
+            rewardType = "durability"
+            rewardValue = matchCount == 3 and 3 or 1
+        elseif matchSymbol == "HARVEST" then
+            rewardType = "harvest"
+            rewardValue = matchCount == 3 and 0.15 or 0.05
+        elseif matchSymbol == "PART" then
+            rewardType = "part"
+            rewardValue = 0  -- part drop, no money
+        end
+        -- MONEY match stays as money reward
+    end
     return {
         symbols = symbols,
-        reward = spinCost * rewardMultiplier,
+        reward = rewardType == "money" and rewardValue or 0,
+        rewardType = rewardType,
+        rewardValue = rewardValue,
         rewardMultiplier = rewardMultiplier,
         totalWeight = total,
         effectiveHarvestWeight = effectiveHarvestWeight,
-        -- Legacy alias for tests that check effectiveStarWeight
         effectiveStarWeight = effectiveHarvestWeight,
         matchCount = matchCount,
         matchSymbol = matchSymbol,
