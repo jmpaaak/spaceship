@@ -60,10 +60,11 @@ function PB:drawBoostButton()
     -- Disabled if phase is not ascending
     if self.expedition.phase ~= "ascending" then return end
 
-    local w, h = 54, 54
+    -- Wider so "BOOST" + charge count fit without overflow (user 2026-09-07)
+    local w, h = 120, 72
     local bx = viewport.width - w - 16
     local by = viewport.height - h - 16
-    
+
     self.boostBtnRect = { x = bx, y = by, w = w, h = h }
 
     local r, g, b = 0.4, 0.4, 0.4
@@ -74,34 +75,18 @@ function PB:drawBoostButton()
             r, g, b = 0.2, 0.6, 1.0
         end
     end
-    
-    love.graphics.setColor(r, g, b, 0.8)
-    love.graphics.rectangle("fill", bx, by, w, h, 8, 8)
-    
-    -- Draw boost icon instead of text
-    local boostIcon = self.boostIcon
-    if not boostIcon and love.graphics and love.graphics.newImage then
-        local ok, img = pcall(love.graphics.newImage, "assets/effects/boost_icon.png")
-        if ok and img then
-            img:setFilter("nearest", "nearest")
-            self.boostIcon = img
-            boostIcon = img
-        end
-    end
-    if boostIcon then
-        love.graphics.setColor(1, 1, 1, 1)
-        local iw, ih = boostIcon:getWidth(), boostIcon:getHeight()
-        local scale = math.min((w - 8) / iw, (h - 16) / ih)
-        love.graphics.draw(boostIcon, bx + (w - iw * scale) / 2, by + 4, 0, scale, scale)
-    end
-    -- Remaining count below icon
-    if remaining > 0 then
-        love.graphics.setColor(1, 1, 1, 1)
-        local prevFont = love.graphics.getFont()
-        love.graphics.setFont(fonts.get(11))
-        love.graphics.printf(tostring(remaining), bx, by + h - 14, w, "center")
-        love.graphics.setFont(prevFont)
-    end
+
+    love.graphics.setColor(r, g, b, 0.85)
+    love.graphics.rectangle("fill", bx, by, w, h, 10, 10)
+
+    local prevFont = love.graphics.getFont()
+    love.graphics.setFont(fonts.get(22))
+    love.graphics.setColor(1, 1, 1, remaining > 0 and 1 or 0.55)
+    love.graphics.printf("BOOST", bx, by + 10, w, "center")
+    love.graphics.setFont(fonts.get(22))
+    love.graphics.setColor(1, 1, 1, remaining > 0 and 0.95 or 0.5)
+    love.graphics.printf(tostring(remaining), bx, by + 38, w, "center")
+    love.graphics.setFont(prevFont)
 end
 
 ---------------------------------------------------------------------------
