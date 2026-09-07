@@ -27,6 +27,8 @@ require("game.scenes.play_shop").install(M)
 require("game.scenes.play_hud").install(M)
 -- Boost logic extracted to play_boost.lua (MODULE_STRUCTURE).
 require("game.scenes.play_boost").install(M)
+-- Destroyed-phase layout + keep-one card + Balatro card draw extracted to play_gameover.lua (MODULE_STRUCTURE).
+require("game.scenes.play_gameover").install(M)
 
 -- Omnidirectional movement: both horizontal (ship.x) and vertical (ship.y)
 -- are driven directly by joystick/keyboard input at effectiveSpeed, with no
@@ -135,12 +137,7 @@ end
 -- SHIP DESTROYED restart touch target. Unlike EARTH SHOP's four stacked
 -- rows, this phase has a single action (restart), so touchpressed accepts
 -- any tap on the full 180x320 internal canvas rather than a narrow band.
--- Documented and engine-tested explicitly so this stays true if the
--- destroyed phase ever grows per-row touch targets like settlement did.
--- Mobile-UI sub-item (6): touch target spans the full 720×1280 canvas so
--- any tap restarts. Previous 180×320 was from the old canvas era.
-local destroyedTouchArea = { top = 0, bottom = 1280, left = 0, right = 720 }
-M.destroyedTouchArea = destroyedTouchArea
+-- destroyedTouchArea → moved to game/scenes/play_gameover.lua (installed on M at top of file)
 
 -- Ascending-phase HOLD LEFT/HOLD RIGHT steering buttons. touchpressed for
 -- this phase already accepts a tap anywhere on the internal canvas (no y
@@ -378,107 +375,9 @@ function M.hitHudGearSlot(scene, x, y)
     return nil
 end
 
--- INBOX 61(17): destroyed-panel layout constants
-M.destroyedPanelY = 340
-M.destroyedPanelH = 560
-
--- Returns the Y position for "TAP TO START OVER" text on the destroyed screen.
--- When keepPartChoices is empty, center vertically in the panel.
--- When keepPartChoices has items, position near the bottom.
-function M.destroyedRestartTextY(hasChoices)
-    if hasChoices then
-        return M.destroyedPanelY + M.destroyedPanelH - 72
-    else
-        return M.destroyedPanelY + math.floor(M.destroyedPanelH / 2) - 11
-    end
-end
-
-function M.destroyedKeepPartRects(choices)
-    choices = choices or {}
-    local n = #choices
-    if n == 0 then return {} end
-    local size, gap = 72, 12
-    local maxPerRow = 5
-    local cols = math.min(n, maxPerRow)
-    local rows = math.ceil(n / cols)
-    local totalW = cols * size + (cols - 1) * gap
-    local startX = math.floor((720 - totalW) / 2)
-    local y = 500
-    local rects = {}
-    for i = 1, n do
-        local col = (i - 1) % cols
-        local row = math.floor((i - 1) / cols)
-        rects[i] = {
-            x = startX + col * (size + gap),
-            y = y + row * (size + gap),
-            w = size, h = size,
-            choice = choices[i],
-        }
-    end
-    return rects
-end
-
--- INBOX 61(12): keep-one confirm popup geometry
--- Returns {popupX, popupY, popupW, popupH, yes={x,y,w,h}, no={x,y,w,h}}
-M.keepConfirmPopupW = 360
-M.keepConfirmPopupH = 360
-M.keepConfirmBtnH = 48  -- ≥44px touch target
-function M.keepConfirmButtons()
-    local pw, ph = M.keepConfirmPopupW, M.keepConfirmPopupH
-    local px = math.floor((720 - pw) / 2)
-    local py = math.floor((1280 - ph) / 2)
-    local btnW = 120
-    local btnH = M.keepConfirmBtnH
-    local gap = 24
-    local btnY = py + ph - btnH - 16
-    local yesX = px + pw / 2 - btnW - gap / 2
-    local noX = px + pw / 2 + gap / 2
-    return {
-        px = px, py = py, pw = pw, ph = ph,
-        yes = { x = yesX, y = btnY, w = btnW, h = btnH },
-        no  = { x = noX,  y = btnY, w = btnW, h = btnH },
-    }
-end
-
-local function rarityRgb(rarity)
-    if rarity == "legendary" then return 1.00, 0.72, 0.18 end
-    if rarity == "rare" then return 0.35, 0.62, 1.00 end
-    if rarity == "uncommon" then return 0.35, 0.82, 0.45 end
-    return 0.72, 0.74, 0.78
-end
-
-function M.drawBalatroCard(part, x, y, w, h, selected)
-    part = part or {}
-    local rr, rg, rb = rarityRgb(part.rarity)
-    love.graphics.setColor(0.12, 0.10, 0.14, 0.96)
-    love.graphics.rectangle("fill", x, y, w, h, 8, 8)
-    love.graphics.setColor(rr, rg, rb, selected and 1 or 0.85)
-    love.graphics.setLineWidth(selected and 4 or 2)
-    love.graphics.rectangle("line", x, y, w, h, 8, 8)
-    love.graphics.setLineWidth(1)
-    love.graphics.setColor(rr, rg, rb, 0.18)
-    love.graphics.rectangle("fill", x + 4, y + 4, w - 8, 22, 4, 4)
-    local prev = love.graphics.getFont()
-    love.graphics.setFont(fonts.get(11))
-    love.graphics.setColor(rr, rg, rb, 1)
-    love.graphics.printf(i18n.rarityLabel(part.rarity), x + 4, y + 6, w - 8, "center")
-    -- Part icon centered in card
-    local icon = getPartIcon(part.id)
-    if icon then
-        love.graphics.setColor(1, 1, 1, 0.85)
-        local iw, ih = icon:getDimensions()
-        local iconSize = math.min(w, h) * 0.45
-        local sc = iconSize / math.max(iw, ih)
-        love.graphics.draw(icon, x + w/2, y + h/2, 0, sc, sc, iw/2, ih/2)
-    end
-    -- INBOX 61(12): name 11px, clipped inside card
-    love.graphics.setFont(fonts.get(11))
-    love.graphics.setColor(1, 0.98, 0.92, 1)
-    love.graphics.setScissor(x, y, w, h)
-    love.graphics.printf(i18n.partName(part), x + 4, y + h - 16, w - 8, "center")
-    love.graphics.setScissor()
-    if prev then love.graphics.setFont(prev) end
-end
+-- destroyedPanelY/H, destroyedRestartTextY, destroyedKeepPartRects,
+-- keepConfirmPopupW/H/BtnH, keepConfirmButtons, rarityRgb, drawBalatroCard
+-- → moved to game/scenes/play_gameover.lua (installed on M at top of file)
 
 -- docs/feedback/INBOX.md UI/HUD item 4: the "LAUNCH LOADOUT"/"발사 장비"
 -- panel caption itself was flagged for removal during the "remove
@@ -3214,38 +3113,7 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "destroyed" then
-        -- INBOX 61(12): confirm popup yes/no handling
-        if self.keepPartConfirm then
-            local btns = M.keepConfirmButtons()
-            if btns then
-                if x >= btns.yes.x and x < btns.yes.x + btns.yes.w
-                   and y >= btns.yes.y and y < btns.yes.y + btns.yes.h then
-                    self.expedition.keptPart = self.keepPartConfirm
-                    self.keepPartConfirm = nil
-                    return
-                end
-                if x >= btns.no.x and x < btns.no.x + btns.no.w
-                   and y >= btns.no.y and y < btns.no.y + btns.no.h then
-                    self.keepPartConfirm = nil
-                    return
-                end
-            end
-            return  -- absorb all taps while popup is open
-        end
-        local choices = self.expedition.keepPartChoices or {}
-        if #choices > 0 then
-            for _, rect in ipairs(M.destroyedKeepPartRects(choices)) do
-                if x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h then
-                    -- INBOX 61(12): open confirm popup instead of immediate keep
-                    self.keepPartConfirm = rect.choice
-                    return
-                end
-            end
-        end
-        local area = destroyedTouchArea
-        if x >= area.left and x < area.right and y >= area.top and y < area.bottom then
-            self:keypressed("space")
-        end
+        M.handleDestroyedTouch(self, x, y)
     end
 end
 

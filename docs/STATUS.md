@@ -112,6 +112,14 @@
   - Enhanced RCS particles during boost (golden color, 2.5x radius, faster spawn).
   - Added vertical speed lines visual effect during boost.
 
+- INBOX 61(32): play_gameover.lua extraction
+  - Created `game/scenes/play_gameover.lua` — gameover/destroyed-phase layout module.
+  - Extracted: `destroyedTouchArea`, `destroyedPanelY/H`, `destroyedRestartTextY`, `destroyedKeepPartRects`, `keepConfirmPopupW/H/BtnH`, `keepConfirmButtons`, `rarityRgb`, `drawBalatroCard`, `handleDestroyedTouch`.
+  - `play.lua` inline destroyed touch handling replaced with single `M.handleDestroyedTouch(self, x, y)` delegation.
+  - play.lua 4169→4037 lines (~132 lines removed).
+  - Test `INBOX-61(32) play_gameover.lua extraction` GREEN. All existing tests pass unchanged.
+
 ## Next slice
 
-- INBOX-61(29): 행운 % 표시 + 헬프(?) 아이콘 + 게임 설명 패널 (play_help.lua 분리)
+- Continue play.lua modularization: extract icon polygon helpers + sprite draw helpers into `play_icons.lua` (~150 lines), or joystick input into `play_joystick.lua` (~100 lines).
+- Once play.lua < 800 lines, unblock INBOX items (29), (34), (31b).
