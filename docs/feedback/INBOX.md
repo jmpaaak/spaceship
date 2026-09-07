@@ -54,6 +54,14 @@
     - `tools/gen_sun.py` ≤50줄, 128×128 RGBA. 기존 `gen_stars_from_nasa.py` 패턴 활용.
     - `assets/star/star_generic.png` 교체. `play.lua` draw에서 `starImage` 사용.
 
+  (23) **메인메뉴 리더보드 + 로컬 서버** (msg `1546396453734326293`)
+    - 타이틀 씬 (21)에 **리더보드** 버튼 추가.
+    - Mac mini 로컬에 가벼운 HTTP 서버 (`tools/leaderboard_server.py`, Flask 또는 http.server + JSON 파일).
+    - API: `POST /score` `{name, bestAltitude, timestamp}` → append. `GET /scores?limit=20` → top 20.
+    - 게임: 게임오버 또는 착지 시 `bestAltitude` 갱신되면 서버에 POST. 타이틀 리더보드 화면에서 GET 후 표시.
+    - LÖVE HTTP: `love.thread` + `luasocket` 또는 `os.execute curl` 비동기. 연결 실패 시 조용히 스킵.
+    - 서버 포트 고정 (예: 8770). `conf.lua`에 `leaderboardUrl` 설정.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
