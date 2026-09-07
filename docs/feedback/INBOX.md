@@ -63,6 +63,14 @@
     - LÖVE HTTP: `love.thread` + `luasocket` 또는 `os.execute curl` 비동기. 연결 실패 시 조용히 스킵.
     - 서버 포트 고정 (예: 8770). `conf.lua`에 `leaderboardUrl` 설정.
 
+  (24) **게임오버 → 마지막 체크포인트 부활 + 메인홈 구성** (msg `1546397935804223528`)
+    - 현재: 게임오버 → 아이템 1개만 keep → 지구(0,75)에서 리스타트, 모든 돈/업그레이드/장비 리셋. 로그라이트치고 너무 가혹.
+    - 변경: **마지막 방문 체크포인트(허브/지구)에서 부활**. `run.lastCheckpoint = {galaxyId, hubX, hubY, money, upgrades}` 스냅샷을 settle/settleAtHub 시 저장.
+    - 게임오버 시 `destroy`가 `lastCheckpoint`로 복원: 위치·돈·업그레이드 레벨·장비(keep-one 없이 전부 유지). `bestAltitude`만 갱신.
+    - keep-one은 폐지하거나, "체크포인트 복귀" vs "지구 리셋(keep-one)" 선택지로 남김.
+    - **새 게임**: 메인홈(타이틀 씬 21)에서 `새 게임` = 전체 리셋 + 지구 시작. `이어서 하기` = 마지막 체크포인트.
+    - 타이틀 메뉴 최종 구성: `이어서 하기` / `새 게임` / `리더보드` / `설정`.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
