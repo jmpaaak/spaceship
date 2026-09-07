@@ -48,6 +48,12 @@
     - `main.lua`가 PlayScene 대신 TitleScene으로 시작.
     - 설정은 빈 껍데기(언어/사운드 토글 자리).
 
+  (22) **중심별 근처 "DANGER" 텍스트 + 태양 에셋 교체** (msg `1546396077832273940`)
+    - 중심별(태양) 중력 우물 근처에 진입하면 **"DANGER"** 경고 텍스트 표시. 빨강 깜빡임, 우물 바깥 경계 부근에서 나타남.
+    - 현재 태양은 노란 원 폴백. NASA 태양 사진 → 청키 4px PIL 파이프라인으로 화려한 에셋 교체.
+    - `tools/gen_sun.py` ≤50줄, 128×128 RGBA. 기존 `gen_stars_from_nasa.py` 패턴 활용.
+    - `assets/star/star_generic.png` 교체. `play.lua` draw에서 `starImage` 사용.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
