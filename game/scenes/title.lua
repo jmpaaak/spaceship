@@ -87,19 +87,13 @@ function M:draw()
     local authorFont = fonts.get(22)
     love.graphics.setFont(authorFont)
     love.graphics.setColor(0.55, 0.55, 0.58, 0.85)
-    love.graphics.printf(i18n.t("title_author"), 0, 268, viewport.width, "center")
+    love.graphics.printf(i18n.t("title_author"), 0, 488, viewport.width, "center")
 
-    -- Title
+    -- Title — lower, closer to the menu (user 2026-09-07)
     local titleFont = fonts.get(44)
     love.graphics.setFont(titleFont)
     love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.printf(i18n.t("title_game_name"), 0, 300, viewport.width, "center")
-
-    -- Subtitle
-    local subFont = fonts.get(22)
-    love.graphics.setFont(subFont)
-    love.graphics.setColor(0.6, 0.7, 0.9, 0.7)
-    love.graphics.printf("ROGUELITE", 0, 390, viewport.width, "center")
+    love.graphics.printf(i18n.t("title_game_name"), 0, 520, viewport.width, "center")
 
     -- Buttons
     local rects = self:buttonRects()
