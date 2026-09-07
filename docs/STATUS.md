@@ -1,24 +1,19 @@
 ## Current Status
 
-- INBOX 61(6): Synergy popup two lines + prefix symbol removal + void collect +30%.
-  - Removed `☀ * # ~ x + @` prefix symbols from all synergy names (EN+KO).
-  - Updated KO names: 태양계 시너지 / 성운 지대 / 사건의 지평선 / 펄서 폭발 / 쌍성 / 초신성 / 암흑물질.
-  - `i18n.synergyHint(suit)` now returns `{name, desc}` table instead of flat string.
-  - Popup synergy hint: line 1 at 22px (name + "효과"/"Effect"), line 2 at 11px (condition).
-  - Active synergy = gold pulse glow; inactive = grey.
-  - eventHorizon (void 3+): changed from collisionRadius −30% → collectOrbitRadius +30%.
-  - `expedition.collectOrbitRadius(run, base)` added; `play.lua` collection checks wired.
-  - synergy_desc_eventHorizon updated: EN "collect +30%", KO "채집 +30%".
-  - Tests: synergyHint table return, prefix-free assertion, collectOrbitRadius +30% test, old CR test updated.
+- INBOX 61(7): Gear popup rarity+suit chips vertical stack.
+  - Changed chips from horizontal side-by-side to vertical stack (rarity line, suit line below).
+  - Each chip centered independently in the popup.
+  - Tooltip height 220→256 to accommodate extra vertical space.
+  - `M.gearPopupChipVertical = true` flag + test assertion.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item (61.7 or next sub-item).
+- Process next pending INBOX item (61.8: part icons + HUD slot 48px).
 
 ## Previous
 
-- INBOX 61(5): solarSystem synergy settle effect changed from +1 HP heal to +1 maxDurability.
+- INBOX 61(6): Synergy popup two lines + prefix symbol removal + void collect +30%.
 
 - Fix: previous cycle left uncommitted star sprite assets (`assets/star/`,
   `tools/gen_stars.py`) and partially updated collision damage formula

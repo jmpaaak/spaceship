@@ -9181,6 +9181,13 @@ function M.run()
         print("  INBOX-61(5) solarSystem maxDurability OK")
     end
 
+    -- INBOX 61(7): gear popup chips must be vertical (one line each)
+    do
+        assert(PlayScene.gearPopupChipVertical == true,
+            "INBOX 61(7): gearPopupChipVertical flag must be true for vertical stacking")
+        print("  INBOX-61(7) gearPopupChipVertical OK")
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

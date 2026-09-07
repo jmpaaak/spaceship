@@ -1660,6 +1660,7 @@ end
 -- 32×32px slots, hull 6 + engine 3 = 9 max, horizontal row, with a
 -- small "GEAR" label above the grid in 22px font.
 M.hudGearSlotSize = 32
+M.gearPopupChipVertical = true  -- INBOX 61(7): chips stacked vertically
 M.hudGearSlotGap  = 4
 M.hudGearLabelFontSize = 22
 
@@ -4560,7 +4561,7 @@ function M:draw()
         -- Find the slot rect for positioning
         local slotIdx = self.gearPopup.slotIndex or 0
         local slotRect = self.gearPopup.slotRect
-        local tipW, tipH = 320, 220
+        local tipW, tipH = 320, 256
         local tipX, tipY
         if slotRect then
             -- Position right of the slot
@@ -4603,7 +4604,7 @@ function M:draw()
             love.graphics.printf(line, tipX + 12, effectsY, tipW - 24, "center")
             effectsY = effectsY + 28
         end
-        -- Rarity + Suit chips (Balatro round button style)
+        -- Rarity + Suit chips (vertical stack: one chip per line)
         local chipY2 = effectsY + 8
         local chipFont = fonts.get(22)
         love.graphics.setFont(chipFont)
@@ -4611,16 +4612,15 @@ function M:draw()
         local rarW = chipFont:getWidth(rarLabel) + 24
         local rarH = 30
         local chipsCenterX = tipX + tipW / 2
+        -- Rarity chip (centered)
+        local rarX = chipsCenterX - rarW / 2
+        love.graphics.setColor(rr, rg, rb, 0.85)
+        love.graphics.rectangle("fill", rarX, chipY2, rarW, rarH, 6, 6)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.printf(rarLabel, rarX, chipY2 + 4, rarW, "center")
+        -- Suit chip (centered, below rarity)
         local suitLabel = i18n.suitLabel(part.suit)
         local hasSuit = suitLabel ~= ""
-        local totalChipW = rarW + (hasSuit and (chipFont:getWidth(suitLabel) + 24 + 8) or 0)
-        local chipStartX = chipsCenterX - totalChipW / 2
-        -- Rarity chip
-        love.graphics.setColor(rr, rg, rb, 0.85)
-        love.graphics.rectangle("fill", chipStartX, chipY2, rarW, rarH, 6, 6)
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.printf(rarLabel, chipStartX, chipY2 + 4, rarW, "center")
-        -- Suit chip
         if hasSuit then
             local suitColors = {
                 solar = {1, 0.82, 0.2},
@@ -4630,11 +4630,13 @@ function M:draw()
             }
             local sc = suitColors[part.suit] or {0.5, 0.5, 0.5}
             local suitW = chipFont:getWidth(suitLabel) + 24
-            local suitX = chipStartX + rarW + 8
+            local suitX = chipsCenterX - suitW / 2
+            local suitY = chipY2 + rarH + 6
             love.graphics.setColor(sc[1], sc[2], sc[3], 0.85)
-            love.graphics.rectangle("fill", suitX, chipY2, suitW, rarH, 6, 6)
+            love.graphics.rectangle("fill", suitX, suitY, suitW, rarH, 6, 6)
             love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.printf(suitLabel, suitX, chipY2 + 4, suitW, "center")
+            love.graphics.printf(suitLabel, suitX, suitY + 4, suitW, "center")
+            chipY2 = suitY  -- update for synergy hint positioning
         end
         -- Synergy hint: two lines (name at 22px, desc at 11px) (INBOX item 6)
         local hint = i18n.synergyHint(part.suit)

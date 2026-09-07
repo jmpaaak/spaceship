@@ -10,9 +10,6 @@
   프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-  (7) **등급·수트 칩 각 한 줄**
-    - 팝업에서 커먼/보이드가 가로 나란히 → **세로 스택** (등급 한 줄, 수트 한 줄).
-
   (8) **선체/엔진 부품 아이콘**
     - HUD 슬롯 48px (지금 32). 사용자: "UI 이미지가 들어갈거니까 충분히 크게".
     - `tools/gen_part_icons.py` ≤50줄, 32×32 RGBA 청키 4px, 부품 id별 1장 `assets/part_icons/<id>.png`.
@@ -59,6 +56,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+
+(61.7) **등급·수트 칩 각 한 줄:**
+  - 완료: Gear popup chips changed from horizontal side-by-side to vertical stack (rarity one line, suit below). Each chip centered independently. Tooltip height 220→256 to accommodate. `gearPopupChipVertical` flag + test. GREEN.
 
 (61.6) **시너지 팝업 두 줄 + 기호 제거 + 보이드 채집 +30%:**
   - 완료: Removed ☀ * # ~ x + @ prefix symbols from all synergy names (EN+KO). Updated KO names (사건의 지평선 etc.). `i18n.synergyHint` returns `{name, desc}` table. Popup: 22px name line + 11px desc line, gold pulse if active, grey if not. eventHorizon changed from collisionRadius −30% to collectOrbitRadius +30%. `expedition.collectOrbitRadius(run, base)` added. Tests all GREEN.
