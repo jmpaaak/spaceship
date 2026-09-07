@@ -1,8 +1,9 @@
 ## Current Status
 
-- Fix: 12 star asset SHA256 mismatches in MANIFEST.json (star_bare,
-  star_dry, star_gas, star_ice, star_lava, star_sun — both .png and
-  _sheet.png). Updated all hashes to match on-disk files.
+- Finish prior-cycle uncommitted change: `sampleYieldUpgradeAmount`
+  default 0.05 → 0.01. Tests still expected x1.05/x1.10 harvest copy;
+  updated those four assertions to x1.01/x1.02. HARVEST slot pair/triple
+  payouts scaled to 0.04/0.20 so they stay ~4x/20x of the $5 shop cost.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
   ASSET_MANIFEST_OK.
 
@@ -11,6 +12,12 @@
 - Process next pending INBOX item.
 
 ## Previous
+
+- Fix: 12 star asset SHA256 mismatches in MANIFEST.json (star_bare,
+  star_dry, star_gas, star_ice, star_lava, star_sun — both .png and
+  _sheet.png). Updated all hashes to match on-disk files.
+- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
+  ASSET_MANIFEST_OK.
 
 - Fix: previous cycle left uncommitted star sprite assets (`assets/star/`,
   `tools/gen_stars.py`) and partially updated collision damage formula

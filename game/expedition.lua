@@ -311,7 +311,7 @@ function M.new(options)
         durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
         durabilityUpgradeCost = options.durabilityUpgradeCost or 10,
         durabilityUpgradeLevel = 0,
-        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.05,
+        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.01,
         sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 5,
         sampleYieldUpgradeLevel = 0,
         baseSpeed = options.baseSpeed or options.climbSpeed or 30,
@@ -1369,7 +1369,7 @@ function M.earthSlotSpin(run, galaxyId, rolls)
             rewardValue = matchCount == 3 and 10 or 3    -- $10/upgrade → 3x or 10x value
         elseif matchSymbol == "HARVEST" then
             rewardType = "harvest"
-            rewardValue = matchCount == 3 and 1.0 or 0.25 -- $5/0.05 → 5x or 20x value
+            rewardValue = matchCount == 3 and 0.20 or 0.04 -- $5/0.01 → 4x or 20x value
         elseif matchSymbol == "PART" then
             rewardType = "part"
             rewardValue = 0
