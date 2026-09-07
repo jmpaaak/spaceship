@@ -2685,7 +2685,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(bare)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "3543507cfd9a68479a6c5e103024f12cdf73cd59da9d2244c497db42077ad9b3",
+    "sha256": "f637931bded3f26ca41d7877165b5e9cc2dd5aa13e9234df3439625019758ea7",
     "width": 64,
     "height": 64,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=bare"
@@ -2701,7 +2701,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(dry)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "cfc45ef46a67219e86f7b0afbb41bee160644578ac254599116cd1befacb384d",
+    "sha256": "7f2676f2e402e331e866801e3b9c72c31ed4cb01f4139ece67d7d819d2a9850f",
     "width": 64,
     "height": 64,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=dry"
@@ -2717,7 +2717,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(gas)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "bef7bcaa233c0fcce50b9dff54bf346a1e3a7292ebe08d913dfb1f8177a253d9",
+    "sha256": "70e76bda1f78d131effffb999758dde00ef3a8a7ccfc56a640241ee4ae28b97d",
     "width": 64,
     "height": 64,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=gas"
@@ -2733,7 +2733,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(ice)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "573b08510db9f69e8b0bd9d239eb6fc6c675ad0b88480191971ad59a943ef855",
+    "sha256": "37bd57adf1a7bac7ade855bc0bfae8939750ff54afc8046b0a1c8c6c89aef306",
     "width": 64,
     "height": 64,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=ice"
@@ -2749,7 +2749,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(lava)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "2f73ab6e3b83000751b7a99052d44e1eab12f634dc8e10dcfec7a957f9064a72",
+    "sha256": "d177a57499ce6762de43bb37f07d8eb85a050535dc8ab53888d4826fa088db21",
     "width": 64,
     "height": 64,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=lava"
@@ -2765,7 +2765,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(sun)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "31a7116a21f25410e6137922d578c827d586de16454ee364c552db753b13b648",
+    "sha256": "27b5115304b36a075f22b1ee5abbff14cc603cb9208685b2ed69254543ab7a46",
     "width": 64,
     "height": 64,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=sun"
@@ -2781,7 +2781,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(sun)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "556c864169e98911a2fe0112251c2525d6aca8a1b7b7f46556fc968300921bc3",
+    "sha256": "6df42fe33a6df58ef2fdc26a0d00cd68841f508f82c96f445e412f073d0670fc",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame sun star animation sheet"
@@ -2916,7 +2916,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_hub_sheet.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "b2ed35dc1cdf35a58ab90f5b77b68725c77bc53d53f696ff6d2d8fc6655523f7",
+    "sha256": "6a620774ce1ae020c3ee331efd3df84add66683123e4af899c034300ebf32b6d",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame hub planet rotation sheet"
@@ -2932,7 +2932,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_planet_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(bare)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "330cb4cbc09b0aabecb2338ea6bcfce99258c146228e0aa6584f5ba5e403e368",
+    "sha256": "29752c4bef6a6ce7c2cfcb92812ff6d614de4263e0190c9b019aeb60de4f410e",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame bare planet rotation sheet"
@@ -2948,7 +2948,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_planet_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(dry)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "1808bf9a5f10ed78bf834d502483df475ed767b16c75f6009bd33b76cbc9cc43",
+    "sha256": "92ca7778c6906e00b07782bbced3884a3c6adf5f3a03830bfb58a751abd98843",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame dry planet rotation sheet"
@@ -2964,7 +2964,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_planet_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(earth)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "2e14862ee218c56ced78f617f55bf102128e0c01678158846a1a1ef33d982ee7",
+    "sha256": "594bc3472df98afea28c6dcc35a069aa0c3e142de790579e9b7df9e04d2df320",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame earth planet rotation sheet"
@@ -2980,7 +2980,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_planet_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(gas)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "78a5bd8ec5183a2b7768325340a93fe98a6c3809013f39ddf6f47344f58670ad",
+    "sha256": "117359cb20a2729a9b4e98be4e0791a4c9e55a2d2fa8e37e696760b07e4a5271",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame gas planet rotation sheet"
@@ -2996,7 +2996,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_planet_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(ice)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "5f4972053263c0d119170505bbbd17764263f167b67aa13c6ef312fb6e8bb41b",
+    "sha256": "fcd038de633de282b23514d1d8c245554f6d42a3337003706da64b87f706c56b",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame ice planet rotation sheet"
@@ -3012,7 +3012,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_planet_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(lava)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "a918b559257dece239ae3151368020e8dfbe1f0e78ded25cc9e6e4ce9f43ac1e",
+    "sha256": "5f8c29209258aeb17d420456ab86a5532d2335c26a5c4ecc9b5a17ad1b80b3fb",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame lava planet rotation sheet"
@@ -3028,7 +3028,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(bare)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "275c5dafc8042188b55e5d19edc866f7315c4b50ef1808ff93effd11abd466d2",
+    "sha256": "99aef95c4d98e060bbce16cd569e5d00b95ec6490f012e4b9734bf41f7027d85",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame bare star rotation sheet"
@@ -3044,7 +3044,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(dry)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "1209f9054b72d9426323f065835737bc19def77c7771f612787bf762bab84181",
+    "sha256": "52c49525bd012518ad5a4b5bd06faf9072372681ca40aa2f3f6a38e4666ecfe8",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame dry star rotation sheet"
@@ -3060,7 +3060,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(gas)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "a9ed39895430c923e0dafafb824961900aaa7a3676f3490e6f2c467c73f1e6fa",
+    "sha256": "5a074afd3702872db2a1389e0de34be3e2365a4b74d50fbe97b35f1a718d74cf",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame gas star rotation sheet"
@@ -3076,7 +3076,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(ice)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "8fbe2dd682cf0fcbf649f6ef9366c1ea9ee9107c9e6bb92036df333c9b5f219d",
+    "sha256": "0438d46205a6ba809dbf3b0250e506ef3ed0217fff95573c173a5bb7206842b4",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame ice star rotation sheet"
@@ -3092,7 +3092,7 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(lava)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "ba14c253129c7b251f0e4f4194b90375f8eb507cb2da8c17ca62f1682035ca76",
+    "sha256": "acab3c97e115ea6540bde6e1fcdd4b3b7c0ed17a71ff2d679effeebd4f927a71",
     "width": 64,
     "height": 256,
     "qa": "PIL-generated 64x256 4-frame lava star rotation sheet"

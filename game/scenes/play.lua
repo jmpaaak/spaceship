@@ -4143,19 +4143,19 @@ function M:draw()
         local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg, isHovered)
             local cardH = touchRowHeight - 16
             local cardY = rowTop + 8
-            local cx = leftX + leftW / 2
-            local cy = cardY + cardH / 2
+            local cx2 = leftX + leftW / 2
+            local cy2 = cardY + cardH / 2
             -- Hover: scale up + brighter border
             if isHovered then
                 love.graphics.push()
-                love.graphics.translate(cx, cy)
+                love.graphics.translate(cx2, cy2)
                 love.graphics.scale(1.05, 1.05)
-                love.graphics.translate(-cx, -cy)
+                love.graphics.translate(-cx2, -cy2)
             end
-            -- Card body (dark rounded rect with colored border)
+            -- Card body
             love.graphics.setColor(isHovered and 0.12 or 0.08, isHovered and 0.10 or 0.06, isHovered and 0.18 or 0.12, 0.92)
             love.graphics.rectangle("fill", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
-            -- Border: green if affordable, red if not; brighter on hover
+            -- Border
             if isAffordable then
                 love.graphics.setColor(0.3, isHovered and 1.0 or 0.85, 0.4, isHovered and 1.0 or 0.8)
             else
@@ -4164,16 +4164,33 @@ function M:draw()
             love.graphics.setLineWidth(isHovered and 3 or 2)
             love.graphics.rectangle("line", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
             love.graphics.setLineWidth(1)
-            -- Action text (what you buy)
+            -- Split actionText: extract price ($N) to separate gold line
+            local actionLabel = actionText
+            local priceLabel = ""
+            local priceStart = string.find(actionText, "%$%d")
+            if priceStart then
+                actionLabel = string.sub(actionText, 1, priceStart - 2)
+                priceLabel = string.sub(actionText, priceStart)
+            end
+            -- Line 1: upgrade content (white, 22px)
+            local lineY = cardY + 10
             love.graphics.setColor(1, isHovered and 1.0 or 0.92, isHovered and 0.95 or 0.85, 1)
-            love.graphics.printf(actionText, leftX + 8, cardY + 12, leftW - 16, "center")
-            -- Status (balance/shortfall)
-            local statusY = cardY + 12 + 28
-            love.graphics.setColor(isAffordable and 0.45 or 1, isAffordable and 1 or 0.4, isAffordable and 0.55 or 0.35)
-            love.graphics.printf(statusText, leftX + 8, statusY, leftW - 16, "center")
-            -- Preview (what you get)
+            love.graphics.printf(actionLabel, leftX + 8, lineY, leftW - 16, "center")
+            -- Line 2: price (gold, 22px)
+            lineY = lineY + 26
+            love.graphics.setColor(1, 0.85, 0.25, 1)
+            love.graphics.printf(priceLabel, leftX + 8, lineY, leftW - 16, "center")
+            -- Line 3: balance/shortfall (small 11px)
+            lineY = lineY + 26
+            local prevSmFont = love.graphics.getFont()
+            love.graphics.setFont(fonts.get(11))
+            love.graphics.setColor(isAffordable and 0.45 or 1, isAffordable and 1 or 0.4, isAffordable and 0.55 or 0.35, 0.8)
+            love.graphics.printf(statusText, leftX + 8, lineY, leftW - 16, "center")
+            love.graphics.setFont(prevSmFont)
+            -- Line 4: preview (cyan)
+            lineY = lineY + 18
             love.graphics.setColor(0.5, 0.85, 1, 0.9)
-            love.graphics.printf(previewText, leftX + 8, statusY + 28, leftW - 16, "center")
+            love.graphics.printf(previewText, leftX + 8, lineY, leftW - 16, "center")
             if isHovered then
                 love.graphics.pop()
             end
