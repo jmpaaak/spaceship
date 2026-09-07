@@ -65,13 +65,14 @@ Both files share the exact same document/card schema below.
 ## Effect shape
 
 ```json
-{ "type": "speed", "value": 5 }
+{ "type": "speed", "value": 5, "mode": "flat" }
 ```
 
 | field   | type   | required | notes |
 |---------|--------|----------|-------|
 | `type`  | string enum | yes | One of the known effect types (see below). |
 | `value` | number | yes | Must be in the range `[-100, 100]` (enforced by both `game/gear.lua` and the web editor). |
+| `mode`  | string enum | no  | Either `"flat"` (default) or `"multiply"`. `"flat"` adds the value linearly; `"multiply"` computes a product multiplier (e.g. speed ×1.5). |
 
 ### Known effect types
 

@@ -961,13 +961,15 @@ end
 --   + engine gear `speed` (synergy-multiplied via tagSynergyMultiplier)
 --   + scout ship bonus
 function M.effectiveSpeed(run)
-    local gearTotals = gearModule.equippedTotals(run.equippedGear or {})
+    local gearTotals, gearMults = gearModule.equippedTotals(run.equippedGear or {})
     local engineParts = run.equippedEngineParts or {}
-    local engineSpeedRaw = gearModule.aggregateEffects(engineParts).speed or 0
-    local engineSpeed = engineSpeedRaw * gearModule.tagSynergyMultiplier(engineParts)
+    local engineSpeedRaw, engineMultsRaw = gearModule.aggregateEffects(engineParts)
+    local engineSpeed = (engineSpeedRaw.speed or 0) * gearModule.tagSynergyMultiplier(engineParts)
     local shipBonus = run.selectedShipId == "scout" and run.scoutClimbSpeedBonus or 0
     local base = (run.baseSpeed or 0) + (run.steeringUpgradeLevel or 0) * (run.steeringUpgradeAmount or 0)
-    return base + (run.slotSpeedBonus or 0) + (shipBonus or 0) + (gearTotals.speed or 0) + engineSpeed
+    local flat = base + (run.slotSpeedBonus or 0) + (shipBonus or 0) + (gearTotals.speed or 0) + engineSpeed
+    local mult = (gearMults and gearMults.speed or 1) * (engineMultsRaw and engineMultsRaw.speed or 1)
+    return flat * mult
 end
 
 -- Item 9/14 economy-stat gap audit: gear.equippedTotals already combines a
@@ -990,10 +992,12 @@ end
 -- sellMultiplier; this recomputes the same additive-then-multiply once
 -- across hull sampleSellValue + hull/engine sellMultiplier.
 function M.effectiveSampleBonus(run)
-    local hullAdditive = gearModule.aggregateEffects(run.equippedGear or {}).sampleSellValue or 0
+    local hullAdditiveRaw, hullMults = gearModule.aggregateEffects(run.equippedGear or {})
+    local hullAdditive = hullAdditiveRaw.sampleSellValue or 0
     if hullAdditive == 0 then return 0 end
     local sellMult = gearModule.totalEffect(combinedGearList(run), "sellMultiplier")
-    return hullAdditive * (1 + sellMult / 100)
+    local mult = hullMults.sampleSellValue or 1
+    return hullAdditive * (1 + sellMult / 100) * mult
 end
 
 -- Stellar Origin (item 16, 2026-09-05): supernova (all 4 suits 1+) scales
@@ -1004,13 +1008,18 @@ end
 function M.aggregateEffectsWithSynergies(run, parts)
     local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
     local totals = {}
+    local multTotals = {}
     for _, part in ipairs(parts) do
         local scale = (syn.supernova and part.rarity == "legendary") and 1.5 or 1
         for _, effect in ipairs(part.effects) do
-            totals[effect.type] = (totals[effect.type] or 0) + effect.value * scale
+            if effect.mode == "multiply" then
+                multTotals[effect.type] = (multTotals[effect.type] or 1) * (effect.value * scale)
+            else
+                totals[effect.type] = (totals[effect.type] or 0) + effect.value * scale
+            end
         end
     end
-    return totals
+    return totals, multTotals
 end
 
 -- Run-level equippedTotals wrapper that incorporates Stellar Origin synergies.
@@ -1019,7 +1028,7 @@ end
 -- combine pass from gear.equippedTotals are preserved exactly.
 function M.equippedTotals(run, parts)
     local combined = parts or combinedGearList(run)
-    local totals = M.aggregateEffectsWithSynergies(run, combined)
+    local totals, multTotals = M.aggregateEffectsWithSynergies(run, combined)
     local multiplier = gearModule.tagSynergyMultiplier(combined)
     if totals.speed then
         totals.speed = totals.speed * multiplier
@@ -1028,7 +1037,7 @@ function M.equippedTotals(run, parts)
     if totals.sellMultiplier and totals.sampleSellValue then
         totals.sampleSellValue = totals.sampleSellValue * (1 + totals.sellMultiplier / 100)
     end
-    return totals
+    return totals, multTotals
 end
 
 -- Item 10(b)/14(G) wiring: how many one-shot emergency boost charges the

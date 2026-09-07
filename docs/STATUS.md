@@ -18,14 +18,20 @@
   - Generated and verified PIL icons for the new parts in `assets/part_icons` and updated `MANIFEST.json`.
   - Test `INBOX-61(31)` GREEN. `make verify LOVE=...` GREEN.
 
-## Next slice
-
-- INBOX 61(26): Part balance — common min 5, uncommon+ Balatro flat/mult system.
-
-## Previous
 - INBOX 61(24b): Title menu composition — CONTINUE / NEW GAME / LEADERBOARD / SETTINGS.
   - `title.lua`: button order is CONTINUE (top) → NEW GAME → LEADERBOARD → SETTINGS. CONTINUE greyed out unless `hasSave`. NEW GAME uses `onNewGame` (legacy `onStart` still works).
   - `i18n`: EN `title_new_game`="NEW GAME", KO="새 게임". `title_start` removed.
   - `main.lua`: `hasSave` from `best_altitude_store:load() > 0`. NEW GAME calls `altStore:reset()` + `specStore:reset()` then fresh PlayScene at Earth. CONTINUE starts PlayScene with persisted bestAltitude.
   - Test `INBOX-61(24b)` GREEN.
 
+
+- INBOX 61(26a/b): Added `mode = "flat"|"multiply"` gear effect schema
+  - Modified `gear.lua` and `expedition.lua` to separate flat and mult calculations for stats.
+  - Applied product multiplier in `effectiveSpeed`, `effectiveSampleBonus`, `effectiveCollisionRadius`, `effectiveDetectionRadius`, `effectiveShopPrice`.
+  - Added `mode` field support to `tools/gear-editor` UI (default flat, toggles flat/multiply, live previews updated).
+  - Documented `mode` in `docs/GEAR_SCHEMA.md`.
+  - Test suite (INBOX-61(26) infra part) GREEN. Code infrastructure complete.
+
+## Next slice
+
+- INBOX 61(26c): hull_parts.json / engine_parts.json 전수 재조정 (common minimum 5, uncommon multi-flat, rare mult, legendary mixed).

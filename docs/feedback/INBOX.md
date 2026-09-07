@@ -91,9 +91,9 @@
     - uncommon: **+배수** (`addMultiplier`). 기존 효과에 **고정값 추가** (예: `speed +8` + `luck +5`). 복합 효과 2개.
     - rare: **×배수** (`scaleMultiplier`). 효과값이 **비율 곱**으로 동작 (예: `speed ×1.5`, `harvest ×1.3`). 새 effect type `"multiply"` 추가하거나, value를 `{"flat": N, "mult": M}` 구조로.
     - legendary: **+배수 AND ×배수** 복합 (예: `speed +10, harvest ×2.0`).
-    - `gear.lua` `totalEffect` / `equippedTotals`가 flat sum + mult product를 분리 계산하도록: `final = (base + sum_of_flat) * product_of_mult`.
-    - JSON 스키마: `effects[].mode = "flat"|"multiply"` (기본 "flat", 기존 호환). `expedition.effectiveSpeed` 등에서 곱 적용.
-    - hull_parts.json / engine_parts.json 전수 재조정. `tools/gear-editor`에서 mode 필드 편집 가능하게.
+    - 완료(a): `gear.lua` `totalEffect` / `equippedTotals`가 flat sum + mult product를 분리 계산하도록: `final = (base + sum_of_flat) * product_of_mult`. JSON 스키마: `effects[].mode = "flat"|"multiply"` (기본 "flat", 기존 호환). `expedition.effectiveSpeed` 등에서 곱 적용.
+    - 완료(b): `tools/gear-editor`에서 mode 필드 편집 가능하게. GEAR_SCHEMA 문서 반영.
+    - hull_parts.json / engine_parts.json 전수 재조정.
 
   (27) **에셋 스튜디오 sprite-gen 서버 연동** (msg `1546408506700337213`)
     - 현재: 업로드 이미지 → PerfectPixel → 4px chunky만 동작. 프롬프트 → xorshift 노이즈 스텁(AI 아님).

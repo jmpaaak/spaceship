@@ -249,7 +249,7 @@ function renderGrid() {
       <div class="icon">${escapeHtml(part.icon || "?")}</div>
       <div class="name">${escapeHtml(part.name || part.id)}</div>
       <div class="rarity-label">${escapeHtml(part.rarity || "?")}${part.galaxyExclusive ? " · galaxy exclusive" : ""}${part.slotExclusive ? " · slot exclusive" : ""}</div>
-      <div class="effects">${(part.effects || []).map((e) => `<div>${escapeHtml(e.type)} ${e.value >= 0 ? "+" : ""}${e.value}</div>`).join("")}</div>
+      <div class="effects">${(part.effects || []).map((e) => `<div>${escapeHtml(e.type)} ${e.mode === "multiply" ? "×" : e.value >= 0 ? "+" : ""}${e.value}</div>`).join("")}</div>
     `;
     card.addEventListener("click", () => openForm(part.id));
     els.grid.appendChild(card);
@@ -262,38 +262,50 @@ function escapeHtml(s) {
   }[c]));
 }
 
-function addEffectRow(type, value) {
+function addEffectRow(type, value, mode) {
   const row = document.createElement("div");
   row.className = "effect-row";
   const select = document.createElement("select");
-  // Item 14: group the dropdown by schema category (A~F) so the ~15
-  // effect types stay navigable as the schema grows, instead of one long
-  // flat list.
   Object.entries(EFFECT_TYPE_GROUPS).forEach(([groupLabel, types]) => {
     const group = document.createElement("optgroup");
     group.label = groupLabel;
     types.forEach((t) => {
-      const opt = document.createElement("option");
-      opt.value = t;
-      opt.textContent = t;
-      if (t === type) opt.selected = true;
-      group.appendChild(opt);
+      const option = document.createElement("option");
+      option.value = t;
+      option.textContent = t;
+      group.appendChild(option);
     });
     select.appendChild(group);
   });
+  select.value = type || KNOWN_EFFECT_TYPES[0];
+  select.addEventListener("change", () => { updateEditionPreview(); });
+
+  const modeSelect = document.createElement("select");
+  modeSelect.className = "effect-mode-select";
+  ["flat", "multiply"].forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    modeSelect.appendChild(opt);
+  });
+  modeSelect.value = mode || "flat";
+  modeSelect.addEventListener("change", () => { updateEditionPreview(); });
+
   const input = document.createElement("input");
-  input.type = "text";
-  input.placeholder = "value";
-  input.value = value !== undefined ? String(value) : "";
-  
-  input.addEventListener("input", updateEditionPreview);
-  select.addEventListener("change", updateEditionPreview);
+  input.type = "number";
+  input.value = value;
+  input.min = EFFECT_VALUE_MIN;
+  input.max = EFFECT_VALUE_MAX;
+  input.addEventListener("input", () => { updateEditionPreview(); });
+
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
-  removeBtn.textContent = "✕";
+  removeBtn.textContent = "X";
+  removeBtn.className = "danger";
   removeBtn.addEventListener("click", () => { row.remove(); updateEditionPreview(); });
 
   row.appendChild(select);
+  row.appendChild(modeSelect);
   row.appendChild(input);
   row.appendChild(removeBtn);
   els.effectsList.appendChild(row);
@@ -331,7 +343,7 @@ function openForm(id) {
     els.fieldEditions.value = (part.editions || []).join(", ");
     els.fieldGalaxyExclusive.checked = part.galaxyExclusive === true;
     els.fieldSlotExclusive.checked = part.slotExclusive === true;
-    (part.effects || []).forEach((e) => addEffectRow(e.type, e.value));
+    (part.effects || []).forEach((e) => addEffectRow(e.type, e.value, e.mode));
     els.deleteCardBtn.style.display = "";
   }
   updateRarityPreview();
@@ -359,21 +371,21 @@ function updateEditionPreview() {
     const def = EDITION_EFFECTS[editionId];
     if (!def) return;
     
-    const outEffects = candidate.effects.map(e => ({ type: e.type, value: e.value }));
+    const outEffects = candidate.effects.map(e => ({ type: e.type, value: e.value, mode: e.mode }));
     outEffects.forEach(effect => {
       if (def.scope === "all" || def.scope === effect.type) {
         effect.value = effect.value * def.multiplier;
       }
     });
     if (def.drawback) {
-      outEffects.push({ type: def.drawback.type, value: def.drawback.value });
+      outEffects.push({ type: def.drawback.type, value: def.drawback.value, mode: "flat" });
     }
 
     const item = document.createElement("div");
     item.className = "edition-preview-item";
     
     let html = `<strong>${escapeHtml(editionId)}</strong>: `;
-    const effectStrs = outEffects.map(e => `${escapeHtml(e.type)} ${e.value >= 0 ? "+" : ""}${e.value}`);
+    const effectStrs = outEffects.map(e => `${escapeHtml(e.type)} ${e.mode === "multiply" ? "×" : e.value >= 0 ? "+" : ""}${e.value}`);
     if (def.synergyBonusAdd) {
       effectStrs.push(`(synergy +${def.synergyBonusAdd})`);
     }
@@ -426,9 +438,12 @@ function updateEconomyPreview() {
 function collectFormPart() {
   const effects = Array.from(els.effectsList.querySelectorAll(".effect-row")).map((row) => {
     const type = row.querySelector("select").value;
+    const mode = row.querySelector(".effect-mode-select").value;
     const rawValue = row.querySelector("input").value;
     const value = Number(rawValue);
-    return { type, value };
+    const effect = { type, value };
+    if (mode === "multiply") effect.mode = "multiply";
+    return effect;
   });
   const tags = els.fieldTags.value.split(",").map((s) => s.trim()).filter(Boolean);
   const editions = els.fieldEditions.value.split(",").map((s) => s.trim()).filter(Boolean);

@@ -328,12 +328,17 @@ M.synergyBonusPerSharedPair = 0.15
 -- tests and as the pre-multiplier accumulator inside equippedTotals.
 function M.aggregateEffects(parts)
     local totals = {}
+    local multTotals = {}
     for _, part in ipairs(parts) do
         for _, effect in ipairs(part.effects) do
-            totals[effect.type] = (totals[effect.type] or 0) + effect.value
+            if effect.mode == "multiply" then
+                multTotals[effect.type] = (multTotals[effect.type] or 1) * effect.value
+            else
+                totals[effect.type] = (totals[effect.type] or 0) + effect.value
+            end
         end
     end
-    return totals
+    return totals, multTotals
 end
 
 -- Computes the climbSpeed synergy multiplier for a set of equipped parts:
@@ -381,25 +386,17 @@ end
 -- this cycle. Also returns the multiplier itself (as `synergyMultiplier`)
 -- so callers/tests/UI can display it directly.
 function M.equippedTotals(parts)
-    local totals = M.aggregateEffects(parts)
+    local totals, multTotals = M.aggregateEffects(parts)
     local multiplier = M.tagSynergyMultiplier(parts)
     if totals.speed then
         totals.speed = totals.speed * multiplier
     end
     totals.synergyMultiplier = multiplier
 
-    -- Item 14 category (B): multiplicative effects are applied AFTER every
-    -- additive (A) total above is summed, as a separate multiply pass —
-    -- "가산 총합 × 배율 총합" per docs/feedback/INBOX.md item 14. A card's
-    -- sellMultiplier value is a percentage (e.g. 25 == "+25%"); every
-    -- equipped card's sellMultiplier stacks additively into one combined
-    -- percentage BEFORE being converted to a single multiply pass against
-    -- sampleSellValue, so two +25% cards give +50% total, not +56%
-    -- (compounding), matching the additive-then-multiply design mandate.
     if totals.sellMultiplier and totals.sampleSellValue then
         totals.sampleSellValue = totals.sampleSellValue * (1 + totals.sellMultiplier / 100)
     end
-    return totals
+    return totals, multTotals
 end
 
 -- ---------------------------------------------------------------------
@@ -418,14 +415,19 @@ end
 -- one doesn't re-implement the same scan.
 function M.totalEffect(parts, effectType)
     local total = 0
+    local mult = 1
     for _, part in ipairs(parts) do
         for _, effect in ipairs(part.effects) do
             if effect.type == effectType then
-                total = total + effect.value
+                if effect.mode == "multiply" then
+                    mult = mult * effect.value
+                else
+                    total = total + effect.value
+                end
             end
         end
     end
-    return total
+    return total, mult
 end
 
 -- Item 14(B) streakMultiplier consumer wiring (docs/GEAR_SCHEMA.md's
@@ -469,8 +471,8 @@ end
 -- shrink applied to a base hitbox radius, clamped so it can never invert
 -- into a negative radius.
 function M.effectiveCollisionRadius(baseRadius, parts)
-    local pct = M.totalEffect(parts, "collisionRadius")
-    local radius = baseRadius * (1 - pct / 100)
+    local pct, mult = M.totalEffect(parts, "collisionRadius")
+    local radius = baseRadius * (1 - pct / 100) * mult
     if radius < 0 then radius = 0 end
     return radius
 end
@@ -478,8 +480,8 @@ end
 -- (E) detectionRadius: "표본/체크포인트/상점 행성 미니맵 표시 반경 확대" —
 -- percentage growth applied to a base scan radius.
 function M.effectiveDetectionRadius(baseRadius, parts)
-    local pct = M.totalEffect(parts, "detectionRadius")
-    local radius = baseRadius * (1 + pct / 100)
+    local pct, mult = M.totalEffect(parts, "detectionRadius")
+    local radius = baseRadius * (1 + pct / 100) * mult
     if radius < 0 then radius = 0 end
     return radius
 end
@@ -494,8 +496,8 @@ end
 -- base shop price, clamped so a stack of discount cards can reduce a price
 -- to free but never below zero (negative price).
 function M.effectiveShopPrice(basePrice, parts)
-    local pct = M.totalEffect(parts, "shopDiscount")
-    local price = basePrice * (1 - pct / 100)
+    local pct, mult = M.totalEffect(parts, "shopDiscount")
+    local price = basePrice * (1 - pct / 100) * mult
     if price < 0 then price = 0 end
     return price
 end
