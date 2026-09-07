@@ -129,7 +129,7 @@ locales.en = {
     earth_shop_label = "EARTH SHOP",
     hub_shop_label = "HUB SHOP",
     -- Item 7(c): Earth shop gear purchase UI
-    earth_gear_offer = "GEAR OFFER [B]: %s  $%d",
+    earth_gear_offer = "GEAR OFFER: %s  $%d",
     earth_gear_bought = "GEAR ACQUIRED: %s  BALANCE $%d",
     earth_gear_full = "GEAR SLOTS FULL  SELL EQUIPPED FIRST",
     earth_gear_broke = "NOT ENOUGH MONEY  NEED $%d MORE",
@@ -343,7 +343,7 @@ locales.ko = {
     earth_shop_label = "지구 상점",
     hub_shop_label = "HUB 상점",
     -- Item 7(c): Earth shop gear purchase UI
-    earth_gear_offer = "장비 제안 [B]: %s  $%d",
+    earth_gear_offer = "장비 제안: %s  $%d",
     earth_gear_bought = "장비 획득: %s  잔액 $%d",
     earth_gear_full = "장비 슬롯 가득  장착 장비 먼저 판매",
     earth_gear_broke = "돈이 부족합니다  $%d 더 필요",

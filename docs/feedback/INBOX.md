@@ -39,8 +39,9 @@
     - ~~내구도·수확도 같은 구조인지 확인: 내구도는 maxDurability를 직접 올려서 OK. 수확은 `sampleYieldUpgradeLevel += 1`이라 1%씩이라 완만. 속도만 rv가 크게 레벨을 올려서 문제.~~
     - 완료: `slotSpeedBonus` field added to run state (init/wipe). `effectiveSpeed()` includes it. play.lua slot reward uses `slotSpeedBonus` not `steeringUpgradeLevel`. Test INBOX-61(19) GREEN.
 
-  (20) **장비 제안 `[B]:` 키보드 접두사 제거** (msg `1546395217618542712`)
-    - i18n `earth_gear_offer` = `"GEAR OFFER [B]: %s  $%d"` — `[B]` 제거.
+  ~~(20) **장비 제안 `[B]:` 키보드 접두사 제거** (msg `1546395217618542712`)~~
+    - ~~i18n `earth_gear_offer` = `"GEAR OFFER [B]: %s  $%d"` — `[B]` 제거.~~
+    - 완료: EN `"GEAR OFFER: %s  $%d"`, KO `"장비 제안: %s  $%d"`. Test INBOX-61(20) GREEN.
 
   (21) **일시정지 메뉴: 다시 시작 + 메인메뉴** (msg `1546395541850554480`)
     - 일시정지 상태에서 **다시 시작** 버튼 → `expedition.destroy` + `expedition.launch` (현재 런 초기화).

@@ -4495,8 +4495,13 @@ function M:draw()
                     love.graphics.setScissor()
                 end
             else
-                -- Idle: show static icons with gentle glow pulse
-                local rKeys = {"MONEY", "SPEED", "HARVEST"}
+                -- Idle: show static icons with gentle glow pulse, rotating through all 5 symbols
+                local allSyms = {"MONEY", "SPEED", "HARVEST", "DURABILITY", "PART"}
+                local idleCycle = math.floor((self.time or 0) / 2) % #allSyms
+                local rKeys = {}
+                for i = 0, 2 do
+                    rKeys[i + 1] = allSyms[(idleCycle + i) % #allSyms + 1]
+                end
                 local reelWindowW = 24 * slotScale
                 local reelWindowH = 32 * slotScale
                 local symSize = 32
