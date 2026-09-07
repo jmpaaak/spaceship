@@ -37,7 +37,7 @@
           "value": 6
         },
         {
-          "type": "shopDiscount",
+          "type": "boostCharge",
           "value": 3
         }
       ]
@@ -56,7 +56,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 19
+          "value": 12
         }
       ]
     },
@@ -82,8 +82,7 @@
         },
         {
           "type": "boostCharge",
-          "value": 1.3,
-          "mode": "multiply"
+          "value": 2
         },
         {
           "type": "detectionRadius",
@@ -110,8 +109,8 @@
           "value": 7
         },
         {
-          "type": "speed",
-          "value": 7
+          "type": "detectionRadius",
+          "value": 10
         }
       ]
     },
@@ -128,8 +127,8 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 12
+          "type": "luck",
+          "value": 8
         }
       ]
     },
@@ -152,7 +151,7 @@
         },
         {
           "type": "collisionRadius",
-          "value": 6
+          "value": 8
         }
       ]
     },
@@ -170,12 +169,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 13
+          "type": "boostCharge",
+          "value": 4
         },
         {
-          "type": "collisionRadius",
-          "value": 7
+          "type": "speed",
+          "value": 8
         }
       ]
     },
@@ -214,8 +213,8 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 10
+          "type": "detectionRadius",
+          "value": 15
         }
       ]
     },
@@ -313,7 +312,7 @@
           "value": 6
         },
         {
-          "type": "speed",
+          "type": "luck",
           "value": 6
         }
       ]
@@ -332,12 +331,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
+          "type": "luck",
           "value": 1.8,
           "mode": "multiply"
         },
         {
-          "type": "luck",
+          "type": "speed",
           "value": 1.2,
           "mode": "multiply"
         }
@@ -358,6 +357,10 @@
       "effects": [
         {
           "type": "chainTrigger",
+          "value": 2
+        },
+        {
+          "type": "speed",
           "value": 1.4,
           "mode": "multiply"
         }
@@ -382,7 +385,7 @@
         },
         {
           "type": "rerollBonus",
-          "value": 4
+          "value": 5
         }
       ]
     },
@@ -423,8 +426,8 @@
           "value": 20
         },
         {
-          "type": "sellMultiplier",
-          "value": 5
+          "type": "luck",
+          "value": 8
         }
       ]
     },
@@ -442,13 +445,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 1.3,
-          "mode": "multiply"
+          "type": "autoCollect",
+          "value": 1
         },
         {
-          "type": "autoCollect",
-          "value": 1.8,
+          "type": "speed",
+          "value": 1.3,
           "mode": "multiply"
         }
       ]
@@ -467,12 +469,11 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 1.8,
-          "mode": "multiply"
+          "type": "boostCharge",
+          "value": 2
         },
         {
-          "type": "boostCharge",
+          "type": "speed",
           "value": 1.8,
           "mode": "multiply"
         }
@@ -515,12 +516,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
+          "type": "autoCollect",
           "value": 5
         },
         {
-          "type": "autoCollect",
-          "value": 4
+          "type": "speed",
+          "value": 6
         }
       ]
     },
@@ -538,13 +539,13 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 1.3,
+          "type": "streakMultiplier",
+          "value": 1.4,
           "mode": "multiply"
         },
         {
-          "type": "streakMultiplier",
-          "value": 1.4,
+          "type": "speed",
+          "value": 1.3,
           "mode": "multiply"
         }
       ]
@@ -572,8 +573,8 @@
         },
         {
           "type": "rerollBonus",
-          "mode": "multiply",
-          "value": 1.9
+          "value": 1.9,
+          "mode": "multiply"
         }
       ]
     },
@@ -600,6 +601,10 @@
         },
         {
           "type": "boostCharge",
+          "value": 3
+        },
+        {
+          "type": "speed",
           "value": 2.1,
           "mode": "multiply"
         }
@@ -619,12 +624,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 5
+          "type": "luck",
+          "value": 8
         },
         {
-          "type": "insurance",
-          "value": 3
+          "type": "collisionRadius",
+          "value": 6
         }
       ]
     },
@@ -642,12 +647,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 5
+          "type": "rerollBonus",
+          "value": 8
         },
         {
-          "type": "shopDiscount",
-          "value": 15
+          "type": "speed",
+          "value": 6
         }
       ]
     },
@@ -665,12 +670,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 6
+          "type": "streakMultiplier",
+          "value": 12
         },
         {
-          "type": "sellMultiplier",
-          "value": 15
+          "type": "speed",
+          "value": 6
         }
       ]
     },
@@ -714,13 +719,13 @@
       ],
       "effects": [
         {
-          "type": "speed",
-          "value": 1.2,
+          "type": "luck",
+          "value": 1.3,
           "mode": "multiply"
         },
         {
-          "type": "luck",
-          "value": 1.3,
+          "type": "speed",
+          "value": 1.2,
           "mode": "multiply"
         }
       ],

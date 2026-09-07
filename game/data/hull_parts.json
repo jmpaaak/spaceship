@@ -15,7 +15,7 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 6
+          "value": 8
         }
       ]
     },
@@ -33,7 +33,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 5
+          "value": 8
         }
       ]
     },
@@ -51,7 +51,7 @@
       "effects": [
         {
           "type": "sampleSellValue",
-          "value": 6
+          "value": 10
         }
       ]
     },
@@ -161,7 +161,7 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
+          "type": "luck",
           "value": 8
         }
       ]
@@ -203,8 +203,8 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 7
+          "type": "collisionRadius",
+          "value": 10
         }
       ]
     },
@@ -222,8 +222,8 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 9
+          "type": "rerollBonus",
+          "value": 8
         }
       ]
     },
@@ -241,7 +241,7 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 5
+          "value": 7
         }
       ]
     },
@@ -259,12 +259,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 6
+          "type": "sellMultiplier",
+          "value": 8
         },
         {
           "type": "money",
-          "value": 3
+          "value": 5
         }
       ]
     },
@@ -380,7 +380,7 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 7
+          "value": 10
         }
       ]
     },
@@ -399,7 +399,7 @@
       "effects": [
         {
           "type": "money",
-          "value": 5
+          "value": 8
         }
       ]
     },
@@ -517,8 +517,8 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
-          "value": 11
+          "type": "streakMultiplier",
+          "value": 8
         }
       ]
     },
@@ -541,7 +541,7 @@
         },
         {
           "type": "collisionRadius",
-          "value": 4
+          "value": 5
         }
       ]
     },
@@ -644,8 +644,8 @@
       "editions": [],
       "effects": [
         {
-          "type": "streakMultiplier",
-          "value": 1.4,
+          "type": "sellMultiplier",
+          "value": 1.5,
           "mode": "multiply"
         }
       ]
@@ -692,7 +692,7 @@
         },
         {
           "type": "rerollBonus",
-          "value": 4
+          "value": 5
         }
       ]
     },

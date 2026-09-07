@@ -169,20 +169,16 @@
     - Hull | Engine 탭. 엔진 탭 **첫 클릭**에 `/gear-editor/data/engine_parts.json` (현재 적용본) fetch.
     - 두 풀을 메모리에 따로 보관. 파일 피커는 덮어쓰기용으로 유지.
 
-  (44) **발라트로 조커식 부품 효과 다양화** (namu.wiki Balatro/조커 카드#s-6, 사용자 2026-09-07)
-    - 담당: `game/data/hull_parts.json` + `game/data/engine_parts.json` + `game/gear.lua` `validatePart` (play.lua 금지, self_test 거대파일 금지).
-    - (26)은 수치 +/×만 맞춤. 카드들이 속도/내구/수확 클론. 조커처럼 **한 장 = 한 정체성**.
-    - 새 효과 타입 추가 금지 (`gear.lua` 이미 800줄+). 기존 타입만 재배치.
-    - 선체: +칩=hullDurability, 경제=sampleSellValue/money/shopDiscount/sellMultiplier, 생존=insurance/hullRegen/collisionRadius, 확률=luck/rerollBonus, 스케일=streakMultiplier.
-    - 엔진: 기동=speed/boostCharge, 특수=autoCollect/chainTrigger/detectionRadius, 공유=luck/rerollBonus/collisionRadius/streakMultiplier. **헐-온리 효과(shopDiscount/sellMultiplier/insurance/money/sampleSellValue/hullDurability) 엔진에서 제거.**
-    - 착지 트리거 부품 효과 넣지 말 것 (시너지 solarSystem·binary와 중복, INBOX 41).
-    - 로더가 `effects[].mode`를 버리고 있음 → `validatePart`가 `flat|multiply` persist. 없으면 rare ×카드가 로딩 후 전부 flat.
-    - 픽스처 유지: `hull_emergency_beacon` insurance>0, `hull_trade_license` shopDiscount=20. 엔진 풀에 luck/chainTrigger/rerollBonus/collisionRadius/detectionRadius/autoCollect/streakMultiplier/boostCharge 각 ≥1.
+  ~~(44) **발라트로 조커식 부품 효과 다양화** (namu.wiki Balatro/조커 카드#s-6, 사용자 2026-09-07)~~
+    - 완료: JSON 전수 재배치 — 한 장=한 정체성. 엔진에서 헐-온리 효과 제거. `validatePart`가 `mode` persist. Test GREEN.
 
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+(61.44) **발라트로 조커식 부품 효과 다양화:**
+  - 완료: 선체/엔진 JSON 전수 재배치 — 한 장=한 정체성 (커먼 단일, 언커먼 복합2, 레어 ×, 전설 +와 ×). 엔진에서 헐-온리(shopDiscount/sellMultiplier/insurance/money/sampleSellValue/hullDurability) 제거. `validatePart`가 `effects[].mode` persist (rare ×가 로딩 후 flat으로 사라지던 버그). i18n multiply 줄 `×N`. `tools/rebalance_joker_parts.py`. UNIT/SMOKE GREEN.
+
 (61.40) **gear-editor KO/EN 토글:**
   - 완료: toolbar KO|EN (`localeKoBtn`/`localeEnBtn`), `localStorage` key `gear-editor-locale`. Grid uses `nameKo` in KO and `name` in EN. Effects/rarity/suit/synergy 7종 follow i18n (no symbols). `python3 -m unittest tools.test_gear_editor_locale -v` GREEN.
 
