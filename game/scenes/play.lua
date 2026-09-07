@@ -2,6 +2,7 @@ local shipModule = require("game.ship")
 local expedition = require("game.expedition")
 local playJoystick = require("game.scenes.play_joystick")
 local playHud = require("game.scenes.play_hud")
+local playGameover = require("game.scenes.play_gameover")
 local bestAltitudeStore = require("game.best_altitude_store")
 local collectionStore = require("game.collection_store")
 local viewport = require("game.viewport")
@@ -3164,6 +3165,12 @@ M.shipStatsLineStep = 26
 function M:drawShipStatsSummary()
     return playHud.drawShipStatsSummary(self, M)
 end
+
+-- Delegate game-over panel drawing to play_gameover.lua.
+function M:drawGameOver()
+    return playGameover.drawGameOver(self, M)
+end
+
 function M:draw()
     local galaxy = world.galaxyContaining(self.ship.x, self.ship.y)
     love.graphics.clear(world.galaxyBackgroundColor(galaxy))
@@ -4184,118 +4191,7 @@ function M:draw()
         
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "destroyed" then
-        local panelX, panelW = 24, viewport.width - 48
-        local panelY, panelH = M.destroyedPanelY, M.destroyedPanelH
-        love.graphics.setColor(1, 1, 1, 0.94)
-        if not drawPanelSprite(self.destroyedPanelImage, panelX, panelY, panelW, panelH) then
-            love.graphics.setColor(0.08, 0.02, 0.03, 0.94)
-            love.graphics.rectangle("fill", panelX, panelY, panelW, panelH)
-        end
-        local previousFont = love.graphics.getFont()
-        love.graphics.setFont(fonts.get(33))
-        love.graphics.setColor(0.62, 0.64, 0.68, 0.85)
-        love.graphics.printf(i18n.t("ship_destroyed_title"), panelX, panelY + 36, panelW, "center")
-        love.graphics.setFont(fonts.get(22))
-        love.graphics.setColor(0.7, 0.72, 0.76, 0.85)
-        love.graphics.printf(i18n.t("meta_reset_line", math.floor(self.expedition.bestAltitude)),
-            panelX, panelY + 92, panelW, "center")
-        local choices = self.expedition.keepPartChoices or {}
-        if #choices > 0 then
-            love.graphics.setColor(0.65, 0.68, 0.72, 0.8)
-            love.graphics.printf(i18n.t("keep_part_hint"), panelX, panelY + 150, panelW, "center")
-            local rects = M.destroyedKeepPartRects(choices)
-            local kept = self.expedition.keptPart
-            for _, rect in ipairs(rects) do
-                local selected = kept and kept.part and rect.choice.part
-                    and kept.part.id == rect.choice.part.id
-                    and kept.category == rect.choice.category
-                M.drawBalatroCard(rect.choice.part, rect.x, rect.y, rect.w, rect.h, selected)
-            end
-            love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
-            love.graphics.printf(i18n.t("tap_start_over"), panelX, M.destroyedRestartTextY(true), panelW, "center")
-        else
-            -- No items to keep: center the restart prompt vertically
-            love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
-            love.graphics.printf(i18n.t("tap_start_over"), panelX, M.destroyedRestartTextY(false), panelW, "center")
-        end
-        -- INBOX 61(12): keep-one confirm popup overlay
-        if self.keepPartConfirm and self.keepPartConfirm.part then
-            local cp = self.keepPartConfirm.part
-            local rr, rg, rb = rarityRgb(cp.rarity)
-            local btns = M.keepConfirmButtons()
-            -- Dim background
-            love.graphics.setColor(0, 0, 0, 0.55)
-            love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
-            -- Popup body
-            love.graphics.setColor(0.10, 0.08, 0.12, 0.97)
-            love.graphics.rectangle("fill", btns.px, btns.py, btns.pw, btns.ph, 10, 10)
-            love.graphics.setColor(rr, rg, rb, 1)
-            love.graphics.setLineWidth(3)
-            love.graphics.rectangle("line", btns.px, btns.py, btns.pw, btns.ph, 10, 10)
-            love.graphics.setLineWidth(1)
-            -- Title
-            love.graphics.setFont(fonts.get(22))
-            love.graphics.setColor(1, 0.98, 0.92, 1)
-            love.graphics.printf(i18n.partName(cp), btns.px + 12, btns.py + 14, btns.pw - 24, "center")
-            -- Effects
-            local ey = btns.py + 46
-            love.graphics.setFont(fonts.get(18))
-            for _, eff in ipairs(cp.effects or {}) do
-                love.graphics.setColor(0.95, 0.82, 0.28, 1)
-                love.graphics.printf(i18n.effectLine(eff), btns.px + 12, ey, btns.pw - 24, "center")
-                ey = ey + 24
-            end
-            -- Rarity chip
-            local chipFont = fonts.get(18)
-            love.graphics.setFont(chipFont)
-            local rarLabel = i18n.rarityLabel(cp.rarity)
-            local rarW = chipFont:getWidth(rarLabel) + 20
-            local rarH2 = 26
-            local chipCX = btns.px + btns.pw / 2
-            love.graphics.setColor(rr, rg, rb, 0.85)
-            love.graphics.rectangle("fill", chipCX - rarW/2, ey + 6, rarW, rarH2, 5, 5)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.printf(rarLabel, chipCX - rarW/2, ey + 9, rarW, "center")
-            -- Suit chip
-            local suitLabel = i18n.suitLabel(cp.suit)
-            if suitLabel ~= "" then
-                local suitColors = {
-                    solar = {1, 0.82, 0.2}, nebula = {0.7, 0.3, 0.9},
-                    void = {0.2, 0.3, 0.8}, pulsar = {0.1, 0.85, 0.95},
-                }
-                local sc2 = suitColors[cp.suit] or {0.5, 0.5, 0.5}
-                local suitW = chipFont:getWidth(suitLabel) + 20
-                love.graphics.setColor(sc2[1], sc2[2], sc2[3], 0.85)
-                love.graphics.rectangle("fill", chipCX - suitW/2, ey + 6 + rarH2 + 4, suitW, rarH2, 5, 5)
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.printf(suitLabel, chipCX - suitW/2, ey + 9 + rarH2 + 4, suitW, "center")
-                ey = ey + rarH2 + 4
-            end
-            -- Synergy hint (two lines)
-            local hint = i18n.synergyHint(cp.suit)
-            if hint.name ~= "" then
-                local synY = ey + rarH2 + 14
-                love.graphics.setFont(fonts.get(16))
-                love.graphics.setColor(0.95, 0.82, 0.28, 0.9)
-                love.graphics.printf(hint.name, btns.px + 12, synY, btns.pw - 24, "center")
-                love.graphics.setFont(fonts.get(11))
-                love.graphics.setColor(0.7, 0.7, 0.7, 0.8)
-                love.graphics.printf(hint.desc, btns.px + 12, synY + 20, btns.pw - 24, "center")
-            end
-            -- Yes / No buttons
-            love.graphics.setFont(fonts.get(22))
-            -- YES button
-            love.graphics.setColor(0.2, 0.65, 0.3, 0.9)
-            love.graphics.rectangle("fill", btns.yes.x, btns.yes.y, btns.yes.w, btns.yes.h, 8, 8)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.printf(i18n.t("keep_yes"), btns.yes.x, btns.yes.y + 12, btns.yes.w, "center")
-            -- NO button
-            love.graphics.setColor(0.6, 0.2, 0.2, 0.9)
-            love.graphics.rectangle("fill", btns.no.x, btns.no.y, btns.no.w, btns.no.h, 8, 8)
-            love.graphics.setColor(1, 1, 1, 1)
-            love.graphics.printf(i18n.t("keep_no"), btns.no.x, btns.no.y + 12, btns.no.w, "center")
-        end
-        love.graphics.setFont(previousFont)
+        self:drawGameOver()
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()
     end
