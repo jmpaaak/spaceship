@@ -92,7 +92,7 @@ locales.en = {
     -- Item 11/15(a): returning_message no longer references in-flight slot
     -- opportunities (abolished).
     returning_message = "RETURNING  DRAG TO STEER",
-    earth_slot_spin_prompt = "TAP: EARTH SLOT SPIN",
+    earth_slot_spin_prompt = "TAP TO SPIN!",
     earth_slot_result = "%s  +$%d",
     earth_slot_miss = "%s  NO WIN",
     earth_slot_broke = "NOT ENOUGH MONEY  NEED $%d MORE FOR SPIN",
@@ -142,7 +142,7 @@ locales.en = {
     samples_settlement_line = "SAMPLES (%d) $%d",
     spins_settlement_line = "SPINS (%d) $%d",
     peak_alt_line = "PEAK ALT %d",
-    tap_relaunch = "TAP: RELAUNCH",
+    tap_relaunch = "TAP TO RELAUNCH",
     ship_destroyed_title = "GAME OVER",
     lost_total_line = "LOST TOTAL $%d",
     meta_reset_line = "MY BEST %d",

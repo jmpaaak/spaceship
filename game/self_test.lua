@@ -9037,6 +9037,32 @@ function M.run()
         print("  INBOX-61(1) asset-studio web hub OK")
     end
 
+    -- INBOX 61(3): slot UI — lever pull larger, i18n colon-free format
+    do
+        local i18n = require("game.i18n")
+        -- EN i18n: no colon prefix, user-friendly prompts
+        i18n.setLocale("en")
+        local enSpin = i18n.t("earth_slot_spin_prompt")
+        assert(not enSpin:find(":", 1, true),
+            "INBOX 61(3): earth_slot_spin_prompt EN must not contain colon, got: " .. enSpin)
+        local enRelaunch = i18n.t("tap_relaunch")
+        assert(not enRelaunch:find(":", 1, true),
+            "INBOX 61(3): tap_relaunch EN must not contain colon, got: " .. enRelaunch)
+        -- KO i18n: already updated previously
+        i18n.setLocale("ko")
+        local koSpin = i18n.t("earth_slot_spin_prompt")
+        assert(koSpin:find("탭하여", 1, true),
+            "INBOX 61(3): earth_slot_spin_prompt KO must start with 탭하여, got: " .. koSpin)
+        local koRelaunch = i18n.t("tap_relaunch")
+        assert(koRelaunch:find("탭하여", 1, true),
+            "INBOX 61(3): tap_relaunch KO must start with 탭하여, got: " .. koRelaunch)
+        -- Lever pull multiplier: code uses *150 for dramatic pull (was *50)
+        local src = love.filesystem.read("game/scenes/play.lua")
+        assert(src:find("slotLeverPull * 150", 1, true) or src:find("slotLeverPull *150", 1, true),
+            "INBOX 61(3): lever pull multiplier must be 150 (large pull), not 50")
+        print("  INBOX-61(3) slot lever/i18n OK")
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

@@ -4272,7 +4272,7 @@ function M:draw()
             local leverBotY = my + 40 * slotScale
             local leverPull = 0
             if self.slotLeverPull and self.slotLeverPull > 0 then
-                leverPull = self.slotLeverPull * 50
+                leverPull = self.slotLeverPull * 150
                 self.slotLeverPull = self.slotLeverPull - (love.timer and love.timer.getDelta() or 0.016) * 3
                 if self.slotLeverPull < 0 then self.slotLeverPull = 0 end
             end

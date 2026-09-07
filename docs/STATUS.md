@@ -1,16 +1,18 @@
 ## Current Status
 
-- INBOX 61(2): Slot 2/3-match rarity gate, duplicate refund, full-slot replacement.
-  - Fixed: earthSlotSpin PART branch pool now includes both hull AND engine parts (was hull-only).
-  - Rarity gate (2-match=common/uncommon, 3-match=rare/legendary) already correct.
-  - Duplicate part → $10 refund already correct.
-  - Full slot → replacement UI (shopModal) already correct.
-  - Added testEarthSlotSpinPartRarityGate: verifies rarity gate at expedition level + engine parts in pool.
+- INBOX 61(3): Slot UI — lever pull larger, i18n colon-free format.
+  - Lever pull multiplier tripled: `slotLeverPull * 50` → `* 150` for dramatic pull animation.
+  - EN i18n: `earth_slot_spin_prompt` = "TAP TO SPIN!" (was "TAP: EARTH SLOT SPIN"), `tap_relaunch` = "TAP TO RELAUNCH" (was "TAP: RELAUNCH").
+  - KO i18n already correct from prior cycle ("탭하여 룰렛 도전!" / "탭하여 재발사").
+  - PNG has no lever (confirmed pixel scan) — code lever is the only one, no duplication.
+  - Reel-stop haptic/shake/sparkles already present from prior cycle.
+  - 22px two-line text below machine already present.
+  - Added testINBOX61_3: verifies EN/KO i18n format + lever multiplier.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item (61.3 or next sub-item).
+- Process next pending INBOX item (61.4 or next sub-item).
 
 ## Previous
 
