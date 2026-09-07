@@ -119,6 +119,11 @@
       - **슬롯**: 심볼 매칭 규칙
     - Balatro 스타일 다크 패널, 닫기=아무 곳 탭.
 
+  (30) **타이틀: Sid Meier's 스타일 "Jimmy's 우주선"** (msg `1546411241927614506`)
+    - 제목 위에 작고 회색 `"Jimmy's"` (22px, `(0.55, 0.55, 0.58)`).
+    - 본 제목 `우주선` / `SPACESHIP` (기존 큰 폰트).
+    - i18n `title_author = "Jimmy's"` (EN/KO 동일). `title_game_name` 유지.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 

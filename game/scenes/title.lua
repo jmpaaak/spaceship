@@ -82,8 +82,14 @@ function M:draw()
         love.graphics.rectangle("fill", star.x, star.y, star.size, star.size)
     end
 
+    -- Author credit (Sid Meier's Civilization style): small grey above title
+    local authorFont = fonts.get(22)
+    love.graphics.setFont(authorFont)
+    love.graphics.setColor(0.55, 0.55, 0.58, 0.85)
+    love.graphics.printf(i18n.t("title_author"), 0, 268, viewport.width, "center")
+
     -- Title
-    local titleFont = fonts.get(72)
+    local titleFont = fonts.get(44)
     love.graphics.setFont(titleFont)
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.printf(i18n.t("title_game_name"), 0, 300, viewport.width, "center")
