@@ -4556,5 +4556,25 @@
     "width": 32,
     "height": 32,
     "qa": "32x32 RGBA boost effect icon"
+  },
+  {
+    "path": "assets/star/star_generic.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_stars.py",
+    "terms_url": "tools/gen_stars.py",
+    "asset_id": "star-generic-001",
+    "prompt": "PIL-generated generic star: 128x128 RGBA, procedural radial glow",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 128,
+      "height": 128
+    },
+    "downloaded_at": "2026-09-07T20:02:12+09:00",
+    "sha256": "ade237057563834bc448c7adfa7c379727337e48681cee6dbdafbcb8dacd3a4b",
+    "width": 128,
+    "height": 128,
+    "qa": "128x128 RGBA star sprite, tools/gen_stars.py"
   }
 ]
