@@ -136,7 +136,10 @@ function computeBuyPrice(rarity, editionId) {
 }
 
 /** @type {{schemaVersion: number, parts: Array<object>}|null} */
-let pool = null;
+let hullPool = null;
+let enginePool = null;
+let activeKind = "hull"; // "hull" | "engine"
+let pool = null; // currently displayed pool (hullPool or enginePool)
 let fileHandle = null; // File System Access API handle, when available
 let editingId = null; // id of the card currently open in the form, or null for "new"
 
@@ -144,6 +147,7 @@ const els = {};
 function cacheEls() {
   [
     "openHullInput", "openEngineInput", "openFsaBtn", "saveFsaBtn",
+    "tabHull", "tabEngine",
     "downloadBtn", "newCardBtn", "statusBar", "grid", "formPanel",
     "formTitle", "cardForm", "fieldId", "fieldName", "fieldNameKo",
     "fieldIcon", "fieldRarity", "rarityPreview", "fieldSuit", "fieldTags",
@@ -213,6 +217,25 @@ function validatePool(doc) {
   return errors;
 }
 
+function poolKindFromName(name) {
+  const n = String(name || "").toLowerCase();
+  if (n.indexOf("engine") >= 0) return "engine";
+  if (n.indexOf("hull") >= 0) return "hull";
+  return activeKind;
+}
+
+function storePool(kind, doc) {
+  if (kind === "engine") enginePool = doc;
+  else hullPool = doc;
+}
+
+function syncActivePool() {
+  pool = activeKind === "engine" ? enginePool : hullPool;
+  const ready = !!pool;
+  els.downloadBtn.disabled = !ready;
+  els.newCardBtn.disabled = !ready;
+}
+
 function loadDocument(doc, name) {
   const errors = validatePool(doc);
   if (errors.length > 0) {
@@ -220,22 +243,33 @@ function loadDocument(doc, name) {
   } else {
     setStatus(`Loaded '${name}' — ${doc.parts.length} card(s), all valid.`, "ok");
   }
-  pool = doc;
-  els.downloadBtn.disabled = false;
-  els.newCardBtn.disabled = false;
-  renderGrid();
+  const kind = poolKindFromName(name);
+  storePool(kind, doc);
+  if (kind === activeKind) {
+    syncActivePool();
+    renderGrid();
+  }
 }
 
 function readFileAsJson(file) {
   return file.text().then((text) => JSON.parse(text));
 }
 
-function wireOpenInput(inputEl) {
+function wireOpenInput(inputEl, kindHint) {
   inputEl.addEventListener("change", () => {
     const file = inputEl.files[0];
     if (!file) return;
     readFileAsJson(file)
-      .then((doc) => { fileHandle = null; els.saveFsaBtn.disabled = true; loadDocument(doc, file.name); })
+      .then((doc) => {
+        fileHandle = null;
+        els.saveFsaBtn.disabled = true;
+        const name = kindHint === "engine"
+          ? (file.name.indexOf("engine") >= 0 ? file.name : "engine_parts.json")
+          : (kindHint === "hull"
+            ? (file.name.indexOf("hull") >= 0 ? file.name : "hull_parts.json")
+            : file.name);
+        loadDocument(doc, name);
+      })
       .catch((err) => setStatus(`Failed to parse '${file.name}': ${err.message}`, "error"));
   });
 }
@@ -296,10 +330,10 @@ function wireDownload() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "gear_parts.json";
+    a.download = activeKind === "engine" ? "engine_parts.json" : "hull_parts.json";
     a.click();
     URL.revokeObjectURL(url);
-    setStatus("Downloaded gear_parts.json — move it into game/data/ to replace the original.", "ok");
+    setStatus(`Downloaded ${a.download} — move it into game/data/ to replace the original.`, "ok");
   });
 }
 
@@ -624,6 +658,7 @@ function wireForm() {
   els.deleteCardBtn.addEventListener("click", () => {
     if (!editingId || !pool) return;
     pool.parts = pool.parts.filter((p) => p.id !== editingId);
+    storePool(activeKind, pool);
     setStatus(`Deleted '${editingId}'. Remember to save/download.`, "ok");
     renderGrid();
     closeForm();
@@ -646,6 +681,7 @@ function wireForm() {
     }
 
     pool.parts = hypothetical.parts;
+    storePool(activeKind, pool);
     setStatus(`Saved '${candidate.id}' in memory. Use "Save to disk" or "Download JSON" to persist.`, "ok");
     renderGrid();
     closeForm();
@@ -655,22 +691,65 @@ function wireForm() {
 function init() {
   cacheEls();
   loadLocale();
-  wireOpenInput(els.openHullInput);
-  wireOpenInput(els.openEngineInput);
+  wireOpenInput(els.openHullInput, "hull");
+  wireOpenInput(els.openEngineInput, "engine");
   wireOpenFsa();
   wireSaveFsa();
   wireDownload();
   wireForm();
+  wirePoolTabs();
   if (els.localeKoBtn) els.localeKoBtn.addEventListener("click", () => setLocale("ko"));
   if (els.localeEnBtn) els.localeEnBtn.addEventListener("click", () => setLocale("en"));
   setLocale(editorLocale);
-  // Auto-load both JSON files when served via HTTP (gear-editor server)
+  // Auto-load hull JSON when served via HTTP. Engine waits for first Engine tab click.
   autoLoadDefaults();
+}
+
+function wirePoolTabs() {
+  if (els.tabHull) els.tabHull.addEventListener("click", () => selectPool("hull"));
+  if (els.tabEngine) els.tabEngine.addEventListener("click", () => selectPool("engine"));
+}
+
+function updateTabActive() {
+  if (els.tabHull) els.tabHull.classList.toggle("active", activeKind === "hull");
+  if (els.tabEngine) els.tabEngine.classList.toggle("active", activeKind === "engine");
+}
+
+function selectPool(kind) {
+  activeKind = kind === "engine" ? "engine" : "hull";
+  updateTabActive();
+  closeForm();
+  if (activeKind === "engine") {
+    ensureEngineLoaded();
+    return;
+  }
+  syncActivePool();
+  renderGrid();
+}
+
+async function ensureEngineLoaded() {
+  if (enginePool) {
+    syncActivePool();
+    renderGrid();
+    return;
+  }
+  const enginePath = "/gear-editor/data/engine_parts.json";
+  try {
+    const resp = await fetch(enginePath);
+    if (resp.ok) {
+      const doc = await resp.json();
+      loadDocument(doc, "engine_parts.json");
+      setStatus("Auto-loaded engine_parts.json — " + doc.parts.length + " card(s).", "ok");
+      return;
+    }
+  } catch (_) { /* not served via HTTP, ignore */ }
+  syncActivePool();
+  renderGrid();
+  setStatus("Open an engine_parts.json file, or serve the editor over HTTP so Engine can auto-load.");
 }
 
 async function autoLoadDefaults() {
   const hullPath = "/gear-editor/data/hull_parts.json";
-  const enginePath = "/gear-editor/data/engine_parts.json";
   try {
     const resp = await fetch(hullPath);
     if (resp.ok) {
@@ -680,15 +759,6 @@ async function autoLoadDefaults() {
       return;
     }
   } catch (_) { /* not served via HTTP, ignore */ }
-  try {
-    const resp = await fetch(enginePath);
-    if (resp.ok) {
-      const doc = await resp.json();
-      loadDocument(doc, "engine_parts.json");
-      setStatus("Auto-loaded engine_parts.json — " + doc.parts.length + " card(s).", "ok");
-      return;
-    }
-  } catch (_) { /* ignore */ }
   setStatus("Open a hull_parts.json or engine_parts.json file to begin.");
 }
 

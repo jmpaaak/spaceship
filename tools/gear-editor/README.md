@@ -16,8 +16,10 @@ No build step, no server-side dependency, no npm install. Two ways to use it:
    "Open hull_parts.json" / "Open engine_parts.json" to load a file from
    disk (any modern browser supports `<input type=file>`), edit cards in
    the form/grid, and click "Download JSON" to save your edits back to
-   `game/data/hull_parts.json` (overwrite the file when your browser
-   downloads it, or move the downloaded file into place manually).
+   `game/data/` (overwrite the file when your browser downloads it, or
+   move the downloaded file into place manually). Served over HTTP, hull
+   auto-loads on start; the Engine tab's first click fetches
+   `/gear-editor/data/engine_parts.json`. Both pools stay in memory.
 
 2. **With File System Access API** (Chrome/Edge): click "Open + enable
    direct save" to pick the JSON file via the native file picker. Edits can

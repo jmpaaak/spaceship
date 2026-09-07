@@ -163,11 +163,8 @@
     - 소스 `space.flac` → LÖVE용 ogg/mp3. 크레딧: `BGM: Space — lasercheese (CC-BY 3.0)`.
     - 헤드리스 audio nil 가드 유지.
 
-  (43) **gear-editor 엔진 파츠도 초기 클릭 시 현재 JSON 자동 로드** (msg `154641...` 후속)
-    - 담당: `tools/gear-editor/` (play.lua 금지).
-    - 지금 `autoLoadDefaults()`가 hull만 fetch하고 `return`해서 engine은 파일 피커 필수.
-    - Hull | Engine 탭. 엔진 탭 **첫 클릭**에 `/gear-editor/data/engine_parts.json` (현재 적용본) fetch.
-    - 두 풀을 메모리에 따로 보관. 파일 피커는 덮어쓰기용으로 유지.
+  ~~(43) **gear-editor 엔진 파츠도 초기 클릭 시 현재 JSON 자동 로드** (msg `154641...` 후속)~~
+    - 완료: Hull|Engine 탭. `hullPool`/`enginePool` 분리. `autoLoadDefaults`는 hull만. Engine 첫 클릭에 `/gear-editor/data/engine_parts.json` fetch. 파일 피커 덮어쓰기 유지. Test `tools.test_gear_editor_engine_tab` GREEN.
 
   ~~(44) **발라트로 조커식 부품 효과 다양화** (namu.wiki Balatro/조커 카드#s-6, 사용자 2026-09-07)~~
     - 완료: JSON 전수 재배치 — 한 장=한 정체성. 엔진에서 헐-온리 효과 제거. `validatePart`가 `mode` persist. Test GREEN.
@@ -176,6 +173,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+(61.43) **gear-editor 엔진 탭 자동 로드:**
+  - 완료: Hull|Engine 탭 클릭이 `selectPool`로 전환. `hullPool`/`enginePool` 메모리 분리. `autoLoadDefaults()`는 hull만 fetch. Engine 탭 첫 클릭 `ensureEngineLoaded()` → `/gear-editor/data/engine_parts.json`. 파일 피커는 덮어쓰기용 유지. `python3 -m unittest tools.test_gear_editor_engine_tab -v` GREEN. play.lua / self_test.lua untouched.
+
 (61.44) **발라트로 조커식 부품 효과 다양화:**
   - 완료: 선체/엔진 JSON 전수 재배치 — 한 장=한 정체성 (커먼 단일, 언커먼 복합2, 레어 ×, 전설 +와 ×). 엔진에서 헐-온리(shopDiscount/sellMultiplier/insurance/money/sampleSellValue/hullDurability) 제거. `validatePart`가 `effects[].mode` persist (rare ×가 로딩 후 flat으로 사라지던 버그). i18n multiply 줄 `×N`. `tools/rebalance_joker_parts.py`. UNIT/SMOKE GREEN.
 

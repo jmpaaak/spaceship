@@ -7,7 +7,7 @@ LOVE_PACKAGE ?= $(BUILD_DIR)/game.love
 
 test:
 	GAME_HEADLESS=1 GAME_UNIT=1 $(LOVE) .
-	python3 -m unittest tools.test_verify_asset_manifest tools.test_serve_editors tools.test_gear_editor_locale -v
+	python3 -m unittest tools.test_verify_asset_manifest tools.test_serve_editors tools.test_gear_editor_locale tools.test_gear_editor_engine_tab -v
 
 smoke:
 	GAME_HEADLESS=1 $(LOVE) .
