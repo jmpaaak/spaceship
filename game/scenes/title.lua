@@ -22,6 +22,7 @@ function M.new(options)
         onStart = options.onStart,      -- callback: new game
         onContinue = options.onContinue, -- callback: continue
         onSettings = options.onSettings, -- callback: settings (stub)
+        onLeaderboard = options.onLeaderboard, -- callback: leaderboard
         -- Background star field (simple)
         stars = M._generateStars(120),
         starTimer = 0,
@@ -52,6 +53,9 @@ function M:buttonRects()
     y = y + M.buttonH + M.buttonGap
     -- CONTINUE
     rects.continue_ = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
+    y = y + M.buttonH + M.buttonGap
+    -- LEADERBOARD
+    rects.leaderboard = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
     y = y + M.buttonH + M.buttonGap
     -- SETTINGS
     rects.settings = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
@@ -94,6 +98,8 @@ function M:draw()
     self:_drawButton(rects.start, i18n.t("title_start"), true)
     -- CONTINUE button (greyed out if no save)
     self:_drawButton(rects.continue_, i18n.t("title_continue"), self.hasSave)
+    -- LEADERBOARD button
+    self:_drawButton(rects.leaderboard, i18n.t("title_leaderboard"), true)
     -- SETTINGS button (stub, always enabled visually)
     self:_drawButton(rects.settings, i18n.t("title_settings"), true)
 end
@@ -119,6 +125,11 @@ function M:touchpressed(id, x, y)
     end
     if self.hasSave and self:_hitRect(rects.continue_, x, y) then
         if self.onContinue then self.onContinue() end
+        return
+    end
+    -- Leaderboard
+    if self:_hitRect(rects.leaderboard, x, y) then
+        if self.onLeaderboard then self.onLeaderboard() end
         return
     end
     -- Settings: stub, do nothing for now

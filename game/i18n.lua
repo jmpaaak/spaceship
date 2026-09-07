@@ -233,6 +233,13 @@ locales.en = {
     title_start = "START",
     title_continue = "CONTINUE",
     title_settings = "SETTINGS",
+    title_leaderboard = "LEADERBOARD",
+    leaderboard_title = "LEADERBOARD",
+    leaderboard_empty = "No scores yet",
+    leaderboard_back = "BACK",
+    leaderboard_rank = "#%d",
+    leaderboard_loading = "Loading...",
+    leaderboard_error = "Could not connect",
 }
 
 locales.en.phase_abbrev = {
@@ -455,6 +462,13 @@ locales.ko = {
     title_start = "시작하기",
     title_continue = "이어서 하기",
     title_settings = "설정",
+    title_leaderboard = "리더보드",
+    leaderboard_title = "리더보드",
+    leaderboard_empty = "기록이 없습니다",
+    leaderboard_back = "돌아가기",
+    leaderboard_rank = "#%d",
+    leaderboard_loading = "불러오는 중...",
+    leaderboard_error = "연결할 수 없습니다",
 }
 
 locales.ko.phase_abbrev = {

@@ -2,6 +2,7 @@ local viewport = require("game.viewport")
 local sceneStack = require("game.scene_stack")
 local PlayScene = require("game.scenes.play")
 local TitleScene = require("game.scenes.title")
+local LeaderboardScene = require("game.scenes.leaderboard")
 
 local canvas
 local scenes
@@ -78,6 +79,12 @@ function love.load()
                 hasSave = false,
                 onStart = function() startGame(true) end,
                 onContinue = function() startGame(false) end,
+                onLeaderboard = function()
+                    local lb = LeaderboardScene.new({
+                        onBack = function() goToTitle() end,
+                    })
+                    sceneStack.switch(scenes, lb)
+                end,
             })
             sceneStack.switch(scenes, title)
         end
@@ -94,6 +101,12 @@ function love.load()
             hasSave = false, -- TODO: detect save in future slice
             onStart = function() startGame(true) end,
             onContinue = function() startGame(false) end,
+            onLeaderboard = function()
+                local lb = LeaderboardScene.new({
+                    onBack = function() goToTitle() end,
+                })
+                sceneStack.switch(scenes, lb)
+            end,
         })
         scenes = sceneStack.new(title)
     end

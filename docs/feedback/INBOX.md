@@ -60,12 +60,13 @@
     - 완료: DANGER 경고 텍스트 — `world.starDangerTextMultiplier=1.5` 범위 내 접근 시 빨간 깜빡임 텍스트 4개가 well ring 주위를 천천히 회전하며 표시. i18n EN="DANGER"/KO="위험". 태양 에셋은 이미 `tools/gen_stars.py`로 6종 star sprite + rotation sheet 생성 완료 (노란 원 폴백 아님). Test INBOX-61(22) GREEN.
 
   (23) **메인메뉴 리더보드 + 로컬 서버** (msg `1546396453734326293`)
-    - 타이틀 씬 (21)에 **리더보드** 버튼 추가.
-    - Mac mini 로컬에 가벼운 HTTP 서버 (`tools/leaderboard_server.py`, Flask 또는 http.server + JSON 파일).
-    - API: `POST /score` `{name, bestAltitude, timestamp}` → append. `GET /scores?limit=20` → top 20.
+    - ~~타이틀 씬 (21)에 **리더보드** 버튼 추가.~~
+    - ~~Mac mini 로컬에 가벼운 HTTP 서버 (`tools/leaderboard_server.py`, Flask 또는 http.server + JSON 파일).~~
+    - ~~API: `POST /score` `{name, bestAltitude, timestamp}` → append. `GET /scores?limit=20` → top 20.~~
     - 게임: 게임오버 또는 착지 시 `bestAltitude` 갱신되면 서버에 POST. 타이틀 리더보드 화면에서 GET 후 표시.
-    - LÖVE HTTP: `love.thread` + `luasocket` 또는 `os.execute curl` 비동기. 연결 실패 시 조용히 스킵.
-    - 서버 포트 고정 (예: 8770). `conf.lua`에 `leaderboardUrl` 설정.
+    - ~~LÖVE HTTP: `love.thread` + `luasocket` 또는 `os.execute curl` 비동기. 연결 실패 시 조용히 스킵.~~
+    - ~~서버 포트 고정 (예: 8770). `conf.lua`에 `leaderboardUrl` 설정.~~
+    - 완료(a): LEADERBOARD 버튼 title scene에 추가, `game/scenes/leaderboard.lua` scene (GET /scores 표시), `game/game_config.lua` (leaderboardUrl=8770), `tools/leaderboard_server.py` (POST /score + GET /scores), i18n EN+KO, main.lua 연결. Test INBOX-61(23) GREEN. 남은 작업: settle/destroy 시 score POST 자동 전송.
 
   (24) **게임오버 → 마지막 체크포인트 부활 + 메인홈 구성** (msg `1546397935804223528`, 정정 `1546398416471457792`)
     - 현재: 게임오버 → 아이템 1개만 keep → 지구(0,75)에서 리스타트, 모든 돈/업그레이드/장비 리셋.
