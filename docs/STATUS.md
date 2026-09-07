@@ -1,18 +1,28 @@
 ## Current Status
 
+- INBOX 61(12): keep-one confirm popup + card text fix.
+  - drawBalatroCard name text: 22px → 11px, clipped inside card via setScissor (no overflow).
+  - Tapping a card no longer immediately keeps it; opens a confirm popup with:
+    name, effect lines, rarity chip, suit chip, synergy hint (two lines), Yes/No buttons.
+  - Yes → keptPart set, No → popup dismissed, pick again.
+  - Yes/No buttons 48px tall (≥44px touch target requirement).
+  - keepConfirmButtons() pure function, tested: layout fits 720×1280, buttons inside popup.
+  - i18n: keep_confirm_title, keep_yes, keep_no (EN + KO).
+  - Tests: INBOX-61(12) keepOne confirm popup OK.
+- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
+
+## Next slice
+
+- Process next pending INBOX item (14: planet green circle fallback fix).
+
+## Previous
+
 - INBOX 61(9)(10)(11)(13): batch fix — rim marker colours, pause time freeze, star scan, debris.
   - (9) Both minimap rim markers now cyan `{0.3,0.9,0.95}`, second alpha 0.45, radius 2.8 (smaller).
   - (10) `self.time += dt` removed from paused/gearPopup early returns → moons/comets/debris freeze.
   - (11) Background + foreground star scan range dynamic `max(4, ceil(h/2/sectorSize)+2)` — no pop-in gaps.
   - (13) Debris: radii 8-16/5-8/5-10, continuous angle velocity, `time % 30` wrap — visible at t=300.
   - Tests: INBOX-61(9/10/11/13) all GREEN.
-- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
-
-## Next slice
-
-- Process next pending INBOX item (12: game-over keep-one card overflow + confirm popup).
-
-## Previous
 
 - INBOX 61(8): Part icons + HUD slot 48px.
 
@@ -48,5 +58,3 @@
 - INBOX (43) complete: PIL-generated 16×16 HUD icons for distance/cash/durability.
 - INBOX (42) complete: gear slots layout changed from horizontal row to vertical column.
 - INBOX (41) complete: HUD font size unified across all phases (launch = ascending).
-- INBOX (40) complete: Gear slots grid fixed below left HUD stats during ascending/returning/launch.
-- INBOX (36) complete: flat $1 planet sample value.

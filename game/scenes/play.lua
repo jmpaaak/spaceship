@@ -393,6 +393,28 @@ function M.destroyedKeepPartRects(choices)
     return rects
 end
 
+-- INBOX 61(12): keep-one confirm popup geometry
+-- Returns {popupX, popupY, popupW, popupH, yes={x,y,w,h}, no={x,y,w,h}}
+M.keepConfirmPopupW = 360
+M.keepConfirmPopupH = 360
+M.keepConfirmBtnH = 48  -- ≥44px touch target
+function M.keepConfirmButtons()
+    local pw, ph = M.keepConfirmPopupW, M.keepConfirmPopupH
+    local px = math.floor((720 - pw) / 2)
+    local py = math.floor((1280 - ph) / 2)
+    local btnW = 120
+    local btnH = M.keepConfirmBtnH
+    local gap = 24
+    local btnY = py + ph - btnH - 16
+    local yesX = px + pw / 2 - btnW - gap / 2
+    local noX = px + pw / 2 + gap / 2
+    return {
+        px = px, py = py, pw = pw, ph = ph,
+        yes = { x = yesX, y = btnY, w = btnW, h = btnH },
+        no  = { x = noX,  y = btnY, w = btnW, h = btnH },
+    }
+end
+
 local function rarityRgb(rarity)
     if rarity == "legendary" then return 1.00, 0.72, 0.18 end
     if rarity == "rare" then return 0.35, 0.62, 1.00 end
@@ -424,9 +446,12 @@ function M.drawBalatroCard(part, x, y, w, h, selected)
         local sc = iconSize / math.max(iw, ih)
         love.graphics.draw(icon, x + w/2, y + h/2, 0, sc, sc, iw/2, ih/2)
     end
-    love.graphics.setFont(fonts.get(22))
+    -- INBOX 61(12): name 11px, clipped inside card
+    love.graphics.setFont(fonts.get(11))
     love.graphics.setColor(1, 0.98, 0.92, 1)
-    love.graphics.printf(i18n.partName(part), x + 6, y + math.floor(h / 2) - 12, w - 12, "center")
+    love.graphics.setScissor(x, y, w, h)
+    love.graphics.printf(i18n.partName(part), x + 4, y + h - 16, w - 8, "center")
+    love.graphics.setScissor()
     if prev then love.graphics.setFont(prev) end
 end
 
@@ -3112,11 +3137,30 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "destroyed" then
+        -- INBOX 61(12): confirm popup yes/no handling
+        if self.keepPartConfirm then
+            local btns = M.keepConfirmButtons()
+            if btns then
+                if x >= btns.yes.x and x < btns.yes.x + btns.yes.w
+                   and y >= btns.yes.y and y < btns.yes.y + btns.yes.h then
+                    self.expedition.keptPart = self.keepPartConfirm
+                    self.keepPartConfirm = nil
+                    return
+                end
+                if x >= btns.no.x and x < btns.no.x + btns.no.w
+                   and y >= btns.no.y and y < btns.no.y + btns.no.h then
+                    self.keepPartConfirm = nil
+                    return
+                end
+            end
+            return  -- absorb all taps while popup is open
+        end
         local choices = self.expedition.keepPartChoices or {}
         if #choices > 0 then
             for _, rect in ipairs(M.destroyedKeepPartRects(choices)) do
                 if x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h then
-                    self.expedition.keptPart = rect.choice
+                    -- INBOX 61(12): open confirm popup instead of immediate keep
+                    self.keepPartConfirm = rect.choice
                     return
                 end
             end
@@ -4459,6 +4503,83 @@ function M:draw()
         end
         love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
         love.graphics.printf(i18n.t("tap_start_over"), panelX, panelY + panelH - 72, panelW, "center")
+        -- INBOX 61(12): keep-one confirm popup overlay
+        if self.keepPartConfirm and self.keepPartConfirm.part then
+            local cp = self.keepPartConfirm.part
+            local rr, rg, rb = rarityRgb(cp.rarity)
+            local btns = M.keepConfirmButtons()
+            -- Dim background
+            love.graphics.setColor(0, 0, 0, 0.55)
+            love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
+            -- Popup body
+            love.graphics.setColor(0.10, 0.08, 0.12, 0.97)
+            love.graphics.rectangle("fill", btns.px, btns.py, btns.pw, btns.ph, 10, 10)
+            love.graphics.setColor(rr, rg, rb, 1)
+            love.graphics.setLineWidth(3)
+            love.graphics.rectangle("line", btns.px, btns.py, btns.pw, btns.ph, 10, 10)
+            love.graphics.setLineWidth(1)
+            -- Title
+            love.graphics.setFont(fonts.get(22))
+            love.graphics.setColor(1, 0.98, 0.92, 1)
+            love.graphics.printf(i18n.partName(cp), btns.px + 12, btns.py + 14, btns.pw - 24, "center")
+            -- Effects
+            local ey = btns.py + 46
+            love.graphics.setFont(fonts.get(18))
+            for _, eff in ipairs(cp.effects or {}) do
+                love.graphics.setColor(0.95, 0.82, 0.28, 1)
+                love.graphics.printf(i18n.effectLine(eff), btns.px + 12, ey, btns.pw - 24, "center")
+                ey = ey + 24
+            end
+            -- Rarity chip
+            local chipFont = fonts.get(18)
+            love.graphics.setFont(chipFont)
+            local rarLabel = i18n.rarityLabel(cp.rarity)
+            local rarW = chipFont:getWidth(rarLabel) + 20
+            local rarH2 = 26
+            local chipCX = btns.px + btns.pw / 2
+            love.graphics.setColor(rr, rg, rb, 0.85)
+            love.graphics.rectangle("fill", chipCX - rarW/2, ey + 6, rarW, rarH2, 5, 5)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.printf(rarLabel, chipCX - rarW/2, ey + 9, rarW, "center")
+            -- Suit chip
+            local suitLabel = i18n.suitLabel(cp.suit)
+            if suitLabel ~= "" then
+                local suitColors = {
+                    solar = {1, 0.82, 0.2}, nebula = {0.7, 0.3, 0.9},
+                    void = {0.2, 0.3, 0.8}, pulsar = {0.1, 0.85, 0.95},
+                }
+                local sc2 = suitColors[cp.suit] or {0.5, 0.5, 0.5}
+                local suitW = chipFont:getWidth(suitLabel) + 20
+                love.graphics.setColor(sc2[1], sc2[2], sc2[3], 0.85)
+                love.graphics.rectangle("fill", chipCX - suitW/2, ey + 6 + rarH2 + 4, suitW, rarH2, 5, 5)
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.printf(suitLabel, chipCX - suitW/2, ey + 9 + rarH2 + 4, suitW, "center")
+                ey = ey + rarH2 + 4
+            end
+            -- Synergy hint (two lines)
+            local hint = i18n.synergyHint(cp.suit)
+            if hint.name ~= "" then
+                local synY = ey + rarH2 + 14
+                love.graphics.setFont(fonts.get(16))
+                love.graphics.setColor(0.95, 0.82, 0.28, 0.9)
+                love.graphics.printf(hint.name, btns.px + 12, synY, btns.pw - 24, "center")
+                love.graphics.setFont(fonts.get(11))
+                love.graphics.setColor(0.7, 0.7, 0.7, 0.8)
+                love.graphics.printf(hint.desc, btns.px + 12, synY + 20, btns.pw - 24, "center")
+            end
+            -- Yes / No buttons
+            love.graphics.setFont(fonts.get(22))
+            -- YES button
+            love.graphics.setColor(0.2, 0.65, 0.3, 0.9)
+            love.graphics.rectangle("fill", btns.yes.x, btns.yes.y, btns.yes.w, btns.yes.h, 8, 8)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.printf(i18n.t("keep_yes"), btns.yes.x, btns.yes.y + 12, btns.yes.w, "center")
+            -- NO button
+            love.graphics.setColor(0.6, 0.2, 0.2, 0.9)
+            love.graphics.rectangle("fill", btns.no.x, btns.no.y, btns.no.w, btns.no.h, 8, 8)
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.printf(i18n.t("keep_no"), btns.no.x, btns.no.y + 12, btns.no.w, "center")
+        end
         love.graphics.setFont(previousFont)
     elseif self.expedition.phase == "ascending" then
         self:drawJoystickStick()
