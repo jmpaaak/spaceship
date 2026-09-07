@@ -7411,8 +7411,8 @@ function M.run()
         assert(slotScene.expedition.money == moneyBefore - spinCost + 100,
             "item 15(b): winning spin must be money - cost + reward, expected "
             .. (moneyBefore - spinCost + 100) .. " got " .. slotScene.expedition.money)
-        assert(slotScene.message ~= nil and slotScene.message:find("%+%$100"),
-            "item 15(b): message must reference the +$75 reward, got: " .. tostring(slotScene.message))
+        assert(slotScene.slotResultMessage ~= nil and slotScene.slotResultMessage:find("%+%$100"),
+            "item 15(b): slotResultMessage must reference the +$100 reward, got: " .. tostring(slotScene.slotResultMessage))
 
         -- (4) The rolls table passed to earthSlotSpin must have a .reels field
         -- (not a plain array). Plain arrays make rolls.reels nil and cause the

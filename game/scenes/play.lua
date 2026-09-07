@@ -2033,7 +2033,7 @@ function M:update(dt)
             if result then
                 self.expedition.money = self.expedition.money + result.reward
                 if result.reward > 0 then
-                    self.message = i18n.t("earth_slot_result",
+                    self.slotResultMessage = i18n.t("earth_slot_result",
                         table.concat(result.symbols, " "), result.reward)
                     -- WIN: strong haptic + sparkle particles
                     pcall(love.system.vibrate, 0.12)
@@ -2052,7 +2052,7 @@ function M:update(dt)
                         }
                     end
                 else
-                    self.message = i18n.t("earth_slot_miss",
+                    self.slotResultMessage = i18n.t("earth_slot_miss",
                         table.concat(result.symbols, " "))
                     pcall(love.system.vibrate, 0.04)
                 end
@@ -2812,6 +2812,7 @@ function M:keypressed(key)
         self.slotShake = 0.1
         self.slotState = {
             spinning = true,
+            startTime = self.time or 0,
             stopIndex = 1,
             reels = {
                 { y = 0, speed = 800, stopping = false, stopped = false, sym = result.symbols[1] },
@@ -4239,10 +4240,10 @@ function M:draw()
         end
 
         local r4 = M.settlementTouchRows[4].top
-        row = r4 + 12
+        row = r4 + 4
         if self.earthShopSlotResult or (self.slotState and self.slotState.spinning) then
             love.graphics.setColor(1, 1, 1, 1)
-            local slotScale = 2
+            local slotScale = 3
             local slotW = 96 * slotScale
             local mx = fullX + (fullW - slotW) / 2
             local my = row
@@ -4250,21 +4251,40 @@ function M:draw()
             local shakeX, shakeY = 0, 0
             if (self.slotShake or 0) > 0 then
                 self.slotShake = self.slotShake - (love.timer and love.timer.getDelta() or 0.016)
-                shakeX = (math.random() - 0.5) * 6
-                shakeY = (math.random() - 0.5) * 4
+                shakeX = (math.random() - 0.5) * 8
+                shakeY = (math.random() - 0.5) * 6
             end
             mx = mx + shakeX
             my = my + shakeY
             if self.slotMachineImage then
                 love.graphics.draw(self.slotMachineImage, mx, my, 0, slotScale, slotScale)
             end
+            -- Lever animation: pull down when spinning
+            local leverX = mx + 96 * slotScale + 2
+            local leverBaseY = my + 4 * slotScale
+            local leverPull = 0
+            if self.slotState and self.slotState.spinning then
+                local elapsed = (self.time or 0) - (self.slotState.startTime or 0)
+                if elapsed < 0.3 then
+                    leverPull = math.sin(elapsed / 0.3 * math.pi) * 20 * slotScale / 3
+                end
+            end
+            love.graphics.setColor(0.9, 0.15, 0.1)
+            love.graphics.circle("fill", leverX, leverBaseY + leverPull, 6)
+            love.graphics.setColor(0.5, 0.5, 0.5)
+            love.graphics.setLineWidth(3)
+            love.graphics.line(leverX, my + 2 * slotScale, leverX, leverBaseY + leverPull)
+            love.graphics.setLineWidth(1)
             
-            -- Draw Reels
+            -- Draw Reels — centered in each window
             local rKeys = {"MONEY", "PART", "SPEED", "DURABILITY", "HARVEST"}
+            local reelWindowW = 24 * slotScale
+            local reelWindowH = 32 * slotScale
+            local symSize = 32  -- symbol image is 32x32
             for i = 1, 3 do
-                local rx = mx + 12 * slotScale + (i - 1) * 24 * slotScale
+                local rx = mx + (8 + (i - 1) * 28) * slotScale
                 local ry = my + 8 * slotScale
-                love.graphics.setScissor(rx, ry, 20 * slotScale, 32 * slotScale)
+                love.graphics.setScissor(rx, ry, reelWindowW, reelWindowH)
                 local rState = self.slotState and self.slotState.reels[i]
                 local drawSym = self.earthShopSlotResult and self.earthShopSlotResult.symbols[i] or "MONEY"
                 local yOff = 0
@@ -4276,29 +4296,34 @@ function M:draw()
                         drawSym = rState.sym
                     end
                 end
-                
                 local symImg = self.slotSymbolImages and self.slotSymbolImages[drawSym]
+                local symScale = reelWindowW / symSize * 0.85
+                local symOffX = (reelWindowW - symSize * symScale) / 2
+                local symOffY = (reelWindowH - symSize * symScale) / 2
                 if symImg then
-                    love.graphics.draw(symImg, rx - 6 * slotScale, ry + yOff - 32 * slotScale, 0, slotScale, slotScale)
-                    local nextSym = rState and (not rState.stopped) and rKeys[math.random(1, #rKeys)] or drawSym
-                    local nextImg = self.slotSymbolImages and self.slotSymbolImages[nextSym]
-                    if nextImg then
-                        love.graphics.draw(nextImg, rx - 6 * slotScale, ry + yOff, 0, slotScale, slotScale)
-                    end
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.draw(symImg, rx + symOffX, ry + symOffY + yOff - reelWindowH, 0, symScale, symScale)
+                    love.graphics.draw(symImg, rx + symOffX, ry + symOffY + yOff, 0, symScale, symScale)
                 else
-                    love.graphics.setColor(1,1,1,1)
-                    love.graphics.print(string.sub(drawSym, 1, 1), rx, ry + yOff)
+                    love.graphics.setColor(1, 1, 1, 1)
+                    love.graphics.printf(string.sub(drawSym, 1, 1), rx, ry + yOff, reelWindowW, "center")
                 end
                 love.graphics.setScissor()
             end
 
-            row = row + 48 * slotScale
+            -- Result text right below slot machine
+            local resultY = my + 48 * slotScale + 4
             local profileLabel = self.earthShopSlotResult and M.earthSlotProfileLabel(self.earthShopSlotResult.rewardProfile)
             if profileLabel then
                 love.graphics.setColor(1, 0.55, 0.45)
-                love.graphics.printf(profileLabel, fullX, row, fullW, "center")
+                love.graphics.printf(profileLabel, fullX, resultY, fullW, "center")
+                resultY = resultY + 26
             end
-            row = row + rowStep - 10
+            if self.slotResultMessage then
+                love.graphics.setColor(1, 0.9, 0.5)
+                love.graphics.printf(self.slotResultMessage, fullX, resultY, fullW, "center")
+            end
+            row = resultY + 28
         else
             love.graphics.setColor(1, 1, 1, 0.85)
             drawPanelSprite(self.slotSpinButtonImage, fullX, row - 2, fullW, rowStep + 4)
