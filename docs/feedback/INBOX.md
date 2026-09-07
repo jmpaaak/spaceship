@@ -33,10 +33,11 @@
     - ~~슬롯 머신을 row3 텍스트 바로 아래로 붙여 그려서 간격 축소.~~
     - 완료: row3 height 170→70px (`settlementGearRowHeight`), row4 slot 200px (`settlementSlotRowHeight`). Gear text vertically centered. Test INBOX-61(18) GREEN.
 
-  (19) **슬롯 속도 보상이 steeringUpgradeLevel에 +5/+20 → 가격 폭등 버그** (msg `1546395056120926240`)
-    - `play.lua:2145` `steeringUpgradeLevel += rv` (rv=5 or 20). 가격 `$5 × 1.05^level`라서 level 200이면 $86,000+.
-    - 수정: 슬롯 속도 보상은 **별도 `slotSpeedBonus`** 필드에 누적하고, `effectiveSpeed`에 합산. `steeringUpgradeLevel`은 상점 구매만 올리게.
-    - 내구도·수확도 같은 구조인지 확인: 내구도는 maxDurability를 직접 올려서 OK. 수확은 `sampleYieldUpgradeLevel += 1`이라 1%씩이라 완만. 속도만 rv가 크게 레벨을 올려서 문제.
+  ~~(19) **슬롯 속도 보상이 steeringUpgradeLevel에 +5/+20 → 가격 폭등 버그** (msg `1546395056120926240`)~~
+    - ~~`play.lua:2145` `steeringUpgradeLevel += rv` (rv=5 or 20). 가격 `$5 × 1.05^level`라서 level 200이면 $86,000+.~~
+    - ~~수정: 슬롯 속도 보상은 **별도 `slotSpeedBonus`** 필드에 누적하고, `effectiveSpeed`에 합산. `steeringUpgradeLevel`은 상점 구매만 올리게.~~
+    - ~~내구도·수확도 같은 구조인지 확인: 내구도는 maxDurability를 직접 올려서 OK. 수확은 `sampleYieldUpgradeLevel += 1`이라 1%씩이라 완만. 속도만 rv가 크게 레벨을 올려서 문제.~~
+    - 완료: `slotSpeedBonus` field added to run state (init/wipe). `effectiveSpeed()` includes it. play.lua slot reward uses `slotSpeedBonus` not `steeringUpgradeLevel`. Test INBOX-61(19) GREEN.
 
   (20) **장비 제안 `[B]:` 키보드 접두사 제거** (msg `1546395217618542712`)
     - i18n `earth_gear_offer` = `"GEAR OFFER [B]: %s  $%d"` — `[B]` 제거.

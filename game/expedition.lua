@@ -275,6 +275,7 @@ local function destroy(run)
     run.durabilityUpgradeLevel = 0
     run.sampleYieldUpgradeLevel = 0
     run.steeringUpgradeLevel = 0
+    run.slotSpeedBonus = 0
     run.ownedShips = { starter = true }
     run.selectedShipId = "starter"
     refreshShipStats(run)
@@ -321,6 +322,7 @@ function M.new(options)
         steeringUpgradeAmount = options.steeringUpgradeAmount or 1,
         steeringUpgradeCost = options.steeringUpgradeCost or 5,
         steeringUpgradeLevel = 0,
+        slotSpeedBonus = 0,
         scoutShipCost = options.scoutShipCost or 125,
         scoutClimbSpeedBonus = options.scoutClimbSpeedBonus or 50,
         scoutDurabilityBonus = options.scoutDurabilityBonus or -1,
@@ -937,7 +939,7 @@ function M.effectiveSpeed(run)
     local engineSpeed = engineSpeedRaw * gearModule.tagSynergyMultiplier(engineParts)
     local shipBonus = run.selectedShipId == "scout" and run.scoutClimbSpeedBonus or 0
     local base = (run.baseSpeed or 0) + (run.steeringUpgradeLevel or 0) * (run.steeringUpgradeAmount or 0)
-    return base + (shipBonus or 0) + (gearTotals.speed or 0) + engineSpeed
+    return base + (run.slotSpeedBonus or 0) + (shipBonus or 0) + (gearTotals.speed or 0) + engineSpeed
 end
 
 -- Item 9/14 economy-stat gap audit: gear.equippedTotals already combines a

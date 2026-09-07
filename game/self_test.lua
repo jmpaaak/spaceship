@@ -9572,6 +9572,41 @@ function M.run()
         print("  INBOX-61(18) hub shop row3 gap OK")
     end
 
+    -- INBOX 61(19): slot speed reward must use slotSpeedBonus, not steeringUpgradeLevel
+    do
+        local exp = require("game.expedition")
+        local run = exp.new({ baseSpeed = 30, steeringUpgradeAmount = 1 })
+        -- Simulate buying 2 shop steering upgrades
+        run.money = 1000; run.phase = "settlement"
+        exp.buySteeringUpgrade(run)
+        exp.buySteeringUpgrade(run)
+        assert(run.steeringUpgradeLevel == 2, "INBOX 61(19): shop upgrades should set level=2")
+        local costAfterShop = exp.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)
+        -- Simulate slot speed reward (+20) via slotSpeedBonus
+        run.slotSpeedBonus = (run.slotSpeedBonus or 0) + 20
+        -- steeringUpgradeLevel must NOT change
+        assert(run.steeringUpgradeLevel == 2,
+            "INBOX 61(19): slot speed reward must not change steeringUpgradeLevel")
+        -- upgrade cost must stay the same
+        local costAfterSlot = exp.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)
+        assert(costAfterShop == costAfterSlot,
+            "INBOX 61(19): upgrade cost must not change from slot reward, got " ..
+            costAfterShop .. " vs " .. costAfterSlot)
+        -- effectiveSpeed must include slotSpeedBonus
+        local speed = exp.effectiveSpeed(run)
+        -- base=30 + 2*1(shop) + 20(slot) = 52
+        assert(speed >= 52,
+            "INBOX 61(19): effectiveSpeed must include slotSpeedBonus, got " .. speed)
+        -- meta wipe must reset slotSpeedBonus
+        run.phase = "ascending"
+        run.durability = run.maxDurability
+        exp.damage(run, run.durability)
+        assert(run.phase == "destroyed", "INBOX 61(19): should be destroyed")
+        assert(run.slotSpeedBonus == 0,
+            "INBOX 61(19): meta wipe must reset slotSpeedBonus")
+        print("  INBOX-61(19) slot speed bonus separate from upgrade level OK")
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 

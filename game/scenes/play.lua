@@ -2145,7 +2145,7 @@ function M:update(dt)
                         self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n꽝"
                     end
                 elseif rt == "speed" then
-                    self.expedition.steeringUpgradeLevel = self.expedition.steeringUpgradeLevel + rv
+                    self.expedition.slotSpeedBonus = (self.expedition.slotSpeedBonus or 0) + rv
                     self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n속도 +" .. rv
                 elseif rt == "durability" then
                     self.expedition.durabilityUpgradeLevel = (self.expedition.durabilityUpgradeLevel or 0) + rv

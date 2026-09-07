@@ -1,4 +1,17 @@
 ## Current Status
+- INBOX 61(19): Slot speed reward no longer inflates steeringUpgradeLevel.
+  - Slot speed rewards (+5/+20) now accumulate in `slotSpeedBonus` field.
+  - `effectiveSpeed()` sums `slotSpeedBonus` alongside base + shop upgrades.
+  - `steeringUpgradeLevel` stays shop-only, so `upgradeCost` stays sane.
+  - `slotSpeedBonus` resets on meta wipe (destruction) like other upgrade fields.
+  - Test `INBOX-61(19)` verifies cost isolation, speed inclusion, and wipe reset.
+  - `make verify LOVE=…` GREEN.
+
+## Next slice
+
+- Process next pending INBOX item (20: gear offer `[B]:` keyboard prefix removal).
+
+## Previous
 - INBOX 61(18): HUB shop row3 gap — compact gear text row.
   - Row 3 (gear text) height reduced from 170px → 70px (`settlementGearRowHeight`).
   - Row 4 (slot machine) gets 200px (`settlementSlotRowHeight`).
@@ -7,12 +20,6 @@
   - Touch handling auto-adapts (iterates `settlementTouchRows`).
   - Test `INBOX-61(18)` verifies row3 < 100px, contiguity, panel bounds.
   - `make verify LOVE=…` GREEN.
-
-## Next slice
-
-- Process next pending INBOX item (19: slot speed bonus → separate field).
-
-## Previous
 - INBOX 61(14): Planet fallback sprite loading fix.
   - Replaced `love.filesystem.read(path)` with `love.filesystem.newFile` and `file:read(33)` in `pngColorType`. This fixes memory/large string issues on mobile Android devices that caused `pngColorType` to return nil, triggering the green circle fallback for perfectly valid RGBA planet sheets.
   - Fixed a rotation bug in planet sheet rendering: `love.graphics.draw` now correctly rotates around the sheet center (`sw / 2, frameH / 2`) instead of wildly swinging around the top-left corner.
