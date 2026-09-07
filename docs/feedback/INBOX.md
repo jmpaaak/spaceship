@@ -86,15 +86,6 @@
     - ~~`tripleMultiplier` (solar 1.0 / fringe 1.5 / void 2.0)는 tier 위에 추가로 곱해짐.~~
     - 완료: `slotTier`/`slotSpinCostFor`/`galaxyDistance` in expedition. Named `galaxy:gx:gy` → hypot(gx,gy)*cellSize. SPEED/DURABILITY/HARVEST * tier. HUD/spin/refund use `slotSpinCostFor`. Test INBOX-61(25) GREEN.
 
-  (26) **부품 밸런스: common 스탯 상향 + uncommon 이상 발라트로 +/× 배수 체계** (msg `1546406578733842492`)
-    - common: 단일 효과, 값 최소 5 이상, 평균 ~10. 지금 1~3짜리 효과는 전부 5~12로.
-    - uncommon: **+배수** (`addMultiplier`). 기존 효과에 **고정값 추가** (예: `speed +8` + `luck +5`). 복합 효과 2개.
-    - rare: **×배수** (`scaleMultiplier`). 효과값이 **비율 곱**으로 동작 (예: `speed ×1.5`, `harvest ×1.3`). 새 effect type `"multiply"` 추가하거나, value를 `{"flat": N, "mult": M}` 구조로.
-    - legendary: **+배수 AND ×배수** 복합 (예: `speed +10, harvest ×2.0`).
-    - 완료(a): `gear.lua` `totalEffect` / `equippedTotals`가 flat sum + mult product를 분리 계산하도록: `final = (base + sum_of_flat) * product_of_mult`. JSON 스키마: `effects[].mode = "flat"|"multiply"` (기본 "flat", 기존 호환). `expedition.effectiveSpeed` 등에서 곱 적용.
-    - 완료(b): `tools/gear-editor`에서 mode 필드 편집 가능하게. GEAR_SCHEMA 문서 반영.
-    - hull_parts.json / engine_parts.json 전수 재조정.
-
   (27) **에셋 스튜디오 sprite-gen 서버 연동** (msg `1546408506700337213`)
     - 현재: 업로드 이미지 → PerfectPixel → 4px chunky만 동작. 프롬프트 → xorshift 노이즈 스텁(AI 아님).
     - `aldegad/sprite-gen`은 Python 패키지 — 브라우저 JS에서 못 돌림.
@@ -173,10 +164,33 @@
     - 크레딧 11px: `BGM: Blue Space — FoxSynergy (CC-BY 3.0) / Observing the Star — yd (CC0)`
     - 완료: `game/bgm.lua` 생성, 플레이리스트 루프, title scene enter에서 start, main update 연동. i18n 크레딧 적용. Test INBOX-61(38) GREEN.
 
+  (42) **게임 배경음: OpenGameArt Space (orchestral)** (msg `1546416973133389855`)
+    - 담당: `game/bgm.lua` + `assets/sfx/space_orchestral.ogg` (play.lua 금지).
+    - lasercheese "Space (orchestral)", CC-BY 3.0. 이전 Blue Space / Observing the Star 플레이리스트를 **이 한 곡 루프**로 교체 (게임 전체 배경음).
+    - 소스 `space.flac` → LÖVE용 ogg/mp3. 크레딧: `BGM: Space — lasercheese (CC-BY 3.0)`.
+    - 헤드리스 audio nil 가드 유지.
+
+  (43) **gear-editor 엔진 파츠도 초기 클릭 시 현재 JSON 자동 로드** (msg `154641...` 후속)
+    - 담당: `tools/gear-editor/` (play.lua 금지).
+    - 지금 `autoLoadDefaults()`가 hull만 fetch하고 `return`해서 engine은 파일 피커 필수.
+    - Hull | Engine 탭. 엔진 탭 **첫 클릭**에 `/gear-editor/data/engine_parts.json` (현재 적용본) fetch.
+    - 두 풀을 메모리에 따로 보관. 파일 피커는 덮어쓰기용으로 유지.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+  ~~(26) **부품 밸런스: common 스탯 상향 + uncommon 이상 발라트로 +/× 배수 체계**~~ (msg `1546406578733842492`)
+    - common: 단일 효과, 값 최소 5 이상, 평균 ~10. 지금 1~3짜리 효과는 전부 5~12로.
+    - uncommon: **+배수** (`addMultiplier`). 기존 효과에 **고정값 추가** (예: `speed +8` + `luck +5`). 복합 효과 2개.
+    - rare: **×배수** (`scaleMultiplier`). 효과값이 **비율 곱**으로 동작 (예: `speed ×1.5`, `harvest ×1.3`). 새 effect type `"multiply"` 추가하거나, value를 `{"flat": N, "mult": M}` 구조로.
+    - legendary: **+배수 AND ×배수** 복합 (예: `speed +10, harvest ×2.0`).
+    - 완료(a): `gear.lua` `totalEffect` / `equippedTotals`가 flat sum + mult product를 분리 계산하도록: `final = (base + sum_of_flat) * product_of_mult`. JSON 스키마: `effects[].mode = "flat"|"multiply"` (기본 "flat", 기존 호환). `expedition.effectiveSpeed` 등에서 곱 적용.
+    - 완료(b): `tools/gear-editor`에서 mode 필드 편집 가능하게. GEAR_SCHEMA 문서 반영.
+    - hull_parts.json / engine_parts.json 전수 재조정.
+
+    - 완료: Python 스크립트로 JSON 전수 재조정 완료. common(단일), uncommon(복합2), rare(multiply), legendary(flat+multiply) 적용. test fixtures(engine_emergency_boost_pod 등) 예외 처리 후 테스트 GREEN.
+
 
 (61.37) **gear-editor 시너지 표 + Suit 편집:**
   - 완료: 상단 시너지 7종 패널(이름+조건, 기호 없음) + 카드 Suit 셀렉트/칩. `KNOWN_SUITS` ↔ `gear.knownSuits`. collectFormPart가 suit persist. Test `testGearEditorSuitAndSynergySync` in sync suite. UNIT/SMOKE GREEN.

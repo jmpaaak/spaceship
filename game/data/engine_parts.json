@@ -35,6 +35,10 @@
         {
           "type": "speed",
           "value": 6
+        },
+        {
+          "type": "shopDiscount",
+          "value": 3
         }
       ]
     },
@@ -73,15 +77,18 @@
       "effects": [
         {
           "type": "speed",
-          "value": 8
+          "value": 1.3,
+          "mode": "multiply"
         },
         {
           "type": "boostCharge",
-          "value": 1
+          "value": 1.3,
+          "mode": "multiply"
         },
         {
           "type": "detectionRadius",
-          "value": 15
+          "value": 1.6,
+          "mode": "multiply"
         }
       ]
     },
@@ -100,11 +107,11 @@
       "effects": [
         {
           "type": "speed",
-          "value": 4
+          "value": 7
         },
         {
           "type": "speed",
-          "value": 2
+          "value": 7
         }
       ]
     },
@@ -142,6 +149,10 @@
         {
           "type": "speed",
           "value": 5
+        },
+        {
+          "type": "collisionRadius",
+          "value": 6
         }
       ]
     },
@@ -161,6 +172,10 @@
         {
           "type": "speed",
           "value": 13
+        },
+        {
+          "type": "collisionRadius",
+          "value": 7
         }
       ]
     },
@@ -180,7 +195,8 @@
       "effects": [
         {
           "type": "speed",
-          "value": 21
+          "value": 1.5,
+          "mode": "multiply"
         }
       ]
     },
@@ -199,11 +215,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 2
-        },
-        {
-          "type": "speed",
-          "value": 1
+          "value": 10
         }
       ]
     },
@@ -226,7 +238,7 @@
         },
         {
           "type": "boostCharge",
-          "value": 1
+          "value": 7
         }
       ]
     },
@@ -251,11 +263,12 @@
       "effects": [
         {
           "type": "speed",
-          "value": 33
+          "value": 18
         },
         {
           "type": "speed",
-          "value": 4
+          "value": 2.7,
+          "mode": "multiply"
         }
       ]
     },
@@ -265,7 +278,7 @@
       "name": "Emergency Boost Pod",
       "nameKo": "비상 부스트 포드",
       "icon": "▲",
-      "rarity": "rare",
+      "rarity": "uncommon",
       "tags": [
         "altitude",
         "speed"
@@ -273,12 +286,12 @@
       "editions": [],
       "effects": [
         {
-          "type": "speed",
+          "type": "boostCharge",
           "value": 2
         },
         {
-          "type": "boostCharge",
-          "value": 2
+          "type": "speed",
+          "value": 5
         }
       ]
     },
@@ -297,11 +310,11 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 6
         },
         {
           "type": "speed",
-          "value": 1
+          "value": 6
         }
       ]
     },
@@ -320,11 +333,13 @@
       "effects": [
         {
           "type": "speed",
-          "value": 6
+          "value": 1.8,
+          "mode": "multiply"
         },
         {
           "type": "luck",
-          "value": 8
+          "value": 1.2,
+          "mode": "multiply"
         }
       ]
     },
@@ -343,7 +358,8 @@
       "effects": [
         {
           "type": "chainTrigger",
-          "value": 1
+          "value": 1.4,
+          "mode": "multiply"
         }
       ]
     },
@@ -366,7 +382,7 @@
         },
         {
           "type": "rerollBonus",
-          "value": 1
+          "value": 4
         }
       ]
     },
@@ -383,10 +399,6 @@
       ],
       "editions": [],
       "effects": [
-        {
-          "type": "speed",
-          "value": 2
-        },
         {
           "type": "collisionRadius",
           "value": 12
@@ -409,6 +421,10 @@
         {
           "type": "detectionRadius",
           "value": 20
+        },
+        {
+          "type": "sellMultiplier",
+          "value": 5
         }
       ]
     },
@@ -427,11 +443,13 @@
       "effects": [
         {
           "type": "speed",
-          "value": 6
+          "value": 1.3,
+          "mode": "multiply"
         },
         {
           "type": "autoCollect",
-          "value": 1
+          "value": 1.8,
+          "mode": "multiply"
         }
       ]
     },
@@ -450,11 +468,13 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 1.8,
+          "mode": "multiply"
         },
         {
           "type": "boostCharge",
-          "value": 2
+          "value": 1.8,
+          "mode": "multiply"
         }
       ]
     },
@@ -473,7 +493,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 4
+          "value": 9
         },
         {
           "type": "detectionRadius",
@@ -500,7 +520,7 @@
         },
         {
           "type": "autoCollect",
-          "value": 1
+          "value": 4
         }
       ]
     },
@@ -519,11 +539,13 @@
       "effects": [
         {
           "type": "speed",
-          "value": 8
+          "value": 1.3,
+          "mode": "multiply"
         },
         {
           "type": "streakMultiplier",
-          "value": 8
+          "value": 1.4,
+          "mode": "multiply"
         }
       ]
     },
@@ -546,7 +568,12 @@
       "effects": [
         {
           "type": "speed",
-          "value": 9
+          "value": 19
+        },
+        {
+          "type": "rerollBonus",
+          "mode": "multiply",
+          "value": 1.9
         }
       ]
     },
@@ -569,11 +596,12 @@
       "effects": [
         {
           "type": "speed",
-          "value": 7
+          "value": 19
         },
         {
           "type": "boostCharge",
-          "value": 1
+          "value": 2.1,
+          "mode": "multiply"
         }
       ]
     },
@@ -592,11 +620,11 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 5
         },
         {
           "type": "insurance",
-          "value": 1
+          "value": 3
         }
       ]
     },
@@ -615,7 +643,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 4
+          "value": 5
         },
         {
           "type": "shopDiscount",
@@ -638,7 +666,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 4
+          "value": 6
         },
         {
           "type": "sellMultiplier",
@@ -653,11 +681,19 @@
       "nameKo": "터보 스핀 엔진",
       "icon": "🎰",
       "rarity": "uncommon",
-      "tags": ["speed"],
+      "tags": [
+        "speed"
+      ],
       "editions": [],
       "effects": [
-        { "type": "speed", "value": 6 },
-        { "type": "boostCharge", "value": 3 }
+        {
+          "type": "speed",
+          "value": 6
+        },
+        {
+          "type": "boostCharge",
+          "value": 3
+        }
       ],
       "slotExclusive": true
     },
@@ -668,11 +704,25 @@
       "nameKo": "행운의 드라이브",
       "icon": "🎰",
       "rarity": "rare",
-      "tags": ["speed", "economy"],
-      "editions": ["quantum_flawed", "refined"],
+      "tags": [
+        "speed",
+        "economy"
+      ],
+      "editions": [
+        "quantum_flawed",
+        "refined"
+      ],
       "effects": [
-        { "type": "speed", "value": 8 },
-        { "type": "luck", "value": 8 }
+        {
+          "type": "speed",
+          "value": 1.2,
+          "mode": "multiply"
+        },
+        {
+          "type": "luck",
+          "value": 1.3,
+          "mode": "multiply"
+        }
       ],
       "slotExclusive": true
     }

@@ -15,7 +15,7 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 1
+          "value": 6
         }
       ]
     },
@@ -51,7 +51,7 @@
       "effects": [
         {
           "type": "sampleSellValue",
-          "value": 3
+          "value": 6
         }
       ]
     },
@@ -70,6 +70,10 @@
         {
           "type": "money",
           "value": 10
+        },
+        {
+          "type": "sampleSellValue",
+          "value": 6
         }
       ]
     },
@@ -89,6 +93,10 @@
         {
           "type": "speed",
           "value": 6
+        },
+        {
+          "type": "luck",
+          "value": 5
         }
       ]
     },
@@ -110,11 +118,13 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 2
+          "value": 1.8,
+          "mode": "multiply"
         },
         {
           "type": "sampleSellValue",
-          "value": 5
+          "value": 1.5,
+          "mode": "multiply"
         }
       ]
     },
@@ -133,7 +143,7 @@
       "effects": [
         {
           "type": "sampleSellValue",
-          "value": 2
+          "value": 9
         }
       ]
     },
@@ -152,7 +162,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 8
         }
       ]
     },
@@ -171,7 +181,11 @@
       "effects": [
         {
           "type": "sampleSellValue",
-          "value": 4
+          "value": 10
+        },
+        {
+          "type": "rerollBonus",
+          "value": 8
         }
       ]
     },
@@ -190,7 +204,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 7
         }
       ]
     },
@@ -209,7 +223,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 9
         }
       ]
     },
@@ -227,7 +241,7 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 1
+          "value": 5
         }
       ]
     },
@@ -246,7 +260,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 6
         },
         {
           "type": "money",
@@ -269,11 +283,13 @@
       "effects": [
         {
           "type": "speed",
-          "value": 2
+          "value": 1.5,
+          "mode": "multiply"
         },
         {
           "type": "hullDurability",
-          "value": 3
+          "value": 1.3,
+          "mode": "multiply"
         }
       ]
     },
@@ -292,11 +308,13 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 2
+          "value": 1.3,
+          "mode": "multiply"
         },
         {
           "type": "sampleSellValue",
-          "value": 3
+          "value": 1.4,
+          "mode": "multiply"
         }
       ]
     },
@@ -316,6 +334,10 @@
         {
           "type": "speed",
           "value": 5
+        },
+        {
+          "type": "luck",
+          "value": 8
         }
       ]
     },
@@ -334,11 +356,13 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 2
+          "value": 1.7,
+          "mode": "multiply"
         },
         {
           "type": "sampleSellValue",
-          "value": 4
+          "value": 1.2,
+          "mode": "multiply"
         }
       ]
     },
@@ -356,7 +380,7 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 2
+          "value": 7
         }
       ]
     },
@@ -395,6 +419,10 @@
         {
           "type": "speed",
           "value": 5
+        },
+        {
+          "type": "hullRegen",
+          "value": 5
         }
       ]
     },
@@ -418,15 +446,12 @@
       "effects": [
         {
           "type": "speed",
-          "value": 4
+          "value": 18
         },
         {
           "type": "hullDurability",
-          "value": 3
-        },
-        {
-          "type": "sampleSellValue",
-          "value": 6
+          "value": 1.5,
+          "mode": "multiply"
         }
       ]
     },
@@ -445,11 +470,13 @@
       "effects": [
         {
           "type": "speed",
-          "value": 3
+          "value": 1.8,
+          "mode": "multiply"
         },
         {
           "type": "sampleSellValue",
-          "value": 2
+          "value": 1.7,
+          "mode": "multiply"
         }
       ]
     },
@@ -468,7 +495,11 @@
       "effects": [
         {
           "type": "hullDurability",
-          "value": 2
+          "value": 6
+        },
+        {
+          "type": "shopDiscount",
+          "value": 8
         }
       ]
     },
@@ -487,7 +518,7 @@
       "effects": [
         {
           "type": "speed",
-          "value": 4
+          "value": 11
         }
       ]
     },
@@ -506,7 +537,11 @@
       "effects": [
         {
           "type": "insurance",
-          "value": 1
+          "value": 5
+        },
+        {
+          "type": "collisionRadius",
+          "value": 4
         }
       ]
     },
@@ -525,6 +560,10 @@
         {
           "type": "shopDiscount",
           "value": 20
+        },
+        {
+          "type": "luck",
+          "value": 7
         }
       ]
     },
@@ -543,7 +582,8 @@
       "effects": [
         {
           "type": "streakMultiplier",
-          "value": 10
+          "value": 1.7,
+          "mode": "multiply"
         }
       ],
       "galaxyExclusive": true
@@ -563,6 +603,10 @@
         {
           "type": "sellMultiplier",
           "value": 20
+        },
+        {
+          "type": "rerollBonus",
+          "value": 7
         }
       ]
     },
@@ -581,7 +625,8 @@
       "effects": [
         {
           "type": "luck",
-          "value": 15
+          "value": 1.7,
+          "mode": "multiply"
         }
       ]
     },
@@ -600,7 +645,8 @@
       "effects": [
         {
           "type": "streakMultiplier",
-          "value": 15
+          "value": 1.4,
+          "mode": "multiply"
         }
       ]
     },
@@ -619,7 +665,11 @@
       "effects": [
         {
           "type": "rerollBonus",
-          "value": 2
+          "value": 5
+        },
+        {
+          "type": "streakMultiplier",
+          "value": 7
         }
       ]
     },
@@ -639,6 +689,10 @@
         {
           "type": "collisionRadius",
           "value": 15
+        },
+        {
+          "type": "rerollBonus",
+          "value": 4
         }
       ]
     },
@@ -656,7 +710,7 @@
       "effects": [
         {
           "type": "sampleSellValue",
-          "value": 4
+          "value": 8
         }
       ]
     },
@@ -675,11 +729,13 @@
       "effects": [
         {
           "type": "sampleSellValue",
-          "value": 5
+          "value": 1.6,
+          "mode": "multiply"
         },
         {
           "type": "money",
-          "value": 8
+          "value": 1.5,
+          "mode": "multiply"
         }
       ]
     },
@@ -701,11 +757,12 @@
       "effects": [
         {
           "type": "speed",
-          "value": 5
+          "value": 16
         },
         {
           "type": "hullDurability",
-          "value": 2
+          "value": 2.9,
+          "mode": "multiply"
         }
       ],
       "galaxyExclusive": true
@@ -728,11 +785,12 @@
       "effects": [
         {
           "type": "sampleSellValue",
-          "value": 6
+          "value": 14
         },
         {
           "type": "luck",
-          "value": 10
+          "value": 2.8,
+          "mode": "multiply"
         }
       ],
       "galaxyExclusive": true
@@ -744,11 +802,20 @@
       "nameKo": "행운의 장갑",
       "icon": "🎰",
       "rarity": "uncommon",
-      "tags": ["defense", "economy"],
+      "tags": [
+        "defense",
+        "economy"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullDurability", "value": 2 },
-        { "type": "luck", "value": 5 }
+        {
+          "type": "hullDurability",
+          "value": 9
+        },
+        {
+          "type": "luck",
+          "value": 5
+        }
       ],
       "slotExclusive": true
     },
@@ -759,11 +826,25 @@
       "nameKo": "잭팟 실드",
       "icon": "🎰",
       "rarity": "rare",
-      "tags": ["defense", "altitude"],
-      "editions": ["crystallized", "irradiated"],
+      "tags": [
+        "defense",
+        "altitude"
+      ],
+      "editions": [
+        "crystallized",
+        "irradiated"
+      ],
       "effects": [
-        { "type": "hullDurability", "value": 4 },
-        { "type": "sampleSellValue", "value": 3 }
+        {
+          "type": "hullDurability",
+          "value": 1.5,
+          "mode": "multiply"
+        },
+        {
+          "type": "sampleSellValue",
+          "value": 1.6,
+          "mode": "multiply"
+        }
       ],
       "slotExclusive": true
     },
@@ -774,10 +855,15 @@
       "nameKo": "나노 메쉬",
       "icon": "🩹",
       "rarity": "common",
-      "tags": ["defense"],
+      "tags": [
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullRegen", "value": 0.2 }
+        {
+          "type": "hullRegen",
+          "value": 5
+        }
       ]
     },
     {
@@ -787,10 +873,19 @@
       "nameKo": "수리 드론",
       "icon": "🤖",
       "rarity": "uncommon",
-      "tags": ["defense"],
+      "tags": [
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullRegen", "value": 0.5 }
+        {
+          "type": "hullRegen",
+          "value": 10
+        },
+        {
+          "type": "shopDiscount",
+          "value": 8
+        }
       ]
     },
     {
@@ -800,10 +895,16 @@
       "nameKo": "자동 용접기",
       "icon": "🔧",
       "rarity": "rare",
-      "tags": ["defense"],
+      "tags": [
+        "defense"
+      ],
       "editions": [],
       "effects": [
-        { "type": "hullRegen", "value": 1.0 }
+        {
+          "type": "hullRegen",
+          "value": 1.5,
+          "mode": "multiply"
+        }
       ]
     }
   ]
