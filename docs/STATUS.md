@@ -1,9 +1,8 @@
 ## Current Status
 
-- Fix: 19 asset SHA256 mismatches in MANIFEST.json (planet sheets, star
-  sprites/sheets). Updated all hashes to match on-disk files.
-- Settlement shop hover UI: adjusted touch row layout (top 420→400,
-  height 165→170) and added hover highlight effect on shop cards.
+- Fix: 12 star asset SHA256 mismatches in MANIFEST.json (star_bare,
+  star_dry, star_gas, star_ice, star_lava, star_sun — both .png and
+  _sheet.png). Updated all hashes to match on-disk files.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
   ASSET_MANIFEST_OK.
 
