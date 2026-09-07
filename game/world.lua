@@ -810,8 +810,12 @@ function M.moonSampleValue(moon)
 end
 
 function M.moonCollisionDamage(moon)
-    -- Use the parent planet position for distance-based damage
-    return M.collisionDamage({ x = moon.parentX, y = moon.parentY })
+    -- Parent-planet distance as the floor, plus extra from orbit speed
+    -- (user 2026-09-07: faster moons deal more damage, matching $2~$10 reward).
+    -- speedFactor 0 → +0, 0.5 → +1, 1.0 → +2.
+    local base = M.collisionDamage({ x = moon.parentX, y = moon.parentY })
+    local factor = (moon and moon.speedFactor) or 0.5
+    return base + math.floor(factor * 2 + 0.5)
 end
 
 return M

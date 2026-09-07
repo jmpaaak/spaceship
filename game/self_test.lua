@@ -5461,6 +5461,13 @@ testStellarSynergies = function()
         "synergy_desc_solarSystem i18n key must exist")
     assert(i18n.t("synergy_desc_nebulaField") ~= "synergy_desc_nebulaField",
         "synergy_desc_nebulaField i18n key must exist")
+    local nebulaHint = i18n.synergyHint("nebula")
+    assert(nebulaHint:find(i18n.t("synergy_nebulaField"), 1, true),
+        "synergyHint(nebula) must prefix the synergy name, got: " .. tostring(nebulaHint))
+    assert(nebulaHint:find(i18n.t("synergy_desc_nebulaField"), 1, true),
+        "synergyHint(nebula) must include the condition text, got: " .. tostring(nebulaHint))
+    assert(i18n.synergyHint(nil) == "" and i18n.synergyHint("unknown") == "",
+        "synergyHint must return empty for missing/unknown suit")
 
     -- Bundled JSON cards all have suit field (no [WARN] paths expected from loader in prod).
     local hullPool, hullErr = gear.loadHullParts()
@@ -8493,10 +8500,17 @@ function M.run()
         assert(world.moonSampleValue(midMoon) == 6, "mid-speed moon must pay $6, got " .. world.moonSampleValue(midMoon))
         assert(world.moonSampleValue(nil) == 6, "nil moon defaults to $6")
 
-        -- (e) moonCollisionDamage same as planet
-        local fakeMoon = { parentX = 0, parentY = -500 }
-        assert(world.moonCollisionDamage(fakeMoon) == world.collisionDamage({ x = 0, y = -500 }),
-            "moon collision damage must match planet at same position")
+        -- (e) moonCollisionDamage: planet floor + speed bonus (+0/+1/+2)
+        local planetDmg = world.collisionDamage({ x = 0, y = -500 })
+        local slowMoonDmg = { parentX = 0, parentY = -500, speedFactor = 0 }
+        local midMoonDmg = { parentX = 0, parentY = -500, speedFactor = 0.5 }
+        local fastMoonDmg = { parentX = 0, parentY = -500, speedFactor = 1 }
+        assert(world.moonCollisionDamage(slowMoonDmg) == planetDmg,
+            "slowest moon damage must equal planet floor, got " .. tostring(world.moonCollisionDamage(slowMoonDmg)))
+        assert(world.moonCollisionDamage(midMoonDmg) == planetDmg + 1,
+            "mid-speed moon must deal planet+1, got " .. tostring(world.moonCollisionDamage(midMoonDmg)))
+        assert(world.moonCollisionDamage(fastMoonDmg) == planetDmg + 2,
+            "fastest moon must deal planet+2, got " .. tostring(world.moonCollisionDamage(fastMoonDmg)))
 
         -- (f) i18n moon_label
         local i18n = require("game.i18n")

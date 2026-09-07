@@ -501,6 +501,22 @@ function M.suitLabel(suit)
     return table_[key] or locales[DEFAULT_LOCALE][key] or tostring(suit)
 end
 
+-- Suit → primary synergy name + condition, shown on item inspect/acquire.
+-- User 2026-09-07: prefix HUD synergy names (e.g. "* 성운 지대") onto the
+-- popup condition line so the right-side HUD label is recognizable.
+local suitSynergyKeys = {
+    solar  = "solarSystem",
+    nebula = "nebulaField",
+    void   = "eventHorizon",
+    pulsar = "pulsarBurst",
+}
+
+function M.synergyHint(suit)
+    local key = suitSynergyKeys[suit]
+    if not key then return "" end
+    return M.t("synergy_" .. key) .. "  " .. M.t("synergy_desc_" .. key)
+end
+
 function M.shopError(err)
     err = tostring(err or "")
     if err:find("not enough money", 1, true) then return M.t("shop_err_broke") end

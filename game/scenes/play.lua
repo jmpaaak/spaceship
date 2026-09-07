@@ -4579,18 +4579,12 @@ function M:draw()
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.printf(suitLabel, suitX, chipY2 + 4, suitW, "center")
         end
-        -- Synergy condition hint below chips
-        local suitKey = part.suit
-        local descKey = nil
-        if suitKey == "solar" then descKey = "synergy_desc_solarSystem"
-        elseif suitKey == "nebula" then descKey = "synergy_desc_nebulaField"
-        elseif suitKey == "void" then descKey = "synergy_desc_eventHorizon"
-        elseif suitKey == "pulsar" then descKey = "synergy_desc_pulsarBurst"
-        end
-        if descKey then
+        -- Synergy name + condition below chips (user 2026-09-07)
+        local hint = i18n.synergyHint(part.suit)
+        if hint ~= "" then
             love.graphics.setFont(fonts.get(11))
             love.graphics.setColor(0.72, 0.68, 0.82, 0.8)
-            love.graphics.printf(i18n.t(descKey), tipX + 12, chipY2 + rarH + 8, tipW - 24, "center")
+            love.graphics.printf(hint, tipX + 12, chipY2 + rarH + 8, tipW - 24, "center")
         end
         love.graphics.setFont(prevPopupFont)
     end
