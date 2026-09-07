@@ -3100,11 +3100,11 @@ end
 local function testGearHullSpeedRunWiring()
     local expedition = require("game.expedition")
 
-    -- No gear equipped: effectiveSpeed must equal baseSpeed (default 30).
+    -- No gear equipped: effectiveSpeed must equal baseSpeed (default 60).
     local bareRun = expedition.new()
     local baseline = expedition.effectiveSpeed(bareRun)
-    assert(baseline == 30,
-        "an unequipped fresh run's effectiveSpeed must equal baseSpeed 30, got "
+    assert(baseline == 60,
+        "an unequipped fresh run's effectiveSpeed must equal baseSpeed 60, got "
             .. tostring(baseline))
 
     -- Equipping a hull card with a `speed` effect must raise effectiveSpeed
@@ -3117,8 +3117,8 @@ local function testGearHullSpeedRunWiring()
     local run = expedition.new()
     assert(expedition.equipGear(run, "hull", speedCard))
     local boosted = expedition.effectiveSpeed(run)
-    assert(boosted == 38,
-        "equipping a speed +8 hull card must raise effectiveSpeed from 30 to 38, got "
+    assert(boosted == 68,
+        "equipping a speed +8 hull card must raise effectiveSpeed from 60 to 68, got "
             .. tostring(boosted))
 
     -- An ENGINE-slot card carrying `speed` must also count (item 53a unified).
@@ -3130,7 +3130,7 @@ local function testGearHullSpeedRunWiring()
     }
     assert(expedition.equipGear(engineRun, "engine", engineSpeedCard))
     local engineResult = expedition.effectiveSpeed(engineRun)
-    assert(engineResult == 38,
+    assert(engineResult == 68,
         "speed effects on an engine-slot part must now count toward effectiveSpeed "
             .. "(item 53a unified speed), got " .. tostring(engineResult))
 
@@ -3139,8 +3139,8 @@ local function testGearHullSpeedRunWiring()
     assert(expedition.equipGear(stackedRun, "hull", speedCard))
     assert(expedition.equipGear(stackedRun, "engine", engineSpeedCard))
     local stacked = expedition.effectiveSpeed(stackedRun)
-    assert(stacked == 46,
-        "hull speed (+8) and engine speed (+8) must both add to base 30 for 46, got "
+    assert(stacked == 76,
+        "hull speed (+8) and engine speed (+8) must both add to base 60 for 76, got "
             .. tostring(stacked))
 end
 
@@ -6936,20 +6936,20 @@ function M.run()
         steeringUpgradeAmount = 1,
         money = 40,
     })
-    assert(expedition.effectiveSpeed(steeringRun) == 30)
+    assert(expedition.effectiveSpeed(steeringRun) == 60)
     assert(not expedition.buySteeringUpgrade(steeringRun))
     steeringRun.phase = "settlement"
     assert(not expedition.buySteeringUpgrade(steeringRun))
     steeringRun.money = 65
     assert(expedition.buySteeringUpgrade(steeringRun))
     assert(steeringRun.money == 0 and steeringRun.steeringUpgradeLevel == 1)
-    assert(expedition.effectiveSpeed(steeringRun) == 31)
+    assert(expedition.effectiveSpeed(steeringRun) == 61)
     assert(expedition.launch(steeringRun) and steeringRun.phase == "ascending")
-    assert(expedition.effectiveSpeed(steeringRun) == 31,
+    assert(expedition.effectiveSpeed(steeringRun) == 61,
         "steering upgrade must persist across relaunch like fuel/hull upgrades")
     assert(expedition.damage(steeringRun, steeringRun.durability))
     assert(steeringRun.phase == "destroyed" and steeringRun.steeringUpgradeLevel == 0)
-    assert(expedition.effectiveSpeed(steeringRun) == 30,
+    assert(expedition.effectiveSpeed(steeringRun) == 60,
         "steering upgrade must reset to base speed on destruction like the other upgrades")
 
     local steeringMoveScene = PlayScene.new({
@@ -6960,8 +6960,8 @@ function M.run()
     steeringMoveScene.touches["upgraded-steer"] = { x = 500, y = 10 }
     local shipXBefore = steeringMoveScene.ship.x
     steeringMoveScene:update(1)
-    -- steeringUpgradeAmount=1: speed = 30 + 1*1 = 31
-    assert(math.abs(steeringMoveScene.ship.x - shipXBefore - 31) < 1e-9,
+    -- steeringUpgradeAmount=1: speed = 60 + 1*1 = 61
+    assert(math.abs(steeringMoveScene.ship.x - shipXBefore - 61) < 1e-9,
         "ascending steering must move the ship at expedition.effectiveSpeed(run), not a fixed constant ("
             .. tostring(steeringMoveScene.ship.x - shipXBefore) .. ")")
 
@@ -6993,7 +6993,7 @@ function M.run()
     assert(not expedition.buyShip(shipShopRun, "scout") and shipShopRun.money == 10)
     assert(expedition.selectShip(shipShopRun, "scout"))
     assert(shipShopRun.selectedShipId == "scout")
-    assert(shipShopRun.maxDurability == 2 and expedition.effectiveSpeed(shipShopRun) == 35)
+    assert(shipShopRun.maxDurability == 2 and expedition.effectiveSpeed(shipShopRun) == 65)
     assert(expedition.launch(shipShopRun) and shipShopRun.durability == 2)
     assert(not expedition.damage(shipShopRun, 1))
     assert(expedition.damage(shipShopRun, 1))
@@ -7077,7 +7077,7 @@ function M.run()
     local leftAscendSteering = touchScene:steeringButtonState()
     assert(leftAscendSteering.leftActive and not leftAscendSteering.rightActive)
     touchScene:update(1)
-    assert(math.abs(touchScene.ship.x - (-30)) < 1e-9, "expected -30, got " .. string.format("%.17g", touchScene.ship.x))
+    assert(math.abs(touchScene.ship.x - (-60)) < 1e-9, "expected -60, got " .. string.format("%.17g", touchScene.ship.x))
     touchScene:touchreleased("steer-left")
     local releasedAscendSteering = touchScene:steeringButtonState()
     assert(not releasedAscendSteering.leftActive and not releasedAscendSteering.rightActive)
@@ -7115,7 +7115,7 @@ function M.run()
     assert(starterLoadout.stats == "HULL 3")
     assert(starterLoadout.upgrades == "HULL LV.0")
 
-    assert(starterLoadout.steering == "30")
+    assert(starterLoadout.steering == "60")
     loadoutScene.expedition.phase = "settlement"
     loadoutScene.expedition.money = loadoutScene.expedition.durabilityUpgradeCost
         + loadoutScene.expedition.scoutShipCost
@@ -7129,7 +7129,7 @@ function M.run()
     assert(upgradedLoadout.stats == "HULL 3")
     assert(upgradedLoadout.upgrades == "HULL LV.1")
 
-    assert(upgradedLoadout.steering == "81")
+    assert(upgradedLoadout.steering == "111")
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
     local resetLoadout = loadoutScene:loadoutLines()
@@ -7139,7 +7139,7 @@ function M.run()
         "loadout ship line should be hidden again after a meta-wipe reset")
     assert(resetLoadout.stats == "HULL 3")
     assert(resetLoadout.upgrades == "HULL LV.0")
-    assert(resetLoadout.steering == "30")
+    assert(resetLoadout.steering == "60")
 
     local nextLaunchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -7164,7 +7164,7 @@ function M.run()
     assert(starterNextLaunch.yieldPreview == "HARVEST x1.01")
     assert(starterNextLaunch.yieldStatus == "SHORT $5" and not starterNextLaunch.yieldAffordable)
     assert(starterNextLaunch.steeringAction == "T/G SPEED LV.0>1 $5")
-    assert(starterNextLaunch.steeringPreview == "31")
+    assert(starterNextLaunch.steeringPreview == "61")
     assert(starterNextLaunch.steeringStatus == "SHORT $5" and not starterNextLaunch.steeringAffordable)
     -- Compact column labels for the HULL/STEERING shared touch row (see
     -- settlementTouchRows: HULL occupies the left half, STEERING the right
@@ -7175,9 +7175,9 @@ function M.run()
     -- drawn in the column instead, without changing the existing full
     -- strings other callers may still rely on.
     assert(starterNextLaunch.hullActionCompact == "HULL 3 -> 4 $10")
-    assert(starterNextLaunch.steeringActionCompact == "SPEED 30 -> 31 $5")
+    assert(starterNextLaunch.steeringActionCompact == "SPEED 60 -> 61 $5")
     assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
-    assert(starterNextLaunch.steeringPreviewCompact == "31")
+    assert(starterNextLaunch.steeringPreviewCompact == "61")
     -- Same compact treatment for the YIELD/SHIP shared touch row (see
     -- settlementTouchRows: YIELD occupies the left half, SHIP the right
     -- half). yieldAction ("T/Y YIELD LV.0>1 $60", 92-97px) and shipAction

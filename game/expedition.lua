@@ -340,7 +340,7 @@ function M.new(options)
         sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.01,
         sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 5,
         sampleYieldUpgradeLevel = 0,
-        baseSpeed = options.baseSpeed or options.climbSpeed or 30,
+        baseSpeed = options.baseSpeed or options.climbSpeed or 60,
         steeringUpgradeAmount = options.steeringUpgradeAmount or 1,
         steeringUpgradeCost = options.steeringUpgradeCost or 5,
         steeringUpgradeLevel = 0,
