@@ -1989,6 +1989,43 @@ local function testGearEditorGalaxyExclusiveFieldSync()
         "openForm must restore galaxyExclusive from the loaded part")
 end
 
+-- INBOX 61(37): gear-editor must expose stellar suit + synergy table (user 2026-09-07).
+local function testGearEditorSuitAndSynergySync()
+    local editorSrc = love.filesystem.read("tools/gear-editor/editor.js")
+    assert(editorSrc, "tools/gear-editor/editor.js must be readable for the sync check")
+    local htmlSrc = love.filesystem.read("tools/gear-editor/index.html")
+    assert(htmlSrc, "tools/gear-editor/index.html must be readable for the sync check")
+
+    assert(htmlSrc:find('id="fieldSuit"', 1, true),
+        "index.html must expose fieldSuit so authors can set stellar suit")
+    assert(htmlSrc:find('id="synergyPanel"', 1, true),
+        "index.html must expose synergyPanel for the 7 stellar synergies")
+
+    local suitsStart = editorSrc:find("KNOWN_SUITS%s*=%s*%[")
+    assert(suitsStart, "editor.js must define KNOWN_SUITS")
+    local suitsEnd = editorSrc:find("%]", suitsStart)
+    local suitsBlock = editorSrc:sub(suitsStart, suitsEnd)
+    for suit, _ in pairs(gear.knownSuits) do
+        assert(suitsBlock:find('"' .. suit .. '"', 1, true),
+            "editor.js KNOWN_SUITS must include '" .. suit .. "'")
+    end
+
+    assert(editorSrc:find("STELLAR_SYNERGIES", 1, true),
+        "editor.js must list STELLAR_SYNERGIES")
+    assert(editorSrc:find("사건의 지평선", 1, true),
+        "synergy table must include 사건의 지평선 (no symbol prefix)")
+    assert(editorSrc:find("채집 +30%", 1, true),
+        "eventHorizon copy must be 채집 +30%")
+    assert(editorSrc:find("function renderSynergyPanel", 1, true),
+        "editor.js must draw the synergy reference panel")
+
+    local collectStart = editorSrc:find("function collectFormPart")
+    local collectEnd = editorSrc:find("\n}", collectStart)
+    local collectBlock = editorSrc:sub(collectStart, collectEnd)
+    assert(collectBlock:find("suit:"),
+        "collectFormPart must persist suit so a save does not strip it")
+end
+
 -- Groups the gear-editor <-> gear.lua sync regression checks into one
 -- wrapper so M.run() only references a single upvalue for all five
 -- (Lua's 60-upvalue-per-function ceiling: this suite has grown enough
@@ -1999,6 +2036,7 @@ local function testGearEditorSyncSuite()
     testGearEditorEffectValueRangeSync()
     testGearEditorEconomyPreviewSync()
     testGearEditorGalaxyExclusiveFieldSync()
+    testGearEditorSuitAndSynergySync()
 end
 
 -- docs/feedback/INBOX.md item 13 follow-up (named next slice after the

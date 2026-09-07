@@ -192,3 +192,43 @@ form fieldset {
 .edition-preview-item strong {
   color: #ffb347;
 }
+
+.synergy-panel {
+  margin: 0 24px 8px;
+  padding: 12px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.synergy-panel h2 {
+  grid-column: 1 / -1;
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: var(--accent);
+}
+.synergy-item {
+  border-left: 3px solid var(--muted);
+  padding: 4px 8px;
+}
+.synergy-name { font-size: 13px; font-weight: 600; }
+.synergy-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.suit-chip {
+  display: inline-block;
+  margin: 4px auto 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  width: fit-content;
+}
+.card .suit-chip { display: block; }
+.suit-chip.suit-solar { background: #3a2a12; color: #ffb347; }
+.suit-chip.suit-nebula { background: #2a1838; color: #c084fc; }
+.suit-chip.suit-void { background: #121a38; color: #5b8def; }
+.suit-chip.suit-pulsar { background: #123238; color: #5ce1e6; }

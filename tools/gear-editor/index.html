@@ -32,6 +32,8 @@
 
 <section id="statusBar" class="status"></section>
 
+<section id="synergyPanel" class="synergy-panel" aria-label="stellar synergies"></section>
+
 <main>
   <section id="grid" class="card-grid"></section>
 
@@ -58,6 +60,14 @@
           <option value="legendary">legendary</option>
         </select>
         <span id="rarityPreview" class="rarity-swatch"></span>
+      </label>
+      <label>Suit (stellar synergy)
+        <select id="fieldSuit">
+          <option value="solar">solar — 태양계</option>
+          <option value="nebula">nebula — 성운 지대</option>
+          <option value="void">void — 사건의 지평선</option>
+          <option value="pulsar">pulsar — 펄서 폭발</option>
+        </select>
       </label>
       <label>Tags (comma separated)
         <input type="text" id="fieldTags" placeholder="speed, altitude">

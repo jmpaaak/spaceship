@@ -152,10 +152,16 @@
   (31b) **허브 내구 회복 제거 + hullRegen 부품** (msg `1546411887430991913`)
     - 담당: `game/expedition.lua` launch 힐 스킵 + `game/gear.lua` hullRegen + `game/data/hull_parts.json`. 허브 UI 힌트는 play.lua라 모듈 분리 후 또는 루프 dirty가 아니면.
 
+  (37) ~~**gear-editor에 시너지 표기/수트 편집 없음** (msg `1546415792424488970`)~~
+    - 완료: 상단 시너지 7종 패널 + 카드 Suit 셀렉트/칩. `KNOWN_SUITS` ↔ `gear.knownSuits`. 기호 없음. Test INBOX-61(37) GREEN.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+
+(61.37) **gear-editor 시너지 표 + Suit 편집:**
+  - 완료: 상단 시너지 7종 패널(이름+조건, 기호 없음) + 카드 Suit 셀렉트/칩. `KNOWN_SUITS` ↔ `gear.knownSuits`. collectFormPart가 suit persist. Test `testGearEditorSuitAndSynergySync` in sync suite. UNIT/SMOKE GREEN.
 
 (61.25) **슬롯 비용·보상 은하 거리에 비례:**
   - 완료: `slotTier`/`slotSpinCostFor`/`galaxyDistance`. spinCost=$10*tier. SPEED/DURABILITY/HARVEST * tier. HUD/spin/refund wired. Test INBOX-61(25) GREEN.

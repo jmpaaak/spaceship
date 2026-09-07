@@ -24,6 +24,18 @@ const EFFECT_TYPE_GROUPS = {
 };
 const KNOWN_EFFECT_TYPES = Object.values(EFFECT_TYPE_GROUPS).flat();
 const KNOWN_RARITIES = ["common", "uncommon", "rare", "legendary"];
+const KNOWN_SUITS = ["solar", "nebula", "void", "pulsar"];
+// Mirrors game/i18n.lua synergy_* / synergy_desc_* (no symbol prefixes).
+const STELLAR_SYNERGIES = [
+  { key: "solarSystem",  suit: "solar",  name: "태양계 시너지",  desc: "솔라 3+: 착지 시 최대내구 +1" },
+  { key: "nebulaField",  suit: "nebula", name: "성운 지대",       desc: "네뷸라 3+: 수확 x1.5" },
+  { key: "eventHorizon", suit: "void",   name: "사건의 지평선",   desc: "보이드 3+: 채집 +30%" },
+  { key: "pulsarBurst",  suit: "pulsar", name: "펄서 폭발",       desc: "펄서 2+: 연속 x2" },
+  { key: "binaryStar",   suit: null,     name: "쌍성",            desc: "솔라2+네뷸라2: 착지 +$30" },
+  { key: "supernova",    suit: null,     name: "초신성",          desc: "4수트: 전설 x1.5" },
+  { key: "darkMatter",   suit: null,     name: "암흑물질",        desc: "보이드2+펄서2: 연속 +50%" },
+];
+const SUIT_COLOR = { solar: "#ffb347", nebula: "#c084fc", void: "#5b8def", pulsar: "#5ce1e6" };
 // Item 12: known edition ids a card's `editions` array may reference (must
 // stay identical to game/gear.lua's M.knownEditions whitelist).
 const KNOWN_EDITIONS = ["irradiated", "crystallized", "quantum_flawed", "refined"];
@@ -78,9 +90,10 @@ function cacheEls() {
     "openHullInput", "openEngineInput", "openFsaBtn", "saveFsaBtn",
     "downloadBtn", "newCardBtn", "statusBar", "grid", "formPanel",
     "formTitle", "cardForm", "fieldId", "fieldName", "fieldNameKo",
-    "fieldIcon", "fieldRarity", "rarityPreview", "fieldTags",
+    "fieldIcon", "fieldRarity", "rarityPreview", "fieldSuit", "fieldTags",
     "fieldEditions", "fieldGalaxyExclusive", "fieldSlotExclusive", "effectsList", "addEffectBtn", "saveCardBtn",
-    "deleteCardBtn", "cancelBtn", "formError", "editionPreviewContainer", "economyPreviewContainer"
+    "deleteCardBtn", "cancelBtn", "formError", "editionPreviewContainer", "economyPreviewContainer",
+    "synergyPanel"
   ].forEach((id) => { els[id] = document.getElementById(id); });
 }
 
@@ -112,6 +125,9 @@ function validatePool(doc) {
     if (!isNonEmptyString(part.name)) errors.push(`${prefix}: missing non-empty name`);
     if (!isNonEmptyString(part.icon)) errors.push(`${prefix}: missing non-empty icon`);
     if (!KNOWN_RARITIES.includes(part.rarity)) errors.push(`${prefix}: unknown rarity '${part.rarity}'`);
+    if (part.suit != null && part.suit !== "" && !KNOWN_SUITS.includes(part.suit)) {
+      errors.push(`${prefix}: unknown suit '${part.suit}'`);
+    }
     if (Array.isArray(part.editions)) {
       part.editions.forEach((edition) => {
         if (isNonEmptyString(edition) && !KNOWN_EDITIONS.includes(edition)) {
@@ -245,15 +261,31 @@ function renderGrid() {
     const card = document.createElement("div");
     card.className = `card rarity-${part.rarity || "common"}`;
     card.tabIndex = 0;
+    const suit = part.suit || "";
+    const suitChip = suit
+      ? `<div class="suit-chip suit-${escapeHtml(suit)}">${escapeHtml(suit)}</div>`
+      : "";
     card.innerHTML = `
       <div class="icon">${escapeHtml(part.icon || "?")}</div>
       <div class="name">${escapeHtml(part.name || part.id)}</div>
       <div class="rarity-label">${escapeHtml(part.rarity || "?")}${part.galaxyExclusive ? " · galaxy exclusive" : ""}${part.slotExclusive ? " · slot exclusive" : ""}</div>
+      ${suitChip}
       <div class="effects">${(part.effects || []).map((e) => `<div>${escapeHtml(e.type)} ${e.mode === "multiply" ? "×" : e.value >= 0 ? "+" : ""}${e.value}</div>`).join("")}</div>
     `;
     card.addEventListener("click", () => openForm(part.id));
     els.grid.appendChild(card);
   });
+}
+
+function renderSynergyPanel() {
+  if (!els.synergyPanel) return;
+  els.synergyPanel.innerHTML = `<h2>시너지</h2>` + STELLAR_SYNERGIES.map((s) => {
+    const color = s.suit ? (SUIT_COLOR[s.suit] || "#8b93a7") : "#e6e9ef";
+    return `<div class="synergy-item" style="border-left-color:${color}">
+      <div class="synergy-name">${escapeHtml(s.name)}</div>
+      <div class="synergy-desc">${escapeHtml(s.desc)}</div>
+    </div>`;
+  }).join("");
 }
 
 function escapeHtml(s) {
@@ -325,6 +357,7 @@ function openForm(id) {
     els.fieldNameKo.value = "";
     els.fieldIcon.value = "";
     els.fieldRarity.value = "common";
+    els.fieldSuit.value = "solar";
     els.fieldTags.value = "";
     els.fieldEditions.value = "";
     els.fieldGalaxyExclusive.checked = false;
@@ -339,6 +372,7 @@ function openForm(id) {
     els.fieldNameKo.value = part.nameKo || "";
     els.fieldIcon.value = part.icon || "";
     els.fieldRarity.value = part.rarity || "common";
+    els.fieldSuit.value = KNOWN_SUITS.includes(part.suit) ? part.suit : "solar";
     els.fieldTags.value = (part.tags || []).join(", ");
     els.fieldEditions.value = (part.editions || []).join(", ");
     els.fieldGalaxyExclusive.checked = part.galaxyExclusive === true;
@@ -453,6 +487,7 @@ function collectFormPart() {
     nameKo: els.fieldNameKo.value.trim() || els.fieldName.value.trim(),
     icon: els.fieldIcon.value.trim(),
     rarity: els.fieldRarity.value,
+    suit: els.fieldSuit.value,
     tags,
     editions,
     galaxyExclusive: els.fieldGalaxyExclusive.checked,
@@ -507,6 +542,7 @@ function init() {
   wireSaveFsa();
   wireDownload();
   wireForm();
+  renderSynergyPanel();
   // Auto-load both JSON files when served via HTTP (gear-editor server)
   autoLoadDefaults();
 }
