@@ -193,7 +193,7 @@ locales.en = {
     effect_shopDiscount = "SHOP -%d%%",
     effect_collisionRadius = "HITBOX %+d",
     effect_detectionRadius = "DETECT %+d",
-    effect_luck = "LUCK +%d",
+    effect_luck = "LUCK +%d%%",
     effect_rerollBonus = "REROLL +%d",
     effect_boostCharge = "BOOST +%d",
     effect_autoCollect = "AUTO COLLECT",
@@ -243,6 +243,14 @@ locales.en = {
     leaderboard_rank = "#%d",
     leaderboard_loading = "Loading...",
     leaderboard_error = "Could not connect",
+    -- INBOX 61(29): help overlay
+    help_title = "HELP",
+    help_luck = "LUCK: Higher rarity drops, edition chance 8%+luck%, harvest weight x(1+luck/100).",
+    help_harvest = "HARVEST: Sample sell price multiplier.",
+    help_streak = "STREAK: Same-family chain bonus.",
+    help_boost = "BOOST: Tap bottom-right, 0.8s at 3x speed.",
+    help_synergy = "SYNERGY: Suit-matched gear combos grant bonuses.",
+    help_slot = "SLOT: Match 3 symbols for rewards. Cost scales with galaxy distance.",
 }
 
 locales.en.phase_abbrev = {
@@ -425,7 +433,7 @@ locales.ko = {
     effect_shopDiscount = "상점 -%d%%",
     effect_collisionRadius = "충돌 %+d",
     effect_detectionRadius = "탐지 %+d",
-    effect_luck = "행운 +%d",
+    effect_luck = "행운 +%d%%",
     effect_rerollBonus = "리롤 +%d",
     effect_boostCharge = "부스트 +%d",
     effect_autoCollect = "자동 채집",
@@ -475,6 +483,14 @@ locales.ko = {
     leaderboard_rank = "#%d",
     leaderboard_loading = "불러오는 중...",
     leaderboard_error = "연결할 수 없습니다",
+    -- INBOX 61(29): help overlay
+    help_title = "도움말",
+    help_luck = "행운: 높은 등급 드롭 확률 상승, 에디션 확률 8%+행운%, 수확 가중 x(1+행운/100).",
+    help_harvest = "수확: 표본 판매가 배율.",
+    help_streak = "연속: 같은 계열 연쇄 시 보너스.",
+    help_boost = "부스트: 우측 하단 탭, 0.8초 3배속.",
+    help_synergy = "시너지: 같은 수트 부품 조합 효과.",
+    help_slot = "슬롯: 심볼 3개 매칭 보상. 비용은 은하 거리에 비례.",
 }
 
 locales.ko.phase_abbrev = {

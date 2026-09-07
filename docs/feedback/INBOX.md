@@ -52,7 +52,7 @@
     - ~~설정은 빈 껍데기(언어/사운드 토글 자리).~~
     - 완료: pause overlay에 RESTART/MAIN MENU 버튼 추가, `game/scenes/title.lua` 신규 (별 배경 + 타이틀 + 시작/이어서/설정 버튼), `main.lua` TitleScene으로 시작, 캡처 모드는 직접 PlayScene. `onMainMenu` 콜백으로 양방향 전환. Test INBOX-61(21) GREEN.
 
-  (22) **중심별 근처 "DANGER" 텍스트 + 태양 에셋 교체** (msg `1546396077832273940`)
+  ~~(22) **중심별 근처 "DANGER" 텍스트 + 태양 에셋 교체** (msg `1546396077832273940`)~~
     - ~~중심별(태양) 중력 우물 근처에 진입하면 **"DANGER"** 경고 텍스트 표시. 빨강 깜빡임, 우물 바깥 경계 부근에서 나타남.~~
     - ~~현재 태양은 노란 원 폴백. NASA 태양 사진 → 청키 4px PIL 파이프라인으로 화려한 에셋 교체.~~
     - ~~`tools/gen_sun.py` ≤50줄, 128×128 RGBA. 기존 `gen_stars_from_nasa.py` 패턴 활용.~~
@@ -90,17 +90,18 @@
     - 완료: `tools/serve_editors.py` POST `/api/sprite-gen` `{prompt,width,height,image?}` → PNG base64. Tries `sprite-gen` package, else deterministic PIL shapes. `editor.js` `generateFromPromptAsync` fetch + local fallback. Test `tools.test_serve_editors` GREEN.
 
 
-  (29) **행운 % 표시 + 헬프(?) 아이콘 + 게임 설명** (msg `1546409329245036554`)
-    - 행운 수치를 **퍼센트**로 표시 (`luck +10` → `행운 +10%`). `i18n effect_luck` 포맷 `"행운 +%d%%"` / `"LUCK +%d%%"`.
-    - HUD 우측 상단, 일시정지 버튼 옆에 **? 헬프 아이콘** (44×44 터치).
-    - 탭하면 오버레이 패널:
-      - **행운**: 드롭 희귀도 상향 / 에디션 확률 8%+luck% / 슬롯 HARVEST 가중 ×(1+luck/100)
-      - **수확**: 표본 판매 배율
-      - **연속**: 같은 계열 연쇄 시 보너스
-      - **부스트**: 우측 하단 탭, 0.8초 3배속
-      - **시너지**: 같은 수트 부품 조합 효과
-      - **슬롯**: 심볼 매칭 규칙
-    - Balatro 스타일 다크 패널, 닫기=아무 곳 탭.
+  ~~(29) **행운 % 표시 + 헬프(?) 아이콘 + 게임 설명** (msg `1546409329245036554`)~~
+    - ~~행운 수치를 **퍼센트**로 표시 (`luck +10` → `행운 +10%`). `i18n effect_luck` 포맷 `"행운 +%d%%"` / `"LUCK +%d%%"`.~~
+    - ~~HUD 우측 상단, 일시정지 버튼 옆에 **? 헬프 아이콘** (44×44 터치).~~
+    - ~~탭하면 오버레이 패널:~~
+      - ~~**행운**: 드롭 희귀도 상향 / 에디션 확률 8%+luck% / 슬롯 HARVEST 가중 ×(1+luck/100)~~
+      - ~~**수확**: 표본 판매 배율~~
+      - ~~**연속**: 같은 계열 연쇄 시 보너스~~
+      - ~~**부스트**: 우측 하단 탭, 0.8초 3배속~~
+      - ~~**시너지**: 같은 수트 부품 조합 효과~~
+      - ~~**슬롯**: 심볼 매칭 규칙~~
+    - ~~Balatro 스타일 다크 패널, 닫기=아무 곳 탭.~~
+    - 완료: `game/scenes/play_help.lua` 신규 모듈 — ? 버튼(pause 버튼 좌측 44×44) + 다크 오버레이 패널(6개 항목: luck/harvest/streak/boost/synergy/slot). i18n EN+KO 8키. `effect_luck` → `%d%%` 포맷. play.lua에 install + 3줄 배선. Test INBOX-61(29) GREEN.
 
   ~~(30) **타이틀: Sid Meier's 스타일 "Jimmy's 우주선"** (msg `1546411241927614506`)~~
     - ~~제목 위에 작고 회색 `"Jimmy's"` (22px, `(0.55, 0.55, 0.58)`).~~

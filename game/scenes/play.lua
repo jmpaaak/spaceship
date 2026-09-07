@@ -29,6 +29,8 @@ require("game.scenes.play_hud").install(M)
 require("game.scenes.play_boost").install(M)
 -- Destroyed-phase layout + keep-one card + Balatro card draw extracted to play_gameover.lua (MODULE_STRUCTURE).
 require("game.scenes.play_gameover").install(M)
+-- Help (?) button + overlay extracted to play_help.lua (MODULE_STRUCTURE).
+require("game.scenes.play_help").install(M)
 
 -- Omnidirectional movement: both horizontal (ship.x) and vertical (ship.y)
 -- are driven directly by joystick/keyboard input at effectiveSpeed, with no
@@ -3000,10 +3002,21 @@ function M:touchpressed(id, x, y)
         return
     end
     if self.expedition.phase == "ascending" then
+        -- INBOX 61(29): help overlay dismiss — tap anywhere closes it
+        if self.helpOverlayOpen then
+            self.helpOverlayOpen = false
+            return
+        end
         -- Item 18: pause button check (top-right corner).
         local pb = pauseButton
         if x >= pb.x and x < pb.x + pb.w and y >= pb.y and y < pb.y + pb.h then
             self.paused = not self.paused
+            pcall(love.system.vibrate, 0.02)
+            return
+        end
+        -- INBOX 61(29): help (?) button check (left of pause).
+        if M.hitHelpButton(self, x, y) then
+            self.helpOverlayOpen = true
             pcall(love.system.vibrate, 0.02)
             return
         end
@@ -4002,9 +4015,13 @@ function M:draw()
             love.graphics.printf(i18n.t(btn.labelKey), ax, ay + 6, aw, "center")
         end
         love.graphics.setFont(prevAdminFont)
+        -- INBOX 61(29): help (?) button next to pause
+        self:drawHelpButton()
     end
     -- drawPauseOverlay → game/scenes/play_hud.lua
     self:drawPauseOverlay()
+    -- INBOX 61(29): help overlay → game/scenes/play_help.lua
+    self:drawHelpOverlay()
     if self.shopModal then
         self:drawShopModal()
     end
