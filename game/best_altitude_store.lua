@@ -24,4 +24,8 @@ function M:save(altitude)
     return self.filesystem.write(self.filename, string.format("%.17g", altitude)) == true
 end
 
+function M:reset()
+    self.filesystem.write(self.filename, "0")
+end
+
 return M

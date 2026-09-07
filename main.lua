@@ -73,11 +73,23 @@ function love.load()
     if capturePhase or captureRequested then
         scenes = sceneStack.new(PlayScene.new())
     else
+        local altStore = require("game.best_altitude_store").new()
+        local specStore = require("game.collection_store").new()
+
+        local function detectSave()
+            return altStore:load() > 0
+        end
+
         local startGame  -- forward declaration for mutual recursion
         local function goToTitle()
             local title = TitleScene.new({
-                hasSave = false,
-                onStart = function() startGame(true) end,
+                hasSave = detectSave(),
+                onNewGame = function()
+                    -- Full reset: wipe bestAltitude + specimens, then fresh run
+                    altStore:reset()
+                    specStore:reset()
+                    startGame(true)
+                end,
                 onContinue = function() startGame(false) end,
                 onLeaderboard = function()
                     local lb = LeaderboardScene.new({
@@ -98,8 +110,12 @@ function love.load()
             sceneStack.switch(scenes, play)
         end
         local title = TitleScene.new({
-            hasSave = false, -- TODO: detect save in future slice
-            onStart = function() startGame(true) end,
+            hasSave = detectSave(),
+            onNewGame = function()
+                altStore:reset()
+                specStore:reset()
+                startGame(true)
+            end,
             onContinue = function() startGame(false) end,
             onLeaderboard = function()
                 local lb = LeaderboardScene.new({

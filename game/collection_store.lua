@@ -45,4 +45,8 @@ function M:record(newId)
     return true
 end
 
+function M:reset()
+    self.filesystem.write(self.filename, "")
+end
+
 return M

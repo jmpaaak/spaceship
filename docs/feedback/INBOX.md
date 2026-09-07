@@ -69,13 +69,14 @@
     - 완료(a): LEADERBOARD 버튼 title scene에 추가, `game/scenes/leaderboard.lua` scene (GET /scores 표시), `game/game_config.lua` (leaderboardUrl=8770), `tools/leaderboard_server.py` (POST /score + GET /scores), i18n EN+KO, main.lua 연결. Test INBOX-61(23) GREEN.
     - 완료(b): `game/leaderboard_client.lua` 신규 — `submitScore(name, bestAltitude)` fire-and-forget POST via `love.thread`. `isNewBest(run)` helper. `play.lua:persistBestAltitude()`에서 bestAltitude 갱신 시 자동 POST. settle/destroy 모두 `persistBestAltitude()` 경유하므로 양쪽 커버. headless/서버 미접속 시 silent skip. Test INBOX-61(23b) GREEN.
 
-  (24) **게임오버 → 마지막 체크포인트 부활 + 메인홈 구성** (msg `1546397935804223528`, 정정 `1546398416471457792`)
-    - 현재: 게임오버 → 아이템 1개만 keep → 지구(0,75)에서 리스타트, 모든 돈/업그레이드/장비 리셋.
-    - 변경: **마지막 방문 체크포인트(허브/지구)에서 부활**. 단 돈·업그레이드·장비는 **기존대로 전부 리셋** + **keep-one(아이템 1개 선택) 유지**. 달라지는 건 **부활 위치만** (지구 고정 → 마지막 체크포인트).
+  (24) ~~**게임오버 → 마지막 체크포인트 부활 + 메인홈 구성** (msg `1546397935804223528`, 정정 `1546398416471457792`)~~
+    - ~~현재: 게임오버 → 아이템 1개만 keep → 지구(0,75)에서 리스타트, 모든 돈/업그레이드/장비 리셋.~~
+    - ~~변경: **마지막 방문 체크포인트(허브/지구)에서 부활**. 단 돈·업그레이드·장비는 **기존대로 전부 리셋** + **keep-one(아이템 1개 선택) 유지**. 달라지는 건 **부활 위치만** (지구 고정 → 마지막 체크포인트).~~
     - ~~`run.lastCheckpointPosition = {x, y, galaxyId}` settle/settleAtHub 시 저장. `destroy` → ship 위치를 `lastCheckpointPosition`으로, 나머지(돈/업그레이드/장비) 리셋은 현행 유지.~~
     - 완료(a): `lastCheckpointX/Y` added to run state. `settle()` saves Earth or hub position. `destroy()` preserves checkpoint. `lastCheckpointOrEarth(run)` helper. `play.lua` uses checkpoint for destroy respawn. Test INBOX-61(24) GREEN.
-    - **새 게임**: 메인홈에서 `새 게임` = 전체 리셋 + 지구 시작. `이어서 하기` = 마지막 체크포인트.
-    - 타이틀 메뉴 최종 구성: `이어서 하기` / `새 게임` / `리더보드` / `설정`.
+    - ~~**새 게임**: 메인홈에서 `새 게임` = 전체 리셋 + 지구 시작. `이어서 하기` = 마지막 체크포인트.~~
+    - ~~타이틀 메뉴 최종 구성: `이어서 하기` / `새 게임` / `리더보드` / `설정`.~~
+    - 완료(b): Title menu CONTINUE / NEW GAME / LEADERBOARD / SETTINGS. NEW GAME resets bestAltitude+specimens then Earth start. CONTINUE gated on `bestAltitude > 0`. i18n EN/KO. Test INBOX-61(24b) GREEN.
 
   (25) **슬롯 비용·보상 은하 거리에 비례** (msg `1546403099059429456`)
     - 현재: spinCost=$10 고정, 보상도 고정(SPEED+5/+20, DURABILITY+3/+10 등). 먼 은하에서 돈이 많아져도 슬롯 의미 없어짐.

@@ -1,6 +1,7 @@
--- INBOX 61(21): Title scene — game start screen.
--- Shows game title + START / CONTINUE / SETTINGS buttons.
+-- INBOX 61(21)+61(24b): Title scene — game start screen.
+-- Menu: CONTINUE / NEW GAME / LEADERBOARD / SETTINGS.
 -- "CONTINUE" is enabled only when a saved expedition exists (hasSave).
+-- "NEW GAME" = full reset (bestAltitude, specimens, money, upgrades, checkpoint).
 
 local viewport = require("game.viewport")
 local i18n = require("game.i18n")
@@ -19,10 +20,12 @@ function M.new(options)
     options = options or {}
     return setmetatable({
         hasSave = options.hasSave or false,
-        onStart = options.onStart,      -- callback: new game
-        onContinue = options.onContinue, -- callback: continue
-        onSettings = options.onSettings, -- callback: settings (stub)
+        onNewGame = options.onNewGame,        -- callback: full reset + start
+        onContinue = options.onContinue,      -- callback: resume last checkpoint
+        onSettings = options.onSettings,      -- callback: settings (stub)
         onLeaderboard = options.onLeaderboard, -- callback: leaderboard
+        -- Legacy compat: onStart maps to onNewGame
+        onStart = options.onStart,
         -- Background star field (simple)
         stars = M._generateStars(120),
         starTimer = 0,
@@ -48,11 +51,13 @@ function M:buttonRects()
     local bx = cx - M.buttonW / 2
     local y = M.buttonStartY
     local rects = {}
-    -- START
-    rects.start = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
-    y = y + M.buttonH + M.buttonGap
-    -- CONTINUE
+    -- CONTINUE (top — primary action when save exists)
     rects.continue_ = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
+    y = y + M.buttonH + M.buttonGap
+    -- NEW GAME (was "start")
+    rects.newGame = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
+    -- Keep legacy alias for existing tests
+    rects.start = rects.newGame
     y = y + M.buttonH + M.buttonGap
     -- LEADERBOARD
     rects.leaderboard = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
@@ -94,10 +99,10 @@ function M:draw()
     local btnFont = fonts.get(32)
     love.graphics.setFont(btnFont)
 
-    -- START button
-    self:_drawButton(rects.start, i18n.t("title_start"), true)
     -- CONTINUE button (greyed out if no save)
     self:_drawButton(rects.continue_, i18n.t("title_continue"), self.hasSave)
+    -- NEW GAME button
+    self:_drawButton(rects.newGame, i18n.t("title_new_game"), true)
     -- LEADERBOARD button
     self:_drawButton(rects.leaderboard, i18n.t("title_leaderboard"), true)
     -- SETTINGS button (stub, always enabled visually)
@@ -119,12 +124,15 @@ end
 
 function M:touchpressed(id, x, y)
     local rects = self:buttonRects()
-    if self:_hitRect(rects.start, x, y) then
-        if self.onStart then self.onStart() end
-        return
-    end
+    -- Continue (only if save exists)
     if self.hasSave and self:_hitRect(rects.continue_, x, y) then
         if self.onContinue then self.onContinue() end
+        return
+    end
+    -- New Game
+    if self:_hitRect(rects.newGame, x, y) then
+        local handler = self.onNewGame or self.onStart
+        if handler then handler() end
         return
     end
     -- Leaderboard
@@ -145,7 +153,8 @@ end
 
 function M:keypressed(key)
     if key == "return" or key == "space" then
-        if self.onStart then self.onStart() end
+        local handler = self.onNewGame or self.onStart
+        if handler then handler() end
     end
 end
 
