@@ -29,9 +29,11 @@
     - 지금 PART 매치는 `loadHullParts()` 랜덤 → 상점/허브와 같은 풀, 2매치 전설 가능.
     - `galaxyExclusive`처럼 `slotExclusive: true` 카드 수종을 hull+engine JSON에 추가. Earth shop / hub explore 제외, 슬롯 PART만. (2) rarity 게이트와 같이.
 
-  (16) **허브 은하 추가 구입 메뉴 버튼** (msg `1546327428819853462`)
-    - 지구 상점 밑 합계/표본/최고고도 텍스트는 이미 제거됨 (`7c7c888`).
-    - 이후 은하 허브 상점에 **추가 구입 메뉴 버튼**을 넣는다 (지구에는 두지 않음). 한 사이클에서 버튼 자리+터치만, 상품 목록은 기존 hub shop pool.
+  ~~(16) **허브 은하 추가 구입 메뉴 버튼** → 완료~~
+
+  (17) **게임오버: 아이템 없으면 "탭하여 다시시작" 세로 가운데** (msg `1546390979194519602`)
+    - `keepPartChoices`가 비어 있으면 카드·힌트 없이 빈 화면. "탭하여 다시시작"을 `panelY + panelH/2`로.
+    - 아이템 있으면 기존 하단 위치 유지.
 
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.

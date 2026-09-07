@@ -445,7 +445,8 @@ function M.debris(sectorX, sectorY, time)
             + hash(sectorX, sectorY, 960 + i) * (M.sectorSize - 32)
         local baseRotation = hash(sectorX + i, sectorY, 970) * 2 * math.pi
         local rotSpeed = (hash(sectorX + i, sectorY, 971) - 0.5) * 2  -- ±1 rad/s
-        local wrappedTime = time % 30
+        local wrapPeriod = 20 + hash(sectorX + i * 3, sectorY + i * 5, 975) * 25  -- 20~45s per piece
+        local wrappedTime = time % wrapPeriod
         pieces[#pieces + 1] = {
             id = string.format("debris:%d:%d:%d", sectorX, sectorY, i),
             x = baseX + vx * wrappedTime,

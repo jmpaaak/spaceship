@@ -1,34 +1,21 @@
 ## Current Status
 
-- INBOX 61(15) fix: slot-exclusive parts + manifest repair.
-  - Previous cycle left uncommitted changes adding slot-exclusive hull/engine
-    parts (hull_slot_lucky_plating, hull_slot_jackpot_shield,
-    engine_slot_turbo_spin, engine_slot_fortune_drive) with gear.slotPool(),
-    earthShopPool filter, expedition.lua slot PART reward wiring, and 4 PIL
-    part icon PNGs.
-  - Test failure: `testGearOfferRolling` assertion "an attached edition must
-    actually mutate the offer's effect values" failed because the new
-    hull_slot_jackpot_shield (last card with editions) listed irradiated first
-    (multiplier 1.0 = no value change). Fix: reordered editions to
-    ["crystallized", "irradiated"] so the test picks crystallized (multiplier
-    2.0) first.
-  - Manifest failure: 4 new icon entries used wrong schema (license/generation
-    instead of user_supplied/asset_id/prompt/model/style/settings). Fixed to
-    match existing PIL part icon entry format.
+- INBOX 61(16): hub restock gear button.
+  - `expedition.hubRestock(run, pool, rolls)`: pay $5 to re-roll gear offer at
+    hub settlement shops only (lastVisitedGalaxyId required, Earth excluded).
+  - `expedition.hubRestockCost = 5` constant.
+  - i18n keys `hub_restock_btn` (EN/KO).
+  - play.lua: key "r" triggers restock; gear touch button routes to restock when
+    at hub with no active gear offer; draw shows restock button text with
+    green/red color based on affordability.
+  - Test `INBOX-61(16)`: verifies success, Earth rejection, insufficient money
+    rejection, and i18n key existence.
   - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
     ASSET_MANIFEST_OK.
 
-- INBOX 61(14): planet green circle fallback fix.
-  - Root cause: drawing code required non-nil `planetSprite` (static pp_* image) to enter the sheet-drawing path. If pp_* static PNGs failed to load but rotation sheets loaded, sheets were unreachable → circle fallback.
-  - Fix: restructured planet draw to check sheet images FIRST, independent of `planetSprite`. Priority: sheet → static sprite → circle fallback.
-  - Added all 6 planet sheet PNGs + hub_sheet.png to the RGBA keepers test list.
-  - New test INBOX-61(14): verifies all sheet PNGs are RGBA (colorType 6), pass runtime sprite gate, and mock-load successfully.
-  - Collection orbit ring still drawn for undiscovered planets (unchanged).
-- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
-
 ## Next slice
 
-- Process next pending INBOX item (15: slot-exclusive parts pool).
+- Process next pending INBOX item (14: planet green circle fallback, or 15: slot-exclusive parts pool).
 
 ## Previous
 

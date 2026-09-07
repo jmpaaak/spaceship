@@ -40,6 +40,7 @@ M.earthSlotRewardMultipliers = {
 }
 
 M.slotSpinCost = 10
+M.hubRestockCost = 5       -- INBOX 61(16): cost to re-roll gear offer at hub shop
 M.slotConfigPath = "data/slot_config.json"
 
 function M.loadSlotConfig(fsOverride)
@@ -1115,6 +1116,29 @@ function M.rerollGearOffer(run, pool, rolls)
     if not ok then
         return false, err
     end
+    return true, offer
+end
+
+-- INBOX 61(16): hub-only restock — pay hubRestockCost to re-roll a gear
+-- offer at a hub settlement shop. Only allowed when lastVisitedGalaxyId is
+-- set (i.e. settled at a hub, not Earth). Pure function: deducts money,
+-- returns new offer.
+function M.hubRestock(run, pool, rolls)
+    if run.phase ~= "settlement" then
+        return false, "hubRestock: only during settlement"
+    end
+    if not run.lastVisitedGalaxyId then
+        return false, "hubRestock: hub only"
+    end
+    local cost = M.hubRestockCost or 5
+    if run.money < cost then
+        return false, "hubRestock: not enough money"
+    end
+    local offer = M.rollGearOffer(run, pool, rolls)
+    if not offer then
+        return false, "hubRestock: pool produced no offer"
+    end
+    run.money = run.money - cost
     return true, offer
 end
 

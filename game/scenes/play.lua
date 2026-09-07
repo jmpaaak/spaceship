@@ -2943,6 +2943,35 @@ function M:keypressed(key)
         end
         return
     end
+    -- INBOX 61(16): hub restock — re-roll gear offer at hub settlement
+    if self.expedition.phase == "settlement" and key == "r" then
+        if self.expedition.lastVisitedGalaxyId and not self.earthShopGearOffer then
+            local gearMod = require("game.gear")
+            local hull = gearMod.loadHullParts() or {}
+            local engine = gearMod.loadEngineParts() or {}
+            local pool = {}
+            for _, p in ipairs(hull) do
+                if not p.slotExclusive then pool[#pool+1] = p end
+            end
+            for _, p in ipairs(engine) do
+                if not p.slotExclusive then pool[#pool+1] = p end
+            end
+            local rolls = {
+                rarity = math.random(),
+                pick = math.random(),
+                editionChance = math.random(),
+                editionPick = math.random(),
+            }
+            local ok, offer = expedition.hubRestock(self.expedition, pool, rolls)
+            if ok then
+                self.earthShopGearOffer = offer
+                self.message = ""
+            else
+                self.message = offer or "RESTOCK FAILED"
+            end
+        end
+        return
+    end
     if key == "space" or key == "return" or key == "up" or key == "w" then
         -- Item 15(a): in-flight slot machine removed. Space/return during
         -- returning phase no longer triggers a slot spin. Settlement happens
@@ -3124,7 +3153,12 @@ function M:touchpressed(id, x, y)
                 elseif key == "ship" then
                     self:keypressed("v")
                 elseif key == "gear" then
-                    self:keypressed("b")
+                    -- INBOX 61(16): hub restock when no active gear offer
+                    if self.expedition.lastVisitedGalaxyId and not self.earthShopGearOffer then
+                        self:keypressed("r")
+                    else
+                        self:keypressed("b")
+                    end
                 elseif key == "slot" then
                     self:keypressed("l")
                 elseif key == "relaunch" then
@@ -4353,6 +4387,16 @@ function M:draw()
             local price = expedition.shopPrice(self.expedition, gearMod.buyPrice(offer))
             love.graphics.setColor(0.4, 1, 0.7)
             love.graphics.printf(i18n.t("earth_gear_offer", offer.name, price), fullX, row, fullW, "center")
+        elseif self.expedition.lastVisitedGalaxyId then
+            -- INBOX 61(16): hub-only restock button when gear offer is empty
+            local restockCost = expedition.hubRestockCost or 5
+            local canAfford = self.expedition.money >= restockCost
+            if canAfford then
+                love.graphics.setColor(0.3, 0.85, 0.5)
+            else
+                love.graphics.setColor(0.6, 0.3, 0.3)
+            end
+            love.graphics.printf(i18n.t("hub_restock_btn", restockCost), fullX, row, fullW, "center")
         end
 
         local r4 = M.settlementTouchRows[4].top
@@ -4511,9 +4555,13 @@ function M:draw()
                     and kept.category == rect.choice.category
                 M.drawBalatroCard(rect.choice.part, rect.x, rect.y, rect.w, rect.h, selected)
             end
+            love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
+            love.graphics.printf(i18n.t("tap_start_over"), panelX, panelY + panelH - 72, panelW, "center")
+        else
+            -- No items to keep: center the restart prompt vertically
+            love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
+            love.graphics.printf(i18n.t("tap_start_over"), panelX, panelY + panelH / 2 - 11, panelW, "center")
         end
-        love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
-        love.graphics.printf(i18n.t("tap_start_over"), panelX, panelY + panelH - 72, panelW, "center")
         -- INBOX 61(12): keep-one confirm popup overlay
         if self.keepPartConfirm and self.keepPartConfirm.part then
             local cp = self.keepPartConfirm.part
