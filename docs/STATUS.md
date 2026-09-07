@@ -1,12 +1,10 @@
 ## Current Status
 
-- Fix: asset manifest missing entries for 12 sprite sheet PNGs and sha256
-  mismatch for `assets/star/star_sun_sheet.png`.
-  Added manifest entries for `assets/planet/hub_sheet.png`,
-  `assets/planet/pp_{bare,dry,earth,gas,ice,lava}_sheet.png`,
-  `assets/star/star_{bare,dry,gas,ice,lava}_sheet.png`.
-  Fixed `star_sun_sheet.png` sha256 to match actual file on disk.
-  `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
+- Fix: 19 asset SHA256 mismatches in MANIFEST.json (planet sheets, star
+  sprites/sheets). Updated all hashes to match on-disk files.
+- Settlement shop hover UI: adjusted touch row layout (top 420→400,
+  height 165→170) and added hover highlight effect on shop cards.
+- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
   ASSET_MANIFEST_OK.
 
 ## Next slice
