@@ -157,11 +157,8 @@
     - 크레딧 11px: `BGM: Blue Space — FoxSynergy (CC-BY 3.0) / Observing the Star — yd (CC0)`
     - 완료: `game/bgm.lua` 생성, 플레이리스트 루프, title scene enter에서 start, main update 연동. i18n 크레딧 적용. Test INBOX-61(38) GREEN.
 
-  (42) **게임 배경음: OpenGameArt Space (orchestral)** (msg `1546416973133389855`)
-    - 담당: `game/bgm.lua` + `assets/sfx/space_orchestral.ogg` (play.lua 금지).
-    - lasercheese "Space (orchestral)", CC-BY 3.0. 이전 Blue Space / Observing the Star 플레이리스트를 **이 한 곡 루프**로 교체 (게임 전체 배경음).
-    - 소스 `space.flac` → LÖVE용 ogg/mp3. 크레딧: `BGM: Space — lasercheese (CC-BY 3.0)`.
-    - 헤드리스 audio nil 가드 유지.
+  ~~(42) **게임 배경음: OpenGameArt Space (orchestral)** (msg `1546416973133389855`)~~
+    - 완료: `game/bgm.lua` 한 곡 루프 `assets/sfx/space_orchestral.mp3` (이미 커밋된 mp3). i18n EN/KO `title_bgm_credit` = `BGM: Space — lasercheese (CC-BY 3.0)`. 헤드리스 audio nil 가드 유지. Test INBOX-61(42) GREEN.
 
   ~~(43) **gear-editor 엔진 파츠도 초기 클릭 시 현재 JSON 자동 로드** (msg `154641...` 후속)~~
     - 완료: Hull|Engine 탭. `hullPool`/`enginePool` 분리. `autoLoadDefaults`는 hull만. Engine 첫 클릭에 `/gear-editor/data/engine_parts.json` fetch. 파일 피커 덮어쓰기 유지. Test `tools.test_gear_editor_engine_tab` GREEN.
@@ -173,6 +170,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+(61.42) **게임 배경음 Space orchestral:**
+  - 완료: `game/bgm.lua` 플레이리스트를 lasercheese "Space (orchestral)" 한 곡 루프로 교체. 트랙 `assets/sfx/space_orchestral.mp3`. `title_bgm_credit` EN/KO = `BGM: Space — lasercheese (CC-BY 3.0)`. `game/tests/bgm.lua` + `GAME_HEADLESS=1 GAME_UNIT=1` GREEN. play.lua 미수정.
+
 (61.43) **gear-editor 엔진 탭 자동 로드:**
   - 완료: Hull|Engine 탭 클릭이 `selectPool`로 전환. `hullPool`/`enginePool` 메모리 분리. `autoLoadDefaults()`는 hull만 fetch. Engine 탭 첫 클릭 `ensureEngineLoaded()` → `/gear-editor/data/engine_parts.json`. 파일 피커는 덮어쓰기용 유지. `python3 -m unittest tools.test_gear_editor_engine_tab -v` GREEN. play.lua / self_test.lua untouched.
 
