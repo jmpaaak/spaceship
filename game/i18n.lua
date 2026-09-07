@@ -300,7 +300,7 @@ locales.ko = {
     -- Item 11/15(a): returning_message no longer references in-flight slot
     -- opportunities (abolished).
     returning_message = "귀환중  드래그 조종",
-    earth_slot_spin_prompt = "탭: 지구 슬롯 스핀",
+    earth_slot_spin_prompt = "탭하여 룰렛 도전!",
     earth_slot_result = "%s  +$%d",
     earth_slot_miss = "%s  꽝",
     earth_slot_broke = "잔액 부족  스핀에 $%d 더 필요",
@@ -350,7 +350,7 @@ locales.ko = {
     samples_settlement_line = "표본 (%d) $%d",
     spins_settlement_line = "회전 (%d) $%d",
     peak_alt_line = "최고고도 %d",
-    tap_relaunch = "탭: 재발사",
+    tap_relaunch = "탭하여 재발사",
     ship_destroyed_title = "게임 오버",
     lost_total_line = "손실합계 $%d",
     meta_reset_line = "내 최고기록 %d",

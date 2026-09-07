@@ -2009,9 +2009,22 @@ function M:update(dt)
                         r.speed = 0
                         r.stopping = false
                         r.stopped = true
-                        -- Haptic + shake on each reel stop
                         pcall(love.system.vibrate, 0.03)
                         self.slotShake = 0.15
+                        -- Short sparkles
+                        for k = 1, 3 do
+                            self.particles[#self.particles + 1] = {
+                                x = viewport.width / 2 + (i - 2) * 45 + (math.random() - 0.5) * 20,
+                                y = M.settlementTouchRows[4].top + 20 + (math.random() - 0.5) * 20,
+                                vx = (math.random() - 0.5) * 40,
+                                vy = (math.random() - 0.5) * 40,
+                                timer = 0.3 + math.random() * 0.2,
+                                maxTimer = 0.5,
+                                r = 1, g = 0.9, b = 0.5,
+                                radius = 2 + math.random() * 2,
+                                hud = true,
+                            }
+                        end
                     end
                 end
                 allStopped = false
@@ -2781,7 +2794,13 @@ function M:keypressed(key)
         end
         local reels = {}
         for i = 1, 3 do reels[i] = math.random(1, 10) end
-        local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, { reels = reels })
+        local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, {
+            reels = reels,
+            partRarity = math.random(),
+            partPick = math.random(),
+            partEditionChance = math.random(),
+            partEditionPick = math.random()
+        })
         self.earthShopSlotResult = result
         self.expedition.money = self.expedition.money - spinCost
         pcall(love.system.vibrate, 0.05)
@@ -4253,7 +4272,7 @@ function M:draw()
             local leverBotY = my + 40 * slotScale
             local leverPull = 0
             if self.slotLeverPull and self.slotLeverPull > 0 then
-                leverPull = self.slotLeverPull * 20
+                leverPull = self.slotLeverPull * 50
                 self.slotLeverPull = self.slotLeverPull - (love.timer and love.timer.getDelta() or 0.016) * 3
                 if self.slotLeverPull < 0 then self.slotLeverPull = 0 end
             end
@@ -4338,12 +4357,11 @@ function M:draw()
             else
                 -- Cost label below idle slot
                 local spinCost = expedition.slotSpinCost or 10
+                love.graphics.setFont(fonts.get(22))
                 love.graphics.setColor(1, 0.85, 0.25, 1)
-                love.graphics.printf("$" .. spinCost, fullX, belowY, fullW, "center")
-                belowY = belowY + 22
-                love.graphics.setFont(fonts.get(11))
-                love.graphics.setColor(0.7, 0.7, 0.7, 0.6)
                 love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, belowY, fullW, "center")
+                belowY = belowY + 26
+                love.graphics.printf("$" .. spinCost, fullX, belowY, fullW, "center")
                 love.graphics.setFont(fonts.get(M.settlementFontSize))
             end
         end

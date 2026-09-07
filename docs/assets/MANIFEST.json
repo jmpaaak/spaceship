@@ -2653,7 +2653,7 @@
     "style": "pixel-art",
     "settings": "{\"generator\":\"tools/gen_slot_machine.py\",\"method\":\"PIL\"}",
     "downloaded_at": "2026-09-06T22:00:00+09:00",
-    "sha256": "cd4d98c229d7d8d8efc869796bee99fa9086ac1418130d53738349afd2932890",
+    "sha256": "c979595fd41c429e391410453df44454fa551e869cde7629d8ed82e2ea133793",
     "width": 96,
     "height": 48,
     "qa": "INBOX (52a): PIL-generated 96x48 slot machine body, RGBA, transparent bg, 3 reel windows"

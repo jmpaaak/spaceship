@@ -26,10 +26,6 @@ for i in range(3):
                          fill=(8, 6, 16, 255), outline=(180, 145, 55, 255))
     # Inner glow line
     d.line([(rx + 2, ry + 2), (rx + rw - 2, ry + 2)], fill=(80, 65, 120, 180))
-# Lever
-lx = W - 5
-d.line([(lx, 10), (lx, 30)], fill=(220, 55, 55, 255), width=3)
-d.ellipse([lx - 4, 5, lx + 4, 13], fill=(240, 40, 40, 255), outline=(180, 30, 30, 255))
 # Decorative gold dots
 for dx in [18, 48, 78]:
     d.ellipse([dx - 2, H - 7, dx + 2, H - 3], fill=(255, 210, 60, 200))
