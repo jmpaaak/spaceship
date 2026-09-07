@@ -9259,8 +9259,8 @@ function M.run()
         local pieces = world.nearbyDebris(0, 0, 4, 300)
         assert(#pieces > 0, "INBOX 61(13): debris must still exist near origin at t=300")
         for _, d in ipairs(pieces) do
-            assert(d.radius >= 5,
-                "INBOX 61(13): debris radius must be >= 5 (mobile min), got " .. tostring(d.radius))
+            assert(d.radius >= 3,
+                "INBOX 61(13): debris radius must be >= 3 (x1.3 of orig min), got " .. tostring(d.radius))
         end
         print("  INBOX-61(13) debris at t=300 OK")
     end

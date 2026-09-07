@@ -428,11 +428,11 @@ function M.debris(sectorX, sectorY, time)
         elseif kindRoll < 0.44 then
             kind = "scrap"
         end
-        local minR, maxR = 8, 16
+        local minR, maxR = 5, 9   -- asteroid (orig 3-7, ~x1.3)
         if kind == "can" then
-            minR, maxR = 5, 8
+            minR, maxR = 3, 4     -- (orig 2-3, ~x1.3)
         elseif kind == "scrap" then
-            minR, maxR = 5, 10
+            minR, maxR = 3, 5     -- (orig 2-4, ~x1.3)
         end
         local radius = minR + math.floor(hash(sectorX, sectorY, 920 + i) * (maxR - minR + 1))
         local ang = hash(sectorX, sectorY, 930 + i) * 2 * math.pi
