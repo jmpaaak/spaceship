@@ -78,12 +78,13 @@
     - ~~타이틀 메뉴 최종 구성: `이어서 하기` / `새 게임` / `리더보드` / `설정`.~~
     - 완료(b): Title menu CONTINUE / NEW GAME / LEADERBOARD / SETTINGS. NEW GAME resets bestAltitude+specimens then Earth start. CONTINUE gated on `bestAltitude > 0`. i18n EN/KO. Test INBOX-61(24b) GREEN.
 
-  (25) **슬롯 비용·보상 은하 거리에 비례** (msg `1546403099059429456`)
-    - 현재: spinCost=$10 고정, 보상도 고정(SPEED+5/+20, DURABILITY+3/+10 등). 먼 은하에서 돈이 많아져도 슬롯 의미 없어짐.
-    - 변경: `slotTier = 1 + floor(galaxyDistance / galaxyCellSize)`. spinCost = `$10 * slotTier`. MONEY 보상도 `spinCost * multiplier`로 이미 스케일됨. 비머니 보상도 tier에 비례: SPEED `(5*tier)/(20*tier)`, DURABILITY `(3*tier)/(10*tier)`, HARVEST `(0.04*tier)/(0.20*tier)`.
-    - `earthSlotSpin`에 `tier` 파라미터 추가하거나, `run`에서 `lastVisitedGalaxyId` → `world.galaxyAt` → 거리 계산.
-    - HUD에 스핀 비용 표시는 이미 `spinCost` 읽으므로 자동 반영.
-    - `tripleMultiplier` (solar 1.0 / fringe 1.5 / void 2.0)는 tier 위에 추가로 곱해짐.
+  (25) ~~**슬롯 비용·보상 은하 거리에 비례** (msg `1546403099059429456`)~~
+    - ~~현재: spinCost=$10 고정, 보상도 고정(SPEED+5/+20, DURABILITY+3/+10 등). 먼 은하에서 돈이 많아져도 슬롯 의미 없어짐.~~
+    - ~~변경: `slotTier = 1 + floor(galaxyDistance / galaxyCellSize)`. spinCost = `$10 * slotTier`. MONEY 보상도 `spinCost * multiplier`로 이미 스케일됨. 비머니 보상도 tier에 비례: SPEED `(5*tier)/(20*tier)`, DURABILITY `(3*tier)/(10*tier)`, HARVEST `(0.04*tier)/(0.20*tier)`.~~
+    - ~~`earthSlotSpin`에 `tier` 파라미터 추가하거나, `run`에서 `lastVisitedGalaxyId` → `world.galaxyAt` → 거리 계산.~~
+    - ~~HUD에 스핀 비용 표시는 이미 `spinCost` 읽으므로 자동 반영.~~
+    - ~~`tripleMultiplier` (solar 1.0 / fringe 1.5 / void 2.0)는 tier 위에 추가로 곱해짐.~~
+    - 완료: `slotTier`/`slotSpinCostFor`/`galaxyDistance` in expedition. Named `galaxy:gx:gy` → hypot(gx,gy)*cellSize. SPEED/DURABILITY/HARVEST * tier. HUD/spin/refund use `slotSpinCostFor`. Test INBOX-61(25) GREEN.
 
   (26) **부품 밸런스: common 스탯 상향 + uncommon 이상 발라트로 +/× 배수 체계** (msg `1546406578733842492`)
     - common: 단일 효과, 값 최소 5 이상, 평균 ~10. 지금 1~3짜리 효과는 전부 5~12로.
@@ -128,6 +129,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+
+(61.25) **슬롯 비용·보상 은하 거리에 비례:**
+  - 완료: `slotTier`/`slotSpinCostFor`/`galaxyDistance`. spinCost=$10*tier. SPEED/DURABILITY/HARVEST * tier. HUD/spin/refund wired. Test INBOX-61(25) GREEN.
 
 (61.8) **선체/엔진 부품 아이콘 + HUD 48px:**
   - 완료: `tools/gen_part_icons.py` 36줄, 32×32 RGBA chunky-4px icons for all 65 parts. Hull=shield silhouette, Engine=nozzle silhouette, suit colors (solar gold/nebula purple/void blue/pulsar cyan). HUD slot 32→48px. Icons in drawHudGearSlots/drawGearSlots/gearPopup/drawBalatroCard (keep-one). Shield/circle fallbacks removed. Manifest updated. GREEN.

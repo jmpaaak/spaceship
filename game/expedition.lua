@@ -1298,6 +1298,40 @@ end
 
 M.homeGalaxies = { milkyway = true }
 
+-- INBOX 61(25): slot cost/rewards scale with galaxy-grid distance from origin.
+-- slotTier = 1 + floor(galaxyDistance / galaxyCellSize). Home/nil → tier 1.
+-- Named ids like "galaxy:gx:gy" use hypot(gx, gy) * cellSize so (1,0) is tier 2.
+function M.galaxyDistance(run, galaxyId)
+    local id = galaxyId or (run and run.lastVisitedGalaxyId)
+    if id and not M.homeGalaxies[id] then
+        local gx, gy = id:match("^galaxy:(-?%d+):(-?%d+)$")
+        if gx then
+            gx, gy = tonumber(gx), tonumber(gy)
+            local worldMod = require("game.world")
+            local cell = worldMod.galaxyCellSize or 4608
+            return math.sqrt((gx * cell) ^ 2 + (gy * cell) ^ 2)
+        end
+    end
+    local hx = run and run.lastHubX
+    local hy = run and run.lastHubY
+    if hx and hy then
+        return math.sqrt(hx * hx + hy * hy)
+    end
+    return 0
+end
+
+function M.slotTier(run, galaxyId)
+    local worldMod = require("game.world")
+    local cell = worldMod.galaxyCellSize or 4608
+    local dist = M.galaxyDistance(run, galaxyId)
+    return 1 + math.floor(dist / cell)
+end
+
+function M.slotSpinCostFor(run, galaxyId)
+    local base = M.slotSpinCost or 10
+    return base * M.slotTier(run, galaxyId)
+end
+
 -- Maps a galaxyId string to one of the three profile names. nil or any
 -- known home galaxy ("milkyway") returns "solar". Outer galaxies are
 -- assigned "fringe" or "void" via a stable hash of their id (mod 3: 0 ->
@@ -1410,7 +1444,8 @@ function M.earthSlotSpin(run, galaxyId, rolls)
         matchCount = 2; matchSymbol = symbols[2]
     end
     local rewardMultiplier = earthSlotReward(symbols, profile)
-    local spinCost = M.slotSpinCost or 10
+    local tier = M.slotTier(run, galaxyId)
+    local spinCost = M.slotSpinCostFor(run, galaxyId)
     -- Symbol-specific rewards instead of money-only
     local rewardType = "money"
     local rewardValue = spinCost * rewardMultiplier
@@ -1418,13 +1453,16 @@ function M.earthSlotSpin(run, galaxyId, rolls)
     if matchCount >= 2 and matchSymbol then
         if matchSymbol == "SPEED" then
             rewardType = "speed"
-            rewardValue = matchCount == 3 and 20 or 5    -- $5/upgrade → 4x or 20x value
+            -- INBOX 61(25): SPEED (5*tier)/(20*tier)
+            rewardValue = (matchCount == 3 and 20 or 5) * tier
         elseif matchSymbol == "DURABILITY" then
             rewardType = "durability"
-            rewardValue = matchCount == 3 and 10 or 3    -- $10/upgrade → 3x or 10x value
+            -- INBOX 61(25): DURABILITY (3*tier)/(10*tier)
+            rewardValue = (matchCount == 3 and 10 or 3) * tier
         elseif matchSymbol == "HARVEST" then
             rewardType = "harvest"
-            rewardValue = matchCount == 3 and 0.20 or 0.04 -- $5/0.01 → 4x or 20x value
+            -- INBOX 61(25): HARVEST (0.04*tier)/(0.20*tier)
+            rewardValue = (matchCount == 3 and 0.20 or 0.04) * tier
         elseif matchSymbol == "PART" then
             rewardType = "part"
             rewardValue = 0
@@ -1476,6 +1514,8 @@ function M.earthSlotSpin(run, galaxyId, rolls)
         matchCount = matchCount,
         matchSymbol = matchSymbol,
         rewardProfile = profile,
+        spinCost = spinCost,
+        slotTier = tier,
     }
 end
 

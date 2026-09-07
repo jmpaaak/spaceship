@@ -2186,7 +2186,7 @@ function M:update(dt)
                         for _, p in ipairs(self.expedition.equippedEngineParts or {}) do
                             if p.id == drop.id then alreadyEquipped = true; break end
                         end
-                        local spinCost = expedition.slotSpinCost or 10
+                        local spinCost = expedition.slotSpinCostFor(self.expedition, self.expedition.lastVisitedGalaxyId)
                         if alreadyEquipped then
                             self.expedition.money = self.expedition.money + spinCost
                             self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n" .. i18n.partName(drop) .. "\n(중복 환불 +$" .. spinCost .. ")"
@@ -2909,14 +2909,14 @@ function M:keypressed(key)
     end
     -- Item 15(b): Earth shop slot machine. "l" triggers a slot spin during
     -- settlement using the galaxy-aware earthSlotSpin pure function (item 15(c)).
-    -- Spin costs expedition.slotSpinCost up front; miss reward is 0 so a
+    -- Spin costs expedition.slotSpinCostFor(run, galaxyId) up front; miss reward is 0 so a
     -- miss is a real loss. Reward is applied after the cost is deducted.
     if self.expedition.phase == "settlement" and key == "l" then
         if self.slotState and self.slotState.spinning then
             if self.slotState.stopNext then self.slotState:stopNext() end
             return
         end
-        local spinCost = expedition.slotSpinCost or 10
+        local spinCost = expedition.slotSpinCostFor(self.expedition, self.expedition.lastVisitedGalaxyId)
         if self.expedition.money < spinCost then
             self.message = i18n.t("earth_slot_broke", spinCost - self.expedition.money)
             return
@@ -4617,7 +4617,7 @@ function M:draw()
                 end
             else
                 -- Cost label below idle slot
-                local spinCost = expedition.slotSpinCost or 10
+                local spinCost = expedition.slotSpinCostFor(self.expedition, self.expedition.lastVisitedGalaxyId)
                 love.graphics.setFont(fonts.get(22))
                 love.graphics.setColor(1, 0.85, 0.25, 1)
                 love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, belowY, fullW, "center")
