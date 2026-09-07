@@ -968,7 +968,11 @@ local function pngColorType(path)
 end
 
 local function shouldLoadRuntimeSprite(path)
-    return pngColorType(path) == 6
+    local ct = pngColorType(path)
+    -- If we can't read the header (mobile sandbox, missing file), load anyway.
+    -- Only reject if we positively detect RGB (colorType 2) which renders opaque.
+    if ct == nil then return true end
+    return ct ~= 2
 end
 
 local function loadSprite(path)
