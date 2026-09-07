@@ -63,7 +63,7 @@ M.settlementRowStep = 44  -- vertical px between successive text lines in the sh
 M.settlementSummaryRowStep = 40  -- vertical px between summary stat lines
 -- Vertical layout anchors (all in 720×1280 canvas coordinates):
 M.settlementPanelTop = 200
-M.settlementPanelHeight = 1045
+M.settlementPanelHeight = 1080
 M.settlementTitleY = 210
 M.settlementSummaryBgTop = 240
 M.settlementSummaryBgHeight = 170
@@ -72,8 +72,8 @@ M.settlementSamplesY = 288
 M.settlementPeakAltY = 328
 M.settlementNewBestY = 368
 -- Touch rows: 5 rows × 165px each, starting after the summary section.
-local settlementTouchRowTop = 420
-local settlementTouchRowHeight = 165
+local settlementTouchRowTop = 400
+local settlementTouchRowHeight = 170
 local settlementTouchRows = {
     {
         top = settlementTouchRowTop, bottom = settlementTouchRowTop + settlementTouchRowHeight,
@@ -1461,6 +1461,8 @@ function M.new(options)
         moonDiscovered = {},      -- moon.id → true
         shopVisited = {},         -- shop planet.id → true after a successful buy
         moonCollided = {},        -- moon.id → true
+        hoverRow = nil,           -- settlement row being hovered/touched
+        hoverCol = nil,           -- "left" or "right" column
     }, M)
 end
 
@@ -2058,6 +2060,38 @@ function M:update(dt)
         end
     end
     self:pollDesktopMouse()
+    -- Settlement hover tracking for mouse/touch
+    if self.expedition.phase == "settlement" then
+        local mx, my = nil, nil
+        if love.mouse and love.mouse.getPosition and love.graphics and love.graphics.getDimensions then
+            local rmx, rmy = love.mouse.getPosition()
+            local ww, wh = love.graphics.getDimensions()
+            mx, my = viewport.toGame(rmx, rmy, ww, wh, false)
+        end
+        self.hoverRow = nil
+        self.hoverCol = nil
+        if mx and my then
+            for i, row in ipairs(settlementTouchRows) do
+                if my >= row.top and my < row.bottom then
+                    self.hoverRow = i
+                    if row.columns then
+                        for _, col in ipairs(row.columns) do
+                            if mx >= col.left and mx < col.right then
+                                self.hoverCol = col.key == "hull" and "left" or "right"
+                                break
+                            end
+                        end
+                    else
+                        self.hoverCol = mx < viewport.width / 2 and "left" or "right"
+                    end
+                    break
+                end
+            end
+        end
+    else
+        self.hoverRow = nil
+        self.hoverCol = nil
+    end
     local steering = self:steeringButtonState()
     local previousPhase = self.expedition.phase
     for i = #self.floatingTexts, 1, -1 do
@@ -4105,44 +4139,56 @@ function M:draw()
         local rowStep = M.settlementRowStep
         local touchRowHeight = M.settlementTouchRowHeight
         
-        -- Helper: Balatro-style shop card button
-        local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg)
+        -- Helper: Balatro-style shop card button with hover effect
+        local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg, isHovered)
             local cardH = touchRowHeight - 16
             local cardY = rowTop + 8
-            -- Card body (dark rounded rect with colored border)
-            love.graphics.setColor(0.08, 0.06, 0.12, 0.92)
-            love.graphics.rectangle("fill", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
-            -- Border: green if affordable, red if not
-            if isAffordable then
-                love.graphics.setColor(0.3, 0.85, 0.4, 0.8)
-            else
-                love.graphics.setColor(0.6, 0.25, 0.2, 0.6)
+            local cx = leftX + leftW / 2
+            local cy = cardY + cardH / 2
+            -- Hover: scale up + brighter border
+            if isHovered then
+                love.graphics.push()
+                love.graphics.translate(cx, cy)
+                love.graphics.scale(1.05, 1.05)
+                love.graphics.translate(-cx, -cy)
             end
-            love.graphics.setLineWidth(2)
+            -- Card body (dark rounded rect with colored border)
+            love.graphics.setColor(isHovered and 0.12 or 0.08, isHovered and 0.10 or 0.06, isHovered and 0.18 or 0.12, 0.92)
+            love.graphics.rectangle("fill", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
+            -- Border: green if affordable, red if not; brighter on hover
+            if isAffordable then
+                love.graphics.setColor(0.3, isHovered and 1.0 or 0.85, 0.4, isHovered and 1.0 or 0.8)
+            else
+                love.graphics.setColor(isHovered and 0.8 or 0.6, 0.25, 0.2, isHovered and 0.8 or 0.6)
+            end
+            love.graphics.setLineWidth(isHovered and 3 or 2)
             love.graphics.rectangle("line", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
             love.graphics.setLineWidth(1)
             -- Action text (what you buy)
-            love.graphics.setColor(0.95, 0.92, 0.85, 1)
+            love.graphics.setColor(1, isHovered and 1.0 or 0.92, isHovered and 0.95 or 0.85, 1)
             love.graphics.printf(actionText, leftX + 8, cardY + 12, leftW - 16, "center")
-            -- Status (balance/shortfall) — green affordable, red not
+            -- Status (balance/shortfall)
             local statusY = cardY + 12 + 28
             love.graphics.setColor(isAffordable and 0.45 or 1, isAffordable and 1 or 0.4, isAffordable and 0.55 or 0.35)
             love.graphics.printf(statusText, leftX + 8, statusY, leftW - 16, "center")
             -- Preview (what you get)
             love.graphics.setColor(0.5, 0.85, 1, 0.9)
             love.graphics.printf(previewText, leftX + 8, statusY + 28, leftW - 16, "center")
+            if isHovered then
+                love.graphics.pop()
+            end
         end
 
         local shopIcons = self.shopIconImages or {}
         local r1 = M.settlementTouchRows[1].top
-        drawShopItem(r1, shopColumnLeftX, shopColumnLeftW, shopEff.hullAction, shopEff.hullStatus, shopEff.hullPreview, nextLaunch.hullActionCompact, nextLaunch.hullStatus, nextLaunch.hullPreviewCompact, nextLaunch.hullAffordable, shopIcons.hull)
-        drawShopItem(r1, shopColumnRightX, shopColumnRightW, shopEff.steeringAction, shopEff.steeringStatus, shopEff.steeringPreview, nextLaunch.steeringActionCompact, nextLaunch.steeringStatus, nextLaunch.steeringPreviewCompact, nextLaunch.steeringAffordable, shopIcons.steering)
+        drawShopItem(r1, shopColumnLeftX, shopColumnLeftW, shopEff.hullAction, shopEff.hullStatus, shopEff.hullPreview, nextLaunch.hullActionCompact, nextLaunch.hullStatus, nextLaunch.hullPreviewCompact, nextLaunch.hullAffordable, shopIcons.hull, self.hoverRow == 1 and self.hoverCol == "left")
+        drawShopItem(r1, shopColumnRightX, shopColumnRightW, shopEff.steeringAction, shopEff.steeringStatus, shopEff.steeringPreview, nextLaunch.steeringActionCompact, nextLaunch.steeringStatus, nextLaunch.steeringPreviewCompact, nextLaunch.steeringAffordable, shopIcons.steering, self.hoverRow == 1 and self.hoverCol == "right")
 
         local r2 = M.settlementTouchRows[2].top
         local shopIconsYS = self.shopIconImages or {}
-        drawShopItem(r2, shopColumnLeftX, shopColumnLeftW, shopEff.yieldAction, shopEff.yieldStatus, shopEff.yieldPreview, nextLaunch.yieldActionCompact, nextLaunch.yieldStatus, nextLaunch.yieldPreview, nextLaunch.yieldAffordable, shopIconsYS.yield)
+        drawShopItem(r2, shopColumnLeftX, shopColumnLeftW, shopEff.yieldAction, shopEff.yieldStatus, shopEff.yieldPreview, nextLaunch.yieldActionCompact, nextLaunch.yieldStatus, nextLaunch.yieldPreview, nextLaunch.yieldAffordable, shopIconsYS.yield, self.hoverRow == 2 and self.hoverCol == "left")
         if not nextLaunch.shipHidden then
-            drawShopItem(r2, shopColumnRightX, shopColumnRightW, shopEff.shipAction, shopEff.shipStatus, shopEff.shipPreview, nextLaunch.shipActionCompact, nextLaunch.shipStatus, nextLaunch.shipPreviewCompact, nextLaunch.shipAffordable, shopIconsYS.ship)
+            drawShopItem(r2, shopColumnRightX, shopColumnRightW, shopEff.shipAction, shopEff.shipStatus, shopEff.shipPreview, nextLaunch.shipActionCompact, nextLaunch.shipStatus, nextLaunch.shipPreviewCompact, nextLaunch.shipAffordable, shopIconsYS.ship, self.hoverRow == 2 and self.hoverCol == "right")
         else
             -- INBOX-30: show "SCOUT ✓" label in ship slot when scout is active
             local row = r2 + 8 + rowStep

@@ -6689,7 +6689,7 @@ function M.run()
     touchScene:touchpressed("ship", 540, 670)
     assert(touchScene.expedition.durabilityUpgradeLevel == 1)
     assert(touchScene.expedition.ownedShips.scout and touchScene.expedition.selectedShipId == "scout")
-    touchScene:touchpressed("relaunch", 360, 1100)
+    touchScene:touchpressed("relaunch", 360, 1220)
     assert(touchScene.expedition.phase == "ascending")
 
     local loadoutScene = PlayScene.new({
