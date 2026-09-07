@@ -1382,12 +1382,25 @@ function M.earthSlotSpin(run, galaxyId, rolls)
             local basePool = {}
             for _, p in ipairs(gearMod.loadHullParts() or {}) do basePool[#basePool + 1] = p end
             for _, p in ipairs(gearMod.loadEngineParts() or {}) do basePool[#basePool + 1] = p end
+            -- INBOX 61(15): prefer slot-exclusive parts; fall back to full pool
+            local slotOnly = gearMod.slotPool(basePool)
+            local sourcePool = #slotOnly > 0 and slotOnly or basePool
             local filteredPool = {}
-            for _, p in ipairs(basePool) do
+            for _, p in ipairs(sourcePool) do
                 if matchCount == 2 and (p.rarity == "common" or p.rarity == "uncommon") then
                     filteredPool[#filteredPool + 1] = p
                 elseif matchCount == 3 and (p.rarity == "rare" or p.rarity == "legendary") then
                     filteredPool[#filteredPool + 1] = p
+                end
+            end
+            -- If rarity filter emptied the slot pool, fall back to full pool
+            if #filteredPool == 0 then
+                for _, p in ipairs(basePool) do
+                    if matchCount == 2 and (p.rarity == "common" or p.rarity == "uncommon") then
+                        filteredPool[#filteredPool + 1] = p
+                    elseif matchCount == 3 and (p.rarity == "rare" or p.rarity == "legendary") then
+                        filteredPool[#filteredPool + 1] = p
+                    end
                 end
             end
             local partRolls = {

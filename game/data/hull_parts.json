@@ -736,6 +736,36 @@
         }
       ],
       "galaxyExclusive": true
+    },
+    {
+      "id": "hull_slot_lucky_plating",
+      "suit": "pulsar",
+      "name": "Lucky Plating",
+      "nameKo": "행운의 장갑",
+      "icon": "🎰",
+      "rarity": "uncommon",
+      "tags": ["defense", "economy"],
+      "editions": [],
+      "effects": [
+        { "type": "hullDurability", "value": 2 },
+        { "type": "luck", "value": 5 }
+      ],
+      "slotExclusive": true
+    },
+    {
+      "id": "hull_slot_jackpot_shield",
+      "suit": "nebula",
+      "name": "Jackpot Shield",
+      "nameKo": "잭팟 실드",
+      "icon": "🎰",
+      "rarity": "rare",
+      "tags": ["defense", "altitude"],
+      "editions": ["crystallized", "irradiated"],
+      "effects": [
+        { "type": "hullDurability", "value": 4 },
+        { "type": "sampleSellValue", "value": 3 }
+      ],
+      "slotExclusive": true
     }
   ]
 }

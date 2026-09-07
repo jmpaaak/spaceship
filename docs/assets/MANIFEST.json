@@ -4396,5 +4396,85 @@
     "width": 32,
     "height": 32,
     "qa": "PIL part icon, gen_part_icons.py"
+  },
+  {
+    "path": "assets/part_icons/hull_slot_lucky_plating.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_part_icons.py",
+    "terms_url": "tools/gen_part_icons.py",
+    "asset_id": "part-icon-hull_slot_lucky_plating-001",
+    "prompt": "PIL-generated part icon hull_slot_lucky_plating: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 32,
+      "height": 32
+    },
+    "downloaded_at": "2026-09-07T22:00:00+09:00",
+    "sha256": "8069b12f5b6368667a128eb1bdf5335633966d6ba3bf43e3733ef85e02484bee",
+    "width": 32,
+    "height": 32,
+    "qa": "PIL part icon, gen_part_icons.py"
+  },
+  {
+    "path": "assets/part_icons/hull_slot_jackpot_shield.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_part_icons.py",
+    "terms_url": "tools/gen_part_icons.py",
+    "asset_id": "part-icon-hull_slot_jackpot_shield-001",
+    "prompt": "PIL-generated part icon hull_slot_jackpot_shield: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 32,
+      "height": 32
+    },
+    "downloaded_at": "2026-09-07T22:00:00+09:00",
+    "sha256": "2f8391f4b266b04a509550ed0b04af20d8527604856ac42c68047cad70374b00",
+    "width": 32,
+    "height": 32,
+    "qa": "PIL part icon, gen_part_icons.py"
+  },
+  {
+    "path": "assets/part_icons/engine_slot_turbo_spin.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_part_icons.py",
+    "terms_url": "tools/gen_part_icons.py",
+    "asset_id": "part-icon-engine_slot_turbo_spin-001",
+    "prompt": "PIL-generated part icon engine_slot_turbo_spin: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 32,
+      "height": 32
+    },
+    "downloaded_at": "2026-09-07T22:00:00+09:00",
+    "sha256": "fc2f80d11e5c8a779338043f6e95d29a4bf9cb22f2c0400d35696345504d6edd",
+    "width": 32,
+    "height": 32,
+    "qa": "PIL part icon, gen_part_icons.py"
+  },
+  {
+    "path": "assets/part_icons/engine_slot_fortune_drive.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_part_icons.py",
+    "terms_url": "tools/gen_part_icons.py",
+    "asset_id": "part-icon-engine_slot_fortune_drive-001",
+    "prompt": "PIL-generated part icon engine_slot_fortune_drive: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 32,
+      "height": 32
+    },
+    "downloaded_at": "2026-09-07T22:00:00+09:00",
+    "sha256": "f89d0395e592c96ece33105b5c38bda4f62332dc6e8623173f03df5a11b3819e",
+    "width": 32,
+    "height": 32,
+    "qa": "PIL part icon, gen_part_icons.py"
   }
 ]

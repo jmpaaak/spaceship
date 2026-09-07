@@ -235,6 +235,7 @@ local function validatePart(part, index)
         editions = editions,
         effects = effects,
         galaxyExclusive = part.galaxyExclusive == true,
+        slotExclusive = part.slotExclusive == true,
         -- Stellar Origin suit field: optional for backward compat; warn if absent.
         suit = part.suit,
     }
@@ -756,11 +757,24 @@ function M.buyPrice(part)
     return M.sellValue(part) * M.buyPriceMultiplier
 end
 
--- Returns a new pool containing only parts that are NOT galaxy-exclusive.
+-- Returns a new pool containing only parts that are NOT galaxy-exclusive
+-- and NOT slot-exclusive: the "general acquisition" pool for Earth shop.
 function M.earthShopPool(pool)
     local result = {}
     for _, part in ipairs(pool) do
-        if not part.galaxyExclusive then
+        if not part.galaxyExclusive and not part.slotExclusive then
+            result[#result + 1] = part
+        end
+    end
+    return result
+end
+
+-- Returns a new pool containing only slot-exclusive parts.
+-- Used by the slot machine PART match to pick from the slot-only pool.
+function M.slotPool(pool)
+    local result = {}
+    for _, part in ipairs(pool) do
+        if part.slotExclusive then
             result[#result + 1] = part
         end
     end

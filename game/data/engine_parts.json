@@ -645,6 +645,36 @@
           "value": 15
         }
       ]
+    },
+    {
+      "id": "engine_slot_turbo_spin",
+      "suit": "solar",
+      "name": "Turbo Spin Engine",
+      "nameKo": "터보 스핀 엔진",
+      "icon": "🎰",
+      "rarity": "uncommon",
+      "tags": ["speed"],
+      "editions": [],
+      "effects": [
+        { "type": "speed", "value": 6 },
+        { "type": "boostCharge", "value": 3 }
+      ],
+      "slotExclusive": true
+    },
+    {
+      "id": "engine_slot_fortune_drive",
+      "suit": "void",
+      "name": "Fortune Drive",
+      "nameKo": "행운의 드라이브",
+      "icon": "🎰",
+      "rarity": "rare",
+      "tags": ["speed", "economy"],
+      "editions": ["quantum_flawed", "refined"],
+      "effects": [
+        { "type": "speed", "value": 8 },
+        { "type": "luck", "value": 8 }
+      ],
+      "slotExclusive": true
     }
   ]
 }

@@ -1,5 +1,23 @@
 ## Current Status
 
+- INBOX 61(15) fix: slot-exclusive parts + manifest repair.
+  - Previous cycle left uncommitted changes adding slot-exclusive hull/engine
+    parts (hull_slot_lucky_plating, hull_slot_jackpot_shield,
+    engine_slot_turbo_spin, engine_slot_fortune_drive) with gear.slotPool(),
+    earthShopPool filter, expedition.lua slot PART reward wiring, and 4 PIL
+    part icon PNGs.
+  - Test failure: `testGearOfferRolling` assertion "an attached edition must
+    actually mutate the offer's effect values" failed because the new
+    hull_slot_jackpot_shield (last card with editions) listed irradiated first
+    (multiplier 1.0 = no value change). Fix: reordered editions to
+    ["crystallized", "irradiated"] so the test picks crystallized (multiplier
+    2.0) first.
+  - Manifest failure: 4 new icon entries used wrong schema (license/generation
+    instead of user_supplied/asset_id/prompt/model/style/settings). Fixed to
+    match existing PIL part icon entry format.
+  - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
+    ASSET_MANIFEST_OK.
+
 - INBOX 61(14): planet green circle fallback fix.
   - Root cause: drawing code required non-nil `planetSprite` (static pp_* image) to enter the sheet-drawing path. If pp_* static PNGs failed to load but rotation sheets loaded, sheets were unreachable → circle fallback.
   - Fix: restructured planet draw to check sheet images FIRST, independent of `planetSprite`. Priority: sheet → static sprite → circle fallback.

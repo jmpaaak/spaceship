@@ -2340,9 +2340,16 @@ function M:update(dt)
             for _, p in ipairs(hull) do combined[#combined+1] = p end
             for _, p in ipairs(engine) do combined[#combined+1] = p end
             -- Hub settlements use full pool (incl. galaxyExclusive);
-            -- Earth uses earthShopPool (excludes galaxyExclusive).
+            -- Earth uses earthShopPool (excludes galaxyExclusive+slotExclusive).
+            -- Both exclude slotExclusive (INBOX 61(15): slot-only parts).
             local isHub = self.expedition.lastVisitedGalaxyId ~= nil
-            local pool = isHub and combined or gearMod.earthShopPool(combined)
+            local hubPool = {}
+            if isHub then
+                for _, p in ipairs(combined) do
+                    if not p.slotExclusive then hubPool[#hubPool+1] = p end
+                end
+            end
+            local pool = isHub and hubPool or gearMod.earthShopPool(combined)
             local rolls = {
                 rarity = math.random(),
                 pick = math.random(),
@@ -2572,8 +2579,12 @@ function M:update(dt)
                         local pool = {}
                         local hull = gearMod.loadHullParts() or {}
                         local engine = gearMod.loadEngineParts() or {}
-                        for _, p in ipairs(hull) do pool[#pool+1] = p end
-                        for _, p in ipairs(engine) do pool[#pool+1] = p end
+                        for _, p in ipairs(hull) do
+                            if not p.slotExclusive then pool[#pool+1] = p end
+                        end
+                        for _, p in ipairs(engine) do
+                            if not p.slotExclusive then pool[#pool+1] = p end
+                        end
 
                         local prng = love.math.newRandomGenerator()
                         prng:setSeed(world.hash(planet.x, planet.y, 900) * 1000000)
