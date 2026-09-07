@@ -4141,22 +4141,20 @@ function M:draw()
         local touchRowHeight = M.settlementTouchRowHeight
         
         -- Helper: Balatro-style shop card button with hover effect
+        -- actionText format: "HULL 3>4 $10" or "SPEED 30>31 $5" etc.
         local function drawShopItem(rowTop, leftX, leftW, actionImg, statusImg, previewImg, actionText, statusText, previewText, isAffordable, iconImg, isHovered)
             local cardH = touchRowHeight - 16
             local cardY = rowTop + 8
             local cx2 = leftX + leftW / 2
             local cy2 = cardY + cardH / 2
-            -- Hover: scale up + brighter border
             if isHovered then
                 love.graphics.push()
                 love.graphics.translate(cx2, cy2)
                 love.graphics.scale(1.05, 1.05)
                 love.graphics.translate(-cx2, -cy2)
             end
-            -- Card body
             love.graphics.setColor(isHovered and 0.12 or 0.08, isHovered and 0.10 or 0.06, isHovered and 0.18 or 0.12, 0.92)
             love.graphics.rectangle("fill", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
-            -- Border
             if isAffordable then
                 love.graphics.setColor(0.3, isHovered and 1.0 or 0.85, 0.4, isHovered and 1.0 or 0.8)
             else
@@ -4165,7 +4163,8 @@ function M:draw()
             love.graphics.setLineWidth(isHovered and 3 or 2)
             love.graphics.rectangle("line", leftX + 4, cardY, leftW - 8, cardH, 8, 8)
             love.graphics.setLineWidth(1)
-            -- Split actionText: extract price ($N) to separate gold line
+            -- Parse: extract label, values, price from actionText
+            -- e.g. "HULL 3>4 $10" → label="내구도", values="3 > 4", price="$10"
             local actionLabel = actionText
             local priceLabel = ""
             local priceStart = string.find(actionText, "%$%d")
@@ -4173,25 +4172,21 @@ function M:draw()
                 actionLabel = string.sub(actionText, 1, priceStart - 2)
                 priceLabel = string.sub(actionText, priceStart)
             end
-            -- Line 1: upgrade content (white, 22px)
-            local lineY = cardY + 10
-            love.graphics.setColor(1, isHovered and 1.0 or 0.92, isHovered and 0.95 or 0.85, 1)
+            -- Line 1: label (white)
+            local lineY = cardY + 14
+            love.graphics.setColor(1, 0.95, 0.9, 1)
             love.graphics.printf(actionLabel, leftX + 8, lineY, leftW - 16, "center")
-            -- Line 2: price (gold, 22px)
-            lineY = lineY + 26
+            -- Line 2: price (gold, larger emphasis)
+            lineY = lineY + 28
             love.graphics.setColor(1, 0.85, 0.25, 1)
             love.graphics.printf(priceLabel, leftX + 8, lineY, leftW - 16, "center")
-            -- Line 3: balance/shortfall (small 11px)
-            lineY = lineY + 26
+            -- Line 3: balance (small 11px, subtle)
+            lineY = lineY + 28
             local prevSmFont = love.graphics.getFont()
             love.graphics.setFont(fonts.get(11))
-            love.graphics.setColor(isAffordable and 0.45 or 1, isAffordable and 1 or 0.4, isAffordable and 0.55 or 0.35, 0.8)
+            love.graphics.setColor(isAffordable and 0.5 or 0.9, isAffordable and 0.9 or 0.35, isAffordable and 0.6 or 0.3, 0.7)
             love.graphics.printf(statusText, leftX + 8, lineY, leftW - 16, "center")
             love.graphics.setFont(prevSmFont)
-            -- Line 4: preview (cyan)
-            lineY = lineY + 18
-            love.graphics.setColor(0.5, 0.85, 1, 0.9)
-            love.graphics.printf(previewText, leftX + 8, lineY, leftW - 16, "center")
             if isHovered then
                 love.graphics.pop()
             end
@@ -4241,7 +4236,8 @@ function M:draw()
 
         local r4 = M.settlementTouchRows[4].top
         row = r4 + 4
-        if self.earthShopSlotResult or (self.slotState and self.slotState.spinning) then
+        -- Always show slot machine (spinning or idle)
+        do
             love.graphics.setColor(1, 1, 1, 1)
             local slotScale = 3
             local slotW = 96 * slotScale
@@ -4259,7 +4255,7 @@ function M:draw()
             if self.slotMachineImage then
                 love.graphics.draw(self.slotMachineImage, mx, my, 0, slotScale, slotScale)
             end
-            -- Lever animation: pull down when spinning
+            -- Lever animation
             local leverX = mx + 96 * slotScale + 2
             local leverBaseY = my + 4 * slotScale
             local leverPull = 0
@@ -4275,60 +4271,87 @@ function M:draw()
             love.graphics.setLineWidth(3)
             love.graphics.line(leverX, my + 2 * slotScale, leverX, leverBaseY + leverPull)
             love.graphics.setLineWidth(1)
-            
-            -- Draw Reels — centered in each window
-            local rKeys = {"MONEY", "PART", "SPEED", "DURABILITY", "HARVEST"}
-            local reelWindowW = 24 * slotScale
-            local reelWindowH = 32 * slotScale
-            local symSize = 32  -- symbol image is 32x32
-            for i = 1, 3 do
-                local rx = mx + (8 + (i - 1) * 28) * slotScale
-                local ry = my + 8 * slotScale
-                love.graphics.setScissor(rx, ry, reelWindowW, reelWindowH)
-                local rState = self.slotState and self.slotState.reels[i]
-                local drawSym = self.earthShopSlotResult and self.earthShopSlotResult.symbols[i] or "MONEY"
-                local yOff = 0
-                if rState then
-                    yOff = (rState.y % 32) * slotScale
-                    if not rState.stopped then
-                        drawSym = rKeys[math.random(1, #rKeys)]
+
+            -- Draw reels (spinning or static icons)
+            if self.earthShopSlotResult or (self.slotState and self.slotState.spinning) then
+                local rKeys = {"MONEY", "PART", "SPEED", "DURABILITY", "HARVEST"}
+                local reelWindowW = 24 * slotScale
+                local reelWindowH = 32 * slotScale
+                local symSize = 32
+                for i = 1, 3 do
+                    local rx = mx + (8 + (i - 1) * 28) * slotScale
+                    local ry = my + 8 * slotScale
+                    love.graphics.setScissor(rx, ry, reelWindowW, reelWindowH)
+                    local rState = self.slotState and self.slotState.reels[i]
+                    local drawSym = self.earthShopSlotResult and self.earthShopSlotResult.symbols[i] or "MONEY"
+                    local yOff = 0
+                    if rState then
+                        yOff = (rState.y % 32) * slotScale
+                        if not rState.stopped then
+                            drawSym = rKeys[math.random(1, #rKeys)]
+                        else
+                            drawSym = rState.sym
+                        end
+                    end
+                    local symImg = self.slotSymbolImages and self.slotSymbolImages[drawSym]
+                    local symScale = reelWindowW / symSize * 0.85
+                    local symOffX = (reelWindowW - symSize * symScale) / 2
+                    local symOffY = (reelWindowH - symSize * symScale) / 2
+                    if symImg then
+                        love.graphics.setColor(1, 1, 1, 1)
+                        love.graphics.draw(symImg, rx + symOffX, ry + symOffY + yOff - reelWindowH, 0, symScale, symScale)
+                        love.graphics.draw(symImg, rx + symOffX, ry + symOffY + yOff, 0, symScale, symScale)
                     else
-                        drawSym = rState.sym
+                        love.graphics.setColor(1, 1, 1, 1)
+                        love.graphics.printf(string.sub(drawSym, 1, 1), rx, ry + yOff, reelWindowW, "center")
+                    end
+                    love.graphics.setScissor()
+                end
+            else
+                -- Idle: show static icons with gentle glow pulse
+                local rKeys = {"MONEY", "SPEED", "HARVEST"}
+                local reelWindowW = 24 * slotScale
+                local reelWindowH = 32 * slotScale
+                local symSize = 32
+                local pulse = 0.7 + 0.3 * math.sin((self.time or 0) * 2)
+                for i = 1, 3 do
+                    local rx = mx + (8 + (i - 1) * 28) * slotScale
+                    local ry = my + 8 * slotScale
+                    local symImg = self.slotSymbolImages and self.slotSymbolImages[rKeys[i]]
+                    if symImg then
+                        local symScale = reelWindowW / symSize * 0.85
+                        local symOffX = (reelWindowW - symSize * symScale) / 2
+                        local symOffY = (reelWindowH - symSize * symScale) / 2
+                        love.graphics.setColor(1, 1, 1, pulse)
+                        love.graphics.draw(symImg, rx + symOffX, ry + symOffY, 0, symScale, symScale)
                     end
                 end
-                local symImg = self.slotSymbolImages and self.slotSymbolImages[drawSym]
-                local symScale = reelWindowW / symSize * 0.85
-                local symOffX = (reelWindowW - symSize * symScale) / 2
-                local symOffY = (reelWindowH - symSize * symScale) / 2
-                if symImg then
-                    love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.draw(symImg, rx + symOffX, ry + symOffY + yOff - reelWindowH, 0, symScale, symScale)
-                    love.graphics.draw(symImg, rx + symOffX, ry + symOffY + yOff, 0, symScale, symScale)
-                else
-                    love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.printf(string.sub(drawSym, 1, 1), rx, ry + yOff, reelWindowW, "center")
-                end
-                love.graphics.setScissor()
             end
 
-            -- Result text right below slot machine
-            local resultY = my + 48 * slotScale + 4
-            local profileLabel = self.earthShopSlotResult and M.earthSlotProfileLabel(self.earthShopSlotResult.rewardProfile)
-            if profileLabel then
-                love.graphics.setColor(1, 0.55, 0.45)
-                love.graphics.printf(profileLabel, fullX, resultY, fullW, "center")
-                resultY = resultY + 26
+            -- Result text / cost below slot
+            local belowY = my + 48 * slotScale + 4
+            if self.earthShopSlotResult or (self.slotState and self.slotState.spinning) then
+                local profileLabel = self.earthShopSlotResult and M.earthSlotProfileLabel(self.earthShopSlotResult.rewardProfile)
+                if profileLabel then
+                    love.graphics.setColor(1, 0.55, 0.45)
+                    love.graphics.printf(profileLabel, fullX, belowY, fullW, "center")
+                    belowY = belowY + 26
+                end
+                if self.slotResultMessage then
+                    love.graphics.setColor(1, 0.9, 0.5)
+                    love.graphics.printf(self.slotResultMessage, fullX, belowY, fullW, "center")
+                end
+            else
+                -- Cost label below idle slot
+                local spinCost = expedition.slotSpinCost or 10
+                love.graphics.setColor(1, 0.85, 0.25, 1)
+                love.graphics.printf("$" .. spinCost, fullX, belowY, fullW, "center")
+                belowY = belowY + 22
+                love.graphics.setFont(fonts.get(11))
+                love.graphics.setColor(0.7, 0.7, 0.7, 0.6)
+                love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, belowY, fullW, "center")
+                love.graphics.setFont(fonts.get(M.settlementFontSize))
             end
-            if self.slotResultMessage then
-                love.graphics.setColor(1, 0.9, 0.5)
-                love.graphics.printf(self.slotResultMessage, fullX, resultY, fullW, "center")
-            end
-            row = resultY + 28
-        else
-            love.graphics.setColor(1, 1, 1, 0.85)
-            drawPanelSprite(self.slotSpinButtonImage, fullX, row - 2, fullW, rowStep + 4)
-            love.graphics.setColor(1, 0.8, 0.3)
-            love.graphics.printf(i18n.t("earth_slot_spin_prompt"), fullX, row, fullW, "center")
         end
 
         -- Row 5: only gray "tap to relaunch" text, nothing else
