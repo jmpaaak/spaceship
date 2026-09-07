@@ -6345,6 +6345,41 @@ local function testGearPopupAndKeepPart()
         "relaunch after game over must keep the chosen part")
 end
 
+-- INBOX-61(35): 5-symbol weighted RNG test.
+-- Kept outside M.run() to avoid Lua's 200-local-per-function cap.
+local function testSlot5SymbolWeightedRNG()
+    local run = expedition.new()
+    local total = expedition.slotTotalWeight
+    local seen = {}
+    -- Run 200 deterministic spins across the full [0, totalWeight) range
+    -- to guarantee every symbol is reachable. We sweep the range evenly
+    -- plus a few targeted rolls near each symbol boundary.
+    local spinCount = 200
+    for i = 0, spinCount - 1 do
+        local roll = math.floor(i * total / spinCount)
+        local result = expedition.earthSlotSpin(run, nil, {
+            reels = { roll, roll, roll },
+        })
+        for _, sym in ipairs(result.symbols) do
+            seen[sym] = true
+        end
+    end
+    -- Also sweep roll values 0 through totalWeight-1 explicitly
+    for r = 0, total - 1 do
+        local result = expedition.earthSlotSpin(run, nil, {
+            reels = { r, r, r },
+        })
+        for _, sym in ipairs(result.symbols) do
+            seen[sym] = true
+        end
+    end
+    for _, sym in ipairs(expedition.slotSymbols) do
+        assert(seen[sym],
+            "INBOX-61(35): symbol " .. sym .. " was never drawn — weighted RNG does not cover all 5 symbols")
+    end
+    print("INBOX-61(35) slot 5-symbol weighted OK")
+end
+
 function M.run()
     require("game.i18n").setLocale("en")
     assert(viewport.width == 720 and viewport.height == 1280)
@@ -10227,18 +10262,13 @@ function M.run()
     end
 
     -- INBOX 61(35): slot reels must cover all 5 symbols, not just MONEY/PART/SPEED.
-    -- Bug: play.lua used math.random(1,10) but totalWeight is 20 → DURABILITY/HARVEST
-    -- were unreachable. Fix: earthSlotTotalWeight() helper + random(0, tw-1).
     do
         local run = expedition.new()
-        -- (a) earthSlotTotalWeight must equal earthSlotSpin's totalWeight
         local tw = expedition.earthSlotTotalWeight(run, nil)
         local spinCheck = expedition.earthSlotSpin(run, nil, { reels = {0,0,0} })
         assert(tw == spinCheck.totalWeight,
             string.format("INBOX 61(35): earthSlotTotalWeight (%d) must match earthSlotSpin.totalWeight (%d)",
                 tw, spinCheck.totalWeight))
-
-        -- (b) All 5 symbols must be reachable by sweeping roll values 0..tw-1.
         local reachable = {}
         for roll = 0, tw - 1 do
             local result = expedition.earthSlotSpin(run, nil, {
@@ -10250,8 +10280,6 @@ function M.run()
             assert(reachable[sym],
                 "INBOX 61(35): symbol " .. sym .. " must be reachable with rolls in [0, totalWeight)")
         end
-
-        -- (c) With luck bonus, totalWeight grows (HARVEST weight increases).
         local luckRun = expedition.new()
         local luckPart = {
             id = "luck_test", name = "Lucky", nameKo = "행운", icon = "+",
@@ -10262,7 +10290,6 @@ function M.run()
         local twLuck = expedition.earthSlotTotalWeight(luckRun, nil)
         assert(twLuck > tw,
             string.format("INBOX 61(35): luck must increase totalWeight (%d > %d)", twLuck, tw))
-
         print("  INBOX-61(35) slot weighted random covers all 5 symbols OK")
     end
 
