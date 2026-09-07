@@ -1,9 +1,10 @@
 ## Current Status
 
-- Finish prior-cycle uncommitted change: `sampleYieldUpgradeAmount`
-  default 0.05 → 0.01. Tests still expected x1.05/x1.10 harvest copy;
-  updated those four assertions to x1.01/x1.02. HARVEST slot pair/triple
-  payouts scaled to 0.04/0.20 so they stay ~4x/20x of the $5 shop cost.
+- Finish prior-cycle uncommitted shop UX: Earth settlement hull/yield/
+  steering/scout purchases no longer write banner copy (`self.message =
+  ""`) because shop cards already show level, hull, and price. Removed
+  unused `purchaseShortfallMessage`. Tests now assert empty banners while
+  still checking money/level/hull side effects.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
   ASSET_MANIFEST_OK.
 

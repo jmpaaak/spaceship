@@ -1773,10 +1773,6 @@ local function purchaseStatus(money, cost)
     return i18n.t("purchase_short", cost - money), false
 end
 
-local function purchaseShortfallMessage(money, cost, item)
-    return i18n.t("purchase_shortfall_message", cost - money, item)
-end
-
 -- Formats the SCOUT ship trade-off using the same explicit
 -- "GAINS <label> <value>" / "LOSSES <label> <value>" numeric format the
 -- planet-style-editor tool uses for its GAINS/LOSSES rows, so future
@@ -2722,66 +2718,29 @@ function M:keypressed(key)
         return
     end
     if self.expedition.phase == "settlement" and (key == "h" or key == "right" or key == "d") then
-        if expedition.buyDurabilityUpgrade(self.expedition) then
-            self.message = i18n.t(
-                "hull_upgraded_message",
-                self.expedition.durabilityUpgradeLevel,
-                self.expedition.maxDurability,
-                self.expedition.money)
-        else
-            self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.durabilityUpgradeCost, i18n.t("item_hull_upgrade"))
-        end
+        expedition.buyDurabilityUpgrade(self.expedition)
+        self.message = "" -- shop cards already show values (user 2026-09-07)
         return
     end
     if self.expedition.phase == "settlement" and key == "y" then
-        if expedition.buySampleYieldUpgrade(self.expedition) then
-            self.message = i18n.t(
-                "yield_upgraded_message",
-                self.expedition.sampleYieldUpgradeLevel,
-                expedition.sampleYieldMultiplier(self.expedition),
-                self.expedition.money)
-        else
-            self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.sampleYieldUpgradeCost, i18n.t("item_yield_upgrade"))
-        end
+        expedition.buySampleYieldUpgrade(self.expedition)
+        self.message = ""
         return
     end
     if self.expedition.phase == "settlement" and key == "g" then
-        if expedition.buySteeringUpgrade(self.expedition) then
-            self.message = i18n.t(
-                "steering_upgraded_message",
-                self.expedition.steeringUpgradeLevel,
-                expedition.effectiveSpeed(self.expedition),
-                self.expedition.money)
-        else
-            self.message = purchaseShortfallMessage(self.expedition.money,
-                self.expedition.steeringUpgradeCost, i18n.t("item_steering_upgrade"))
-        end
+        expedition.buySteeringUpgrade(self.expedition)
+        self.message = ""
         return
     end
     if self.expedition.phase == "settlement" and key == "v" then
         if not self.expedition.ownedShips.scout then
             if expedition.buyShip(self.expedition, "scout") then
                 expedition.selectShip(self.expedition, "scout")
-                self.message = i18n.t(
-                    "scout_purchased_message",
-                    self.expedition.maxDurability,
-                    self.expedition.money)
-            else
-                self.message = purchaseShortfallMessage(self.expedition.money,
-                    self.expedition.scoutShipCost, i18n.t("item_scout"))
             end
-        else
-            -- INBOX-30: scout owned+selected → "v" is a no-op (no starter switch)
-            if self.expedition.selectedShipId == "scout" then
-                return
-            end
-            local shipId = "scout"
-            expedition.selectShip(self.expedition, shipId)
-            self.message = i18n.t("ship_selected_message",
-                string.upper(shipId), self.expedition.maxDurability)
+        elseif self.expedition.selectedShipId ~= "scout" then
+            expedition.selectShip(self.expedition, "scout")
         end
+        self.message = ""
         return
     end
     -- Item 15(b): Earth shop slot machine. "l" triggers a slot spin during

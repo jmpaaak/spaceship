@@ -6604,24 +6604,22 @@ function M.run()
     shopScene:keypressed("h")
     assert(shopScene.expedition.durabilityUpgradeLevel == 1 and shopScene.expedition.maxDurability == 4)
     assert(shopScene.expedition.money == 10)
-    assert(shopScene.message
-        == "HULL UPGRADED  LV.1  HULL 4  BALANCE $10")
+    -- Shop cards already show values (user 2026-09-07); banner stays empty.
+    assert(shopScene.message == "")
     shopScene.expedition.money = shopScene.expedition.sampleYieldUpgradeCost + 15
     shopScene:keypressed("y")
     assert(shopScene.expedition.sampleYieldUpgradeLevel == 1)
     assert(shopScene.expedition.money == 15)
-    assert(shopScene.message == "SAMPLE YIELD UPGRADED  LV.1  x1.01  BALANCE $15")
+    assert(shopScene.message == "")
     shopScene.expedition.money = 0
     shopScene:keypressed("y")
     assert(shopScene.expedition.sampleYieldUpgradeLevel == 1)
-    assert(shopScene.message == string.format("NEED $%d MORE FOR SAMPLE YIELD UPGRADE",
-        expedition.upgradeCost(shopScene.expedition, shopScene.expedition.sampleYieldUpgradeCost, shopScene.expedition.sampleYieldUpgradeLevel)))
+    assert(shopScene.message == "")
     shopScene.expedition.money = shopScene.expedition.scoutShipCost + 20
     shopScene:touchpressed("ship", 540, 670)
     assert(shopScene.expedition.ownedShips.scout and shopScene.expedition.selectedShipId == "scout")
     assert(shopScene.expedition.money == 20)
-    assert(shopScene.message
-        == "SCOUT PURCHASED AND SELECTED  HULL 3  BALANCE $20")
+    assert(shopScene.message == "")
 
     local scoutHullMessageScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -6635,8 +6633,7 @@ function M.run()
     assert(scoutHullMessageScene.expedition.durabilityUpgradeLevel == 1
         and scoutHullMessageScene.expedition.maxDurability == 3)
     assert(scoutHullMessageScene.expedition.money == 20)
-    assert(scoutHullMessageScene.message
-        == "HULL UPGRADED  LV.1  HULL 3  BALANCE $20")
+    assert(scoutHullMessageScene.message == "")
 
     local repeatedUpgradeMessageScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -6646,8 +6643,10 @@ function M.run()
     repeatedUpgradeMessageScene:keypressed("h")
     repeatedUpgradeMessageScene:keypressed("h")
     -- durability $10 base: lv0→1 $10, lv1→2 floor(10*1.05+0.5)=$11 → balance 250-10-11=229
-    assert(repeatedUpgradeMessageScene.message
-        == "HULL UPGRADED  LV.2  HULL 5  BALANCE $229")
+    assert(repeatedUpgradeMessageScene.expedition.durabilityUpgradeLevel == 2)
+    assert(repeatedUpgradeMessageScene.expedition.maxDurability == 5)
+    assert(repeatedUpgradeMessageScene.expedition.money == 229)
+    assert(repeatedUpgradeMessageScene.message == "")
 
     local shortfallScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -6656,10 +6655,10 @@ function M.run()
     shortfallScene.expedition.money = 3
     shortfallScene:keypressed("h")
     assert(shortfallScene.expedition.durabilityUpgradeLevel == 0)
-    assert(shortfallScene.message == "NEED $7 MORE FOR HULL UPGRADE")
+    assert(shortfallScene.message == "")
     shortfallScene:touchpressed("ship", 540, 670)
     assert(not shortfallScene.expedition.ownedShips.scout)
-    assert(shortfallScene.message == "NEED $122 MORE FOR SCOUT")
+    assert(shortfallScene.message == "")
 
     local touchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
