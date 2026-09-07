@@ -5,6 +5,9 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 ## 처리 완료
+(51) **수확 1업 +0.1, 슬롯 HARVEST도 맞춤** (msg `1546492087749320774`)
+  - 완료: `sampleYieldUpgradeAmount` 0.05→**0.10**. 슬롯 2매치 +0.10 / 3매치 +0.50 (×tier). Shop preview `x1.00 -> x1.10`. Test GREEN.
+
 (50) **표본 획득 / 슬롯 / 부스트 SFX** (OOB 2026-09-07)
   - 담당: `game/sfx.lua` + collect/slot/boost 호출.
   - collect: Luke.RUSTLTD 8bit coin1 CC0 → `assets/sfx/collect.wav`, `sfx.play("collect")` on planet/moon/comet sample.

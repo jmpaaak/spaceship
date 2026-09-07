@@ -348,7 +348,7 @@ function M.new(options)
         durabilityUpgradeAmount = options.durabilityUpgradeAmount or 1,
         durabilityUpgradeCost = options.durabilityUpgradeCost or 10,
         durabilityUpgradeLevel = 0,
-        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.05,
+        sampleYieldUpgradeAmount = options.sampleYieldUpgradeAmount or 0.10,
         sampleYieldUpgradeCost = options.sampleYieldUpgradeCost or 5,
         sampleYieldUpgradeLevel = 0,
         baseSpeed = options.baseSpeed or options.climbSpeed or 60,
@@ -1503,8 +1503,8 @@ function M.earthSlotSpin(run, galaxyId, rolls)
             rewardValue = (matchCount == 3 and 10 or 3) * tier
         elseif matchSymbol == "HARVEST" then
             rewardType = "harvest"
-            -- INBOX 61(25): HARVEST (0.04*tier)/(0.20*tier)
-            rewardValue = (matchCount == 3 and 0.20 or 0.04) * tier
+            -- Shop harvest step is 0.10 (INBOX 51). 2-match = 1 shop buy, 3-match = 5.
+            rewardValue = (matchCount == 3 and 0.50 or 0.10) * tier
         elseif matchSymbol == "PART" then
             rewardType = "part"
             rewardValue = 0

@@ -7160,7 +7160,7 @@ function M.run()
     assert(starterNextLaunch.hullStatus == "SHORT $10" and not starterNextLaunch.hullAffordable)
     assert(starterNextLaunch.shipStatus == "SHORT $125" and not starterNextLaunch.shipAffordable)
     assert(starterNextLaunch.yieldAction == "T/Y HARVEST LV.0>1 $5")
-    assert(starterNextLaunch.yieldPreview == "HARVEST x1.05")
+    assert(starterNextLaunch.yieldPreview == "HARVEST x1.10")
     assert(starterNextLaunch.yieldStatus == "SHORT $5" and not starterNextLaunch.yieldAffordable)
     assert(starterNextLaunch.steeringAction == "T/G SPEED LV.0>1 $5")
     assert(starterNextLaunch.steeringPreview == "61")
@@ -7184,7 +7184,7 @@ function M.run()
     -- too wide for a 90px column once a "T/V "/"T/Y " prefix and a
     -- side-by-side status line are added, so compact "Y:"/"V:" variants
     -- (measured 38-62px) are drawn in the column instead.
-    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00 -> x1.05 $5")
+    assert(starterNextLaunch.yieldActionCompact == "HARVEST x1.00 -> x1.10 $5")
     assert(starterNextLaunch.shipActionCompact == "SCOUT $125")
     nextLaunchScene.expedition.money = 200
     local balancePreviewNextLaunch = nextLaunchScene:shopLoadoutLines()
@@ -7204,7 +7204,7 @@ function M.run()
     nextLaunchScene:keypressed("y")
     local yieldedNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(yieldedNextLaunch.yieldAction == "T/Y HARVEST LV.1>2 $" .. expedition.upgradeCost(nextLaunchScene.expedition, nextLaunchScene.expedition.sampleYieldUpgradeCost, 1))
-    assert(yieldedNextLaunch.yieldPreview == "HARVEST x1.10")
+    assert(yieldedNextLaunch.yieldPreview == "HARVEST x1.20")
     nextLaunchScene:keypressed("v")
     local scoutNextLaunch = nextLaunchScene:shopLoadoutLines()
     assert(scoutNextLaunch.ship == "NEXT SCOUT")
@@ -10172,11 +10172,11 @@ function M.run()
         local farHarvPair = exp.earthSlotSpin(run, farId, { reels = { harvRoll, harvRoll, 0 } })
         assert(farHarvPair.rewardType == "harvest",
             "INBOX 61(25): far HARVEST pair type")
-        assert(math.abs(farHarvPair.rewardValue - 0.08) < 1e-6,
-            "INBOX 61(25): far HARVEST pair must be 0.04*tier=0.08, got " .. tostring(farHarvPair.rewardValue))
+        assert(math.abs(farHarvPair.rewardValue - 0.20) < 1e-6,
+            "INBOX 61(25): far HARVEST pair must be 0.10*tier=0.20, got " .. tostring(farHarvPair.rewardValue))
         local farHarvTriple = exp.earthSlotSpin(run, farId, { reels = { harvRoll, harvRoll, harvRoll } })
-        assert(math.abs(farHarvTriple.rewardValue - 0.40) < 1e-6,
-            "INBOX 61(25): far HARVEST triple must be 0.20*tier=0.40, got " .. tostring(farHarvTriple.rewardValue))
+        assert(math.abs(farHarvTriple.rewardValue - 1.00) < 1e-6,
+            "INBOX 61(25): far HARVEST triple must be 0.50*tier=1.00, got " .. tostring(farHarvTriple.rewardValue))
 
         -- (d) MONEY already scales with spinCost; pair multiplier 3 → $60 at tier 2
         local moneyRoll = 0.5
