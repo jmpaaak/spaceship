@@ -225,6 +225,13 @@ locales.en = {
     admin_hull = "HULL+",
     admin_yield = "YLD+",
     effect_label = "Effect",
+    -- INBOX 61(21): pause menu + title scene
+    pause_restart = "RESTART",
+    pause_main_menu = "MAIN MENU",
+    title_game_name = "SPACESHIP",
+    title_start = "START",
+    title_continue = "CONTINUE",
+    title_settings = "SETTINGS",
 }
 
 locales.en.phase_abbrev = {
@@ -439,6 +446,13 @@ locales.ko = {
     admin_hull = "내구+",
     admin_yield = "수확+",
     effect_label = "효과",
+    -- INBOX 61(21): pause menu + title scene
+    pause_restart = "다시 시작",
+    pause_main_menu = "메인 메뉴",
+    title_game_name = "우주선",
+    title_start = "시작하기",
+    title_continue = "이어서 하기",
+    title_settings = "설정",
 }
 
 locales.ko.phase_abbrev = {

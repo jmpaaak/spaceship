@@ -1,15 +1,21 @@
 ## Current Status
-- INBOX 61(20): Removed `[B]:` keyboard prefix from gear offer text.
-  - EN: `"GEAR OFFER: %s  $%d"`, KO: `"장비 제안: %s  $%d"`.
-  - Test `INBOX-61(20)` verifies both locales have no `[B]` and correct format.
+- INBOX 61(21): Pause menu restart/main-menu buttons + title scene.
+  - Pause overlay now shows RESTART and MAIN MENU buttons (centered, below "PAUSED" label).
+  - RESTART: resets expedition to launch phase, repositions ship.
+  - MAIN MENU: fires `onMainMenu` callback → switches to TitleScene.
+  - New `game/scenes/title.lua`: starfield background + game title + START/CONTINUE/SETTINGS buttons.
+  - CONTINUE greyed out when `hasSave=false`.
+  - `main.lua` starts with TitleScene (capture modes bypass to PlayScene directly).
+  - i18n keys: `pause_restart`, `pause_main_menu`, `title_game_name`, `title_start`, `title_continue`, `title_settings` (EN+KO).
+  - Test `INBOX-61(21)` verifies i18n, rect layout, restart tap, main-menu callback, title scene buttons, continue gating.
   - `make verify LOVE=…` GREEN.
 
 ## Next slice
 
-- Process next pending INBOX item (21: pause menu restart + main menu + title scene).
+- Process next pending INBOX item (22: DANGER text near sun + sun asset).
 
 ## Previous
-- INBOX 61(19): Slot speed reward no longer inflates steeringUpgradeLevel.
+- INBOX 61(20): Removed `[B]:` keyboard prefix from gear offer text.
   - Slot speed rewards (+5/+20) now accumulate in `slotSpeedBonus` field.
   - `effectiveSpeed()` sums `slotSpeedBonus` alongside base + shop upgrades.
   - `steeringUpgradeLevel` stays shop-only, so `upgradeCost` stays sane.

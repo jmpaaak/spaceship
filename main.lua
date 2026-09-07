@@ -1,6 +1,7 @@
 local viewport = require("game.viewport")
 local sceneStack = require("game.scene_stack")
 local PlayScene = require("game.scenes.play")
+local TitleScene = require("game.scenes.title")
 
 local canvas
 local scenes
@@ -65,8 +66,37 @@ function love.load()
         return
     end
     love.graphics.setDefaultFilter("nearest", "nearest")
-    scenes = sceneStack.new(PlayScene.new())
     local capturePhase = os.getenv("GAME_CAPTURE_PHASE")
+    -- INBOX 61(21): title scene as default entry point.
+    -- Capture phases and GAME_CAPTURE need PlayScene directly (no title).
+    if capturePhase or captureRequested then
+        scenes = sceneStack.new(PlayScene.new())
+    else
+        local startGame  -- forward declaration for mutual recursion
+        local function goToTitle()
+            local title = TitleScene.new({
+                hasSave = false,
+                onStart = function() startGame(true) end,
+                onContinue = function() startGame(false) end,
+            })
+            sceneStack.switch(scenes, title)
+        end
+        startGame = function(fresh)
+            local play = PlayScene.new({
+                onMainMenu = goToTitle,
+            })
+            if fresh then
+                play.expedition.phase = "launch"
+            end
+            sceneStack.switch(scenes, play)
+        end
+        local title = TitleScene.new({
+            hasSave = false, -- TODO: detect save in future slice
+            onStart = function() startGame(true) end,
+            onContinue = function() startGame(false) end,
+        })
+        scenes = sceneStack.new(title)
+    end
     if capturePhase == "destroyed" then
         local run = scenes.current.expedition
         run.phase = "settlement"

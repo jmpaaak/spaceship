@@ -149,6 +149,19 @@ local pauseButton = {
 }
 M.pauseButton = pauseButton
 
+-- INBOX 61(21): Pause menu button rects (restart / main menu).
+function M.pauseMenuRects()
+    local cx = viewport.width / 2
+    local btnW = 300
+    local btnH = 56
+    local gap = 20
+    local baseY = viewport.height / 2 + 10
+    return {
+        restart = { x = cx - btnW / 2, y = baseY, w = btnW, h = btnH },
+        mainMenu = { x = cx - btnW / 2, y = baseY + btnH + gap, w = btnW, h = btnH },
+    }
+end
+
 -- Dev admin cheat buttons: stacked below pause (speed / hull / yield).
 local adminButtons = {
     { kind = "speed", labelKey = "admin_speed" },
@@ -1540,6 +1553,7 @@ function M.new(options)
         moonCollided = {},        -- moon.id → true
         hoverRow = nil,           -- settlement row being hovered/touched
         hoverCol = nil,           -- "left" or "right" column
+        onMainMenu = options.onMainMenu,  -- INBOX 61(21): callback to return to title
     }, M)
 end
 
@@ -3132,8 +3146,30 @@ function M:touchpressed(id, x, y)
             pcall(love.system.vibrate, 0.02)
             return
         end
-        -- If paused, tapping anywhere else unpauses.
+        -- If paused, check pause menu buttons first, then unpause.
         if self.paused then
+            local rects = M.pauseMenuRects()
+            -- Restart button
+            if x >= rects.restart.x and x < rects.restart.x + rects.restart.w
+                and y >= rects.restart.y and y < rects.restart.y + rects.restart.h then
+                self.paused = false
+                expedition.launch(self.expedition)
+                self.ship.x = M.launchSpawnX
+                self.ship.y = M.launchSpawnY
+                self.expedition.phase = "launch"
+                self.floatingTexts = {}
+                self.particles = {}
+                pcall(love.system.vibrate, 0.05)
+                return
+            end
+            -- Main menu button
+            if x >= rects.mainMenu.x and x < rects.mainMenu.x + rects.mainMenu.w
+                and y >= rects.mainMenu.y and y < rects.mainMenu.y + rects.mainMenu.h then
+                self.paused = false
+                if self.onMainMenu then self.onMainMenu() end
+                pcall(love.system.vibrate, 0.05)
+                return
+            end
             self.paused = false
             return
         end
@@ -4747,7 +4783,7 @@ function M:draw()
         end
         love.graphics.setFont(prevAdminFont)
     end
-    -- Item 18: Paused overlay.
+    -- Item 18: Paused overlay with INBOX 61(21) restart/main-menu buttons.
     if self.paused and self.expedition.phase == "ascending" then
         love.graphics.setColor(0, 0, 0, 0.55)
         love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
@@ -4755,7 +4791,25 @@ function M:draw()
         local pauseFont = fonts.get(48)
         local prevFont = love.graphics.getFont()
         love.graphics.setFont(pauseFont)
-        love.graphics.printf(i18n.t("paused_label"), 0, viewport.height / 2 - 30, viewport.width, "center")
+        love.graphics.printf(i18n.t("paused_label"), 0, viewport.height / 2 - 100, viewport.width, "center")
+        -- Pause menu buttons
+        local btnFont = fonts.get(32)
+        love.graphics.setFont(btnFont)
+        local rects = M.pauseMenuRects()
+        -- Restart button
+        love.graphics.setColor(0.08, 0.14, 0.22, 0.9)
+        love.graphics.rectangle("fill", rects.restart.x, rects.restart.y, rects.restart.w, rects.restart.h, 10, 10)
+        love.graphics.setColor(0.3, 0.6, 1, 0.8)
+        love.graphics.rectangle("line", rects.restart.x, rects.restart.y, rects.restart.w, rects.restart.h, 10, 10)
+        love.graphics.setColor(1, 1, 1, 0.95)
+        love.graphics.printf(i18n.t("pause_restart"), rects.restart.x, rects.restart.y + rects.restart.h / 2 - 14, rects.restart.w, "center")
+        -- Main menu button
+        love.graphics.setColor(0.08, 0.14, 0.22, 0.9)
+        love.graphics.rectangle("fill", rects.mainMenu.x, rects.mainMenu.y, rects.mainMenu.w, rects.mainMenu.h, 10, 10)
+        love.graphics.setColor(0.9, 0.4, 0.2, 0.8)
+        love.graphics.rectangle("line", rects.mainMenu.x, rects.mainMenu.y, rects.mainMenu.w, rects.mainMenu.h, 10, 10)
+        love.graphics.setColor(1, 1, 1, 0.95)
+        love.graphics.printf(i18n.t("pause_main_menu"), rects.mainMenu.x, rects.mainMenu.y + rects.mainMenu.h / 2 - 14, rects.mainMenu.w, "center")
         love.graphics.setFont(prevFont)
     end
     if self.shopModal then

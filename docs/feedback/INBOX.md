@@ -43,13 +43,14 @@
     - ~~i18n `earth_gear_offer` = `"GEAR OFFER [B]: %s  $%d"` — `[B]` 제거.~~
     - 완료: EN `"GEAR OFFER: %s  $%d"`, KO `"장비 제안: %s  $%d"`. Test INBOX-61(20) GREEN.
 
-  (21) **일시정지 메뉴: 다시 시작 + 메인메뉴** (msg `1546395541850554480`)
-    - 일시정지 상태에서 **다시 시작** 버튼 → `expedition.destroy` + `expedition.launch` (현재 런 초기화).
-    - **메인 메뉴로** 버튼 → `scene_stack.switch(titleScene)`.
-    - `game/scenes/title.lua` 신규: 배경 별 + 게임 타이틀 + "시작하기" / "이어서 하기" / "설정" (mok 패턴).
-    - "이어서 하기"는 저장된 `expedition` state가 있으면 활성, 없으면 비활성.
-    - `main.lua`가 PlayScene 대신 TitleScene으로 시작.
-    - 설정은 빈 껍데기(언어/사운드 토글 자리).
+  (21) ~~**일시정지 메뉴: 다시 시작 + 메인메뉴** (msg `1546395541850554480`)~~
+    - ~~일시정지 상태에서 **다시 시작** 버튼 → `expedition.destroy` + `expedition.launch` (현재 런 초기화).~~
+    - ~~**메인 메뉴로** 버튼 → `scene_stack.switch(titleScene)`.~~
+    - ~~`game/scenes/title.lua` 신규: 배경 별 + 게임 타이틀 + "시작하기" / "이어서 하기" / "설정" (mok 패턴).~~
+    - ~~"이어서 하기"는 저장된 `expedition` state가 있으면 활성, 없으면 비활성.~~
+    - ~~`main.lua`가 PlayScene 대신 TitleScene으로 시작.~~
+    - ~~설정은 빈 껍데기(언어/사운드 토글 자리).~~
+    - 완료: pause overlay에 RESTART/MAIN MENU 버튼 추가, `game/scenes/title.lua` 신규 (별 배경 + 타이틀 + 시작/이어서/설정 버튼), `main.lua` TitleScene으로 시작, 캡처 모드는 직접 PlayScene. `onMainMenu` 콜백으로 양방향 전환. Test INBOX-61(21) GREEN.
 
   (22) **중심별 근처 "DANGER" 텍스트 + 태양 에셋 교체** (msg `1546396077832273940`)
     - 중심별(태양) 중력 우물 근처에 진입하면 **"DANGER"** 경고 텍스트 표시. 빨강 깜빡임, 우물 바깥 경계 부근에서 나타남.
