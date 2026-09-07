@@ -2922,7 +2922,7 @@ function M:keypressed(key)
             return
         end
         local reels = {}
-        for i = 1, 3 do reels[i] = math.random(1, 10) end
+        for i = 1, 3 do reels[i] = math.floor(math.random() * expedition.slotTotalWeight) end
         local result = expedition.earthSlotSpin(self.expedition, self.expedition.lastVisitedGalaxyId, {
             reels = reels,
             partRarity = math.random(),
