@@ -53,10 +53,11 @@
     - 완료: pause overlay에 RESTART/MAIN MENU 버튼 추가, `game/scenes/title.lua` 신규 (별 배경 + 타이틀 + 시작/이어서/설정 버튼), `main.lua` TitleScene으로 시작, 캡처 모드는 직접 PlayScene. `onMainMenu` 콜백으로 양방향 전환. Test INBOX-61(21) GREEN.
 
   (22) **중심별 근처 "DANGER" 텍스트 + 태양 에셋 교체** (msg `1546396077832273940`)
-    - 중심별(태양) 중력 우물 근처에 진입하면 **"DANGER"** 경고 텍스트 표시. 빨강 깜빡임, 우물 바깥 경계 부근에서 나타남.
-    - 현재 태양은 노란 원 폴백. NASA 태양 사진 → 청키 4px PIL 파이프라인으로 화려한 에셋 교체.
-    - `tools/gen_sun.py` ≤50줄, 128×128 RGBA. 기존 `gen_stars_from_nasa.py` 패턴 활용.
-    - `assets/star/star_generic.png` 교체. `play.lua` draw에서 `starImage` 사용.
+    - ~~중심별(태양) 중력 우물 근처에 진입하면 **"DANGER"** 경고 텍스트 표시. 빨강 깜빡임, 우물 바깥 경계 부근에서 나타남.~~
+    - ~~현재 태양은 노란 원 폴백. NASA 태양 사진 → 청키 4px PIL 파이프라인으로 화려한 에셋 교체.~~
+    - ~~`tools/gen_sun.py` ≤50줄, 128×128 RGBA. 기존 `gen_stars_from_nasa.py` 패턴 활용.~~
+    - ~~`assets/star/star_generic.png` 교체. `play.lua` draw에서 `starImage` 사용.~~
+    - 완료: DANGER 경고 텍스트 — `world.starDangerTextMultiplier=1.5` 범위 내 접근 시 빨간 깜빡임 텍스트 4개가 well ring 주위를 천천히 회전하며 표시. i18n EN="DANGER"/KO="위험". 태양 에셋은 이미 `tools/gen_stars.py`로 6종 star sprite + rotation sheet 생성 완료 (노란 원 폴백 아님). Test INBOX-61(22) GREEN.
 
   (23) **메인메뉴 리더보드 + 로컬 서버** (msg `1546396453734326293`)
     - 타이틀 씬 (21)에 **리더보드** 버튼 추가.
@@ -72,6 +73,13 @@
     - `run.lastCheckpointPosition = {x, y, galaxyId}` settle/settleAtHub 시 저장. `destroy` → ship 위치를 `lastCheckpointPosition`으로, 나머지(돈/업그레이드/장비) 리셋은 현행 유지.
     - **새 게임**: 메인홈에서 `새 게임` = 전체 리셋 + 지구 시작. `이어서 하기` = 마지막 체크포인트.
     - 타이틀 메뉴 최종 구성: `이어서 하기` / `새 게임` / `리더보드` / `설정`.
+
+  (25) **슬롯 비용·보상 은하 거리에 비례** (msg `1546403099059429456`)
+    - 현재: spinCost=$10 고정, 보상도 고정(SPEED+5/+20, DURABILITY+3/+10 등). 먼 은하에서 돈이 많아져도 슬롯 의미 없어짐.
+    - 변경: `slotTier = 1 + floor(galaxyDistance / galaxyCellSize)`. spinCost = `$10 * slotTier`. MONEY 보상도 `spinCost * multiplier`로 이미 스케일됨. 비머니 보상도 tier에 비례: SPEED `(5*tier)/(20*tier)`, DURABILITY `(3*tier)/(10*tier)`, HARVEST `(0.04*tier)/(0.20*tier)`.
+    - `earthSlotSpin`에 `tier` 파라미터 추가하거나, `run`에서 `lastVisitedGalaxyId` → `world.galaxyAt` → 거리 계산.
+    - HUD에 스핀 비용 표시는 이미 `spinCost` 읽으므로 자동 반영.
+    - `tripleMultiplier` (solar 1.0 / fringe 1.5 / void 2.0)는 tier 위에 추가로 곱해짐.
 
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.

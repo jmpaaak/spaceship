@@ -228,6 +228,7 @@ locales.en = {
     -- INBOX 61(21): pause menu + title scene
     pause_restart = "RESTART",
     pause_main_menu = "MAIN MENU",
+    danger_warning = "DANGER",
     title_game_name = "SPACESHIP",
     title_start = "START",
     title_continue = "CONTINUE",
@@ -449,6 +450,7 @@ locales.ko = {
     -- INBOX 61(21): pause menu + title scene
     pause_restart = "다시 시작",
     pause_main_menu = "메인 메뉴",
+    danger_warning = "위험",
     title_game_name = "우주선",
     title_start = "시작하기",
     title_continue = "이어서 하기",

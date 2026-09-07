@@ -3762,6 +3762,27 @@ function M:draw()
                         love.graphics.circle("fill", sx, sy, world.starRadius)
                     end
                 end
+                -- INBOX 61(22): "DANGER" blinking red text near the well boundary
+                do
+                    local sdx = wellSun.x - self.ship.x
+                    local sdy = wellSun.y - self.ship.y
+                    local shipDist = math.sqrt(sdx * sdx + sdy * sdy)
+                    local dangerOuter = world.starWellRadius * world.starDangerTextMultiplier
+                    if shipDist < dangerOuter then
+                        local blink = 0.55 + 0.45 * math.sin(self.time * 6)
+                        love.graphics.setColor(1, 0.15, 0.1, blink)
+                        local dangerText = i18n.t("danger_warning")
+                        local df = love.graphics.getFont()
+                        -- Draw at 4 positions around the well ring
+                        local ringR = world.starWellRadius + 12
+                        for i = 0, 3 do
+                            local angle = (i * math.pi / 2) + self.time * 0.3
+                            local tx = sx + math.cos(angle) * ringR - df:getWidth(dangerText) / 2
+                            local ty = sy + math.sin(angle) * ringR - df:getHeight() / 2
+                            love.graphics.print(dangerText, math.floor(tx), math.floor(ty))
+                        end
+                    end
+                end
             end
         end
     end
