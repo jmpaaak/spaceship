@@ -1363,16 +1363,16 @@ function M.earthSlotSpin(run, galaxyId, rolls)
     if matchCount >= 2 and matchSymbol then
         if matchSymbol == "SPEED" then
             rewardType = "speed"
-            rewardValue = matchCount == 3 and 3 or 1
+            rewardValue = matchCount == 3 and 20 or 5    -- $5/upgrade → 4x or 20x value
         elseif matchSymbol == "DURABILITY" then
             rewardType = "durability"
-            rewardValue = matchCount == 3 and 3 or 1
+            rewardValue = matchCount == 3 and 10 or 3    -- $10/upgrade → 3x or 10x value
         elseif matchSymbol == "HARVEST" then
             rewardType = "harvest"
-            rewardValue = matchCount == 3 and 0.15 or 0.05
+            rewardValue = matchCount == 3 and 1.0 or 0.25 -- $5/0.05 → 5x or 20x value
         elseif matchSymbol == "PART" then
             rewardType = "part"
-            rewardValue = 0  -- part drop, no money
+            rewardValue = 0
         end
         -- MONEY match stays as money reward
     end
