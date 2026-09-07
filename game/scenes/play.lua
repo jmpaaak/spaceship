@@ -19,6 +19,10 @@ M.__index = M
 -- existing callers / tests keep working unchanged.
 require("game.scenes.play_minimap").install(M)
 
+-- Settlement shop + destroyed overlay extracted to play_shop.lua (MODULE_STRUCTURE).
+-- install() copies drawSettlementOverlay, drawDestroyedOverlay, rarityRgb onto M.
+require("game.scenes.play_shop").install(M)
+
 -- Omnidirectional movement: both horizontal (ship.x) and vertical (ship.y)
 -- are driven directly by joystick/keyboard input at effectiveSpeed, with no
 -- clamping. The old verticalOffset ±90 clamp was removed in item 32 so
@@ -312,30 +316,7 @@ M.launchGearBoxH = 21
 
 -- Shop-planet modal layout (720×1280). Titles use 22px Galmuri with 36px
 -- line gaps so Korean HUD font does not collide. Buy/Leave sit centered.
-function M.shopModalLayout()
-    local panelX, panelY = 20, 80
-    local panelW, panelH = 680, 420
-    local titleY = panelY + 28
-    local nameY = titleY + 40
-    local slotsY = nameY + 48
-    local errY = slotsY + 56
-    local btnW, btnH, btnGap = 200, 56, 28
-    local btnY = panelY + panelH - 80
-    local pairW = btnW * 2 + btnGap
-    local buyX = panelX + math.floor((panelW - pairW) / 2)
-    local skipX = buyX + btnW + btnGap
-    return {
-        panelX = panelX, panelY = panelY, panelW = panelW, panelH = panelH,
-        titleY = titleY, nameY = nameY, slotsY = slotsY, errY = errY,
-        buy = { x = buyX, y = btnY, w = btnW, h = btnH },
-        skip = { x = skipX, y = btnY, w = btnW, h = btnH },
-    }
-end
 
-function M.shopModalButtonRects()
-    local L = M.shopModalLayout()
-    return L.buy, L.skip
-end
 
 -- HUD gear-slot hitboxes (same math as drawHudGearSlots).
 function M.hudGearSlotLayout(hudHeight)
@@ -3068,32 +3049,6 @@ local function joystickOrigin(x, y)
     return x, y
 end
 
-function M.hitShopModalGearSlot(scene, x, y)
-    local L = M.shopModalLayout()
-    local hullSlots, engineSlots = 6, 3
-    local boxW, boxH, gap, groupGap = M.launchGearBoxW, M.launchGearBoxH, 5, 12
-    local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
-    local startX = math.floor((viewport.width - totalWidth) / 2)
-    local sy = L.slotsY
-    if y >= sy and y < sy + boxH then
-        local hullGear = scene.expedition.equippedGear or {}
-        for i = 1, hullSlots do
-            local sx = startX + (i - 1) * (boxW + gap)
-            if x >= sx and x < sx + boxW then
-                if hullGear[i] then return { part = hullGear[i], category = "hull", index = i } end
-            end
-        end
-        local engineStartX = startX + (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap
-        local engineGear = scene.expedition.equippedEngineParts or {}
-        for i = 1, engineSlots do
-            local sx = engineStartX + (i - 1) * (boxW + gap)
-            if x >= sx and x < sx + boxW then
-                if engineGear[i] then return { part = engineGear[i], category = "engine", index = i } end
-            end
-        end
-    end
-    return nil
-end
 
 function M:touchpressed(id, x, y)
     if self.gearPopup then
@@ -4195,52 +4150,7 @@ function M:draw()
         love.graphics.setFont(prevFont)
     end
     if self.shopModal then
-        local L = M.shopModalLayout()
-        love.graphics.setColor(0, 0, 0, 0.85)
-        love.graphics.rectangle("fill", 0, 0, viewport.width, viewport.height)
-
-        love.graphics.setColor(0.08, 0.14, 0.22, 1)
-        love.graphics.rectangle("fill", L.panelX, L.panelY, L.panelW, L.panelH, 8, 8)
-        love.graphics.setColor(0.3, 0.6, 1, 1)
-        love.graphics.rectangle("line", L.panelX, L.panelY, L.panelW, L.panelH, 8, 8)
-
-        local prevFont = love.graphics.getFont()
-        local titleFont = fonts.get(22)
-        love.graphics.setFont(titleFont)
-        love.graphics.setColor(1, 1, 1)
-        if self.shopModal.isReplacement then
-            love.graphics.printf("교체할 장착 칸을 탭하세요", L.panelX, L.titleY, L.panelW, "center")
-        else
-            love.graphics.printf(i18n.t("shop_modal_title"), L.panelX, L.titleY, L.panelW, "center")
-        end
-
-        love.graphics.setColor(0.7, 0.8, 1)
-        love.graphics.printf(i18n.partName(self.shopModal.gear), L.panelX, L.nameY, L.panelW, "center")
-
-        self:drawGearSlots(L.slotsY)
-
-        if self.shopModal.errorText then
-            love.graphics.setColor(1, 0.35, 0.35)
-            love.graphics.printf(self.shopModal.errorText, L.panelX + 16, L.errY, L.panelW - 32, "center")
-        end
-
-        local buy, skip = L.buy, L.skip
-        if not self.shopModal.isReplacement then
-            love.graphics.setColor(0.2, 0.45, 0.22, 1)
-            love.graphics.rectangle("fill", buy.x, buy.y, buy.w, buy.h, 6, 6)
-            love.graphics.setColor(1, 1, 1)
-            love.graphics.printf(i18n.t("shop_modal_buy", self.shopModal.price), buy.x, buy.y + 16, buy.w, "center")
-        end
-
-        love.graphics.setColor(0.45, 0.2, 0.2, 1)
-        love.graphics.rectangle("fill", skip.x, skip.y, skip.w, skip.h, 6, 6)
-        love.graphics.setColor(1, 1, 1)
-        if self.shopModal.isReplacement then
-            love.graphics.printf("버리기", skip.x, skip.y + 16, skip.w, "center")
-        else
-            love.graphics.printf(i18n.t("shop_modal_skip"), skip.x, skip.y + 16, skip.w, "center")
-        end
-        love.graphics.setFont(prevFont)
+        self:drawShopModal()
     end
     if self.gearPopup and self.gearPopup.part then
         local part = self.gearPopup.part

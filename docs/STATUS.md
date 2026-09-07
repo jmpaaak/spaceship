@@ -99,6 +99,13 @@
   - `play.lua` integration: 1 require + 4 one-liner calls (galaxy discover, star_sample play/stop, collision).
   - Test `game/tests/sfx.lua` registered in self_test: defs validation, headless safety, dedup guards, reset. GREEN.
 
+
+- INBOX 61(32) (partial): finish play_shop.lua extraction.
+  - Codex rate-limit cutoff left `play_shop.lua` partially extracted (only overlays).
+  - Completed the extraction of `shopModalLayout`, `shopModalButtonRects`, `hitShopModalGearSlot`, and `drawShopModal` into `play_shop.lua`.
+  - `play.lua` now purely delegates all shop/settlement/destroyed overlay logic to `play_shop.lua`.
+  - Tests pass (`make verify LOVE=...` GREEN).
+
 ## Next slice
 
-- INBOX 61(34) synergy popup text in gearPopup, or 61(28) boost button UI, or 61(31b) hub no-heal + hullRegen parts. 61(28)/(29) wait on play.lua module split.
+- INBOX 61(34) synergy popup text in gearPopup, or 61(28) boost button UI. (34) wait on play_hud.lua module split.
