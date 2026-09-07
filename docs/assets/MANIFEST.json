@@ -4476,5 +4476,65 @@
     "width": 32,
     "height": 32,
     "qa": "PIL part icon, gen_part_icons.py"
+  },
+  {
+    "path": "assets/part_icons/hull_auto_welder.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_part_icons.py",
+    "terms_url": "tools/gen_part_icons.py",
+    "asset_id": "part-icon-hull_auto_welder-001",
+    "prompt": "PIL-generated part icon hull_auto_welder: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 32,
+      "height": 32
+    },
+    "downloaded_at": "2026-09-07T22:00:00+09:00",
+    "sha256": "8069b12f5b6368667a128eb1bdf5335633966d6ba3bf43e3733ef85e02484bee",
+    "width": 32,
+    "height": 32,
+    "qa": "PIL part icon, gen_part_icons.py"
+  },
+  {
+    "path": "assets/part_icons/hull_nano_mesh.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_part_icons.py",
+    "terms_url": "tools/gen_part_icons.py",
+    "asset_id": "part-icon-hull_nano_mesh-001",
+    "prompt": "PIL-generated part icon hull_nano_mesh: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 32,
+      "height": 32
+    },
+    "downloaded_at": "2026-09-07T22:00:00+09:00",
+    "sha256": "2e216d124dc1438fbd7ca76f83664058c81e8b290762c279128d49bca54e6232",
+    "width": 32,
+    "height": 32,
+    "qa": "PIL part icon, gen_part_icons.py"
+  },
+  {
+    "path": "assets/part_icons/hull_repair_drone.png",
+    "user_supplied": true,
+    "source_url": "tools/gen_part_icons.py",
+    "terms_url": "tools/gen_part_icons.py",
+    "asset_id": "part-icon-hull_repair_drone-001",
+    "prompt": "PIL-generated part icon hull_repair_drone: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "seed": 0,
+      "width": 32,
+      "height": 32
+    },
+    "downloaded_at": "2026-09-07T22:00:00+09:00",
+    "sha256": "2f8391f4b266b04a509550ed0b04af20d8527604856ac42c68047cad70374b00",
+    "width": 32,
+    "height": 32,
+    "qa": "PIL part icon, gen_part_icons.py"
   }
 ]

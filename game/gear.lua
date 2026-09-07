@@ -51,6 +51,7 @@ M.knownEffectTypes = {
     -- regression instead asserts the *bundled* hull pool stays free of
     -- them so the two card pools read as distinctly-flavored in practice.
     boostCharge = true,
+    hullRegen = true,
 }
 
 -- Item 14: which schema category (A~F) each known effect type belongs to.
@@ -65,6 +66,7 @@ M.effectCategories = {
     detectionRadius = "E", autoCollect = "E",
     shopDiscount = "F",
     boostCharge = "G",
+    hullRegen = "D",
 }
 
 M.knownRarities = {

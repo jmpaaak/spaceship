@@ -3944,16 +3944,15 @@ function M:draw()
                 if not self.expedition.hubExplored[planet.galaxyId] then
                     local engineStr = i18n.t("engine_part_available")
                     love.graphics.setColor(0.85, 0.35, 0.95, 0.85)
-                    love.graphics.print(engineStr, x - f:getWidth(engineStr) / 2, y + planet.radius + 8 + lineH * 3 + bob)
+                    love.graphics.print(engineStr, x - f:getWidth(engineStr) / 2, y + planet.radius + 8 + lineH * 2 + bob)
                 end
+                -- Hub: sell + upgrade only. No hull repair (INBOX 61(31)).
                 local sell = i18n.t("checkpoint_hint_sell")
-                local repair = i18n.t("checkpoint_hint_repair")
                 local upgrade = i18n.t("checkpoint_hint_upgrade")
                 local topY = y + planet.radius + 8 + bob
                 love.graphics.setColor(0.65, 0.68, 0.72, 0.7)
                 love.graphics.print(sell, x - f:getWidth(sell) / 2, topY)
-                love.graphics.print(repair, x - f:getWidth(repair) / 2, topY + lineH)
-                love.graphics.print(upgrade, x - f:getWidth(upgrade) / 2, topY + lineH * 2)
+                love.graphics.print(upgrade, x - f:getWidth(upgrade) / 2, topY + lineH)
             elseif planet.isShop then
                 if not self.shopVisited[planet.id] then
                     local hullStr = i18n.t("hull_part_available")

@@ -766,6 +766,45 @@
         { "type": "sampleSellValue", "value": 3 }
       ],
       "slotExclusive": true
+    },
+    {
+      "id": "hull_nano_mesh",
+      "suit": "solar",
+      "name": "Nano Mesh",
+      "nameKo": "나노 메쉬",
+      "icon": "🩹",
+      "rarity": "common",
+      "tags": ["defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullRegen", "value": 0.2 }
+      ]
+    },
+    {
+      "id": "hull_repair_drone",
+      "suit": "nebula",
+      "name": "Repair Drone",
+      "nameKo": "수리 드론",
+      "icon": "🤖",
+      "rarity": "uncommon",
+      "tags": ["defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullRegen", "value": 0.5 }
+      ]
+    },
+    {
+      "id": "hull_auto_welder",
+      "suit": "pulsar",
+      "name": "Auto Welder",
+      "nameKo": "자동 용접기",
+      "icon": "🔧",
+      "rarity": "rare",
+      "tags": ["defense"],
+      "editions": [],
+      "effects": [
+        { "type": "hullRegen", "value": 1.0 }
+      ]
     }
   ]
 }

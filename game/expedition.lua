@@ -594,7 +594,11 @@ function M.launch(run)
     if run.phase ~= "launch" then
         run.altitude = 0
         run.maxAltitude = 0
-        run.durability = run.maxDurability
+        -- INBOX 61(31): Earth relaunch still full-heals. Hub relaunch does not.
+        local fromHub = run.lastVisitedGalaxyId ~= nil
+        if not fromHub then
+            run.durability = run.maxDurability
+        end
         run.insuranceUsed = false
         run.rerollsUsed = 0
         run.boostsUsed = 0
@@ -1581,6 +1585,17 @@ function M.update(run, dt)
     run.altitude = run.altitude + M.effectiveSpeed(run) * dt
     run.maxAltitude = math.max(run.maxAltitude, run.altitude)
     run.bestAltitude = math.max(run.bestAltitude, run.altitude)
+
+    -- INBOX 61(31): hullRegen HP/s from equipped parts, integer via accumulator.
+    local regen = gearModule.totalEffect(combinedGearList(run), "hullRegen")
+    if regen > 0 and run.durability < run.maxDurability then
+        run.durabilityRegenAcc = (run.durabilityRegenAcc or 0) + regen * dt
+        local whole = math.floor(run.durabilityRegenAcc)
+        if whole >= 1 then
+            run.durability = math.min(run.maxDurability, run.durability + whole)
+            run.durabilityRegenAcc = run.durabilityRegenAcc - whole
+        end
+    end
 end
 
 return M

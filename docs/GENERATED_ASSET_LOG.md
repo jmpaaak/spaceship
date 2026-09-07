@@ -183,3 +183,6 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-07T01:22:00+0900 | assets/debris/can.png | PIL can restored to 32x32 RGBA, gen_debris.py
 2026-09-07T01:22:00+0900 | assets/debris/scrap.png | PIL scrap restored to 32x32 RGBA, gen_debris.py
 2026-09-07T17:00:00+0900 | assets/part_icons/*.png (65 files) | PIL 32x32 RGBA chunky 4px part icons, hull=shield silhouette, engine=nozzle silhouette, suit-colored, gen_part_icons.py
+2026-09-07T16:03:00+0900 | assets/part_icons/hull_auto_welder.png | PIL-generated part icon hull_auto_welder
+2026-09-07T16:03:00+0900 | assets/part_icons/hull_nano_mesh.png | PIL-generated part icon hull_nano_mesh
+2026-09-07T16:03:00+0900 | assets/part_icons/hull_repair_drone.png | PIL-generated part icon hull_repair_drone

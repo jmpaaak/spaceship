@@ -630,3 +630,11 @@
   > 처리 상황 (spaceship-gear 레인, 2026-09-04, 항목7(b)/8 hubExplored safe-relaunch reset gap): M.launch()(settlement→ascending 안전 재발사)가 run.hubExplored와 run.lastVisitedGalaxyId를 초기화하지 않아, 이전 원정에서 방문한 은하 허브가 다음 원정에서도 "이미 탐사됨"으로 영구 잠기는 gap을 감사로 발견해 처리했다. destroy()는 두 필드를 전체 메타 리셋의 일부로 초기화하지만, 안전 귀환 후 재발사 경로(launch())에는 누락이었다 — 결과: 플레이어가 한 번 안전하게 허브를 방문하고 지구로 돌아오면, 이후 어떤 원정에서도 exploreHub가 즉시 nil을 반환해 허브 드롭을 영구적으로 받을 수 없게 됐다(사망하기 전까지). TDD로 testHubExploredResetsOnLaunch()를 추가했다(RED: "hubExplored must be nil for every galaxy after a safe relaunch (was true)"). launch()의 재발사 블록에 run.hubExplored = {} / run.lastVisitedGalaxyId = nil을 추가해 GREEN 전환. make verify LOVE=/Users/jm/.local/bin/love 전체 GREEN(SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK x3, LOVE_BUNDLE_OK:build/game.love:58, ASSET_MANIFEST_OK). 변경 파일은 game/expedition.lua/game/self_test.lua뿐(play.lua/i18n.lua/world.lua/game/gear.lua/game/engine_parts.lua 미변경). 다음 슬라이스: earthSlotSpin engine-slot luck 카테고리 무관성 회귀 가드 또는 항목13→9→10→12→14→15 잔여 gap 재감사.
 
   > 처리 상황 (spaceship-gear 레인, 2026-09-04, 13~14항목 및 잔여 gap 최종 감사 완료): 이전 슬라이스들에서 항목13(JSON/웹에디터), 항목9(선체 시너지), 항목10(엔진 분리), 항목12(등급/에디션), 항목14(효과 스키마), 항목15(오즈 프로파일)와 항목8(hub 정산)의 데이터 및 순수 함수(run-level) 배선이 완전히 종료되었음을 확인했다. 전체 코드베이스(`game/gear.lua`, `game/engine_parts.lua`, `game/expedition.lua`, `game/self_test.lua`)와 `make verify LOVE=/Users/jm/.local/bin/love`를 재감사한 결과, 더 이상의 잔여 로직 gap이나 테스트 누락이 존재하지 않음을 최종 검증(전체 GREEN, `SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`)하였다. 남은 실제 UI 연동(상점 행성 진입, 허브 팝업 등 `play.lua` / `world.lua` 영역)은 이 레인의 스코프가 아니므로 타 레인으로 완전히 이관한다. 해당 레인의 역할을 완벽히 마무리하며 사이클을 종료한다.
+
+- (31) **허브에서 내구 회복 제거 + 초당 회복 부품** (msg `1546411887430991913`)
+  - 허브 행성 힌트에서 `checkpoint_hint_repair` ("내구도 회복") 제거. 지구는 유지 (표본 판매 / 내구도 회복 / 업그레이드).
+  - `launch()`가 hub 상점(`lastVisitedGalaxyId ~= nil`)에서 재출발할 때 `durability = maxDurability` 하지 않음. 지구 재출발만 풀회복.
+  - 새 효과 `hullRegen` (HP/초). `expedition.update` ascending 중 누적 회복, maxDurability 캡.
+  - 부품 추가 (hull): common `hull_nano_mesh` 0.2/s, uncommon `hull_repair_drone` 0.5/s, rare `hull_auto_welder` 1.0/s.
+  - i18n `effect_hullRegen` EN `"REGEN +%.1f/s"` / KO `"회복 +%.1f/초"`.
+  - `tools/gen_part_icons.py` 재실행.

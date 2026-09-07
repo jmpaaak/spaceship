@@ -17,7 +17,7 @@ const EFFECT_TYPE_GROUPS = {
   "A: additive": ["speed", "sampleSellValue", "money", "hullDurability"],
   "B: multiplicative": ["sellMultiplier", "streakMultiplier"],
   "C: trigger/probability": ["luck", "chainTrigger", "rerollBonus"],
-  "D: survival/risk": ["insurance", "collisionRadius"],
+  "D: survival/risk": ["insurance", "collisionRadius", "hullRegen"],
   "E: scouting/info": ["detectionRadius", "autoCollect"],
   "F: economy": ["shopDiscount"],
   "G: propulsion (engine parts)": ["fuelEfficiency", "boostCharge"],
