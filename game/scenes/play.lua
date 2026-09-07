@@ -4084,22 +4084,7 @@ function M:draw()
 
         love.graphics.setColor(1, 1, 1, 0.9)
         local shopEff = self.shopEffectImages or {}
-        local bgW = viewport.width - 48
-        if not drawPanelSprite(shopEff.shopStats, 24, M.settlementSummaryBgTop, bgW, M.settlementSummaryBgHeight) then
-            love.graphics.setColor(0.04, 0.08, 0.16, 0.85)
-            love.graphics.rectangle("fill", 24, M.settlementSummaryBgTop, bgW, M.settlementSummaryBgHeight)
-        end
-        
-        love.graphics.setColor(1, 0.8, 0.3)
-        love.graphics.printf(i18n.t("total_label", self.expedition.lastSettlement), 30, M.settlementTotalY, bgW - 12, "center")
-        love.graphics.setColor(0.75, 0.9, 1)
-        love.graphics.printf(i18n.t("samples_settlement_line", self.expedition.lastSampleCount or 0, self.expedition.lastSampleSettlement), 30, M.settlementSamplesY, bgW - 12, "center")
-        love.graphics.setColor(0.6, 0.8, 1)
-        love.graphics.printf(i18n.t("peak_alt_line", math.floor(self.expedition.lastAltitude or 0)), 30, M.settlementPeakAltY, bgW - 12, "center")
-        if summaryExtraLine then
-            love.graphics.setColor(1, 0.95, 0.3)
-            love.graphics.printf(summaryExtraLine, 30, M.settlementNewBestY, bgW - 12, "center")
-        end
+        -- Summary stats removed (user 2026-09-07): title only, no total/samples/altitude
         
         local nextLaunch = self:shopLoadoutLines()
         local actionX, actionW = shopActionColumnX, shopActionColumnW
