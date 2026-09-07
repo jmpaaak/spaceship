@@ -82,7 +82,7 @@ function PB:drawBoostButton()
     love.graphics.setColor(1, 1, 1, 1)
     local prevFont = love.graphics.getFont()
     
-    love.graphics.setFont(fonts.get("m5x7", 22))
+    love.graphics.setFont(fonts.get(22))
     love.graphics.printf("BOOST", bx, by + 8, w, "center")
     
     if remaining > 0 then
