@@ -1,5 +1,19 @@
 ## Current Status
 
+- INBOX 61(14): planet green circle fallback fix.
+  - Root cause: drawing code required non-nil `planetSprite` (static pp_* image) to enter the sheet-drawing path. If pp_* static PNGs failed to load but rotation sheets loaded, sheets were unreachable → circle fallback.
+  - Fix: restructured planet draw to check sheet images FIRST, independent of `planetSprite`. Priority: sheet → static sprite → circle fallback.
+  - Added all 6 planet sheet PNGs + hub_sheet.png to the RGBA keepers test list.
+  - New test INBOX-61(14): verifies all sheet PNGs are RGBA (colorType 6), pass runtime sprite gate, and mock-load successfully.
+  - Collection orbit ring still drawn for undiscovered planets (unchanged).
+- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
+
+## Next slice
+
+- Process next pending INBOX item (15: slot-exclusive parts pool).
+
+## Previous
+
 - INBOX 61(12): keep-one confirm popup + card text fix.
   - drawBalatroCard name text: 22px → 11px, clipped inside card via setScissor (no overflow).
   - Tapping a card no longer immediately keeps it; opens a confirm popup with:
@@ -9,15 +23,6 @@
   - keepConfirmButtons() pure function, tested: layout fits 720×1280, buttons inside popup.
   - i18n: keep_confirm_title, keep_yes, keep_no (EN + KO).
   - Tests: INBOX-61(12) keepOne confirm popup OK.
-- `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
-
-## Next slice
-
-- Process next pending INBOX item (14: planet green circle fallback fix).
-
-## Previous
-
-- INBOX 61(9)(10)(11)(13): batch fix — rim marker colours, pause time freeze, star scan, debris.
   - (9) Both minimap rim markers now cyan `{0.3,0.9,0.95}`, second alpha 0.45, radius 2.8 (smaller).
   - (10) `self.time += dt` removed from paused/gearPopup early returns → moons/comets/debris freeze.
   - (11) Background + foreground star scan range dynamic `max(4, ceil(h/2/sectorSize)+2)` — no pop-in gaps.

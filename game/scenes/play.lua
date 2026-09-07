@@ -3721,36 +3721,36 @@ function M:draw()
             elseif planet.galaxyStarType and ppImages[planet.galaxyStarType] then
                 planetSprite = ppImages[planet.galaxyStarType]
             end
-            if planetSprite then
+            -- Per-planet rotation & scale variation from planet id
+            local rot, scaleMul = M.planetVariation(planet)
+            -- Light tint: blend toward white so PixelPlanets palette shows through
+            local tR = math.min(1, baseR * 0.35 + 0.65)
+            local tG = math.min(1, baseG * 0.35 + 0.65)
+            local tB = math.min(1, baseB * 0.35 + 0.65)
+            love.graphics.setColor(tR, tG, tB)
+            -- INBOX-61(14): Prefer rotation sheet first, independent of
+            -- planetSprite, so sheets render even when pp_* static PNGs
+            -- fail to load.
+            local sheetType = planet.galaxyStarType
+            local sheetImg = nil
+            if planet.hub then
+                sheetImg = self.hubSheetImage
+            elseif sheetType then
+                sheetImg = self.planetSheetImages and self.planetSheetImages[sheetType]
+            end
+            if sheetImg then
+                local sw, sh = sheetImg:getDimensions()
+                local frameH = sw
+                local frameCount = math.max(1, math.floor(sh / frameH))
+                local frameIdx = math.floor((self.time or 0) * 1.5) % frameCount
+                local quad = love.graphics.newQuad(0, frameIdx * frameH, sw, frameH, sw, sh)
+                local sScale = (planet.radius * 2) / sw * scaleMul
+                love.graphics.draw(sheetImg, quad, x - planet.radius * scaleMul, y - planet.radius * scaleMul, rot, sScale, sScale)
+            elseif planetSprite then
                 local iw, ih = planetSprite:getDimensions()
                 local baseScale = (planet.radius * 2) / math.max(iw, ih)
-                -- Per-planet rotation & scale variation from planet id
-                local rot, scaleMul = M.planetVariation(planet)
                 local scale = baseScale * scaleMul
-                -- Light tint: blend toward white so PixelPlanets palette shows through
-                local tR = math.min(1, baseR * 0.35 + 0.65)
-                local tG = math.min(1, baseG * 0.35 + 0.65)
-                local tB = math.min(1, baseB * 0.35 + 0.65)
-                love.graphics.setColor(tR, tG, tB)
-                -- Prefer rotation sheet if available
-                local sheetType = planet.galaxyStarType
-                local sheetImg = nil
-                if planet.hub then
-                    sheetImg = self.hubSheetImage
-                elseif sheetType then
-                    sheetImg = self.planetSheetImages and self.planetSheetImages[sheetType]
-                end
-                if sheetImg then
-                    local sw, sh = sheetImg:getDimensions()
-                    local frameH = sw
-                    local frameCount = math.max(1, math.floor(sh / frameH))
-                    local frameIdx = math.floor((self.time or 0) * 1.5) % frameCount
-                    local quad = love.graphics.newQuad(0, frameIdx * frameH, sw, frameH, sw, sh)
-                    local sScale = (planet.radius * 2) / sw * scaleMul
-                    love.graphics.draw(sheetImg, quad, x - planet.radius * scaleMul, y - planet.radius * scaleMul, rot, sScale, sScale)
-                else
-                    love.graphics.draw(planetSprite, x, y, rot, scale, scale, iw / 2, ih / 2)
-                end
+                love.graphics.draw(planetSprite, x, y, rot, scale, scale, iw / 2, ih / 2)
             else
                 love.graphics.setColor(baseR * 0.7, baseG * 0.7, baseB * 0.7)
                 love.graphics.circle("fill", x, y, planet.radius)
