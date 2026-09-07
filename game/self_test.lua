@@ -10354,10 +10354,10 @@ function M.run()
             "INBOX 61(29): hitHelpButton must be installed on PlayScene from play_help.lua")
         assert(type(PlayScene.helpButtonRect) == "function",
             "INBOX 61(29): helpButtonRect must be installed on PlayScene from play_help.lua")
-        -- Help button rect is left of pause button
+        -- Help button rect is RIGHT of pause button (closer to minimap edge)
         local pb = PlayScene.pauseButton
         local hb = PlayScene.helpButtonRect(pb)
-        assert(hb.x < pb.x, "INBOX 61(29): help button must be left of pause button")
+        assert(hb.x > pb.x, "INBOX 61(29): help button must be right of pause button")
         assert(hb.w == 44 and hb.h == 44, "INBOX 61(29): help button must be 44x44 touch target")
         -- Luck effect format includes %
         local i18n = require("game.i18n")

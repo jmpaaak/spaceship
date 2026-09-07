@@ -46,7 +46,7 @@ function PG.destroyedKeepPartRects(choices)
     local rows = math.ceil(n / cols)
     local totalW = cols * size + (cols - 1) * gap
     local startX = math.floor((720 - totalW) / 2)
-    local y = 500
+    local y = PG.destroyedPanelY + 170  -- below keep-part hint (panelY+130)
     local rects = {}
     for i = 1, n do
         local col = (i - 1) % cols

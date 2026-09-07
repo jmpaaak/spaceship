@@ -159,9 +159,10 @@ local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 
 M.ascendControls = ascendControls
 
 -- Pause button (top-right corner, ascending phase only).
--- 44×44 touch area with 8px margin from right and top edges.
+-- 44×44 touch area. Help (?) sits to the right of pause, closer to the
+-- minimap edge. Pause is 44+8 px further left.
 local pauseButton = {
-    x = 720 - 44 - 8,  -- 668
+    x = 720 - 44 - 8 - 44 - 8,  -- 616: left of the help button
     y = 8,
     w = 44,
     h = 44,

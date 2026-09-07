@@ -8,11 +8,11 @@ local PH = {}
 local _M
 
 ---------------------------------------------------------------------------
--- Help button rect (44×44, left of pause button)
+-- Help button rect (44×44, RIGHT of pause — closer to minimap edge)
 ---------------------------------------------------------------------------
 function PH.helpButtonRect(pauseBtn)
     return {
-        x = pauseBtn.x - 44 - 8,
+        x = pauseBtn.x + pauseBtn.w + 8,
         y = pauseBtn.y,
         w = 44,
         h = 44,
@@ -38,17 +38,9 @@ function PH.drawHelpButton(self)
     local pb = _M.pauseButton
     if not pb then return end
     local hb = PH.helpButtonRect(pb)
-    -- Circle background
     local cx = hb.x + hb.w / 2
     local cy = hb.y + hb.h / 2
-    local r = 18
-    if self.helpOverlayOpen then
-        love.graphics.setColor(0.3, 0.6, 1, 0.7)
-    else
-        love.graphics.setColor(1, 1, 1, 0.35)
-    end
-    love.graphics.circle("line", cx, cy, r)
-    -- ? text
+    -- ? text only — no outer circle (user 2026-09-07)
     local prevFont = love.graphics.getFont()
     love.graphics.setFont(fonts.get(22))
     if self.helpOverlayOpen then

@@ -312,7 +312,7 @@ function PS.drawDestroyedOverlay(self)
     local choices = self.expedition.keepPartChoices or {}
     if #choices > 0 then
         love.graphics.setColor(0.65, 0.68, 0.72, 0.8)
-        love.graphics.printf(i18n.t("keep_part_hint"), panelX, panelY + 150, panelW, "center")
+        love.graphics.printf(i18n.t("keep_part_hint"), panelX, panelY + 130, panelW, "center")
         local rects = M.destroyedKeepPartRects(choices)
         local kept = self.expedition.keptPart
         for _, rect in ipairs(rects) do
