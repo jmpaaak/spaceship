@@ -93,6 +93,19 @@
     - JSON 스키마: `effects[].mode = "flat"|"multiply"` (기본 "flat", 기존 호환). `expedition.effectiveSpeed` 등에서 곱 적용.
     - hull_parts.json / engine_parts.json 전수 재조정. `tools/gear-editor`에서 mode 필드 편집 가능하게.
 
+  (27) **에셋 스튜디오 sprite-gen 서버 연동** (msg `1546408506700337213`)
+    - 현재: 업로드 이미지 → PerfectPixel → 4px chunky만 동작. 프롬프트 → xorshift 노이즈 스텁(AI 아님).
+    - `aldegad/sprite-gen`은 Python 패키지 — 브라우저 JS에서 못 돌림.
+    - `serve_editors.py`에 `POST /api/sprite-gen` 엔드포인트 추가: `{"prompt": "...", "width": 32, "height": 32}` → sprite-gen Python 호출 → PNG base64 응답.
+    - `pip install sprite-gen` (또는 venv). 없으면 PIL 폴백(procedural shapes).
+    - `editor.js` `generateFromPrompt()` → `fetch("/api/sprite-gen", {method:"POST", body:JSON})` → 서버 결과를 sourceCanvas에 표시.
+    - 업로드 이미지 기반 sprite-gen도: `POST /api/sprite-gen` with `image` base64 + `prompt` → 이미지 컨디셔닝.
+
+  (28) **부스트 버튼 UI + 부스트 중 RCS 강화** (msg `1546408800070934598`)
+    - 우측 하단에 **BOOST 버튼** 시각적으로 표시 (44×44 이상, 충전 수 표시, 0이면 비활성 회색).
+    - 부스트 활성 중 RCS 파티클: radius ×2.5, 속도 ×2, 스폰 쿨다운 0.045→0.02, 색상 금빛 `(1, 0.85, 0.3)` 오버라이드.
+    - 부스트 활성 중 화면 가장자리에 짧은 속도선(speed lines) 이펙트 추가.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
