@@ -25,15 +25,71 @@ const EFFECT_TYPE_GROUPS = {
 const KNOWN_EFFECT_TYPES = Object.values(EFFECT_TYPE_GROUPS).flat();
 const KNOWN_RARITIES = ["common", "uncommon", "rare", "legendary"];
 const KNOWN_SUITS = ["solar", "nebula", "void", "pulsar"];
-// Mirrors game/i18n.lua synergy_* / synergy_desc_* (no symbol prefixes).
+const LOCALE_STORAGE_KEY = "gear-editor-locale";
+let editorLocale = "ko";
+// Mirrors game/i18n.lua rarity_*/suit_*/effect_* / synergy_* (no symbol prefixes).
+const I18N = {
+  en: {
+    synergyTitle: "SYNERGIES",
+    galaxyExclusive: "galaxy exclusive",
+    slotExclusive: "slot exclusive",
+    rarity: { common: "COMMON", uncommon: "UNCOMMON", rare: "RARE", legendary: "LEGENDARY" },
+    suit: { solar: "SOLAR", nebula: "NEBULA", void: "VOID", pulsar: "PULSAR" },
+    effect: {
+      speed: "SPEED +%d",
+      hullDurability: "HULL %+d",
+      sampleSellValue: "HARVEST +%d",
+      money: "MONEY +%d",
+      sellMultiplier: "HARVEST +%d%%",
+      shopDiscount: "SHOP -%d%%",
+      collisionRadius: "HITBOX %+d",
+      detectionRadius: "DETECT %+d",
+      luck: "LUCK +%d",
+      rerollBonus: "REROLL +%d",
+      boostCharge: "BOOST +%d",
+      autoCollect: "AUTO COLLECT",
+      chainTrigger: "CHAIN",
+      insurance: "INSURANCE",
+      streakMultiplier: "STREAK +%d%%",
+      hullRegen: "REGEN +%.1f/s",
+      fuelEfficiency: "FUEL +%d",
+    },
+  },
+  ko: {
+    synergyTitle: "시너지",
+    galaxyExclusive: "은하 전용",
+    slotExclusive: "슬롯 전용",
+    rarity: { common: "커먼", uncommon: "언커먼", rare: "레어", legendary: "전설" },
+    suit: { solar: "솔라", nebula: "네뷸라", void: "보이드", pulsar: "펄서" },
+    effect: {
+      speed: "속도 +%d",
+      hullDurability: "내구 %+d",
+      sampleSellValue: "수확 +%d",
+      money: "수확 +%d",
+      sellMultiplier: "수확 +%d%%",
+      shopDiscount: "상점 -%d%%",
+      collisionRadius: "충돌 %+d",
+      detectionRadius: "탐지 %+d",
+      luck: "행운 +%d",
+      rerollBonus: "리롤 +%d",
+      boostCharge: "부스트 +%d",
+      autoCollect: "자동 채집",
+      chainTrigger: "연쇄",
+      insurance: "보험",
+      streakMultiplier: "연속 +%d%%",
+      hullRegen: "회복 +%.1f/초",
+      fuelEfficiency: "연료 +%d",
+    },
+  },
+};
 const STELLAR_SYNERGIES = [
-  { key: "solarSystem",  suit: "solar",  name: "태양계 시너지",  desc: "솔라 3+: 착지 시 최대내구 +1" },
-  { key: "nebulaField",  suit: "nebula", name: "성운 지대",       desc: "네뷸라 3+: 수확 x1.5" },
-  { key: "eventHorizon", suit: "void",   name: "사건의 지평선",   desc: "보이드 3+: 채집 +30%" },
-  { key: "pulsarBurst",  suit: "pulsar", name: "펄서 폭발",       desc: "펄서 2+: 연속 x2" },
-  { key: "binaryStar",   suit: null,     name: "쌍성",            desc: "솔라2+네뷸라2: 착지 +$30" },
-  { key: "supernova",    suit: null,     name: "초신성",          desc: "4수트: 전설 x1.5" },
-  { key: "darkMatter",   suit: null,     name: "암흑물질",        desc: "보이드2+펄서2: 연속 +50%" },
+  { key: "solarSystem",  suit: "solar",  name: { ko: "태양계 시너지", en: "SOLAR SYSTEM" }, desc: { ko: "솔라 3+: 착지 시 최대내구 +1", en: "3+ SOLAR: +1 max HP on land" } },
+  { key: "nebulaField",  suit: "nebula", name: { ko: "성운 지대", en: "NEBULA FIELD" }, desc: { ko: "네뷸라 3+: 수확 x1.5", en: "3+ NEBULA: harvest x1.5" } },
+  { key: "eventHorizon", suit: "void",   name: { ko: "사건의 지평선", en: "EVENT HORIZON" }, desc: { ko: "보이드 3+: 채집 +30%", en: "3+ VOID: collect +30%" } },
+  { key: "pulsarBurst",  suit: "pulsar", name: { ko: "펄서 폭발", en: "PULSAR BURST" }, desc: { ko: "펄서 2+: 연속 x2", en: "2+ PULSAR: streak x2" } },
+  { key: "binaryStar",   suit: null,     name: { ko: "쌍성", en: "BINARY STAR" }, desc: { ko: "솔라2+네뷸라2: 착지 +$30", en: "2S+2N: +30$ on land" } },
+  { key: "supernova",    suit: null,     name: { ko: "초신성", en: "SUPERNOVA" }, desc: { ko: "4수트: 전설 x1.5", en: "ALL 4: legendary x1.5" } },
+  { key: "darkMatter",   suit: null,     name: { ko: "암흑물질", en: "DARK MATTER" }, desc: { ko: "보이드2+펄서2: 연속 +50%", en: "2V+2P: streak +50%" } },
 ];
 const SUIT_COLOR = { solar: "#ffb347", nebula: "#c084fc", void: "#5b8def", pulsar: "#5ce1e6" };
 // Item 12: known edition ids a card's `editions` array may reference (must
@@ -93,7 +149,7 @@ function cacheEls() {
     "fieldIcon", "fieldRarity", "rarityPreview", "fieldSuit", "fieldTags",
     "fieldEditions", "fieldGalaxyExclusive", "fieldSlotExclusive", "effectsList", "addEffectBtn", "saveCardBtn",
     "deleteCardBtn", "cancelBtn", "formError", "editionPreviewContainer", "economyPreviewContainer",
-    "synergyPanel"
+    "synergyPanel", "localeKoBtn", "localeEnBtn"
   ].forEach((id) => { els[id] = document.getElementById(id); });
 }
 
@@ -254,23 +310,81 @@ const RARITY_COLOR = {
   legendary: "#ffb347",
 };
 
+function loadLocale() {
+  try {
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (stored === "en" || stored === "ko") editorLocale = stored;
+  } catch (_) { /* file:// or disabled storage */ }
+}
+
+function setLocale(locale) {
+  editorLocale = locale === "en" ? "en" : "ko";
+  try { localStorage.setItem(LOCALE_STORAGE_KEY, editorLocale); } catch (_) { /* ignore */ }
+  if (els.localeKoBtn) els.localeKoBtn.classList.toggle("active", editorLocale === "ko");
+  if (els.localeEnBtn) els.localeEnBtn.classList.toggle("active", editorLocale === "en");
+  document.documentElement.lang = editorLocale;
+  renderGrid();
+  renderSynergyPanel();
+}
+
+function packI18n(template, value) {
+  if (template.indexOf("%+d") >= 0) {
+    const sign = value >= 0 ? "+" : "";
+    return template.replace("%+d", sign + String(value));
+  }
+  if (template.indexOf("%d") >= 0) return template.replace("%d", String(value));
+  if (template.indexOf("%.1f") >= 0) return template.replace("%.1f", Number(value).toFixed(1));
+  return template;
+}
+
+function formatEffectLine(effect) {
+  const pack = I18N[editorLocale] || I18N.ko;
+  const template = (pack.effect && pack.effect[effect.type]) || (effect.type + " %d");
+  if (effect.mode === "multiply") {
+    const label = template.replace(/[+\-]?%[+.]?\d*[df]?%%?/g, "").replace(/[+\-]?%.1f\/(s|초)/g, "").trim();
+    return (label || effect.type) + " ×" + effect.value;
+  }
+  return packI18n(template, effect.value);
+}
+
+function partDisplayName(part) {
+  if (editorLocale === "ko") return part.nameKo || part.name || part.id;
+  return part.name || part.id;
+}
+
+function rarityLabel(rarity) {
+  const pack = I18N[editorLocale] || I18N.ko;
+  return (pack.rarity && pack.rarity[rarity]) || rarity || "?";
+}
+
+function suitLabel(suit) {
+  const pack = I18N[editorLocale] || I18N.ko;
+  return (pack.suit && pack.suit[suit]) || suit;
+}
+
 function renderGrid() {
+  if (!els.grid) return;
   els.grid.innerHTML = "";
   if (!pool) return;
+  const pack = I18N[editorLocale] || I18N.ko;
   pool.parts.forEach((part) => {
     const card = document.createElement("div");
     card.className = `card rarity-${part.rarity || "common"}`;
     card.tabIndex = 0;
     const suit = part.suit || "";
     const suitChip = suit
-      ? `<div class="suit-chip suit-${escapeHtml(suit)}">${escapeHtml(suit)}</div>`
+      ? `<div class="suit-chip suit-${escapeHtml(suit)}">${escapeHtml(suitLabel(suit))}</div>`
       : "";
+    const extra = [];
+    if (part.galaxyExclusive) extra.push(pack.galaxyExclusive);
+    if (part.slotExclusive) extra.push(pack.slotExclusive);
+    const extraStr = extra.length ? " · " + extra.join(" · ") : "";
     card.innerHTML = `
       <div class="icon">${escapeHtml(part.icon || "?")}</div>
-      <div class="name">${escapeHtml(part.name || part.id)}</div>
-      <div class="rarity-label">${escapeHtml(part.rarity || "?")}${part.galaxyExclusive ? " · galaxy exclusive" : ""}${part.slotExclusive ? " · slot exclusive" : ""}</div>
+      <div class="name">${escapeHtml(partDisplayName(part))}</div>
+      <div class="rarity-label">${escapeHtml(rarityLabel(part.rarity))}${escapeHtml(extraStr)}</div>
       ${suitChip}
-      <div class="effects">${(part.effects || []).map((e) => `<div>${escapeHtml(e.type)} ${e.mode === "multiply" ? "×" : e.value >= 0 ? "+" : ""}${e.value}</div>`).join("")}</div>
+      <div class="effects">${(part.effects || []).map((e) => `<div>${escapeHtml(formatEffectLine(e))}</div>`).join("")}</div>
     `;
     card.addEventListener("click", () => openForm(part.id));
     els.grid.appendChild(card);
@@ -279,11 +393,15 @@ function renderGrid() {
 
 function renderSynergyPanel() {
   if (!els.synergyPanel) return;
-  els.synergyPanel.innerHTML = `<h2>시너지</h2>` + STELLAR_SYNERGIES.map((s) => {
+  const pack = I18N[editorLocale] || I18N.ko;
+  const loc = editorLocale === "en" ? "en" : "ko";
+  els.synergyPanel.innerHTML = `<h2>${escapeHtml(pack.synergyTitle)}</h2>` + STELLAR_SYNERGIES.map((s) => {
     const color = s.suit ? (SUIT_COLOR[s.suit] || "#8b93a7") : "#e6e9ef";
+    const name = (s.name && s.name[loc]) || s.name || s.key;
+    const desc = (s.desc && s.desc[loc]) || s.desc || "";
     return `<div class="synergy-item" style="border-left-color:${color}">
-      <div class="synergy-name">${escapeHtml(s.name)}</div>
-      <div class="synergy-desc">${escapeHtml(s.desc)}</div>
+      <div class="synergy-name">${escapeHtml(name)}</div>
+      <div class="synergy-desc">${escapeHtml(desc)}</div>
     </div>`;
   }).join("");
 }
@@ -536,13 +654,16 @@ function wireForm() {
 
 function init() {
   cacheEls();
+  loadLocale();
   wireOpenInput(els.openHullInput);
   wireOpenInput(els.openEngineInput);
   wireOpenFsa();
   wireSaveFsa();
   wireDownload();
   wireForm();
-  renderSynergyPanel();
+  if (els.localeKoBtn) els.localeKoBtn.addEventListener("click", () => setLocale("ko"));
+  if (els.localeEnBtn) els.localeEnBtn.addEventListener("click", () => setLocale("en"));
+  setLocale(editorLocale);
   // Auto-load both JSON files when served via HTTP (gear-editor server)
   autoLoadDefaults();
 }

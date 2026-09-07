@@ -141,10 +141,8 @@
   (37) ~~**gear-editor에 시너지 표기/수트 편집 없음** (msg `1546415792424488970`)~~
     - 완료: 상단 시너지 7종 패널 + 카드 Suit 셀렉트/칩. `KNOWN_SUITS` ↔ `gear.knownSuits`. 기호 없음. Test INBOX-61(37) GREEN.
 
-  (40) **gear-editor 부품 이름·설명 한글 + KO/EN 토글** (msg `1546415792424488970` 후속)
-    - 담당: `tools/gear-editor/` (play.lua 금지). JSON `nameKo`는 이미 전원 있음 — 그리드가 `part.name`만 써서 영어로 보임.
-    - 툴바 KO | EN 토글 (localStorage). KO면 카드 이름=`nameKo`, 효과 줄=i18n `effect_*` KO, 레어도/수트/시너지 한글.
-    - EN이면 name + i18n EN. 시너지 7종도 로케일 전환. 기호 금지.
+  ~~(40) **gear-editor 부품 이름·설명 한글 + KO/EN 토글** (msg `1546415792424488970` 후속)~~
+    - 완료: 툴바 KO|EN 토글 + localStorage `gear-editor-locale`. KO=nameKo + effect/rarity/suit/synergy KO, EN=name + i18n EN. 기호 없음. Test `tools.test_gear_editor_locale` GREEN.
 
   (41) **쌍성 시너지 착지 +$30 농장 금지** (OOB 2026-09-07)
     - 담당: `game/expedition.lua` settle binaryStar + `game/i18n.lua` synergy_desc_binaryStar.
@@ -185,6 +183,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+(61.40) **gear-editor KO/EN 토글:**
+  - 완료: toolbar KO|EN (`localeKoBtn`/`localeEnBtn`), `localStorage` key `gear-editor-locale`. Grid uses `nameKo` in KO and `name` in EN. Effects/rarity/suit/synergy 7종 follow i18n (no symbols). `python3 -m unittest tools.test_gear_editor_locale -v` GREEN.
+
 (61.27) **에셋 스튜디오 sprite-gen 서버 연동:**
   - 완료: `tools/serve_editors.py` serves the repo and `POST /api/sprite-gen`. Prompt → PNG base64 (`sprite-gen` if installed, else PIL procedural). Optional `image` base64 conditions the fallback. `tools/asset-studio/editor.js` fetches the endpoint; file:// falls back to the local xorshift still. `python3 -m unittest tools.test_serve_editors -v` GREEN.
 

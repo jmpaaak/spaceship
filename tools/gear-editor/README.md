@@ -34,12 +34,14 @@ Optionally, serve the folder with any static file server (e.g.
 
 - Loads a `{ "schemaVersion": 1, "parts": [...] }` JSON document matching
   the schema documented in `docs/GEAR_SCHEMA.md`.
-- Renders a Balatro-style card grid (icon, name, rarity-colored border,
+- Renders a Balatro-style card grid (icon, localized name, rarity-colored border,
   effect summary) plus a form to add/edit/delete a card:
   id, name (en/ko), icon, rarity (with live color preview), tags,
   editions, and a repeatable effect list (type + numeric value, validated
   client-side against the same known-type/rarity/range rules the Lua
-  loader (`game/gear.lua`) enforces).
+  loader (`game/gear.lua`) enforces). Toolbar **KO | EN** toggle (localStorage)
+  switches grid names, effect lines, rarity/suit labels, and the 7 synergy
+  rows. No symbol prefixes.
 - Validates before allowing a save: no duplicate ids, no empty
   name/icon/id, at least one effect per card, effect values within the
   documented range, rarity/effect-type must be one of the known enums.

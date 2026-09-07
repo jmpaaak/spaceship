@@ -1,4 +1,10 @@
 ## Current Status
+- INBOX 61(40): gear-editor KO/EN locale toggle.
+  - Toolbar KO | EN buttons; preference in `localStorage` (`gear-editor-locale`).
+  - KO: card title = `nameKo`, effects = i18n `effect_*` KO, rarity/suit/synergy Korean.
+  - EN: card title = `name`, effects/rarity/suit/synergy English. Seven synergies switch with locale. No symbol prefixes.
+  - Test `tools.test_gear_editor_locale` GREEN (wired into `make test`). play.lua / self_test.lua untouched.
+
 - INBOX 61(27): Asset Studio sprite-gen server.
   - New `tools/serve_editors.py`: static repo server + `POST /api/sprite-gen` `{prompt, width, height, image?}`.
   - Tries Python `sprite-gen`; missing/fail → deterministic PIL procedural PNG (same prompt → same pixels). Optional base64 `image` conditions the fallback.
@@ -57,4 +63,4 @@
 
 ## Next slice
 
-- INBOX 61(30) title Sid Meier-style "Jimmy's 우주선" (`game/scenes/title.lua` + i18n; play.lua 금지), or 61(40) gear-editor KO/EN toggle. 61(28)/(29) wait on play.lua module split.
+- INBOX 61(43) gear-editor engine-tab auto-load (`tools/gear-editor/`, play.lua 금지), or 61(42) BGM Space orchestral (`game/bgm.lua`). 61(28)/(29) wait on play.lua module split.

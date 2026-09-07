@@ -37,7 +37,16 @@ header h1 { margin: 0 0 4px 0; font-size: 20px; }
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
-.toolbar-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.toolbar-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.locale-toggle { display: flex; gap: 0; }
+.locale-btn { border-radius: 0; min-width: 44px; }
+.locale-btn:first-child { border-radius: 6px 0 0 6px; }
+.locale-btn:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
+.locale-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #243044;
+}
 
 button, .file-btn {
   background: #1e2634;
