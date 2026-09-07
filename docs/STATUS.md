@@ -1,4 +1,9 @@
 ## Current Status
+- INBOX (50): collect / slot / boost SFX.
+  - `game/sfx.lua` defs: `collect` → `assets/sfx/collect.wav` (Luke.RUSTLTD 8bit coin1 CC0), `slot_spin` → `assets/sfx/slot_spin.ogg` (rubberduck retro_coin_01 CC0), `boost` → `assets/sfx/boost.ogg` (rubberduck rocket_01 CC0). All oneshot.
+  - Call sites: `play.lua` sample pickup (planet/moon/comet) `sfx.play("collect")`; `play_slot.lua` spin `sfx.play("slot_spin")`; `play_boost.lua` spendBoost `sfx.play("boost")`.
+  - Test `game/tests/sfx.lua` asserts paths, WAV/OGG magic, loop=false, and the three call sites. GREEN.
+
 - INBOX (49): title starter ship above Jimmy's + 256 window icon.
   - `title.lua` `shipLayout`: `assets/ship/ship_default.png`, nearest ×7, centered, y=488-h-24 so it sits above Jimmy's.
   - `conf.lua` `t.window.icon = "assets/icon.png"` once.
@@ -156,6 +161,6 @@
 
 ## Next slice
 
-- INBOX (50): collect / slot / boost SFX wiring (`game/sfx.lua`).
+- 처리 대기 empty → IDLE until a new Discord/INBOX line is filed.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

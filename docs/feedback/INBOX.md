@@ -4,11 +4,14 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-  (50) **표본 획득 / 슬롯 / 부스트 SFX** (OOB 2026-09-07)
-    - 담당: `game/sfx.lua` + collect/slot/boost 호출.
-    - collect: Luke.RUSTLTD 8bit coin1 CC0. slot: rubberduck retro_coin_01 CC0. boost: rubberduck rocket_01 CC0.
-
 ## 처리 완료
+(50) **표본 획득 / 슬롯 / 부스트 SFX** (OOB 2026-09-07)
+  - 담당: `game/sfx.lua` + collect/slot/boost 호출.
+  - collect: Luke.RUSTLTD 8bit coin1 CC0 → `assets/sfx/collect.wav`, `sfx.play("collect")` on planet/moon/comet sample.
+  - slot: rubberduck retro_coin_01 CC0 → `assets/sfx/slot_spin.ogg`, `play_slot.lua` on spin.
+  - boost: rubberduck rocket_01 CC0 → `assets/sfx/boost.ogg`, `play_boost.lua` on spendBoost.
+  - Test `game/tests/sfx.lua` GREEN (paths, WAV/OGG magic, loop=false, call sites).
+
 (49) **홈(타이틀)에 초기 함선 에셋 + 앱 아이콘** (msg `1546490925700612096`)
   - 완료: `title.lua` `shipLayout` draws `assets/ship/ship_default.png` at nearest ×7, horizontally centered, above Jimmy's (y=488). `conf.lua` `t.window.icon = "assets/icon.png"` once. Icon regenerated 256×256 RGBA via `tools/gen_app_icon.py` (cropped ship nearest ×4 on navy).
   - Test `game/tests/title_ship_icon.lua` GREEN. play.lua untouched except self_test require.
