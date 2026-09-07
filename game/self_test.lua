@@ -9230,10 +9230,10 @@ function M.run()
         local koRelaunch = i18n.t("tap_relaunch")
         assert(koRelaunch:find("탭하여", 1, true),
             "INBOX 61(3): tap_relaunch KO must start with 탭하여, got: " .. koRelaunch)
-        -- Lever pull multiplier: code uses *150 for dramatic pull (was *50)
+        -- Lever pull multiplier: code uses *60 for snappy pull (was *150, too long)
         local src = love.filesystem.read("game/scenes/play.lua")
-        assert(src:find("slotLeverPull * 150", 1, true) or src:find("slotLeverPull *150", 1, true),
-            "INBOX 61(3): lever pull multiplier must be 150 (large pull), not 50")
+        assert(src:find("slotLeverPull * 60", 1, true) or src:find("slotLeverPull *60", 1, true),
+            "INBOX 61(3): lever pull multiplier must be 60 (snappy pull)")
         print("  INBOX-61(3) slot lever/i18n OK")
     end
 
