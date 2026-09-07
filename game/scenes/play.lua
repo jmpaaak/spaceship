@@ -1040,19 +1040,20 @@ local function pngColorType(path)
         return nil
     end
     local data
-    if love.filesystem and love.filesystem.read then
-        local ok, contents = pcall(love.filesystem.read, path)
+    if love.filesystem and love.filesystem.newFile then
+        local file = love.filesystem.newFile(path)
+        local ok, err = file:open("r")
         if ok then
-            data = contents
+            data = file:read(33)
+            file:close()
         end
     end
     if not data then
         local handle = io.open(path, "rb")
-        if not handle then
-            return nil
+        if handle then
+            data = handle:read(33)
+            handle:close()
         end
-        data = handle:read(33)
-        handle:close()
     end
     if type(data) ~= "string" or #data < 26 then
         return nil
@@ -3790,7 +3791,7 @@ function M:draw()
                 local frameIdx = math.floor((self.time or 0) * 1.5) % frameCount
                 local quad = love.graphics.newQuad(0, frameIdx * frameH, sw, frameH, sw, sh)
                 local sScale = (planet.radius * 2) / sw * scaleMul
-                love.graphics.draw(sheetImg, quad, x - planet.radius * scaleMul, y - planet.radius * scaleMul, rot, sScale, sScale)
+                love.graphics.draw(sheetImg, quad, x, y, rot, sScale, sScale, sw / 2, frameH / 2)
             elseif planetSprite then
                 local iw, ih = planetSprite:getDimensions()
                 local baseScale = (planet.radius * 2) / math.max(iw, ih)

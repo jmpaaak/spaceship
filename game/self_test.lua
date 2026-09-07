@@ -9354,10 +9354,19 @@ function M.run()
             circle = function() end,
         }
         -- Load a sheet and a static sprite
+        -- Simulate mobile failure: love.filesystem.read returns nil, io.open returns nil
+        local prevRead = love.filesystem.read
+        local prevIoOpen = io.open
+        love.filesystem.read = function() return nil, "Mobile memory limit simulation" end
+        io.open = function() return nil, "Mobile absolute path simulation" end
+        
         local sheet = PlayScene.loadSprite("assets/planet/pp_ice_sheet.png")
         local static = PlayScene.loadSprite("assets/planet/pp_ice.png")
-        assert(sheet, "INBOX 61(14): sheet must load with mock graphics")
-        assert(static, "INBOX 61(14): static must load with mock graphics")
+        assert(sheet, "INBOX 61(14): sheet must load with mock graphics even if filesystem.read and io.open fail (simulating mobile)")
+        assert(static, "INBOX 61(14): static must load with mock graphics even if filesystem.read and io.open fail (simulating mobile)")
+        
+        love.filesystem.read = prevRead
+        io.open = prevIoOpen
         love.graphics = prevGraphics
 
         print("  INBOX-61(14) planet sheet sprites OK")

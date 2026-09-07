@@ -1,5 +1,15 @@
 ## Current Status
+- INBOX 61(14): Planet fallback sprite loading fix.
+  - Replaced `love.filesystem.read(path)` with `love.filesystem.newFile` and `file:read(33)` in `pngColorType`. This fixes memory/large string issues on mobile Android devices that caused `pngColorType` to return nil, triggering the green circle fallback for perfectly valid RGBA planet sheets.
+  - Fixed a rotation bug in planet sheet rendering: `love.graphics.draw` now correctly rotates around the sheet center (`sw / 2, frameH / 2`) instead of wildly swinging around the top-left corner.
+  - Added test coverage in `self_test.lua` to mock `love.filesystem.read` and `io.open` failures (simulating the mobile environment) to guarantee `pngColorType` successfully loads planet sheets using `love.filesystem.newFile`.
+  - Verified tests pass (`make verify LOVE=...`).
 
+## Next slice
+
+- Process next pending INBOX item (15: slot-exclusive parts pool).
+
+## Previous
 - INBOX 61(16): hub restock gear button.
   - `expedition.hubRestock(run, pool, rolls)`: pay $5 to re-roll gear offer at
     hub settlement shops only (lastVisitedGalaxyId required, Earth excluded).
@@ -12,13 +22,6 @@
     rejection, and i18n key existence.
   - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK,
     ASSET_MANIFEST_OK.
-
-## Next slice
-
-- Process next pending INBOX item (14: planet green circle fallback, or 15: slot-exclusive parts pool).
-
-## Previous
-
 - INBOX 61(12): keep-one confirm popup + card text fix.
   - drawBalatroCard name text: 22px → 11px, clipped inside card via setScissor (no overflow).
   - Tapping a card no longer immediately keeps it; opens a confirm popup with:
