@@ -1,4 +1,9 @@
 ## Current Status
+- Preflight FAIL fix: `assets/icon.png` had no `docs/assets/MANIFEST.json` entry.
+  - Cataloged 256×256 RGBA PNG (sha256 `d04ad9b4…e08a`) as user_supplied PIL/ship-derived window icon.
+  - `conf.lua` `t.window.icon = "assets/icon.png"`. Title ship art for INBOX (49) is still pending.
+  - `python3 tools/verify_asset_manifest.py` + `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
 - INBOX (45): harvest upgrade +5% per buy; durability buy fills the new cell.
   - `game/expedition.lua`: default `sampleYieldUpgradeAmount` 0.01→0.05. Shop copy becomes `HARVEST x1.00 -> x1.05`.
   - `buyDurabilityUpgrade`: after `refreshShipStats`, current `durability` += gained max (capped at max). Earth shop is not a full heal.

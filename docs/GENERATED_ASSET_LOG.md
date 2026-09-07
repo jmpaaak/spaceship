@@ -189,3 +189,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-07T16:26:00+0900 | assets/sfx/galaxy_discover.mp3 | user-provided SFX, new galaxy discover / ≤5-cell approach (19s)
 2026-09-07T16:26:00+0900 | assets/sfx/star_sample.mp3 | user-provided SFX, central-star sample dwell loop (11s)
 2026-09-07T16:26:00+0900 | assets/sfx/collision.mp3 | Pixabay Deep Impact Sound Effect (BryanSantosBreton, Content License, id 176434), collision oneshot (7s)
+2026-09-07T21:10:14+0900 | assets/icon.png | 256x256 RGBA app/window icon (starter ship on navy square), wired as t.window.icon in conf.lua

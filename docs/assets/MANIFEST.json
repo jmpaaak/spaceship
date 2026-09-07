@@ -4576,5 +4576,25 @@
     "width": 128,
     "height": 128,
     "qa": "128x128 RGBA star sprite, tools/gen_stars.py"
+  },
+  {
+    "path": "assets/icon.png",
+    "user_supplied": true,
+    "source_url": "assets/ship/ship_default.png",
+    "terms_url": "assets/ship/ship_default.png",
+    "asset_id": "app-icon-256-001",
+    "prompt": "256x256 RGBA app icon: starter ship sprite centered on dark navy square for t.window.icon",
+    "model": "PIL/Pillow",
+    "style": "procedural",
+    "settings": {
+      "width": 256,
+      "height": 256,
+      "source": "assets/ship/ship_default.png"
+    },
+    "downloaded_at": "2026-09-07T21:10:14+09:00",
+    "sha256": "d04ad9b4b76f2cbe753ff5070fb55ae78a327c7ff4f36e5760e9f18a55a3e08a",
+    "width": 256,
+    "height": 256,
+    "qa": "256x256 RGBA window icon leftover from prior cycle; sha256 matches on-disk PNG"
   }
 ]

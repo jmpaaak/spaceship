@@ -5,6 +5,7 @@ function love.conf(t)
     t.identity = "spaceship"
     t.version = "11.5"
     t.window.title = "Spaceship"
+    t.window.icon = "assets/icon.png"
     t.window.width = 720 * scale
     t.window.height = 1280 * scale
     t.window.resizable = true
