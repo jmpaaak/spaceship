@@ -30,6 +30,26 @@
 
   ~~(17) **게임오버: 아이템 없으면 \"탭하여 다시시작\" 세로 가운데** → 완료 (destroyedRestartTextY helper, panelY+panelH/2-11 centering, test INBOX-61(17) OK)~~
 
+  (18) **HUB 상점 슬롯 위치 깨짐** (msg `1546394478015815772`)
+    - 카드(row1-2)와 슬롯(row4) 사이 빈 공간이 과도. row3 "장비 재입고" 한 줄만 있는데 170px.
+    - 슬롯 머신을 row3 텍스트 바로 아래로 붙여 그려서 간격 축소.
+
+  (19) **슬롯 속도 보상이 steeringUpgradeLevel에 +5/+20 → 가격 폭등 버그** (msg `1546395056120926240`)
+    - `play.lua:2145` `steeringUpgradeLevel += rv` (rv=5 or 20). 가격 `$5 × 1.05^level`라서 level 200이면 $86,000+.
+    - 수정: 슬롯 속도 보상은 **별도 `slotSpeedBonus`** 필드에 누적하고, `effectiveSpeed`에 합산. `steeringUpgradeLevel`은 상점 구매만 올리게.
+    - 내구도·수확도 같은 구조인지 확인: 내구도는 maxDurability를 직접 올려서 OK. 수확은 `sampleYieldUpgradeLevel += 1`이라 1%씩이라 완만. 속도만 rv가 크게 레벨을 올려서 문제.
+
+  (20) **장비 제안 `[B]:` 키보드 접두사 제거** (msg `1546395217618542712`)
+    - i18n `earth_gear_offer` = `"GEAR OFFER [B]: %s  $%d"` — `[B]` 제거.
+
+  (21) **일시정지 메뉴: 다시 시작 + 메인메뉴** (msg `1546395541850554480`)
+    - 일시정지 상태에서 **다시 시작** 버튼 → `expedition.destroy` + `expedition.launch` (현재 런 초기화).
+    - **메인 메뉴로** 버튼 → `scene_stack.switch(titleScene)`.
+    - `game/scenes/title.lua` 신규: 배경 별 + 게임 타이틀 + "시작하기" / "이어서 하기" / "설정" (mok 패턴).
+    - "이어서 하기"는 저장된 `expedition` state가 있으면 활성, 없으면 비활성.
+    - `main.lua`가 PlayScene 대신 TitleScene으로 시작.
+    - 설정은 빈 껍데기(언어/사운드 토글 자리).
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
