@@ -100,16 +100,14 @@
     - 지금 PART 매치는 `loadHullParts()` 랜덤 → 상점/허브와 같은 풀, 2매치 전설 가능.
     - `galaxyExclusive`처럼 `slotExclusive: true` 카드 수종을 hull+engine JSON에 추가. Earth shop / hub explore 제외, 슬롯 PART만. (2) rarity 게이트와 같이.
 
+  (16) **허브 은하 추가 구입 메뉴 버튼** (msg `1546327428819853462`)
+    - 지구 상점 밑 합계/표본/최고고도 텍스트는 이미 제거됨 (`7c7c888`).
+    - 이후 은하 허브 상점에 **추가 구입 메뉴 버튼**을 넣는다 (지구에는 두지 않음). 한 사이클에서 버튼 자리+터치만, 상품 목록은 기존 hub shop pool.
+
   검증: 해당 소항목 self_test + `SPACESHIP_UNIT_OK` / `SPACESHIP_SMOKE_OK`. 커밋 메시지에 소항목 번호.
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
-  (1) **에셋 스튜디오 웹에디터** (msg `1546328787166306395`, 사용자: "만들고 있는거야? 아니면 대기열에 있는거야?" → **둘 다 아니었음**, 지금 큐에 넣음)
-    - `tools/asset-studio/` **없음**. `tools/parts-editor/` **없음**. 있는 건 `tools/gear-editor/`, `tools/slot-editor/`, `tools/gen_*.py`.
-    - sprite-gen (`aldegad/sprite-gen`) + PerfectPixel (`theamusing/perfectPixel`, 사용자 표기 PixelPerpect) + 기존 PIL을 **하나의 웹에디터**로.
-    - 게임 **모든** 에셋 허브 (부품만이 아님). 파이프라인: 업로드/URL/프롬프트 → sprite-gen → PerfectPixel 그리드·양자화 → 청키 4px NEAREST → `assets/` 저장 + `docs/GENERATED_ASSET_LOG.md` + `docs/assets/MANIFEST.json`.
-    - 로컬 정적 HTML+JS (gear-editor 패턴). ComfyUI 금지. 캐릭터/함선/지구 사용자 제공분은 생성 대상 아님.
-
 
 (60) **지구 이미지 확대 + PIL 교체 (사용자 확정, 2026-09-06):**
   - 현재 `M.earthVisualRadius = 58`이지만 실제 이미지가 작아서 반응 영역과 불일치.
