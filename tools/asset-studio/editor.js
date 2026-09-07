@@ -26,13 +26,24 @@ let sourceName = "";
 let processedBlob = null;
 let lastLogLine = "";
 let lastManifest = null;
+let workspaceHandle = null;
+
+async function getFileHandleFromPath(dirHandle, path, create = false) {
+  const parts = path.split('/');
+  const filename = parts.pop();
+  let currentDir = dirHandle;
+  for (const part of parts) {
+    currentDir = await currentDir.getDirectoryHandle(part, { create });
+  }
+  return await currentDir.getFileHandle(filename, { create });
+}
 
 const els = {};
 
 function cacheEls() {
   [
     "uploadInput", "urlInput", "loadUrlBtn", "promptBtn", "promptInput", "destSelect",
-    "processBtn", "downloadPngBtn", "downloadLogBtn", "downloadManifestBtn",
+    "fsaOpenBtn", "processBtn", "saveWorkspaceBtn", "downloadPngBtn", "downloadLogBtn", "downloadManifestBtn",
     "statusBar", "sourceCanvas", "pixelCanvas", "chunkyCanvas",
   ].forEach((id) => { els[id] = document.getElementById(id); });
 }
@@ -326,6 +337,7 @@ async function runPipeline() {
   els.downloadPngBtn.disabled = false;
   els.downloadLogBtn.disabled = false;
   els.downloadManifestBtn.disabled = false;
+  if (workspaceHandle) els.saveWorkspaceBtn.disabled = false;
   setStatus("Pipeline done. Download PNG, GENERATED_ASSET_LOG line, and MANIFEST.json entry, then place them in the repo.", "ok");
 }
 
@@ -374,6 +386,62 @@ function wire() {
   els.processBtn.addEventListener("click", () => {
     runPipeline().catch((err) => setStatus(err.message, "error"));
   });
+  
+  if (els.fsaOpenBtn) {
+    els.fsaOpenBtn.addEventListener("click", async () => {
+      if (!window.showDirectoryPicker) {
+        setStatus("Directory picker not supported in this browser.", "error");
+        return;
+      }
+      try {
+        workspaceHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        setStatus("Workspace opened. You can now save directly to the repo.", "ok");
+        if (processedBlob) els.saveWorkspaceBtn.disabled = false;
+      } catch (err) {
+        if (err.name !== "AbortError") setStatus("Failed to open workspace: " + err.message, "error");
+      }
+    });
+  }
+
+  if (els.saveWorkspaceBtn) {
+    els.saveWorkspaceBtn.addEventListener("click", async () => {
+      if (!workspaceHandle || !processedBlob || !lastManifest || !lastLogLine) return;
+      try {
+        const dest = els.destSelect.value;
+        const pngHandle = await getFileHandleFromPath(workspaceHandle, dest, true);
+        const pngWritable = await pngHandle.createWritable();
+        await pngWritable.write(processedBlob);
+        await pngWritable.close();
+
+        const logHandle = await getFileHandleFromPath(workspaceHandle, "docs/GENERATED_ASSET_LOG.md");
+        const logFile = await logHandle.getFile();
+        const logText = await logFile.text();
+        const logWritable = await logHandle.createWritable();
+        await logWritable.write(logText + (logText.endsWith("\n") ? "" : "\n") + lastLogLine + "\n");
+        await logWritable.close();
+
+        const manifestHandle = await getFileHandleFromPath(workspaceHandle, "docs/assets/MANIFEST.json");
+        const manifestFile = await manifestHandle.getFile();
+        const manifestText = await manifestFile.text();
+        const manifestObj = JSON.parse(manifestText);
+        manifestObj.generated = manifestObj.generated || [];
+        const existingIndex = manifestObj.generated.findIndex(x => x.path === lastManifest.path);
+        if (existingIndex >= 0) {
+          manifestObj.generated[existingIndex] = lastManifest;
+        } else {
+          manifestObj.generated.push(lastManifest);
+        }
+        const manifestWritable = await manifestHandle.createWritable();
+        await manifestWritable.write(JSON.stringify(manifestObj, null, 2) + "\n");
+        await manifestWritable.close();
+
+        setStatus("Saved " + dest + ", log, and manifest to workspace directly!", "ok");
+      } catch (err) {
+        setStatus("Failed to save to workspace: " + err.message, "error");
+      }
+    });
+  }
+
   els.downloadPngBtn.addEventListener("click", () => {
     if (!processedBlob) return;
     const name = els.destSelect.value.split("/").pop() || "asset.png";

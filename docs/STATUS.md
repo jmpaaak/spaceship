@@ -1,11 +1,12 @@
 ## Current Status
 
-- INBOX (61)(1) complete: scaffolded `tools/asset-studio/`, a local static HTML+JS web editor to generate game assets without ComfyUI. The editor acts as an all-game asset hub with a `upload/URL/prompt -> sprite-gen -> PerfectPixel -> chunky 4px NEAREST` pipeline.
+- INBOX (61.1) complete: implemented `tools/asset-studio/`, a local static HTML+JS web editor to generate game assets without ComfyUI. The editor acts as an all-game asset hub with a `upload/URL/prompt -> sprite-gen -> PerfectPixel -> chunky 4px NEAREST` pipeline.
+- Added File System Access API support (`showDirectoryPicker`) to Asset Studio, enabling it to write directly to `assets/`, `docs/GENERATED_ASSET_LOG.md`, and `docs/assets/MANIFEST.json` with a single click.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item (61)(2): Slot machine payout tweaks (legendary gating, $10 refund, full slot replacement).
+- Process next pending INBOX item: (61)(2) or (61)(3) depending on whether (61)(2) is fully complete in the repo.
 
 ## Previous
 
