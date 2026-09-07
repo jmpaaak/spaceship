@@ -262,17 +262,21 @@ function M.hubPlanet(galaxy)
     local gx, gy = galaxy.gx, galaxy.gy
     -- Item 10 change B: offset hub from galaxy center (sunPosition) so the
     -- minimap can show sun and hub as distinct markers.  The hub sits on a
-    -- hash-deterministic angle at ~18% of galaxy.radius (min 80 wu) from
-    -- the center, inside the inner spiral but clearly not at the sun.
+    -- hash-deterministic angle from the center, inside the inner spiral but
+    -- clearly not at the sun.
+    -- INBOX 61(33): ensure hub disk never overlaps the central star.
+    -- Minimum distance = starRadius + hubRadius + 40px padding.
     local angle = hash(gx, gy, 580) * math.pi * 2
-    local dist = math.max(80, galaxy.radius * 0.18)
+    local hubRadius = 40 + math.floor(hash(gx, gy, 540) * 16)
+    local minDist = M.starRadius + hubRadius + 41  -- +41 not +40: absorb cos/sin float rounding
+    local dist = math.max(minDist, galaxy.radius * 0.18)
     local hubX = galaxy.x + math.cos(angle) * dist
     local hubY = galaxy.y + math.sin(angle) * dist
     return {
         id = "hub:" .. galaxy.id,
         x = hubX,
         y = hubY,
-        radius = 40 + math.floor(hash(gx, gy, 540) * 16),
+        radius = hubRadius,
         hue = hash(gx, gy, 550),
         hub = true,
         galaxyId = galaxy.id,

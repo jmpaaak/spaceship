@@ -78,6 +78,15 @@
   - Updated `game/i18n.lua` to match EN/KO texts ("sell +30%" / "판매 +30%").
   - Test `INBOX-61(41)` in `game/tests/binary_star.lua` GREEN.
 
+- INBOX 61(33): hub/star overlap fix
+  - `game/world.lua` `hubPlanet()`: minDist = starRadius + hubRadius + 41 (was max(80, radius*0.18)).
+  - Ensures hub disk never overlaps the central star in any galaxy.
+  - Star sprite green-X bug was already fixed in (14) (pngColorType + sheet rotation center).
+  - Test INBOX-61(33) in `game/self_test.lua` checks all galaxies in -10..10 range: GREEN.
+
+- INBOX 61(30): confirmed already complete
+  - title.lua already has 22px "Jimmy's" + 44px title + i18n keys from prior cycle.
+
 ## Next slice
 
-- INBOX 61(33) hub/star overlap (`game/world.lua`), or 61(36) SFX (`game/sfx.lua`). 61(28)/(29) wait on play.lua module split.
+- INBOX 61(35) slot weighted random (`game/expedition.lua`), or 61(36) SFX (`game/sfx.lua`). 61(28)/(29) wait on play.lua module split.

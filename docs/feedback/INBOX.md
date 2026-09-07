@@ -106,10 +106,11 @@
       - **슬롯**: 심볼 매칭 규칙
     - Balatro 스타일 다크 패널, 닫기=아무 곳 탭.
 
-  (30) **타이틀: Sid Meier's 스타일 "Jimmy's 우주선"** (msg `1546411241927614506`)
-    - 제목 위에 작고 회색 `"Jimmy's"` (22px, `(0.55, 0.55, 0.58)`).
-    - 본 제목 `우주선` / `SPACESHIP` (기존 큰 폰트).
-    - i18n `title_author = "Jimmy's"` (EN/KO 동일). `title_game_name` 유지.
+  ~~(30) **타이틀: Sid Meier's 스타일 "Jimmy's 우주선"** (msg `1546411241927614506`)~~
+    - ~~제목 위에 작고 회색 `"Jimmy's"` (22px, `(0.55, 0.55, 0.58)`).~~
+    - ~~본 제목 `우주선` / `SPACESHIP` (기존 큰 폰트).~~
+    - ~~i18n `title_author = "Jimmy's"` (EN/KO 동일). `title_game_name` 유지.~~
+    - 완료: title.lua에 22px "Jimmy's" + 44px 타이틀 이미 구현됨 (이전 사이클). i18n `title_author` EN/KO 존재.
 
   (32) **거대 파일 금지 + INBOX 최대 병렬** (사용자 2026-09-07)
     - 원본: `docs/MODULE_STRUCTURE.md`. 800줄/80KB Lua에 기능 붙이지 말 것. 슬라이스=모듈 1개.
@@ -117,10 +118,11 @@
     - 처리 대기를 **파일이 안 겹치는 단위로 최대로** 워크트리 병렬. 담당 모듈 경로를 각 항목에 적을 것.
     - **즉시 WT 가능 (모듈화 대기 없음):** (26) JSON+`game/gear.lua`, (27) `tools/asset-studio`+`serve_editors.py`, (36) `assets/sfx`+`game/sfx.lua`.
 
-  (33) **허브와 중심별 절대 겹침 금지 + 중심별 스프라이트 이상** (msg `1546414575241396264`)
-    - 담당: `game/world.lua` `hubPlanet` (play.lua 드로우 금지).
-    - 허브 디스크와 중심별(`starRadius=80`)이 절대 겹치지 않게: `dist >= starRadius + hub.radius + padding`(≥40). 현재 `max(80, radius*0.18)`는 태양 r=80과 허브 r=40~56이 겹침.
-    - 중심별 스프라이트가 초록 X 쿼드/시트 버그(원형 마스크·회전 중심). 시트면 프레임 쿼드가 몸통을 덮게. NASA/청키 원형만.
+  ~~(33) **허브와 중심별 절대 겹침 금지 + 중심별 스프라이트 이상** (msg `1546414575241396264`)~~
+    - ~~담당: `game/world.lua` `hubPlanet` (play.lua 드로우 금지).~~
+    - ~~허브 디스크와 중심별(`starRadius=80`)이 절대 겹치지 않게: `dist >= starRadius + hub.radius + padding`(≥40). 현재 `max(80, radius*0.18)`는 태양 r=80과 허브 r=40~56이 겹침.~~
+    - ~~중심별 스프라이트가 초록 X 쿼드/시트 버그(원형 마스크·회전 중심). 시트면 프레임 쿼드가 몸통을 덮게. NASA/청키 원형만.~~
+    - 완료: `hubPlanet()` minDist = starRadius + hubRadius + 41 으로 겹침 방지. 중심별 스프라이트 초록 X는 (14)에서 이미 수정(pngColorType 메모리 실패 + 시트 회전 중심). Test INBOX-61(33) GREEN.
 
   (34) **시너지 표기가 팝업에 없음** (msg `1546413969718378588`)
     - 담당: `game/scenes/play.lua` gearPopup 하단 (모듈화 후 `play_hud.lua`). 이름+설명 두 줄, 기호 금지.
@@ -168,6 +170,12 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+(61.33) **허브와 중심별 절대 겹침 금지 + 중심별 스프라이트 이상:**
+  - 완료: `world.lua` `hubPlanet()` minDist = starRadius + hubRadius + 41 으로 허브 디스크가 중심별과 겹치지 않게 보장. 중심별 스프라이트 초록 X 버그는 (14)에서 이미 수정(pngColorType + 시트 회전 중심). Test INBOX-61(33) GREEN.
+
+(61.30) **타이틀: Sid Meier's 스타일 "Jimmy's 우주선":**
+  - 완료: title.lua에 22px "Jimmy's" (0.55,0.55,0.58) + 44px 타이틀 구현 완료 (이전 사이클). i18n `title_author` EN/KO 존재.
+
 (61.41) **쌍성 시너지 착지 +$30 농장 금지** (OOB 2026-09-07)
   - 완료: `game/expedition.lua`의 `settle` 및 `settleAtHub`에서 착지 시 고정금액 +30 대신 `pendingSampleValue` * 1.3 (+30%)을 적용하도록 변경. `i18n.lua` 텍스트 수정 완료. `INBOX-61(41)` 테스트 GREEN.
 (61.42) **게임 배경음 Space orchestral:**
