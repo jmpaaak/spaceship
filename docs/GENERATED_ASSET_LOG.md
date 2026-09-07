@@ -182,3 +182,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-07T01:22:00+0900 | assets/debris/asteroid.png | PIL asteroid restored to 32x32 RGBA (stars must show through), gen_debris.py
 2026-09-07T01:22:00+0900 | assets/debris/can.png | PIL can restored to 32x32 RGBA, gen_debris.py
 2026-09-07T01:22:00+0900 | assets/debris/scrap.png | PIL scrap restored to 32x32 RGBA, gen_debris.py
+2026-09-07T17:00:00+0900 | assets/part_icons/*.png (65 files) | PIL 32x32 RGBA chunky 4px part icons, hull=shield silhouette, engine=nozzle silhouette, suit-colored, gen_part_icons.py

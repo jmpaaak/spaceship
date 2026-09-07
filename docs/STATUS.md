@@ -1,15 +1,18 @@
 ## Current Status
 
-- INBOX 61(7): Gear popup rarity+suit chips vertical stack.
-  - Changed chips from horizontal side-by-side to vertical stack (rarity line, suit line below).
-  - Each chip centered independently in the popup.
-  - Tooltip height 220→256 to accommodate extra vertical space.
-  - `M.gearPopupChipVertical = true` flag + test assertion.
+- INBOX 61(8): Part icons + HUD slot 48px.
+  - `tools/gen_part_icons.py` (36 lines): generates 32×32 RGBA chunky-4px icons per part id.
+  - Hull = shield silhouette, Engine = nozzle/rocket silhouette, suit colors applied.
+  - 65 icons generated in `assets/part_icons/<id>.png`, manifest updated.
+  - HUD slot size 32→48px (`M.hudGearSlotSize = 48`).
+  - Icons rendered in: `drawHudGearSlots`, `drawGearSlots`, `gearPopup`, `drawBalatroCard` (game-over keep-one).
+  - Shield/circle fallbacks removed (icon replaces them when present).
+  - Test `INBOX-61(8) part icons infrastructure OK`.
 - `make verify LOVE=…` GREEN: SPACESHIP_UNIT_OK, SPACESHIP_SMOKE_OK, ASSET_MANIFEST_OK.
 
 ## Next slice
 
-- Process next pending INBOX item (61.8: part icons + HUD slot 48px).
+- Process next pending INBOX item (61.9 or next in queue).
 
 ## Previous
 

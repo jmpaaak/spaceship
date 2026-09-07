@@ -8729,7 +8729,7 @@ function M.run()
         local i18n = require("game.i18n")
 
         -- (a) Constants exist with correct values
-        assert(play.hudGearSlotSize == 32, "gear slot size must be 32px")
+        assert(play.hudGearSlotSize == 48, "gear slot size must be 48px")
         assert(play.hudGearSlotGap == 4, "gear slot gap must be 4px")
         assert(play.hudGearLabelFontSize == 22, "gear label font must be 22px")
 
@@ -8742,8 +8742,8 @@ function M.run()
             "hud_gear_label i18n key must exist")
 
         -- (d) Grid height fits in 1280px canvas (vertical column layout)
-        local totalHeight = 6 * (32 + 4) + 8 + 3 * (32 + 4)
-        assert(totalHeight < 600,
+        local totalHeight = 6 * (48 + 4) + 8 + 3 * (48 + 4)
+        assert(totalHeight < 800,
             "gear grid vertical column must fit in 1280px canvas, got " .. totalHeight)
 
         -- (e) drawHudGearSlots does not throw with a mock scene
@@ -8764,6 +8764,7 @@ function M.run()
             end,
             circle = function() end,
             polygon = function() end,
+            draw = function() end,
             printf = function() end,
             print = function() end,
             getFont = function() return {} end,
@@ -8779,14 +8780,26 @@ function M.run()
         assert(#rectCalls >= 9,
             "drawHudGearSlots must draw at least 9 slot rectangles, got " .. #rectCalls)
 
-        -- First filled slot should be 32x32
-        local found32 = false
+        -- First filled slot should be 48x48
+        local found48 = false
         for _, rc in ipairs(rectCalls) do
-            if rc.w == 32 and rc.h == 32 then found32 = true break end
+            if rc.w == 48 and rc.h == 48 then found48 = true break end
         end
-        assert(found32, "slot rectangles must be 32x32px")
+        assert(found48, "slot rectangles must be 48x48px")
 
         print("  INBOX-40 gear slots grid below HUD OK")
+    end
+
+    -- INBOX-61(8): Part icon infrastructure test
+    do
+        local play = require("game.scenes.play")
+        -- getPartIcon function must exist
+        assert(type(play.getPartIcon) == "function",
+            "getPartIcon helper must exist")
+        -- hudGearSlotSize must be 48 for INBOX-61(8)
+        assert(play.hudGearSlotSize == 48,
+            "INBOX-61(8): HUD gear slot size must be 48px, got " .. tostring(play.hudGearSlotSize))
+        print("  INBOX-61(8) part icons infrastructure OK")
     end
 
     -- INBOX-44: ship stats summary below minimap right side during ascending

@@ -10,11 +10,7 @@
   프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-  (8) **선체/엔진 부품 아이콘**
-    - HUD 슬롯 48px (지금 32). 사용자: "UI 이미지가 들어갈거니까 충분히 크게".
-    - `tools/gen_part_icons.py` ≤50줄, 32×32 RGBA 청키 4px, 부품 id별 1장 `assets/part_icons/<id>.png`.
-    - 선체=장갑/판/실드 실루엣, 엔진=노즐/로켓 실루엣, 수트 색(solar금/nebula자/void남/pulsar시안).
-    - `drawHudGearSlots` / `drawGearSlots` / `gearPopup` / 게임오버 keep-one 카드에 아이콘 표시. 폴백 방패/원 금지(아이콘 있을 때).
+  ~~(8) **선체/엔진 부품 아이콘** → 처리 완료로 이동~~
 
   (9) **미니맵 두 번째 은하 림 = 같은 색, 알파만 낮게**
     - 지금 1번 cyan `(0.3,0.9,0.95,0.9)`, 2번 금 `(0.9,0.7,0.3,0.8)`.
@@ -56,6 +52,9 @@
   이미 커밋된 것(재큐 금지): 수확 +1% `7d34de2`, 표본라벨 `be27a9a`, 시너지 이름 prefix `074f5f7`(포맷은 (6)이  supersede), 상점 LV 배너 제거 `15de44e`, 위성 속도 데미지 `074f5f7`.
 
 ## 처리 완료
+
+(61.8) **선체/엔진 부품 아이콘 + HUD 48px:**
+  - 완료: `tools/gen_part_icons.py` 36줄, 32×32 RGBA chunky-4px icons for all 65 parts. Hull=shield silhouette, Engine=nozzle silhouette, suit colors (solar gold/nebula purple/void blue/pulsar cyan). HUD slot 32→48px. Icons in drawHudGearSlots/drawGearSlots/gearPopup/drawBalatroCard (keep-one). Shield/circle fallbacks removed. Manifest updated. GREEN.
 
 (61.7) **등급·수트 칩 각 한 줄:**
   - 완료: Gear popup chips changed from horizontal side-by-side to vertical stack (rarity one line, suit below). Each chip centered independently. Tooltip height 220→256 to accommodate. `gearPopupChipVertical` flag + test. GREEN.

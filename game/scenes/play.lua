@@ -415,6 +415,15 @@ function M.drawBalatroCard(part, x, y, w, h, selected)
     love.graphics.setFont(fonts.get(11))
     love.graphics.setColor(rr, rg, rb, 1)
     love.graphics.printf(i18n.rarityLabel(part.rarity), x + 4, y + 6, w - 8, "center")
+    -- Part icon centered in card
+    local icon = getPartIcon(part.id)
+    if icon then
+        love.graphics.setColor(1, 1, 1, 0.85)
+        local iw, ih = icon:getDimensions()
+        local iconSize = math.min(w, h) * 0.45
+        local sc = iconSize / math.max(iw, ih)
+        love.graphics.draw(icon, x + w/2, y + h/2, 0, sc, sc, iw/2, ih/2)
+    end
     love.graphics.setFont(fonts.get(22))
     love.graphics.setColor(1, 0.98, 0.92, 1)
     love.graphics.printf(i18n.partName(part), x + 6, y + math.floor(h / 2) - 12, w - 12, "center")
@@ -1045,6 +1054,19 @@ M.pngColorType = pngColorType
 M.shouldLoadRuntimeSprite = shouldLoadRuntimeSprite
 M.loadSprite = loadSprite
 
+-- Part icon cache: loads assets/part_icons/<id>.png on first access.
+local partIconCache = {}
+local function getPartIcon(partId)
+    if not partId then return nil end
+    if partIconCache[partId] ~= nil then
+        return partIconCache[partId] or nil
+    end
+    local img = loadSprite("assets/part_icons/" .. partId .. ".png")
+    partIconCache[partId] = img or false
+    return img
+end
+M.getPartIcon = getPartIcon
+
 -- Deterministic per-planet visual variation from planet.id.
 -- Returns rotation (radians, 0..2π) and scaleFactor (0.85..1.15).
 -- Same id always gives the same result; different ids give different values.
@@ -1540,9 +1562,14 @@ function M:drawGearSlots(y)
             else love.graphics.setColor(0.7, 0.7, 0.7) end
             love.graphics.rectangle("fill", x, y, boxW, boxH)
             
-            love.graphics.setColor(1, 1, 1, 0.5)
-            local pts = M.shieldIconPoints(x + boxW/2, y + boxH/2, 6)
-            if pts then love.graphics.polygon("fill", pts) end
+            -- Part icon (replaces shield fallback)
+            local icon = getPartIcon(part.id)
+            if icon then
+                love.graphics.setColor(1, 1, 1, 0.8)
+                local iw, ih = icon:getDimensions()
+                local sc = (math.min(boxW, boxH) - 2) / math.max(iw, ih)
+                love.graphics.draw(icon, x + boxW/2, y + boxH/2, 0, sc, sc, iw/2, ih/2)
+            end
             
             if part.edition and part.edition ~= "base" then
                 love.graphics.setColor(1, 1, 0.5, 0.8)
@@ -1569,9 +1596,14 @@ function M:drawGearSlots(y)
             else love.graphics.setColor(0.7, 0.7, 0.7) end
             love.graphics.rectangle("fill", x, y, boxW, boxH)
             
-            love.graphics.setColor(1, 1, 1, 0.5)
-            local pts = M.rocketIconPoints(x + boxW/2, y + boxH/2, 6)
-            if pts then love.graphics.polygon("fill", pts) end
+            -- Part icon (replaces rocket fallback)
+            local icon = getPartIcon(part.id)
+            if icon then
+                love.graphics.setColor(1, 1, 1, 0.8)
+                local iw, ih = icon:getDimensions()
+                local sc = (math.min(boxW, boxH) - 2) / math.max(iw, ih)
+                love.graphics.draw(icon, x + boxW/2, y + boxH/2, 0, sc, sc, iw/2, ih/2)
+            end
             
             if part.edition and part.edition ~= "base" then
                 love.graphics.setColor(1, 1, 0.5, 0.8)
@@ -1659,7 +1691,7 @@ end
 -- INBOX-40: gear slots grid constants for the HUD (below left stats).
 -- 32×32px slots, hull 6 + engine 3 = 9 max, horizontal row, with a
 -- small "GEAR" label above the grid in 22px font.
-M.hudGearSlotSize = 32
+M.hudGearSlotSize = 48
 M.gearPopupChipVertical = true  -- INBOX 61(7): chips stacked vertically
 M.hudGearSlotGap  = 4
 M.hudGearLabelFontSize = 22
@@ -1697,10 +1729,14 @@ function M:drawHudGearSlots(hudHeight)
             elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4, 0.7)
             else love.graphics.setColor(0.5, 0.5, 0.5, 0.7) end
             love.graphics.rectangle("fill", startX, y, slotSize, slotSize)
-            -- Small icon overlay (shield shape)
-            love.graphics.setColor(1, 1, 1, 0.5)
-            local pts = M.shieldIconPoints(startX + slotSize / 2, y + slotSize / 2, 8)
-            if pts then love.graphics.polygon("fill", pts) end
+            -- Part icon (replaces shield fallback)
+            local icon = getPartIcon(part.id)
+            if icon then
+                love.graphics.setColor(1, 1, 1, 0.9)
+                local iw, ih = icon:getDimensions()
+                local sc = (slotSize - 4) / math.max(iw, ih)
+                love.graphics.draw(icon, startX + slotSize/2, y + slotSize/2, 0, sc, sc, iw/2, ih/2)
+            end
             love.graphics.setColor(0.1, 0.1, 0.1, 1)
             love.graphics.rectangle("line", startX, y, slotSize, slotSize)
         else
@@ -1723,9 +1759,14 @@ function M:drawHudGearSlots(hudHeight)
             elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4, 0.7)
             else love.graphics.setColor(0.5, 0.5, 0.5, 0.7) end
             love.graphics.rectangle("fill", startX, y, slotSize, slotSize)
-            -- Engine icon overlay (small gear shape)
-            love.graphics.setColor(1, 1, 1, 0.5)
-            love.graphics.circle("fill", startX + slotSize / 2, y + slotSize / 2, 6)
+            -- Part icon (replaces circle fallback)
+            local icon = getPartIcon(part.id)
+            if icon then
+                love.graphics.setColor(1, 1, 1, 0.9)
+                local iw, ih = icon:getDimensions()
+                local sc = (slotSize - 4) / math.max(iw, ih)
+                love.graphics.draw(icon, startX + slotSize/2, y + slotSize/2, 0, sc, sc, iw/2, ih/2)
+            end
             love.graphics.setColor(0.1, 0.1, 0.1, 1)
             love.graphics.rectangle("line", startX, y, slotSize, slotSize)
         else
@@ -4590,6 +4631,14 @@ function M:draw()
         love.graphics.rectangle("line", tipX, tipY, tipW, tipH, 10, 10)
         love.graphics.setLineWidth(1)
         local prevPopupFont = love.graphics.getFont()
+        -- Part icon in popup (top-right corner)
+        local popupIcon = getPartIcon(part.id)
+        if popupIcon then
+            love.graphics.setColor(1, 1, 1, 0.9)
+            local piw, pih = popupIcon:getDimensions()
+            local psc = 40 / math.max(piw, pih)
+            love.graphics.draw(popupIcon, tipX + tipW - 36, tipY + 12, 0, psc, psc, piw/2, 0)
+        end
         -- Part name (large, white-gold)
         love.graphics.setFont(fonts.get(22))
         love.graphics.setColor(1, 0.98, 0.92, 1)
