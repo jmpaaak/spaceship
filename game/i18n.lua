@@ -521,6 +521,10 @@ function M.effectLine(effect)
     if not template then
         return tostring(effect.type or "?") .. " " .. tostring(effect.value or "")
     end
+    if effect.mode == "multiply" then
+        local name = (template:match("^([^%%]+)") or tostring(effect.type)):gsub("%s*%+?$", "")
+        return string.format("%s ×%.1f", name, effect.value or 0)
+    end
     if template:find("%%") then
         return string.format(template, effect.value or 0)
     end

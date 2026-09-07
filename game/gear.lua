@@ -195,7 +195,16 @@ local function validatePart(part, index)
             return nil, string.format("part '%s' effect #%d value %s is out of range [%d, %d]",
                 part.id, i, tostring(effect.value), M.effectValueMin, M.effectValueMax)
         end
-        effects[#effects + 1] = { type = effect.type, value = effect.value }
+        -- INBOX 61(44): persist flat|multiply. Dropping mode made rare × cards
+        -- load as flat and silently no-op the product in aggregateEffects.
+        local mode = effect.mode
+        if mode == nil or mode == "flat" then
+            mode = "flat"
+        elseif mode ~= "multiply" then
+            return nil, string.format("part '%s' effect #%d has unknown mode '%s'",
+                part.id, i, tostring(mode))
+        end
+        effects[#effects + 1] = { type = effect.type, value = effect.value, mode = mode }
     end
 
     local tags = {}
@@ -607,7 +616,7 @@ M.editionEffects = {
 function M.applyEditionEffects(part, editionId)
     local out = {}
     for _, effect in ipairs(part.effects) do
-        out[#out + 1] = { type = effect.type, value = effect.value }
+        out[#out + 1] = { type = effect.type, value = effect.value, mode = effect.mode }
     end
     if not editionId then return out end
     local def = M.editionEffects[editionId]
