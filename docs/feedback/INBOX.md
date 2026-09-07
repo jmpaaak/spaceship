@@ -28,9 +28,10 @@
 
   ~~(17) **게임오버: 아이템 없으면 \"탭하여 다시시작\" 세로 가운데** → 완료 (destroyedRestartTextY helper, panelY+panelH/2-11 centering, test INBOX-61(17) OK)~~
 
-  (18) **HUB 상점 슬롯 위치 깨짐** (msg `1546394478015815772`)
-    - 카드(row1-2)와 슬롯(row4) 사이 빈 공간이 과도. row3 "장비 재입고" 한 줄만 있는데 170px.
-    - 슬롯 머신을 row3 텍스트 바로 아래로 붙여 그려서 간격 축소.
+  (18) ~~**HUB 상점 슬롯 위치 깨짐** (msg `1546394478015815772`)~~
+    - ~~카드(row1-2)와 슬롯(row4) 사이 빈 공간이 과도. row3 "장비 재입고" 한 줄만 있는데 170px.~~
+    - ~~슬롯 머신을 row3 텍스트 바로 아래로 붙여 그려서 간격 축소.~~
+    - 완료: row3 height 170→70px (`settlementGearRowHeight`), row4 slot 200px (`settlementSlotRowHeight`). Gear text vertically centered. Test INBOX-61(18) GREEN.
 
   (19) **슬롯 속도 보상이 steeringUpgradeLevel에 +5/+20 → 가격 폭등 버그** (msg `1546395056120926240`)
     - `play.lua:2145` `steeringUpgradeLevel += rv` (rv=5 or 20). 가격 `$5 × 1.05^level`라서 level 200이면 $86,000+.

@@ -71,9 +71,12 @@ M.settlementTotalY = 248
 M.settlementSamplesY = 288
 M.settlementPeakAltY = 328
 M.settlementNewBestY = 368
--- Touch rows: 5 rows × 165px each, starting after the summary section.
+-- Touch rows: variable-height rows starting after the summary section.
+-- Row 3 (gear text) is compact (70px) to reduce the gap between cards and slot.
 local settlementTouchRowTop = 400
 local settlementTouchRowHeight = 170
+local settlementGearRowHeight = 70   -- INBOX 61(18): compact row for gear text
+local settlementSlotRowHeight = 200  -- slot machine gets the space saved from row3
 local settlementTouchRows = {
     {
         top = settlementTouchRowTop, bottom = settlementTouchRowTop + settlementTouchRowHeight,
@@ -92,13 +95,13 @@ local settlementTouchRows = {
     },
     { key = "gear",
       top = settlementTouchRowTop + settlementTouchRowHeight * 2,
-      bottom = settlementTouchRowTop + settlementTouchRowHeight * 3 },
+      bottom = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight },
     { key = "slot",
-      top = settlementTouchRowTop + settlementTouchRowHeight * 3,
-      bottom = settlementTouchRowTop + settlementTouchRowHeight * 4 },
+      top = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight,
+      bottom = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight + settlementSlotRowHeight },
     { key = "relaunch",
-      top = settlementTouchRowTop + settlementTouchRowHeight * 4,
-      bottom = settlementTouchRowTop + settlementTouchRowHeight * 5 },
+      top = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight + settlementSlotRowHeight,
+      bottom = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight + settlementSlotRowHeight + settlementTouchRowHeight },
 }
 M.settlementTouchRows = settlementTouchRows
 M.settlementTouchRowHeight = settlementTouchRowHeight
@@ -4396,7 +4399,8 @@ function M:draw()
         end
 
         local r3 = M.settlementTouchRows[3].top
-        row = r3 + 12
+        -- INBOX 61(18): compact row3 — center gear text vertically in 70px row
+        row = r3 + math.floor((M.settlementTouchRows[3].bottom - r3 - 22) / 2)
         if self.earthShopGearOffer then
             local offer = self.earthShopGearOffer
             local gearMod = require("game.gear")

@@ -7024,7 +7024,7 @@ function M.run()
     touchScene:touchpressed("ship", 540, 670)
     assert(touchScene.expedition.durabilityUpgradeLevel == 1)
     assert(touchScene.expedition.ownedShips.scout and touchScene.expedition.selectedShipId == "scout")
-    touchScene:touchpressed("relaunch", 360, 1220)
+    touchScene:touchpressed("relaunch", 360, PlayScene.settlementTouchRows[5].top + 40)
     assert(touchScene.expedition.phase == "ascending")
 
     local loadoutScene = PlayScene.new({
@@ -9550,6 +9550,26 @@ function M.run()
         assert(emptyY < itemsY,
             "INBOX 61(17): empty restart Y (" .. emptyY .. ") must be above items Y (" .. itemsY .. ")")
         print("  INBOX-61(17) destroyed restart text Y OK")
+    end
+
+    -- INBOX 61(18): hub shop row3 (gear text) gap too large — must be < 100px
+    do
+        local PlayScene = require("game.scenes.play")
+        local rows = PlayScene.settlementTouchRows
+        local row3H = rows[3].bottom - rows[3].top
+        assert(row3H < 100,
+            "INBOX 61(18): row3 (gear) height must be < 100px to reduce gap, got " .. row3H)
+        -- row4 (slot) must start right after row3
+        assert(rows[4].top == rows[3].bottom,
+            "INBOX 61(18): row4.top (" .. rows[4].top .. ") must equal row3.bottom (" .. rows[3].bottom .. ")")
+        -- rows must still be contiguous and within panel
+        for i = 2, #rows do
+            assert(rows[i].top == rows[i-1].bottom,
+                "INBOX 61(18): row " .. i .. " top must equal row " .. (i-1) .. " bottom")
+        end
+        assert(rows[#rows].bottom <= PlayScene.settlementPanelTop + PlayScene.settlementPanelHeight,
+            "INBOX 61(18): last row bottom must fit within panel")
+        print("  INBOX-61(18) hub shop row3 gap OK")
     end
 
     print("SPACESHIP_UNIT_OK")

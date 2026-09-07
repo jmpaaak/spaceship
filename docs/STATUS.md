@@ -1,17 +1,16 @@
 ## Current Status
-- INBOX 61(15): slot-exclusive parts — test coverage + docs + editor.
-  - Test `testSlotExclusivePartsWiring`: bundled JSON ≥2 slotExclusive per pool,
-    `earthShopPool` excludes them, `slotPool` returns only them,
-    `earthSlotSpin` PART 2-/3-match picks from slot-exclusive ids,
-    gear-editor round-trips `slotExclusive`, GEAR_SCHEMA.md documents it.
-  - `docs/GEAR_SCHEMA.md`: Card-shape example + field table entry for `slotExclusive`.
-  - `tools/gear-editor`: `fieldSlotExclusive` checkbox, `cacheEls`/`openForm`/`collectFormPart`/card label.
+- INBOX 61(18): HUB shop row3 gap — compact gear text row.
+  - Row 3 (gear text) height reduced from 170px → 70px (`settlementGearRowHeight`).
+  - Row 4 (slot machine) gets 200px (`settlementSlotRowHeight`).
+  - All rows remain contiguous; panel fits within 1280.
+  - Gear text vertically centered in compact row.
+  - Touch handling auto-adapts (iterates `settlementTouchRows`).
+  - Test `INBOX-61(18)` verifies row3 < 100px, contiguity, panel bounds.
   - `make verify LOVE=…` GREEN.
 
 ## Next slice
 
-- INBOX 61(15) is fully done (code + JSON + tests + schema + editor). Move to 처리 완료.
-- Process next pending INBOX item in 처리 대기.
+- Process next pending INBOX item (19: slot speed bonus → separate field).
 
 ## Previous
 - INBOX 61(14): Planet fallback sprite loading fix.
