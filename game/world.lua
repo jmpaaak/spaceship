@@ -428,32 +428,33 @@ function M.debris(sectorX, sectorY, time)
         elseif kindRoll < 0.44 then
             kind = "scrap"
         end
-        local minR, maxR = 3, 7
+        local minR, maxR = 8, 16
         if kind == "can" then
-            minR, maxR = 2, 3
+            minR, maxR = 5, 8
         elseif kind == "scrap" then
-            minR, maxR = 2, 4
+            minR, maxR = 5, 10
         end
         local radius = minR + math.floor(hash(sectorX, sectorY, 920 + i) * (maxR - minR + 1))
-        local vxSign = hash(sectorX, sectorY, 930 + i) < 0.5 and -1 or 1
-        local vySign = hash(sectorX, sectorY, 931 + i) < 0.5 and -1 or 1
-        local vx = vxSign * (6 + hash(sectorX, sectorY, 932 + i) * 10)
-        local vy = vySign * (6 + hash(sectorX, sectorY, 933 + i) * 10)
+        local ang = hash(sectorX, sectorY, 930 + i) * 2 * math.pi
+        local spd = 6 + hash(sectorX, sectorY, 932 + i) * 10
+        local vx = math.cos(ang) * spd
+        local vy = math.sin(ang) * spd
         local baseX = sectorX * M.sectorSize + 16
             + hash(sectorX, sectorY, 950 + i) * (M.sectorSize - 32)
         local baseY = sectorY * M.sectorSize + 16
             + hash(sectorX, sectorY, 960 + i) * (M.sectorSize - 32)
         local baseRotation = hash(sectorX + i, sectorY, 970) * 2 * math.pi
         local rotSpeed = (hash(sectorX + i, sectorY, 971) - 0.5) * 2  -- ±1 rad/s
+        local wrappedTime = time % 30
         pieces[#pieces + 1] = {
             id = string.format("debris:%d:%d:%d", sectorX, sectorY, i),
-            x = baseX + vx * time,
-            y = baseY + vy * time,
+            x = baseX + vx * wrappedTime,
+            y = baseY + vy * wrappedTime,
             radius = radius,
             kind = kind,
             vx = vx,
             vy = vy,
-            rotation = baseRotation + rotSpeed * time,
+            rotation = baseRotation + rotSpeed * wrappedTime,
             rotSpeed = rotSpeed,
         }
     end

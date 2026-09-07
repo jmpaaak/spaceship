@@ -593,6 +593,12 @@ local function drawMinimapSprite(image, cx, cy, targetDiameter)
 end
 M.drawMinimapSprite = drawMinimapSprite
 
+-- INBOX 61(9): minimap rim marker colours — both cyan, second dimmer+smaller.
+M.rimMarker1Color = {0.3, 0.9, 0.95, 0.9}
+M.rimMarker1Radius = 3.6
+M.rimMarker2Color = {0.3, 0.9, 0.95, 0.45}
+M.rimMarker2Radius = 2.8
+
 -- INBOX (8): one gold palette for every galaxy ring, spiral, and galaxy
 -- marker. milkyway used to be blue; that special-case is gone. Earth /
 -- player / return-arrow / checkpoint-arrow / sun keep their own colors.
@@ -2013,12 +2019,10 @@ function M:update(dt)
     -- We still allow time/collectFlash to be updated for visual continuity,
     -- but the main game tick gets dt=0.
     if self.paused and self.expedition.phase == "ascending" then
-        self.time = self.time + dt  -- keep clock for UI animations
         return
     end
     -- Gear popup freezes the game too (user 2026-09-07)
     if self.gearPopup and self.expedition.phase == "ascending" then
-        self.time = self.time + dt
         return
     end
     -- Auto-unpause if phase changed away from ascending while paused.
@@ -3358,8 +3362,8 @@ function M:drawMinimap()
         local mx = cx + marker.dx * rim
         local my = cy + marker.dy * rim
         -- Cyan-ish dot distinct from magenta checkpoint arrow and orange return
-        love.graphics.setColor(0.3, 0.9, 0.95, 0.9)
-        love.graphics.circle("fill", mx, my, 3.6)
+        love.graphics.setColor(unpack(M.rimMarker1Color))
+        love.graphics.circle("fill", mx, my, M.rimMarker1Radius)
         -- Distance label (compact, small 11px font)
         local prevRimFont = love.graphics.getFont()
         love.graphics.setFont(fonts.get(11))
@@ -3373,8 +3377,8 @@ function M:drawMinimap()
         local marker = view.secondGalaxyRimMarker
         local mx = cx + marker.dx * rim
         local my = cy + marker.dy * rim
-        love.graphics.setColor(0.9, 0.7, 0.3, 0.8)
-        love.graphics.circle("fill", mx, my, 3.0)
+        love.graphics.setColor(0.3, 0.9, 0.95, 0.45)
+        love.graphics.circle("fill", mx, my, 2.6)
         local prevRimFont2 = love.graphics.getFont()
         love.graphics.setFont(fonts.get(11))
         local distLabel2 = string.format("%.0f", marker.distance / 100)
@@ -3478,8 +3482,9 @@ function M:draw()
     -- with the foreground streaks or gameplay elements.
     local bgCameraX, bgCameraY = cameraX * 0.4, cameraY * 0.4
     local bsx, bsy = world.sectorAt(bgCameraX, bgCameraY)
-    for oy = -2, 2 do
-        for ox = -2, 2 do
+    local bgScanR = math.max(4, math.ceil(viewport.height / 2 / world.sectorSize) + 2)
+    for oy = -bgScanR, bgScanR do
+        for ox = -bgScanR, bgScanR do
             for _, star in ipairs(world.backgroundStars(bsx + ox, bsy + oy)) do
                 local x, y = math.floor(star.x - bgCameraX), math.floor(star.y - bgCameraY)
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
@@ -3510,8 +3515,9 @@ function M:draw()
             end
         end
     end
-    for oy = -2, 2 do
-        for ox = -2, 2 do
+    local fgScanR = math.max(4, math.ceil(viewport.height / 2 / world.sectorSize) + 2)
+    for oy = -fgScanR, fgScanR do
+        for ox = -fgScanR, fgScanR do
             for _, star in ipairs(world.stars(sx + ox, sy + oy)) do
                 local x, y = math.floor(star.x - cameraX), math.floor(star.y - cameraY)
                 if x >= 0 and x < viewport.width and y >= 0 and y < viewport.height then
