@@ -127,9 +127,10 @@
   (34) **시너지 표기가 팝업에 없음** (msg `1546413969718378588`)
     - 담당: `game/scenes/play.lua` gearPopup 하단 (모듈화 후 `play_hud.lua`). 이름+설명 두 줄, 기호 금지.
 
-  (35) **슬롯 실제 결과가 3심볼만** (아이들 5종 아이콘은 있음)
+  (35) ~~**슬롯 실제 결과가 3심볼만** (아이들 5종 아이콘은 있음)~~
     - 담당: `game/expedition.lua` `earthSlotSpin` + play 스핀 호출.
-    - `math.random(1,10)` vs 가중치 합 20 → DURABILITY/HARVEST 미추첨. `random()*totalWeight`로.
+    - ~~`math.random(1,10)` vs 가중치 합 20 → DURABILITY/HARVEST 미추첨. `random()*totalWeight`로.~~
+    - 완료: `earthSlotTotalWeight(run, galaxyId)` helper added to expedition.lua (luck-aware). play.lua now generates reels with `math.random(0, tw-1)` instead of `math.random(1,10)`. All 5 symbols reachable. Test INBOX-61(35) GREEN.
 
   (36) **SFX 3종** (msg `1546415750342770748` + Pixabay 충돌)
     - 담당: **새** `game/sfx.lua` (play.lua에 붙이지 말 것). 에셋 이미 `assets/sfx/`.

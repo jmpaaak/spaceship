@@ -1375,6 +1375,18 @@ function M.earthSlotWeights(galaxyId)
     return copy
 end
 
+-- INBOX 61(35): Compute the effective total weight for a given run + galaxy,
+-- including the luck-boosted HARVEST weight. Callers use this to generate
+-- uniformly distributed reel rolls in [0, totalWeight - 1].
+function M.earthSlotTotalWeight(run, galaxyId)
+    local weights = M.earthSlotWeights(galaxyId)
+    local luckBonus = gearModule.totalLuckBonus(combinedGearList(run))
+    weights.HARVEST = weights.HARVEST * (1 + luckBonus)
+    local total = 0
+    for _, sym in ipairs(slotSymbols) do total = total + weights[sym] end
+    return math.floor(total)
+end
+
 -- Item 15(c) + Item 14(C) luck: Earth-shop slot spin with per-galaxy odds
 -- and luck-boosted STAR weight (item 15 says luck applies to the Earth shop
 -- slot's high-payout symbol probability — the third luck target alongside

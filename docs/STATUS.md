@@ -87,6 +87,11 @@
 - INBOX 61(30): confirmed already complete
   - title.lua already has 22px "Jimmy's" + 44px title + i18n keys from prior cycle.
 
+- INBOX 61(35): slot weighted random fix
+  - Bug: `play.lua` generated reel rolls with `math.random(1,10)` but totalWeight is 20 (6+3+4+3+4). Only MONEY/PART/SPEED were ever chosen; DURABILITY and HARVEST were unreachable.
+  - Fix: added `expedition.earthSlotTotalWeight(run, galaxyId)` helper (luck-aware) to compute effective totalWeight. `play.lua` now uses `math.random(0, tw-1)` for proper uniform distribution over all 5 symbols.
+  - Test INBOX-61(35) in `game/self_test.lua`: sweeps all roll values 0..tw-1 and asserts all 5 symbols reachable. Also verifies luck increases totalWeight. GREEN.
+
 ## Next slice
 
-- INBOX 61(35) slot weighted random (`game/expedition.lua`), or 61(36) SFX (`game/sfx.lua`). 61(28)/(29) wait on play.lua module split.
+- INBOX 61(36) SFX (`game/sfx.lua`), or 61(34) synergy popup text, or 61(28) boost button. 61(28)/(29) wait on play.lua module split.

@@ -10213,6 +10213,46 @@ function M.run()
         print("  INBOX-61(33) hub-star no-overlap OK (" .. checked .. " galaxies)")
     end
 
+    -- INBOX 61(35): slot reels must cover all 5 symbols, not just MONEY/PART/SPEED.
+    -- Bug: play.lua used math.random(1,10) but totalWeight is 20 → DURABILITY/HARVEST
+    -- were unreachable. Fix: earthSlotTotalWeight() helper + random(0, tw-1).
+    do
+        local run = expedition.new()
+        -- (a) earthSlotTotalWeight must equal earthSlotSpin's totalWeight
+        local tw = expedition.earthSlotTotalWeight(run, nil)
+        local spinCheck = expedition.earthSlotSpin(run, nil, { reels = {0,0,0} })
+        assert(tw == spinCheck.totalWeight,
+            string.format("INBOX 61(35): earthSlotTotalWeight (%d) must match earthSlotSpin.totalWeight (%d)",
+                tw, spinCheck.totalWeight))
+
+        -- (b) All 5 symbols must be reachable by sweeping roll values 0..tw-1.
+        local reachable = {}
+        for roll = 0, tw - 1 do
+            local result = expedition.earthSlotSpin(run, nil, {
+                reels = { roll, roll, roll },
+            })
+            reachable[result.symbols[1]] = true
+        end
+        for _, sym in ipairs(expedition.slotSymbols) do
+            assert(reachable[sym],
+                "INBOX 61(35): symbol " .. sym .. " must be reachable with rolls in [0, totalWeight)")
+        end
+
+        -- (c) With luck bonus, totalWeight grows (HARVEST weight increases).
+        local luckRun = expedition.new()
+        local luckPart = {
+            id = "luck_test", name = "Lucky", nameKo = "행운", icon = "+",
+            rarity = "common", tags = {}, editions = {},
+            effects = { { type = "luck", value = 50 } },
+        }
+        expedition.equipGear(luckRun, "hull", luckPart)
+        local twLuck = expedition.earthSlotTotalWeight(luckRun, nil)
+        assert(twLuck > tw,
+            string.format("INBOX 61(35): luck must increase totalWeight (%d > %d)", twLuck, tw))
+
+        print("  INBOX-61(35) slot weighted random covers all 5 symbols OK")
+    end
+
     print("SPACESHIP_UNIT_OK")
 end
 
