@@ -1844,3 +1844,15 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved rarity/edition sell values, in-flight rejection, settlement refunds, hull/engine slot independence, and unknown-ID rejection assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearCrystallizedSellPremiumWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 19:09)
+
+- R1 (Lane C, partial): extracted gear-buy economy wiring coverage to `game/tests/legacy_gear_buy_economy_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,848 to 6,721 lines.
+  - Preserved settlement gating, affordability, duplicate/slot occupancy, discount, galaxy-exclusive rejection, sale stat refresh, and hull/engine slot-independence assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+- R1 (Lane C, partial): extracted crystallized sell-premium wiring coverage to `game/tests/legacy_gear_crystallized_sell_premium_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,930 to 6,848 lines.
+  - Preserved shared-edition pricing, crystallized rarity scaling, buy/sell loss, fallback rarity, settlement credit, and hull/engine slot-independence assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.

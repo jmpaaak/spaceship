@@ -995,7 +995,7 @@ part)`:
   per item 7(a) is a physical, in-galaxy location that may legitimately
   stock that galaxy's own exclusive card.
 
-`game/self_test.lua`'s new `testGearShopPlanetPurchaseWiring` regression-
+`game/tests/legacy_gear_shop_planet_purchase_wiring.lua` regression-
 checks: refusal outside `ascending` (including during `settlement`,
 proving this is not `M.buyGear` under another name), a successful
 `ascending`-phase purchase with exact price deduction and immediate
