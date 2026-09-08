@@ -1882,3 +1882,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 6,481 to 6,434 lines.
   - Preserved shared-tag bonus amplification, two-irradiated-part stacking, and non-overlapping-tag isolation assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 19:36)
+
+- R1 (Lane C, partial): extracted galaxy-exclusive hull wiring coverage to `game/tests/legacy_gear_galaxy_exclusive_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,434 to 6,407 lines.
+  - Preserved Earth-pool exclusion, deterministic galaxy-specific selection, explored-hub marking, and one-offer-per-hub assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.

@@ -18,108 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 7 follow-up gap: item 7's acquisition-path text explicitly says
--- galaxy-exclusive gear is not scoped to a single card category -- "특정
--- 은하 고유의 희귀 장비는 지구에서 판매하지 않는다" applies to both hull
--- and engine slot pools per item 10(c) ("획득 경로는 항목 7의 3원화 구조를
--- 그대로 재사용하되, 엔진 부품 전용 카드 풀로 별도 관리한다"). The prior
--- slice only marked a single hull card (hull_combo_matrix) as
--- galaxyExclusive and never audited the bundled engine_parts.json pool, so
--- exploreHub(run, galaxyId, enginePool) always silently fell back to the
--- full (non-exclusive) engine pool -- a player exploring a galaxy hub could
--- never receive an engine-exclusive reward, and the Earth shop's engine
--- pool never excludes anything. This regression asserts the engine pool
--- carries its own galaxy-exclusive content and that exploreHub/earthShopPool
--- behave identically for the engine card pool as they already do for hull.
-local function testGearGalaxyExclusiveEnginePoolWiring()
-    local enginePool = gear.loadEngineParts()
-    local hasExclusive = false
-    for _, part in ipairs(enginePool) do
-        if part.galaxyExclusive then hasExclusive = true end
-    end
-    assert(hasExclusive, "the bundled engine_parts.json pool must contain at least one galaxyExclusive card")
-
-    local earthEnginePool = gear.earthShopPool(enginePool)
-    assert(#earthEnginePool < #enginePool, "Earth shop engine pool must exclude galaxy-exclusive engine parts")
-    for _, part in ipairs(earthEnginePool) do
-        assert(not part.galaxyExclusive, "Earth shop engine pool must not contain galaxy-exclusive parts")
-    end
-
-    local specific = gear.galaxySpecificGear(enginePool, "galaxy:3:4")
-    assert(specific, "galaxySpecificGear must return an engine part")
-    assert(specific.galaxyExclusive, "galaxySpecificGear must prefer a galaxy-exclusive engine card when one exists")
-
-    local expedition = require("game.expedition")
-    local run = expedition.new()
-    local offer1 = expedition.exploreHub(run, "galaxy:3:4", enginePool)
-    assert(offer1 and offer1.id == specific.id,
-        "exploreHub must return the deterministic galaxy-specific engine gear")
-    assert(run.hubExplored["galaxy:3:4"], "exploreHub must mark the hub as explored")
-
-    local offer2 = expedition.exploreHub(run, "galaxy:3:4", enginePool)
-    assert(offer2 == nil, "exploreHub must return nil on subsequent visits to the same hub in the same run")
-
-    -- Item 7 follow-up gap #2: item 7(b)'s promise is "해당 은하계 *특유의*
-    -- 고유 장비 부품" (each galaxy's OWN distinctive exclusive gear), but
-    -- both bundled pools had exactly ONE galaxyExclusive card each
-    -- (hull_combo_matrix, engine_singularity_drive). M.galaxySpecificGear
-    -- always narrows to the galaxyExclusive candidate subset first, so with
-    -- only one candidate EVERY galaxy's hub-exploration reward and shop-
-    -- planet-exclusive-card slot resolves to that exact same single card
-    -- regardless of hash -- there is no actual per-galaxy variety, just one
-    -- reused reward wearing item 7's "galaxy-specific" label. This asserts
-    -- each bundled pool carries at least 3 galaxyExclusive cards AND that
-    -- galaxySpecificGear actually returns more than one distinct card
-    -- across a spread of galaxy ids (proving real, not just theoretical,
-    -- variety) -- exactly the same "documented vs actually exercised" gap
-    -- pattern this lane has repeatedly found and closed elsewhere.
-    local function testGalaxyExclusiveVarietyLocal()
-        local hullPool = gear.loadHullParts()
-        local enginePool = gear.loadEngineParts()
-
-        local function countExclusive(pool)
-            local n = 0
-            for _, part in ipairs(pool) do
-                if part.galaxyExclusive then n = n + 1 end
-            end
-            return n
-        end
-        assert(countExclusive(hullPool) >= 3,
-            "hull_parts.json must carry at least 3 galaxyExclusive cards for real per-galaxy variety")
-        assert(countExclusive(enginePool) >= 3,
-            "engine_parts.json must carry at least 3 galaxyExclusive cards for real per-galaxy variety")
-
-        local function distinctIdsAcrossGalaxies(pool)
-            local seen = {}
-            local count = 0
-            for i = 1, 12 do
-                local id = string.format("galaxy:%d:%d", i * 7, i * 13)
-                local part = gear.galaxySpecificGear(pool, id)
-                if not seen[part.id] then
-                    seen[part.id] = true
-                    count = count + 1
-                end
-            end
-            return count
-        end
-        assert(distinctIdsAcrossGalaxies(hullPool) > 1,
-            "galaxySpecificGear must return more than one distinct hull card across different galaxy ids")
-        assert(distinctIdsAcrossGalaxies(enginePool) > 1,
-            "galaxySpecificGear must return more than one distinct engine card across different galaxy ids")
-    end
-    testGalaxyExclusiveVarietyLocal()
-
-    -- hull and engine hub-exploration tracking must share run.hubExplored
-    -- keyed by galaxyId (not by category), matching item 8's single
-    -- checkpoint-settlement trigger design -- a second exploreHub call for
-    -- the SAME galaxy using the OTHER pool must also be rejected as
-    -- already-explored, since a galaxy hub is explored once, not once per
-    -- category.
-    local hullPool = gear.loadHullParts()
-    local offer3 = expedition.exploreHub(run, "galaxy:3:4", hullPool)
-    assert(offer3 == nil, "a galaxy hub already explored via one pool must stay explored for the other pool too")
-end
-
 -- INBOX 61(15): slotExclusive parts — pool filtering, slot-machine
 -- acquisition, and gear-editor round-trip.
 local function testSlotExclusivePartsWiring()
@@ -1704,7 +1602,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_no_slot_cost_engine_slot_wiring").run()
     require("game.tests.legacy_gear_irradiated_synergy_wiring").run()
     require("game.tests.legacy_gear_galaxy_exclusive_wiring").run()
-    testGearGalaxyExclusiveEnginePoolWiring()
+    require("game.tests.legacy_gear_galaxy_exclusive_engine_pool_wiring").run()
     testSlotExclusivePartsWiring()
     testGearExploreHubEditionRolling()
     testGearEquippedEditionEffectsRunWiring()
