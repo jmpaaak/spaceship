@@ -425,6 +425,53 @@
         "wired": false,
         "sha256": "52e387259e424c323a4e1417e5670b60c4c375ac30b9d7be24c9386b8295a29a"
       }
+    },
+    {
+      "id": "star_filament_nasa_gsfc_20171208_archive_e002069",
+      "kind": "central_star",
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "generated_at": "2026-09-09T01:32:12+09:00",
+      "source": {
+        "path": "docs/assets/sources/star/filament_sdo_nasa_gsfc_20171208_archive_e002069.jpg",
+        "url": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e002069/GSFC_20171208_Archive_e002069~orig.jpg",
+        "nasa_id": "GSFC_20171208_Archive_e002069",
+        "creator": "NASA Goddard/SDO/AIA",
+        "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
+        "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+        "dimensions": [1280, 720],
+        "sha256": "e13524641873a6ec38798932ff3823f2f9fa33e27caf6c309d0f0fbe3eb4af34"
+      },
+      "request": {
+        "log_path": "docs/assets/runs/star_filament_nasa_gsfc_20171208_archive_e002069/request.json",
+        "input_dimensions": [1024, 1024],
+        "target_width": 512,
+        "target_height": 512,
+        "pixel_block": 4,
+        "background_tolerance": 40,
+        "palette_limit": 64,
+        "payload_sha256": "f22dd7a92b29c7fd4adc2bb0341ed2b6ac6e32421b9143eb166de224a19544d9"
+      },
+      "response": {
+        "log_path": "docs/assets/runs/star_filament_nasa_gsfc_20171208_archive_e002069/response.json",
+        "http_status": 200,
+        "report_valid": true,
+        "body_sha256": "914627caaa4cdb5745618ea8b1dc2e8aad35265ed3e78b0f5316a03a230255bf",
+        "image_rgba_sha256": "8063c022e6c6314077365091ceca419306e5368497c7e58c7fb5f374d80f0e32"
+      },
+      "master": {
+        "path": "docs/assets/masters/star/star_filament_nasa_gsfc_20171208_archive_e002069_master.png",
+        "dimensions": [512, 512],
+        "mode": "RGBA",
+        "sha256": "cd00a609ecc2bfde81c5429ba654ce123c7fa1ca7185f2012c9d498c9dd53765"
+      },
+      "runtime": {
+        "path": "assets/star/studio/star_filament.png",
+        "dimensions": [128, 128],
+        "mode": "RGBA",
+        "derivation": "integer 4x NEAREST downscale from master",
+        "wired": false,
+        "sha256": "4925ef241b546e8bc6e371b51914d8fbcf90e7eda55f0dbe2002bd6f5d651ac5"
+      }
     }
   ]
 }

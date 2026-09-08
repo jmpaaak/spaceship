@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T01:32:12+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/star/filament_sdo_nasa_gsfc_20171208_archive_e002069.jpg",
+  "source_dimensions": [
+    1280,
+    720
+  ],
+  "input_preparation": {
+    "resize": [
+      832,
+      832
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 96,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "star_filament",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 40,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "f22dd7a92b29c7fd4adc2bb0341ed2b6ac6e32421b9143eb166de224a19544d9",
+  "payload_bytes": 15234877,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

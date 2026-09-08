@@ -1,7 +1,7 @@
 ## Current Status
 
-- INBOX 78 Lane B: generated the first hub-planet candidate, `hub_neptune_nasa_pia00046`, from NASA/JPL Voyager 2's 1000×1000 Neptune Full Disk source through the live `POST /api/pixel-perfect` endpoint at port 4176.
-  - Preserved the source, 512×512 RGBA master, integer 4× NEAREST 128×128 unwired `hub_neptune` derivative, exact request/response logs, dimensions, and SHA-256 hashes.
+- INBOX 78 Lane B: generated the second central-star candidate, `star_filament_nasa_gsfc_20171208_archive_e002069`, from NASA Goddard SDO/AIA's 1280×720 full-disk launching-filament source through the live `POST /api/pixel-perfect` endpoint at port 4176.
+  - Preserved source, 512×512 RGBA master, unwired integer 4× NEAREST 128×128 runtime derivative, exact request/response logs, dimensions, and SHA-256 provenance in `docs/assets/CELESTIAL_ASSET_STUDIO.json` and `docs/assets/MANIFEST.json`.
   - The endpoint's dimensions, 64-color palette, transparent-alpha, hard-grid alignment, and nearest-neighbor checks returned valid (5/5); the focused manifest test is GREEN after the expected missing-entry RED.
 
 ## Next slice
