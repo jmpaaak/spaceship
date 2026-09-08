@@ -36,6 +36,7 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 - 처리 대기를 **파일/모듈이 안 겹치는 단위로 최대로** 워크트리 병렬화한다. 겹치면 분리 후 병렬.
 - JSON/`tools/`/순수 `game/*.lua`처럼 이미 독립인 항목은 모듈화를 기다리지 말고 즉시 WT.
 - INBOX 항목에는 담당 모듈 경로를 적는다. 안 적으면 전부 `play.lua`에 붙어 1레인이 된다.
+- R1 추출은 `.hermes/skills/love2d-behavior-preserving-refactor/SKILL.md`의 **스캔 → 책임 하나/패턴 하나 → 기존 테스트 → 참조 갱신** 순서를 적용한다. 정책 변경·무차별 정규식 치환·테스트 재승인을 섞지 않는다.
 
 
 ## Required workflow

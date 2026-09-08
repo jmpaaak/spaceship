@@ -1,9 +1,4 @@
 ## Current Status
-- R1 (Lane C, partial): extracted JSON gear-data loader legacy coverage to `game/tests/legacy_gear_json.lua`.
-  - `game/self_test.lua` now delegates the unchanged decoder, bundled-pool, lookup, and malformed-schema assertions and shrank from 9,015 to 8,942 lines.
-  - Observed missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
-  - Next slice: extract the gear synergy engine legacy coverage from `game/self_test.lua` into `game/tests/legacy_gear_synergy.lua`.
-
 - R1 (Lane C, partial): extracted launch and HUD-icon legacy coverage to `game/tests/legacy_hud_icons.lua`.
   - `game/self_test.lua` now delegates five icon test groups and shrank from 9,401 to 9,245 lines.
   - Preserved rocket, shield, coin, speedometer, and PNG transparency/dimension assertions unchanged.
@@ -151,6 +146,13 @@
   - Moved `loadSlotConfig`, `earthSlotSpin`, `slotTier`, `slotReward` etc., from `game/expedition.lua`.
   - Reduced `game/expedition.lua` by ~250 lines.
   - Retained `M.*` API wrappers in `game/expedition.lua` ensuring all tests and caller modules work transparently.
+
+- R1-METHOD: added reusable repository-local Hermes skills for behavior-preserving refactors.
+  - `.hermes/skills/love2d-behavior-preserving-refactor/SKILL.md` preserves pure-rule/`love.*` boundaries, callback consumption order, module state, and determinism.
+  - `.hermes/skills/flutter-flame-behavior-preserving-refactor/SKILL.md` preserves `FlameGame`/component lifecycle, input propagation, state, and determinism.
+  - Added `tools.test_project_skills` to `make test`; observed missing-skill RED, then GREEN after both skills were added.
+  - Trusted this repository and verified an actual Hermes invocation preloaded both skills and returned both exact names.
+  - R1 lanes now follow the documented scan → one responsibility/one pattern → existing tests → reference update sequence.
 
 ## Next slice
 

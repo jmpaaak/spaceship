@@ -32,6 +32,19 @@ Hermes 스킬 `love2d-refactor-patterns`를 로드하고 다음 순서를 지킨
 - `play.lua` / `main.lua` / `self_test.lua`를 더 키우지 마라.
   `self_test`는 시나리오별 상위 함수 또는 `game/tests/<topic>.lua`.
 
+## 동작 불변 리팩토링 절차
+
+모든 추출 레인은 **스캔 → 책임 하나와 패턴 하나 선택 → 기존 테스트 → 참조 갱신**
+순서를 지킨다. 죽은 코드, 중복 헬퍼, 매직값, 긴 인자 목록, 반복 생성 객체를
+식별하되 정책 변경, 무차별 정규식 치환, 테스트 재승인과 한 슬라이스에 섞지 않는다.
+
+- LÖVE2D 레인: `.hermes/skills/love2d-behavior-preserving-refactor/SKILL.md`
+- Flutter+Flame 스켈레톤: `.hermes/skills/flutter-flame-behavior-preserving-refactor/SKILL.md`
+
+LÖVE2D에서는 순수 규칙과 `love.*` 어댑터를 분리하고 callback 소비 순서, 모듈
+상태 수명, update/draw 순서, RNG와 순회의 결정론을 추출 전후에 기록하고 검증한다.
+각 R1 레인 A/B/C는 위 LÖVE2D 스킬을 기본 절차로 적용한다.
+
 ## INBOX 최대 병렬 (사용자 2026-09-07)
 
 처리 대기 목록을 **가능한 단위로 최대로** 워크트리 병렬화한다. 모듈 분해가 병렬도의 전제다.

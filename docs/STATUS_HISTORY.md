@@ -1622,3 +1622,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates the unchanged debris assertions and shrank from 9,127 to 9,015 lines.
   - Observed missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
   - Next slice: extract the JSON gear-data loader legacy coverage from `game/self_test.lua` into `game/tests/legacy_gear_json.lua`.
+
+## Archived from STATUS.md (2026-09-08 16:13)
+
+- R1 (Lane C, partial): extracted JSON gear-data loader legacy coverage to `game/tests/legacy_gear_json.lua`.
+  - `game/self_test.lua` now delegates the unchanged decoder, bundled-pool, lookup, and malformed-schema assertions and shrank from 9,015 to 8,942 lines.
+  - Observed missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
+  - Next slice: extract the gear synergy engine legacy coverage from `game/self_test.lua` into `game/tests/legacy_gear_synergy.lua`.
