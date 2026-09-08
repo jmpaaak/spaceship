@@ -1,7 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted runtime sprite asset-policy legacy coverage to `game/tests/legacy_runtime_sprites.lua`.
-  - `game/self_test.lua` now delegates RGB rejection, RGBA keeper, sprite loading, and nil draw-fallback assertions; it shrank from 9,245 to 9,127 lines.
-  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN with the assertions unchanged.
+- R1 (Lane C, partial): extracted debris generation, drift, collision-damage, and destruction legacy coverage to `game/tests/legacy_debris.lua`.
+  - `game/self_test.lua` now delegates the unchanged debris assertions and shrank from 9,127 to 9,015 lines.
+  - Observed missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
+  - Next slice: extract the JSON gear-data loader legacy coverage from `game/self_test.lua` into `game/tests/legacy_gear_json.lua`.
 
 - R1 (Lane C, partial): extracted launch and HUD-icon legacy coverage to `game/tests/legacy_hud_icons.lua`.
   - `game/self_test.lua` now delegates five icon test groups and shrank from 9,401 to 9,245 lines.

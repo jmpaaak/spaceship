@@ -1609,3 +1609,9 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates four world-generation test groups and shrank from 9,540 to 9,401 lines.
   - Preserved deterministic/dense star fields, independent coordinate salts, planet density, and overlap assertions.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 16:01)
+
+- R1 (Lane C, partial): extracted runtime sprite asset-policy legacy coverage to `game/tests/legacy_runtime_sprites.lua`.
+  - `game/self_test.lua` now delegates RGB rejection, RGBA keeper, sprite loading, and nil draw-fallback assertions; it shrank from 9,245 to 9,127 lines.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN with the assertions unchanged.
