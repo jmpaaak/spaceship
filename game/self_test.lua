@@ -18,33 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 8: Partial settlement at checkpoint (hub).
--- Tests that normal collection only gives samples (not money), and returning to
--- a hub converts those pending samples into money without triggering full Earth settlement.
-local function testHubPartialSettlement()
-    local expedition = require("game.expedition")
-    
-    local run = expedition.new()
-    expedition.launch(run)
-    run.money = 100
-    
-    -- Normal planet collection
-    expedition.collectSample(run, 10, "azure")
-    assert(run.pendingSampleValue == 10, "normal collection should only increase pendingSampleValue")
-    assert(run.money == 100, "normal collection must not increase money immediately")
-    
-    -- Settle at hub
-    local payout = expedition.settleAtHub(run)
-    assert(payout == 10, "settleAtHub should return the settled amount")
-    assert(run.pendingSampleValue == 0, "settleAtHub must clear pendingSampleValue")
-    assert(run.money == 110, "settleAtHub must add pendingSampleValue to money")
-    
-    -- Additional calls yield 0
-    local payout2 = expedition.settleAtHub(run)
-    assert(payout2 == 0, "consecutive settleAtHub should yield 0")
-    assert(run.money == 110, "money should remain unchanged on zero payout")
-end
-
 -- Item 8 follow-up: testHubPartialSettlement verified the basic pendingSampleValue
 -- conversion, but did NOT test the gear-interaction boundary that the comment on
 -- M.settleAtHub explicitly documents: sampleSellValue gear IS applied (via
@@ -917,7 +890,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_engine_synergy_multiplier_wiring").run()
     require("game.tests.legacy_gear_boosts_used_destroy_reset").run()
     require("game.tests.legacy_hub_explored_resets_on_launch").run()
-    testHubPartialSettlement()
+    require("game.tests.legacy_hub_partial_settlement").run()
     testHubPartialSettlementGearInteraction()
     testHubSettleStreakPersistence()
     testEarthSlotMachineGalaxyOdds()
