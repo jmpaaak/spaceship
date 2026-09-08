@@ -380,6 +380,8 @@ function M.new(options)
         bare  = "assets/planet/pp_bare.png",
     }
     local ppPlanetImages = loadSpriteMap(ppPlanetImagePaths)
+    local studioPlanetImagePaths = playPlanets.studioPlanetImagePaths()
+    local studioPlanetImages = loadSpriteMap(studioPlanetImagePaths)
     -- Central star sprites per starType (PIL gen_stars.py)
     local starImagePaths = {
         sun   = "assets/star/star_sun.png",
@@ -537,6 +539,8 @@ function M.new(options)
         shopPlanetImagePath = shopPlanetImagePath,
         ppPlanetImages = ppPlanetImages,
         ppPlanetImagePaths = ppPlanetImagePaths,
+        studioPlanetImages = studioPlanetImages,
+        studioPlanetImagePaths = studioPlanetImagePaths,
         starTypeImages = starTypeImages,
         starImagePaths = starImagePaths,
         starSheetImages = starSheetImages,

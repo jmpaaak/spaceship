@@ -194,3 +194,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-07T21:16:00+0900 | assets/sfx/collect.wav | Luke.RUSTLTD 8bit coin1 CC0, sample pickup
 2026-09-07T21:16:00+0900 | assets/sfx/slot_spin.ogg | rubberduck retro_coin_01 CC0, slot spin
 2026-09-07T21:16:00+0900 | assets/sfx/boost.ogg | rubberduck rocket_01 CC0, boost whoosh
+2026-09-09T03:14:25+0900 | assets/planet/studio/pp_bare.png | INBOX (78) Lane D: approved NASA PIA00405 Asset Studio 128x128 RGBA derivative wired for bare planets via runtime manifest

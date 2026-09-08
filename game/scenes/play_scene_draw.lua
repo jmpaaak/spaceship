@@ -199,35 +199,20 @@ function M:draw()
                 love.graphics.circle("fill", x + planet.radius * 0.22, y + planet.radius * 0.22, planet.radius * 1.02)
             end
             local baseR, baseG, baseB = planetColor(planet.hue)
-            local planetSprite = self.planetImage
-            local ppImages = self.ppPlanetImages or {}
-            if planet.hub then
-                if planet.galaxyStarType and ppImages[planet.galaxyStarType] then
-                    planetSprite = ppImages[planet.galaxyStarType]
-                elseif self.hubPlanetImage then
-                    planetSprite = self.hubPlanetImage
-                end
-            elseif planet.isShop then
-                if planet.galaxyStarType and ppImages[planet.galaxyStarType] then
-                    planetSprite = ppImages[planet.galaxyStarType]
-                elseif self.shopPlanetImage then
-                    planetSprite = self.shopPlanetImage
-                end
-            elseif planet.galaxyStarType and ppImages[planet.galaxyStarType] then
-                planetSprite = ppImages[planet.galaxyStarType]
-            end
+            local planetSprite, sheetImg = M.selectPlanetArtwork(planet, {
+                default = self.planetImage,
+                hub = self.hubPlanetImage,
+                shop = self.shopPlanetImage,
+                pixel = self.ppPlanetImages,
+                sheets = self.planetSheetImages,
+                hubSheet = self.hubSheetImage,
+                studio = self.studioPlanetImages,
+            })
             local rot, scaleMul = M.planetVariation(planet)
             local tR = math.min(1, baseR * 0.35 + 0.65)
             local tG = math.min(1, baseG * 0.35 + 0.65)
             local tB = math.min(1, baseB * 0.35 + 0.65)
             love.graphics.setColor(tR, tG, tB)
-            local sheetType = planet.galaxyStarType
-            local sheetImg = nil
-            if planet.hub then
-                sheetImg = self.hubSheetImage
-            elseif sheetType then
-                sheetImg = self.planetSheetImages and self.planetSheetImages[sheetType]
-            end
             if sheetImg then
                 local sw, sh = sheetImg:getDimensions()
                 local frameH = sw

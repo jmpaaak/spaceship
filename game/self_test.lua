@@ -1936,8 +1936,8 @@ function M.run()
             "regular ice planet must resolve to pp_ice.png")
         assert(resolve({ galaxyStarType = "lava" }) == "assets/planet/pp_lava.png",
             "regular lava planet must resolve to pp_lava.png")
-        assert(resolve({ galaxyStarType = "bare" }) == "assets/planet/pp_bare.png",
-            "regular bare planet must resolve to pp_bare.png")
+        assert(resolve({ galaxyStarType = "bare" }) == "assets/planet/studio/pp_bare.png",
+            "regular bare planet must resolve to the wired Asset Studio derivative")
 
         -- Hub planet with starType → pp_<starType> (starType takes priority over dedicated hub sprite)
         assert(resolve({ hub = true, galaxyStarType = "gas" }) == "assets/planet/pp_gas.png",

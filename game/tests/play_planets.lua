@@ -51,6 +51,33 @@ function M.run()
             == "assets/planet/planet_generic.png",
         "R1: unknown planet types must use the generic fallback")
 
+    local studioPaths = api.studioPlanetImagePaths()
+    assert(studioPaths.bare == "assets/planet/studio/pp_bare.png",
+        "INBOX 78: bare planets must load the approved Asset Studio runtime derivative")
+    assert(studioPaths.ice == nil,
+        "INBOX 78: unwired Asset Studio candidates must remain out of the runtime manifest")
+
+    local legacyBare = {}
+    local legacyBareSheet = {}
+    local studioBare = {}
+    local sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "bare" }, {
+        default = {},
+        pixel = { bare = legacyBare },
+        sheets = { bare = legacyBareSheet },
+        studio = { bare = studioBare },
+    })
+    assert(sprite == studioBare and sheet == nil,
+        "INBOX 78: a decoded studio candidate must take priority over the legacy animation sheet")
+
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "bare" }, {
+        default = {},
+        pixel = { bare = legacyBare },
+        sheets = { bare = legacyBareSheet },
+        studio = {},
+    })
+    assert(sprite == legacyBare and sheet == legacyBareSheet,
+        "INBOX 78: a failed studio image load must preserve the existing legacy fallback")
+
     local playSource = love.filesystem.read("game/scenes/play.lua") or ""
     assert(playSource:find('require%("game%.scenes%.play_planets"%)'),
         "R1: play.lua must delegate planet presentation rules")

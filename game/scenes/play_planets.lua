@@ -1,3 +1,5 @@
+local celestialAssets = require("game.celestial_asset_manifest")
+
 local M = {}
 
 local pixelPlanetTypes = {
@@ -30,6 +32,11 @@ function M.planetVariation(planet)
 end
 
 function M.planetImagePathForPlanet(planet)
+    local studioAsset = celestialAssets.planets[planet.galaxyStarType]
+    if studioAsset then
+        return studioAsset.runtimePath
+    end
+
     if planet.hub then
         if pixelPlanetTypes[planet.galaxyStarType] then
             return "assets/planet/pp_" .. planet.galaxyStarType .. ".png"
@@ -50,10 +57,47 @@ function M.planetImagePathForPlanet(planet)
     return "assets/planet/planet_generic.png"
 end
 
+function M.studioPlanetImagePaths()
+    local paths = {}
+    for planetType, asset in pairs(celestialAssets.planets) do
+        paths[planetType] = asset.runtimePath
+    end
+    return paths
+end
+
+function M.selectPlanetArtwork(planet, assets)
+    assets = assets or {}
+    local planetType = planet.galaxyStarType
+    local studioSprite = (assets.studio or {})[planetType]
+    if studioSprite then
+        return studioSprite, nil
+    end
+
+    local pixelSprite = (assets.pixel or {})[planetType]
+    local sprite
+    if planet.hub then
+        sprite = pixelSprite or assets.hub or assets.default
+    elseif planet.isShop then
+        sprite = pixelSprite or assets.shop or assets.default
+    else
+        sprite = pixelSprite or assets.default
+    end
+
+    local sheet
+    if planet.hub then
+        sheet = assets.hubSheet
+    elseif planetType then
+        sheet = (assets.sheets or {})[planetType]
+    end
+    return sprite, sheet
+end
+
 function M.install(scene)
     scene.planetColor = M.planetColor
     scene.planetVariation = M.planetVariation
     scene.planetImagePathForPlanet = M.planetImagePathForPlanet
+    scene.studioPlanetImagePaths = M.studioPlanetImagePaths
+    scene.selectPlanetArtwork = M.selectPlanetArtwork
     return scene
 end
 
