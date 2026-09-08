@@ -1856,3 +1856,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 6,930 to 6,848 lines.
   - Preserved shared-edition pricing, crystallized rarity scaling, buy/sell loss, fallback rarity, settlement credit, and hull/engine slot-independence assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 19:15)
+
+- R1 (Lane C, partial): extracted shop-planet purchase wiring coverage to `game/tests/legacy_gear_shop_planet_purchase_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,721 to 6,622 lines.
+  - Preserved ascending/settlement phase gating, affordability, exact and discounted prices, galaxy-exclusive purchases, immediate stat refresh, and hull/engine slot-independence assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
