@@ -2174,3 +2174,13 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Ensures hub disk never overlaps the central star in any galaxy.
   - Star sprite green-X bug was already fixed in (14) (pngColorType + sheet rotation center).
   - Test INBOX-61(33) in `game/self_test.lua` checks all galaxies in -10..10 range: GREEN.
+
+## Archived from STATUS.md (2026-09-08 23:06)
+
+- INBOX 61(30): confirmed already complete
+  - title.lua already has 22px "Jimmy's" + 44px title + i18n keys from prior cycle.
+
+- INBOX 61(35): slot weighted random fix
+  - Bug: `play.lua` generated reel rolls with `math.random(1,10)` but totalWeight is 20 (6+3+4+3+4). Only MONEY/PART/SPEED were ever chosen; DURABILITY and HARVEST were unreachable.
+  - Fix: added `expedition.earthSlotTotalWeight(run, galaxyId)` helper (luck-aware) to compute effective totalWeight. `play.lua` now uses `math.random(0, tw-1)` for proper uniform distribution over all 5 symbols.
+  - Test INBOX-61(35) in `game/self_test.lua`: sweeps all roll values 0..tw-1 and asserts all 5 symbols reachable. Also verifies luck increases totalWeight. GREEN.

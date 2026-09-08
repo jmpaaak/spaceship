@@ -1,12 +1,4 @@
 ## Current Status
-- INBOX 61(30): confirmed already complete
-  - title.lua already has 22px "Jimmy's" + 44px title + i18n keys from prior cycle.
-
-- INBOX 61(35): slot weighted random fix
-  - Bug: `play.lua` generated reel rolls with `math.random(1,10)` but totalWeight is 20 (6+3+4+3+4). Only MONEY/PART/SPEED were ever chosen; DURABILITY and HARVEST were unreachable.
-  - Fix: added `expedition.earthSlotTotalWeight(run, galaxyId)` helper (luck-aware) to compute effective totalWeight. `play.lua` now uses `math.random(0, tw-1)` for proper uniform distribution over all 5 symbols.
-  - Test INBOX-61(35) in `game/self_test.lua`: sweeps all roll values 0..tw-1 and asserts all 5 symbols reachable. Also verifies luck increases totalWeight. GREEN.
-
 - INBOX 61(36): SFX 3종 module
   - Created `game/sfx.lua` — standalone SFX module with headless-safe API (no-op when `love.audio` is nil).
   - Three effects: `galaxy_discover` (oneshot, dedup by galaxy id), `star_sample` (loop while in star well), `collision` (oneshot on planet hit).
@@ -123,8 +115,12 @@
   - Preserved file-presence, pipeline-label, blocked user-supplied ship/Earth path, no-ComfyUI, and output assertions unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,678 to 3,649 lines.
 
+- R1 (Lane C, partial): extracted the INBOX 61(3) slot UI/i18n characterization block into `game/tests/legacy_slot_ui_copy.lua`.
+  - Preserved the EN/KO prompt-copy, colon-free English, Korean `탭하여`, lever-reference, and output assertions unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,649 to 3,622 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the INBOX 61(3) slot UI/i18n characterization block from `game/self_test.lua` into `game/tests/legacy_slot_ui_copy.lua`, preserving EN/KO colon-free prompt, lever-pull, and output assertions.
+- R1 (Lane C): extract the INBOX 61(4) shop-card copy/layout characterization block from `game/self_test.lua` into `game/tests/legacy_shop_card_copy_layout.lua`, preserving KO durability wording, EN/KO arrow/tradeoff, and output assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
