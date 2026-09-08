@@ -1641,3 +1641,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates nine galaxy/minimap test groups and shrank from 10,255 to 9,540 lines.
   - Preserved the two repeated stencil/label checks through explicit module exports; no assertions were removed.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 16:34)
+
+- R1 (Lane C, partial): extracted gear-synergy legacy coverage to `game/tests/legacy_gear_synergy.lua`.
+  - `game/self_test.lua` now delegates the unchanged bundled-pool, tag matching, additive aggregation, and speed-synergy assertions.
+  - Engine-hosted unit/smoke tests are GREEN after resolving the concurrent `game/expedition.lua` extraction conflict.
+  - Next slice: extract engine-parts slot-separation legacy coverage from `game/self_test.lua`.

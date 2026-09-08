@@ -1,8 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted gear-synergy legacy coverage to `game/tests/legacy_gear_synergy.lua`.
-  - `game/self_test.lua` now delegates the unchanged bundled-pool, tag matching, additive aggregation, and speed-synergy assertions.
-  - Engine-hosted unit/smoke tests are GREEN after resolving the concurrent `game/expedition.lua` extraction conflict.
-  - Next slice: extract engine-parts slot-separation legacy coverage from `game/self_test.lua`.
+- R1 (Lane C, partial): extracted engine-parts slot-separation legacy coverage to `game/tests/legacy_engine_parts_slots.lua`.
+  - `game/self_test.lua` delegates the unchanged engine pool, independent hull/engine slot, capacity, overflow, and duplicate-id assertions.
+  - `game/self_test.lua` shrank from 8,894 to 8,839 lines; the extracted module has no `love.*` dependency.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
@@ -151,7 +151,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract debris generation/drift legacy coverage from `game/self_test.lua` into `game/tests/legacy_debris.lua`.
-- R1 (Lane B): Extract remaining `game/expedition.lua` logic (e.g. `expedition_shop.lua`, `expedition_upgrades.lua`).
+- R1 (Lane C): extract rarity/edition legacy coverage from `game/self_test.lua` into `game/tests/legacy_gear_rarity_edition.lua`.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
