@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T02:13:33+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/star/flare_sdo_nasa_gsfc_20171208_archive_e001058.jpg",
+  "source_dimensions": [
+    4096,
+    4096
+  ],
+  "input_preparation": {
+    "resize": [
+      896,
+      896
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 64,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "star_flare",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 64,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "5c278fb5081b80defb9746e92195ff1b6b2534f7843f76d387b454185396b061",
+  "payload_bytes": 16765724,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

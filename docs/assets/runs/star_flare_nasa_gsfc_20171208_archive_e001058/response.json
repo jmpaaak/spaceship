@@ -1,0 +1,29 @@
+{
+  "pipeline": "local-pixel-perfect",
+  "llmImageGeneration": false,
+  "settings": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 64,
+    "paletteLimit": 64
+  },
+  "report": {
+    "valid": true,
+    "checks": {
+      "dimensions": true,
+      "palette": true,
+      "transparentAlpha": true,
+      "alignment": true,
+      "nearestNeighbor": true
+    },
+    "paletteSize": 64,
+    "transparentPixels": 77312,
+    "bounds": {
+      "minX": 0,
+      "minY": 20,
+      "maxX": 511,
+      "maxY": 491
+    }
+  }
+}

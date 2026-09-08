@@ -20,6 +20,7 @@ REQUIRED_IDS = {
     "star_sun_nasa_gsfc_20171208_archive_e002035",
     "star_filament_nasa_gsfc_20171208_archive_e002069",
     "star_cme_nasa_gsfc_20171208_archive_e001770",
+    "star_flare_nasa_gsfc_20171208_archive_e001058",
     "hub_neptune_nasa_pia00046",
 }
 

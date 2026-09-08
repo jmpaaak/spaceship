@@ -519,6 +519,53 @@
         "wired": false,
         "sha256": "a75396e7083586f15f1e165917e11312a95e18dd956677de3ca7b4e333dca105"
       }
+    },
+    {
+      "id": "star_flare_nasa_gsfc_20171208_archive_e001058",
+      "kind": "central_star",
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "generated_at": "2026-09-09T02:13:33+09:00",
+      "source": {
+        "path": "docs/assets/sources/star/flare_sdo_nasa_gsfc_20171208_archive_e001058.jpg",
+        "url": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001058/GSFC_20171208_Archive_e001058~orig.jpg",
+        "nasa_id": "GSFC_20171208_Archive_e001058",
+        "creator": "NASA Goddard/SDO",
+        "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
+        "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+        "dimensions": [4096, 4096],
+        "sha256": "6000b41061b3bf17a8495a12c8723f036be1e4ab1f7debd96659463477576e51"
+      },
+      "request": {
+        "log_path": "docs/assets/runs/star_flare_nasa_gsfc_20171208_archive_e001058/request.json",
+        "input_dimensions": [1024, 1024],
+        "target_width": 512,
+        "target_height": 512,
+        "pixel_block": 4,
+        "background_tolerance": 64,
+        "palette_limit": 64,
+        "payload_sha256": "5c278fb5081b80defb9746e92195ff1b6b2534f7843f76d387b454185396b061"
+      },
+      "response": {
+        "log_path": "docs/assets/runs/star_flare_nasa_gsfc_20171208_archive_e001058/response.json",
+        "http_status": 200,
+        "report_valid": true,
+        "body_sha256": "6db6848cb74b42a65dc472b7d26d7ae639477da09f60707f4b3ce79fa4e7e0b5",
+        "image_rgba_sha256": "94438f85f5d15019d6152694c7da28fcc8fd74640789a79dc23b4b727a3a1914"
+      },
+      "master": {
+        "path": "docs/assets/masters/star/star_flare_nasa_gsfc_20171208_archive_e001058_master.png",
+        "dimensions": [512, 512],
+        "mode": "RGBA",
+        "sha256": "96a0f504425c024b4718117bbdebd9ec773dac2f62b7cbd1779537ed052d3e1a"
+      },
+      "runtime": {
+        "path": "assets/star/studio/star_flare.png",
+        "dimensions": [128, 128],
+        "mode": "RGBA",
+        "derivation": "integer 4x NEAREST downscale from master",
+        "wired": false,
+        "sha256": "e049d64e81561b3b66540972b0060016f6c57ea622d1a4d99bbb3349d5d34665"
+      }
     }
   ]
 }
