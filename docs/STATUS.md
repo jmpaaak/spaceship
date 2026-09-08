@@ -1,9 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted galaxy-exclusive engine-pool wiring coverage to `game/tests/legacy_gear_galaxy_exclusive_engine_pool_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 6,407 to 6,305 lines.
-  - Preserved Earth-pool exclusion, deterministic engine rewards, cross-galaxy variety, and shared hull/engine hub-exploration assertions; the extracted module has no `love.*` boundary.
-  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testSlotExclusivePartsWiring` to `game/tests/legacy_gear_slot_exclusive_parts_wiring.lua` without changing assertions.
+- R1 (Lane C, partial): extracted slot-exclusive parts wiring coverage to `game/tests/legacy_gear_slot_exclusive_parts_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,305 to 6,183 lines.
+  - Preserved bundled-pool counts, Earth/slot pool filtering, deterministic 2/3-match PART rewards, editor round-trip, and schema assertions unchanged.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearExploreHubEditionRolling` to `game/tests/legacy_gear_explore_hub_edition_rolling.lua` without changing assertions.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
@@ -152,6 +152,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearGalaxyExclusiveEnginePoolWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving engine-pool exclusivity, Earth-pool exclusion, deterministic per-galaxy variety, and one-offer-per-hub assertions.
+- R1 (Lane C): extract `testGearExploreHubEditionRolling` from `game/self_test.lua` to `game/tests/legacy_gear_explore_hub_edition_rolling.lua`, preserving guaranteed drops, deterministic edition assignment, disabled-edition fallback, and luck-boosted edition assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
