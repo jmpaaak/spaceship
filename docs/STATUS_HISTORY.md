@@ -1525,3 +1525,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added engine-hosted `game/tests/play_steering.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
   - `play.lua` reduced from 3029 lines / 151623 bytes to 3020 lines / 151456 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 14:02)
+
+- R1: `play.lua` collision-presentation extraction.
+  - Added `game/scenes/play_collision.lua` for ascending collision risk, lethal/sample labels, and approach-warning eligibility; dependency injection keeps the rules engine-testable while `install()` preserves the scene API.
+  - Added engine-hosted `game/tests/play_collision.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3020 lines / 151456 bytes to 2998 lines / 150393 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).

@@ -144,21 +144,8 @@ M.earthReentryRadius = 145  -- (INBOX 23: shrink from 174)
 M.reentryShakeMax = 6
 require("game.scenes.play_reentry").install(M)
 
--- INBOX (14): undiscovered-planet collect orbit is a faint thin line.
--- Collection still uses radius+30; only the ring visual is thinned.
-M.collectRadiusPadding = 30
-M.collectOrbitRingAlpha = 0.3
-M.collectOrbitRingLineWidth = 1
-M.useCollectOrbitRimSprite = false
-
-function M.collectOrbitRadius(planetRadius, run)
-    local base = (planetRadius or 0) + M.collectRadiusPadding
-    if run then
-        local expedition = require("game.expedition")
-        return expedition.collectOrbitRadius(run, base)
-    end
-    return base
-end
+-- Collection radius and orbit-ring presentation constants.
+require("game.scenes.play_collect_orbit").install(M, expedition)
 
 local function pulseHaptic(self, intensity)
     -- Sustained rumble, not staccato taps. LÖVE 11 vibrate(seconds);
