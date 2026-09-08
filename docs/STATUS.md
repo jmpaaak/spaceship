@@ -1,4 +1,9 @@
 ## Current Status
+- R1 (Lane C, partial): extracted background-star and planet-generation legacy coverage to `game/tests/legacy_world_generation.lua`.
+  - `game/self_test.lua` now delegates four world-generation test groups and shrank from 9,540 to 9,401 lines.
+  - Preserved deterministic/dense star fields, independent coordinate salts, planet density, and overlap assertions.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
 - R1 (Lane C, partial): extracted galaxy/minimap legacy coverage to `game/tests/legacy_galaxy_structure.lua`.
   - `game/self_test.lua` now delegates nine galaxy/minimap test groups and shrank from 10,255 to 9,540 lines.
   - Preserved the two repeated stencil/label checks through explicit module exports; no assertions were removed.
@@ -144,7 +149,7 @@
 
 ## Next slice
 
-- R1 (Lane C): extract background-star and planet-generation legacy coverage from `game/self_test.lua` into `game/tests/legacy_world_generation.lua`.
+- R1 (Lane C): extract launch and HUD icon legacy coverage from `game/self_test.lua` into `game/tests/legacy_hud_icons.lua`.
 - R1 (Lane B): Extract remaining `game/expedition.lua` logic (e.g. `expedition_shop.lua`, `expedition_upgrades.lua`).
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
