@@ -1,9 +1,7 @@
 ## Current Status
-- INBOX 78 (Lane A): removed the superseded standalone Asset Studio.
-  - Deleted `tools/asset-studio/`, its dedicated `tools/serve_editors.py` server/Python tests, the engine-hosted legacy web-hub test, and both test-runner links.
-  - Added `tools/test_legacy_asset_studio_removed.py`; observed two expected RED failures before deletion, then focused GREEN.
-  - Stopped only `/tmp/serve_editors.py` PID 48293 and its two 8766 cloudflared tunnels (PIDs 7733/41470); verified TCP 8766 has no listener. The separate MOK service on 8767 was not touched.
-  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, Python 26/26, smoke/package/bundle/asset-manifest checks).
+- R1 (Lane C, partial): extracted the sample-tier color, pickup-particle, sparkle, scene-time, and anticipation characterization block into `game/tests/legacy_sample_tier_visuals.lua`.
+  - Preserved the existing assertions and execution order behind `run()`; `game/tests/self_test_sample_visuals_extraction.lua` enforces delegation and prevents the body from returning to the runner.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,360 to 3,263 lines.
 
 - INBOX 61(28): Boost button UI & Boost FX
   - Created `game/scenes/play_boost.lua` to extract boost logic and avoid bloating `play.lua`.
@@ -121,6 +119,6 @@
 
 ## Next slice
 
-- INBOX 78 baseline: inventory and test the current runtime celestial/ship source dimensions, sheet frame dimensions/counts, and draw sizes in a dedicated asset manifest before generating or wiring replacements.
+- R1 (Lane C): extract the adjacent collision-impact and score-proportional screen-shake characterization block from `game/self_test.lua` into one `game/tests/legacy_*.lua` suite, preserving execution order and assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

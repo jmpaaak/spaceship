@@ -2201,3 +2201,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Completed the extraction of `shopModalLayout`, `shopModalButtonRects`, `hitShopModalGearSlot`, and `drawShopModal` into `play_shop.lua`.
   - `play.lua` now purely delegates all shop/settlement/destroyed overlay logic to `play_shop.lua`.
   - Tests pass (`make verify LOVE=...` GREEN).
+
+## Archived from STATUS.md (2026-09-08 23:26)
+
+- INBOX 78 (Lane A): removed the superseded standalone Asset Studio.
+  - Deleted `tools/asset-studio/`, its dedicated `tools/serve_editors.py` server/Python tests, the engine-hosted legacy web-hub test, and both test-runner links.
+  - Added `tools/test_legacy_asset_studio_removed.py`; observed two expected RED failures before deletion, then focused GREEN.
+  - Stopped only `/tmp/serve_editors.py` PID 48293 and its two 8766 cloudflared tunnels (PIDs 7733/41470); verified TCP 8766 has no listener. The separate MOK service on 8767 was not touched.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, Python 26/26, smoke/package/bundle/asset-manifest checks).
