@@ -1490,3 +1490,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added engine-hosted `game/tests/play_sprites.lua`; observed RED for the missing module, then GREEN after extraction and registered only its entry point in `self_test.lua`.
   - `play.lua` reduced from 3354 lines / 165592 bytes to 3282 lines / 163571 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
+
+## Archived from STATUS.md (2026-09-08 13:35)
+
+
+- R1: `play.lua` planet presentation rule extraction.
+  - Added pure `game/scenes/play_planets.lua` for planet tint selection, deterministic ID-based rotation/scale, and PixelPlanets/fallback sprite-path routing; `install()` preserves the scene API.
+  - Added engine-hosted `game/tests/play_planets.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3282 lines / 163571 bytes to 3243 lines / 161851 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).

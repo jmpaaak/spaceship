@@ -34,6 +34,14 @@ require("game.scenes.play_icons").install(M)
 -- Pure HUD band sizing rules (height, text-width cap, and spacing constants).
 require("game.scenes.play_hud_layout").install(M)
 
+-- Pure control, pause, and settlement layout rules.
+local playLayout = require("game.scenes.play_layout")
+playLayout.install(M, viewport)
+local settlementTouchRows = M.settlementTouchRows
+local pauseButton = M.pauseButton
+local adminButtons = playLayout.adminButtons
+local adminButtonRect = playLayout.adminButtonRect
+
 -- Pure equipped-gear HUD layout and hit testing.
 require("game.scenes.play_hud_gear").install(M)
 
@@ -114,146 +122,15 @@ local function shortestAngleDelta(from, to)
 end
 M.shortestAngleDelta = shortestAngleDelta
 
--- Returning-phase LEFT/RIGHT touch band. Was a 24px-tall row
--- (254-278), which only clears ~24pt at the smallest supported window
--- (integer scale 1, 1x device pixel ratio) -- well under the iOS/Android
--- ~44pt accessibility minimum PlayScene.settlementTouchRows was already
--- fixed to meet (see game/self_test.lua's canvasPixelsToPoints check).
--- Widened to a 44 canvas px band (244-288).
-local returnControls = {
-    top = 244,
-    bottom = 288,
-    leftMaxX = 55,
-    rightMinX = 125,
-}
-M.returnControls = returnControls
-
--- Mobile-UI sub-item (4): settlement panel vertically centered on 1280px
--- canvas with 12px font (was 8px crammed into 70-320 at the top). Touch
--- rows expanded to 70px each (well above 44pt iOS HIG minimum). Columns
--- widened to fill the 720px canvas.
-M.settlementFontSize = 22
-M.settlementRowStep = 44  -- vertical px between successive text lines in the shop
-M.settlementSummaryRowStep = 40  -- vertical px between summary stat lines
--- Vertical layout anchors (all in 720×1280 canvas coordinates):
-M.settlementPanelTop = 200
-M.settlementPanelHeight = 1080
-M.settlementTitleY = 210
-M.settlementSummaryBgTop = 240
-M.settlementSummaryBgHeight = 170
-M.settlementTotalY = 248
-M.settlementSamplesY = 288
-M.settlementPeakAltY = 328
-M.settlementNewBestY = 368
--- Touch rows: variable-height rows starting after the summary section.
--- Row 3 (gear text) is compact (70px) to reduce the gap between cards and slot.
-local settlementTouchRowTop = 400
-local settlementTouchRowHeight = 170
-local settlementGearRowHeight = 70   -- INBOX 61(18): compact row for gear text
-local settlementSlotRowHeight = 200  -- slot machine gets the space saved from row3
-local settlementTouchRows = {
-    {
-        top = settlementTouchRowTop, bottom = settlementTouchRowTop + settlementTouchRowHeight,
-        columns = {
-            { key = "hull", left = 0, right = 360 },
-            { key = "steering", left = 360, right = 720 },
-        },
-    },
-    {
-        top = settlementTouchRowTop + settlementTouchRowHeight,
-        bottom = settlementTouchRowTop + settlementTouchRowHeight * 2,
-        columns = {
-            { key = "yield", left = 0, right = 360 },
-            { key = "ship", left = 360, right = 720 },
-        },
-    },
-    { key = "gear",
-      top = settlementTouchRowTop + settlementTouchRowHeight * 2,
-      bottom = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight },
-    { key = "slot",
-      top = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight,
-      bottom = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight + settlementSlotRowHeight },
-    { key = "relaunch",
-      top = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight + settlementSlotRowHeight,
-      bottom = settlementTouchRowTop + settlementTouchRowHeight * 2 + settlementGearRowHeight + settlementSlotRowHeight + settlementTouchRowHeight },
-}
-M.settlementTouchRows = settlementTouchRows
-M.settlementTouchRowHeight = settlementTouchRowHeight
-M.settlementShopLayout = function()
-    return {
-        slot = { top = M.settlementTouchRows[4].top, bottom = M.settlementTouchRows[4].bottom },
-        slotResult = { top = M.settlementTouchRows[4].top, bottom = M.settlementTouchRows[4].bottom },
-        gear = { top = M.settlementTouchRows[3].top, bottom = M.settlementTouchRows[3].bottom },
-        scout = { top = M.settlementTouchRows[2].top, bottom = M.settlementTouchRows[2].bottom },
-        relaunch = { top = M.settlementTouchRows[5].top, bottom = M.settlementTouchRows[5].bottom }
-    }
-end
+-- Control and settlement layout constants are installed from play_layout.lua.
 
 -- SHIP DESTROYED restart touch target. Unlike EARTH SHOP's four stacked
 -- rows, this phase has a single action (restart), so touchpressed accepts
 -- any tap on the full 180x320 internal canvas rather than a narrow band.
 -- destroyedTouchArea → moved to game/scenes/play_gameover.lua (installed on M at top of file)
 
--- Ascending-phase HOLD LEFT/HOLD RIGHT steering buttons. touchpressed for
--- this phase already accepts a tap anywhere on the internal canvas (no y
--- restriction; see the "ascending" branch below), so the *functional*
--- touch target already spans the full 180x320 canvas -- far beyond the
--- 44pt accessibility minimum. This constant only documents/tests the
--- *visual* button box drawn on screen, which was a 24px-tall row
--- (254-278, only ~24pt at the smallest supported window, integer scale 1,
--- 1x device pixel ratio) -- under the same 44pt bar returnControls and
--- settlementTouchRows were widened to meet. Widened to match
--- returnControls exactly (244-288, 44 canvas px) for visual consistency,
--- even though it does not gate touch acceptance.
-local ascendControls = { top = 244, bottom = 288, leftMaxX = 81, rightMinX = 99 }
-M.ascendControls = ascendControls
-
--- Pause button (top-right corner, ascending phase only).
--- 44×44 touch area. Help (?) sits to the right of pause, closer to the
--- minimap edge. Pause is 44+8 px further left.
-local pauseButton = {
-    x = 720 - 44 - 8 - 44 - 8,  -- 616: left of the help button
-    y = 8,
-    w = 44,
-    h = 44,
-}
-M.pauseButton = pauseButton
-
--- INBOX 61(21): Pause menu button rects (restart / main menu).
-function M.pauseMenuRects()
-    local cx = viewport.width / 2
-    local btnW = 300
-    local btnH = 56
-    local gap = 20
-    local baseY = viewport.height / 2 + 10
-    return {
-        restart = { x = cx - btnW / 2, y = baseY, w = btnW, h = btnH },
-        mainMenu = { x = cx - btnW / 2, y = baseY + btnH + gap, w = btnW, h = btnH },
-    }
-end
-
--- Dev admin cheat buttons: stacked below pause (speed / hull / yield).
-local adminButtons = {
-    { kind = "speed", labelKey = "admin_speed" },
-    { kind = "hull",  labelKey = "admin_hull" },
-    { kind = "yield", labelKey = "admin_yield" },
-}
-local function adminButtonRect(index, pauseY)
-    local w, h, gap = 72, 36, 6
-    local x = 720 - w - 8
-    local y = (pauseY or 8) + 44 + 8 + (index - 1) * (h + gap)
-    return x, y, w, h
-end
-
--- Ascending-phase RETURN TO EARTH button. A 48px-tall strip at the bottom
--- of the canvas (above the status message at viewport.height-30=1250).
--- Centered horizontally, 300px wide — comfortably above the 80×44pt mobile
--- minimum and easy to hit with a thumb.
--- Mobile-UI sub-item (7): widened 200→300px, height 44→48px for mobile.
-local ascendReturnButton = { top = 1186, bottom = 1234, left = 210, right = 510 }
--- Item 2: ascendReturnButton kept as dead layout constant for backwards
--- compat; the draw/touch code that referenced it is removed.
-M.ascendReturnButton = ascendReturnButton
+-- Ascending, pause, admin, and legacy return-button layouts are installed
+-- from play_layout.lua.
 
 -- Item 2: Earth proximity auto-settle constants.
 -- Earth world center is (0, 75); visual radius 58px; settle radius
@@ -394,74 +271,8 @@ M.showLaunchLoadoutTitle = false
 -- Sample-tier presentation and floating-label feedback rules are installed
 -- from play_sample_visuals.lua and play_sample_feedback.lua above.
 
--- EARTH SHOP action/status two-column layout for the hull/steering/
--- yield/ship rows. Measured with a real LÖVE font probe
--- (GAME_FONTPROBE=1 love .) against the small scene-cached font
--- (love.graphics.newFont(8)): the widest action string
--- ("T/G STEER LV.9>10 $65") is 100px and the widest status string
--- ("SHORT $125") is 52px. The previous actionW=102/statusX=120/statusW=48
--- columns left the status column only 48px -- 4px under its own worst
--- case -- so a wide "SHORT $N" status could wrap to a second line inside
--- its own printf box and overlap the row drawn immediately below (only
--- 9px of row spacing). The panel background spans x=12..168
--- (viewport.width - 24 wide from x=12), so the two columns are sized to
--- exactly cover their measured worst case within that inner width with
--- no wasted margin: action 16..116 (100px), status 116..168 (52px).
--- Mobile-UI sub-item (4): columns widened for 720px canvas + 12px font.
--- Action column takes the left ~60%, status the right ~40%.
-local shopActionColumnX, shopActionColumnW = 24, 400
-local shopStatusColumnX, shopStatusColumnW = 430, 260
-M.shopActionColumnX = shopActionColumnX
-M.shopActionColumnW = shopActionColumnW
-M.shopStatusColumnX = shopStatusColumnX
-M.shopStatusColumnW = shopStatusColumnW
-
--- Split-column layout for the two settlementTouchRows entries that share a
--- single 44px band between two keys (HULL/STEERING, then YIELD/SHIP; see
--- settlementTouchRows' `columns` sub-tables, left=0..90, right=90..180 in
--- full canvas coordinates). Two prior cycles tried moving the *existing*
--- full-width action/status printf calls to sit flush inside these bands and
--- both were reverted after a real LÖVE capture showed the two items'
--- full-width centered text overlapping (see docs/STATUS.md "이번 사이클
--- 시도 및 되돌림 기록"). This cycle takes a narrower, additive fix instead
--- of repositioning the existing verified rows: only the compact
--- hullActionCompact/steeringActionCompact/yieldActionCompact/
--- shipActionCompact action strings (measured 38-63px via GAME_FONTPROBE,
--- see shopLoadoutLines) and their purchaseStatus() results (measured
--- <=52px, same as shopStatusColumnW) are drawn confined to each item's own
--- half of the shared row, so a row's left half always shows the key whose
--- touch column is settlementTouchRows[n].columns[1] (left=0,right=90) and
--- the right half always shows columns[2] (left=90,right=180). The existing
--- full-width preview lines below each shared row are left
--- untouched (they are advisory text, not the tap target itself, and were
--- already verified not to overlap).
--- Mobile-UI sub-item (4): split columns widened for 720px canvas + 12px font.
--- Each half is ~330px wide within the 696px panel.
-local shopColumnLeftX, shopColumnLeftW = 24, 330
-local shopColumnRightX, shopColumnRightW = 370, 320
-M.shopColumnLeftX = shopColumnLeftX
-M.shopColumnLeftW = shopColumnLeftW
-M.shopColumnRightX = shopColumnRightX
-M.shopColumnRightW = shopColumnRightW
-
--- EARTH SHOP touch-row background shading. Two prior cycles tried to move
--- the shop's text lines to sit flush inside each settlementTouchRows band
--- and both attempts were reverted after a real LÖVE capture showed shared
--- HULL/STEERING and YIELD/SHIP columns' full-width centered text
--- overlapping (see docs/STATUS.md "이번 사이클 시도 및 되돌림 기록"). This
--- takes the safer path: instead of repositioning the already-verified,
--- non-overlapping text, it draws a faint alternating background band behind
--- each settlementTouchRows entry so the four tappable rows are visually
--- distinguishable at a glance, without touching a single printf call.
-local settlementRowBackgroundColors = {
-    { 0.08, 0.14, 0.22, 0.35 },
-    { 0.05, 0.09, 0.15, 0.2 },
-}
-M.settlementRowBackgroundColors = settlementRowBackgroundColors
-
-function M.settlementRowBackgroundColor(index)
-    return settlementRowBackgroundColors[(index - 1) % #settlementRowBackgroundColors + 1]
-end
+-- Settlement columns and alternating row colors are installed from
+-- play_layout.lua.
 
 
 function M.new(options)

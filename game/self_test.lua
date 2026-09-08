@@ -10427,6 +10427,7 @@ function M.run()
     require("game.tests.play_sample_feedback").run()
     require("game.tests.play_planets").run()
     require("game.tests.play_sprites").run()
+    require("game.tests.play_layout").run()
 
     print("SPACESHIP_UNIT_OK")
 end

@@ -1,10 +1,11 @@
 ## Current Status
 
-- R1: `play.lua` planet presentation rule extraction.
-  - Added pure `game/scenes/play_planets.lua` for planet tint selection, deterministic ID-based rotation/scale, and PixelPlanets/fallback sprite-path routing; `install()` preserves the scene API.
-  - Added engine-hosted `game/tests/play_planets.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
-  - `play.lua` reduced from 3282 lines / 163571 bytes to 3243 lines / 161851 bytes.
+- R1: `play.lua` control and settlement layout extraction.
+  - Added pure `game/scenes/play_layout.lua` for control bands, pause/admin button geometry, settlement touch rows, shop columns, and alternating row colors; `install()` preserves the scene API.
+  - Added engine-hosted `game/tests/play_layout.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3243 lines / 161851 bytes to 3054 lines / 152156 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
+  - Next slice: extract collect-orbit and atmospheric reentry presentation calculations into `game/scenes/play_reentry.lua` without adding gameplay behavior.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
