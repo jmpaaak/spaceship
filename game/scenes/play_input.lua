@@ -8,6 +8,13 @@ local function hit(rect, x, y)
     return x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h
 end
 
+local function captureUiPointer(self, id)
+    self.uiCapturedPointers = self.uiCapturedPointers or {}
+    self.uiCapturedPointers[id] = true
+    -- A pointer owned by UI must never remain available to the joystick.
+    self.touches[id] = nil
+end
+
 function M.steeringButtonState(self, deps)
     local left = love.keyboard.isDown("left", "a")
     local right = love.keyboard.isDown("right", "d")
@@ -205,25 +212,8 @@ function M.touchpressed(self, id, x, y, deps)
             pcall(love.system.vibrate, 0.02)
             return true
         end
-        if self:hitHelpButton(x, y) then
-            self.helpOverlayOpen = true
-            pcall(love.system.vibrate, 0.02)
-            return true
-        end
-        for i, button in ipairs(deps.adminButtons) do
-            local ax, ay, aw, ah = deps.adminButtonRect(i, deps.pauseButton.y)
-            if x >= ax and x < ax + aw and y >= ay and y < ay + ah then
-                expedition.adminUpgrade(self.expedition, button.kind)
-                return true
-            end
-        end
-        local slot = self:hitHudGearSlot(x, y)
-        if slot then
-            slot.slotRect = slot.rect
-            self.gearPopup = slot
-            pcall(love.system.vibrate, 0.02)
-            return true
-        end
+        -- The pause overlay owns the whole pointer surface. Check it before
+        -- help/admin/gear controls that are visually underneath the overlay.
         if self.paused then
             local rects = self:pauseMenuRects()
             if hit(rects.restart, x, y) then
@@ -244,14 +234,30 @@ function M.touchpressed(self, id, x, y, deps)
             self.paused = false
             return true
         end
-        local ox, oy = self.joystickOrigin(x, y)
-        if x > deps.viewport.width * 0.6 and y > deps.viewport.height * 0.5
-                and expedition.boostsRemaining(self.expedition) > 0 and not self.boostActive then
-            if expedition.spendBoost(self.expedition) then
-                self.boostActive = { timer = 0.8, speedMultiplier = 3.0 }
-                pcall(love.system.vibrate, 0.1)
+        if self:hitHelpButton(x, y) then
+            self.helpOverlayOpen = true
+            pcall(love.system.vibrate, 0.02)
+            return true
+        end
+        for i, button in ipairs(deps.adminButtons) do
+            local ax, ay, aw, ah = deps.adminButtonRect(i, deps.pauseButton.y)
+            if x >= ax and x < ax + aw and y >= ay and y < ay + ah then
+                expedition.adminUpgrade(self.expedition, button.kind)
                 return true
             end
+        end
+        local slot = self:hitHudGearSlot(x, y)
+        if slot then
+            slot.slotRect = slot.rect
+            self.gearPopup = slot
+            pcall(love.system.vibrate, 0.02)
+            return true
+        end
+        local ox, oy = self.joystickOrigin(x, y)
+        -- hitBoostButton consumes its visible button even when disabled, so a
+        -- zero-charge BOOST tap cannot leak into world steering.
+        if self.hitBoostButton and self:hitBoostButton(x, y) then
+            return true
         end
         self.touches[id] = { x = x, y = y, originX = ox, originY = oy }
         return true
@@ -311,6 +317,7 @@ function M.touchpressed(self, id, x, y, deps)
 end
 
 function M.touchmoved(self, id, x, y)
+    if self.uiCapturedPointers and self.uiCapturedPointers[id] then return true end
     local touch = self.touches[id]
     if not touch then return false end
     touch.x, touch.y = x, y
@@ -318,6 +325,11 @@ function M.touchmoved(self, id, x, y)
 end
 
 function M.touchreleased(self, id)
+    if self.uiCapturedPointers and self.uiCapturedPointers[id] then
+        self.uiCapturedPointers[id] = nil
+        self.touches[id] = nil
+        return true
+    end
     if not self.touches[id] then return false end
     self.touches[id] = nil
     return true
@@ -327,7 +339,14 @@ function M.install(target, deps)
     assert(type(target) == "table" and type(deps) == "table", "play_input.install requires target and dependencies")
     target.steeringButtonState = function(self) return M.steeringButtonState(self, deps) end
     target.keypressed = function(self, key) return M.keypressed(self, key, deps) end
-    target.touchpressed = function(self, id, x, y) return M.touchpressed(self, id, x, y, deps) end
+    target.touchpressed = function(self, id, x, y)
+        local consumed = M.touchpressed(self, id, x, y, deps)
+        -- World/joystick input records itself in touches. Every other handled
+        -- press is UI and remains captured until release, including presses
+        -- whose action was disabled or failed.
+        if consumed and not self.touches[id] then captureUiPointer(self, id) end
+        return consumed
+    end
     target.touchmoved = M.touchmoved
     target.touchreleased = M.touchreleased
     return target

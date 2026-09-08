@@ -1,4 +1,5 @@
 local input = require("game.scenes.play_input")
+local playJoystick = require("game.scenes.play_joystick")
 
 local M = {}
 
@@ -8,6 +9,11 @@ local function fixture(phase)
         launchSpawnX = 360,
         launchSpawnY = 1100,
         hitHudGearSlot = function() return nil end,
+        hitShopModalGearSlot = function() return nil end,
+        shopModalButtonRects = function()
+            return { x = 200, y = 700, w = 140, h = 60 },
+                { x = 380, y = 700, w = 140, h = 60 }
+        end,
         hitHelpButton = function() return false end,
         joystickOrigin = function(x, y) return x, y end,
         handleDestroyedTouch = function() return true end,
@@ -36,6 +42,12 @@ local function fixture(phase)
         pauseButton = { x = 616, y = 8, w = 44, h = 44 },
         adminButtons = {},
         adminButtonRect = function() return 0, 0, 0, 0 end,
+        layout = {
+            shopModalButtons = function()
+                return { x = 200, y = 700, w = 140, h = 60 },
+                    { x = 380, y = 700, w = 140, h = 60 }
+            end,
+        },
         expedition = {
             launch = function(run)
                 launches = launches + 1
@@ -68,7 +80,7 @@ local function fixture(phase)
         launchInputArmed = true,
         time = 0,
     }, { __index = target })
-    return scene, function() return launches end
+    return scene, function() return launches end, target
 end
 
 function M.run()
@@ -84,6 +96,12 @@ function M.run()
         "R1-A1: relaunch must use the normal Earth launch spawn")
     assert(shop.touches.finger == nil and not (shop.ship.x == oldX and shop.ship.y == oldY),
         "R1-A1: consumed relaunch press must not become steering input")
+    assert(shop.uiCapturedPointers.finger,
+        "R1-A1: relaunch pointer must stay UI-captured until release")
+    assert(shop:touchmoved("finger", 100, 900) == true and shop.touches.finger == nil,
+        "R1-A1: dragging a consumed relaunch pointer must not activate steering")
+    assert(shop:touchreleased("finger") == true and not shop.uiCapturedPointers.finger,
+        "R1-A1: UI capture must clear on release")
 
     local flight = fixture("ascending")
     assert(flight:touchpressed("finger", 100, 900) == true,
@@ -108,6 +126,78 @@ function M.run()
         "R1-A1: gear popup must consume its dismiss press")
     assert(overlay.gearPopup == nil and overlay.touches.finger == nil,
         "R1-A1: overlay press must not leak to world steering")
+
+    local help = fixture("ascending")
+    help.helpOverlayOpen = true
+    assert(help:touchpressed("help", 100, 900) == true
+            and not help.helpOverlayOpen and help.touches.help == nil
+            and help.uiCapturedPointers.help,
+        "R1-A1: help overlay must consume and capture its dismiss pointer")
+
+    local modal = fixture("ascending")
+    modal.shopModal = { gear = {}, category = "hull", isReplacement = false }
+    assert(modal:touchpressed("modal", 100, 900) == true
+            and modal.touches.modal == nil and modal.uiCapturedPointers.modal,
+        "R1-A1: shop modal must consume presses outside its buttons")
+
+    local paused = fixture("ascending")
+    paused.paused = true
+    paused.hitHelpButton = function() return true end
+    paused.hitHudGearSlot = function() return { part = {}, rect = {} } end
+    assert(paused:touchpressed("pause-overlay", 100, 900) == true
+            and not paused.paused and not paused.helpOverlayOpen
+            and paused.gearPopup == nil and paused.touches["pause-overlay"] == nil,
+        "R1-A1: pause overlay must block help/gear/world controls underneath")
+
+    local destroyed = fixture("destroyed")
+    assert(destroyed:touchpressed("destroyed", 100, 900) == true
+            and destroyed.touches.destroyed == nil
+            and destroyed.uiCapturedPointers.destroyed,
+        "R1-A1: destroyed overlay action must capture its pointer")
+
+    local launchGate, gateLaunches = fixture("launch")
+    assert(launchGate:touchpressed("launch", 100, 900) == true and gateLaunches() == 1
+            and launchGate.touches.launch == nil and launchGate.uiCapturedPointers.launch,
+        "R1-A1: launch-screen tap must not become steering after phase transition")
+
+    -- Exact desktop regression: mouse remains physically held for a frame
+    -- after Relaunch changes phase to ascending. pollDesktopMouse must not
+    -- recreate a virtual joystick touch at the button coordinate.
+    local held = true
+    local oldMouse = love.mouse
+    local oldGraphics = love.graphics
+    love.mouse = {
+        isDown = function() return held end,
+        getPosition = function() return 360, 1100 end,
+    }
+    love.graphics = love.graphics or {}
+    local oldGetDimensions = love.graphics.getDimensions
+    love.graphics.getDimensions = function() return 720, 1280 end
+    local desktop, desktopLaunches, desktopTarget = fixture("settlement")
+    desktop.allowDesktopMousePollingInTests = true
+    playJoystick.install(desktopTarget)
+    assert(desktop:touchpressed("mouse", 360, 1100) == true and desktopLaunches() == 1)
+    desktop:pollDesktopMouse()
+    assert(desktop.touches.mouse == nil and desktop.uiCapturedPointers.mouse,
+        "R1-A1: held UI mouse after launch must not be recreated as joystick input")
+    held = false
+    desktop:pollDesktopMouse()
+    assert(desktop.touches.mouse == nil and not desktop.uiCapturedPointers.mouse,
+        "R1-A1: missed mouse release must clear UI capture during polling")
+    love.graphics.getDimensions = oldGetDimensions
+    love.mouse = oldMouse
+    if not oldGraphics then love.graphics = nil end
+
+    local disabledBoost = fixture("ascending")
+    disabledBoost.boostBtnRect = { x = 580, y = 1100, w = 120, h = 72 }
+    disabledBoost.hitBoostButton = function(self, x, y)
+        return x >= self.boostBtnRect.x and x <= self.boostBtnRect.x + self.boostBtnRect.w
+            and y >= self.boostBtnRect.y and y <= self.boostBtnRect.y + self.boostBtnRect.h
+    end
+    assert(disabledBoost:touchpressed("finger", 620, 1120) == true
+            and disabledBoost.touches.finger == nil
+            and disabledBoost.uiCapturedPointers.finger,
+        "R1-A1: disabled BOOST button must consume and capture its pointer")
 
     local playSource = love.filesystem.read("game/scenes/play.lua") or ""
     assert(playSource:find('require%("game%.scenes%.play_input"%)'),

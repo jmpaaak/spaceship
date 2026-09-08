@@ -42,13 +42,22 @@ end
 -- frame and feed the same "mouse" touch id. Skipped during GAME_UNIT tests
 -- so injected touches["mouse"] are not cleared by isDown()==false.
 function PJ:pollDesktopMouse()
-    if os.getenv("GAME_UNIT") == "1" then return end
+    if os.getenv("GAME_UNIT") == "1" and not self.allowDesktopMousePollingInTests then return end
     if not love.mouse or not love.mouse.isDown then return end
+    local mouseDown = love.mouse.isDown(1)
+    -- A mouse press consumed by UI remains unavailable to the virtual stick
+    -- until physical release. This survives phase changes such as a shop
+    -- Relaunch press changing settlement -> ascending in the same frame.
+    if self.uiCapturedPointers and self.uiCapturedPointers.mouse then
+        self.touches.mouse = nil
+        if not mouseDown then self.uiCapturedPointers.mouse = nil end
+        return
+    end
     if self.expedition.phase ~= "ascending"
         and self.expedition.phase ~= "launch" then
         return
     end
-    if not love.mouse.isDown(1) then
+    if not mouseDown then
         self.touches.mouse = nil
         return
     end
