@@ -153,25 +153,7 @@ function M.run()
 
     require("game.tests.legacy_hud_sprite_fallback").run()
 
-    -- ComfyUI planet effect wiring (group 3): drawPlanetEffectSprite is
-    -- exported and returns false when image is nil (fallback to polygon).
-    do
-        local PlayScene = require("game.scenes.play")
-        assert(type(PlayScene.drawPlanetEffectSprite) == "function",
-            "drawPlanetEffectSprite must be exported on PlayScene")
-        -- nil image -> returns false without error
-        local ok, res = pcall(PlayScene.drawPlanetEffectSprite, nil, 50, 50, 20, 1, 1, 1, 1)
-        assert(ok, "drawPlanetEffectSprite(nil,...) must not throw")
-        assert(res == false, "drawPlanetEffectSprite(nil,...) must return false")
-        -- planetEffectImages key set is present on a new scene instance
-        local scene = PlayScene.new()
-        local pe = scene.planetEffectImages
-        assert(type(pe) == "table", "scene.planetEffectImages must be a table")
-        for _, key in ipairs({"glow","shadow","rim","twinkle","sampleValue","risk"}) do
-            assert(pe[key] == nil or type(pe[key]) == "userdata",
-                "planetEffectImages." .. key .. " must be nil (headless) or image userdata")
-        end
-    end
+    require("game.tests.legacy_planet_effect_sprite").run()
 
     -- ComfyUI floating text icon wiring (group 4): drawFloatingIconSprite is
     -- exported and returns false when image is nil (graceful no-op).
@@ -1781,6 +1763,7 @@ function M.run()
     require("game.tests.self_test_dead_settlement_slot_fields_extraction").run()
     require("game.tests.self_test_earth_shop_gear_offer_keyboard_extraction").run()
     require("game.tests.self_test_hud_sprite_fallback_extraction").run()
+    require("game.tests.self_test_planet_effect_sprite_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
