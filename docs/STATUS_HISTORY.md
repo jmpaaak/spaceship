@@ -2003,3 +2003,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 5,145 to 5,052 lines.
   - Preserved configured spin cost, deterministic miss/pair/triple rewards, insufficient-funds rejection, and settlement money application without changing production code.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
+
+## Archived from STATUS.md (2026-09-08 21:09)
+
+- R1 (Lane C, partial): extracted Earth slot part replacement coverage to `game/tests/legacy_earth_slot_part_replacement.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,052 to 4,979 lines.
+  - Preserved part equip, duplicate-cost refund, and full-loadout replacement-modal assertions without changing production code.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` is GREEN.

@@ -1,9 +1,4 @@
 ## Current Status
-- R1 (Lane C, partial): extracted Earth slot part replacement coverage to `game/tests/legacy_earth_slot_part_replacement.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,052 to 4,979 lines.
-  - Preserved part equip, duplicate-cost refund, and full-loadout replacement-modal assertions without changing production code.
-  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` is GREEN.
-
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
   - `autoLoadDefaults()` fetches hull only. First Engine tab click `ensureEngineLoaded()` fetches `/gear-editor/data/engine_parts.json`.
@@ -148,8 +143,12 @@
   - Preserved the engine-hosted two-/three-match rarity gates and combined hull/engine PART-pool coverage unchanged behind `run()`.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,979 to 4,883 lines.
 
+- R1 (Lane C, partial): extracted `testSlotEditorWebUi` into `game/tests/legacy_slot_editor_web_ui.lua`.
+  - Preserved the runtime JSON defaults, profile fallback/override, and slot-editor source assertions unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,883 to 4,798 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract `testSlotEditorWebUi` from `game/self_test.lua` to `game/tests/legacy_slot_editor_web_ui.lua`, preserving the runtime JSON defaults, profile fallback/override, and editor-source assertions.
+- R1 (Lane C): extract `testItem15DeadSlotConstantsRemoved` from `game/self_test.lua` to `game/tests/legacy_item15_dead_slot_constants_removed.lua`, preserving the dead constant/control/state-field assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
