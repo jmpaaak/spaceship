@@ -1,11 +1,4 @@
 ## Current Status
-- INBOX 61(24b): Title menu composition — CONTINUE / NEW GAME / LEADERBOARD / SETTINGS.
-  - `title.lua`: button order is CONTINUE (top) → NEW GAME → LEADERBOARD → SETTINGS. CONTINUE greyed out unless `hasSave`. NEW GAME uses `onNewGame` (legacy `onStart` still works).
-  - `i18n`: EN `title_new_game`="NEW GAME", KO="새 게임". `title_start` removed.
-  - `main.lua`: `hasSave` from `best_altitude_store:load() > 0`. NEW GAME calls `altStore:reset()` + `specStore:reset()` then fresh PlayScene at Earth. CONTINUE starts PlayScene with persisted bestAltitude.
-  - Test `INBOX-61(24b)` GREEN.
-
-
 - INBOX 61(26a/b): Added `mode = "flat"|"multiply"` gear effect schema
   - Modified `gear.lua` and `expedition.lua` to separate flat and mult calculations for stats.
   - Applied product multiplier in `effectiveSpeed`, `effectiveSampleBonus`, `effectiveCollisionRadius`, `effectiveDetectionRadius`, `effectiveShopPrice`.
@@ -132,8 +125,12 @@
   - Preserved HUD constants, i18n coverage, draw-call mocking/restoration, nine-slot and 48×48 dimensions, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,996 to 3,928 lines.
 
+- R1 (Lane C, partial): extracted the part-icon infrastructure characterization block into `game/tests/legacy_part_icon_infrastructure.lua`.
+  - Preserved the `getPartIcon` helper, 48px HUD gear-slot assertion, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,928 to 3,918 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the part-icon infrastructure characterization block from `game/self_test.lua` into `game/tests/legacy_part_icon_infrastructure.lua`, preserving helper/48px assertions and output behavior.
+- R1 (Lane C): extract the ship-stats-summary characterization block from `game/self_test.lua` into `game/tests/legacy_ship_stats_summary.lua`, preserving graphics restoration, ascending/settlement behavior, localized lines, right alignment, and output.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

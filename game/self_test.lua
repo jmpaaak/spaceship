@@ -2478,17 +2478,7 @@ function M.run()
 
     require("game.tests.legacy_gear_slots_grid").run()
 
-    -- INBOX-61(8): Part icon infrastructure test
-    do
-        local play = require("game.scenes.play")
-        -- getPartIcon function must exist
-        assert(type(play.getPartIcon) == "function",
-            "getPartIcon helper must exist")
-        -- hudGearSlotSize must be 48 for INBOX-61(8)
-        assert(play.hudGearSlotSize == 48,
-            "INBOX-61(8): HUD gear slot size must be 48px, got " .. tostring(play.hudGearSlotSize))
-        print("  INBOX-61(8) part icons infrastructure OK")
-    end
+    require("game.tests.legacy_part_icon_infrastructure").run()
 
     -- INBOX-44: ship stats summary below minimap right side during ascending
     do
