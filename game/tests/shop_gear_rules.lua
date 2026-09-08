@@ -32,13 +32,13 @@ function M.run()
         "failed purchases must not consume the shop allowance")
 
     local shopSource = love.filesystem.read("game/scenes/play_shop.lua") or ""
-    local playSource = love.filesystem.read("game/scenes/play.lua") or ""
+    local inputSource = love.filesystem.read("game/scenes/play_input.lua") or ""
     assert(shopSource:find('require%("game%.shop_gear_rules"%)'),
         "play_shop must consume the pure shop gear rules")
     assert(shopSource:find("shop_modal_limit", 1, true),
         "the purchase button must expose its disabled one-item-limit state")
-    assert(playSource:find("self:buyShopModalGear%(%)"),
-        "play scene input must delegate galaxy shop purchases to play_shop")
+    assert(inputSource:find("self:buyShopModalGear%(%)"),
+        "play input module must delegate galaxy shop purchases to play_shop")
     print("  INBOX-77(1) one gear purchase per galaxy shop OK")
 end
 

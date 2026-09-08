@@ -11,13 +11,6 @@
   - 병렬 레인 C — `game/self_test.lua`(현재 약 10,441줄): 기존 테스트 본문을 영역별 `game/tests/legacy_*.lua`로 이동. 신규 테스트는 계속 `game/tests/`에만 추가하고 `self_test.lua`는 runner/공통 fixture 중심으로 축소.
   - 각 레인은 독립 worktree에서 작업·검증·커밋 후 main에 순차 통합한다. 최종 기준: 세 거대 파일 모두 실질 감소, 동작 변경 없음, `make test` + `make verify` GREEN.
 
-(R1-A1) **상점 출발 탭 이벤트 전파 오류 수정 + 전체 입력 소비 감사** (msg `1546763887930646618`)
-  - 재현: 상점의 출발 버튼을 탭하면 출발 처리 뒤 같은 포인터 이벤트가 비행 이동/조향 경로까지 전파되어 우주선 목표 위치가 탭 좌표로 급변한다.
-  - `game/scenes/play_input.lua` 추출과 동시에 모든 입력 레이어의 우선순위와 소비 계약을 명시한다: modal/popup/help/pause/destroyed → 상점·슬롯·출발·부스트·HUD 버튼 → 조이스틱/월드 이동. 상위 UI가 히트되면 반드시 `true`/조기 `return`으로 종료하며 같은 press가 하위 레이어에 재사용되지 않아야 한다.
-  - `touchpressed`뿐 아니라 mouse→touch 에뮬레이션, `keypressed`, `touchmoved`, `touchreleased`, 버튼에서 시작한 pointer capture까지 전수 감사한다. 출발·구매·판매·닫기·확인·슬롯·부스트·도움말·일시정지·장비 팝업·파괴 재시작·조이스틱에 대해 hit/consume/side-effect를 표로 검증한다.
-  - 특히 `launch()` 직후 phase가 `settled→ascending`으로 바뀌어 같은 함수 아래쪽의 ascending 월드 이동 분기가 실행되는 상태 전이를 방지한다. UI 액션은 성공/실패와 무관하게 해당 UI 영역의 press를 소비한다.
-  - 테스트: `game/tests/play_input.lua`에 상점 출발 탭→launch 1회·steering/target 변경 0회, 상점 버튼 밖 탭→기존 이동, 각 오버레이 우선순위, drag/release pointer capture, mouse 경로 동등성. 전체 `make test` + `make verify` GREEN.
-
 (77) **은하 상점 장비 구매·판매·정찰선 문구·회복 밸런스 정리** (msg `1546761251697328169`, R1 완료 후 진행)
   - (1) 은하계 별 상점에서 한 번에 구매 가능한 장비는 **최대 1개**로 제한한다. 담당: 새 순수 모듈 `game/shop_gear_rules.lua` + `game/scenes/play_shop.lua` 소비. 상점 오퍼/구매 상태를 별·은하 상점 방문 단위로 추적하고, 1개 구매 후 같은 상점의 추가 장비 구매 버튼은 비활성화한다. 지구 업그레이드·슬롯 구매에는 적용하지 않는다.
   - (2) 장착 장비 상세 툴팁에서 선택한 장비를 **언제든 판매**할 수 있게 한다. 담당: `game/shop_gear_rules.lua` 판매가 계산/인벤토리 제거 + `game/scenes/play_shop.lua` 또는 신규 `game/scenes/play_gear_popup.lua` 판매 버튼. 비행 중 판매도 가능하며 판매 직후 슬롯·시너지·스탯을 즉시 갱신하고 현금을 지급한다. 확인 버튼/터치영역은 44px 이상, 빈 슬롯·중복 탭 방어.
@@ -172,6 +165,14 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(R1-A1) **상점 출발 탭 이벤트 전파 오류 수정 + 전체 입력 소비 감사** (msg `1546763887930646618`)
+  - 재현: 상점의 출발 버튼을 탭하면 출발 처리 뒤 같은 포인터 이벤트가 비행 이동/조향 경로까지 전파되어 우주선 목표 위치가 탭 좌표로 급변한다.
+  - `game/scenes/play_input.lua` 추출과 동시에 모든 입력 레이어의 우선순위와 소비 계약을 명시한다: modal/popup/help/pause/destroyed → 상점·슬롯·출발·부스트·HUD 버튼 → 조이스틱/월드 이동. 상위 UI가 히트되면 반드시 `true`/조기 `return`으로 종료하며 같은 press가 하위 레이어에 재사용되지 않아야 한다.
+  - `touchpressed`뿐 아니라 mouse→touch 에뮬레이션, `keypressed`, `touchmoved`, `touchreleased`, 버튼에서 시작한 pointer capture까지 전수 감사한다. 출발·구매·판매·닫기·확인·슬롯·부스트·도움말·일시정지·장비 팝업·파괴 재시작·조이스틱에 대해 hit/consume/side-effect를 표로 검증한다.
+  - 특히 `launch()` 직후 phase가 `settled→ascending`으로 바뀌어 같은 함수 아래쪽의 ascending 월드 이동 분기가 실행되는 상태 전이를 방지한다. UI 액션은 성공/실패와 무관하게 해당 UI 영역의 press를 소비한다.
+  - 테스트: `game/tests/play_input.lua`에 상점 출발 탭→launch 1회·steering/target 변경 0회, 상점 버튼 밖 탭→기존 이동, 각 오버레이 우선순위, drag/release pointer capture, mouse 경로 동등성. 전체 `make test` + `make verify` GREEN. [DONE 2026-09-08]
+
 
 (55) **새게임/이어하기 → 탭하여 출발 화면을 반드시 거침** (OOB 2026-09-08) [DONE]
 (56) **HUD 최고기록 → 기록, 제로패딩 제거** (OOB 2026-09-08) [DONE]
