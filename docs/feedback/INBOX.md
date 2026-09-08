@@ -16,6 +16,14 @@
   - 상점 미리보기도 `속도 0 -> 1`로 통일하여 `60 -> 61`과 섞이지 않게 한다. 번역 KO/EN 동일 기준.
   - 테스트: `game/tests/speed_display.lua` — base 60/effective 60→0, 61→1, 80→20; 물리 `effectiveSpeed`는 60 유지; RCS 실제속도 기준 유지.
 
+(73) **Asset Studio 업로드 이미지에 고정 원형/타원 덮어쓰기 제거** (msg `1546743276339232869`)
+  - 담당: `tools/serve_editors.py` + `tools/asset-studio/editor.js` + `tools/test_serve_editors.py`. 게임 Lua 불변.
+  - 원인: sprite-gen import 실패 시 `generate_pil_fallback()`이 입력과 무관하게 중앙 wobble 원형(74~90행)과 accent ellipse(92~101행)를 항상 그림. 업로드 이미지가 있어도 그 위에 도형이 덮여 결과가 비슷한 원형으로 고정됨.
+  - 입력 이미지가 있으면 RGBA를 비율 유지 contain/투명 패딩 후 NEAREST 픽셀 리사이즈하여 **그대로 반환**하고 어떤 절차적 원·타원도 추가하지 않는다.
+  - 입력 이미지 없이 실제 sprite-gen도 없으면 가짜 원형을 생성하지 말고 명확한 `generator unavailable` 오류를 UI에 표시한다. 브라우저 로컬 xorshift 원형 fallback도 제거한다.
+  - API 응답/UI에 사용 엔진(`sprite-gen`/`uploaded-image`) 표시. 캐시된 구 JS를 피하도록 asset-studio 응답에 no-store 적용.
+  - 테스트: 서로 다른 두 입력 PNG 결과가 서로 다르고 원본 픽셀을 보존; 고정 ellipse 없음; 무입력+generator 없음은 오류; HTTP 캐시 금지.
+
 (59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
   - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
   - 충돌: `assets/sfx/collision.mp3`를 Pixabay **Space Explosion with reverb** (id 101449, morganpurkis/Freesound, ~4s, Pixabay Content License)로 교체.
