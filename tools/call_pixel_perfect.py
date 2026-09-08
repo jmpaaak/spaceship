@@ -16,6 +16,7 @@ def main():
     input_margin = int(sys.argv[3]) if len(sys.argv) > 3 else 0
     background_tolerance = int(sys.argv[4]) if len(sys.argv) > 4 else 28
     runtime_stem = sys.argv[5] if len(sys.argv) > 5 else planet_id
+
     
     img = Image.open(input_jpg)
     original_dims = img.size
@@ -26,15 +27,19 @@ def main():
     if bbox:
         w = bbox[2] - bbox[0]
         h = bbox[3] - bbox[1]
-        side = max(w, h)
+        # Keep the square inside the source. Pillow pads out-of-bounds crops
+        # with black, which can shift the endpoint's detected alpha bounds.
+        side = min(max(w, h), img.width, img.height)
         center_x = bbox[0] + w // 2
         center_y = bbox[1] + h // 2
+        left = min(max(center_x - side // 2, 0), img.width - side)
+        top = min(max(center_y - side // 2, 0), img.height - side)
         
         new_bbox = (
-            center_x - side // 2,
-            center_y - side // 2,
-            center_x - side // 2 + side,
-            center_y - side // 2 + side
+            left,
+            top,
+            left + side,
+            top + side
         )
         img = img.crop(new_bbox)
         

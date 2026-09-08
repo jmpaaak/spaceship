@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T02:05:41+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/star/cme_sdo_nasa_gsfc_20171208_archive_e001770.jpg",
+  "source_dimensions": [
+    2048,
+    1918
+  ],
+  "input_preparation": {
+    "resize": [
+      1024,
+      1024
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 0,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "star_cme",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 35,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "da0514f23d677947b26adf1a0f12f190de4cbbd6f213ec35d6270ed863fb7fc9",
+  "payload_bytes": 16876601,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}
