@@ -127,21 +127,7 @@ function M.run()
     -- 항목 1, "조이스틱을 통해 전방향으로 이동 가능함").
     require("game.tests.legacy_inflight_slot_i18n").run()
 
-    -- Item 11(c): dead fuel-upgrade function and run state fields must not exist
-    -- in expedition.lua. buyFuelUpgrade was removed when the fuel upgrade mechanic
-    -- was abolished; main.lua capture harnesses that still reference it would crash
-    -- at runtime if those GAME_CAPTURE_PHASE values are ever triggered.
-    do
-        local expedition = require("game.expedition")
-        assert(expedition.buyFuelUpgrade == nil,
-            "item 11(c): expedition.buyFuelUpgrade must not exist (fuel upgrade abolished)")
-        -- slotOpportunities must not be initialised in a fresh run (item 15(a))
-        local run = expedition.new({})
-        assert(run.slotOpportunities == nil,
-            "item 11(c): run.slotOpportunities must be nil after item-15(a) abolition")
-        assert(run.slotDistance == nil,
-            "item 11(c): run.slotDistance must be nil after item-15(a) abolition")
-    end
+    require("game.tests.legacy_expedition_removed_slots").run()
 
     -- Item 11(c) follow-up: the Earth shop's shopLoadoutLines() must not expose
     -- any fuel-upgrade keys (fuelAction/fuelStatus/fuelAffordable/fuelPreview)
@@ -2172,6 +2158,7 @@ function M.run()
     require("game.tests.self_test_launch_loadout_layout_extraction").run()
     require("game.tests.self_test_ascending_touch_steering_extraction").run()
     require("game.tests.self_test_inflight_slot_i18n_extraction").run()
+    require("game.tests.self_test_expedition_removed_slots_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
