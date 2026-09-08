@@ -145,6 +145,7 @@ M.launchSpawnY = 75 - 68 - 20  -- -13  (INBOX 23: margin 50→20)
 -- INBOX (5)(a): atmospheric reentry starts outside settle range.
 M.earthReentryRadius = 145  -- (INBOX 23: shrink from 174)
 M.reentryShakeMax = 6
+require("game.scenes.play_reentry").install(M)
 
 -- INBOX (14): undiscovered-planet collect orbit is a faint thin line.
 -- Collection still uses radius+30; only the ring visual is thinned.
@@ -160,32 +161,6 @@ function M.collectOrbitRadius(planetRadius, run)
         return expedition.collectOrbitRadius(run, base)
     end
     return base
-end
-
-function M.reentryDrawOffsetX(time, magnitude)
-    return math.sin(time * 60) * (magnitude or 0)
-end
-
-function M.reentryShakeFromDistance(dist)
-    local radius = M.earthReentryRadius
-    if dist >= radius then
-        return 0
-    end
-    if dist <= 0 then
-        return M.reentryShakeMax
-    end
-    return M.reentryShakeMax * (1 - dist / radius)
-end
-
-function M.reentryHeatVignetteAlpha(dist)
-    local radius = M.earthReentryRadius
-    if dist >= radius then
-        return 0
-    end
-    if dist <= 0 then
-        return 0.3
-    end
-    return 0.3 * (1 - dist / radius)
 end
 
 local function pulseHaptic(self, intensity)
