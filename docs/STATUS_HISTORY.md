@@ -1602,3 +1602,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `play.lua` reduced from 1974 lines / 100186 bytes to 1140 lines / 53943 bytes; the extracted module is 796 lines / 41656 bytes (below the 800-line/80KB module ceiling).
   - Verified the extracted draw body is executable-text equivalent after comment/whitespace normalization; `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
   - Exact next slice: extract `steeringButtonState`, `keypressed`, and touch callbacks from `game/scenes/play.lua` into `game/scenes/play_input.lua`; do not add pending features to `play.lua`.
+
+## Archived from STATUS.md (2026-09-08 15:49)
+
+- R1 (Lane C, partial): extracted background-star and planet-generation legacy coverage to `game/tests/legacy_world_generation.lua`.
+  - `game/self_test.lua` now delegates four world-generation test groups and shrank from 9,540 to 9,401 lines.
+  - Preserved deterministic/dense star fields, independent coordinate salts, planet density, and overlap assertions.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
