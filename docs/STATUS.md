@@ -1,9 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted boost-counter destruction-reset coverage to `game/tests/legacy_gear_boosts_used_destroy_reset.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,742 to 5,692 lines.
-  - Preserved the boost, insurance, and reroll reset assertions without changing production behavior or adding a `love.*` boundary.
+- R1 (Lane C, partial): extracted hub-exploration relaunch/reset coverage to `game/tests/legacy_hub_explored_resets_on_launch.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,692 to 5,612 lines.
+  - Preserved the safe-relaunch and destruction-reset assertions without changing production behavior or adding a `love.*` boundary.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testHubExploredResetsOnLaunch` to `game/tests/legacy_hub_explored_resets_on_launch.lua` without changing assertions.
+  - Exact next slice: extract `testHubPartialSettlement` to `game/tests/legacy_hub_partial_settlement.lua` without changing assertions.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).

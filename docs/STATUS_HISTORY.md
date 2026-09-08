@@ -1936,3 +1936,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
   - Preserved joystick vectors, touch/mouse movement, heading, thrust, and RCS assertions unchanged.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 20:15)
+
+- R1 (Lane C, partial): extracted boost-counter destruction-reset coverage to `game/tests/legacy_gear_boosts_used_destroy_reset.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,742 to 5,692 lines.
+  - Preserved the boost, insurance, and reroll reset assertions without changing production behavior or adding a `love.*` boundary.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testHubExploredResetsOnLaunch` to `game/tests/legacy_hub_explored_resets_on_launch.lua` without changing assertions.
