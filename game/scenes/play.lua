@@ -18,6 +18,12 @@ local planetColor = playPlanets.planetColor
 local playSteering = require("game.scenes.play_steering")
 playSteering.install(M)
 local shortestAngleDelta = playSteering.shortestAngleDelta
+local playCollision = require("game.scenes.play_collision")
+playCollision.install(M, {
+    world = world,
+    expedition = expedition,
+    i18n = i18n,
+})
 M.__index = M
 
 -- Shared sprite drawing primitives extracted from this oversized scene.
@@ -758,34 +764,6 @@ function M:drawGearSlots(y)
     love.graphics.setColor(0.6, 0.7, 0.8, 0.9)
     love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 28, viewport.width, "center")
     love.graphics.setFont(previousFont)
-end
-
-function M:collisionRisk(planet)
-    local phase = self.expedition.phase
-    -- Item 2: returning phase abolished; only ascending has collision risk.
-    if phase ~= "ascending" then return nil end
-    local damage = world.collisionDamage(planet)
-    local lethal = damage >= self.expedition.durability
-    local risk = {
-        damage = damage,
-        lethal = lethal,
-        label = string.format(lethal and i18n.t("risk_lethal") or i18n.t("risk_normal"), damage),
-    }
-    if phase == "ascending" then
-        local baseValue = world.sampleValue(planet)
-        risk.sampleValue = math.floor(baseValue * expedition.sampleYieldMultiplier(self.expedition) + 0.5)
-        risk.sampleLabel = string.format(i18n.t("sample_value_label"), risk.sampleValue)
-    end
-    return risk
-end
-
-function M:approachWarning(planet, planetScreenY, shipScreenY)
-    if planet.id and self.collided[planet.id] then return nil end
-    local phase = self.expedition.phase
-    -- Item 2: returning phase abolished; only ascending approach warnings.
-    local approaching = phase == "ascending" and planetScreenY >= 40 and planetScreenY < shipScreenY
-    if not approaching then return nil end
-    return self:collisionRisk(planet)
 end
 
 function M:hudDistanceRaw()

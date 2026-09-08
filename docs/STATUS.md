@@ -1,9 +1,10 @@
 ## Current Status
-- R1: `play.lua` steering-rule extraction.
-  - Added pure `game/scenes/play_steering.lua` for full-circle stick heading and shortest wrapped angle-delta rules; `install()` preserves the scene API.
-  - Added engine-hosted `game/tests/play_steering.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
-  - `play.lua` reduced from 3029 lines / 151623 bytes to 3020 lines / 151456 bytes.
-  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+- R1: `play.lua` collision-presentation extraction.
+  - Added `game/scenes/play_collision.lua` for ascending collision risk, lethal/sample labels, and approach-warning eligibility; dependency injection keeps the rules engine-testable while `install()` preserves the scene API.
+  - Added engine-hosted `game/tests/play_collision.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3020 lines / 151456 bytes to 2998 lines / 150393 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
+  - Exact next slice: extract `hudDistanceRaw` and HUD line assembly into `game/scenes/play_hud_data.lua`; do not add a pending feature to `play.lua`.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
