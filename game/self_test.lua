@@ -229,26 +229,7 @@ function M.run()
 
     require("game.tests.legacy_hub_restock").run()
 
-    -- INBOX 61(17): destroyed screen restart text Y position
-    do
-        local PlayScene = require("game.scenes.play")
-        -- When no keep choices: text should be vertically centered in panel
-        local emptyY = PlayScene.destroyedRestartTextY(false)
-        local panelCenter = PlayScene.destroyedPanelY + math.floor(PlayScene.destroyedPanelH / 2)
-        assert(math.abs(emptyY - (panelCenter - 11)) <= 1,
-            "INBOX 61(17): empty keepPartChoices restart text must be near panel vertical center"
-            .. " (got " .. emptyY .. ", expected ~" .. (panelCenter - 11) .. ")")
-        -- When items exist: text should be near panel bottom
-        local itemsY = PlayScene.destroyedRestartTextY(true)
-        local bottomExpect = PlayScene.destroyedPanelY + PlayScene.destroyedPanelH - 72
-        assert(itemsY == bottomExpect,
-            "INBOX 61(17): with keepPartChoices restart text must be near panel bottom"
-            .. " (got " .. itemsY .. ", expected " .. bottomExpect .. ")")
-        -- Centered Y must be higher (smaller) than bottom Y
-        assert(emptyY < itemsY,
-            "INBOX 61(17): empty restart Y (" .. emptyY .. ") must be above items Y (" .. itemsY .. ")")
-        print("  INBOX-61(17) destroyed restart text Y OK")
-    end
+    require("game.tests.legacy_destroyed_restart_text").run()
 
     -- INBOX 61(18): hub shop row3 (gear text) gap too large — must be < 100px
     do
@@ -1120,6 +1101,7 @@ function M.run()
     require("game.tests.self_test_keep_one_confirm_extraction").run()
     require("game.tests.self_test_planet_sheet_sprites_extraction").run()
     require("game.tests.self_test_hub_restock_extraction").run()
+    require("game.tests.self_test_destroyed_restart_text_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
