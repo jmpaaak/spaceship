@@ -2184,3 +2184,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Bug: `play.lua` generated reel rolls with `math.random(1,10)` but totalWeight is 20 (6+3+4+3+4). Only MONEY/PART/SPEED were ever chosen; DURABILITY and HARVEST were unreachable.
   - Fix: added `expedition.earthSlotTotalWeight(run, galaxyId)` helper (luck-aware) to compute effective totalWeight. `play.lua` now uses `math.random(0, tw-1)` for proper uniform distribution over all 5 symbols.
   - Test INBOX-61(35) in `game/self_test.lua`: sweeps all roll values 0..tw-1 and asserts all 5 symbols reachable. Also verifies luck increases totalWeight. GREEN.
+
+## Archived from STATUS.md (2026-09-08 23:10)
+
+- INBOX 61(36): SFX 3종 module
+  - Created `game/sfx.lua` — standalone SFX module with headless-safe API (no-op when `love.audio` is nil).
+  - Three effects: `galaxy_discover` (oneshot, dedup by galaxy id), `star_sample` (loop while in star well), `collision` (oneshot on planet hit).
+  - Lazy source creation, uniqueKey dedup for galaxy_discover, `resetGuards()`/`releaseAll()` cleanup API.
+  - `play.lua` integration: 1 require + 4 one-liner calls (galaxy discover, star_sample play/stop, collision).
+  - Test `game/tests/sfx.lua` registered in self_test: defs validation, headless safety, dedup guards, reset. GREEN.

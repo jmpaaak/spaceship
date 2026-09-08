@@ -1,12 +1,4 @@
 ## Current Status
-- INBOX 61(36): SFX 3종 module
-  - Created `game/sfx.lua` — standalone SFX module with headless-safe API (no-op when `love.audio` is nil).
-  - Three effects: `galaxy_discover` (oneshot, dedup by galaxy id), `star_sample` (loop while in star well), `collision` (oneshot on planet hit).
-  - Lazy source creation, uniqueKey dedup for galaxy_discover, `resetGuards()`/`releaseAll()` cleanup API.
-  - `play.lua` integration: 1 require + 4 one-liner calls (galaxy discover, star_sample play/stop, collision).
-  - Test `game/tests/sfx.lua` registered in self_test: defs validation, headless safety, dedup guards, reset. GREEN.
-
-
 - INBOX 61(32) (partial): finish play_shop.lua extraction.
   - Codex rate-limit cutoff left `play_shop.lua` partially extracted (only overlays).
   - Completed the extraction of `shopModalLayout`, `shopModalButtonRects`, `hitShopModalGearSlot`, and `drawShopModal` into `play_shop.lua`.
@@ -118,6 +110,10 @@
 - R1 (Lane C, partial): extracted the INBOX 61(3) slot UI/i18n characterization block into `game/tests/legacy_slot_ui_copy.lua`.
   - Preserved the EN/KO prompt-copy, colon-free English, Korean `탭하여`, lever-reference, and output assertions unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,649 to 3,622 lines.
+
+- R1 (Lane C, partial): extracted the stellar synergy rule, expedition integration, and HUD characterization suite into `game/tests/legacy_stellar_synergies.lua`.
+  - Preserved all existing assertions and execution order behind `run()`; added `game/tests/self_test_stellar_extraction.lua` to enforce delegation and prevent the bodies from returning to the runner.
+  - Observed the expected missing-module RED, then `make test` GREEN; `game/self_test.lua` decreased from 3,622 to 3,398 lines.
 
 ## Next slice
 
