@@ -24,6 +24,13 @@
   - API 응답/UI에 사용 엔진(`sprite-gen`/`uploaded-image`) 표시. 캐시된 구 JS를 피하도록 asset-studio 응답에 no-store 적용.
   - 테스트: 서로 다른 두 입력 PNG 결과가 서로 다르고 원본 픽셀을 보존; 고정 ellipse 없음; 무입력+generator 없음은 오류; HTTP 캐시 금지.
 
+(74) **BOOST 버튼 터치가 우주선 위치 이동 입력으로 전파되지 않게 소비** (msg `1546744727726624919`)
+  - 담당: `game/scenes/play_boost.lua`가 버튼 hit-test와 입력 소비 여부를 소유. `play.lua`는 `if playBoost.touchpressed(...) then return end` 한 줄 위임만. 조이스틱 모듈과 역할을 섞지 않는다.
+  - BOOST 버튼을 누르면 부스트 충전 소비/효과만 실행하고, 동일한 touch/mouse press가 우주선 목표 위치 이동·조이스틱·launch 입력으로 절대 전달되지 않아야 한다.
+  - `touchpressed`와 마우스 입력 에뮬레이션 양쪽에서 소비 boolean을 반환한다. 버튼 영역 밖 입력은 기존 이동 동작을 그대로 유지한다.
+  - 손가락을 버튼에서 시작해 밖으로 움직이거나 떼어도 이동 제어가 뒤늦게 활성화되지 않도록 해당 pointer ID를 release까지 캡처한다.
+  - 테스트: `game/tests/play_boost_input.lua` — 버튼 내부 press→boost 1회/이동 0회; 외부 press→이동; 버튼 시작 후 drag/release→이동 0회; 충전 0이어도 버튼 터치는 소비.
+
 (59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
   - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
   - 충돌: `assets/sfx/collision.mp3`를 Pixabay **Space Explosion with reverb** (id 101449, morganpurkis/Freesound, ~4s, Pixabay Content License)로 교체.
