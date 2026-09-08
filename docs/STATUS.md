@@ -1,8 +1,8 @@
 ## Current Status
-- INBOX (52): title ship idle motion.
-  - `title.lua` `shipIdlePose(t)`: ±7° diagonal tilt, slow bob (|oy|≤8), tiny left-right sway (|ox|≤3). `update` advances `shipIdleTime`. Draw rotates around sprite center.
-  - Asset unchanged: `assets/ship/ship_default.png`, nearest ×7, same `shipLayout`.
-  - Test `game/tests/title_ship_idle.lua` GREEN. play.lua untouched except self_test require.
+- INBOX (53): skip galaxy_discover on CONTINUE / NEW GAME (home/start galaxy).
+  - `game/sfx.lua` `playGalaxyDiscover(galaxy)`: skip milkyway, `galaxy:0:0`, and (gx,gy)=(0,0). Non-home galaxies still play once via uniqueKey.
+  - `play.lua` one-line: `sfx.playGalaxyDiscover(wellGalaxy)`. Title has no tap SFX; `bgm.start()` kept.
+  - Test `game/tests/title_start_sfx.lua` GREEN.
 
 - INBOX (45): harvest upgrade +5% per buy; durability buy fills the new cell.
   - `game/expedition.lua`: default `sampleYieldUpgradeAmount` 0.01→0.05. Shop copy becomes `HARVEST x1.00 -> x1.05`.
@@ -149,6 +149,6 @@
 
 ## Next slice
 
-- INBOX (53): skip galaxy_discover / start SFX on CONTINUE / NEW GAME; keep BGM. Test `game/tests/title_start_sfx.lua`.
+- INBOX (54): debris hits play collision SFX at 1.5x volume (0.9); planet stays 0.6. Test `game/tests/debris_collision_sfx.lua`.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

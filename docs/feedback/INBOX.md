@@ -4,12 +4,6 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(53) **이어하기/새게임 출발 SFX 제거** (OOB 2026-09-08)
-  - 담당: `game/scenes/title.lua` + `game/scenes/play.lua` 진입 경로. play.lua는 한 줄 위임만.
-  - 이어하기/새게임 탭 직후 나는 출발음이 안 맞음. 버튼 탭 SFX가 있으면 제거.
-  - 유력 원인: 시작 은하에서 `sfx.play("galaxy_discover")`가 즉시 재생. 홈/시작 은하는 discover SFX 스킵.
-  - BGM은 유지. 테스트: `game/tests/title_start_sfx.lua`
-
 (54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
   - 담당: `game/sfx.lua` + 파편 히트 호출. play.lua 거대 파일에 로직 붙이지 말고 한 줄 위임 (`game/scenes/play.lua` debris 루프).
   - 행성 충돌은 `sfx.play("collision")` (vol 0.6). 파편(`nearbyDebris`) 히트에는 같은 클립을 **1.5배(0.9)** 로 재생.
@@ -75,6 +69,10 @@
   - 테스트: `game/tests/slot_payout_audit.lua` — 2매치 HARVEST 후 multiplier +0.10, 3매치 후 +0.50 (level +1 / +5). 기존 `harvest_hull_upgrade.lua` rewardValue 0.10/0.50 유지.
 
 ## 처리 완료
+(53) **이어하기/새게임 출발 SFX 제거** (OOB 2026-09-08)
+  - 완료: `sfx.playGalaxyDiscover(galaxy)` skips milkyway / `galaxy:0:0` / (gx,gy)=(0,0). play.lua one-line delegate. Title has no button tap SFX; BGM `bgm.start()` kept.
+  - Test `game/tests/title_start_sfx.lua` GREEN.
+
 (52) **타이틀 함선 아이들 모션** (msg `1546710064830877696`)
   - 완료: `title.lua` `shipIdlePose(t)` — ±7° diagonal tilt, slow bob (|oy|≤8), tiny sway (|ox|≤3). Draw uses nearest ×7 `ship_default.png` rotated around sprite center. Asset unchanged.
   - Test `game/tests/title_ship_idle.lua` GREEN. play.lua untouched except self_test require.

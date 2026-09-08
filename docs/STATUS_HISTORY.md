@@ -1392,3 +1392,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `play.lua` `M:update` early-returns (self.time / ship frozen); `paused` stays false so HUD pause menu is not drawn.
   - Tap anywhere still closes overlay via existing `touchpressed` path, then time resumes.
   - Test `game/tests/help_overlay_pause.lua` GREEN.
+
+## Archived from STATUS.md (2026-09-08 11:45)
+
+- INBOX (52): title ship idle motion.
+  - `title.lua` `shipIdlePose(t)`: ±7° diagonal tilt, slow bob (|oy|≤8), tiny left-right sway (|ox|≤3). `update` advances `shipIdleTime`. Draw rotates around sprite center.
+  - Asset unchanged: `assets/ship/ship_default.png`, nearest ×7, same `shipLayout`.
+  - Test `game/tests/title_ship_idle.lua` GREEN. play.lua untouched except self_test require.

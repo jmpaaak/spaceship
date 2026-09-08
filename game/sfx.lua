@@ -40,6 +40,17 @@ local function getSource(name)
     return src
 end
 
+--- INBOX (53): home / start galaxy is not a discovery. Skip milkyway and (0,0).
+function M.playGalaxyDiscover(galaxy)
+    if not galaxy then return end
+    local id = galaxy.id
+    local gx, gy = galaxy.gx or 0, galaxy.gy or 0
+    if id == "milkyway" or id == "galaxy:0:0" or (gx == 0 and gy == 0) then
+        return
+    end
+    M.play("galaxy_discover", id)
+end
+
 --- Play a one-shot SFX. For galaxy_discover, pass a unique key to avoid repeats.
 --- @param name string  One of: "galaxy_discover", "star_sample", "collision"
 --- @param uniqueKey string|nil  Optional dedup key (e.g. galaxyId for galaxy_discover)

@@ -2013,7 +2013,7 @@ function M:update(dt)
         self:updateBoostSpeedLines(dt)
         local wellGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
         -- INBOX 61(36): galaxy discover SFX — once per galaxy
-        if wellGalaxy then sfx.play("galaxy_discover", wellGalaxy.id) end
+        if wellGalaxy then sfx.playGalaxyDiscover(wellGalaxy) end
         local wellSun = wellGalaxy and world.sunPosition(wellGalaxy)
         if wellSun then
             local wdx, wdy = wellSun.x - self.ship.x, wellSun.y - self.ship.y
