@@ -155,24 +155,7 @@ function M.run()
 
     require("game.tests.legacy_planet_effect_sprite").run()
 
-    -- ComfyUI floating text icon wiring (group 4): drawFloatingIconSprite is
-    -- exported and returns false when image is nil (graceful no-op).
-    -- scene instance carries the three floating-icon image slots.
-    do
-        local PlayScene = require("game.scenes.play")
-        assert(type(PlayScene.drawFloatingIconSprite) == "function",
-            "drawFloatingIconSprite must be exported on PlayScene")
-        -- nil image -> returns false without error
-        local ok, res = pcall(PlayScene.drawFloatingIconSprite, nil, 50, 50, 8, 1)
-        assert(ok, "drawFloatingIconSprite(nil,...) must not throw")
-        assert(res == false, "drawFloatingIconSprite(nil,...) must return false")
-        -- scene instance carries the image slots (nil in headless, userdata in LOVE)
-        local scene = PlayScene.new()
-        for _, key in ipairs({"floatingSampleIconImage", "floatingDamageIconImage", "messageBannerIconImage"}) do
-            assert(scene[key] == nil or type(scene[key]) == "userdata",
-                key .. " must be nil (headless) or image userdata")
-        end
-    end
+    require("game.tests.legacy_floating_icon_sprite").run()
 
     -- ComfyUI panel/overlay wiring (group 5): drawPanelSprite is exported and
     -- returns false when image is nil (graceful no-op). scene instance carries
@@ -1764,6 +1747,7 @@ function M.run()
     require("game.tests.self_test_earth_shop_gear_offer_keyboard_extraction").run()
     require("game.tests.self_test_hud_sprite_fallback_extraction").run()
     require("game.tests.self_test_planet_effect_sprite_extraction").run()
+    require("game.tests.self_test_floating_icon_sprite_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end

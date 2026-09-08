@@ -1,0 +1,27 @@
+local M = {}
+
+local function read(path)
+    local body, err = love.filesystem.read(path)
+    assert(body, "R1-C: cannot read " .. path .. ": " .. tostring(err))
+    return body
+end
+
+function M.run()
+    print("  [R1-C] self_test floating icon sprite extraction tests...")
+    local runner = read("game/self_test.lua")
+    local suite = read("game/tests/legacy_floating_icon_sprite.lua")
+
+    assert(runner:find('require("game.tests.legacy_floating_icon_sprite").run()', 1, true),
+        "R1-C: self_test must delegate floating icon sprite checks")
+    assert(not runner:find("drawFloatingIconSprite must be exported on PlayScene", 1, true)
+            and not runner:find("floatingSampleIconImage", 1, true),
+        "R1-C: floating icon sprite characterization body must leave self_test")
+    assert(suite:find("function M.run()", 1, true),
+        "R1-C: extracted floating icon sprite suite must expose run()")
+    assert(suite:find("drawFloatingIconSprite(nil,...) must return false", 1, true)
+            and suite:find('{"floatingSampleIconImage", "floatingDamageIconImage", "messageBannerIconImage"}', 1, true),
+        "R1-C: extracted suite must retain false-return and three image-slot contracts")
+    print("  R1-C self_test floating icon sprite extraction OK")
+end
+
+return M
