@@ -1,9 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted equipped-edition run-wiring coverage to `game/tests/legacy_gear_equipped_edition_effects_run_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 6,063 to 5,925 lines.
-  - Preserved crystallized/refined/quantum-flawed transforms, hull/engine slot scoping, input immutability, stored edition identity, and idempotence assertions without adding a `love.*` boundary.
+- R1 (Lane C, partial): extracted quantum-flawed engine drawback wiring coverage to `game/tests/legacy_gear_quantum_flawed_engine_drawback_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,925 to 5,833 lines.
+  - Preserved engine-slot negative-only hull drawback stacking, positive hull isolation, edition materialization, unequip restoration, and live singularity-drive assertions without adding a `love.*` boundary.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testGearQuantumFlawedEngineDrawbackWiring` to `game/tests/legacy_gear_quantum_flawed_engine_drawback_wiring.lua` without changing assertions.
+  - Exact next slice: extract `testGearEngineSynergyMultiplierWiring` to `game/tests/legacy_gear_engine_synergy_multiplier_wiring.lua` without changing assertions.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.

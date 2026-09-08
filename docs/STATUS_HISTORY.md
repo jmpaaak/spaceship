@@ -1913,3 +1913,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved guaranteed drops, deterministic edition thresholds/effect materialization, and luck-boosted edition assertions without adding a `love.*` boundary.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearEquippedEditionEffectsRunWiring` to `game/tests/legacy_gear_equipped_edition_effects_run_wiring.lua` without changing assertions.
+
+## Archived from STATUS.md (2026-09-08 20:00)
+
+- R1 (Lane C, partial): extracted equipped-edition run-wiring coverage to `game/tests/legacy_gear_equipped_edition_effects_run_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,063 to 5,925 lines.
+  - Preserved crystallized/refined/quantum-flawed transforms, hull/engine slot scoping, input immutability, stored edition identity, and idempotence assertions without adding a `love.*` boundary.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearQuantumFlawedEngineDrawbackWiring` to `game/tests/legacy_gear_quantum_flawed_engine_drawback_wiring.lua` without changing assertions.
