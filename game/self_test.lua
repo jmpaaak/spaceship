@@ -18,38 +18,9 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 14 (A)~(G) content coverage: every run-wired effect type in
--- gear.knownEffectTypes must actually be used by at least one card in the
--- bundled hull_parts.json/engine_parts.json pools combined, not merely
--- exist as validated-but-dead schema. Item 10(b)'s engine-propulsion suite
--- already checked this for the (G) propulsion effects; this generalizes the
--- same "real content, not just schema" regression to the full A~F set,
--- which docs/STATUS.md had documented as having a "최소 1개 실제
--- run-level 소비자" (a run-state *function*) for every type, but several
--- types (luck, chainTrigger, rerollBonus, collisionRadius, detectionRadius,
--- autoCollect, sellMultiplier) still had zero cards actually using them in
--- the shipped card pools -- so the run-level wiring existed but a player
--- could never actually encounter it in play.
-local function testGearEffectTypeContentCoverage()
-    local hullPool = gear.loadHullParts()
-    local enginePool = gear.loadEngineParts()
-    local seen = {}
-    for _, pool in ipairs({ hullPool, enginePool }) do
-        for _, part in ipairs(pool) do
-            for _, effect in ipairs(part.effects) do
-                seen[effect.type] = true
-            end
-        end
-    end
-    for t, _ in pairs(gear.knownEffectTypes) do
-        assert(seen[t], "effect type '" .. t ..
-            "' must be used by at least one bundled hull/engine part (content coverage, item 14)")
-    end
-end
-
 -- Item 10/14 content-coverage gap audit (this lane's recurring "문서-코드
 -- 정합성 감사" pattern applied one level deeper than
--- testGearEffectTypeContentCoverage above): that test only checks that
+-- legacy_gear_effect_content suite): that test only checks that
 -- every effect TYPE appears somewhere across the two pools combined, but
 -- several run-level wrappers are documented (game/self_test.lua's
 -- testGearHullSpeedRunWiring/testGearMoneyRunWiring and
@@ -137,7 +108,7 @@ end
 
 -- Item 10/14 content-coverage gap audit, one level further (this lane's
 -- recurring "문서-코드 정합성 감사" pattern applied to a direction the
--- prior two coverage tests never checked). testGearEffectTypeContentCoverage
+-- prior two coverage tests never checked). The legacy gear-effect content suite
 -- only requires each of gear.knownEffectTypes to appear SOMEWHERE across
 -- the hull+engine pools combined; testEngineCardsHaveNonHullOnlyEffect only
 -- requires each bundled engine card to have at least one non-hull-only
@@ -150,7 +121,7 @@ end
 -- from hull gear ONLY, with zero bundled engine cards ever carrying it.
 -- An audit of the actual `game/data/engine_parts.json` (14 cards) finds
 -- exactly this: every one of these 10 category-agnostic types has at least
--- one bundled hull card (per testGearEffectTypeContentCoverage) but not a
+-- one bundled hull card (per the legacy gear-effect content suite) but not a
 -- single bundled engine card, meaning a player who equips only engine gear
 -- can never encounter luck/chainTrigger/rerollBonus/collisionRadius/
 -- detectionRadius/autoCollect/insurance/shopDiscount/sellMultiplier/
@@ -3489,7 +3460,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_schema_docs").run()
     require("game.tests.legacy_gear_effect_schema").run()
     require("game.tests.legacy_engine_propulsion").run()
-    testGearEffectTypeContentCoverage()
+    require("game.tests.legacy_gear_effect_content").run()
     testEngineCardsHaveNonHullOnlyEffect()
     testGearEditionScopeContentCoverage()
     testHullCardsHaveNonEngineOnlyEffect()

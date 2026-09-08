@@ -1691,3 +1691,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 8,377 to 8,270 lines.
   - Preserved all gear calculations, editor-source sync assertions, and the engine-hosted `love.filesystem` boundary unchanged.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 17:11)
+
+- R1 (Lane C, partial): extracted engine-propulsion specialization coverage to `game/tests/legacy_engine_propulsion.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,270 to 8,220 lines.
+  - Preserved effect-category, boost-charge conversion, and bundled engine/hull pool assertions unchanged.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.

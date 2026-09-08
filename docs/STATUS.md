@@ -1,7 +1,7 @@
 ## Current Status
-- R1 (Lane C, partial): extracted engine-propulsion specialization coverage to `game/tests/legacy_engine_propulsion.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 8,270 to 8,220 lines.
-  - Preserved effect-category, boost-charge conversion, and bundled engine/hull pool assertions unchanged.
+- R1 (Lane C, partial): extracted bundled gear effect-type content coverage to `game/tests/legacy_gear_effect_content.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,220 to 8,191 lines.
+  - Preserved every known-effect traversal and bundled hull/engine pool assertion unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
@@ -151,6 +151,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearEffectTypeContentCoverage` from `game/self_test.lua` into `game/tests/legacy_gear_effect_content.lua`, preserving bundled hull/engine pool coverage assertions.
+- R1 (Lane C): extract `testEngineCardsHaveNonHullOnlyEffect` from `game/self_test.lua` into `game/tests/legacy_engine_effect_viability.lua`, preserving per-card engine-slot viability assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
