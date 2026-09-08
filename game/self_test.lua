@@ -10,45 +10,9 @@ local json = require("game.json")
 local gear = require("game.gear")
 local M = {}
 
--- docs/feedback/INBOX.md item 12/13: the web editor's client-side
--- validation is documented (tools/gear-editor/README.md, editor.js's own
--- header comment: "Validation rules here intentionally mirror
--- game/gear.lua's loader exactly") as staying byte-for-byte in sync with
--- gear.lua's `M.knownEditions`/`M.knownRarities` whitelists -- exactly the
--- same sync guarantee `testGearEffectSchemaExpansion` already enforces for
--- `M.knownEffectTypes`/`EFFECT_TYPE_GROUPS`. Until this test, that
--- guarantee for editions/rarities existed only as a comment: nothing
--- actually re-read editor.js's `KNOWN_EDITIONS`/`KNOWN_RARITIES` arrays and
--- compared them against gear.lua, so a future rarity/edition added to one
--- side but not the other would silently drift (the editor would either
--- reject valid game data or accept data the game loader rejects) with no
--- test catching it.
-local function testGearEditorEditionAndRaritySync()
-    local editorSrc = love.filesystem.read("tools/gear-editor/editor.js")
-    assert(editorSrc, "tools/gear-editor/editor.js must be readable for the sync check")
-
-    local editionsStart = editorSrc:find("KNOWN_EDITIONS%s*=%s*%[")
-    assert(editionsStart, "editor.js must define a KNOWN_EDITIONS array")
-    local editionsEnd = editorSrc:find("%]", editionsStart)
-    local editionsBlock = editorSrc:sub(editionsStart, editionsEnd)
-    for edition, _ in pairs(gear.knownEditions) do
-        assert(editionsBlock:find('"' .. edition .. '"', 1, true),
-            "editor.js KNOWN_EDITIONS must include '" .. edition .. "' to stay in sync with gear.lua")
-    end
-
-    local raritiesStart = editorSrc:find("KNOWN_RARITIES%s*=%s*%[")
-    assert(raritiesStart, "editor.js must define a KNOWN_RARITIES array")
-    local raritiesEnd = editorSrc:find("%]", raritiesStart)
-    local raritiesBlock = editorSrc:sub(raritiesStart, raritiesEnd)
-    for rarity, _ in pairs(gear.knownRarities) do
-        assert(raritiesBlock:find('"' .. rarity .. '"', 1, true),
-            "editor.js KNOWN_RARITIES must include '" .. rarity .. "' to stay in sync with gear.lua")
-    end
-end
-
 -- docs/feedback/INBOX.md item 12/13 (follow-up): STATUS.md's own recorded
--- next-slice note flagged that the web editor's edition sync check (just
--- above) only verifies the editor *accepts* the right edition ids -- it
+-- next-slice note flagged that the extracted web editor edition sync check
+-- only verifies the editor *accepts* the right edition ids -- it
 -- never verifies the editor actually *previews* what an edition numerically
 -- does to a card's effects (e.g. "crystallized" doubling sampleSellValue,
 -- "quantum_flawed" doubling everything but appending a hullDurability
@@ -188,7 +152,7 @@ end
 -- value range)") explicitly promises the effect value RANGE stays in sync
 -- too, but until this test nothing ever checked
 -- EFFECT_VALUE_MIN/EFFECT_VALUE_MAX against gear.lua's
--- M.effectValueMin/M.effectValueMax the way testGearEditorEditionAndRaritySync
+-- M.effectValueMin/M.effectValueMax the way the extracted whitelist test
 -- already does for editions/rarities -- a future rebalance of gear.lua's
 -- range (e.g. -100..100 -> -50..50) could silently drift so the editor
 -- keeps accepting/rejecting cards the real game loader would reject/accept.
@@ -341,11 +305,11 @@ local function testGearEditorSuitAndSynergySync()
 end
 
 -- Groups the gear-editor <-> gear.lua sync regression checks into one
--- wrapper so M.run() only references a single upvalue for all five
+-- wrapper so M.run() only references a single suite upvalue
 -- (Lua's 60-upvalue-per-function ceiling: this suite has grown enough
 -- local test functions that M.run() itself was about to exceed it).
 local function testGearEditorSyncSuite()
-    testGearEditorEditionAndRaritySync()
+    require("game.tests.legacy_gear_editor_whitelists").run()
     testGearEditorEditionEffectPreviewSync()
     testGearEditorEffectValueRangeSync()
     testGearEditorEconomyPreviewSync()

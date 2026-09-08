@@ -1,9 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted gear rarity/edition legacy coverage to `game/tests/legacy_gear_rarity_editions.lua`.
-  - `game/self_test.lua` delegates the unchanged rarity roll, edition roll/effect, pool-candidate, and mutation/error assertions.
-  - `game/self_test.lua` shrank from 8,839 to 8,742 lines; the extracted module has no direct `love.*` dependency.
+- R1 (Lane C, partial): extracted gear-editor edition/rarity whitelist coverage to `game/tests/legacy_gear_editor_whitelists.lua`.
+  - `game/self_test.lua` delegates the unchanged `KNOWN_EDITIONS` / `KNOWN_RARITIES` sync assertions and shrank from 8,742 to 8,706 lines.
+  - The engine-hosted module preserves the existing `game.gear` and `love.filesystem` boundaries.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Next slice: extract the gear-editor sync regression suite from `game/self_test.lua` into one `game/tests/legacy_*.lua` module.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
@@ -152,6 +151,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract rarity/edition legacy coverage from `game/self_test.lua` into `game/tests/legacy_gear_rarity_edition.lua`.
+- R1 (Lane C): move the remaining gear-editor sync checks from `game/self_test.lua` into `game/tests/legacy_gear_editor_whitelists.lua`, preserving their engine-hosted filesystem contract.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
