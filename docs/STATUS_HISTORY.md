@@ -1757,3 +1757,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved the engine escape-pod fixture and `boostCharge` assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearOfferRolling` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 18:03)
+
+- R1 (Lane C, partial): extracted run-facing gear-effect coverage to `game/tests/legacy_gear_run_effect_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,688 to 7,548 lines.
+  - Preserved chain-trigger, reroll spending/refill, detection-radius, auto-collect, sample-value, and engine-slot assertions; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearSellMultiplierEngineSlotWiring` into one `game/tests/legacy_*.lua` module.

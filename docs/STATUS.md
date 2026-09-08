@@ -1,9 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted run-facing gear-effect coverage to `game/tests/legacy_gear_run_effect_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 7,688 to 7,548 lines.
-  - Preserved chain-trigger, reroll spending/refill, detection-radius, auto-collect, sample-value, and engine-slot assertions; the extracted module has no `love.*` boundary.
-  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testGearSellMultiplierEngineSlotWiring` into one `game/tests/legacy_*.lua` module.
+- R1 (Lane C, partial): extracted sell-multiplier engine-slot coverage to `game/tests/legacy_gear_sell_multiplier_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,548 to 7,471 lines.
+  - Preserved hull/engine sell-multiplier scope, additive sample-value, and collection-award assertions; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then focused engine-hosted tests and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearCollisionRadiusRunWiring` into one `game/tests/legacy_*.lua` module.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
@@ -152,6 +152,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearSellMultiplierEngineSlotWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving hull/engine sell-multiplier scope and sample-value assertions.
+- R1 (Lane C): extract `testGearCollisionRadiusRunWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving base-radius, hull/engine scope, and clamp assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
