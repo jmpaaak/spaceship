@@ -31,6 +31,7 @@ function M.new(options)
         stars = M._generateStars(120),
         starTimer = 0,
         shipImage = nil,
+        shipIdleTime = 0,
     }, M)
 end
 
@@ -66,6 +67,18 @@ function M.shipLayout(iw, ih)
     }
 end
 
+-- INBOX (52): slight diagonal tilt + slow bob + tiny left-right sway.
+-- Rotation stays within ±8°. Asset path and nearest scale are unchanged.
+function M.shipIdlePose(t)
+    t = t or 0
+    local tiltAmp = 7 * math.pi / 180
+    return {
+        angle = math.sin(t * 0.55) * tiltAmp,
+        ox = math.sin(t * 0.7) * 3,
+        oy = math.sin(t * 1.1) * 8,
+    }
+end
+
 function M:buttonRects()
     local cx = viewport.width / 2
     local bx = cx - M.buttonW / 2
@@ -89,6 +102,7 @@ end
 
 function M:update(dt)
     self.starTimer = (self.starTimer or 0) + dt
+    self.shipIdleTime = (self.shipIdleTime or 0) + dt
 end
 
 function M:draw()
@@ -113,8 +127,15 @@ function M:draw()
     if self.shipImage then
         local iw, ih = self.shipImage:getWidth(), self.shipImage:getHeight()
         local layout = M.shipLayout(iw, ih)
+        local pose = M.shipIdlePose(self.shipIdleTime or 0)
         love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(self.shipImage, layout.x, layout.y, 0, layout.scale, layout.scale)
+        love.graphics.draw(
+            self.shipImage,
+            layout.x + layout.w / 2 + pose.ox,
+            layout.y + layout.h / 2 + pose.oy,
+            pose.angle,
+            layout.scale, layout.scale,
+            iw / 2, ih / 2)
     end
 
     -- Author credit (Sid Meier's Civilization style): small grey above title

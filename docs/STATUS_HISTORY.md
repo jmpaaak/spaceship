@@ -1373,3 +1373,22 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Cataloged 256×256 RGBA PNG (sha256 `d04ad9b4…e08a`) as user_supplied PIL/ship-derived window icon.
   - `conf.lua` `t.window.icon = "assets/icon.png"`. Title ship art for INBOX (49) is still pending.
   - `python3 tools/verify_asset_manifest.py` + `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-07 22:03)
+
+- INBOX (50): collect / slot / boost SFX.
+  - `game/sfx.lua` defs: `collect` → `assets/sfx/collect.wav` (Luke.RUSTLTD 8bit coin1 CC0), `slot_spin` → `assets/sfx/slot_spin.ogg` (rubberduck retro_coin_01 CC0), `boost` → `assets/sfx/boost.ogg` (rubberduck rocket_01 CC0). All oneshot.
+  - Call sites: `play.lua` sample pickup (planet/moon/comet) `sfx.play("collect")`; `play_slot.lua` spin `sfx.play("slot_spin")`; `play_boost.lua` spendBoost `sfx.play("boost")`.
+  - Test `game/tests/sfx.lua` asserts paths, WAV/OGG magic, loop=false, and the three call sites. GREEN.
+
+- INBOX (49): title starter ship above Jimmy's + 256 window icon.
+  - `title.lua` `shipLayout`: `assets/ship/ship_default.png`, nearest ×7, centered, y=488-h-24 so it sits above Jimmy's.
+  - `conf.lua` `t.window.icon = "assets/icon.png"` once.
+  - `assets/icon.png` regenerated 256×256 RGBA via `tools/gen_app_icon.py` (cropped ship nearest ×4 on navy). sha256 `d5a956ec…dd99`.
+  - Test `game/tests/title_ship_icon.lua` GREEN. play.lua untouched except self_test require.
+
+- INBOX (48): help overlay (`?`) freezes play time like pause, without the pause menu.
+  - `play_help.lua`: `shouldFreezeUpdate` is true while `helpOverlayOpen`.
+  - `play.lua` `M:update` early-returns (self.time / ship frozen); `paused` stays false so HUD pause menu is not drawn.
+  - Tap anywhere still closes overlay via existing `touchpressed` path, then time resumes.
+  - Test `game/tests/help_overlay_pause.lua` GREEN.

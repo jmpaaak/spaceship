@@ -10094,6 +10094,7 @@ function M.run()
     require("game.tests.slot_reel_scissor").run()
     require("game.tests.help_overlay_pause").run()
     require("game.tests.title_ship_icon").run()
+    require("game.tests.title_ship_idle").run()
 
     -- INBOX 61(25): slot cost/rewards scale with galaxy distance
     -- slotTier = 1 + floor(galaxyDistance / galaxyCellSize)
