@@ -1,9 +1,8 @@
 ## Current Status
-- INBOX 61(43): gear-editor engine-tab auto-load.
-  - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
-  - `autoLoadDefaults()` fetches hull only. First Engine tab click `ensureEngineLoaded()` fetches `/gear-editor/data/engine_parts.json`.
-  - File pickers still overwrite the matching pool. Download filename follows the active tab.
-  - Test `tools.test_gear_editor_engine_tab` GREEN (wired into `make test`). play.lua / self_test.lua untouched.
+- R1 lane C: extracted hub-proximity settlement regression coverage from `game/self_test.lua` into `game/tests/legacy_hub_proximity_settle.lua`.
+  - Preserved normal-planet non-settlement, hub settlement payout, and floating-text assertions; production behavior is unchanged.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` is GREEN.
+  - `game/self_test.lua` shrank from 4,798 to 4,755 lines. Next slice: extract `testReentryShake` into `game/tests/legacy_reentry_shake.lua`.
 
 - INBOX 61(40): gear-editor KO/EN locale toggle.
   - Toolbar KO | EN buttons; preference in `localStorage` (`gear-editor-locale`).

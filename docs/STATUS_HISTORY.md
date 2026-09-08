@@ -2010,3 +2010,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 5,052 to 4,979 lines.
   - Preserved part equip, duplicate-cost refund, and full-loadout replacement-modal assertions without changing production code.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` is GREEN.
+
+## Archived from STATUS.md (2026-09-08 21:16)
+
+- INBOX 61(43): gear-editor engine-tab auto-load.
+  - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
+  - `autoLoadDefaults()` fetches hull only. First Engine tab click `ensureEngineLoaded()` fetches `/gear-editor/data/engine_parts.json`.
+  - File pickers still overwrite the matching pool. Download filename follows the active tab.
+  - Test `tools.test_gear_editor_engine_tab` GREEN (wired into `make test`). play.lua / self_test.lua untouched.
