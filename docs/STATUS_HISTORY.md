@@ -1458,3 +1458,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added engine-hosted `game/tests/play_hud_layout.lua`; observed RED for the missing module, then GREEN after extraction.
   - `play.lua` reduced from 3602 lines / 176139 bytes to 3521 lines / 172556 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
+
+## Archived from STATUS.md (2026-09-08 13:14)
+
+- R1: `play.lua` HUD gear layout/hit-testing extraction.
+  - Added pure `game/scenes/play_hud_gear.lua`; `play.lua` keeps its public API through `install(M)` and delegates six hull/three engine slot geometry plus occupied-slot hit testing.
+  - Added engine-hosted `game/tests/play_hud_gear.lua`; observed RED for the missing module, then GREEN after extraction and registered only the test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3521 lines / 172556 bytes to 3466 lines / 170579 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).

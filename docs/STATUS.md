@@ -1,8 +1,8 @@
 ## Current Status
-- R1: `play.lua` HUD gear layout/hit-testing extraction.
-  - Added pure `game/scenes/play_hud_gear.lua`; `play.lua` keeps its public API through `install(M)` and delegates six hull/three engine slot geometry plus occupied-slot hit testing.
-  - Added engine-hosted `game/tests/play_hud_gear.lua`; observed RED for the missing module, then GREEN after extraction and registered only the test entry point in `self_test.lua`.
-  - `play.lua` reduced from 3521 lines / 172556 bytes to 3466 lines / 170579 bytes.
+- R1: `play.lua` sample-tier presentation extraction.
+  - Added pure `game/scenes/play_sample_visuals.lua`; the scene delegates sample colors, effect/sparkle profiles, anticipation timing, punch/shake durations, and tier shake multipliers while preserving its public API.
+  - Added engine-hosted `game/tests/play_sample_visuals.lua`; observed RED for the missing module, then GREEN after extraction and registered only the test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3466 lines / 170579 bytes to 3378 lines / 166584 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
@@ -153,6 +153,6 @@
 
 ## Next slice
 
-- R1: extract sample-tier presentation rules (`sampleTierColor`, particles, sparkle, anticipation, and shake constants/functions) from `game/scenes/play.lua` into pure `game/scenes/play_sample_visuals.lua`; preserve the scene API and reduce `play.lua` further before INBOX feature work.
+- R1: extract sample floating-label rules (`clampLabelX`, `sampleRollupDuration`, and `rollupAmount`) from `game/scenes/play.lua` into pure `game/scenes/play_sample_feedback.lua`; preserve the scene API and reduce `play.lua` further before INBOX feature work.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

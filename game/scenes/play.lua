@@ -34,6 +34,18 @@ require("game.scenes.play_hud_layout").install(M)
 -- Pure equipped-gear HUD layout and hit testing.
 require("game.scenes.play_hud_gear").install(M)
 
+-- Pure sample-tier presentation profiles and timing rules.
+local sampleVisuals = require("game.scenes.play_sample_visuals")
+sampleVisuals.install(M)
+local sampleTierColor = sampleVisuals.sampleTierColor
+local sampleTierEffect = sampleVisuals.sampleTierEffect
+local sampleTierSparkle = sampleVisuals.sampleTierSparkle
+local sparkleAlpha = sampleVisuals.sparkleAlpha
+local sparkleAnticipationMultiplier = sampleVisuals.sparkleAnticipationMultiplier
+local sampleTierShakeMultiplier = sampleVisuals.sampleTierShakeMultiplier
+local shipPunchDuration = sampleVisuals.shipPunchDuration
+local shipShakeDuration = sampleVisuals.shipShakeDuration
+
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
 -- install() copies drawMinimap, drawShipStatsSummary, galaxyChartLineColor/FillColor,
 -- drawMinimapSprite, rimMarker constants, shipStats constants back onto M so
@@ -365,108 +377,8 @@ local function planetColor(hue)
     return 0.65, 0.45, 0.95
 end
 
-local sampleTierColors = {
-    common = { 0.75, 0.8, 0.85 },
-    rare = { 0.35, 0.75, 1 },
-    epic = { 0.95, 0.7, 0.15 },
-}
-
-local function sampleTierColor(tier)
-    local color = sampleTierColors[tier] or sampleTierColors.common
-    return color[1], color[2], color[3]
-end
-M.sampleTierColor = sampleTierColor
-
--- Balatro-style card-game visual punch-up requested by the user (2026-09-02
--- pending feedback): stronger rim glow, a burst of tier-colored particles,
--- and a ship scale-punch/shake on sample pickup and collision impact. This
--- only adds a Lua rendering layer on top of the existing DEV PLACEHOLDER
--- shapes (per game/effect-studio's impact/particles/lighting recipes) -- it
--- is not a final-art texture swap, so it is exempt from the AetherAI-only
--- asset policy and can ship immediately. Higher sample tiers get more
--- particles, more glow rings and a brighter glow alpha so common/rare/epic
--- are visually distinct at a glance, not just by ring color.
-local sampleTierEffects = {
-    common = { particleCount = 6, glowRings = 1, glowAlpha = 0.35 },
-    rare = { particleCount = 10, glowRings = 2, glowAlpha = 0.5 },
-    epic = { particleCount = 16, glowRings = 3, glowAlpha = 0.75 },
-}
-
-local function sampleTierEffect(tier)
-    return sampleTierEffects[tier] or sampleTierEffects.common
-end
-M.sampleTierEffect = sampleTierEffect
-
--- Twinkle/sparkle animation parameters per sample tier: higher tiers pulse
--- faster, with a wider brightness swing (amplitude) around a higher base
--- alpha, and are drawn with more sparkle points so an undiscovered epic
--- planet visibly shimmers more than a common one instead of a static ring.
-local sampleTierSparkles = {
-    common = { count = 2, speed = 2.2, base = 0.35, amplitude = 0.15 },
-    rare = { count = 3, speed = 3.0, base = 0.5, amplitude = 0.25 },
-    epic = { count = 5, speed = 4.2, base = 0.65, amplitude = 0.35 },
-}
-
-local function sampleTierSparkle(tier)
-    return sampleTierSparkles[tier] or sampleTierSparkles.common
-end
-M.sampleTierSparkle = sampleTierSparkle
-
--- Deterministic oscillating alpha for a sparkle point: base brightness plus
--- a sine wave offset by `seed` (per-point phase) so multiple sparkle points
--- on the same planet twinkle out of sync with each other.
-local function sparkleAlpha(tier, time, seed)
-    local sparkle = sampleTierSparkle(tier)
-    return sparkle.base + math.sin(time * sparkle.speed + (seed or 0)) * sparkle.amplitude
-end
-M.sparkleAlpha = sparkleAlpha
-
--- Anticipation glow acceleration (docs/feedback/INBOX.md 2026-09-02 후속
--- 확정 사항 #6, "불확실성 속의 기대감"): the slot-spin animation already
--- gives a short "settling" beat for slot rewards; sample discovery had no
--- equivalent tension beat. Accelerate the twinkle animation speed as the
--- ship closes in on an undiscovered planet's collection radius so the
--- shimmer visibly speeds up right before the sample is grabbed. Within
--- `sparkleAnticipationRange` of the collection radius edge, the speed
--- multiplier ramps linearly from 1x up to the max; once inside the
--- collection radius (or closer) it stays clamped at the max.
-local sparkleAnticipationRange = 60
-local sparkleAnticipationMaxMultiplier = 3.0
-M.sparkleAnticipationRange = sparkleAnticipationRange
-M.sparkleAnticipationMaxMultiplier = sparkleAnticipationMaxMultiplier
-
-local function sparkleAnticipationMultiplier(distance, collectRadius)
-    local edgeDistance = distance - collectRadius
-    if edgeDistance <= 0 then return sparkleAnticipationMaxMultiplier end
-    if edgeDistance >= sparkleAnticipationRange then return 1 end
-    local progress = 1 - edgeDistance / sparkleAnticipationRange
-    return 1 + progress * (sparkleAnticipationMaxMultiplier - 1)
-end
-M.sparkleAnticipationMultiplier = sparkleAnticipationMultiplier
-
--- Duration (seconds) of the ship scale-punch on sample pickup and the
--- ship/camera shake on collision impact.
-local shipPunchDuration = 0.2
-local shipShakeDuration = 0.25
-M.shipPunchDuration = shipPunchDuration
-M.shipShakeDuration = shipShakeDuration
-
--- Score-proportional screen shake (docs/feedback/INBOX.md 2026-09-02 후속
--- 확정 사항 #3): the collision shake used to be a fixed magnitude
--- regardless of what was hit. Scale the shake strength by the tier of the
--- planet collided with (world.sampleTier) so a bigger/rarer planet "hits
--- harder" and the player feels the difference through shake alone, the
--- same way particle density/glow already differ by tier.
-local sampleTierShakeMultipliers = {
-    common = 1.0,
-    rare = 1.6,
-    epic = 2.4,
-}
-
-local function sampleTierShakeMultiplier(tier)
-    return sampleTierShakeMultipliers[tier] or sampleTierShakeMultipliers.common
-end
-M.sampleTierShakeMultiplier = sampleTierShakeMultiplier
+-- sample-tier color/effect/sparkle/shake rules and timing constants are
+-- installed from play_sample_visuals.lua above.
 
 local warningLabelMargin = 2
 
