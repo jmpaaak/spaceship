@@ -2158,3 +2158,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added CC-BY/CC0 BGM credit texts in `title.lua` and `i18n.lua`.
   - Added test coverage in `self_test.lua` while ensuring `GAME_HEADLESS=1` runs skip `love.audio`.
   - Test `INBOX-61(38)` GREEN.
+
+## Archived from STATUS.md (2026-09-08 22:57)
+
+- INBOX 61(41): binaryStar settle farm limit
+  - Modified `game/expedition.lua` to remove flat +$30 reward on settle.
+  - Added 1.3x multiplier to sample payouts (`pendingSampleValue`) during `settle()` and `settleAtHub()` when `binaryStar` synergy is active.
+  - Updated `game/i18n.lua` to match EN/KO texts ("sell +30%" / "판매 +30%").
+  - Test `INBOX-61(41)` in `game/tests/binary_star.lua` GREEN.
