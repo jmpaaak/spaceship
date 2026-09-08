@@ -2249,3 +2249,18 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - R1 (Lane C, partial): extracted the collision-risk preview characterization block into `game/tests/legacy_collision_risk.lua`.
   - Preserved assertion order and inputs behind `run()` and returned the configured `riskScene` consumed by subsequent HUD/collision checks; `game/tests/self_test_collision_risk_extraction.lua` enforces delegation and state handoff.
   - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,167 to 3,140 lines.
+
+## Archived from STATUS.md (2026-09-09 00:00)
+
+- INBOX 78 Lane B (baseline measurement): added `docs/assets/CELESTIAL_BASELINE.json` before replacing any celestial art.
+  - Measured all 30 current runtime planet/star PNGs, including file/frame dimensions, frame counts, and SHA-256 hashes.
+  - Recorded the 720×1280 canvas, ordinary/shop/hub radius ranges, 160px central-star diameter, 0.85–1.15 planet draw variation, and NEAREST filter with source locations.
+  - Added `tools/test_celestial_asset_baseline.py` to reject stale hashes/dimensions, omitted celestial PNGs, and changed draw-contract measurements; observed missing-manifest RED, then focused GREEN.
+
+## Archived from STATUS.md (2026-09-09 00:08)
+
+- INBOX 78 Lane B (first generated celestial candidate): converted NASA/JPL/USGS Moon `PIA00405` through the live unified Asset Studio `POST /api/pixel-perfect` endpoint.
+  - Preserved the 1986×1986 source and produced a 512×512 RGBA master with a 4px hard grid/64-color palette plus an unwired 128×128 integer-NEAREST runtime derivative at `assets/planet/studio/pp_bare.png`.
+  - Recorded source license/provenance, dimensions, file hashes, exact request-payload/response-body hashes, output RGBA hash, and the API's valid 5/5 report in `docs/assets/CELESTIAL_ASSET_STUDIO.json` and per-run logs.
+  - Added `tools/test_celestial_asset_studio_manifest.py`; observed missing-manifest RED, then focused manifest/baseline GREEN. The candidate remains deliberately unwired until Lane D.
+- Next slice: generate one high-resolution photo-derived `pp_dry` ordinary-planet candidate through the same live endpoint and append its provenance/run record without changing runtime draw paths.

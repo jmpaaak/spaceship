@@ -1,0 +1,31 @@
+{
+  "received_at": "2026-09-09T00:05:04+09:00",
+  "http_status": 200,
+  "body_sha256": "4ef3aae61fc65109a50ea98a95fe399bde3663661eda2d570de44e7b2a2ba244",
+  "body_bytes": 3470423,
+  "image": {
+    "width": 512,
+    "height": 512,
+    "mode": "RGBA",
+    "rgba_sha256": "521fc364b199d7fc0adea779e38cf85aadd279e8af2782823c5954cb0a5db345"
+  },
+  "report": {
+    "valid": true,
+    "checks": {
+      "dimensions": true,
+      "palette": true,
+      "transparentAlpha": true,
+      "alignment": true,
+      "nearestNeighbor": true
+    },
+    "paletteSize": 64,
+    "transparentPixels": 60112,
+    "bounds": {
+      "minX": 0,
+      "minY": 4,
+      "maxX": 511,
+      "maxY": 507
+    }
+  },
+  "note": "body hash covers the exact response, including RGBA data; image pixels are preserved as the master PNG"
+}

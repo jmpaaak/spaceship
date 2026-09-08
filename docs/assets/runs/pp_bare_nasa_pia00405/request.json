@@ -1,0 +1,29 @@
+{
+  "requested_at": "2026-09-09T00:05:04+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/bare_moon_nasa_pia00405.jpg",
+  "source_dimensions": [
+    1986,
+    1986
+  ],
+  "input_preparation": {
+    "resize": [
+      1024,
+      1024
+    ],
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 28,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "ddd8cb25f66955e99a9e4eced6866af0f5acdc958fe2da0199d1a8d2379db9f2",
+  "payload_bytes": 14330162,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

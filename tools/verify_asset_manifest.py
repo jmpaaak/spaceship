@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Enforce docs/GAME_DESIGN.md's AetherAI-only final-asset policy at
-build/verify time.
+"""Enforce approved final-asset provenance at build/verify time.
 
 Any image asset placed under assets/ must have a matching entry in
-docs/assets/MANIFEST.json recording the official AetherForgeAI/AetherAI
+docs/assets/MANIFEST.json recording the approved source and Asset Studio
 provenance loop/PROMPT.md requires: source/terms URL, generation/asset ID,
 prompt/model/style/settings, download timestamp, original SHA-256,
 dimensions, and a runtime QA note -- and the recorded sha256 must match the
@@ -37,6 +36,10 @@ OFFICIAL_SOURCE_PREFIXES = (
     "https://www.aetherai.com/",
     "https://api.aetherforgeai.com/",
     "https://api.aetherai.com/",
+    # 2026-09-09: photo-derived celestial candidates may use NASA public
+    # imagery under the current Asset Studio workflow and NASA media terms.
+    "https://images-assets.nasa.gov/",
+    "https://www.nasa.gov/nasa-brand-center/images-and-media/",
     # 2026-09-03: local ComfyUI is an equally official generation path
     # (user-approved, human-gate removed) -- its manifest terms_url
     # records the local instance + workflow id instead of a public URL.

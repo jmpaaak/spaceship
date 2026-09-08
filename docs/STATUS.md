@@ -1,8 +1,8 @@
 ## Current Status
-- INBOX 78 Lane B (baseline measurement): added `docs/assets/CELESTIAL_BASELINE.json` before replacing any celestial art.
-  - Measured all 30 current runtime planet/star PNGs, including file/frame dimensions, frame counts, and SHA-256 hashes.
-  - Recorded the 720×1280 canvas, ordinary/shop/hub radius ranges, 160px central-star diameter, 0.85–1.15 planet draw variation, and NEAREST filter with source locations.
-  - Added `tools/test_celestial_asset_baseline.py` to reject stale hashes/dimensions, omitted celestial PNGs, and changed draw-contract measurements; observed missing-manifest RED, then focused GREEN.
+- INBOX 78 Lane B: generated `pp_bare_nasa_pia00405`, the first photo-derived celestial candidate, through the live unified Asset Studio `POST /api/pixel-perfect` endpoint.
+  - Preserved the 1986×1986 NASA/JPL/USGS source, 512×512 RGBA/4px-grid master, 128×128 integer-NEAREST unwired runtime derivative, request/response hashes, provenance, and API valid 5/5 report.
+  - `make verify LOVE=/Users/jm/.local/bin/love` is GREEN, including the new celestial manifest test and `ASSET_MANIFEST_OK`.
+- Next slice: generate one high-resolution photo-derived `pp_dry` candidate through the same endpoint and append its provenance/run record without changing runtime draw paths.
 
 - INBOX 61(32): play_gameover.lua extraction
   - Created `game/scenes/play_gameover.lua` — gameover/destroyed-phase layout module.

@@ -4596,5 +4596,30 @@
     "width": 256,
     "height": 256,
     "qa": "256x256 RGBA window icon: cropped ship_default nearest-upscaled x4 onto navy square via tools/gen_app_icon.py"
+  },
+  {
+    "path": "assets/planet/studio/pp_bare.png",
+    "source_url": "https://images-assets.nasa.gov/image/PIA00405/PIA00405~orig.jpg",
+    "terms_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "asset_id": "pp_bare_nasa_pia00405",
+    "prompt": "NASA/JPL/USGS Earth Moon PIA00405 photo converted by the unified local Asset Studio POST /api/pixel-perfect endpoint",
+    "model": "Unified Asset Studio local Pixel Perfect API",
+    "style": "photo-derived high-resolution pixel art",
+    "settings": {
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "source_dimensions": [1986, 1986],
+      "input_dimensions": [1024, 1024],
+      "master_dimensions": [512, 512],
+      "pixel_block": 4,
+      "palette_limit": 64,
+      "background_tolerance": 28,
+      "runtime_derivation": "integer 4x NEAREST downscale",
+      "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
+    },
+    "downloaded_at": "2026-09-09T00:05:04+09:00",
+    "sha256": "9f85b29f1b62325fea3da53ab092ff5fc6fae4654073079483af0c5fabdfcb24",
+    "width": 128,
+    "height": 128,
+    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
   }
 ]
