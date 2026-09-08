@@ -37,6 +37,21 @@
   - 왼쪽 상단 HUD. 0은 `0000`이 아니라 `0`.
   - 테스트: `game/tests/hud_record_label.lua`
 
+(57) **BGM 볼륨을 현재의 75%로** (OOB 2026-09-08)
+  - 담당: `game/bgm.lua` (`src:setVolume`). play.lua 금지.
+  - 현재 `0.25` → **`0.1875`** (0.25 × 0.75). 상수로 두고 테스트에서 값 고정.
+  - 테스트: `game/tests/bgm.lua`에 volume assert 추가.
+
+(58) **중심별(태양) 스프라이트가 실제로 보이게** (OOB 2026-09-08, 반복 요청)
+  - 담당: `game/scenes/play_star.lua` (새 모듈) + `play.lua`는 require/한 줄 위임만. `world.lua` starType 매핑.
+  - 원인: 홈 은하 `starType = "earth"` 인데 `starImagePaths`/`starSheetPaths`에 **earth 키 없음**. 시트 미스 → 정적 미스 → `circle("fill")` 폴백. 밋밋한 노란 원.
+  - 필수:
+    (a) `earth` → `star_sun` (시트+정적) 매핑. 다른 타입도 시트 실패 시 정적, 정적 실패 시 원에 떨어지지 않게 sun 폴백.
+    (b) 런타임에 시트가 로드됐는지 assert. `shouldLoadRuntimeSprite`가 star PNG를 스킵하면 고친다.
+    (c) 현재 `star_sun.png` ~3KB PIL 원형이면 **교체**: 코로나가 있는 노란 태양 스프라이트, nearest, 화면상 ≥별 반지름 80px.
+    (d) 회전 시트 4프레임이 실제로 돌아가게. 원 폴백은 최후.
+  - 테스트: `game/tests/star_sprite.lua` — earth 은하가 sun 시트/정적 경로를 쓰고, circle 폴백 경로를 타지 않음.
+
 ## 처리 완료
 (51) **수확 1업 +0.1, 슬롯 HARVEST도 맞춤** (msg `1546492087749320774`)
   - 완료: `sampleYieldUpgradeAmount` 0.05→**0.10**. 슬롯 2매치 +0.10 / 3매치 +0.50 (×tier). Shop preview `x1.00 -> x1.10`. Test GREEN.
