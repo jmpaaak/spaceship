@@ -16,6 +16,7 @@ REQUIRED_IDS = {
     "pp_dry_nasa_pia00407",
     "pp_ice_nasa_pia00353",
     "pp_lava_nasa_pia00703",
+    "pp_earth_nasa_as17_148_22727",
 }
 
 

@@ -284,6 +284,53 @@
         "wired": false,
         "sha256": "e155a770f2586e79616e302b1e8d821097b7085a9d044c58dcd86c9d823e3f32"
       }
+    },
+    {
+      "id": "pp_earth_nasa_as17_148_22727",
+      "kind": "ordinary_planet",
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "generated_at": "2026-09-09T01:06:57+09:00",
+      "source": {
+        "path": "docs/assets/sources/planet/earth_apollo17_nasa_as17_148_22727.jpg",
+        "url": "https://images-assets.nasa.gov/image/as17-148-22727/as17-148-22727~orig.jpg",
+        "nasa_id": "as17-148-22727",
+        "creator": "NASA/Apollo 17",
+        "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
+        "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+        "dimensions": [4579, 4579],
+        "sha256": "cb4c3d2da98ee72130ebfd2ea472fc84ede6726002c2a8c9cabd86e4deea9f0f"
+      },
+      "request": {
+        "log_path": "docs/assets/runs/pp_earth_nasa_as17_148_22727/request.json",
+        "input_dimensions": [1024, 1024],
+        "target_width": 512,
+        "target_height": 512,
+        "pixel_block": 4,
+        "background_tolerance": 64,
+        "palette_limit": 64,
+        "payload_sha256": "f70d2813bbd2596c162ef06fbcda279593354bdc8f5000920a05e6b47c180450"
+      },
+      "response": {
+        "log_path": "docs/assets/runs/pp_earth_nasa_as17_148_22727/response.json",
+        "http_status": 200,
+        "report_valid": true,
+        "body_sha256": "402bba16041e7e1d5cf63c4350c0f18d2ff9b382ab28274bff71ffa026444eac",
+        "image_rgba_sha256": "2ba94d044b984945689ac3b2a03c555d07dcfad5304d496876c8e8665dadf523"
+      },
+      "master": {
+        "path": "docs/assets/masters/planet/pp_earth_nasa_as17_148_22727_master.png",
+        "dimensions": [512, 512],
+        "mode": "RGBA",
+        "sha256": "f479190c4cdcd7646e23d6a79ea0114af903d7f5de7b37e18e5c17d9baead3b3"
+      },
+      "runtime": {
+        "path": "assets/planet/studio/pp_earth.png",
+        "dimensions": [128, 128],
+        "mode": "RGBA",
+        "derivation": "integer 4x NEAREST downscale from master",
+        "wired": false,
+        "sha256": "9f6d517594f696491165c4fe4a5af8ae137b496d5593a175155d4e6b67cffb8e"
+      }
     }
   ]
 }

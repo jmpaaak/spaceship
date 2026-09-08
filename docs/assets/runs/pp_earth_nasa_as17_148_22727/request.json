@@ -1,0 +1,35 @@
+{
+  "requested_at": "2026-09-09T01:06:57+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/earth_apollo17_nasa_as17_148_22727.jpg",
+  "source_dimensions": [
+    4579,
+    4579
+  ],
+  "input_preparation": {
+    "resize": [
+      976,
+      976
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 24,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 64,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "f70d2813bbd2596c162ef06fbcda279593354bdc8f5000920a05e6b47c180450",
+  "payload_bytes": 18158229,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}
