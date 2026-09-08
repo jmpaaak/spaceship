@@ -107,6 +107,19 @@
   - 우측 상단 pause 아래 스택 전부 제거. (67) 배율 표시만 남김.
   - 테스트: `game/tests/admin_buttons_gone.lua` — play.lua에 adminButtons 테이블/드로우 없음.
 
+(69) **표본 계열 = 부품 수트 4종 (void / nebula / solar / pulsar)** (msg `1546719861651021824`)
+  - 담당: `game/world.lua` `hueFamilies` + `expedition.collectSample` 스트릭 키. play.lua는 hueKey 전달만.
+  - 지금: azure / ember / void 3색. 부품은 `gear.knownSuits` **solar, nebula, void, pulsar** 4종. 사용자가 복잡하다고 해서 **표본 계열을 부품과 동일하게**.
+  - 매핑 (hue 4등분):
+    - 0.00–0.25 **solar**
+    - 0.25–0.50 **nebula**
+    - 0.50–0.75 **void**
+    - 0.75–1.00 **pulsar**
+  - 도감 `specimenKind` id도 `solar_common` 등으로. azure/ember 문자열 제거. i18n 라벨 KO/EN: 솔라/네뷸라/보이드/펄서 (기호 금지).
+  - (67) HUD는 `SOLAR x1.4`처럼 이 4종 이름 사용.
+  - 스트릭 규칙은 그대로 (같은 계열 연속 +0.2/스텝). 시너지 pulsarBurst/darkMatter는 기어 수트 기준 유지 — 표본 계열과 이름이 같아져도 로직은 기어 장착 수트.
+  - 테스트: `game/tests/sample_suits.lua` — hueFamily 4키, 같은 solar 연속 시 스트릭, nebula로 바꾸면 리셋.
+
 ## 처리 완료
 (54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
   - 완료: `sfx.play(name, uniqueKey, volume?)` — default 0.6. Planet keeps `sfx.play("collision")`. Debris loop one-line `sfx.play("collision", nil, 0.9)`. Moon/comet unchanged.
