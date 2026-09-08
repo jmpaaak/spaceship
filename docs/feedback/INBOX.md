@@ -4,12 +4,6 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(52) **타이틀 함선 아이들 모션** (msg `1546710064830877696`)
-  - 담당: `game/scenes/title.lua` (play.lua 금지)
-  - 홈 화면 함선이 PNG 그대로 멈춰 있음. 살짝 대각선 기울기 + 느린 부유(bob) + 아주 작은 좌우 요동.
-  - 회전은 작은 각(대략 ±8°)만. 에셋 교체 금지, `ship_default.png` nearest 스케일 유지.
-  - 테스트: `game/tests/title_ship_idle.lua`
-
 (53) **이어하기/새게임 출발 SFX 제거** (OOB 2026-09-08)
   - 담당: `game/scenes/title.lua` + `game/scenes/play.lua` 진입 경로. play.lua는 한 줄 위임만.
   - 이어하기/새게임 탭 직후 나는 출발음이 안 맞음. 버튼 탭 SFX가 있으면 제거.
@@ -52,7 +46,27 @@
     (d) 회전 시트 4프레임이 실제로 돌아가게. 원 폴백은 최후.
   - 테스트: `game/tests/star_sprite.lua` — earth 은하가 sun 시트/정적 경로를 쓰고, circle 폴백 경로를 타지 않음.
 
+(59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
+  - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
+  - 충돌: `assets/sfx/collision.mp3`를 Pixabay **Space Explosion with reverb** (id 101449, morganpurkis/Freesound, ~4s, Pixabay Content License)로 교체.
+    출처: https://pixabay.com/sound-effects/film-special-effects-space-explosion-with-reverb-101449/
+  - 기존 충돌 클립은 **표본 획득**으로 이동: 행성/달/혜성 `sfx.play("collect")`가 옛 `collision.mp3`를 쓰게. 현재 8bit `collect.wav`는 이 용도에서 뺌 (파일 남겨도 되지만 collect def는 옛 collision 클립).
+  - (54) 파편 충돌도 새 explosion 클립을 1.5배 볼륨으로. 행성 충돌 기본 vol은 기존 collision 값.
+  - 크레딧: `docs/GENERATED_ASSET_LOG.md` + 필요 시 i18n. 테스트: `game/tests/sfx.lua` 경로/매직/호출 갱신.
+
+(60) **중심 행성(허브) 표본 획득 SFX = Pixabay Loud Space Launch** (OOB 2026-09-08)
+  - 담당: `game/sfx.lua` 새 def `hub_sample` + 허브 탐사/표본 획득 한 줄 호출. play.lua 거대 로직 금지.
+  - 클립: Pixabay **Loud Space Launch** (id 351055, IdoBerg, ~6s, Pixabay Content License).
+    출처: https://pixabay.com/sound-effects/film-special-effects-loud-space-launch-351055/
+  - 허브(`planet.hub`) 최초 탐사/`exploreHub`/허브 표본 획득 시에만 `sfx.play("hub_sample")`. 일반 행성 collect와 섞지 말 것.
+  - 중심별(태양 우물) `star_sample` 루프와는 별개. 태양 우물 10초 생존 보상도 허브가 아니면 hub_sample 쓰지 말 것.
+  - 파일: `assets/sfx/hub_sample.mp3`. 테스트: `game/tests/hub_sample_sfx.lua`.
+
 ## 처리 완료
+(52) **타이틀 함선 아이들 모션** (msg `1546710064830877696`)
+  - 완료: `title.lua` `shipIdlePose(t)` — ±7° diagonal tilt, slow bob (|oy|≤8), tiny sway (|ox|≤3). Draw uses nearest ×7 `ship_default.png` rotated around sprite center. Asset unchanged.
+  - Test `game/tests/title_ship_idle.lua` GREEN. play.lua untouched except self_test require.
+
 (51) **수확 1업 +0.1, 슬롯 HARVEST도 맞춤** (msg `1546492087749320774`)
   - 완료: `sampleYieldUpgradeAmount` 0.05→**0.10**. 슬롯 2매치 +0.10 / 3매치 +0.50 (×tier). Shop preview `x1.00 -> x1.10`. Test GREEN.
 
