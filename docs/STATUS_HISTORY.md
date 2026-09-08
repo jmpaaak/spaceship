@@ -2120,3 +2120,15 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `earthSlotSpin` returns `spinCost` + `slotTier`. `tripleMultiplier` still stacks on MONEY triples.
   - `play.lua` HUD / spin charge / duplicate-part refund use `slotSpinCostFor`.
   - Test `INBOX-61(25)` GREEN. `make verify LOVE=…` GREEN.
+
+## Archived from STATUS.md (2026-09-08 22:35)
+
+- INBOX 61(31): Hub relaunch does not full-heal; hullRegen ticks HP.
+  - Hub checkpoint `checkpoint_hint_repair` removed, Earth is unchanged.
+  - `launch()` skipping `durability = maxDurability` when from hub.
+  - New effect `hullRegen` implemented in `expedition.update` to tick durability over time.
+  - Added 3 new hull parts (`hull_nano_mesh`, `hull_repair_drone`, `hull_auto_welder`) with `hullRegen`.
+  - Added `i18n` lines for `effect_hullRegen`.
+  - Added `hullRegen` to `EFFECT_TYPE_GROUPS` in `tools/gear-editor/editor.js`.
+  - Generated and verified PIL icons for the new parts in `assets/part_icons` and updated `MANIFEST.json`.
+  - Test `INBOX-61(31)` GREEN. `make verify LOVE=...` GREEN.

@@ -1,14 +1,4 @@
 ## Current Status
-- INBOX 61(31): Hub relaunch does not full-heal; hullRegen ticks HP.
-  - Hub checkpoint `checkpoint_hint_repair` removed, Earth is unchanged.
-  - `launch()` skipping `durability = maxDurability` when from hub.
-  - New effect `hullRegen` implemented in `expedition.update` to tick durability over time.
-  - Added 3 new hull parts (`hull_nano_mesh`, `hull_repair_drone`, `hull_auto_welder`) with `hullRegen`.
-  - Added `i18n` lines for `effect_hullRegen`.
-  - Added `hullRegen` to `EFFECT_TYPE_GROUPS` in `tools/gear-editor/editor.js`.
-  - Generated and verified PIL icons for the new parts in `assets/part_icons` and updated `MANIFEST.json`.
-  - Test `INBOX-61(31)` GREEN. `make verify LOVE=...` GREEN.
-
 - INBOX 61(24b): Title menu composition — CONTINUE / NEW GAME / LEADERBOARD / SETTINGS.
   - `title.lua`: button order is CONTINUE (top) → NEW GAME → LEADERBOARD → SETTINGS. CONTINUE greyed out unless `hasSave`. NEW GAME uses `onNewGame` (legacy `onStart` still works).
   - `i18n`: EN `title_new_game`="NEW GAME", KO="새 게임". `title_start` removed.
@@ -138,8 +128,12 @@
   - Preserved deterministic spawn-rate coverage, orbit geometry and motion, sample value, collision damage, i18n assertion, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,085 to 3,996 lines.
 
+- R1 (Lane C, partial): extracted the gear-slots-grid characterization block into `game/tests/legacy_gear_slots_grid.lua`.
+  - Preserved HUD constants, i18n coverage, draw-call mocking/restoration, nine-slot and 48×48 dimensions, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,996 to 3,928 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the gear-slots-grid characterization block from `game/self_test.lua` into `game/tests/legacy_gear_slots_grid.lua`, preserving HUD constants, draw-call mocking/restoration, slot dimensions, and output behavior.
+- R1 (Lane C): extract the part-icon infrastructure characterization block from `game/self_test.lua` into `game/tests/legacy_part_icon_infrastructure.lua`, preserving helper/48px assertions and output behavior.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
