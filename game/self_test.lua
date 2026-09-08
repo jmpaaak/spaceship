@@ -6176,7 +6176,7 @@ local function testHudBackgroundNotFullWidth()
         distance = "DIST 0",
         cash = "CASH $0",
         status = "H3/3 LAUNCH",
-        best = "PERSONAL BEST 0000",
+        best = "RECORD 0",
         galaxy = "SOLAR SYSTEM",
         samples = "SAMPLES 03  AT RISK $95",
     }
@@ -6687,7 +6687,7 @@ function M.run()
         .. tostring(PlayScene.hudHeight("ascending", noGalaxyHud, 0)))
     -- With galaxy + best: 5 lines → 4 + 5*30 = 154.
     local fullHud = { distance = "DIST 0", cash = "CASH $0", status = "H3/3 LAUNCH",
-        galaxy = "SOLAR SYSTEM", best = "BEST 0000" }
+        galaxy = "SOLAR SYSTEM", best = "RECORD 0" }
     assert(PlayScene.hudHeight("launch", fullHud, 0) == 154,
         "launch HUD (galaxy+best) height must be 154: "
         .. tostring(PlayScene.hudHeight("launch", fullHud, 0)))
@@ -6695,8 +6695,8 @@ function M.run()
     -- Item 38d: best record must be visible in ascending phase too.
     assert(ascendingHud.best ~= nil,
         "item 38d: hudLines().best must be non-nil during ascending phase")
-    assert(ascendingHud.best:find("BEST") ~= nil,
-        "item 38d: ascending best line must contain 'BEST': " .. tostring(ascendingHud.best))
+    assert(ascendingHud.best:find("RECORD") ~= nil,
+        "item 38d: ascending best line must contain 'RECORD': " .. tostring(ascendingHud.best))
 
     -- Item 38c: durability HP block rendering constants must exist.
     assert(PlayScene.hpBlockSize and PlayScene.hpBlockSize >= 10,
@@ -7321,9 +7321,9 @@ function M.run()
     }
     local persistedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
     assert(persistedScene.expedition.bestAltitude == 40)
-    assert(persistedScene:hudLines().best == "PERSONAL BEST 0040")
+    assert(persistedScene:hudLines().best == "RECORD 40")
     persistedScene.expedition.phase = "settlement"
-    assert(persistedScene:hudLines().best == "PERSONAL BEST 0040")
+    assert(persistedScene:hudLines().best == "RECORD 40")
     persistedScene.expedition.phase = "launch"
     persistedScene.expedition.baseSpeed = 60
     assert(expedition.launch(persistedScene.expedition))
@@ -7335,7 +7335,7 @@ function M.run()
     assert(persistedScene.expedition.phase == "returning" and savedBest == 60)
     local restartedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
     assert(restartedScene.expedition.bestAltitude == 60)
-    assert(restartedScene:hudLines().best == "PERSONAL BEST 0060")
+    assert(restartedScene:hudLines().best == "RECORD 60")
 
     local floatingTextScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -10416,6 +10416,9 @@ function M.run()
     end
 
     require("game.tests.sfx").run()
+    require("game.tests.title_to_launch_gate").run()
+    require("game.tests.hud_record_label").run()
+
     print("SPACESHIP_UNIT_OK")
 end
 

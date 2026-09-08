@@ -1383,6 +1383,7 @@ function M.new(options)
         bestAltitudeStore = altitudeStore,
         collectionStore = specimenStore,
         collectedSpecimens = specimenStore:load(),
+        launchInputArmed = not options.fromTitle,
         newSpecimenBanner = nil,
         newSpecimenBannerTimer = 0,
         discovered = {},
@@ -1934,6 +1935,16 @@ function M:update(dt)
     if self.paused and self.expedition.phase ~= "ascending" then
         self.paused = false
     end
+
+    if not self.launchInputArmed then
+        local anyTouch = next(self.touches) ~= nil
+        local mouse = love.mouse and love.mouse.isDown(1)
+        local space = love.keyboard and love.keyboard.isDown("space")
+        if not anyTouch and not mouse and not space then
+            self.launchInputArmed = true
+        end
+    end
+
     local rawDt = dt
     if self.timeSlip then
         self.timeSlip.timer = self.timeSlip.timer - rawDt
@@ -2710,6 +2721,9 @@ function M:keypressed(key)
         return
     end
     if key == "space" or key == "return" or key == "up" or key == "w" then
+        if self.expedition.phase == "launch" and not self.launchInputArmed then
+            return
+        end
         -- Item 15(a): in-flight slot machine removed. Space/return during
         -- returning phase no longer triggers a slot spin. Settlement happens
         -- automatically when altitude reaches 0 (expedition.update).
@@ -2930,7 +2944,9 @@ function M:touchpressed(id, x, y)
             pcall(love.system.vibrate, 0.02)
             return
         end
-        self:keypressed("space")
+        if self.launchInputArmed then
+            self:keypressed("space")
+        end
         return
     end
     if self.expedition.phase == "destroyed" then

@@ -25,7 +25,7 @@ locales.en = {
     hud_samples = "SAMPLES %02d  AT RISK $%d",
     hud_earth = "EARTH IN %d",
     hud_return_progress = "RETURN %d%%  %ds LEFT",
-    hud_personal_best = "PERSONAL BEST %04d",
+    hud_personal_best = "RECORD %d",
     hud_distance = "DIST %d",
     hud_cash = "CASH $%d",
     -- Item 11: S%02d (slotOpportunities) removed — item-15 abolished in-flight
@@ -270,7 +270,7 @@ locales.ko = {
     hud_samples = "표본 %02d  위험 $%d",
     hud_earth = "지구까지 %d",
     hud_return_progress = "귀환 %d%%  %d초",
-    hud_personal_best = "최고기록 %04d",
+    hud_personal_best = "기록 %d",
     hud_distance = "거리 %d",
     hud_cash = "자금 $%d",
     -- Item 11: S%02d (slotOpportunities) removed — item-15 abolished in-flight

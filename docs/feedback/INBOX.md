@@ -4,24 +4,8 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(55) **새게임/이어하기 → 탭하여 출발 화면을 반드시 거침** (OOB 2026-09-08)
-  - 담당: `main.lua` `startGame` + `game/scenes/play.lua` launch 입력. play.lua는 한 줄 위임/가드만.
-  - 타이틀 CONTINUE/NEW GAME 탭이 같은 터치/마우스다운으로 launch 페이즈 `space`를 눌러 바로 ascending 됨 (click-through).
-  - `play_joystick.lua`도 launch 중 마우스다운이면 `keypressed("space")`.
-  - 새게임·이어하기 둘 다 PlayScene은 **phase=launch** 로 진입. 탭하여 출발 화면을 보여 주고, 그 화면에서 한 번 더 탭해야 `expedition.launch` → ascending.
-  - 타이틀에서 넘어온 첫 입력(같은 프레임/같은 손가락/마우스 홀드)은 발사로 쓰지 말 것. 손가락/마우스 릴리즈 후 다음 탭만 발사.
-  - 테스트: `game/tests/title_to_launch_gate.lua`
 
-(56) **HUD 최고기록 → 기록, 제로패딩 제거** (OOB 2026-09-08)
-  - 담당: `game/i18n.lua` (`hud_personal_best`). play.lua 금지.
-  - KO: `최고기록 %04d` → `기록 %d`. EN: `PERSONAL BEST %04d` → `RECORD %d`.
-  - 왼쪽 상단 HUD. 0은 `0000`이 아니라 `0`.
-  - 테스트: `game/tests/hud_record_label.lua`
 
-(57) **BGM 볼륨을 현재의 75%로** (OOB 2026-09-08)
-  - 담당: `game/bgm.lua` (`src:setVolume`). play.lua 금지.
-  - 현재 `0.25` → **`0.1875`** (0.25 × 0.75). 상수로 두고 테스트에서 값 고정.
-  - 테스트: `game/tests/bgm.lua`에 volume assert 추가.
 
 (58) **중심별(태양) 스프라이트가 실제로 보이게** (OOB 2026-09-08, 반복 요청)
   - 담당: `game/scenes/play_star.lua` (새 모듈) + `play.lua`는 require/한 줄 위임만. `world.lua` starType 매핑.
@@ -138,6 +122,11 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(55) **새게임/이어하기 → 탭하여 출발 화면을 반드시 거침** (OOB 2026-09-08) [DONE]
+(56) **HUD 최고기록 → 기록, 제로패딩 제거** (OOB 2026-09-08) [DONE]
+(57) **BGM 볼륨을 현재의 75%로** (OOB 2026-09-08) [DONE]
+
 (54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
   - 완료: `sfx.play(name, uniqueKey, volume?)` — default 0.6. Planet keeps `sfx.play("collision")`. Debris loop one-line `sfx.play("collision", nil, 0.9)`. Moon/comet unchanged.
   - Test `game/tests/debris_collision_sfx.lua` GREEN.
@@ -273,7 +262,6 @@
   - `make verify` GREEN + 커밋: `fix(play): hub shop relaunch touch must work`
 
 
-(55) **상점 하단 — 슬롯/기어오퍼/NEXT SCOUT 제거, 재발사+함선선택만 남기기 (사용자 확정, 2026-09-06):**
   - 상점 draw에서 `settlementTouchRows[3]`(슬롯) 영역: 기어 오퍼 텍스트 + 슬롯머신 + SOLAR ODDS 등 전부 제거.
   - `settlementTouchRows[5]`(재발사) 영역: NEXT SCOUT/STARTER 텍스트 (`nextLaunch.ship`, `nextLaunch.stats`, `nextLaunch.upgrades`) 제거. `tap_relaunch` 텍스트만 남기기.
   - Scout tradeoff 텍스트(L3584-3597)도 제거.
@@ -281,10 +269,8 @@
   - 슬롯은 별도 UI로 분리 예정 (52에서 이미 리디자인됨).
   - ✅ 완료: commit `c4ec930` (inbox: shop bottom cleanup, RCS continuous gradient 1-999, background star grid fix (55-57))
 
-(56) **RCS 색상·크기 — 속도 1~999 연속 그라데이션 (사용자 확정, 2026-09-06):**
   - ✅ 완료: commit `c4ec930`
 
-(57) **배경 별 격자 패턴 개선 (사용자 확정, 2026-09-06):**
   - ✅ 완료: commit `c4ec930`
 
 (53) **부품 스탯 통합 + 불필요 효과 제거 (사용자 확정, 2026-09-06):**
@@ -731,7 +717,6 @@
   - i18n `effect_hullRegen` EN `"REGEN +%.1f/s"` / KO `"회복 +%.1f/초"`.
   - `tools/gen_part_icons.py` 재실행.
 (46) **정찰선 카드: '구매' → '정찰선 구매', 속도 +120 / 내구 -50%** (msg `1546488266650554368`)
-    - 담당: `game/i18n.lua` `buy_scout_compact` + `game/expedition.lua` scout 보너스.
     - KO compact 제목 `정찰선 구매`. EN `SCOUT`.
     - `scoutClimbSpeedBonus` 50→**120**. 내구는 고정 -1이 아니라 **현재 max의 50%** (`floor(maxDurability * 0.5)` 차감, 최소 1 남김).
     - ✅ 완료: commit (will be pushed)

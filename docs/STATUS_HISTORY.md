@@ -1406,3 +1406,14 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/sfx.lua` `playGalaxyDiscover(galaxy)`: skip milkyway, `galaxy:0:0`, and (gx,gy)=(0,0). Non-home galaxies still play once via uniqueKey.
   - `play.lua` one-line: `sfx.playGalaxyDiscover(wellGalaxy)`. Title has no tap SFX; `bgm.start()` kept.
   - Test `game/tests/title_start_sfx.lua` GREEN.
+
+## Archived from STATUS.md (2026-09-08 11:58)
+
+- INBOX (54): debris hits play collision SFX at 1.5x volume (0.9).
+  - `game/sfx.lua` `play(name, uniqueKey, volume?)`: default volume 0.6; `lastVolume` recorded for tests. Planet collision stays `sfx.play("collision")`.
+  - `play.lua` debris loop one-line: `sfx.play("collision", nil, 0.9)`. Moon/comet collision SFX out of scope.
+  - Test `game/tests/debris_collision_sfx.lua` GREEN. play.lua not grown beyond the one-line delegate.
+- INBOX (45): harvest upgrade +5% per buy; durability buy fills the new cell.
+  - `game/expedition.lua`: default `sampleYieldUpgradeAmount` 0.01→0.05. Shop copy becomes `HARVEST x1.00 -> x1.05`.
+  - `buyDurabilityUpgrade`: after `refreshShipStats`, current `durability` += gained max (capped at max). Earth shop is not a full heal.
+  - Test `game/tests/harvest_hull_upgrade.lua` GREEN. play.lua untouched.

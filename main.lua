@@ -103,10 +103,9 @@ function love.load()
         startGame = function(fresh)
             local play = PlayScene.new({
                 onMainMenu = goToTitle,
+                fromTitle = true,
             })
-            if fresh then
-                play.expedition.phase = "launch"
-            end
+            play.expedition.phase = "launch"
             sceneStack.switch(scenes, play)
         end
         local title = TitleScene.new({

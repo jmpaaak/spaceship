@@ -1,13 +1,4 @@
 ## Current Status
-- INBOX (54): debris hits play collision SFX at 1.5x volume (0.9).
-  - `game/sfx.lua` `play(name, uniqueKey, volume?)`: default volume 0.6; `lastVolume` recorded for tests. Planet collision stays `sfx.play("collision")`.
-  - `play.lua` debris loop one-line: `sfx.play("collision", nil, 0.9)`. Moon/comet collision SFX out of scope.
-  - Test `game/tests/debris_collision_sfx.lua` GREEN. play.lua not grown beyond the one-line delegate.
-- INBOX (45): harvest upgrade +5% per buy; durability buy fills the new cell.
-  - `game/expedition.lua`: default `sampleYieldUpgradeAmount` 0.01→0.05. Shop copy becomes `HARVEST x1.00 -> x1.05`.
-  - `buyDurabilityUpgrade`: after `refreshShipStats`, current `durability` += gained max (capped at max). Earth shop is not a full heal.
-  - Test `game/tests/harvest_hull_upgrade.lua` GREEN. play.lua untouched.
-
 - INBOX 61(42): game-wide BGM is one looping Space orchestral track.
   - `game/bgm.lua`: `tracks = { assets/sfx/space_orchestral.mp3 }`, `looping = true`, headless `love.audio` nil guard kept.
   - i18n EN/KO `title_bgm_credit` = `BGM: Space — lasercheese (CC-BY 3.0)`. Title still starts BGM on enter; `main.lua` still calls `bgm.update()`.
@@ -146,8 +137,21 @@
   - Assertions in `self_test.lua` adjusted to expect correct scaled stat previews.
   - Tests pass (`make verify LOVE=...` GREEN).
 
+- INBOX (55): CONTINUE/NEW GAME must land on launch
+  - `main.lua`: `startGame` sets `fromTitle = true`, `play.expedition.phase = "launch"`.
+  - `play.lua` / `play_joystick.lua`: `launchInputArmed` gate prevents immediate launch from title tap click-through.
+  - Tests pass (`game/tests/title_to_launch_gate.lua` GREEN).
+
+- INBOX (56): HUD RECORD label zero-padding removed
+  - `game/i18n.lua`: changed format string from `%04d` to `%d` (RECORD %d / 기록 %d).
+  - Tests pass (`game/tests/hud_record_label.lua` GREEN).
+
+- INBOX (57): BGM volume reduced to 75%
+  - `game/bgm.lua`: `src:setVolume` updated from `0.25` to `0.1875`.
+  - Tests pass (`game/tests/bgm.lua` GREEN).
+
 ## Next slice
 
-- INBOX (55): CONTINUE/NEW GAME must land on launch (tap-to-start); same-frame click-through must not fire `expedition.launch`. Test `game/tests/title_to_launch_gate.lua`.
+- INBOX (58): 중심별(태양) 스프라이트가 실제로 보이게 (`game/scenes/play_star.lua`)
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

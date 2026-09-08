@@ -60,7 +60,7 @@ function PJ:pollDesktopMouse()
     if gy < 0 then gy = 0 elseif gy > viewport.height then gy = viewport.height end
     if not self.touches.mouse then
         self.touches.mouse = { x = gx, y = gy, originX = gx, originY = gy }
-        if self.expedition.phase == "launch" then
+        if self.expedition.phase == "launch" and self.launchInputArmed then
             self:keypressed("space")
         end
     else

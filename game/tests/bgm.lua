@@ -28,6 +28,7 @@ function M.run()
     title:enter()
     if love.audio and love.audio.newSource then
         assert(bgm.isPlaying, "INBOX 61(42): title enter starts BGM")
+        assert(bgm.currentSource:getVolume() == 0.1875, "INBOX (57): BGM volume must be 0.1875")
     end
     print("  INBOX-61(42) Space orchestral BGM OK")
 end
