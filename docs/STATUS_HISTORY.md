@@ -1982,3 +1982,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 5,442 to 5,309 lines.
   - Preserved per-galaxy odds profiles, deterministic reel rewards, hull-slot luck weighting, and last-visited-galaxy assertions without changing production code.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 20:47)
+
+- R1 (Lane C, partial): extracted Earth-slot engine-luck wiring coverage to `game/tests/legacy_gear_earth_slot_engine_luck_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,309 to 5,253 lines.
+  - Preserved deterministic reels, bare-run baseline, hull/engine luck boosts, and equal boost magnitude without changing production code.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.

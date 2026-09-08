@@ -1,8 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted Earth-slot engine-luck wiring coverage to `game/tests/legacy_gear_earth_slot_engine_luck_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,309 to 5,253 lines.
-  - Preserved deterministic reels, bare-run baseline, hull/engine luck boosts, and equal boost magnitude without changing production code.
-  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+- R1 (Lane C, partial): extracted Earth-slot profile reward coverage to `game/tests/legacy_earth_slot_profile_reward_variation.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,253 to 5,145 lines.
+  - Preserved deterministic solar/fringe/void HARVEST reels, exposed reward profiles, and void-versus-solar no-match risk assertions without changing production code.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -146,6 +146,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testEarthSlotProfileRewardVariation` from `game/self_test.lua` to `game/tests/legacy_earth_slot_profile_reward_variation.lua`, preserving solar/fringe/void reward tiers and no-match risk assertions.
+- R1 (Lane C): extract `testSlotSpinCostAndMissPaysZero` from `game/self_test.lua` to `game/tests/legacy_slot_spin_cost_and_miss.lua`, preserving configured cost/reward loading, deterministic symbol/reward assertions, and missing-config defaults.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

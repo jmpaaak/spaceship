@@ -18,16 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 15(c) follow-up: earthSlotSpin.reward must vary per galaxy profile.
--- Item 15 says \"보상 테이블이 달라지도록\" (reward TABLE changes) not just
--- weight odds. Currently slotReward is a global fixed table (STAR*3=75,
--- etc.) regardless of profile — void's \"고배당\" promise is only half-fulfilled
--- by raising STAR probability; the jackpot value itself should also scale up.
--- This test pins:
---   (a) solar triple-star reward matches the existing global STAR*3 value (75)
---       so long-time solar players see no change.
---   (b) void triple-star jackpot > solar triple-star jackpot (\"고배당\").
---   (c) fringe triple-star jackpot > solar and <= void (gradient).
 -- Item 15(a) cleanup: dead in-flight slot constants/fields removed from play.lua.
 -- After item-15 abolished the returning-phase slot machine, three dead remnants
 -- remained: (1) the module-level constants `slotReelStagger`/`slotSpinDuration`
@@ -58,104 +48,6 @@ local function testItem15DeadSlotConstantsRemoved()
     })
     assert(scene.slotSpin == nil,
         "item15 cleanup: scene.slotSpin must be removed from M.new() (dead field)")
-end
-
---   (d) earthSlotSpin exposes .rewardProfile so UI can show which tier is active.
---   (e) void no-match (miss) reward <= solar no-match reward (risk tradeoff:
---       higher ceiling, same or lower floor).
-local function testEarthSlotProfileRewardVariation()
-    local expedition = require("game.expedition")
-
-    -- Find galaxy IDs for fringe and void profiles.
-    local fringeGalaxy, voidGalaxy
-    local candidates = {
-        "andromeda", "triangulum", "ngc1300", "sombrero", "pinwheel",
-        "sculptor", "circinus", "bode", "centaurus", "whirlpool",
-    }
-    for _, g in ipairs(candidates) do
-        local p = expedition.galaxySlotOddsProfile(g)
-        if p == "fringe" and not fringeGalaxy then fringeGalaxy = g end
-        if p == "void"   and not voidGalaxy   then voidGalaxy   = g end
-        if fringeGalaxy and voidGalaxy then break end
-    end
-    assert(fringeGalaxy, "need at least one fringe galaxy in candidates")
-    assert(voidGalaxy,   "need at least one void galaxy in candidates")
-
-    local run = expedition.new()
-
-    -- STAR is the last symbol in slotSymbols canonical order
-    -- (COMET -> PLANET -> STAR). A roll past MONEY+PART+SPEED+DURABILITY selects STAR.
-    local solarWeights = expedition.earthSlotWeights(nil)
-    local solarTotal   = solarWeights.MONEY + solarWeights.PART + solarWeights.SPEED + solarWeights.DURABILITY + solarWeights.HARVEST
-    local starRoll     = solarTotal - 0.5   -- last bucket = STAR
-
-    -- (a) Solar triple-HARVEST must equal the legacy global STAR*3 value (75).
-    local solarSpin = expedition.earthSlotSpin(run, nil, {
-        reels = { starRoll, starRoll, starRoll },
-    })
-    assert(solarSpin.symbols[1] == "HARVEST" and solarSpin.symbols[2] == "HARVEST"
-        and solarSpin.symbols[3] == "HARVEST",
-        "starRoll must select HARVEST for solar profile, got: "
-            .. table.concat(solarSpin.symbols, "-"))
-    assert(solarSpin.rewardType == "harvest" and solarSpin.reward == 0,
-        "solar triple-HARVEST must be harvest type (not money), got: "
-            .. tostring(solarSpin.reward))
-
-    -- (b) Void triple-HARVEST jackpot must EXCEED solar.
-    local voidWeights  = expedition.earthSlotWeights(voidGalaxy)
-    local voidTotal    = voidWeights.MONEY + voidWeights.PART + voidWeights.SPEED + voidWeights.DURABILITY + voidWeights.HARVEST
-    local voidStarRoll = voidTotal - 0.5
-    local voidSpin = expedition.earthSlotSpin(run, voidGalaxy, {
-        reels = { voidStarRoll, voidStarRoll, voidStarRoll },
-    })
-    assert(voidSpin.symbols[1] == "HARVEST",
-        "voidStarRoll must select HARVEST for void profile, got: "
-            .. table.concat(voidSpin.symbols, "-"))
-    assert(voidSpin.rewardType == "harvest",
-        "void triple-HARVEST must be harvest type, got " .. tostring(voidSpin.rewardType))
-
-    -- (c) Fringe triple-HARVEST jackpot: > solar and <= void (gradient).
-    local fringeWeights  = expedition.earthSlotWeights(fringeGalaxy)
-    local fringeTotal    = fringeWeights.MONEY + fringeWeights.PART + fringeWeights.SPEED + fringeWeights.DURABILITY + fringeWeights.HARVEST
-    local fringeStarRoll = fringeTotal - 0.5
-    local fringeSpin = expedition.earthSlotSpin(run, fringeGalaxy, {
-        reels = { fringeStarRoll, fringeStarRoll, fringeStarRoll },
-    })
-    assert(fringeSpin.symbols[1] == "HARVEST",
-        "fringeStarRoll must select HARVEST for fringe profile, got: "
-            .. table.concat(fringeSpin.symbols, "-"))
-    assert(fringeSpin.rewardType == "harvest",
-        "fringe triple-HARVEST must be harvest type, got " .. tostring(fringeSpin.rewardType))
-    assert(fringeSpin.rewardType == voidSpin.rewardType,
-        "fringe and void must have same rewardType, got " .. tostring(fringeSpin.rewardType))
-
-    -- (d) earthSlotSpin must expose .rewardProfile for UI.
-    assert(solarSpin.rewardProfile == "solar",
-        "solar spin must expose rewardProfile='solar', got: "
-            .. tostring(solarSpin.rewardProfile))
-    assert(voidSpin.rewardProfile == "void",
-        "void spin must expose rewardProfile='void', got: "
-            .. tostring(voidSpin.rewardProfile))
-    assert(fringeSpin.rewardProfile == "fringe",
-        "fringe spin must expose rewardProfile='fringe', got: "
-            .. tostring(fringeSpin.rewardProfile))
-
-    -- (e) Void no-match reward <= solar no-match (risk tradeoff: high ceiling,
-    -- same or lower floor — void pays more for wins, not more for misses).
-    -- Force a guaranteed COMET-PLANET-COMET mismatch on each profile.
-    local moneyRoll  = 0.5                              -- lands in MONEY bucket
-    local partRoll = solarWeights.MONEY + 0.5         -- past COMET, in PART bucket
-    local solarMiss  = expedition.earthSlotSpin(run, nil, {
-        reels = { moneyRoll, partRoll, moneyRoll },
-    })
-    local voidPlanetRoll = voidWeights.MONEY + 0.5
-    local voidMiss = expedition.earthSlotSpin(run, voidGalaxy, {
-        reels = { moneyRoll, voidPlanetRoll, moneyRoll },
-    })
-    assert(voidMiss.reward <= solarMiss.reward,
-        "void no-match reward (" .. tostring(voidMiss.reward)
-            .. ") must be <= solar no-match (" .. tostring(solarMiss.reward)
-            .. ") - risk tradeoff")
 end
 
 -- INBOX (15)(b): spin cost + miss pays 0. Miss used to pay +$5 so every
@@ -565,7 +457,7 @@ local function runGearTests()
     testEarthSlotPartReplacement()
     testEarthSlotSpinPartRarityGate()
     require("game.tests.legacy_gear_earth_slot_engine_luck_wiring").run()
-    testEarthSlotProfileRewardVariation()
+    require("game.tests.legacy_earth_slot_profile_reward_variation").run()
     testSlotSpinCostAndMissPaysZero()
     testSlotEditorWebUi()
     testItem15DeadSlotConstantsRemoved()

@@ -1625,7 +1625,7 @@ profile without re-calling `galaxySlotOddsProfile`.
 are identical across profiles. Only the STAR jackpot scales, so void/fringe
 don't give more for misses — genuine high-risk-high-reward.
 
-**Regression test:** `testEarthSlotProfileRewardVariation()` verifies:
+**Regression test:** `game/tests/legacy_earth_slot_profile_reward_variation.lua` verifies:
   (a) solar triple-STAR == 75 (legacy parity)
   (b) void triple-STAR > solar triple-STAR
   (c) fringe triple-STAR > solar and <= void (gradient)
