@@ -105,45 +105,7 @@ function M.run()
 
     require("game.tests.legacy_touch_flight_settlement").run()
 
-    local loadoutScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    local starterLoadout = loadoutScene:loadoutLines()
-    -- docs/feedback/INBOX.md UI/HUD item 4: the ship-name line is dead
-    -- weight while only the single default STARTER hull is owned (no real
-    -- choice exists yet), so loadoutLines().ship is nil until a second
-    -- ship (scout) is actually owned -- only then does naming the current
-    -- ship carry any meaning.
-    assert(starterLoadout.ship == nil,
-        "loadout ship line should be hidden while only STARTER is owned")
-    assert(starterLoadout.stats == "HULL 3")
-    assert(starterLoadout.upgrades == "HULL LV.0")
-
-    assert(starterLoadout.steering == "60")
-    loadoutScene.expedition.phase = "settlement"
-    loadoutScene.expedition.money = loadoutScene.expedition.durabilityUpgradeCost
-        + loadoutScene.expedition.scoutShipCost
-        + loadoutScene.expedition.steeringUpgradeCost
-    assert(expedition.buyDurabilityUpgrade(loadoutScene.expedition))
-    assert(expedition.buyShip(loadoutScene.expedition, "scout"))
-    assert(expedition.selectShip(loadoutScene.expedition, "scout"))
-    assert(expedition.buySteeringUpgrade(loadoutScene.expedition))
-    local upgradedLoadout = loadoutScene:loadoutLines()
-    assert(upgradedLoadout.ship == "SHIP SCOUT")
-    assert(upgradedLoadout.stats == "HULL 2")
-    assert(upgradedLoadout.upgrades == "HULL LV.1")
-
-    assert(upgradedLoadout.steering == "181")
-    assert(expedition.launch(loadoutScene.expedition))
-    assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
-    local resetLoadout = loadoutScene:loadoutLines()
-    -- Destruction wipes ownedShips back down to only STARTER, so the ship
-    -- line is hidden again post-reset for the same reason as above.
-    assert(resetLoadout.ship == nil,
-        "loadout ship line should be hidden again after a meta-wipe reset")
-    assert(resetLoadout.stats == "HULL 3")
-    assert(resetLoadout.upgrades == "HULL LV.0")
-    assert(resetLoadout.steering == "60")
+    require("game.tests.legacy_loadout_lines").run()
 
     local nextLaunchScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -2675,6 +2637,7 @@ function M.run()
     require("game.tests.self_test_ship_shop_extraction").run()
     require("game.tests.self_test_settlement_shop_input_extraction").run()
     require("game.tests.self_test_touch_flight_settlement_extraction").run()
+    require("game.tests.self_test_loadout_lines_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
