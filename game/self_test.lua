@@ -99,28 +99,7 @@ function M.run()
 
     require("game.tests.legacy_steering_upgrade").run()
 
-    local shipShopRun = expedition.new({
-        durability = 3,
-        scoutShipCost = 90,
-        scoutClimbSpeedBonus = 5,
-        money = 100,
-    })
-    assert(not expedition.buyShip(shipShopRun, "scout"))
-    shipShopRun.phase = "settlement"
-    assert(expedition.buyShip(shipShopRun, "scout"))
-    assert(shipShopRun.money == 10 and shipShopRun.ownedShips.scout)
-    assert(shipShopRun.selectedShipId == "starter")
-    assert(not expedition.buyShip(shipShopRun, "scout") and shipShopRun.money == 10)
-    assert(expedition.selectShip(shipShopRun, "scout"))
-    assert(shipShopRun.selectedShipId == "scout")
-    assert(shipShopRun.maxDurability == 2 and expedition.effectiveSpeed(shipShopRun) == 65)
-    assert(expedition.launch(shipShopRun) and shipShopRun.durability == 2)
-    assert(not expedition.damage(shipShopRun, 1))
-    assert(expedition.damage(shipShopRun, 1))
-    assert(shipShopRun.phase == "destroyed")
-    assert(shipShopRun.selectedShipId == "starter" and shipShopRun.ownedShips.starter)
-    assert(not shipShopRun.ownedShips.scout)
-    assert(shipShopRun.maxDurability == 3)
+    require("game.tests.legacy_ship_shop").run()
 
     local shopScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -2788,6 +2767,7 @@ function M.run()
     require("game.tests.self_test_upgrade_extraction").run()
     require("game.tests.self_test_sample_streak_extraction").run()
     require("game.tests.self_test_steering_upgrade_extraction").run()
+    require("game.tests.self_test_ship_shop_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
