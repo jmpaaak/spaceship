@@ -1968,3 +1968,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved sample-sell-value gear, Earth-only money gear, sample-count persistence, and phase-independent return assertions without changing production behavior or adding a `love.*` boundary.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testHubSettleStreakPersistence` to `game/tests/legacy_hub_settle_streak_persistence.lua` without changing assertions.
+
+## Archived from STATUS.md (2026-09-08 20:35)
+
+- R1 (Lane C, partial): extracted hub-settlement streak persistence coverage to `game/tests/legacy_hub_settle_streak_persistence.lua`.
+  - `game/self_test.lua` delegates through `run()` and shrank from 5,499 to 5,442 lines.
+  - Preserved same-family streak continuation across repeated hub settlements, multiplier assertions, and different-family reset behavior without changing production code.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
