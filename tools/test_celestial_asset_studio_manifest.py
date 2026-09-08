@@ -24,6 +24,7 @@ REQUIRED_IDS = {
     "star_sdo_nasa_pia26681",
     "hub_neptune_nasa_pia00046",
     "hub_pluto_nasa_pia19952",
+    "hub_saturn_nasa_pia02225",
 }
 
 

@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T02:44:02+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/hub_saturn_nasa_pia02225.jpg",
+  "source_dimensions": [
+    900,
+    1000
+  ],
+  "input_preparation": {
+    "resize": [
+      896,
+      896
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 64,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "hub_saturn",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 96,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "94292c0c83676bf6a85ff6465d7fca13b9b0c25c38ff2e9264703f69f2af3120",
+  "payload_bytes": 17654382,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}
