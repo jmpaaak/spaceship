@@ -231,25 +231,7 @@ function M.run()
 
     require("game.tests.legacy_destroyed_restart_text").run()
 
-    -- INBOX 61(18): hub shop row3 (gear text) gap too large — must be < 100px
-    do
-        local PlayScene = require("game.scenes.play")
-        local rows = PlayScene.settlementTouchRows
-        local row3H = rows[3].bottom - rows[3].top
-        assert(row3H < 100,
-            "INBOX 61(18): row3 (gear) height must be < 100px to reduce gap, got " .. row3H)
-        -- row4 (slot) must start right after row3
-        assert(rows[4].top == rows[3].bottom,
-            "INBOX 61(18): row4.top (" .. rows[4].top .. ") must equal row3.bottom (" .. rows[3].bottom .. ")")
-        -- rows must still be contiguous and within panel
-        for i = 2, #rows do
-            assert(rows[i].top == rows[i-1].bottom,
-                "INBOX 61(18): row " .. i .. " top must equal row " .. (i-1) .. " bottom")
-        end
-        assert(rows[#rows].bottom <= PlayScene.settlementPanelTop + PlayScene.settlementPanelHeight,
-            "INBOX 61(18): last row bottom must fit within panel")
-        print("  INBOX-61(18) hub shop row3 gap OK")
-    end
+    require("game.tests.legacy_hub_shop_row3_gap").run()
 
     -- INBOX 61(19): slot speed reward must use slotSpeedBonus, not steeringUpgradeLevel
     do
@@ -1102,6 +1084,7 @@ function M.run()
     require("game.tests.self_test_planet_sheet_sprites_extraction").run()
     require("game.tests.self_test_hub_restock_extraction").run()
     require("game.tests.self_test_destroyed_restart_text_extraction").run()
+    require("game.tests.self_test_hub_shop_row3_gap_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
