@@ -4,6 +4,25 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
+(52) **타이틀 함선 아이들 모션** (msg `1546710064830877696`)
+  - 담당: `game/scenes/title.lua` (play.lua 금지)
+  - 홈 화면 함선이 PNG 그대로 멈춰 있음. 살짝 대각선 기울기 + 느린 부유(bob) + 아주 작은 좌우 요동.
+  - 회전은 작은 각(대략 ±8°)만. 에셋 교체 금지, `ship_default.png` nearest 스케일 유지.
+  - 테스트: `game/tests/title_ship_idle.lua`
+
+(53) **이어하기/새게임 출발 SFX 제거** (OOB 2026-09-08)
+  - 담당: `game/scenes/title.lua` + `game/scenes/play.lua` 진입 경로. play.lua는 한 줄 위임만.
+  - 이어하기/새게임 탭 직후 나는 출발음이 안 맞음. 버튼 탭 SFX가 있으면 제거.
+  - 유력 원인: 시작 은하에서 `sfx.play("galaxy_discover")`가 즉시 재생. 홈/시작 은하는 discover SFX 스킵.
+  - BGM은 유지. 테스트: `game/tests/title_start_sfx.lua`
+
+(54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
+  - 담당: `game/sfx.lua` + 파편 히트 호출. play.lua 거대 파일에 로직 붙이지 말고 한 줄 위임 (`game/scenes/play.lua` debris 루프).
+  - 행성 충돌은 `sfx.play("collision")` (vol 0.6). 파편(`nearbyDebris`) 히트에는 같은 클립을 **1.5배(0.9)** 로 재생.
+  - `sfx.play(name, uniqueKey, volume?)` 또는 동등한 volume 인자. 행성 충돌 볼륨은 그대로.
+  - 달/혜성 충돌은 이번 항목 범위 아님.
+  - 테스트: `game/tests/debris_collision_sfx.lua`
+
 ## 처리 완료
 (51) **수확 1업 +0.1, 슬롯 HARVEST도 맞춤** (msg `1546492087749320774`)
   - 완료: `sampleYieldUpgradeAmount` 0.05→**0.10**. 슬롯 2매치 +0.10 / 3매치 +0.50 (×tier). Shop preview `x1.00 -> x1.10`. Test GREEN.
