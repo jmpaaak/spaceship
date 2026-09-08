@@ -1,9 +1,9 @@
 ## Current Status
-- R1 lane C: extracted collect-zoom/time-slip characterization coverage from `game/self_test.lua` into `game/tests/legacy_collect_zoom_and_timeslip.lua`.
-  - The runner now delegates through the module's `run()` entry point; assertions, update order, scene setup, and output remain unchanged.
+- R1 lane C: extracted dead in-flight slot artifact characterization coverage from `game/self_test.lua` into `game/tests/legacy_dead_slot_constants.lua`.
+  - The runner now delegates through the module's `run()` entry point; removed constants, return-control fields, fresh-scene state assertions, and execution order remain unchanged.
   - TDD evidence: missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; final `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - `game/self_test.lua` decreased by 59 lines (4,348 → 4,289); `play.lua` and `expedition.lua` were not changed.
-  - Next R1 slice: extract the adjacent RCS 0–999 gradient characterization block into `game/tests/legacy_rcs_gradient.lua`.
+  - `game/self_test.lua` decreased by 32 lines (4,289 → 4,257); `play.lua` and `expedition.lua` were not changed.
+  - Next R1 slice: extract the RCS 0–999 gradient characterization block into `game/tests/legacy_rcs_gradient.lua`.
 
 - INBOX 61(25): Slot cost/rewards scale with galaxy distance.
   - `expedition.slotTier(run, galaxyId)` = `1 + floor(galaxyDistance / galaxyCellSize)`.
@@ -139,6 +139,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testItem15DeadSlotConstantsRemoved` from `game/self_test.lua` into `game/tests/legacy_dead_slot_constants.lua`, preserving the removed constants, return-control fields, and fresh-scene state assertions.
+- R1 (Lane C): extract the RCS 0–999 gradient characterization block from `game/self_test.lua` into `game/tests/legacy_rcs_gradient.lua`, preserving pure visual calculations, scene particle assertions, and output.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

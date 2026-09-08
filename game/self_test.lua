@@ -17,38 +17,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 15(a) cleanup: dead in-flight slot constants/fields removed from play.lua.
--- After item-15 abolished the returning-phase slot machine, three dead remnants
--- remained: (1) the module-level constants `slotReelStagger`/`slotSpinDuration`
--- (no longer referenced by any function), (2) `returnControls.slotMinX`/
--- `.slotMaxX` (slot tap zone fields — only leftMaxX/rightMinX are still used),
--- and (3) `slotSpin = nil` in M.new() (dead state field never written or read).
--- This test guards that all three dead artifacts are gone.
-local function testItem15DeadSlotConstantsRemoved()
-    local PlayScene = require("game.scenes.play")
-    -- (1) Module-level dead constants must not leak onto the table.
-    assert(PlayScene.slotReelStagger == nil,
-        "item15 cleanup: PlayScene.slotReelStagger must be removed (dead constant)")
-    assert(PlayScene.slotSpinDuration == nil,
-        "item15 cleanup: PlayScene.slotSpinDuration must be removed (dead constant)")
-    -- (2) returnControls dead slot-zone fields.
-    local rc = PlayScene.returnControls
-    assert(rc ~= nil, "returnControls must still exist")
-    assert(rc.slotMinX == nil,
-        "item15 cleanup: returnControls.slotMinX must be removed (dead slot zone)")
-    assert(rc.slotMaxX == nil,
-        "item15 cleanup: returnControls.slotMaxX must be removed (dead slot zone)")
-    -- Steering fields still present.
-    assert(type(rc.leftMaxX) == "number", "returnControls.leftMaxX must remain")
-    assert(type(rc.rightMinX) == "number", "returnControls.rightMinX must remain")
-    -- (3) Dead slotSpin state field must not appear in a fresh PlayScene instance.
-    local scene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    assert(scene.slotSpin == nil,
-        "item15 cleanup: scene.slotSpin must be removed from M.new() (dead field)")
-end
-
 -- Forward declaration: testStellarSynergies is defined after runGearTests
 -- (where it is called) to keep related logic together; forward-declaring the
 -- local here satisfies Lua 5.1 scoping while keeping the 60-upvalue limit
@@ -113,7 +81,7 @@ local function runGearTests()
     require("game.tests.legacy_earth_slot_profile_reward_variation").run()
     require("game.tests.legacy_slot_spin_cost_and_miss").run()
     require("game.tests.legacy_slot_editor_web_ui").run()
-    testItem15DeadSlotConstantsRemoved()
+    require("game.tests.legacy_dead_slot_constants").run()
     require("game.tests.legacy_slot_5_symbol_weighted_rng").run()
     testStellarSynergies()
     testExpeditionStellarSynergies()
