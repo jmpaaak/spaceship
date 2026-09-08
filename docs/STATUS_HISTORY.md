@@ -1897,3 +1897,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved Earth-pool exclusion, deterministic engine rewards, cross-galaxy variety, and shared hull/engine hub-exploration assertions; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testSlotExclusivePartsWiring` to `game/tests/legacy_gear_slot_exclusive_parts_wiring.lua` without changing assertions.
+
+## Archived from STATUS.md (2026-09-08 19:47)
+
+- R1 (Lane C, partial): extracted slot-exclusive parts wiring coverage to `game/tests/legacy_gear_slot_exclusive_parts_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,305 to 6,183 lines.
+  - Preserved bundled-pool counts, Earth/slot pool filtering, deterministic 2/3-match PART rewards, editor round-trip, and schema assertions unchanged.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearExploreHubEditionRolling` to `game/tests/legacy_gear_explore_hub_edition_rolling.lua` without changing assertions.
