@@ -1735,3 +1735,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved engine-speed, boost-charge spend/exhaustion, independent hull-slot, and relaunch-refill assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearSurvivalAndEconomyWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 17:45)
+
+- R1 (Lane C, partial): extracted insurance/shop-discount run-wiring coverage to `game/tests/legacy_gear_survival_economy_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,897 to 7,831 lines.
+  - Preserved first-hit insurance survival, second-hit destruction, uninsured destruction, discounted purchase, and full-price purchase assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearInsuranceCategoryAgnosticWiring` into one `game/tests/legacy_*.lua` module.

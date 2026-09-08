@@ -18,34 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 14(D) category-agnostic content-coverage follow-up: this lane's own
--- audit pattern (documented in docs/GEAR_SCHEMA.md and
--- legacy_gear_category_coverage) treats insurance as one
--- of the effect types "hull/engine 어느 슬롯이든 효과가 실제로 반영되도록
--- 설계된" -- combinedGearList(run) already unions equippedGear +
--- equippedEngineParts for every other category-agnostic wrapper in this
--- file (chainTrigger, rerollBonus, detectionRadius, autoCollect,
--- shopDiscount, sellMultiplier, streakMultiplier, luck). M.damage's
--- insurance check was the one holdout still reading run.equippedGear (hull
--- only) directly, so a bundled engine card carrying `insurance`
--- (engine_escape_pod_thruster) was silently unable to grant the "파괴 시 1회
--- 한정 정산 없이 생존" save even though the schema/docs describe insurance
--- as category-agnostic -- an engine-only loadout could never survive a
--- lethal hit via gear, unlike every other category-agnostic effect.
-local function testGearInsuranceCategoryAgnosticWiring()
-    local expedition = require("game.expedition")
-    -- engine_escape_pod_thruster no longer carries insurance (hull-only effect).
-    -- Verify it has boostCharge instead.
-    local enginePool = gear.loadEngineParts()
-    local escapePod = gear.findById(enginePool, "engine_escape_pod_thruster")
-    assert(escapePod, "fixture engine card 'engine_escape_pod_thruster' must exist in the bundled pool")
-    local hasBoost = false
-    for _, eff in ipairs(escapePod.effects) do
-        if eff.type == "boostCharge" then hasBoost = true end
-    end
-    assert(hasBoost, "engine_escape_pod_thruster must have boostCharge (insurance moved to hull-only)")
-end
-
 -- Item 12's rarity/edition RNG (gear.rollRarity/gear.rollEdition) has
 -- existed only as pure functions until now -- never actually called from a
 -- run's shop/checkpoint drop path. This wires an explicit-roll offer
@@ -3108,7 +3080,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_run_wiring").run()
     require("game.tests.legacy_gear_propulsion_run_wiring").run()
     require("game.tests.legacy_gear_survival_economy_wiring").run()
-    testGearInsuranceCategoryAgnosticWiring()
+    require("game.tests.legacy_gear_insurance_category_wiring").run()
     testGearOfferRolling()
     testGearRunEffectWiring()
     testGearSellMultiplierEngineSlotWiring()
