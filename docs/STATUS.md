@@ -1,11 +1,4 @@
 ## Current Status
-- INBOX 61(38): Title/Game BGM playlist
-  - Implemented `game/bgm.lua` to handle playlist looping between `title_bgm.mp3` and `observing_the_star.ogg`.
-  - Hooked `bgm.update()` in `main.lua` and `bgm.start()` in `title.lua:enter()`. Playback continues seamlessly during gameplay.
-  - Added CC-BY/CC0 BGM credit texts in `title.lua` and `i18n.lua`.
-  - Added test coverage in `self_test.lua` while ensuring `GAME_HEADLESS=1` runs skip `love.audio`.
-  - Test `INBOX-61(38)` GREEN.
-
 - INBOX 61(41): binaryStar settle farm limit
   - Modified `game/expedition.lua` to remove flat +$30 reward on settle.
   - Added 1.3x multiplier to sample payouts (`pendingSampleValue`) during `settle()` and `settleAtHub()` when `binaryStar` synergy is active.
@@ -130,8 +123,12 @@
   - Preserved the chart-line alpha threshold, the existing minimap-rim coverage note, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,820 to 3,810 lines.
 
+- R1 (Lane C, partial): extracted the hub-full-settlement-shop characterization block into `game/tests/legacy_hub_full_settlement_shop.lua`.
+  - Preserved settlement payout/state, hub-position survival and lifecycle clearing, bilingual i18n assertions, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,810 to 3,746 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the hub-full-settlement-shop characterization block from `game/self_test.lua` into `game/tests/legacy_hub_full_settlement_shop.lua`, preserving settlement payout/state, hub-position lifecycle, i18n assertions, and output.
+- R1 (Lane C): extract the hub-shop-relaunch-touch characterization block from `game/self_test.lua` into `game/tests/legacy_hub_shop_relaunch_touch.lua`, preserving touch/keyboard relaunch behavior, stored hub coordinates, `hasLeftEarth`, and output.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

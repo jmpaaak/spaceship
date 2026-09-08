@@ -2149,3 +2149,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added `mode` field support to `tools/gear-editor` UI (default flat, toggles flat/multiply, live previews updated).
   - Documented `mode` in `docs/GEAR_SCHEMA.md`.
   - Test suite (INBOX-61(26) infra part) GREEN. Code infrastructure complete.
+
+## Archived from STATUS.md (2026-09-08 22:51)
+
+- INBOX 61(38): Title/Game BGM playlist
+  - Implemented `game/bgm.lua` to handle playlist looping between `title_bgm.mp3` and `observing_the_star.ogg`.
+  - Hooked `bgm.update()` in `main.lua` and `bgm.start()` in `title.lua:enter()`. Playback continues seamlessly during gameplay.
+  - Added CC-BY/CC0 BGM credit texts in `title.lua` and `i18n.lua`.
+  - Added test coverage in `self_test.lua` while ensuring `GAME_HEADLESS=1` runs skip `love.audio`.
+  - Test `INBOX-61(38)` GREEN.
