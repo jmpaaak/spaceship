@@ -159,39 +159,7 @@ function M.run()
 
     require("game.tests.legacy_panel_sprite").run()
 
-    -- ComfyUI shop icon / joystick / star-point / specimen-banner wiring (group 6):
-    -- drawShopIconSprite and drawStarPointSprite are exported and return false when
-    -- image is nil. Scene instance carries the 4 new image slots.
-    do
-        local PlayScene = require("game.scenes.play")
-        assert(type(PlayScene.drawShopIconSprite) == "function",
-            "drawShopIconSprite must be exported on PlayScene")
-        local ok1, res1 = pcall(PlayScene.drawShopIconSprite, nil, 50, 50, 8)
-        assert(ok1, "drawShopIconSprite(nil,...) must not throw")
-        assert(res1 == false, "drawShopIconSprite(nil,...) must return false")
-
-        assert(type(PlayScene.drawStarPointSprite) == "function",
-            "drawStarPointSprite must be exported on PlayScene")
-        local ok2, res2 = pcall(PlayScene.drawStarPointSprite, nil, 50, 50, 3)
-        assert(ok2, "drawStarPointSprite(nil,...) must not throw")
-        assert(res2 == false, "drawStarPointSprite(nil,...) must return false")
-
-        local scene = PlayScene.new()
-        for _, key in ipairs({
-            "joystickPadImage", "joystickKnobImage",
-            "specimenBannerImage", "starPointImage",
-        }) do
-            assert(scene[key] == nil or type(scene[key]) == "userdata",
-                key .. " must be nil (headless) or image userdata")
-        end
-        -- shopIconImages map must carry the 4 keys
-        assert(type(scene.shopIconImages) == "table",
-            "shopIconImages must be a table")
-        for _, ikey in ipairs({"hull", "steering", "yield", "ship"}) do
-            assert(scene.shopIconImages[ikey] == nil or type(scene.shopIconImages[ikey]) == "userdata",
-                "shopIconImages." .. ikey .. " must be nil (headless) or image userdata")
-        end
-    end
+    require("game.tests.legacy_shop_control_sprite").run()
 
     -- PixelPlanets pixel-art star sprites: drawPixelStar exported, nil-safe,
     -- and scene carries pixelStarsImage / pixelStarsSpecialImage slots.
@@ -1696,6 +1664,7 @@ function M.run()
     require("game.tests.self_test_planet_effect_sprite_extraction").run()
     require("game.tests.self_test_floating_icon_sprite_extraction").run()
     require("game.tests.self_test_panel_sprite_extraction").run()
+    require("game.tests.self_test_shop_control_sprite_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
