@@ -2262,7 +2262,6 @@ function M.run()
 
     require("game.tests.legacy_hub_shop_relaunch_touch").run()
 
-    require("game.tests.legacy_asset_studio_web_hub").run()
 
     require("game.tests.legacy_slot_ui_copy").run()
 

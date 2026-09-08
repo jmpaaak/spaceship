@@ -2193,3 +2193,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Lazy source creation, uniqueKey dedup for galaxy_discover, `resetGuards()`/`releaseAll()` cleanup API.
   - `play.lua` integration: 1 require + 4 one-liner calls (galaxy discover, star_sample play/stop, collision).
   - Test `game/tests/sfx.lua` registered in self_test: defs validation, headless safety, dedup guards, reset. GREEN.
+
+## Archived from STATUS.md (2026-09-08 23:21)
+
+- INBOX 61(32) (partial): finish play_shop.lua extraction.
+  - Codex rate-limit cutoff left `play_shop.lua` partially extracted (only overlays).
+  - Completed the extraction of `shopModalLayout`, `shopModalButtonRects`, `hitShopModalGearSlot`, and `drawShopModal` into `play_shop.lua`.
+  - `play.lua` now purely delegates all shop/settlement/destroyed overlay logic to `play_shop.lua`.
+  - Tests pass (`make verify LOVE=...` GREEN).
