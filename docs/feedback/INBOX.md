@@ -61,6 +61,32 @@
     (d) `sampleYieldMultiplier`가 슬롯 정산 후 `1 + level * 0.10`으로 맞는지 테스트.
   - 테스트: `game/tests/slot_payout_audit.lua` — 2매치 HARVEST 후 multiplier +0.10, 3매치 후 +0.50 (level +1 / +5). 기존 `harvest_hull_upgrade.lua` rewardValue 0.10/0.50 유지.
 
+(62) **룰렛 시작 SFX 볼륨 절반** (OOB 2026-09-08)
+  - 담당: `game/sfx.lua`. play.lua 금지.
+  - `slot_spin` 기본 vol은 전역 `0.6`과 같음. `sfx.play("slot_spin")`를 **0.3** (절반)으로. 다른 SFX 볼륨 건드리지 말 것.
+  - def에 `volume` 필드를 두면 전역 0.6을 덮어쓰게. `play_slot.lua`는 한 줄 유지.
+  - 테스트: `game/tests/sfx.lua` — slot_spin volume 0.3.
+
+(63) **회전 버려진 우주정거장 도킹** (msg `1546715845642682451`)
+  - 담당: `game/world.lua` + `game/stations.lua` (새 모듈, 순수) + `game/scenes/play_station.lua` (드로우/도킹). play.lua는 require + 한 줄 위임만. `tools/gen_station.py` 에셋.
+  - 행성과 **별도** 오브젝트. 혜성(운성)과 **동일 등장 확률**: `cometSpawnInterval=30`, `cometSpawnChance=0.30`, 첫 스폰 60초 보장과 같은 타이머/롤 (독립 스트림, 혜성과 같은 틱에 안 겹쳐도 됨).
+  - 정거장은 천천히 회전. 도킹 가능 영역은 **원주의 일부 아크**(대략 40~60°)만. 함선이 그 아크에 맞춰 천천히 진입해야 성공. 아크 밖/너무 빠르면 충돌(행성 충돌 데미지 경로).
+  - 도킹 성공: 회전 정지. 보상 = `moonSampleValue * 1.5` (반올림) + **내구도 완전 회복** (`durability = maxDurability`). 한 정거장 1회.
+  - 스프라이트: 웹에서 버려진 우주정거장 레퍼런스 검색 → 픽셀화 → `assets/station/station.png` (+ 가능하면 회전 시트). NASA/위키미디어 등 사용 가능한 소스. `docs/GENERATED_ASSET_LOG.md` 기록. ComfyUI 금지, PIL/`tools/` ≤50줄 또는 검색 PNG 픽셀화.
+  - 테스트: `game/tests/station_dock.lua` — 스폰 확률 상수 혜성과 동일, 아크 히트만 도킹, 성공 시 회전 정지·힐·1.5×위성 금액.
+
+(64) **행성 배치가 세로줄/규칙 격자처럼 보이면 안 됨** (msg `1546715845642682451`)
+  - 담당: `game/world.lua` `M.planets`. play.lua 금지.
+  - 원인: `sectorSize=192` 격자 + 섹터당 0~1개라 세로/가로 줄로 읽힘. x는 `hash(sectorX+i*7, sectorY, 40)`, y는 `hash(sectorX, sectorY+i*13, 60)` — 같은 열 섹터에서 x 분산이 약함.
+  - 수정: 섹터 안 위치를 **극좌표/두 축 모두 i·salt를 곱한 해시**로 재시드 (world.lua hash 버그 교훈: i를 좌표에 곱 + LCG 3회는 이미 있음). 인접 섹터 행성 간 최소 거리 강제(겹침/줄 정렬 깨기). 은하 원 안에서는 각도를 고르게 쓰지 말고 해시 각+반경.
+  - 테스트: `game/tests/planet_scatter.lua` — 같은 gx 줄에서 x 좌표 분산이 섹터 폭의 상당 비율, 등간격 세로줄 패턴 실패.
+
+(65) **내구 칸이 1칸=10HP일 때 끝에 x10** (OOB 2026-09-08)
+  - 담당: `game/scenes/play_hud.lua`로 HP 블록 드로우를 옮기거나 기존 HUD 블록에 라벨만. play.lua는 한 줄 위임(이미 거대 파일).
+  - `maxDurability >= 10`이면 큰 칸=10HP (이미 있음)인데 **칸들 오른쪽 끝에 `x10` 텍스트가 없음**. Galmuri 11px 배수. 색은 HP 칸과 같거나 회색.
+  - 10 미만은 1칸=1HP, `x10` 없음.
+  - 테스트: `game/tests/hp_block_x10.lua`.
+
 ## 처리 완료
 (54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
   - 완료: `sfx.play(name, uniqueKey, volume?)` — default 0.6. Planet keeps `sfx.play("collision")`. Debris loop one-line `sfx.play("collision", nil, 0.9)`. Moon/comet unchanged.
