@@ -2073,3 +2073,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved visual/settle/reentry radii, launch spawn offset, and outside-settle-radius assertions; production behavior is unchanged.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN. `game/self_test.lua` shrank from 4,501 to 4,484 lines.
   - Next slice: extract the sample collect zoom/time-slip regression block into `game/tests/legacy_collect_zoom.lua`.
+
+## Archived from STATUS.md (2026-09-08 21:55)
+
+- INBOX 61(40): gear-editor KO/EN locale toggle.
+  - Toolbar KO | EN buttons; preference in `localStorage` (`gear-editor-locale`).
+  - KO: card title = `nameKo`, effects = i18n `effect_*` KO, rarity/suit/synergy Korean.
+  - EN: card title = `name`, effects/rarity/suit/synergy English. Seven synergies switch with locale. No symbol prefixes.
+  - Test `tools.test_gear_editor_locale` GREEN (wired into `make test`). play.lua / self_test.lua untouched.

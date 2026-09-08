@@ -1,10 +1,4 @@
 ## Current Status
-- INBOX 61(40): gear-editor KO/EN locale toggle.
-  - Toolbar KO | EN buttons; preference in `localStorage` (`gear-editor-locale`).
-  - KO: card title = `nameKo`, effects = i18n `effect_*` KO, rarity/suit/synergy Korean.
-  - EN: card title = `name`, effects/rarity/suit/synergy English. Seven synergies switch with locale. No symbol prefixes.
-  - Test `tools.test_gear_editor_locale` GREEN (wired into `make test`). play.lua / self_test.lua untouched.
-
 - INBOX 61(27): Asset Studio sprite-gen server.
   - New `tools/serve_editors.py`: static repo server + `POST /api/sprite-gen` `{prompt, width, height, image?}`.
   - Tries Python `sprite-gen`; missing/fail → deterministic PIL procedural PNG (same prompt → same pixels). Optional base64 `image` conditions the fallback.
@@ -145,8 +139,12 @@
   - Preserved its 44×44 touch area, ascending-only phase gate, toggle/unpause behavior, paused update freeze, and phase-change auto-clear assertions unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,485 to 4,426 lines.
 
+- R1 (Lane C, partial): extracted `testGearPopupAndKeepPart` into `game/tests/legacy_gear_popup_and_keep_part.lua`.
+  - Preserved the English i18n assertions, equipped hull-slot popup interaction, destruction snapshot, and keep-one relaunch behavior unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,426 to 4,382 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract `testGearPopupAndKeepPart` from `game/self_test.lua` into `game/tests/legacy_gear_popup_and_keep_part.lua`, preserving its i18n, equipped-slot popup, destruction snapshot, and keep-one relaunch assertions.
+- R1 (Lane C): extract `testSlot5SymbolWeightedRNG` from `game/self_test.lua` into `game/tests/legacy_slot_5_symbol_weighted_rng.lua`, preserving its deterministic weighted-roll coverage for all five slot symbols.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
