@@ -219,18 +219,7 @@ function M.run()
 
     require("game.tests.legacy_pause_time_freeze").run()
 
-    -- INBOX 61(11): star scan range must cover canvas height
-    do
-        -- bgScanR/fgScanR are local to draw(), so we verify the constant
-        -- used: world.sectorSize must be known, and the formula
-        -- max(4, ceil(height/2/sectorSize)+2) with height=1280 should give >=4.
-        local ss = world.sectorSize
-        assert(ss and ss > 0, "INBOX 61(11): world.sectorSize must be positive")
-        local minScan = math.max(4, math.ceil(1280 / 2 / ss) + 2)
-        assert(minScan >= 4,
-            "INBOX 61(11): star scan range must be >= 4 sectors, got " .. tostring(minScan))
-        print("  INBOX-61(11) star scan range OK")
-    end
+    require("game.tests.legacy_star_scan_range").run()
 
     -- INBOX 61(13): debris at t=300 must still appear near origin, radius >= 5
     do
@@ -1272,6 +1261,7 @@ function M.run()
     require("game.tests.self_test_gear_popup_chip_layout_extraction").run()
     require("game.tests.self_test_rim_marker_styling_extraction").run()
     require("game.tests.self_test_pause_time_freeze_extraction").run()
+    require("game.tests.self_test_star_scan_range_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
