@@ -1905,3 +1905,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved bundled-pool counts, Earth/slot pool filtering, deterministic 2/3-match PART rewards, editor round-trip, and schema assertions unchanged.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearExploreHubEditionRolling` to `game/tests/legacy_gear_explore_hub_edition_rolling.lua` without changing assertions.
+
+## Archived from STATUS.md (2026-09-08 19:53)
+
+- R1 (Lane C, partial): extracted hub gear-edition rolling coverage to `game/tests/legacy_gear_explore_hub_edition_rolling.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,183 to 6,063 lines.
+  - Preserved guaranteed drops, deterministic edition thresholds/effect materialization, and luck-boosted edition assertions without adding a `love.*` boundary.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearEquippedEditionEffectsRunWiring` to `game/tests/legacy_gear_equipped_edition_effects_run_wiring.lua` without changing assertions.

@@ -1,9 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted hub gear-edition rolling coverage to `game/tests/legacy_gear_explore_hub_edition_rolling.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 6,183 to 6,063 lines.
-  - Preserved guaranteed drops, deterministic edition thresholds/effect materialization, and luck-boosted edition assertions without adding a `love.*` boundary.
+- R1 (Lane C, partial): extracted equipped-edition run-wiring coverage to `game/tests/legacy_gear_equipped_edition_effects_run_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,063 to 5,925 lines.
+  - Preserved crystallized/refined/quantum-flawed transforms, hull/engine slot scoping, input immutability, stored edition identity, and idempotence assertions without adding a `love.*` boundary.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testGearEquippedEditionEffectsRunWiring` to `game/tests/legacy_gear_equipped_edition_effects_run_wiring.lua` without changing assertions.
+  - Exact next slice: extract `testGearQuantumFlawedEngineDrawbackWiring` to `game/tests/legacy_gear_quantum_flawed_engine_drawback_wiring.lua` without changing assertions.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
@@ -152,6 +152,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearExploreHubEditionRolling` from `game/self_test.lua` to `game/tests/legacy_gear_explore_hub_edition_rolling.lua`, preserving guaranteed drops, deterministic edition assignment, disabled-edition fallback, and luck-boosted edition assertions.
+- R1 (Lane C): extract `testGearQuantumFlawedEngineDrawbackWiring` from `game/self_test.lua` to `game/tests/legacy_gear_quantum_flawed_engine_drawback_wiring.lua`, preserving engine-slot negative hull drawback, positive hull bonus exclusion, max-durability wiring, and equipped-effect immutability assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
