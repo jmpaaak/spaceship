@@ -88,6 +88,15 @@ require("game.scenes.play_hud_gear_draw").install(M, {
     getPartIcon = getPartIcon,
 })
 
+-- Launch-screen equipped-gear rendering.
+require("game.scenes.play_loadout_draw").install(M, {
+    graphics = love.graphics,
+    fonts = fonts,
+    i18n = i18n,
+    viewport = viewport,
+    getPartIcon = getPartIcon,
+})
+
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
 -- install() copies drawMinimap, drawShipStatsSummary, galaxyChartLineColor/FillColor,
 -- drawMinimapSprite, rimMarker constants, shipStats constants back onto M so
@@ -668,99 +677,6 @@ function M:persistBestAltitude()
         leaderboardClient.submitScore("Player", self.expedition.bestAltitude)
     end
     return saved
-end
-
--- Draws equipped gear slots (Item 6): up to 6 hull parts and 3 engine parts
--- displayed as Balatro-style card icons in the launch screen, replacing the
--- old specimen log.
-function M:drawGearSlots(y)
-    local hullSlots = 6
-    local engineSlots = 3
-    local boxW = M.launchGearBoxW
-    local boxH = M.launchGearBoxH
-    local gap = 5
-    local groupGap = 12
-    
-    local run = self.expedition
-    local hullGear = run.equippedGear or {}
-    local engineGear = run.equippedEngineParts or {}
-
-    local totalWidth = (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap + (engineSlots * boxW + (engineSlots - 1) * gap)
-    local startX = math.floor((viewport.width - totalWidth) / 2)
-    
-    self.tinyFont = self.tinyFont or fonts.get(22)
-    local previousFont = love.graphics.getFont()
-    love.graphics.setFont(self.tinyFont)
-    
-    for i = 1, hullSlots do
-        local x = startX + (i - 1) * (boxW + gap)
-        local part = hullGear[i]
-        if part then
-            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
-            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1)
-            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
-            else love.graphics.setColor(0.7, 0.7, 0.7) end
-            love.graphics.rectangle("fill", x, y, boxW, boxH)
-            
-            -- Part icon (replaces shield fallback)
-            local icon = getPartIcon(part.id)
-            if icon then
-                love.graphics.setColor(1, 1, 1, 0.8)
-                local iw, ih = icon:getDimensions()
-                local sc = (math.min(boxW, boxH) - 2) / math.max(iw, ih)
-                love.graphics.draw(icon, x + boxW/2, y + boxH/2, 0, sc, sc, iw/2, ih/2)
-            end
-            
-            if part.edition and part.edition ~= "base" then
-                love.graphics.setColor(1, 1, 0.5, 0.8)
-                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
-            else
-                love.graphics.setColor(0.1, 0.1, 0.1, 1)
-                love.graphics.rectangle("line", x, y, boxW, boxH)
-            end
-        else
-            love.graphics.setColor(0.3, 0.35, 0.45, 0.6)
-            love.graphics.rectangle("line", x, y, boxW, boxH)
-        end
-    end
-    
-    local engineStartX = startX + (hullSlots * boxW + (hullSlots - 1) * gap) + groupGap
-    
-    for i = 1, engineSlots do
-        local x = engineStartX + (i - 1) * (boxW + gap)
-        local part = engineGear[i]
-        if part then
-            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0)
-            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1)
-            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4)
-            else love.graphics.setColor(0.7, 0.7, 0.7) end
-            love.graphics.rectangle("fill", x, y, boxW, boxH)
-            
-            -- Part icon (replaces rocket fallback)
-            local icon = getPartIcon(part.id)
-            if icon then
-                love.graphics.setColor(1, 1, 1, 0.8)
-                local iw, ih = icon:getDimensions()
-                local sc = (math.min(boxW, boxH) - 2) / math.max(iw, ih)
-                love.graphics.draw(icon, x + boxW/2, y + boxH/2, 0, sc, sc, iw/2, ih/2)
-            end
-            
-            if part.edition and part.edition ~= "base" then
-                love.graphics.setColor(1, 1, 0.5, 0.8)
-                love.graphics.rectangle("line", x-1, y-1, boxW+2, boxH+2)
-            else
-                love.graphics.setColor(0.1, 0.1, 0.1, 1)
-                love.graphics.rectangle("line", x, y, boxW, boxH)
-            end
-        else
-            love.graphics.setColor(0.45, 0.35, 0.3, 0.6)
-            love.graphics.rectangle("line", x, y, boxW, boxH)
-        end
-    end
-    
-    love.graphics.setColor(0.6, 0.7, 0.8, 0.9)
-    love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 28, viewport.width, "center")
-    love.graphics.setFont(previousFont)
 end
 
 -- INBOX-40: gear slots grid constants for the HUD (below left stats).

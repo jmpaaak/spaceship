@@ -1,5 +1,6 @@
 local hudGear = require("game.scenes.play_hud_gear")
 local hudGearDraw = require("game.scenes.play_hud_gear_draw")
+local loadoutDraw = require("game.scenes.play_loadout_draw")
 
 local M = {}
 
@@ -57,6 +58,37 @@ function M.run()
     assert(calls.lastFont == "previous-font",
         "R1: renderer must restore the previous font")
 
+    local loadoutCalls = { labels = {}, rectangles = 0 }
+    local loadoutGraphics = {
+        getFont = function() return "loadout-previous-font" end,
+        setFont = function(font) loadoutCalls.lastFont = font end,
+        setColor = function() end,
+        printf = function(text) loadoutCalls.labels[#loadoutCalls.labels + 1] = text end,
+        rectangle = function() loadoutCalls.rectangles = loadoutCalls.rectangles + 1 end,
+        draw = function() end,
+    }
+    loadoutDraw.install(api, {
+        graphics = loadoutGraphics,
+        fonts = { get = function(size) return "font-" .. size end },
+        i18n = { t = function(key) return key end },
+        viewport = { width = 720 },
+        getPartIcon = function() return nil end,
+    })
+    api.launchGearBoxW = 40
+    api.launchGearBoxH = 50
+    api.drawGearSlots({
+        expedition = {
+            equippedGear = { { id = "hull-test", rarity = "legendary" } },
+            equippedEngineParts = {},
+        },
+    }, 200)
+    assert(loadoutCalls.labels[1] == "equipped_gear_label",
+        "R1: extracted launch loadout renderer must preserve its localized label")
+    assert(loadoutCalls.rectangles == 10,
+        "R1: launch loadout renderer must preserve one fill plus nine slot outlines")
+    assert(loadoutCalls.lastFont == "loadout-previous-font",
+        "R1: launch loadout renderer must restore the previous font")
+
     local hullPart = { id = "hull-test" }
     local enginePart = { id = "engine-test" }
     local scene = {
@@ -87,6 +119,10 @@ function M.run()
         "R1: play.lua must delegate HUD gear rendering to play_hud_gear_draw")
     assert(not playSource:find("function M:drawHudGearSlots"),
         "R1: drawHudGearSlots implementation must leave play.lua")
+    assert(playSource:find('require%("game%.scenes%.play_loadout_draw"%)'),
+        "R1: play.lua must delegate launch loadout rendering to play_loadout_draw")
+    assert(not playSource:find("function M:drawGearSlots"),
+        "R1: drawGearSlots implementation must leave play.lua")
     assert(not playSource:find("function M%.hudGearSlotLayout"),
         "R1: hudGearSlotLayout implementation must leave play.lua")
     assert(not playSource:find("function M%.hitHudGearSlot"),

@@ -1,10 +1,10 @@
 ## Current Status
-- R1: `play.lua` equipped-gear HUD rendering extraction.
-  - Added `game/scenes/play_hud_gear_draw.lua`; rarity fills, part icons, hull/engine labels, nine slot outlines, font caching/restoration, and the existing scene method API are preserved through injected dependencies.
+- R1: `play.lua` launch loadout renderer extraction.
+  - Added `game/scenes/play_loadout_draw.lua`; six hull slots, three engine slots, rarity fills, part icons, edition outlines, localized label, font caching/restoration, and the existing `drawGearSlots` scene API are preserved through injected dependencies.
   - Extended engine-hosted `game/tests/play_hud_gear.lua`; observed RED for the missing module, then GREEN after extraction. `self_test.lua` was not expanded.
-  - `play.lua` reduced from 2950 lines / 148506 bytes to 2877 lines / 144922 bytes.
+  - `play.lua` reduced from 2877 lines / 144922 bytes to 2793 lines / 141142 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
-  - Exact next slice: extract `drawGearSlots` rendering into `game/scenes/play_loadout_draw.lua`; do not add a pending feature to `play.lua`.
+  - Exact next slice: extract `loadoutLines`, `scoutTradeoffLines`, and `shopLoadoutLines` presentation assembly into `game/scenes/play_loadout_data.lua`; do not add a pending feature to `play.lua`.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -154,6 +154,6 @@
 
 ## Next slice
 
-- R1: extract `hudDistanceRaw` and HUD line assembly from `game/scenes/play.lua` into `game/scenes/play_hud_data.lua`; preserve current formatting and scene API without adding gameplay behavior.
+- R1: extract `loadoutLines`, `scoutTradeoffLines`, and `shopLoadoutLines` presentation assembly from `game/scenes/play.lua` into `game/scenes/play_loadout_data.lua`; preserve current formatting and scene APIs without adding gameplay behavior.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

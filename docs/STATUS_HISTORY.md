@@ -1551,3 +1551,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `play.lua` reduced from 2985 lines / 149987 bytes to 2950 lines / 148506 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
   - Exact next slice: extract `drawHudGearSlots` rendering into `game/scenes/play_hud_gear_draw.lua`; do not add a pending feature to `play.lua`.
+
+## Archived from STATUS.md (2026-09-08 14:15)
+
+- R1: `play.lua` equipped-gear HUD rendering extraction.
+  - Added `game/scenes/play_hud_gear_draw.lua`; rarity fills, part icons, hull/engine labels, nine slot outlines, font caching/restoration, and the existing scene method API are preserved through injected dependencies.
+  - Extended engine-hosted `game/tests/play_hud_gear.lua`; observed RED for the missing module, then GREEN after extraction. `self_test.lua` was not expanded.
+  - `play.lua` reduced from 2950 lines / 148506 bytes to 2877 lines / 144922 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
+  - Exact next slice: extract `drawGearSlots` rendering into `game/scenes/play_loadout_draw.lua`; do not add a pending feature to `play.lua`.
