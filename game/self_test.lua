@@ -18,123 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 12 gap audit: an edition's transform (gear.applyEditionEffects,
--- gear.editionEffects) only multiplies effect entries whose `type` matches
--- the edition's own `scope` (or all entries, if scope == "all"). A card
--- that lists a non-"all"-scoped edition (e.g. "crystallized", scope
--- "sampleSellValue") in its `editions` candidate pool but does NOT itself
--- carry any effect of that scoped type is a documented-but-dead
--- combination: if that specific card ever rolls that edition via
--- gear.rollEdition/expedition.rollGearOffer, M.applyEditionEffects runs
--- its multiply loop over the card's effects and finds nothing to scale --
--- the player receives an edition-tagged card (UI shows the edition
--- badge/icon per item 12) whose numbers are byte-for-byte identical to the
--- unedited card. This is the same "documented mechanism with zero actual
--- effect for a specific card" class of gap this lane has repeatedly found
--- and closed for irradiated-synergy/noSlotCost/collisionRadius/etc, just
--- audited one level deeper: per-card x per-scoped-edition instead of
--- per-effect-type-globally.
-local function testGearEditionScopeContentCoverage()
-    local pools = { gear.loadHullParts(), gear.loadEngineParts() }
-    local deadCombos = {}
-    for _, pool in ipairs(pools) do
-        for _, part in ipairs(pool) do
-            for _, editionId in ipairs(part.editions or {}) do
-                local def = gear.editionEffects[editionId]
-                assert(def, "part '" .. part.id .. "' references unknown edition '" .. tostring(editionId) .. "'")
-                if def.scope ~= "all" then
-                    local hasScopedEffect = false
-                    for _, effect in ipairs(part.effects) do
-                        if effect.type == def.scope then
-                            hasScopedEffect = true
-                            break
-                        end
-                    end
-                    if not hasScopedEffect then
-                        deadCombos[#deadCombos + 1] = part.id .. ":" .. editionId
-                    end
-                end
-            end
-        end
-    end
-    assert(#deadCombos == 0,
-        "every bundled card x edition combo whose edition has a scoped (non-\"all\") multiplier must " ..
-        "carry at least one effect of that scoped type, otherwise rolling that edition on that card " ..
-        "is a silent no-op (edition badge shown, numbers unchanged); dead combos: " ..
-        table.concat(deadCombos, ", "))
-end
-
--- Item 10/14 content-coverage gap audit, one level further (this lane's
--- recurring "문서-코드 정합성 감사" pattern applied to a direction the
--- prior two coverage tests never checked). The legacy gear-effect content suite
--- only requires each of gear.knownEffectTypes to appear SOMEWHERE across
--- the hull+engine pools combined; legacy_engine_effect_viability only
--- requires each bundled engine card to have at least one non-hull-only
--- effect. Neither test catches a category-agnostic (B/C/D/E/F) effect type
--- -- one whose run-level wiring explicitly reads BOTH slot lists via
--- expedition.lua's combinedGearList(run) (luck, chainTrigger, rerollBonus,
--- collisionRadius, detectionRadius, autoCollect, insurance, shopDiscount,
--- sellMultiplier, streakMultiplier are all documented as hull/engine
--- category-agnostic, unlike the five (A) hull-only types) -- being usable
--- from hull gear ONLY, with zero bundled engine cards ever carrying it.
--- An audit of the actual `game/data/engine_parts.json` (14 cards) finds
--- exactly this: every one of these 10 category-agnostic types has at least
--- one bundled hull card (per the legacy gear-effect content suite) but not a
--- single bundled engine card, meaning a player who equips only engine gear
--- can never encounter luck/chainTrigger/rerollBonus/collisionRadius/
--- detectionRadius/autoCollect/insurance/shopDiscount/sellMultiplier/
--- streakMultiplier in actual play even though every one of their run
--- wrappers reads the engine slot list too.
-
-local function testHullCardsHaveNonEngineOnlyEffect()
-    -- The (G) engine-only types
-    local engineOnlyTypes = {
-        boostCharge = true
-    }
-    local hullPool = gear.loadHullParts()
-    local deadCards = {}
-    for _, part in ipairs(hullPool) do
-        local hasNonEngineOnlyEffect = false
-        for _, effect in ipairs(part.effects) do
-            if not engineOnlyTypes[effect.type] then
-                hasNonEngineOnlyEffect = true
-                break
-            end
-        end
-        if not hasNonEngineOnlyEffect then
-            deadCards[#deadCards + 1] = part.id
-        end
-    end
-    assert(#deadCards == 0,
-        "hull_parts.json contains cards with ONLY engine-scoped (G) effects, " ..
-        "making them completely dead in the hull slot: " .. table.concat(deadCards, ", "))
-end
-
-local function testEngineCardsHaveCategoryAgnosticEffectCoverage()
-    -- After engine/hull effect separation, engine cards only need to cover
-    -- engine-appropriate shared types + engine-exclusive types.
-    local engineExpectedTypes = {
-        "luck", "chainTrigger", "rerollBonus", "collisionRadius",
-        "detectionRadius", "autoCollect", "streakMultiplier", "boostCharge",
-    }
-    local enginePool = gear.loadEngineParts()
-    local seen = {}
-    for _, part in ipairs(enginePool) do
-        for _, effect in ipairs(part.effects) do
-            seen[effect.type] = true
-        end
-    end
-    local missing = {}
-    for _, t in ipairs(engineExpectedTypes) do
-        if not seen[t] then
-            missing[#missing + 1] = t
-        end
-    end
-    assert(#missing == 0,
-        "engine_parts.json must cover engine-appropriate effect types; missing: " ..
-        table.concat(missing, ", "))
-end
-
 -- Minimal game wiring for items 9/10/13 ("최소한의 로더 호출 추가는 예외로
 -- 허용"): expedition.lua now owns a run.gearLoadout (hull + engine slot
 -- lists via engine_parts.lua) and applies the item 9 climbSpeed synergy
@@ -270,7 +153,7 @@ end
 
 -- Item 14(D) category-agnostic content-coverage follow-up: this lane's own
 -- audit pattern (documented in docs/GEAR_SCHEMA.md and
--- testEngineCardsHaveCategoryAgnosticEffectCoverage) treats insurance as one
+-- legacy_gear_category_coverage) treats insurance as one
 -- of the effect types "hull/engine 어느 슬롯이든 효과가 실제로 반영되도록
 -- 설계된" -- combinedGearList(run) already unions equippedGear +
 -- equippedEngineParts for every other category-agnostic wrapper in this
@@ -618,7 +501,7 @@ local function testGearRunEffectWiring()
 end
 
 -- Item 10/14 (B) sellMultiplier engine-slot gap: docs/GEAR_SCHEMA.md and
--- testEngineCardsHaveCategoryAgnosticEffectCoverage treat sellMultiplier as
+-- legacy_gear_category_coverage treat sellMultiplier as
 -- hull/engine category-agnostic (combinedGearList), and engine_parts.json
 -- now ships engine_market_thruster (sellMultiplier +20) for that coverage
 -- — but M.effectiveSampleBonus still reads only run.equippedGear (hull).
@@ -3420,9 +3303,7 @@ local function runGearTests()
     require("game.tests.legacy_engine_propulsion").run()
     require("game.tests.legacy_gear_effect_content").run()
     require("game.tests.legacy_engine_effect_viability").run()
-    testGearEditionScopeContentCoverage()
-    testHullCardsHaveNonEngineOnlyEffect()
-    testEngineCardsHaveCategoryAgnosticEffectCoverage()
+    require("game.tests.legacy_gear_category_coverage").run()
     testGearRunWiring()
     testGearPropulsionRunWiring()
     testGearSurvivalAndEconomyWiring()

@@ -1,8 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted per-card engine effect viability coverage to `game/tests/legacy_engine_effect_viability.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 8,191 to 8,149 lines.
-  - Preserved the hull-only effect set, per-engine-card traversal, and dead-card assertion unchanged; the extracted module has no `love.*` boundary.
+- R1 (Lane C, partial): extracted gear category/content coverage to `game/tests/legacy_gear_category_coverage.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,149 to 8,030 lines.
+  - Preserved edition-scope, hull-card viability, and engine effect-category assertions; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract the cohesive gear run/loadout wiring tests beginning at `testGearRunWiring` into one `game/tests/legacy_*.lua` module.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
