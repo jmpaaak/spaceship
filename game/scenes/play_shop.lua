@@ -6,11 +6,51 @@ local i18n       = require("game.i18n")
 local fonts      = require("game.fonts")
 local viewport   = require("game.viewport")
 local expedition = require("game.expedition")
+local shopGearRules = require("game.shop_gear_rules")
 
 local PS = {}
 
 -- Cached reference to PlayScene class table (set by install())
 local _M
+
+local function purchaseState(self)
+    if not self.shopGearPurchaseState then
+        self.shopGearPurchaseState = shopGearRules.newState()
+    end
+    return self.shopGearPurchaseState
+end
+
+function PS.shopGearPurchaseAllowed(self)
+    local modal = self.shopModal
+    return modal and modal.planet
+        and shopGearRules.canPurchase(purchaseState(self), modal.planet.id)
+        or false
+end
+
+function PS.buyShopModalGear(self)
+    local modal = self.shopModal
+    if not modal or not modal.planet then return false end
+    local ok, err = shopGearRules.tryPurchase(purchaseState(self), modal.planet.id, function()
+        return expedition.buyGearFromShopPlanet(self.expedition, modal.category, modal.gear)
+    end)
+    if not ok then
+        modal.errorText = i18n.shopError(err)
+        return false, err
+    end
+    self.gearPopup = { part = modal.gear, category = modal.category }
+    table.insert(self.floatingTexts, {
+        text = i18n.t("floating_hub_gear", i18n.partName(modal.gear)),
+        x = modal.planet.x,
+        y = modal.planet.y + 20,
+        timer = 3.0,
+        kind = "sample",
+        awarded = 0,
+        rollupElapsed = 0,
+    })
+    self.shopVisited[modal.planet.id] = true
+    self.shopModal = nil
+    return true, err
+end
 
 ---------------------------------------------------------------------------
 -- rarityRgb — shared colour helper (also used by drawBalatroCard in play.lua)
@@ -535,10 +575,13 @@ function PS.drawShopModal(self)
 
         local buy, skip = L.buy, L.skip
         if not self.shopModal.isReplacement then
-            love.graphics.setColor(0.2, 0.45, 0.22, 1)
+            local canBuy = PS.shopGearPurchaseAllowed(self)
+            love.graphics.setColor(canBuy and 0.2 or 0.22, canBuy and 0.45 or 0.22, canBuy and 0.22 or 0.24, 1)
             love.graphics.rectangle("fill", buy.x, buy.y, buy.w, buy.h, 6, 6)
-            love.graphics.setColor(1, 1, 1)
-            love.graphics.printf(i18n.t("shop_modal_buy", self.shopModal.price), buy.x, buy.y + 16, buy.w, "center")
+            love.graphics.setColor(canBuy and 1 or 0.55, canBuy and 1 or 0.55, canBuy and 1 or 0.55)
+            local buyText = canBuy and i18n.t("shop_modal_buy", self.shopModal.price)
+                or i18n.t("shop_modal_limit")
+            love.graphics.printf(buyText, buy.x, buy.y + 16, buy.w, "center")
         end
 
         love.graphics.setColor(0.45, 0.2, 0.2, 1)
@@ -566,6 +609,8 @@ function PS.install(M)
     M.shopModalButtonRects     = PS.shopModalButtonRects
     M.hitShopModalGearSlot     = PS.hitShopModalGearSlot
     M.drawShopModal            = PS.drawShopModal
+    M.shopGearPurchaseAllowed  = PS.shopGearPurchaseAllowed
+    M.buyShopModalGear         = PS.buyShopModalGear
     M.drawDestroyedOverlay     = PS.drawDestroyedOverlay
 end
 

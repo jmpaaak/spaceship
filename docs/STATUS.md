@@ -1,4 +1,10 @@
 ## Current Status
+- INBOX 77(1): galaxy-shop gear purchases are limited to one per shop.
+  - Added pure `game/shop_gear_rules.lua`; successful purchases consume only that shop id's allowance, failed purchases do not, and another shop remains independent.
+  - `game/scenes/play_shop.lua` now owns the purchase flow and renders a disabled one-item-limit button after purchase; `play.lua` delegates and shrank from 1,140 to 1,123 lines.
+  - Added localized EN/KO limit labels/errors and engine-hosted `game/tests/shop_gear_rules.lua` coverage. Observed RED (missing module), then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: honor pending R1 priority by extracting `keypressed`/touch callbacks from `game/scenes/play.lua` into `game/scenes/play_input.lua` without behavior changes.
+
 - R1: `play.lua` scene-draw orchestration extraction.
   - Added `game/scenes/play_scene_draw.lua`; `M:draw()` now installs through explicit rendering/layout dependencies while preserving executable draw behavior.
   - Added engine-hosted structural coverage in `game/tests/play_scene_draw.lua` and registered it from `game/self_test.lua`.

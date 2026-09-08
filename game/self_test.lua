@@ -10415,6 +10415,7 @@ function M.run()
         print("  INBOX-61(34) synergy display in gear popup OK")
     end
 
+    require("game.tests.shop_gear_rules").run()
     require("game.tests.sfx").run()
     require("game.tests.title_to_launch_gate").run()
     require("game.tests.hud_record_label").run()

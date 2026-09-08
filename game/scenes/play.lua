@@ -744,24 +744,7 @@ function M:keypressed(key)
     end
     if self.shopModal then
         if key == "y" then
-            local ok, err = expedition.buyGearFromShopPlanet(self.expedition, self.shopModal.category, self.shopModal.gear)
-            if ok then
-                -- Show Balatro-style part detail popup on purchase
-                self.gearPopup = { part = self.shopModal.gear, category = self.shopModal.category }
-                table.insert(self.floatingTexts, {
-                    text = i18n.t("floating_hub_gear", i18n.partName(self.shopModal.gear)),
-                    x = self.shopModal.planet.x,
-                    y = self.shopModal.planet.y + 20,
-                    timer = 3.0,
-                    kind = "sample",
-                    awarded = 0,
-                    rollupElapsed = 0,
-                })
-                self.shopVisited[self.shopModal.planet.id] = true
-                self.shopModal = nil
-            else
-                self.shopModal.errorText = i18n.shopError(err)
-            end
+            self:buyShopModalGear()
         elseif key == "n" then
             self.shopModal = nil
         end

@@ -103,6 +103,7 @@ locales.en = {
     floating_hub_gear = "NEW: %s",
     shop_modal_title = "LOCAL GALAXY SHOP",
     shop_modal_buy = "[Y] BUY: $%d",
+    shop_modal_limit = "PURCHASED — LIMIT 1",
     shop_modal_skip = "[N] LEAVE",
     sample_streak_message = "SAMPLE +$%d  STREAK x%.1f  %s",
     sample_message = "SAMPLE +$%d  %s",
@@ -138,6 +139,7 @@ locales.en = {
     shop_err_full_hull = "HULL SLOTS FULL",
     shop_err_full_engine = "ENGINE SLOTS FULL",
     shop_err_already = "ALREADY EQUIPPED",
+    shop_err_limit = "ONLY 1 GEAR PER SHOP",
     shop_err_generic = "CANNOT BUY",
     newbest_label = "NEW BEST!",
     total_label = "TOTAL $%d",
@@ -343,6 +345,7 @@ locales.ko = {
     floating_hub_gear = "획득: %s",
     shop_modal_title = "지역 은하 상점",
     shop_modal_buy = "[Y] 구매: $%d",
+    shop_modal_limit = "구매 완료 — 1개 제한",
     shop_modal_skip = "[N] 떠나기",
     sample_streak_message = "표본 +$%d  연속 x%.1f  %s",
     sample_message = "표본 +$%d  %s",
@@ -378,6 +381,7 @@ locales.ko = {
     shop_err_full_hull = "선체부품 슬롯이 가득 찼습니다",
     shop_err_full_engine = "엔진부품 슬롯이 가득 찼습니다",
     shop_err_already = "이미 장착한 부품입니다",
+    shop_err_limit = "상점당 장비는 1개만 구매할 수 있습니다",
     shop_err_generic = "구매할 수 없습니다",
     newbest_label = "신기록!",
     total_label = "합계 $%d",
@@ -590,6 +594,7 @@ end
 
 function M.shopError(err)
     err = tostring(err or "")
+    if err:find("shop gear purchase limit reached", 1, true) then return M.t("shop_err_limit") end
     if err:find("not enough money", 1, true) then return M.t("shop_err_broke") end
     if err:find("hull slots are full", 1, true) then return M.t("shop_err_full_hull") end
     if err:find("engine slots are full", 1, true) then return M.t("shop_err_full_engine") end
