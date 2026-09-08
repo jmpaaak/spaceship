@@ -1,4 +1,9 @@
 ## Current Status
+- R1 (Lane C, partial): extracted hub-settlement streak persistence coverage to `game/tests/legacy_hub_settle_streak_persistence.lua`.
+  - `game/self_test.lua` delegates through `run()` and shrank from 5,499 to 5,442 lines.
+  - Preserved same-family streak continuation across repeated hub settlements, multiplier assertions, and different-family reset behavior without changing production code.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
   - `autoLoadDefaults()` fetches hull only. First Engine tab click `ensureEngineLoaded()` fetches `/gear-editor/data/engine_parts.json`.
@@ -141,6 +146,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testHubExploredResetsOnLaunch` from `game/self_test.lua` to `game/tests/legacy_hub_explored_resets_on_launch.lua`, preserving hub exploration and last-visited-galaxy reset behavior across safe relaunch.
+- R1 (Lane C): extract `testEarthSlotMachineGalaxyOdds` from `game/self_test.lua` to `game/tests/legacy_earth_slot_machine_galaxy_odds.lua`, preserving per-galaxy odds, last-visited-galaxy, and deterministic RNG assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
