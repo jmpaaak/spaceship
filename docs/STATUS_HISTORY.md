@@ -1863,3 +1863,15 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 6,721 to 6,622 lines.
   - Preserved ascending/settlement phase gating, affordability, exact and discounted prices, galaxy-exclusive purchases, immediate stat refresh, and hull/engine slot-independence assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 19:27)
+
+- R1 (Lane C, partial): extracted refined-edition engine slot-accounting coverage to `game/tests/legacy_gear_no_slot_cost_engine_slot_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,548 to 6,481 lines.
+  - Preserved engine capacity/fullness, normal-card overflow rejection, refined-card overflow/refill behavior, and hull/engine category-isolation assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+- R1 (Lane C, partial): extracted refined-edition hull slot-accounting coverage to `game/tests/legacy_gear_no_slot_cost_edition_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,622 to 6,548 lines.
+  - Preserved refined-edition slot accounting, capacity/fullness, normal-card full-loadout rejection, refill behavior, and hull/engine category-isolation assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.

@@ -762,7 +762,7 @@ edition, ever did anything).
   edition present behave exactly as before (both calls return `0`). Pairs
   with no shared tag still contribute nothing at all — editions amplify
   existing synergy, they never manufacture synergy between unrelated tags.
-- `game/self_test.lua`'s new `testGearIrradiatedSynergyBonusWiring()`
+- `game/tests/legacy_gear_irradiated_synergy_wiring.lua`
   regression-checks: an irradiated part in a shared-tag pair produces a
   strictly higher multiplier than the same pair without the edition, the
   delta over baseline equals exactly `gear.editionSynergyBonusAdd("irradiated")`,
