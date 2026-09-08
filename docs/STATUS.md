@@ -1,13 +1,4 @@
 ## Current Status
-- INBOX 61(25): Slot cost/rewards scale with galaxy distance.
-  - `expedition.slotTier(run, galaxyId)` = `1 + floor(galaxyDistance / galaxyCellSize)`.
-  - Named ids `galaxy:gx:gy` use hypot(gx, gy)*cellSize; home/nil → tier 1. Fallback: lastHubX/Y distance.
-  - `slotSpinCostFor` = `$10 * slotTier`. MONEY already `spinCost * multiplier`.
-  - Non-money: SPEED `(5*tier)/(20*tier)`, DURABILITY `(3*tier)/(10*tier)`, HARVEST `(0.04*tier)/(0.20*tier)`.
-  - `earthSlotSpin` returns `spinCost` + `slotTier`. `tripleMultiplier` still stacks on MONEY triples.
-  - `play.lua` HUD / spin charge / duplicate-part refund use `slotSpinCostFor`.
-  - Test `INBOX-61(25)` GREEN. `make verify LOVE=…` GREEN.
-
 - INBOX 61(31): Hub relaunch does not full-heal; hullRegen ticks HP.
   - Hub checkpoint `checkpoint_hint_repair` removed, Earth is unchanged.
   - `launch()` skipping `durability = maxDurability` when from hub.
@@ -139,8 +130,12 @@
   - Preserved comet reset, timed spawn, motion, sample value, collision damage, pruning, next-spawn interval, fresh-scene state, cleanup, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,180 to 4,103 lines.
 
+- R1 (Lane C, partial): extracted the flat-$1 planet-sample characterization block into `game/tests/legacy_flat_sample_value.lua`.
+  - Preserved flat sample values, distance-based sample tiers and collision damage, the 50× comet multiplier, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,103 to 4,085 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the flat-$1 planet sample characterization block from `game/self_test.lua` into `game/tests/legacy_flat_sample_value.lua`, preserving sample value/tier, collision damage, comet multiplier, and output behavior.
+- R1 (Lane C): extract the moon-system characterization block from `game/self_test.lua` into `game/tests/legacy_moon_system.lua`, preserving deterministic spawn-rate, orbit geometry/motion, sample value, collision damage, and output behavior.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

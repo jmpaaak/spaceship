@@ -2109,3 +2109,14 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - TDD evidence: missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; final `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - `game/self_test.lua` decreased by 32 lines (4,289 → 4,257); `play.lua` and `expedition.lua` were not changed.
   - Next R1 slice: extract the RCS 0–999 gradient characterization block into `game/tests/legacy_rcs_gradient.lua`.
+
+## Archived from STATUS.md (2026-09-08 22:25)
+
+- INBOX 61(25): Slot cost/rewards scale with galaxy distance.
+  - `expedition.slotTier(run, galaxyId)` = `1 + floor(galaxyDistance / galaxyCellSize)`.
+  - Named ids `galaxy:gx:gy` use hypot(gx, gy)*cellSize; home/nil → tier 1. Fallback: lastHubX/Y distance.
+  - `slotSpinCostFor` = `$10 * slotTier`. MONEY already `spinCost * multiplier`.
+  - Non-money: SPEED `(5*tier)/(20*tier)`, DURABILITY `(3*tier)/(10*tier)`, HARVEST `(0.04*tier)/(0.20*tier)`.
+  - `earthSlotSpin` returns `spinCost` + `slotTier`. `tripleMultiplier` still stacks on MONEY triples.
+  - `play.lua` HUD / spin charge / duplicate-part refund use `slotSpinCostFor`.
+  - Test `INBOX-61(25)` GREEN. `make verify LOVE=…` GREEN.
