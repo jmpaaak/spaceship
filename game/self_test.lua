@@ -129,32 +129,7 @@ function M.run()
 
     require("game.tests.legacy_expedition_removed_slots").run()
 
-    -- Item 11(c) follow-up: the Earth shop's shopLoadoutLines() must not expose
-    -- any fuel-upgrade keys (fuelAction/fuelStatus/fuelAffordable/fuelPreview)
-    -- now that the fuel upgrade mechanic is fully abolished. This prevents a
-    -- future refactor from re-introducing dead fuel UI into the settlement shop.
-    do
-        local shopScene = PlayScene.new({
-            bestAltitudeStore = { load = function() return 0 end, save = function() end },
-        })
-        shopScene.expedition.phase = "settlement"
-        local loadout = shopScene:shopLoadoutLines()
-        assert(loadout.fuelAction == nil,
-            "item 11(c): shopLoadoutLines must not expose fuelAction (fuel upgrade abolished)")
-        assert(loadout.fuelStatus == nil,
-            "item 11(c): shopLoadoutLines must not expose fuelStatus")
-        assert(loadout.fuelAffordable == nil,
-            "item 11(c): shopLoadoutLines must not expose fuelAffordable")
-        assert(loadout.fuelPreview == nil,
-            "item 11(c): shopLoadoutLines must not expose fuelPreview")
-        -- The shop must still expose the remaining three upgrade rows.
-        assert(loadout.hullAction ~= nil,
-            "item 11(c): shopLoadoutLines must still expose hullAction")
-        assert(loadout.yieldAction ~= nil,
-            "item 11(c): shopLoadoutLines must still expose yieldAction")
-        assert(loadout.steeringAction ~= nil,
-            "item 11(c): shopLoadoutLines must still expose steeringAction")
-    end
+    require("game.tests.legacy_shop_loadout_removed_fuel").run()
 
     -- Item 7(a) UI regression: the shop-planet modal keyboard interaction
     -- (keypressed "y" = buy, "n" = skip/leave) added in commit 4358510
@@ -2159,6 +2134,7 @@ function M.run()
     require("game.tests.self_test_ascending_touch_steering_extraction").run()
     require("game.tests.self_test_inflight_slot_i18n_extraction").run()
     require("game.tests.self_test_expedition_removed_slots_extraction").run()
+    require("game.tests.self_test_shop_loadout_removed_fuel_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
