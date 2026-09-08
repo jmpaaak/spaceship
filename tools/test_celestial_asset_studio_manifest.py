@@ -23,6 +23,7 @@ REQUIRED_IDS = {
     "star_flare_nasa_gsfc_20171208_archive_e001058",
     "star_sdo_nasa_pia26681",
     "hub_neptune_nasa_pia00046",
+    "hub_pluto_nasa_pia19952",
 }
 
 

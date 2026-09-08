@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T02:34:47+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/hub_pluto_nasa_pia19952.jpg",
+  "source_dimensions": [
+    5000,
+    5000
+  ],
+  "input_preparation": {
+    "resize": [
+      976,
+      976
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 24,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "hub_pluto",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 64,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "203fa4171e9467424497f3f2ce11546bd919113aeb74afc5377200af337394d2",
+  "payload_bytes": 17643643,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

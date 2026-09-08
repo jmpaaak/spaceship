@@ -4965,5 +4965,33 @@
     "width": 128,
     "height": 128,
     "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+  },
+  {
+    "path": "assets/planet/studio/hub_pluto.png",
+    "source_url": "https://images-assets.nasa.gov/image/PIA19952/PIA19952~orig.jpg",
+    "terms_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "asset_id": "hub_pluto_nasa_pia19952",
+    "prompt": "NASA/JHUAPL/SwRI New Horizons enhanced-color Pluto photograph PIA19952 converted by the unified local Asset Studio POST /api/pixel-perfect endpoint",
+    "model": "Unified Asset Studio local Pixel Perfect API",
+    "style": "photo-derived high-resolution pixel art",
+    "settings": {
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "targetWidth": 512,
+      "targetHeight": 512,
+      "pixelBlock": 4,
+      "backgroundTolerance": 64,
+      "paletteLimit": 64,
+      "source_dimensions": [5000, 5000],
+      "input_dimensions": [1024, 1024],
+      "master_dimensions": [512, 512],
+      "runtime_derivation": "integer 4x NEAREST downscale",
+      "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
+    },
+    "note": "Unwired hub-planet candidate; actual runtime load path waits for Lane D.",
+    "downloaded_at": "2026-09-09T02:34:47+09:00",
+    "sha256": "257e083294aa7634e482024a935262ec854c17d0df1ef5d400797720ca711b72",
+    "width": 128,
+    "height": 128,
+    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
   }
 ]
