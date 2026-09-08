@@ -235,20 +235,7 @@ function M.run()
 
     require("game.tests.legacy_slot_speed_reward_separation").run()
 
-    -- INBOX 61(20): earth_gear_offer must not contain [B] keyboard prefix
-    do
-        local i18n = require("game.i18n")
-        i18n.setLocale("en")
-        local en = i18n.t("earth_gear_offer", "TestGear", 100)
-        assert(not en:find("%[B%]"), "INBOX 61(20): EN earth_gear_offer still contains [B], got: " .. en)
-        assert(en:find("GEAR OFFER:"), "INBOX 61(20): EN must have 'GEAR OFFER:', got: " .. en)
-        i18n.setLocale("ko")
-        local ko = i18n.t("earth_gear_offer", "테스트장비", 100)
-        assert(not ko:find("%[B%]"), "INBOX 61(20): KO earth_gear_offer still contains [B], got: " .. ko)
-        assert(ko:find("장비 제안:"), "INBOX 61(20): KO must have '장비 제안:', got: " .. ko)
-        i18n.setLocale("en")  -- restore
-        print("  INBOX-61(20) gear offer [B] prefix removed OK")
-    end
+    require("game.tests.legacy_earth_gear_offer_i18n").run()
 
     -- INBOX 61(21): pause menu buttons + title scene i18n
     do
@@ -1053,6 +1040,7 @@ function M.run()
     require("game.tests.self_test_destroyed_restart_text_extraction").run()
     require("game.tests.self_test_hub_shop_row3_gap_extraction").run()
     require("game.tests.self_test_slot_speed_reward_separation_extraction").run()
+    require("game.tests.self_test_earth_gear_offer_i18n_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
