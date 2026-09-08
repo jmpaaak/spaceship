@@ -1828,3 +1828,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved bare-run fallback, hull/engine chain-trigger payout, retrigger count, and single sample-count assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearRerollOfferSpendWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 18:51)
+
+- R1 (Lane C, partial): extracted reroll-offer spend wiring coverage to `game/tests/legacy_gear_reroll_offer_spend_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,068 to 7,001 lines.
+  - Preserved no-budget rejection, atomic reroll consumption/offer generation, and exhausted-budget assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearSlotSwapEconomyWiring` into one `game/tests/legacy_*.lua` module.
