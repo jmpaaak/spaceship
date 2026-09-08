@@ -1,8 +1,7 @@
 ## Current Status
-- R1 lane C: extracted HUD-background width regression coverage from `game/self_test.lua` into `game/tests/legacy_hud_background.lua`.
-  - Preserved the 280px cap, text measurement, viewport-width guard, minimum coverage, and oversized-text clamp assertions; production behavior is unchanged.
-  - Observed the expected missing-module RED; `make verify LOVE=/Users/jm/.local/bin/love` is GREEN. `game/self_test.lua` shrank from 4,600 to 4,565 lines.
-  - Next slice: extract `testSettlementSlotRowDoesNotOverlapShop` into `game/tests/legacy_settlement_slot_row.lua`.
+- R1 lane C: extracted settlement slot-row regression coverage from `game/self_test.lua` into `game/tests/legacy_settlement_slot_row.lua`.
+  - Preserved the five contiguous touch rows and the slot-result, gear, scout, and relaunch draw-band containment assertions; production behavior is unchanged.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN. `game/self_test.lua` shrank from 4,565 to 4,520 lines.
 
 - INBOX 61(40): gear-editor KO/EN locale toggle.
   - Toolbar KO | EN buttons; preference in `localStorage` (`gear-editor-locale`).
@@ -148,6 +147,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testItem15DeadSlotConstantsRemoved` from `game/self_test.lua` to `game/tests/legacy_item15_dead_slot_constants_removed.lua`, preserving the dead constant/control/state-field assertions.
+- R1 (Lane C): extract `testPauseButton` from `game/self_test.lua` into `game/tests/legacy_pause_button.lua`, preserving its touch-area, phase gating, toggle, and draw-state assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
