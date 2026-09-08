@@ -18,48 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 10/14 content-coverage gap audit (this lane's recurring "문서-코드
--- 정합성 감사" pattern applied one level deeper than
--- legacy_gear_effect_content suite): that test only checks that
--- every effect TYPE appears somewhere across the two pools combined, but
--- several run-level wrappers are documented (game/self_test.lua's
--- testGearHullSpeedRunWiring/testGearMoneyRunWiring and
--- docs/GEAR_SCHEMA.md) as explicitly HULL-ONLY -- an engine-slot card
--- carrying `speed`/`money`/`hullDurability`/`sampleSellValue`
--- (the (A) additive types item 9 scopes to hull "조커형" gear) contributes
--- NOTHING when equipped in the engine slot. A bundled engine_parts.json
--- card whose effects are ENTIRELY drawn from that hull-only set is
--- therefore live-looking schema but dead-in-practice content: a player can
--- equip it in its only legal slot category and see zero gameplay effect.
--- Item 53a: speed is now category-agnostic (effectiveSpeed reads both
--- hull and engine parts), so it's removed from the hull-only set.
-local function testEngineCardsHaveNonHullOnlyEffect()
-    -- The (A) additive types with documented hull-only run-scope.
-    local hullOnlyTypes = {
-        money = true,
-        hullDurability = true, sampleSellValue = true,
-    }
-    local enginePool = gear.loadEngineParts()
-    local deadCards = {}
-    for _, part in ipairs(enginePool) do
-        local hasNonHullOnlyEffect = false
-        for _, effect in ipairs(part.effects) do
-            if not hullOnlyTypes[effect.type] then
-                hasNonHullOnlyEffect = true
-                break
-            end
-        end
-        if not hasNonHullOnlyEffect then
-            deadCards[#deadCards + 1] = part.id
-        end
-    end
-    assert(#deadCards == 0,
-        "every bundled engine_parts.json card must carry at least one effect type that is NOT " ..
-        "hull-only-scoped (money/hullDurability/sampleSellValue), otherwise the " ..
-        "card contributes nothing when equipped in its only legal (engine) slot; dead cards: " ..
-        table.concat(deadCards, ", "))
-end
-
 -- Item 12 gap audit: an edition's transform (gear.applyEditionEffects,
 -- gear.editionEffects) only multiplies effect entries whose `type` matches
 -- the edition's own `scope` (or all entries, if scope == "all"). A card
@@ -110,7 +68,7 @@ end
 -- recurring "문서-코드 정합성 감사" pattern applied to a direction the
 -- prior two coverage tests never checked). The legacy gear-effect content suite
 -- only requires each of gear.knownEffectTypes to appear SOMEWHERE across
--- the hull+engine pools combined; testEngineCardsHaveNonHullOnlyEffect only
+-- the hull+engine pools combined; legacy_engine_effect_viability only
 -- requires each bundled engine card to have at least one non-hull-only
 -- effect. Neither test catches a category-agnostic (B/C/D/E/F) effect type
 -- -- one whose run-level wiring explicitly reads BOTH slot lists via
@@ -3461,7 +3419,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_effect_schema").run()
     require("game.tests.legacy_engine_propulsion").run()
     require("game.tests.legacy_gear_effect_content").run()
-    testEngineCardsHaveNonHullOnlyEffect()
+    require("game.tests.legacy_engine_effect_viability").run()
     testGearEditionScopeContentCoverage()
     testHullCardsHaveNonEngineOnlyEffect()
     testEngineCardsHaveCategoryAgnosticEffectCoverage()

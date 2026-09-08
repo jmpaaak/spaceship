@@ -1698,3 +1698,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 8,270 to 8,220 lines.
   - Preserved effect-category, boost-charge conversion, and bundled engine/hull pool assertions unchanged.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 17:16)
+
+- R1 (Lane C, partial): extracted bundled gear effect-type content coverage to `game/tests/legacy_gear_effect_content.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,220 to 8,191 lines.
+  - Preserved every known-effect traversal and bundled hull/engine pool assertion unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
