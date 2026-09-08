@@ -1,10 +1,4 @@
 ## Current Status
-- INBOX 61(33): hub/star overlap fix
-  - `game/world.lua` `hubPlanet()`: minDist = starRadius + hubRadius + 41 (was max(80, radius*0.18)).
-  - Ensures hub disk never overlaps the central star in any galaxy.
-  - Star sprite green-X bug was already fixed in (14) (pngColorType + sheet rotation center).
-  - Test INBOX-61(33) in `game/self_test.lua` checks all galaxies in -10..10 range: GREEN.
-
 - INBOX 61(30): confirmed already complete
   - title.lua already has 22px "Jimmy's" + 44px title + i18n keys from prior cycle.
 
@@ -125,8 +119,12 @@
   - Preserved touch/keyboard relaunch behavior, stored hub spawn coordinates, hub-coordinate clearing, `hasLeftEarth`, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,746 to 3,678 lines.
 
+- R1 (Lane C, partial): extracted the local Asset Studio web-hub characterization block into `game/tests/legacy_asset_studio_web_hub.lua`.
+  - Preserved file-presence, pipeline-label, blocked user-supplied ship/Earth path, no-ComfyUI, and output assertions unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,678 to 3,649 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the local Asset Studio web-hub characterization block from `game/self_test.lua` into `game/tests/legacy_asset_studio_web_hub.lua`, preserving file/pipeline-label, blocked user-supplied-kind, no-ComfyUI, and output assertions.
+- R1 (Lane C): extract the INBOX 61(3) slot UI/i18n characterization block from `game/self_test.lua` into `game/tests/legacy_slot_ui_copy.lua`, preserving EN/KO colon-free prompt, lever-pull, and output assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

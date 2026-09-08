@@ -2166,3 +2166,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added 1.3x multiplier to sample payouts (`pendingSampleValue`) during `settle()` and `settleAtHub()` when `binaryStar` synergy is active.
   - Updated `game/i18n.lua` to match EN/KO texts ("sell +30%" / "판매 +30%").
   - Test `INBOX-61(41)` in `game/tests/binary_star.lua` GREEN.
+
+## Archived from STATUS.md (2026-09-08 23:01)
+
+- INBOX 61(33): hub/star overlap fix
+  - `game/world.lua` `hubPlanet()`: minDist = starRadius + hubRadius + 41 (was max(80, radius*0.18)).
+  - Ensures hub disk never overlaps the central star in any galaxy.
+  - Star sprite green-X bug was already fixed in (14) (pngColorType + sheet rotation center).
+  - Test INBOX-61(33) in `game/self_test.lua` checks all galaxies in -10..10 range: GREEN.
