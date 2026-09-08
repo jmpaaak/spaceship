@@ -1,0 +1,35 @@
+{
+  "requested_at": "2026-09-09T00:51:34+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/ice_ganymede_nasa_pia00353.jpg",
+  "source_dimensions": [
+    600,
+    600
+  ],
+  "input_preparation": {
+    "resize": [
+      1024,
+      1024
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 0,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 28,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "b1f32aeffbd8d202e647fd9c6f9b2f3885d2cdf9256882ec3c3f65c258bb46cd",
+  "payload_bytes": 19311822,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

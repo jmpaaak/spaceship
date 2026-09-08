@@ -4,20 +4,50 @@ import os
 import hashlib
 import urllib.request
 from datetime import datetime, timezone, timedelta
-from PIL import Image
+from PIL import Image, ImageOps
 
 def main():
     if len(sys.argv) < 3:
-        print("Usage: python call_pixel_perfect.py <input_jpg> <planet_id>")
+        print("Usage: python call_pixel_perfect.py <input_jpg> <planet_id> [input_margin_px] [background_tolerance]")
         sys.exit(1)
         
     input_jpg = sys.argv[1]
     planet_id = sys.argv[2]
+    input_margin = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+    background_tolerance = int(sys.argv[4]) if len(sys.argv) > 4 else 28
     
     img = Image.open(input_jpg)
     original_dims = img.size
     
-    img = img.resize((1024, 1024), Image.LANCZOS).convert("RGBA")
+    # Auto-crop to content, but force it to be a perfect square
+    gray = img.convert("L")
+    bbox = gray.point(lambda p: p > background_tolerance).getbbox()
+    if bbox:
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        side = max(w, h)
+        center_x = bbox[0] + w // 2
+        center_y = bbox[1] + h // 2
+        
+        new_bbox = (
+            center_x - side // 2,
+            center_y - side // 2,
+            center_x - side // 2 + side,
+            center_y - side // 2 + side
+        )
+        img = img.crop(new_bbox)
+        
+    # Now img is a perfect square containing the planet.
+    inner = 1024 - input_margin * 2
+    contained = ImageOps.contain(img.convert("RGBA"), (inner, inner), Image.Resampling.LANCZOS)
+    
+    # Center it on a transparent 1024x1024 canvas
+    prepared = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+    offset_x = (1024 - contained.width) // 2
+    offset_y = (1024 - contained.height) // 2
+    prepared.alpha_composite(contained, (offset_x, offset_y))
+    img = prepared
+
     data = list(img.getdata())
     flat_data = []
     for r, g, b, a in data:
@@ -32,7 +62,7 @@ def main():
         "targetWidth": 512,
         "targetHeight": 512,
         "pixelBlock": 4,
-        "backgroundTolerance": 28,
+        "backgroundTolerance": background_tolerance,
         "paletteLimit": 64
     }
     
@@ -54,7 +84,10 @@ def main():
         "source_path": input_jpg,
         "source_dimensions": original_dims,
         "input_preparation": {
-            "resize": [1024, 1024],
+            "resize": [1024 - input_margin * 2, 1024 - input_margin * 2],
+            "canvas": [1024, 1024],
+            "margin": input_margin,
+            "auto_crop": "square",
             "resampling": "Pillow LANCZOS",
             "mode": "RGBA"
         },
@@ -62,7 +95,7 @@ def main():
             "targetWidth": 512,
             "targetHeight": 512,
             "pixelBlock": 4,
-            "backgroundTolerance": 28,
+            "backgroundTolerance": background_tolerance,
             "paletteLimit": 64
         },
         "payload_sha256": payload_sha256,

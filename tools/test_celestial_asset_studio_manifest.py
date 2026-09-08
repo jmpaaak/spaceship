@@ -14,6 +14,7 @@ REQUIRED_IDS = {
     "pp_bare_nasa_pia00405",
     "pp_gas_nasa_pia01518",
     "pp_dry_nasa_pia00407",
+    "pp_ice_nasa_pia00353",
 }
 
 

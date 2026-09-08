@@ -178,6 +178,65 @@
         "wired": false,
         "sha256": "e05a74ddaadb122957e0a7e839aaa835f2af3cc2b5387eeb1c28f7d71b3fbebd"
       }
+    },
+    {
+      "id": "pp_ice_nasa_pia00353",
+      "kind": "ordinary_planet",
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "generated_at": "2026-09-09T00:51:35+09:00",
+      "source": {
+        "path": "docs/assets/sources/planet/ice_ganymede_nasa_pia00353.jpg",
+        "url": "https://images-assets.nasa.gov/image/PIA00353/PIA00353~orig.jpg",
+        "nasa_id": "PIA00353",
+        "creator": "NASA/JPL/USGS",
+        "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
+        "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+        "dimensions": [
+          600,
+          600
+        ],
+        "sha256": "f62bae1e9b1fdb31b0bfc0782c775746319f5b7e1d4b9d4113ea844a24132662"
+      },
+      "request": {
+        "log_path": "docs/assets/runs/pp_ice_nasa_pia00353/request.json",
+        "input_dimensions": [
+          1024,
+          1024
+        ],
+        "target_width": 512,
+        "target_height": 512,
+        "pixel_block": 4,
+        "background_tolerance": 28,
+        "palette_limit": 64,
+        "payload_sha256": "b1f32aeffbd8d202e647fd9c6f9b2f3885d2cdf9256882ec3c3f65c258bb46cd"
+      },
+      "response": {
+        "log_path": "docs/assets/runs/pp_ice_nasa_pia00353/response.json",
+        "http_status": 200,
+        "report_valid": true,
+        "body_sha256": "0d26397af7ba9f620e056f31a9a70be852430e986badef595e27efcef7e60151",
+        "image_rgba_sha256": "19467d9aaac952e479613f2cf0138f02836854e03cf4691b034b2b3ca4361083"
+      },
+      "master": {
+        "path": "docs/assets/masters/planet/pp_ice_nasa_pia00353_master.png",
+        "dimensions": [
+          512,
+          512
+        ],
+        "mode": "RGBA",
+        "sha256": "49cac028da6555ee1c763eb5569c19f661f89997821169fdf4151253a309d2ea"
+      },
+      "runtime": {
+        "path": "assets/planet/studio/pp_ice_nasa_pia00353.png",
+        "dimensions": [
+          128,
+          128
+        ],
+        "mode": "RGBA",
+        "derivation": "integer 4x NEAREST downscale from master",
+        "wired": false,
+        "sha256": "8963191009096a3ccd9e16755f4aa55cca10059a08f316d73ce8f7254e83c537"
+      }
     }
   ]
 }
