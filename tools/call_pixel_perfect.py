@@ -8,13 +8,14 @@ from PIL import Image, ImageOps
 
 def main():
     if len(sys.argv) < 3:
-        print("Usage: python call_pixel_perfect.py <input_jpg> <planet_id> [input_margin_px] [background_tolerance]")
+        print("Usage: python call_pixel_perfect.py <input_jpg> <asset_id> [input_margin_px] [background_tolerance] [runtime_stem]")
         sys.exit(1)
         
     input_jpg = sys.argv[1]
     planet_id = sys.argv[2]
     input_margin = int(sys.argv[3]) if len(sys.argv) > 3 else 0
     background_tolerance = int(sys.argv[4]) if len(sys.argv) > 4 else 28
+    runtime_stem = sys.argv[5] if len(sys.argv) > 5 else planet_id
     
     img = Image.open(input_jpg)
     original_dims = img.size
@@ -91,6 +92,7 @@ def main():
             "resampling": "Pillow LANCZOS",
             "mode": "RGBA"
         },
+        "runtime_stem": runtime_stem,
         "parameters": {
             "targetWidth": 512,
             "targetHeight": 512,
@@ -134,12 +136,13 @@ def main():
             with open(f"{log_dir}/response.json", "w") as f:
                 json.dump(resp_log, f, indent=2)
                 
-            master_path = f"docs/assets/masters/planet/{planet_id}_master.png"
+            asset_kind = "star" if planet_id.startswith("star_") else "planet"
+            master_path = f"docs/assets/masters/{asset_kind}/{planet_id}_master.png"
             os.makedirs(os.path.dirname(master_path), exist_ok=True)
             img_out.save(master_path, "PNG")
             
             runtime_img = img_out.resize((128, 128), Image.NEAREST)
-            runtime_path = f"assets/planet/studio/{planet_id}.png"
+            runtime_path = f"assets/{asset_kind}/studio/{runtime_stem}.png"
             os.makedirs(os.path.dirname(runtime_path), exist_ok=True)
             runtime_img.save(runtime_path, "PNG")
             

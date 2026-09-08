@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T01:15:12+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/star/sun_sdo_nasa_gsfc_20171208_archive_e002035.jpg",
+  "source_dimensions": [
+    1024,
+    1024
+  ],
+  "input_preparation": {
+    "resize": [
+      896,
+      896
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 64,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "star_sun",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 64,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "ee748e197aaa09d1ee60b0463ef55f57189a79f09a5c1164ff34a1d98df6bef6",
+  "payload_bytes": 15932883,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

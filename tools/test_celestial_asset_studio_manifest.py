@@ -17,6 +17,7 @@ REQUIRED_IDS = {
     "pp_ice_nasa_pia00353",
     "pp_lava_nasa_pia00703",
     "pp_earth_nasa_as17_148_22727",
+    "star_sun_nasa_gsfc_20171208_archive_e002035",
 }
 
 
