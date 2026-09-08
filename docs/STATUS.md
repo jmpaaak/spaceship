@@ -1,8 +1,8 @@
 ## Current Status
-- R1 lane C: extracted atmospheric reentry-shake regression coverage from `game/self_test.lua` into `game/tests/legacy_reentry_shake.lua`.
-  - Preserved far/mid/near shake and heat thresholds, slow-motion timing, Earth settlement reset, draw-offset math, and ship-shake independence assertions; production behavior is unchanged.
+- R1 lane C: extracted Earth-shop launch/return regression coverage from `game/self_test.lua` into `game/tests/legacy_earth_shop_start_trap.lua`.
+  - Preserved spawn-distance, first ascending-frame no-settlement, and post-departure Earth settlement assertions; production behavior is unchanged.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
-  - `game/self_test.lua` shrank from 4,755 to 4,674 lines. Next slice: extract `testEarthShopStartTrap` into `game/tests/legacy_earth_shop_start_trap.lua`.
+  - `game/self_test.lua` shrank from 4,674 to 4,650 lines. Next slice: extract `testFaintCollectOrbitRing` into `game/tests/legacy_faint_collect_orbit_ring.lua`.
 
 - INBOX 61(40): gear-editor KO/EN locale toggle.
   - Toolbar KO | EN buttons; preference in `localStorage` (`gear-editor-locale`).

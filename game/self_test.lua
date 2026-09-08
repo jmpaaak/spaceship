@@ -334,30 +334,6 @@ testStellarSynergyHUD = function()
 end
 
 
-local function testEarthShopStartTrap()
-    local dx = PlayScene.launchSpawnX - PlayScene.earthCenterX
-    local dy = PlayScene.launchSpawnY - PlayScene.earthCenterY
-    local spawnDist = math.sqrt(dx * dx + dy * dy)
-    assert(spawnDist > PlayScene.earthSettleRadius,
-        "launch spawn must sit outside Earth settle radius, dist=" .. spawnDist)
-
-    local scene = PlayScene.new({})
-    assert(scene.expedition.phase == "launch")
-    assert(scene.ship.x == PlayScene.launchSpawnX)
-    assert(scene.ship.y == PlayScene.launchSpawnY)
-    scene.expedition.phase = "ascending"
-    scene:update(0.05)
-    assert(scene.expedition.phase == "ascending",
-        "first ascending frames must not auto-settle into Earth shop")
-
-    scene.hasLeftEarth = true
-    scene.ship.x = PlayScene.earthCenterX
-    scene.ship.y = PlayScene.earthCenterY
-    scene:update(0.05)
-    assert(scene.expedition.phase == "settlement",
-        "returning into the Earth disk after leaving must settle")
-end
-
 -- INBOX (14): undiscovered-planet collect orbit is a faint thin line.
 -- Collect radius stays radius+30; visual is constants/alpha, not a capture.
 local function testFaintCollectOrbitRing()
@@ -2780,7 +2756,7 @@ function M.run()
 
     require("game.tests.legacy_galaxy_structure").testMinimapStencilClip()
     require("game.tests.legacy_galaxy_structure").testMinimapEarthStarLabels()
-    testEarthShopStartTrap()
+    require("game.tests.legacy_earth_shop_start_trap").run()
     testFaintCollectOrbitRing()
     testHudBackgroundNotFullWidth()
     testSettlementSlotRowDoesNotOverlapShop()

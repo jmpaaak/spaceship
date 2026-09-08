@@ -2025,3 +2025,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved normal-planet non-settlement, hub settlement payout, and floating-text assertions; production behavior is unchanged.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` is GREEN.
   - `game/self_test.lua` shrank from 4,798 to 4,755 lines. Next slice: extract `testReentryShake` into `game/tests/legacy_reentry_shake.lua`.
+
+## Archived from STATUS.md (2026-09-08 21:26)
+
+- R1 lane C: extracted atmospheric reentry-shake regression coverage from `game/self_test.lua` into `game/tests/legacy_reentry_shake.lua`.
+  - Preserved far/mid/near shake and heat thresholds, slow-motion timing, Earth settlement reset, draw-offset math, and ship-shake independence assertions; production behavior is unchanged.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
+  - `game/self_test.lua` shrank from 4,755 to 4,674 lines. Next slice: extract `testEarthShopStartTrap` into `game/tests/legacy_earth_shop_start_trap.lua`.
