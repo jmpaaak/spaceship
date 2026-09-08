@@ -115,8 +115,12 @@
   - Preserved all existing assertions and execution order behind `run()`; added `game/tests/self_test_stellar_extraction.lua` to enforce delegation and prevent the bodies from returning to the runner.
   - Observed the expected missing-module RED, then `make test` GREEN; `game/self_test.lua` decreased from 3,622 to 3,398 lines.
 
+- R1 (Lane C, partial): extracted the INBOX 61(4) shop-card copy/layout characterization block into `game/tests/legacy_shop_card_copy_layout.lua`.
+  - Preserved KO `내구도`, EN/KO `->`, scout tradeoff, locale side effects, and output unchanged behind `run()`; `game/tests/self_test_shop_card_extraction.lua` enforces delegation.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,398 to 3,361 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the INBOX 61(4) shop-card copy/layout characterization block from `game/self_test.lua` into `game/tests/legacy_shop_card_copy_layout.lua`, preserving KO durability wording, EN/KO arrow/tradeoff, and output assertions.
+- R1 (Lane C): extract the INBOX 61(5) solar-system max-durability settlement characterization block from `game/self_test.lua` into `game/tests/legacy_solar_system_max_durability.lua`, preserving i18n, settle/launch state assertions, and execution order.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
