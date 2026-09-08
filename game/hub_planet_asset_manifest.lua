@@ -19,6 +19,14 @@ M.hubs = {
         height = 128,
         sha256 = "52e387259e424c323a4e1417e5670b60c4c375ac30b9d7be24c9386b8295a29a",
     },
+    gas = {
+        id = "hub_saturn_nasa_pia02225",
+        runtimePath = "assets/planet/studio/hub_saturn.png",
+        masterPath = "docs/assets/masters/planet/hub_saturn_nasa_pia02225_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "6948a4b3eeae108ef495855033e0ab557174947b100a160c7fff528defb52f80",
+    },
 }
 
 return M

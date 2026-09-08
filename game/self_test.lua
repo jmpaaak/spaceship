@@ -1939,9 +1939,9 @@ function M.run()
         assert(resolve({ galaxyStarType = "bare" }) == "assets/planet/studio/pp_bare.png",
             "regular bare planet must resolve to the wired Asset Studio derivative")
 
-        -- Hub planet with starType → pp_<starType> (starType takes priority over dedicated hub sprite)
-        assert(resolve({ hub = true, galaxyStarType = "gas" }) == "assets/planet/pp_gas.png",
-            "hub planet with starType must resolve to pp_<starType>.png")
+        -- Approved hub candidates take priority only for their mapped star type.
+        assert(resolve({ hub = true, galaxyStarType = "gas" }) == "assets/planet/studio/hub_saturn.png",
+            "gas hub planet must resolve to the approved Saturn derivative")
 
         -- Hub planet without starType → planet_hub.png fallback
         assert(resolve({ hub = true }) == "assets/planet/planet_hub.png",

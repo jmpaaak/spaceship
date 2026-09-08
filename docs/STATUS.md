@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 78 Lane D wired the second approved photo-derived hub candidate, `hub_pluto_nasa_pia19952`, to bare-type galaxy hubs only.
-  - `game/hub_planet_asset_manifest.lua` now allowlists `assets/planet/studio/hub_pluto.png`; its Asset Studio and asset-catalog records are marked wired.
-  - A decoded 128×128 RGBA Pluto image takes precedence over legacy bare hub artwork. Decode failure retains the existing PixelPlanets/hub-sheet fallback, and ordinary planets remain isolated.
-  - Engine-hosted tests cover manifest routing, decoded-image precedence, bare-type isolation, and decode-failure fallback; the existing world suite continues to cover hub location, radius, and collision behavior. `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
+- INBOX 78 Lane D wired the third approved photo-derived hub candidate, `hub_saturn_nasa_pia02225`, to gas-type galaxy hubs only.
+  - `game/hub_planet_asset_manifest.lua` now allowlists `assets/planet/studio/hub_saturn.png`; its Asset Studio and asset-catalog records are marked wired.
+  - A decoded 128×128 RGBA Saturn image takes precedence over legacy gas hub artwork. Decode failure retains the existing PixelPlanets/hub-sheet fallback, and ordinary planets remain isolated.
+  - Engine-hosted tests cover manifest routing, decoded-image precedence, gas-type isolation, and decode-failure fallback; the existing world suite continues to cover hub location, radius, and collision behavior. `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
 
 ## Next slice
 
