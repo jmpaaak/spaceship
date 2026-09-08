@@ -1,7 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted the collision-risk preview characterization block into `game/tests/legacy_collision_risk.lua`.
-  - Preserved assertion order and inputs behind `run()` and returned the configured `riskScene` consumed by subsequent HUD/collision checks; `game/tests/self_test_collision_risk_extraction.lua` enforces delegation and state handoff.
-  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,167 to 3,140 lines.
+- INBOX 78 Lane B (baseline measurement): added `docs/assets/CELESTIAL_BASELINE.json` before replacing any celestial art.
+  - Measured all 30 current runtime planet/star PNGs, including file/frame dimensions, frame counts, and SHA-256 hashes.
+  - Recorded the 720×1280 canvas, ordinary/shop/hub radius ranges, 160px central-star diameter, 0.85–1.15 planet draw variation, and NEAREST filter with source locations.
+  - Added `tools/test_celestial_asset_baseline.py` to reject stale hashes/dimensions, omitted celestial PNGs, and changed draw-contract measurements; observed missing-manifest RED, then focused GREEN.
 
 - INBOX 61(32): play_gameover.lua extraction
   - Created `game/scenes/play_gameover.lua` — gameover/destroyed-phase layout module.
@@ -113,6 +114,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract the HUD constants/status/distance characterization block into one legacy suite while preserving the configured `riskScene` state consumed by the following collision checks.
+- INBOX 78 Lane B (`docs/assets/`, `assets/planet/`): select one provenance-safe high-resolution ordinary-planet photo master, send its decoded RGBA pixels through the actual `POST http://127.0.0.1:4176/api/pixel-perfect`, and record the request, response, dimensions, and hashes without wiring it into runtime yet.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

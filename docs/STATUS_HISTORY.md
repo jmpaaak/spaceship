@@ -2243,3 +2243,9 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added BOOST button UI in bottom-right corner with charge counter.
   - Enhanced RCS particles during boost (golden color, 2.5x radius, faster spawn).
   - Added vertical speed lines visual effect during boost.
+
+## Archived from STATUS.md (2026-09-08 23:51)
+
+- R1 (Lane C, partial): extracted the collision-risk preview characterization block into `game/tests/legacy_collision_risk.lua`.
+  - Preserved assertion order and inputs behind `run()` and returned the configured `riskScene` consumed by subsequent HUD/collision checks; `game/tests/self_test_collision_risk_extraction.lua` enforces delegation and state handoff.
+  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,167 to 3,140 lines.
