@@ -1,4 +1,9 @@
 ## Current Status
+- R1 (Lane C, partial): extracted refined-edition engine slot-accounting coverage to `game/tests/legacy_gear_no_slot_cost_engine_slot_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,548 to 6,481 lines.
+  - Preserved engine capacity/fullness, normal-card overflow rejection, refined-card overflow/refill behavior, and hull/engine category-isolation assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
 - R1 (Lane C, partial): extracted refined-edition hull slot-accounting coverage to `game/tests/legacy_gear_no_slot_cost_edition_wiring.lua`.
   - `game/self_test.lua` now delegates through `run()` and shrank from 6,622 to 6,548 lines.
   - Preserved refined-edition slot accounting, capacity/fullness, normal-card full-loadout rejection, refill behavior, and hull/engine category-isolation assertions unchanged; the extracted module has no `love.*` boundary.
@@ -151,6 +156,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearNoSlotCostEngineSlotWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving refined-edition engine capacity/fullness, overflow, and hull/engine category-isolation assertions.
+- R1 (Lane C): extract `testGearIrradiatedSynergyBonusWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving irradiated-edition shared-tag bonus, double-edition stacking, and non-overlapping-tag assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
