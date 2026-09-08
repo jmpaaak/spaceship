@@ -93,38 +93,7 @@ function M.run()
 
     require("game.tests.legacy_basic_expedition").run()
 
-
-    local hullShopRun = expedition.new({
-        durability = 2,
-        durabilityUpgradeCost = 60,
-        money = 85,
-    })
-    assert(not expedition.buyDurabilityUpgrade(hullShopRun))
-    hullShopRun.phase = "settlement"
-    assert(expedition.buyDurabilityUpgrade(hullShopRun))
-    assert(hullShopRun.money == 25 and hullShopRun.durabilityUpgradeLevel == 1 and hullShopRun.maxDurability == 3)
-    assert(not expedition.buyDurabilityUpgrade(hullShopRun))
-    assert(expedition.launch(hullShopRun) and hullShopRun.phase == "ascending")
-    assert(hullShopRun.durability == 3)
-
-    local yieldRun = expedition.new({
-        sampleYieldUpgradeCost = 60,
-        sampleYieldUpgradeAmount = 0.25,
-        money = 45,
-    })
-    assert(not expedition.buySampleYieldUpgrade(yieldRun))
-    yieldRun.phase = "settlement"
-    assert(not expedition.buySampleYieldUpgrade(yieldRun))
-    yieldRun.money = 60
-    assert(expedition.buySampleYieldUpgrade(yieldRun))
-    assert(yieldRun.money == 0 and yieldRun.sampleYieldUpgradeLevel == 1)
-    assert(expedition.sampleYieldMultiplier(yieldRun) == 1.25)
-    assert(expedition.launch(yieldRun) and yieldRun.phase == "ascending")
-    local ok, awarded = expedition.collectSample(yieldRun, 20)
-    assert(ok and awarded == 25 and yieldRun.pendingSampleValue == 25 and yieldRun.sampleCount == 1)
-    assert(expedition.damage(yieldRun, yieldRun.durability))
-    assert(yieldRun.phase == "destroyed" and yieldRun.sampleYieldUpgradeLevel == 0)
-    assert(expedition.sampleYieldMultiplier(yieldRun) == 1)
+    require("game.tests.legacy_expedition_upgrades").run()
 
     -- docs/feedback/INBOX.md's Balatro core-mechanics porting plan item 1
     -- ("점진적 시너지/빌드업") asks for a multiplicative STREAK bonus when the
@@ -2899,6 +2868,7 @@ function M.run()
     require("game.tests.self_test_hud_extraction").run()
     require("game.tests.self_test_collision_feedback_extraction").run()
     require("game.tests.self_test_basic_expedition_extraction").run()
+    require("game.tests.self_test_upgrade_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
