@@ -1975,3 +1975,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` delegates through `run()` and shrank from 5,499 to 5,442 lines.
   - Preserved same-family streak continuation across repeated hub settlements, multiplier assertions, and different-family reset behavior without changing production code.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 20:41)
+
+- R1 (Lane C, partial): extracted Earth slot-machine galaxy-odds coverage to `game/tests/legacy_earth_slot_machine_galaxy_odds.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,442 to 5,309 lines.
+  - Preserved per-galaxy odds profiles, deterministic reel rewards, hull-slot luck weighting, and last-visited-galaxy assertions without changing production code.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.

@@ -18,62 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 15(c) + Item 14(C): earthSlotSpin engine-slot luck regression guard.
--- testEarthSlotMachineGalaxyOdds already verifies hull-slot luck raises
--- effectiveStarWeight. This companion test verifies the ENGINE-slot path:
--- earthSlotSpin uses combinedGearList(run) (hull+engine) for its luck total,
--- so an engine-slot luck card must raise effectiveStarWeight to the same
--- degree as the same card equipped in a hull slot. If this regresses the
--- guard catches it before it silently becomes a dead content path again.
-local function testGearEarthSlotEngineSlotLuckWiring()
-    local expedition = require("game.expedition")
-    local solarWeights = expedition.earthSlotWeights(nil)
-    local rolls = { reels = { 0, 0, 0 } }  -- deterministic rolls
-
-    -- Baseline: no gear equipped.
-    local bareRun = expedition.new()
-    local bareResult = expedition.earthSlotSpin(bareRun, nil, rolls)
-    assert(bareResult.effectiveStarWeight == solarWeights.HARVEST,
-        "bare run must have base STAR weight in earthSlotSpin, got: "
-            .. tostring(bareResult.effectiveStarWeight))
-
-    local luckCard = {
-        id = "engine-slot-luck-fixture", name = "EngLuck", nameKo = "엔진럭",
-        icon = "✦", rarity = "common", tags = {}, editions = {},
-        effects = { { type = "luck", value = 50 } },  -- +50 luck = 0.5 luckBonus
-    }
-
-    -- Hull-slot luck: equip as hull, verify STAR boost.
-    local hullLuckRun = expedition.new()
-    assert(expedition.equipGear(hullLuckRun, "hull", luckCard))
-    local hullResult = expedition.earthSlotSpin(hullLuckRun, nil, rolls)
-    assert(hullResult.effectiveStarWeight > solarWeights.HARVEST,
-        "hull-slot luck card must boost earthSlotSpin STAR weight (baseline "
-            .. tostring(solarWeights.HARVEST) .. ", got "
-            .. tostring(hullResult.effectiveStarWeight) .. ")")
-
-    -- Engine-slot luck: same card in ENGINE slot must produce the same boost.
-    local engineLuckRun = expedition.new()
-    local engineCard = {
-        id = "engine-slot-luck-fixture2", name = "EngLuck2", nameKo = "엔진럭2",
-        icon = "✦", rarity = "common", tags = {}, editions = {},
-        effects = { { type = "luck", value = 50 } },
-    }
-    assert(expedition.equipGear(engineLuckRun, "engine", engineCard))
-    local engineResult = expedition.earthSlotSpin(engineLuckRun, nil, rolls)
-    assert(engineResult.effectiveStarWeight > solarWeights.HARVEST,
-        "engine-slot luck card must also boost earthSlotSpin STAR weight "
-            .. "(earthSlotSpin uses combinedGearList, so engine luck must feed through): "
-            .. "baseline=" .. tostring(solarWeights.HARVEST)
-            .. " engineResult=" .. tostring(engineResult.effectiveStarWeight))
-
-    -- The boost magnitude should match hull-slot for the same luck value.
-    assert(math.abs(hullResult.effectiveStarWeight - engineResult.effectiveStarWeight) < 0.001,
-        "engine-slot and hull-slot luck with same value must produce identical STAR weight boost: "
-            .. "hull=" .. tostring(hullResult.effectiveStarWeight)
-            .. " engine=" .. tostring(engineResult.effectiveStarWeight))
-end
-
 -- Item 15(c) follow-up: earthSlotSpin.reward must vary per galaxy profile.
 -- Item 15 says \"보상 테이블이 달라지도록\" (reward TABLE changes) not just
 -- weight odds. Currently slotReward is a global fixed table (STAR*3=75,
@@ -620,7 +564,7 @@ local function runGearTests()
     require("game.tests.legacy_earth_slot_machine_galaxy_odds").run()
     testEarthSlotPartReplacement()
     testEarthSlotSpinPartRarityGate()
-    testGearEarthSlotEngineSlotLuckWiring()
+    require("game.tests.legacy_gear_earth_slot_engine_luck_wiring").run()
     testEarthSlotProfileRewardVariation()
     testSlotSpinCostAndMissPaysZero()
     testSlotEditorWebUi()

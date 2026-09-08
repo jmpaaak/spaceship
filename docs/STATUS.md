@@ -1,7 +1,7 @@
 ## Current Status
-- R1 (Lane C, partial): extracted Earth slot-machine galaxy-odds coverage to `game/tests/legacy_earth_slot_machine_galaxy_odds.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,442 to 5,309 lines.
-  - Preserved per-galaxy odds profiles, deterministic reel rewards, hull-slot luck weighting, and last-visited-galaxy assertions without changing production code.
+- R1 (Lane C, partial): extracted Earth-slot engine-luck wiring coverage to `game/tests/legacy_gear_earth_slot_engine_luck_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,309 to 5,253 lines.
+  - Preserved deterministic reels, bare-run baseline, hull/engine luck boosts, and equal boost magnitude without changing production code.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
@@ -146,6 +146,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearEarthSlotEngineSlotLuckWiring` from `game/self_test.lua` to `game/tests/legacy_gear_earth_slot_engine_luck_wiring.lua`, preserving combined hull/engine luck and deterministic reel assertions.
+- R1 (Lane C): extract `testEarthSlotProfileRewardVariation` from `game/self_test.lua` to `game/tests/legacy_earth_slot_profile_reward_variation.lua`, preserving solar/fringe/void reward tiers and no-match risk assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
