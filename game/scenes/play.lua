@@ -15,6 +15,9 @@ local play_star = require("game.scenes.play_star")
 local playPlanets = require("game.scenes.play_planets")
 playPlanets.install(M)
 local planetColor = playPlanets.planetColor
+local playSteering = require("game.scenes.play_steering")
+playSteering.install(M)
+local shortestAngleDelta = playSteering.shortestAngleDelta
 M.__index = M
 
 -- Shared sprite drawing primitives extracted from this oversized scene.
@@ -109,18 +112,6 @@ local stickTurnFollow = 1.8
 M.stickTurnFollow = stickTurnFollow
 local rcsPuffDuration = 1.32
 M.rcsPuffDuration = rcsPuffDuration
-
-function M.headingFromStick(dx, dy)
-    return math.atan2(dy or 0, dx or 0)
-end
-
-local function shortestAngleDelta(from, to)
-    local d = to - from
-    while d > math.pi do d = d - 2 * math.pi end
-    while d < -math.pi do d = d + 2 * math.pi end
-    return d
-end
-M.shortestAngleDelta = shortestAngleDelta
 
 -- Control and settlement layout constants are installed from play_layout.lua.
 

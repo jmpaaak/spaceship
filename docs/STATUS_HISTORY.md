@@ -1509,3 +1509,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `play.lua` reduced from 3243 lines / 161851 bytes to 3054 lines / 152156 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
   - Next slice: extract collect-orbit and atmospheric reentry presentation calculations into `game/scenes/play_reentry.lua` without adding gameplay behavior.
+
+## Archived from STATUS.md (2026-09-08 13:49)
+
+- R1: `play.lua` re-entry presentation extraction.
+  - Added pure `game/scenes/play_reentry.lua` for the 60 Hz draw offset, distance-based shake, and heat-vignette alpha ramps; `install()` preserves the scene API and reads the scene's existing radius/shake constants.
+  - Added engine-hosted `game/tests/play_reentry.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3054 lines / 152156 bytes to 3029 lines / 151623 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).

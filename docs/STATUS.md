@@ -1,9 +1,9 @@
 ## Current Status
-- R1: `play.lua` re-entry presentation extraction.
-  - Added pure `game/scenes/play_reentry.lua` for the 60 Hz draw offset, distance-based shake, and heat-vignette alpha ramps; `install()` preserves the scene API and reads the scene's existing radius/shake constants.
-  - Added engine-hosted `game/tests/play_reentry.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
-  - `play.lua` reduced from 3054 lines / 152156 bytes to 3029 lines / 151623 bytes.
-  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
+- R1: `play.lua` steering-rule extraction.
+  - Added pure `game/scenes/play_steering.lua` for full-circle stick heading and shortest wrapped angle-delta rules; `install()` preserves the scene API.
+  - Added engine-hosted `game/tests/play_steering.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3029 lines / 151623 bytes to 3020 lines / 151456 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -153,6 +153,6 @@
 
 ## Next slice
 
-- R1: extract heading/angle rules (`headingFromStick` and `shortestAngleDelta`) from `game/scenes/play.lua` into a pure `game/scenes/play_steering.lua`; preserve the scene API and reduce `play.lua` further before INBOX feature work.
+- R1: extract `collectOrbitRadius` and its collect-orbit constants from `game/scenes/play.lua` into `game/scenes/play_collect_orbit.lua`; preserve the scene API and expedition modifier behavior without adding gameplay behavior.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

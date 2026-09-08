@@ -10429,6 +10429,7 @@ function M.run()
     require("game.tests.play_sprites").run()
     require("game.tests.play_layout").run()
     require("game.tests.play_reentry").run()
+    require("game.tests.play_steering").run()
 
     print("SPACESHIP_UNIT_OK")
 end
