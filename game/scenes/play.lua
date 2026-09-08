@@ -53,6 +53,13 @@ local clampLabelX = sampleFeedback.clampLabelX
 local sampleRollupDuration = sampleFeedback.sampleRollupDuration
 local rollupAmount = sampleFeedback.rollupAmount
 
+-- Runtime sprite decoding, loading, maps, and part-icon cache.
+local playSprites = require("game.scenes.play_sprites")
+playSprites.install(M)
+local loadSprite = playSprites.loadSprite
+local getPartIcon = playSprites.getPartIcon
+local loadSpriteMap = playSprites.loadSpriteMap
+
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
 -- install() copies drawMinimap, drawShipStatsSummary, galaxyChartLineColor/FillColor,
 -- drawMinimapSprite, rimMarker constants, shipStats constants back onto M so
@@ -457,77 +464,6 @@ function M.settlementRowBackgroundColor(index)
 end
 
 
--- PNG IHDR color type (byte 26): 2 = RGB (opaque square blobs), 6 = RGBA.
--- INBOX 2026-09-05 item (1): RGB ComfyUI PNGs stay on disk but must not
--- load; draw helpers already fall back to Lua polygons when image is nil.
-local function pngColorType(path)
-    if type(path) ~= "string" or path == "" then
-        return nil
-    end
-    local data
-    if love.filesystem and love.filesystem.newFile then
-        local file = love.filesystem.newFile(path)
-        local ok, err = file:open("r")
-        if ok then
-            data = file:read(33)
-            file:close()
-        end
-    end
-    if not data then
-        local handle = io.open(path, "rb")
-        if handle then
-            data = handle:read(33)
-            handle:close()
-        end
-    end
-    if type(data) ~= "string" or #data < 26 then
-        return nil
-    end
-    if data:sub(1, 8) ~= "\137PNG\r\n\26\n" then
-        return nil
-    end
-    return data:byte(26)
-end
-
-local function shouldLoadRuntimeSprite(path)
-    local ct = pngColorType(path)
-    -- If we can't read the header (mobile sandbox, missing file), load anyway.
-    -- Only reject if we positively detect RGB (colorType 2) which renders opaque.
-    if ct == nil then return true end
-    return ct ~= 2
-end
-
-local function loadSprite(path)
-    if not shouldLoadRuntimeSprite(path) then
-        return nil
-    end
-    if not (love.graphics and love.graphics.newImage) then
-        return nil
-    end
-    local ok, img = pcall(love.graphics.newImage, path)
-    if ok and img then
-        img:setFilter("nearest", "nearest")
-        return img
-    end
-    return nil
-end
-M.pngColorType = pngColorType
-M.shouldLoadRuntimeSprite = shouldLoadRuntimeSprite
-M.loadSprite = loadSprite
-
--- Part icon cache: loads assets/part_icons/<id>.png on first access.
-local partIconCache = {}
-local function getPartIcon(partId)
-    if not partId then return nil end
-    if partIconCache[partId] ~= nil then
-        return partIconCache[partId] or nil
-    end
-    local img = loadSprite("assets/part_icons/" .. partId .. ".png")
-    partIconCache[partId] = img or false
-    return img
-end
-M.getPartIcon = getPartIcon
-
 -- Deterministic per-planet visual variation from planet.id.
 -- Returns rotation (radians, 0..2π) and scaleFactor (0.85..1.15).
 -- Same id always gives the same result; different ids give different values.
@@ -565,14 +501,6 @@ function M.planetImagePathForPlanet(planet)
     else
         return "assets/planet/planet_generic.png"
     end
-end
-
-local function loadSpriteMap(paths)
-    local images = {}
-    for key, path in pairs(paths) do
-        images[key] = loadSprite(path)
-    end
-    return images
 end
 
 function M.new(options)

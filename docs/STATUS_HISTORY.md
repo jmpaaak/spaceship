@@ -1474,3 +1474,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added engine-hosted `game/tests/play_sample_visuals.lua`; observed RED for the missing module, then GREEN after extraction and registered only the test entry point in `self_test.lua`.
   - `play.lua` reduced from 3466 lines / 170579 bytes to 3378 lines / 166584 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
+
+## Archived from STATUS.md (2026-09-08 13:24)
+
+- R1: `play.lua` sample floating-label feedback extraction.
+  - Added pure `game/scenes/play_sample_feedback.lua`; the scene delegates label clamping, sample roll-up timing, and integer roll-up calculation while preserving its public API.
+  - Added engine-hosted `game/tests/play_sample_feedback.lua`; observed RED for the missing module, then GREEN after extraction and registered only the test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3378 lines / 166584 bytes to 3354 lines / 165592 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
