@@ -6,9 +6,9 @@
 //   grid · quantize → chunky 4px NEAREST → PNG + GENERATED_ASSET_LOG
 //   line + MANIFEST.json entry (download; overwrite into the repo).
 //
-// sprite-gen (aldegad/sprite-gen) runs on tools/serve_editors.py
-// (PIL fallback if the package is missing). Character / ship /
-// Earth remain user-supplied and are blocked as destinations.
+// sprite-gen (aldegad/sprite-gen) runs on tools/serve_editors.py.
+// If unavailable, uploaded images are passed through without overlays; prompt-only
+// generation reports an error instead of substituting a fake procedural blob.
 
 const BLOCKED_PREFIXES = [
   "assets/ship/",
@@ -72,54 +72,27 @@ function loadImageFromUrl(url) {
   });
 }
 
-function hashPrompt(text) {
-  let h = 2166136261;
-  const s = String(text || "spaceship-asset");
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-// Local PIL-equivalent still used only when /api/sprite-gen is unreachable.
-function generateFromPrompt(prompt) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 32;
-  canvas.height = 32;
-  const ctx = canvas.getContext("2d");
-  const seed = hashPrompt(prompt);
-  const rnd = () => {
-    // xorshift from seed
-    let x = generateFromPrompt._s || seed || 1;
-    x ^= x << 13; x >>>= 0;
-    x ^= x >> 17; x >>>= 0;
-    x ^= x << 5; x >>>= 0;
-    generateFromPrompt._s = x;
-    return (x >>> 0) / 4294967296;
-  };
-  generateFromPrompt._s = seed || 1;
-  const r = 40 + Math.floor(rnd() * 180);
-  const g = 40 + Math.floor(rnd() * 180);
-  const b = 40 + Math.floor(rnd() * 180);
-  ctx.clearRect(0, 0, 32, 32);
-  const cx = 16, cy = 16, rad = 8 + Math.floor(rnd() * 6);
-  for (let y = 0; y < 32; y++) {
-    for (let x = 0; x < 32; x++) {
-      const dx = x - cx + 0.5, dy = y - cy + 0.5;
-      const d = Math.sqrt(dx * dx + dy * dy);
-      const wobble = 1 + 0.2 * Math.sin(Math.atan2(dy, dx) * (3 + (seed % 4)) + (seed % 7));
-      if (d > rad * wobble) continue;
-      const shade = Math.max(0.4, 1 - d / rad);
-      ctx.fillStyle = "rgba(" + Math.floor(r * shade) + "," + Math.floor(g * shade) + "," + Math.floor(b * shade) + ",1)";
-      ctx.fillRect(x, y, 1, 1);
-    }
-  }
-  return canvas;
-}
+// Prompt generation requires the local /api/sprite-gen endpoint. The editor
+// deliberately has no procedural shape fallback: fake blobs can overwrite or
+// obscure uploaded art and look like successful generation.
 
 function canvasToPngDataUrl(canvas) {
   try {
+    return canvas.toDataURL("image/png");
+  } catch (err) {
+    return null;
+  }
+}
+
+function imageToPngDataUrl(img) {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
     return canvas.toDataURL("image/png");
   } catch (err) {
     return null;
@@ -149,19 +122,22 @@ async function requestSpriteGen(prompt, extra) {
   }
   const data = await resp.json();
   if (!data || !data.png_b64) throw new Error("sprite-gen response missing png_b64");
-  return loadImageFromDataUrl("data:image/png;base64," + data.png_b64);
+  const image = await loadImageFromDataUrl("data:image/png;base64," + data.png_b64);
+  return { image: image, engine: data.engine || "unknown" };
 }
 
 async function generateFromPromptAsync(prompt) {
   const extra = {};
   if (sourceImage && sourceKind === "upload") {
-    extra.image = canvasToPngDataUrl(els.sourceCanvas) || undefined;
+    extra.image = imageToPngDataUrl(sourceImage) || undefined;
   }
   try {
-    return await requestSpriteGen(prompt, extra);
+    const result = await requestSpriteGen(prompt, extra);
+    setStatus("Generator: " + result.engine + ". No procedural shape overlay applied.", "ok");
+    return result.image;
   } catch (err) {
-    setStatus("sprite-gen server unavailable (" + err.message + "); using local PIL-equivalent fallback.", "error");
-    return generateFromPrompt(prompt);
+    setStatus("Generation unavailable: " + err.message + ". No fake shape was substituted.", "error");
+    throw err;
   }
 }
 

@@ -2,8 +2,9 @@
 """Local static editor server + POST /api/sprite-gen (INBOX 61(27)).
 
 Serves the repo so asset-studio / gear-editor work over HTTP, and generates
-32x32 (default) PNG sprites from a prompt. Tries the `sprite-gen` Python
-package; if it is missing or fails, falls back to deterministic PIL shapes.
+32x32 (default) PNG sprites from a prompt. Uses the `sprite-gen` Python
+package when available. Uploaded images fall back to overlay-free pixel resize;
+prompt-only requests fail explicitly rather than returning a fake shape.
 """
 from __future__ import annotations
 
@@ -51,57 +52,22 @@ def _xorshift(state: int):
     return rnd
 
 
-def generate_pil_fallback(prompt: str, width: int, height: int, image_bytes=None):
-    """Deterministic procedural sprite. Same prompt → same pixels."""
-    from PIL import Image, ImageDraw, ImageFilter
+def prepare_uploaded_image(width: int, height: int, image_bytes=None):
+    """Pixel-resize an upload without adding generated shapes or overlays."""
+    if not image_bytes:
+        return None
+    from PIL import Image, ImageOps
 
     width = _clamp_size(width)
     height = _clamp_size(height)
-    seed = _prompt_seed(prompt)
-    rnd = _xorshift(seed)
-    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-
-    if image_bytes:
-        try:
-            src = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
-            src = src.resize((width, height), Image.Resampling.NEAREST)
-            img = Image.blend(src, img, 0.15) if src.mode == "RGBA" else src
-            draw = ImageDraw.Draw(img)
-        except Exception:
-            pass
-
-    r = int(40 + rnd() * 180)
-    g = int(40 + rnd() * 180)
-    b = int(40 + rnd() * 180)
-    cx, cy = width / 2.0, height / 2.0
-    rad = min(width, height) * (0.28 + rnd() * 0.22)
-    lobes = 3 + (seed % 4)
-    phase = seed % 7
-    for y in range(height):
-        for x in range(width):
-            dx = x - cx + 0.5
-            dy = y - cy + 0.5
-            d = (dx * dx + dy * dy) ** 0.5
-            wobble = 1 + 0.2 * math.sin(math.atan2(dy, dx) * lobes + phase)
-            if d > rad * wobble:
-                continue
-            shade = max(0.4, 1 - d / rad)
-            img.putpixel((x, y), (int(r * shade), int(g * shade), int(b * shade), 255))
-
-    accent = (
-        int(80 + rnd() * 150),
-        int(80 + rnd() * 150),
-        int(80 + rnd() * 150),
-        220,
-    )
-    ax = int(width * (0.25 + rnd() * 0.5))
-    ay = int(height * (0.25 + rnd() * 0.5))
-    ar = max(2, int(min(width, height) * (0.08 + rnd() * 0.12)))
-    draw.ellipse([ax - ar, ay - ar, ax + ar, ay + ar], fill=accent)
-    if rnd() > 0.45:
-        img = img.filter(ImageFilter.MaxFilter(3))
-    return img
+    try:
+        src = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+    except Exception as error:
+        raise ValueError("invalid uploaded image") from error
+    fitted = ImageOps.contain(src, (width, height), Image.Resampling.NEAREST)
+    result = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    result.alpha_composite(fitted, ((width - fitted.width) // 2, (height - fitted.height) // 2))
+    return result
 
 
 def try_sprite_gen(prompt: str, width: int, height: int, image_bytes=None):
@@ -140,9 +106,11 @@ def generate_sprite(prompt: str, width=32, height=32, image_bytes=None):
     height = _clamp_size(height)
     img = try_sprite_gen(prompt, width, height, image_bytes)
     engine = "sprite-gen"
+    if img is None and image_bytes:
+        img = prepare_uploaded_image(width, height, image_bytes)
+        engine = "uploaded-image"
     if img is None:
-        img = generate_pil_fallback(prompt, width, height, image_bytes)
-        engine = "pil-fallback"
+        raise RuntimeError("sprite generator unavailable; upload an image or install sprite-gen")
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     png = buf.getvalue()
@@ -177,6 +145,7 @@ class EditorHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Cache-Control", "no-store, max-age=0")
         super().end_headers()
 
     def do_OPTIONS(self):
@@ -213,7 +182,11 @@ class EditorHandler(SimpleHTTPRequestHandler):
         width = _clamp_size(data.get("width", 32))
         height = _clamp_size(data.get("height", 32))
         image_bytes = decode_image_field(data.get("image"))
-        result = generate_sprite(prompt, width, height, image_bytes)
+        try:
+            result = generate_sprite(prompt, width, height, image_bytes)
+        except (RuntimeError, ValueError) as error:
+            self._json(503, {"error": str(error)})
+            return
         self._json(200, result)
 
     def _json(self, code, payload):
