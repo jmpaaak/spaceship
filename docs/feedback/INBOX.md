@@ -87,6 +87,26 @@
   - 10 미만은 1칸=1HP, `x10` 없음.
   - 테스트: `game/tests/hp_block_x10.lua`.
 
+(66) **부스터+ 있으면 5초마다 1개 충전, 효과 1초** (msg `1546717606822674452`)
+  - 담당: `game/expedition.lua` (`boostsRemaining`/`spendBoost`/충전 틱) + `game/scenes/play_boost.lua`. play.lua의 중복 `timer=0.8` 히트는 위임만.
+  - 지금: 장착 `boostCharge` 합이 **런 시작 충전량**이고, 쓰면 줄어들기만 함. 지속 **0.8초**.
+  - 변경:
+    (a) `boostCharge` 합 = **최대 보유량(캡)**. 부스터+가 없으면 충전 0, 버튼 비활성.
+    (b) ascending 중 5초마다 부스터 1개 생성, 캡을 넘지 않음.
+    (c) 효과 지속 **1.0초** (`boostActive.timer = 1.0`). i18n `help_boost`도 1초로.
+  - 테스트: `game/tests/boost_regen.lua`.
+
+(67) **표본 연속 배율을 우측 도움말/일시정지 아래에 상시 표시** (msg `1546718466558533652`)
+  - 담당: `game/scenes/play_hud.lua` (또는 play_help 옆). play.lua는 한 줄 위임. 어드민 버튼이 있던 자리.
+  - `expedition.streakMultiplier(sampleStreakCount, run)` 현재 값. 예: `x1.0` / `x1.2` / `AZURE x1.4`. 계열 이름(azure/ember/void) + 배수.
+  - Galmuri 11px 배수. 연속 0/1이면 `x1.0`도 보여 줌 (빈칸 금지).
+  - 테스트: `game/tests/streak_hud.lua`.
+
+(68) **어드민 속도+/내구+/수확+ 버튼 3개 제거** (msg `1546718466558533652`)
+  - 담당: `game/scenes/play.lua`의 `adminButtons` / `adminButtonRect` / draw+touch. 함수 `expedition.adminUpgrade`는 테스트용으로 남겨도 됨 — **화면 버튼만 삭제**.
+  - 우측 상단 pause 아래 스택 전부 제거. (67) 배율 표시만 남김.
+  - 테스트: `game/tests/admin_buttons_gone.lua` — play.lua에 adminButtons 테이블/드로우 없음.
+
 ## 처리 완료
 (54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
   - 완료: `sfx.play(name, uniqueKey, volume?)` — default 0.6. Planet keeps `sfx.play("collision")`. Debris loop one-line `sfx.play("collision", nil, 0.9)`. Moon/comet unchanged.
