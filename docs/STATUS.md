@@ -1,8 +1,8 @@
 ## Current Status
-- R1 lane C: extracted planet-label locale regression coverage from `game/self_test.lua` into `game/tests/legacy_planet_label_i18n.lua`.
-  - Preserved the English/Korean non-empty checks for discovery, central-star, part-availability, hub, and shop labels, including the final locale reset; production behavior is unchanged.
-  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN. `game/self_test.lua` shrank from 4,520 to 4,501 lines.
-  - Next slice: extract the Earth settle-radius regression block into `game/tests/legacy_earth_settle_radius.lua`.
+- R1 lane C: extracted Earth settle-radius regression coverage from `game/self_test.lua` into `game/tests/legacy_earth_settle_radius.lua`.
+  - Preserved visual/settle/reentry radii, launch spawn offset, and outside-settle-radius assertions; production behavior is unchanged.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN. `game/self_test.lua` shrank from 4,501 to 4,484 lines.
+  - Next slice: extract the sample collect zoom/time-slip regression block into `game/tests/legacy_collect_zoom.lua`.
 
 - INBOX 61(40): gear-editor KO/EN locale toggle.
   - Toolbar KO | EN buttons; preference in `localStorage` (`gear-editor-locale`).

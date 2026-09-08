@@ -2059,3 +2059,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - R1 lane C: extracted settlement slot-row regression coverage from `game/self_test.lua` into `game/tests/legacy_settlement_slot_row.lua`.
   - Preserved the five contiguous touch rows and the slot-result, gear, scout, and relaunch draw-band containment assertions; production behavior is unchanged.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN. `game/self_test.lua` shrank from 4,565 to 4,520 lines.
+
+## Archived from STATUS.md (2026-09-08 21:46)
+
+- R1 lane C: extracted planet-label locale regression coverage from `game/self_test.lua` into `game/tests/legacy_planet_label_i18n.lua`.
+  - Preserved the English/Korean non-empty checks for discovery, central-star, part-availability, hub, and shop labels, including the final locale reset; production behavior is unchanged.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN. `game/self_test.lua` shrank from 4,520 to 4,501 lines.
+  - Next slice: extract the Earth settle-radius regression block into `game/tests/legacy_earth_settle_radius.lua`.
