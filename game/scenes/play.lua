@@ -12,6 +12,9 @@ local leaderboardClient = require("game.leaderboard_client")
 local sfx = require("game.sfx")
 local M = {}
 local play_star = require("game.scenes.play_star")
+local playPlanets = require("game.scenes.play_planets")
+playPlanets.install(M)
+local planetColor = playPlanets.planetColor
 M.__index = M
 
 -- Shared sprite drawing primitives extracted from this oversized scene.
@@ -385,11 +388,8 @@ M.showLaunchLoadoutTitle = false
 -- drawMinimapSprite / rimMarker* / galaxyChartLineColor / galaxyChartFillColor
 -- → moved to game/scenes/play_minimap.lua (installed on M at top of file)
 
-local function planetColor(hue)
-    if hue < 0.33 then return 0.35, 0.75, 1 end
-    if hue < 0.66 then return 0.95, 0.55, 0.3 end
-    return 0.65, 0.45, 0.95
-end
+-- Planet tint, deterministic variation, and sprite-path rules are installed
+-- from play_planets.lua above.
 
 -- Sample-tier presentation and floating-label feedback rules are installed
 -- from play_sample_visuals.lua and play_sample_feedback.lua above.
@@ -463,45 +463,6 @@ function M.settlementRowBackgroundColor(index)
     return settlementRowBackgroundColors[(index - 1) % #settlementRowBackgroundColors + 1]
 end
 
-
--- Deterministic per-planet visual variation from planet.id.
--- Returns rotation (radians, 0..2π) and scaleFactor (0.85..1.15).
--- Same id always gives the same result; different ids give different values.
-function M.planetVariation(planet)
-    if not planet or not planet.id then return 0, 1.0 end
-    -- Simple deterministic hash from the planet id string
-    local idStr = tostring(planet.id)
-    local h = 0
-    for i = 1, #idStr do
-        h = (h * 31 + idStr:byte(i)) % 65521
-    end
-    local rotation = (h % 360) * (math.pi / 180)        -- 0..2π
-    local scaleFactor = 0.85 + (h % 100) / 100 * 0.30   -- 0.85..1.15
-    return rotation, scaleFactor
-end
-
--- Resolve the planet image path based on starType / hub / shop flags.
--- Used by self_test to verify wiring without requiring love.graphics.
-function M.planetImagePathForPlanet(planet)
-    local ppTypes = { ice = true, lava = true, dry = true, gas = true, earth = true, bare = true }
-    -- Hub and shop planets use pp_<starType> when their galaxy has a known starType,
-    -- falling back to dedicated planet_hub/planet_shop sprites otherwise.
-    if planet.hub then
-        if planet.galaxyStarType and ppTypes[planet.galaxyStarType] then
-            return "assets/planet/pp_" .. planet.galaxyStarType .. ".png"
-        end
-        return "assets/planet/planet_hub.png"
-    elseif planet.isShop then
-        if planet.galaxyStarType and ppTypes[planet.galaxyStarType] then
-            return "assets/planet/pp_" .. planet.galaxyStarType .. ".png"
-        end
-        return "assets/planet/planet_shop.png"
-    elseif planet.galaxyStarType and ppTypes[planet.galaxyStarType] then
-        return "assets/planet/pp_" .. planet.galaxyStarType .. ".png"
-    else
-        return "assets/planet/planet_generic.png"
-    end
-end
 
 function M.new(options)
     options = options or {}

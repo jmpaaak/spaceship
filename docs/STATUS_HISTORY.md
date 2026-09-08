@@ -1482,3 +1482,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added engine-hosted `game/tests/play_sample_feedback.lua`; observed RED for the missing module, then GREEN after extraction and registered only the test entry point in `self_test.lua`.
   - `play.lua` reduced from 3378 lines / 166584 bytes to 3354 lines / 165592 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
+
+## Archived from STATUS.md (2026-09-08 13:33)
+
+- R1: `play.lua` runtime sprite helper extraction.
+  - Added `game/scenes/play_sprites.lua` for PNG color-type validation, guarded image loading, sprite-map loading, and cached part icons; the scene keeps its existing public API through `install()`.
+  - Added engine-hosted `game/tests/play_sprites.lua`; observed RED for the missing module, then GREEN after extraction and registered only its entry point in `self_test.lua`.
+  - `play.lua` reduced from 3354 lines / 165592 bytes to 3282 lines / 163571 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).

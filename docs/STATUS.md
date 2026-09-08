@@ -1,8 +1,9 @@
 ## Current Status
-- R1: `play.lua` runtime sprite helper extraction.
-  - Added `game/scenes/play_sprites.lua` for PNG color-type validation, guarded image loading, sprite-map loading, and cached part icons; the scene keeps its existing public API through `install()`.
-  - Added engine-hosted `game/tests/play_sprites.lua`; observed RED for the missing module, then GREEN after extraction and registered only its entry point in `self_test.lua`.
-  - `play.lua` reduced from 3354 lines / 165592 bytes to 3282 lines / 163571 bytes.
+
+- R1: `play.lua` planet presentation rule extraction.
+  - Added pure `game/scenes/play_planets.lua` for planet tint selection, deterministic ID-based rotation/scale, and PixelPlanets/fallback sprite-path routing; `install()` preserves the scene API.
+  - Added engine-hosted `game/tests/play_planets.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
+  - `play.lua` reduced from 3282 lines / 163571 bytes to 3243 lines / 161851 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
@@ -153,6 +154,6 @@
 
 ## Next slice
 
-- R1: extract planet presentation rules (`planetColor`, `planetVariation`, and `planetImagePathForPlanet`) from `game/scenes/play.lua` into pure `game/scenes/play_planets.lua`; preserve the scene API and reduce `play.lua` further before INBOX feature work.
+- R1: extract pure re-entry presentation rules (`reentryDrawOffsetX`, `reentryShakeFromDistance`, and `reentryHeatVignetteAlpha`) from `game/scenes/play.lua` into `game/scenes/play_reentry.lua`; preserve the scene API and reduce `play.lua` further before INBOX feature work.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
