@@ -47,6 +47,8 @@ function M.run()
         "INBOX 78: the home central star must load the approved Asset Studio derivative")
     assert(studioPaths.lava == "assets/star/studio/star_filament.png",
         "INBOX 78: lava central stars must load the approved filament derivative")
+    assert(studioPaths.dry == "assets/star/studio/star_cme.png",
+        "INBOX 78: dry central stars must load the approved CME derivative")
 
     calls = {}
     local studioSun = { getDimensions = function() return 128, 128 end }
@@ -87,6 +89,31 @@ function M.run()
     play_star.drawCentralStar(isolatedLavaState, 0, 0, 80, {starType = "dry"}, 0)
     assert(#calls == 1 and calls[1].img == isolatedLavaState.starSheetImages.dry,
         "INBOX 78: the lava candidate must not replace another central-star type")
+
+    calls = {}
+    local studioCme = { getDimensions = function() return 128, 128 end }
+    local dryStudioState = {
+        studioStarImages = { dry = studioCme },
+        starTypeImages = { dry = dummyPlayState.starTypeImages.earth },
+        starSheetImages = { dry = dummyPlayState.starSheetImages.earth },
+    }
+    play_star.drawCentralStar(dryStudioState, 45, 70, 72, {starType = "dry"}, 0)
+    assert(#calls == 1 and calls[1].img == studioCme,
+        "INBOX 78: a decoded studio CME must take priority for dry central stars")
+    assert(calls[1].args[1] == 45 and calls[1].args[2] == 70
+            and calls[1].args[4] == 1.125 and calls[1].args[5] == 1.125
+            and calls[1].args[6] == 64 and calls[1].args[7] == 64,
+        "INBOX 78: studio CME drawing must preserve the central-star center and diameter")
+
+    calls = {}
+    local isolatedCmeState = {
+        studioStarImages = { dry = studioCme },
+        starTypeImages = { gas = dummyPlayState.starTypeImages.earth },
+        starSheetImages = { gas = dummyPlayState.starSheetImages.earth },
+    }
+    play_star.drawCentralStar(isolatedCmeState, 0, 0, 80, {starType = "gas"}, 0)
+    assert(#calls == 1 and calls[1].img == isolatedCmeState.starSheetImages.gas,
+        "INBOX 78: the CME candidate must not replace another central-star type")
 
     calls = {}
     local unrelatedStudioState = {

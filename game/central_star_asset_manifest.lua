@@ -19,6 +19,14 @@ M.stars = {
         height = 128,
         sha256 = "4925ef241b546e8bc6e371b51914d8fbcf90e7eda55f0dbe2002bd6f5d651ac5",
     },
+    dry = {
+        id = "star_cme_nasa_gsfc_20171208_archive_e001770",
+        runtimePath = "assets/star/studio/star_cme.png",
+        masterPath = "docs/assets/masters/star/star_cme_nasa_gsfc_20171208_archive_e001770_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "a75396e7083586f15f1e165917e11312a95e18dd956677de3ca7b4e333dca105",
+    },
 }
 
 return M

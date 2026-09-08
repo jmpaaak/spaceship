@@ -4957,12 +4957,12 @@
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
-    "note": "Unwired central-star candidate; actual runtime load path waits for Lane D.",
+    "note": "Lane D runtime mapping for dry-type galaxy central stars; decoded studio image takes priority with the legacy exact-type/sun/circle fallback retained.",
     "downloaded_at": "2026-09-09T02:05:41+09:00",
     "sha256": "a75396e7083586f15f1e165917e11312a95e18dd956677de3ca7b4e333dca105",
     "width": 128,
     "height": 128,
-    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+    "qa": "Lane D runtime wired; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, live API validation 5/5, decoded-image precedence, legacy fallback, dry-type isolation, and unchanged central-star geometry verified"
   },
   {
     "path": "assets/star/studio/star_flare.png",
