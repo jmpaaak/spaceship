@@ -3,7 +3,6 @@ local viewport = require("game.viewport")
 local shipModule = require("game.ship")
 local world = require("game.world")
 local expedition = require("game.expedition")
-local collectionStore = require("game.collection_store")
 local PlayScene = require("game.scenes.play")
 local M = {}
 
@@ -110,34 +109,7 @@ function M.run()
 
     require("game.tests.legacy_destruction_persistence").run()
 
-    -- collection_store: persists discovered specimen ids across instances
-    -- (mirrors best_altitude_store's file-round-trip test above), and
-    -- record() only reports true (a "new" discovery) the first time a
-    -- given id is seen.
-    local testCollection = "self-test-specimen-collection.txt"
-    love.filesystem.remove(testCollection)
-    local specimenStore = collectionStore.new(testCollection)
-    local emptyIds = specimenStore:load()
-    assert(next(emptyIds) == nil)
-    assert(specimenStore:record("azure_common") == true)
-    assert(specimenStore:record("azure_common") == false)
-    assert(specimenStore:record("ember_rare") == true)
-    local reloadedStore = collectionStore.new(testCollection)
-    local reloadedIds = reloadedStore:load()
-    assert(reloadedIds.azure_common == true)
-    assert(reloadedIds.ember_rare == true)
-    assert(reloadedIds.void_epic == nil)
-    assert(reloadedStore:record("azure_common") == false)
-    assert(love.filesystem.remove(testCollection))
-
-    -- PlayScene wires collectionStore into collectedSpecimens on
-    -- construction and drawSpecimenStrip/specimenProgress read from it
-    -- without erroring even when nothing has been collected yet.
-    local specimenScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        collectionStore = { load = function() return { azure_common = true } end, record = function() return true end },
-    })
-    assert(specimenScene.collectedSpecimens.azure_common == true)
+    require("game.tests.legacy_collection_store").run()
 
     local savedBest = 40
     local fakeStore = {
@@ -2502,6 +2474,7 @@ function M.run()
     require("game.tests.self_test_loadout_lines_extraction").run()
     require("game.tests.self_test_shop_loadout_lines_extraction").run()
     require("game.tests.self_test_destruction_persistence_extraction").run()
+    require("game.tests.self_test_collection_store_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
