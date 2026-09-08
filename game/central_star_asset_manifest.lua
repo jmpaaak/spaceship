@@ -35,6 +35,14 @@ M.stars = {
         height = 128,
         sha256 = "e049d64e81561b3b66540972b0060016f6c57ea622d1a4d99bbb3349d5d34665",
     },
+    bare = {
+        id = "star_sdo_nasa_pia26681",
+        runtimePath = "assets/star/studio/star_sdo.png",
+        masterPath = "docs/assets/masters/star/star_sdo_nasa_pia26681_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "6774e2999a2bfc2cdd15d3a579db2b0312c8eb035417470aa38e87741a7b7d0f",
+    },
 }
 
 return M

@@ -51,6 +51,8 @@ function M.run()
         "INBOX 78: dry central stars must load the approved CME derivative")
     assert(studioPaths.gas == "assets/star/studio/star_flare.png",
         "INBOX 78: gas central stars must load the approved solar-flare derivative")
+    assert(studioPaths.bare == "assets/star/studio/star_sdo.png",
+        "INBOX 78: bare central stars must load the approved SDO derivative")
 
     calls = {}
     local studioSun = { getDimensions = function() return 128, 128 end }
@@ -141,6 +143,31 @@ function M.run()
     play_star.drawCentralStar(isolatedFlareState, 0, 0, 80, {starType = "bare"}, 0)
     assert(#calls == 1 and calls[1].img == isolatedFlareState.starSheetImages.bare,
         "INBOX 78: the flare candidate must not replace another central-star type")
+
+    calls = {}
+    local studioSdo = { getDimensions = function() return 128, 128 end }
+    local bareStudioState = {
+        studioStarImages = { bare = studioSdo },
+        starTypeImages = { bare = dummyPlayState.starTypeImages.earth },
+        starSheetImages = { bare = dummyPlayState.starSheetImages.earth },
+    }
+    play_star.drawCentralStar(bareStudioState, 50, 75, 104, {starType = "bare"}, 0)
+    assert(#calls == 1 and calls[1].img == studioSdo,
+        "INBOX 78: a decoded studio SDO image must take priority for bare central stars")
+    assert(calls[1].args[1] == 50 and calls[1].args[2] == 75
+            and calls[1].args[4] == 1.625 and calls[1].args[5] == 1.625
+            and calls[1].args[6] == 64 and calls[1].args[7] == 64,
+        "INBOX 78: studio SDO drawing must preserve the central-star center and diameter")
+
+    calls = {}
+    local isolatedSdoState = {
+        studioStarImages = { bare = studioSdo },
+        starTypeImages = { ice = dummyPlayState.starTypeImages.earth },
+        starSheetImages = { ice = dummyPlayState.starSheetImages.earth },
+    }
+    play_star.drawCentralStar(isolatedSdoState, 0, 0, 80, {starType = "ice"}, 0)
+    assert(#calls == 1 and calls[1].img == isolatedSdoState.starSheetImages.ice,
+        "INBOX 78: the SDO candidate must not replace another central-star type")
 
     calls = {}
     local unrelatedStudioState = {
