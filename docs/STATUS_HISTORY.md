@@ -1684,3 +1684,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 8,407 to 8,377 lines.
   - Preserved the engine-hosted `love.filesystem` contract and every existing schema assertion unchanged.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 17:05)
+
+- R1 (Lane C, partial): extracted effect-schema expansion coverage to `game/tests/legacy_gear_effect_schema.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,377 to 8,270 lines.
+  - Preserved all gear calculations, editor-source sync assertions, and the engine-hosted `love.filesystem` boundary unchanged.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
