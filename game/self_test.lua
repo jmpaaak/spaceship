@@ -114,6 +114,7 @@ local function runGearTests()
     require("game.tests.legacy_slot_spin_cost_and_miss").run()
     require("game.tests.legacy_slot_editor_web_ui").run()
     testItem15DeadSlotConstantsRemoved()
+    require("game.tests.legacy_slot_5_symbol_weighted_rng").run()
     testStellarSynergies()
     testExpeditionStellarSynergies()
     testStellarSynergyHUD()
@@ -333,41 +334,6 @@ testStellarSynergyHUD = function()
         .. "', got: '" .. tostring(lNebula.synergies[1]) .. "'")
 end
 
-
--- INBOX-61(35): 5-symbol weighted RNG test.
--- Kept outside M.run() to avoid Lua's 200-local-per-function cap.
-local function testSlot5SymbolWeightedRNG()
-    local run = expedition.new()
-    local total = expedition.slotTotalWeight
-    local seen = {}
-    -- Run 200 deterministic spins across the full [0, totalWeight) range
-    -- to guarantee every symbol is reachable. We sweep the range evenly
-    -- plus a few targeted rolls near each symbol boundary.
-    local spinCount = 200
-    for i = 0, spinCount - 1 do
-        local roll = math.floor(i * total / spinCount)
-        local result = expedition.earthSlotSpin(run, nil, {
-            reels = { roll, roll, roll },
-        })
-        for _, sym in ipairs(result.symbols) do
-            seen[sym] = true
-        end
-    end
-    -- Also sweep roll values 0 through totalWeight-1 explicitly
-    for r = 0, total - 1 do
-        local result = expedition.earthSlotSpin(run, nil, {
-            reels = { r, r, r },
-        })
-        for _, sym in ipairs(result.symbols) do
-            seen[sym] = true
-        end
-    end
-    for _, sym in ipairs(expedition.slotSymbols) do
-        assert(seen[sym],
-            "INBOX-61(35): symbol " .. sym .. " was never drawn — weighted RNG does not cover all 5 symbols")
-    end
-    print("INBOX-61(35) slot 5-symbol weighted OK")
-end
 
 function M.run()
     require("game.i18n").setLocale("en")

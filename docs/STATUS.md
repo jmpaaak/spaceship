@@ -1,11 +1,4 @@
 ## Current Status
-- INBOX 61(27): Asset Studio sprite-gen server.
-  - New `tools/serve_editors.py`: static repo server + `POST /api/sprite-gen` `{prompt, width, height, image?}`.
-  - Tries Python `sprite-gen`; missing/fail → deterministic PIL procedural PNG (same prompt → same pixels). Optional base64 `image` conditions the fallback.
-  - `tools/asset-studio/editor.js` `generateFromPromptAsync` fetches `/api/sprite-gen` and paints sourceCanvas; unreachable server uses the old local xorshift still.
-  - Test `tools.test_serve_editors` GREEN (PNG decode, 400 on missing prompt, image conditioning, determinism). `make test` now runs that unittest.
-  - play.lua / self_test.lua untouched.
-
 - INBOX 61(26) (c): Gear part balance and tier differentiation (hull_parts.json / engine_parts.json rebalance).
   - Common cards rebalanced to always feature a single flat effect, boosted to a 5~12 minimum value range, enforcing their identity as solid foundational pieces.
   - Uncommon cards rebalanced to precisely dual flat effects (guaranteed combination).
@@ -143,8 +136,12 @@
   - Preserved the English i18n assertions, equipped hull-slot popup interaction, destruction snapshot, and keep-one relaunch behavior unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,426 to 4,382 lines.
 
+- R1 (Lane C, partial): extracted `testSlot5SymbolWeightedRNG` into `game/tests/legacy_slot_5_symbol_weighted_rng.lua`.
+  - Preserved its 200 evenly swept deterministic spins, explicit full-weight-range sweep, all-five-symbol assertions, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,382 to 4,348 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract `testSlot5SymbolWeightedRNG` from `game/self_test.lua` into `game/tests/legacy_slot_5_symbol_weighted_rng.lua`, preserving its deterministic weighted-roll coverage for all five slot symbols.
+- R1 (Lane C): extract `testItem15DeadSlotConstantsRemoved` from `game/self_test.lua` into `game/tests/legacy_dead_slot_constants.lua`, preserving the removed constants, return-control fields, and fresh-scene state assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

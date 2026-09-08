@@ -2081,3 +2081,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - KO: card title = `nameKo`, effects = i18n `effect_*` KO, rarity/suit/synergy Korean.
   - EN: card title = `name`, effects/rarity/suit/synergy English. Seven synergies switch with locale. No symbol prefixes.
   - Test `tools.test_gear_editor_locale` GREEN (wired into `make test`). play.lua / self_test.lua untouched.
+
+## Archived from STATUS.md (2026-09-08 22:00)
+
+- INBOX 61(27): Asset Studio sprite-gen server.
+  - New `tools/serve_editors.py`: static repo server + `POST /api/sprite-gen` `{prompt, width, height, image?}`.
+  - Tries Python `sprite-gen`; missing/fail → deterministic PIL procedural PNG (same prompt → same pixels). Optional base64 `image` conditions the fallback.
+  - `tools/asset-studio/editor.js` `generateFromPromptAsync` fetches `/api/sprite-gen` and paints sourceCanvas; unreachable server uses the old local xorshift still.
+  - Test `tools.test_serve_editors` GREEN (PNG decode, 400 on missing prompt, image conditioning, determinism). `make test` now runs that unittest.
+  - play.lua / self_test.lua untouched.
