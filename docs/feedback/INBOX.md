@@ -62,6 +62,18 @@
   - 중심별(태양 우물) `star_sample` 루프와는 별개. 태양 우물 10초 생존 보상도 허브가 아니면 hub_sample 쓰지 말 것.
   - 파일: `assets/sfx/hub_sample.mp3`. 테스트: `game/tests/hub_sample_sfx.lua`.
 
+(61) **슬롯 당첨량 전수 점검 — 수확은 상점 1업 단위로 실제 적용** (msg `1546713497088299108`)
+  - 담당: `game/expedition.lua` `earthSlotSpin` + `game/scenes/play_slot.lua` 정산. play.lua 금지.
+  - 계약 (사용자 확정): 슬롯 보상 = **상점 해당 업그레이드 1회분 대비**.
+    HARVEST 상점 1업 = `sampleYieldUpgradeAmount` **+0.10** (`x1.00→x1.10`).
+  - 버그: `earthSlotSpin`은 HARVEST 2매치 `rewardValue=0.10*tier`, 3매치 `0.50*tier`인데, `play_slot.lua`는 **항상 `sampleYieldUpgradeLevel + 1`만** 함. 3매치가 화면엔 +0.50인데 실제는 +0.10.
+  - 수정:
+    (a) HARVEST 정산: `levels = round(rewardValue / sampleYieldUpgradeAmount)` 만큼 레벨 증가. 홈 은하 2매치 = +1업(+0.10), 3매치 = +5업(+0.50).
+    (b) 결과 문구의 `수확 +N`이 **실제로 오른 배수**와 같게 (`+0.10` / `+0.50` * tier).
+    (c) SPEED / DURABILITY / MONEY / PART도 상점 1회분과 비교해 표로 검증. SPEED는 `slotSpeedBonus += rewardValue` (이미 값 적용). DURABILITY는 레벨+=rv. 상점 1회가 +1인데 슬롯 2매치 +3*tier / 3매치 +10*tier면 유지(이미 1회 대비 큰 값). 수확만 미적용이 핵심.
+    (d) `sampleYieldMultiplier`가 슬롯 정산 후 `1 + level * 0.10`으로 맞는지 테스트.
+  - 테스트: `game/tests/slot_payout_audit.lua` — 2매치 HARVEST 후 multiplier +0.10, 3매치 후 +0.50 (level +1 / +5). 기존 `harvest_hull_upgrade.lua` rewardValue 0.10/0.50 유지.
+
 ## 처리 완료
 (52) **타이틀 함선 아이들 모션** (msg `1546710064830877696`)
   - 완료: `title.lua` `shipIdlePose(t)` — ±7° diagonal tilt, slow bob (|oy|≤8), tiny sway (|ox|≤3). Draw uses nearest ×7 `ship_default.png` rotated around sprite center. Asset unchanged.
