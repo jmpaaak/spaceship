@@ -1,7 +1,7 @@
 ## Current Status
-- R1 (Lane C, partial): extracted Earth-slot profile reward coverage to `game/tests/legacy_earth_slot_profile_reward_variation.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,253 to 5,145 lines.
-  - Preserved deterministic solar/fringe/void HARVEST reels, exposed reward profiles, and void-versus-solar no-match risk assertions without changing production code.
+- R1 (Lane C, partial): extracted slot spin cost/miss settlement coverage to `game/tests/legacy_slot_spin_cost_and_miss.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,145 to 5,052 lines.
+  - Preserved configured spin cost, deterministic miss/pair/triple rewards, insufficient-funds rejection, and settlement money application without changing production code.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
@@ -146,6 +146,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testSlotSpinCostAndMissPaysZero` from `game/self_test.lua` to `game/tests/legacy_slot_spin_cost_and_miss.lua`, preserving configured cost/reward loading, deterministic symbol/reward assertions, and missing-config defaults.
+- R1 (Lane C): extract `testEarthSlotPartReplacement` from `game/self_test.lua` to `game/tests/legacy_earth_slot_part_replacement.lua`, preserving part equip, duplicate refund, and full-loadout replacement-modal assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
