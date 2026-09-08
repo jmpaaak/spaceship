@@ -18,33 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
-local function testGearGalaxyExclusiveWiring()
-    local hullPool = gear.loadHullParts()
-    local earthPool = gear.earthShopPool(hullPool)
-    local hasExclusive = false
-    for _, part in ipairs(hullPool) do
-        if part.galaxyExclusive then hasExclusive = true end
-    end
-    if hasExclusive then
-        assert(#earthPool < #hullPool, "Earth shop pool must exclude galaxy-exclusive parts")
-        for _, part in ipairs(earthPool) do
-            assert(not part.galaxyExclusive, "Earth shop pool must not contain galaxy-exclusive parts")
-        end
-    end
-
-    local specific = gear.galaxySpecificGear(hullPool, "galaxy:1:2")
-    assert(specific, "galaxySpecificGear must return a part")
-
-    local expedition = require("game.expedition")
-    local run = expedition.new()
-    local offer1 = expedition.exploreHub(run, "galaxy:1:2", hullPool)
-    assert(offer1 and offer1.id == specific.id, "exploreHub must return the deterministic galaxy-specific gear")
-    assert(run.hubExplored["galaxy:1:2"], "exploreHub must mark the hub as explored")
-
-    local offer2 = expedition.exploreHub(run, "galaxy:1:2", hullPool)
-    assert(offer2 == nil, "exploreHub must return nil on subsequent visits to the same hub in the same run")
-end
-
 -- Item 7 follow-up gap: item 7's acquisition-path text explicitly says
 -- galaxy-exclusive gear is not scoped to a single card category -- "특정
 -- 은하 고유의 희귀 장비는 지구에서 판매하지 않는다" applies to both hull
@@ -1730,7 +1703,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_no_slot_cost_edition_wiring").run()
     require("game.tests.legacy_gear_no_slot_cost_engine_slot_wiring").run()
     require("game.tests.legacy_gear_irradiated_synergy_wiring").run()
-    testGearGalaxyExclusiveWiring()
+    require("game.tests.legacy_gear_galaxy_exclusive_wiring").run()
     testGearGalaxyExclusiveEnginePoolWiring()
     testSlotExclusivePartsWiring()
     testGearExploreHubEditionRolling()

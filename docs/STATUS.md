@@ -1,7 +1,7 @@
 ## Current Status
-- R1 (Lane C, partial): extracted irradiated-edition synergy wiring coverage to `game/tests/legacy_gear_irradiated_synergy_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 6,481 to 6,434 lines.
-  - Preserved shared-tag bonus amplification, two-irradiated-part stacking, and non-overlapping-tag isolation assertions unchanged; the extracted module has no `love.*` boundary.
+- R1 (Lane C, partial): extracted galaxy-exclusive hull wiring coverage to `game/tests/legacy_gear_galaxy_exclusive_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,434 to 6,407 lines.
+  - Preserved Earth-pool exclusion, deterministic galaxy-specific selection, explored-hub marking, and one-offer-per-hub assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
@@ -151,6 +151,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearGalaxyExclusiveWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving Earth-pool exclusion, deterministic galaxy-specific selection, and one-offer-per-hub assertions.
+- R1 (Lane C): extract `testGearGalaxyExclusiveEnginePoolWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving engine-pool exclusivity, Earth-pool exclusion, deterministic per-galaxy variety, and one-offer-per-hub assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
