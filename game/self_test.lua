@@ -10419,6 +10419,7 @@ function M.run()
     require("game.tests.title_to_launch_gate").run()
     require("game.tests.hud_record_label").run()
     require("game.tests.star_sprite").run()
+    require("game.tests.play_draw").run()
 
     print("SPACESHIP_UNIT_OK")
 end

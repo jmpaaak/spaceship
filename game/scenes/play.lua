@@ -14,6 +14,17 @@ local M = {}
 local play_star = require("game.scenes.play_star")
 M.__index = M
 
+-- Shared sprite drawing primitives extracted from this oversized scene.
+require("game.scenes.play_draw").install(M)
+local drawHudSpriteOrPoly = M.drawHudSpriteOrPoly
+local drawPlanetEffectSprite = M.drawPlanetEffectSprite
+local drawCollectOrbitRing = M.drawCollectOrbitRing
+local drawFloatingIconSprite = M.drawFloatingIconSprite
+local drawPanelSprite = M.drawPanelSprite
+local drawShopIconSprite = M.drawShopIconSprite
+local drawStarPointSprite = M.drawStarPointSprite
+local drawPixelStar = M.drawPixelStar
+
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
 -- install() copies drawMinimap, drawShipStatsSummary, galaxyChartLineColor/FillColor,
 -- drawMinimapSprite, rimMarker constants, shipStats constants back onto M so
@@ -523,130 +534,8 @@ function M.drawCenteredIconText(iconPointsFn, iconSize, iconGap, text, x, y, w)
     love.graphics.print(text, startX + iconSize + iconGap, y)
 end
 
--- Draw a HUD sprite icon at (cx, cy) scaled to fit `size` px.
--- If image is nil, falls back to drawing the polygon produced by pointsFn.
--- Call with the icon color already set.
-local function drawHudSpriteOrPoly(image, pointsFn, cx, cy, size)
-    if image then
-        local iw, ih = image:getDimensions()
-        local scale = size / math.max(iw, ih)
-        love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
-    elseif pointsFn then
-        love.graphics.polygon("fill", pointsFn(cx, cy, size))
-    end
-end
-M.drawHudSpriteOrPoly = drawHudSpriteOrPoly
-
 -- drawMinimapSprite / rimMarker* / galaxyChartLineColor / galaxyChartFillColor
 -- → moved to game/scenes/play_minimap.lua (installed on M at top of file)
-
--- Draw a planet-effect overlay sprite centered on (cx, cy), scaled so its
--- largest dimension matches diameter. tint (r,g,b,a) is applied before draw.
--- Returns true if the image was drawn, false if image is nil (caller keeps
--- original polygon fallback).
-local function drawPlanetEffectSprite(image, cx, cy, diameter, r, g, b, a)
-    if not image then return false end
-    local iw, ih = image:getDimensions()
-    local scale = diameter / math.max(iw, ih)
-    love.graphics.setColor(r or 1, g or 1, b or 1, a or 1)
-    love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
-    return true
-end
-M.drawPlanetEffectSprite = drawPlanetEffectSprite
-
--- Faint thin collect-orbit ring. Opaque rim sprites stay off so the
--- fallback 1px alpha line is what the player sees on mobile.
-local function drawCollectOrbitRing(x, y, planetRadius, r, g, b, rimImage)
-    local radius = M.collectOrbitRadius(planetRadius)
-    local alpha = M.collectOrbitRingAlpha
-    if M.useCollectOrbitRimSprite and rimImage then
-        if drawPlanetEffectSprite(rimImage, x, y, radius * 2, r, g, b, alpha) then
-            return true
-        end
-    end
-    local prevWidth = 1
-    if love.graphics.getLineWidth then
-        prevWidth = love.graphics.getLineWidth()
-    end
-    if love.graphics.setLineWidth then
-        love.graphics.setLineWidth(M.collectOrbitRingLineWidth)
-    end
-    love.graphics.setColor(r or 1, g or 1, b or 1, alpha)
-    love.graphics.circle("line", x, y, radius)
-    if love.graphics.setLineWidth then
-        love.graphics.setLineWidth(prevWidth)
-    end
-    return false
-end
-M.drawCollectOrbitRing = drawCollectOrbitRing
-
--- Draw a floating-text icon sprite to the left of a floating text label.
--- image: the icon (may be nil -> no icon drawn). cx, cy: center of the icon.
--- size: target pixel size of the icon. alpha: overall opacity 0-1.
--- Returns true if drawn, false if image is nil.
-local function drawFloatingIconSprite(image, cx, cy, size, alpha)
-    if not image then return false end
-    local iw, ih = image:getDimensions()
-    local scale = size / math.max(iw, ih)
-    love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
-    return true
-end
-M.drawFloatingIconSprite = drawFloatingIconSprite
-
--- Draw a panel/overlay sprite at native pixel size (never stretch to fill
--- dest w/h). Stretching 64x64 RGB panels to viewport.width (720) is what
--- turned launch into a full-bleed red/cyan blur (INBOX 2026-09-04 regen
--- item 0). image may be nil -> caller draws its original rectangle.
--- w, h stay in the signature for callers / a later 9-slice or tile path.
--- Returns true if drawn, false if image is nil.
-local function drawPanelSprite(image, x, y, _w, _h)
-    if not image then return false end
-    love.graphics.draw(image, x, y)
-    return true
-end
-M.drawPanelSprite = drawPanelSprite
-
--- Draw a shop-icon sprite centered at (cx, cy), scaled to `size` px.
--- Used to place a small icon badge to the left of a shop row's text.
--- Returns true if drawn, false if image is nil (caller keeps the text-only row).
-local function drawShopIconSprite(image, cx, cy, size)
-    if not image then return false end
-    local iw, ih = image:getDimensions()
-    local scale = size / math.max(iw, ih)
-    love.graphics.draw(image, cx - iw * scale / 2, cy - ih * scale / 2, 0, scale, scale)
-    return true
-end
-M.drawShopIconSprite = drawShopIconSprite
-
--- Draw a star-point sprite centered at (x, y), scaled to `size` px.
--- Used instead of love.graphics.points for background/foreground stars.
--- Returns true if drawn, false if image is nil (caller keeps love.graphics.points).
-local function drawStarPointSprite(image, x, y, size)
-    if not image then return false end
-    local iw, ih = image:getDimensions()
-    local scale = size / math.max(iw, ih)
-    love.graphics.draw(image, x - iw * scale / 2, y - ih * scale / 2, 0, scale, scale)
-    return true
-end
-M.drawStarPointSprite = drawStarPointSprite
-
--- Draw a PixelPlanets sprite frame centered at (x,y), scaled so the frame
--- appears `size` pixels wide.  frameIdx is 0-based.
--- Returns true if drawn, false if image is nil (caller falls back to rectangle).
-local function drawPixelStar(image, x, y, frameW, frameH, frameCount, frameIdx, size, r, g, b, a)
-    if not image then return false end
-    local iw, ih = image:getDimensions()
-    local fi = frameIdx % frameCount
-    local quad = love.graphics.newQuad(fi * frameW, 0, frameW, frameH, iw, ih)
-    local scale = size / math.max(frameW, frameH)
-    love.graphics.setColor(r, g, b, a)
-    love.graphics.draw(image, quad,
-        x - frameW * scale / 2,
-        y - frameH * scale / 2,
-        0, scale, scale)
-    return true
-end
-M.drawPixelStar = drawPixelStar
 
 -- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
 -- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps

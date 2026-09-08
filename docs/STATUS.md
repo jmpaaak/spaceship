@@ -1,11 +1,9 @@
 ## Current Status
-- INBOX 58: Central star sprite extraction and visual upgrade.
-  - Extracted star rendering logic from `play.lua` into `game/scenes/play_star.lua`.
-  - Defined fallback sequence: exact starType sheet -> static image -> sun sheet -> sun static -> simple circle.
-  - Reworked `tools/gen_stars.py` to generate 256x256 chunky retro star sprites with jagged coronas and procedural noise instead of strict circles. Generates 4-frame rotation sheets (256x1024) for all 6 star types.
-  - Mapped `earth` home galaxy to use `star_sun.png` and `star_sun_sheet.png`.
-  - Wrote robust headless-compatible `game/tests/star_sprite.lua` verifying the correct fallback logic and sheet application. Tests GREEN.
-  - Manifest checksums and resolutions for all star assets updated.
+- R1: `play.lua` sprite-drawing primitive extraction.
+  - Added `game/scenes/play_draw.lua`; `play.lua` now installs and delegates eight sprite/orbit drawing helpers while preserving its public helper API.
+  - Added engine-hosted `game/tests/play_draw.lua`; observed RED for the missing module, then GREEN after extraction.
+  - `play.lua` reduced from 3837 lines / 185925 bytes to 3726 lines / 181093 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, smoke source/package, bundle, and asset manifest).
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -155,6 +153,6 @@
 
 ## Next slice
 
-- INBOX (58): 중심별(태양) 스프라이트가 실제로 보이게 (`game/scenes/play_star.lua`)
+- R1: extract icon geometry and centered icon/text rendering from `game/scenes/play.lua` into `game/scenes/play_icons.lua`; keep function names/API stable and reduce `play.lua` further before INBOX feature work.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

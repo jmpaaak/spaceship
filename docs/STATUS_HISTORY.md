@@ -1424,3 +1424,13 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/bgm.lua`: `tracks = { assets/sfx/space_orchestral.mp3 }`, `looping = true`, headless `love.audio` nil guard kept.
   - i18n EN/KO `title_bgm_credit` = `BGM: Space — lasercheese (CC-BY 3.0)`. Title still starts BGM on enter; `main.lua` still calls `bgm.update()`.
   - Test `game/tests/bgm.lua` (`INBOX-61(42)`) GREEN. play.lua untouched.
+
+## Archived from STATUS.md (2026-09-08 12:49)
+
+- INBOX 58: Central star sprite extraction and visual upgrade.
+  - Extracted star rendering logic from `play.lua` into `game/scenes/play_star.lua`.
+  - Defined fallback sequence: exact starType sheet -> static image -> sun sheet -> sun static -> simple circle.
+  - Reworked `tools/gen_stars.py` to generate 256x256 chunky retro star sprites with jagged coronas and procedural noise instead of strict circles. Generates 4-frame rotation sheets (256x1024) for all 6 star types.
+  - Mapped `earth` home galaxy to use `star_sun.png` and `star_sun_sheet.png`.
+  - Wrote robust headless-compatible `game/tests/star_sprite.lua` verifying the correct fallback logic and sheet application. Tests GREEN.
+  - Manifest checksums and resolutions for all star assets updated.
