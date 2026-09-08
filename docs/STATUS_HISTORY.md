@@ -1765,3 +1765,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved chain-trigger, reroll spending/refill, detection-radius, auto-collect, sample-value, and engine-slot assertions; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearSellMultiplierEngineSlotWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 18:08)
+
+- R1 (Lane C, partial): extracted sell-multiplier engine-slot coverage to `game/tests/legacy_gear_sell_multiplier_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,548 to 7,471 lines.
+  - Preserved hull/engine sell-multiplier scope, additive sample-value, and collection-award assertions; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then focused engine-hosted tests and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearCollisionRadiusRunWiring` into one `game/tests/legacy_*.lua` module.

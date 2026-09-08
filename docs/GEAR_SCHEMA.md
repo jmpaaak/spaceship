@@ -559,8 +559,8 @@ remaining item 14 gap:
   same category-agnostic combined hull+engine list as the (C)/(E)
   wrappers above (a `collisionRadius` effect can legally live on either
   slot type per the schema).
-- `game/self_test.lua`'s new `testGearCollisionRadiusRunWiring` regression-
-  checks: an unequipped run returns the base radius unmodified; a hull
+- `game/tests/legacy_gear_collision_radius_wiring.lua` regression-checks: an
+  unequipped run returns the base radius unmodified; a hull
   card with `collisionRadius = 20` shrinks a base radius of 10 to exactly
   8 through the run wrapper; an ENGINE-slot card with `collisionRadius = 50`
   also shrinks the total (base 10 → 5), confirming hull/engine
