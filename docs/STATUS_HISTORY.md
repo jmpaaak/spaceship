@@ -1533,3 +1533,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added engine-hosted `game/tests/play_collision.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
   - `play.lua` reduced from 3020 lines / 151456 bytes to 2998 lines / 150393 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
+
+## Archived from STATUS.md (2026-09-08 14:03)
+
+- R1: `play.lua` collect-orbit extraction.
+  - Added pure `game/scenes/play_collect_orbit.lua` for collection-radius calculation and orbit-ring presentation constants; injected expedition rules and `install()` preserve modifier behavior and the scene API.
+  - Added engine-hosted `game/tests/play_collect_orbit.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
+  - `play.lua` reduced from 2998 lines / 150393 bytes to 2985 lines / 149987 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
+  - Exact next slice: extract `hudDistanceRaw` and HUD line assembly into `game/scenes/play_hud_data.lua`; do not add a pending feature to `play.lua`.

@@ -10432,6 +10432,7 @@ function M.run()
     require("game.tests.play_steering").run()
     require("game.tests.play_collision").run()
     require("game.tests.play_collect_orbit").run()
+    require("game.tests.play_hud_data").run()
 
     print("SPACESHIP_UNIT_OK")
 end

@@ -134,6 +134,8 @@ M.rcsPuffDuration = rcsPuffDuration
 -- includes a 30px margin matching the gravity/collection range convention.
 M.earthCenterX = 0
 M.earthCenterY = 75
+-- Pure HUD distance and localized line assembly.
+require("game.scenes.play_hud_data").install(M, {i18n = i18n, world = world})
 M.earthVisualRadius = 68  -- 90 * 0.75 (user 2026-09-06)
 M.earthSettleRadius = 68
 -- Spawn / relaunch outside the settle disk.
@@ -752,43 +754,6 @@ function M:drawGearSlots(y)
     love.graphics.printf(i18n.t("equipped_gear_label"), 0, y - 28, viewport.width, "center")
     love.graphics.setFont(previousFont)
 end
-
-function M:hudDistanceRaw()
-    local dx = self.ship.x - M.earthCenterX
-    local dy = self.ship.y - M.earthCenterY
-    return math.sqrt(dx * dx + dy * dy)
-end
-
-function M:hudLines()
-    local run = self.expedition
-    -- Item 38d: best record shown in all phases (was launch/settlement only).
-    local best = i18n.t("hud_personal_best", math.floor(run.bestAltitude or 0))
-    -- Item 21: HUD distance = euclidean distance from Earth center to ship.
-    local dx = self.ship.x - M.earthCenterX
-    local dy = self.ship.y - M.earthCenterY
-    local dist = math.sqrt(dx * dx + dy * dy)
-    return {
-        distance = i18n.t("hud_distance", math.floor(dist)),
-        cash = i18n.t("hud_cash", run.money),
-        best = best,
-        -- docs/feedback/INBOX.md UI/HUD item 4: the launch phase's slot
-        -- forecast (S%02d) is always 0 because no return trip has
-        -- Item 11: both launch and non-launch phases now use the same
-        -- hud_status_no_slots format — the S%02d slot segment was removed
-        -- from hud_status since item-15 abolished in-flight slots and
-        -- slotOpportunities is always 0 (dead/misleading UI).
-        status = i18n.t("hud_status_no_slots", run.durability,
-            run.maxDurability, i18n.phaseAbbrev(run.phase)),
-        galaxy = (function()
-            if run.phase ~= "ascending" and run.phase ~= "launch" then return nil end
-            local g = world.galaxyContaining(self.ship.x, self.ship.y)
-            if not g then return nil end
-            return world.galaxyName(g)
-        end)(),
-        maxDurability = run.maxDurability,
-    }
-end
-
 
 -- INBOX-40: gear slots grid constants for the HUD (below left stats).
 -- 32×32px slots, hull 6 + engine 3 = 9 max, horizontal row, with a
