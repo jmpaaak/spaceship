@@ -1629,3 +1629,15 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates the unchanged decoder, bundled-pool, lookup, and malformed-schema assertions and shrank from 9,015 to 8,942 lines.
   - Observed missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
   - Next slice: extract the gear synergy engine legacy coverage from `game/self_test.lua` into `game/tests/legacy_gear_synergy.lua`.
+
+## Archived from STATUS.md (2026-09-08 16:24)
+
+- R1 (Lane C, partial): extracted launch and HUD-icon legacy coverage to `game/tests/legacy_hud_icons.lua`.
+  - `game/self_test.lua` now delegates five icon test groups and shrank from 9,401 to 9,245 lines.
+  - Preserved rocket, shield, coin, speedometer, and PNG transparency/dimension assertions unchanged.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+- R1 (Lane C, partial): extracted galaxy/minimap legacy coverage to `game/tests/legacy_galaxy_structure.lua`.
+  - `game/self_test.lua` now delegates nine galaxy/minimap test groups and shrank from 10,255 to 9,540 lines.
+  - Preserved the two repeated stencil/label checks through explicit module exports; no assertions were removed.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
