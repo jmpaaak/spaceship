@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T03:01:01+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/hub_uranus_nasa_pia18182.jpg",
+  "source_dimensions": [
+    1720,
+    1720
+  ],
+  "input_preparation": {
+    "resize": [
+      960,
+      960
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 32,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "hub_uranus",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 128,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "237031a5a39dc8a59e04c5d9cd490d11d72842082c22d612c00efff50b86c507",
+  "payload_bytes": 18718872,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

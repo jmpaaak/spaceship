@@ -4757,9 +4757,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 28,
       "paletteLimit": 64,
-      "source_dimensions": [1000, 800],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        1000,
+        800
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -4785,9 +4794,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 64,
       "paletteLimit": 64,
-      "source_dimensions": [4579, 4579],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        4579,
+        4579
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -4813,9 +4831,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 64,
       "paletteLimit": 64,
-      "source_dimensions": [1024, 1024],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        1024,
+        1024
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -4841,9 +4868,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 28,
       "paletteLimit": 64,
-      "source_dimensions": [1000, 1000],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        1000,
+        1000
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -4869,9 +4905,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 40,
       "paletteLimit": 64,
-      "source_dimensions": [1280, 720],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        1280,
+        720
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -4897,9 +4942,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 35,
       "paletteLimit": 64,
-      "source_dimensions": [2048, 1918],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        2048,
+        1918
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -4925,9 +4979,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 64,
       "paletteLimit": 64,
-      "source_dimensions": [4096, 4096],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        4096,
+        4096
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -4953,9 +5016,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 64,
       "paletteLimit": 64,
-      "source_dimensions": [4096, 4096],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        4096,
+        4096
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -4981,9 +5053,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 64,
       "paletteLimit": 64,
-      "source_dimensions": [5000, 5000],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        5000,
+        5000
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -5009,9 +5090,18 @@
       "pixelBlock": 4,
       "backgroundTolerance": 96,
       "paletteLimit": 64,
-      "source_dimensions": [900, 1000],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        900,
+        1000
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
@@ -5037,15 +5127,61 @@
       "pixelBlock": 4,
       "backgroundTolerance": 64,
       "paletteLimit": 64,
-      "source_dimensions": [4096, 4096],
-      "input_dimensions": [1024, 1024],
-      "master_dimensions": [512, 512],
+      "source_dimensions": [
+        4096,
+        4096
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
     "note": "Unwired hub-planet candidate; actual runtime load path waits for Lane D.",
     "downloaded_at": "2026-09-09T02:53:26+09:00",
     "sha256": "53cabe7fa57bdb551aff57502d97c203dac4c4c1fbcb3d05d81da62618b911b4",
+    "width": 128,
+    "height": 128,
+    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+  },
+  {
+    "path": "assets/planet/studio/hub_uranus.png",
+    "source_url": "https://images-assets.nasa.gov/image/PIA18182/PIA18182~orig.jpg",
+    "terms_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "asset_id": "hub_uranus_nasa_pia18182",
+    "prompt": "NASA/JPL-Caltech Voyager 2 Uranus photograph PIA18182 converted by the unified local Asset Studio POST /api/pixel-perfect endpoint",
+    "model": "Unified Asset Studio local Pixel Perfect API",
+    "style": "photo-derived high-resolution pixel art",
+    "settings": {
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "targetWidth": 512,
+      "targetHeight": 512,
+      "pixelBlock": 4,
+      "backgroundTolerance": 128,
+      "paletteLimit": 64,
+      "source_dimensions": [
+        1720,
+        1720
+      ],
+      "input_dimensions": [
+        1024,
+        1024
+      ],
+      "master_dimensions": [
+        512,
+        512
+      ],
+      "runtime_derivation": "integer 4x NEAREST downscale",
+      "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
+    },
+    "note": "Unwired hub-planet candidate; actual runtime load path waits for Lane D.",
+    "downloaded_at": "2026-09-09T03:01:01+09:00",
+    "sha256": "9124d59137bd7016ba170fc1a13932effaade126e45f768bd224aabb120b1764",
     "width": 128,
     "height": 128,
     "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"

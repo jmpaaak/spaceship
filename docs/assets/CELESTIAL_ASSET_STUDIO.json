@@ -250,12 +250,18 @@
         "creator": "NASA/JPL",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [1000, 800],
+        "dimensions": [
+          1000,
+          800
+        ],
         "sha256": "7f58f36ebc5f1d8d026e32720e047e29151f26ecb6babef2ce6315dc9feb1a4e"
       },
       "request": {
         "log_path": "docs/assets/runs/pp_lava_nasa_pia00703/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -272,13 +278,19 @@
       },
       "master": {
         "path": "docs/assets/masters/planet/pp_lava_nasa_pia00703_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "96d09d2fbaeb1fe253ea3808d049548c7d01564722de3d0cf6a396cd291510f3"
       },
       "runtime": {
         "path": "assets/planet/studio/pp_lava_nasa_pia00703.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -297,12 +309,18 @@
         "creator": "NASA/Apollo 17",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [4579, 4579],
+        "dimensions": [
+          4579,
+          4579
+        ],
         "sha256": "cb4c3d2da98ee72130ebfd2ea472fc84ede6726002c2a8c9cabd86e4deea9f0f"
       },
       "request": {
         "log_path": "docs/assets/runs/pp_earth_nasa_as17_148_22727/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -319,13 +337,19 @@
       },
       "master": {
         "path": "docs/assets/masters/planet/pp_earth_nasa_as17_148_22727_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "f479190c4cdcd7646e23d6a79ea0114af903d7f5de7b37e18e5c17d9baead3b3"
       },
       "runtime": {
         "path": "assets/planet/studio/pp_earth.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -344,12 +368,18 @@
         "creator": "NASA Goddard/SDO/AIA",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [1024, 1024],
+        "dimensions": [
+          1024,
+          1024
+        ],
         "sha256": "96ae2d0582944a62e850186333bfe2936b3ae63feab9b2e3fa2e1ef1379e82b9"
       },
       "request": {
         "log_path": "docs/assets/runs/star_sun_nasa_gsfc_20171208_archive_e002035/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -366,13 +396,19 @@
       },
       "master": {
         "path": "docs/assets/masters/star/star_sun_nasa_gsfc_20171208_archive_e002035_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "e3626e71a4581459c0aa06cae56a20c545194be1dc01d6052f76e18b643137a7"
       },
       "runtime": {
         "path": "assets/star/studio/star_sun.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -391,12 +427,18 @@
         "creator": "NASA/JPL/Voyager 2",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [1000, 1000],
+        "dimensions": [
+          1000,
+          1000
+        ],
         "sha256": "a1cac100aa0b367b9f223809b9a3006a307fb4dedf034a56b3167aecc5c48ee5"
       },
       "request": {
         "log_path": "docs/assets/runs/hub_neptune_nasa_pia00046/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -413,13 +455,19 @@
       },
       "master": {
         "path": "docs/assets/masters/planet/hub_neptune_nasa_pia00046_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "5b9cf3685ecf7fd6f372b6166fdebfaf65d60e7f0b55d5b6cb398fa021849b8f"
       },
       "runtime": {
         "path": "assets/planet/studio/hub_neptune.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -438,12 +486,18 @@
         "creator": "NASA Goddard/SDO/AIA",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [1280, 720],
+        "dimensions": [
+          1280,
+          720
+        ],
         "sha256": "e13524641873a6ec38798932ff3823f2f9fa33e27caf6c309d0f0fbe3eb4af34"
       },
       "request": {
         "log_path": "docs/assets/runs/star_filament_nasa_gsfc_20171208_archive_e002069/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -460,13 +514,19 @@
       },
       "master": {
         "path": "docs/assets/masters/star/star_filament_nasa_gsfc_20171208_archive_e002069_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "cd00a609ecc2bfde81c5429ba654ce123c7fa1ca7185f2012c9d498c9dd53765"
       },
       "runtime": {
         "path": "assets/star/studio/star_filament.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -485,12 +545,18 @@
         "creator": "NASA Goddard/SDO",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [2048, 1918],
+        "dimensions": [
+          2048,
+          1918
+        ],
         "sha256": "b04c113be83a90620723048ed56573145411c3da45e85b3cf3eed3c8f8d2e5c0"
       },
       "request": {
         "log_path": "docs/assets/runs/star_cme_nasa_gsfc_20171208_archive_e001770/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -507,13 +573,19 @@
       },
       "master": {
         "path": "docs/assets/masters/star/star_cme_nasa_gsfc_20171208_archive_e001770_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "c98749c1b57b2dc4d87a67a4e38545e7c4584f32771c2b16d70435ab720a3d25"
       },
       "runtime": {
         "path": "assets/star/studio/star_cme.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -532,12 +604,18 @@
         "creator": "NASA Goddard/SDO",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [4096, 4096],
+        "dimensions": [
+          4096,
+          4096
+        ],
         "sha256": "6000b41061b3bf17a8495a12c8723f036be1e4ab1f7debd96659463477576e51"
       },
       "request": {
         "log_path": "docs/assets/runs/star_flare_nasa_gsfc_20171208_archive_e001058/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -554,13 +632,19 @@
       },
       "master": {
         "path": "docs/assets/masters/star/star_flare_nasa_gsfc_20171208_archive_e001058_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "96a0f504425c024b4718117bbdebd9ec773dac2f62b7cbd1779537ed052d3e1a"
       },
       "runtime": {
         "path": "assets/star/studio/star_flare.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -579,12 +663,18 @@
         "creator": "NASA/GSFC/Solar Dynamics Observatory",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [4096, 4096],
+        "dimensions": [
+          4096,
+          4096
+        ],
         "sha256": "8b829280455d14fa7bbeac4d5ebe18fabacb74221344634947359ed0efd28a82"
       },
       "request": {
         "log_path": "docs/assets/runs/star_sdo_nasa_pia26681/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -601,13 +691,19 @@
       },
       "master": {
         "path": "docs/assets/masters/star/star_sdo_nasa_pia26681_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "72102997976e5edcf34ef2423efc466295484c00e88a4de57f1115713771b8f8"
       },
       "runtime": {
         "path": "assets/star/studio/star_sdo.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -626,12 +722,18 @@
         "creator": "NASA/JHUAPL/SwRI",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [5000, 5000],
+        "dimensions": [
+          5000,
+          5000
+        ],
         "sha256": "257757c3f7a481a677f2932749a8bf3b93c0874ae3a6ed5eead6ea718d7825a1"
       },
       "request": {
         "log_path": "docs/assets/runs/hub_pluto_nasa_pia19952/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -648,13 +750,19 @@
       },
       "master": {
         "path": "docs/assets/masters/planet/hub_pluto_nasa_pia19952_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "402fc0c039d99bdbb2cb00fea67531364a00753b373f282a860f8803357835fa"
       },
       "runtime": {
         "path": "assets/planet/studio/hub_pluto.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -673,12 +781,18 @@
         "creator": "NASA/JPL",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [900, 1000],
+        "dimensions": [
+          900,
+          1000
+        ],
         "sha256": "6f2c49afc2d662e7d3a61addd71a4c6de483358a2e55ded1255488d28e4ad612"
       },
       "request": {
         "log_path": "docs/assets/runs/hub_saturn_nasa_pia02225/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -695,13 +809,19 @@
       },
       "master": {
         "path": "docs/assets/masters/planet/hub_saturn_nasa_pia02225_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "b367f0e11e8224947533e34003f8ba0b59c2026b2f242a4f06f9675c340e3bdf"
       },
       "runtime": {
         "path": "assets/planet/studio/hub_saturn.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
@@ -720,12 +840,18 @@
         "creator": "NASA/JPL Magellan",
         "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
         "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
-        "dimensions": [4096, 4096],
+        "dimensions": [
+          4096,
+          4096
+        ],
         "sha256": "cd54a0759bcc00f73892227a0a5fd63a87b61fca23659759b587ceda3ad28ac2"
       },
       "request": {
         "log_path": "docs/assets/runs/hub_venus_nasa_pia00104/request.json",
-        "input_dimensions": [1024, 1024],
+        "input_dimensions": [
+          1024,
+          1024
+        ],
         "target_width": 512,
         "target_height": 512,
         "pixel_block": 4,
@@ -742,17 +868,82 @@
       },
       "master": {
         "path": "docs/assets/masters/planet/hub_venus_nasa_pia00104_master.png",
-        "dimensions": [512, 512],
+        "dimensions": [
+          512,
+          512
+        ],
         "mode": "RGBA",
         "sha256": "77a65a6b2681eeb27cb7eea689dd82467235d2a865e1b2cea34345088da40577"
       },
       "runtime": {
         "path": "assets/planet/studio/hub_venus.png",
-        "dimensions": [128, 128],
+        "dimensions": [
+          128,
+          128
+        ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
         "wired": false,
         "sha256": "53cabe7fa57bdb551aff57502d97c203dac4c4c1fbcb3d05d81da62618b911b4"
+      }
+    },
+    {
+      "id": "hub_uranus_nasa_pia18182",
+      "kind": "hub_planet",
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "generated_at": "2026-09-09T03:01:01+09:00",
+      "source": {
+        "path": "docs/assets/sources/planet/hub_uranus_nasa_pia18182.jpg",
+        "url": "https://images-assets.nasa.gov/image/PIA18182/PIA18182~orig.jpg",
+        "nasa_id": "PIA18182",
+        "creator": "NASA/JPL-Caltech",
+        "license": "NASA media usage guidelines",
+        "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+        "dimensions": [
+          1720,
+          1720
+        ],
+        "sha256": "3dcc83114f1a25caa1ae1a1436830fffaa15a3e429666dbf4c68bcf035e8932b"
+      },
+      "request": {
+        "log_path": "docs/assets/runs/hub_uranus_nasa_pia18182/request.json",
+        "input_dimensions": [
+          1024,
+          1024
+        ],
+        "target_width": 512,
+        "target_height": 512,
+        "pixel_block": 4,
+        "background_tolerance": 128,
+        "palette_limit": 64,
+        "payload_sha256": "237031a5a39dc8a59e04c5d9cd490d11d72842082c22d612c00efff50b86c507"
+      },
+      "response": {
+        "log_path": "docs/assets/runs/hub_uranus_nasa_pia18182/response.json",
+        "http_status": 200,
+        "report_valid": true,
+        "body_sha256": "aedff1ad932c524510dd16e5a462c39448dc454664d9d738e988de3b9ae36c9d",
+        "image_rgba_sha256": "ea05f36c09938eb87ffb5351a5ac06b33ca3e92524c13e4e43dd9f847f1854c5"
+      },
+      "master": {
+        "path": "docs/assets/masters/planet/hub_uranus_nasa_pia18182_master.png",
+        "dimensions": [
+          512,
+          512
+        ],
+        "mode": "RGBA",
+        "sha256": "f6e3a3004e969d0460cf6a8e4e53454f362e9273b47cf7702893fc4ead57f249"
+      },
+      "runtime": {
+        "path": "assets/planet/studio/hub_uranus.png",
+        "dimensions": [
+          128,
+          128
+        ],
+        "mode": "RGBA",
+        "derivation": "integer 4x NEAREST downscale from master",
+        "wired": false,
+        "sha256": "9124d59137bd7016ba170fc1a13932effaade126e45f768bd224aabb120b1764"
       }
     }
   ]
