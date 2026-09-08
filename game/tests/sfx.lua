@@ -47,11 +47,11 @@ function M.run()
     assertSfxFile("assets/sfx/slot_spin.ogg", "OggS", "OGG")
     assertSfxFile("assets/sfx/boost.ogg", "OggS", "OGG")
 
-    local playSrc = love.filesystem.read("game/scenes/play.lua") or ""
+    local playSrc = love.filesystem.read("game/scenes/play_update.lua") or ""
     local slotSrc = love.filesystem.read("game/scenes/play_slot.lua") or ""
     local boostSrc = love.filesystem.read("game/scenes/play_boost.lua") or ""
     assert(playSrc:find('sfx.play("collect")', 1, true),
-        "INBOX (50): play.lua must play collect")
+        "INBOX (50): play_update.lua must play collect")
     assert(slotSrc:find('sfx.play("slot_spin")', 1, true),
         "INBOX (50): play_slot.lua must play slot_spin")
     assert(boostSrc:find('sfx.play("boost")', 1, true),

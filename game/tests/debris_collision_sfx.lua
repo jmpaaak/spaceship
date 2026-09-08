@@ -28,7 +28,7 @@ function M.run()
     assert(sfx.lastVolume == nil,
         "INBOX (54): duplicate uniqueKey must not replay / reset volume")
 
-    local playSrc = love.filesystem.read("game/scenes/play.lua") or ""
+    local playSrc = love.filesystem.read("game/scenes/play_update.lua") or ""
     assert(playSrc:find('sfx.play("collision")', 1, true),
         "INBOX (54): planet collision must keep sfx.play(\"collision\")")
     assert(playSrc:find('sfx.play("collision", nil, 0.9)', 1, true),

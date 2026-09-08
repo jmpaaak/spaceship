@@ -44,11 +44,11 @@ function M.run()
         assert(bgm.isPlaying, "INBOX (53): title enter must still start BGM")
     end
 
-    local playSrc = love.filesystem.read("game/scenes/play.lua") or ""
+    local playSrc = love.filesystem.read("game/scenes/play_update.lua") or ""
     assert(playSrc:find("sfx.playGalaxyDiscover(wellGalaxy)", 1, true),
-        "INBOX (53): play.lua must one-line-delegate galaxy discover")
+        "INBOX (53): play_update.lua must one-line-delegate galaxy discover")
     assert(not playSrc:find('sfx.play("galaxy_discover"', 1, true),
-        "INBOX (53): play.lua must not call sfx.play(\"galaxy_discover\") directly")
+        "INBOX (53): play_update.lua must not call sfx.play(\"galaxy_discover\") directly")
 
     print("  INBOX-53 title start SFX skip OK")
 end
