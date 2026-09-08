@@ -1663,3 +1663,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` shrank from 8,839 to 8,742 lines; the extracted module has no direct `love.*` dependency.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
   - Next slice: extract the gear-editor sync regression suite from `game/self_test.lua` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 16:49)
+
+- R1 (Lane C, partial): extracted gear-editor edition/rarity whitelist coverage to `game/tests/legacy_gear_editor_whitelists.lua`.
+  - `game/self_test.lua` delegates the unchanged `KNOWN_EDITIONS` / `KNOWN_RARITIES` sync assertions and shrank from 8,742 to 8,706 lines.
+  - The engine-hosted module preserves the existing `game.gear` and `love.filesystem` boundaries.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
