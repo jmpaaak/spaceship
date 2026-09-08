@@ -1578,3 +1578,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `play.lua` reduced from 2793 lines / 141142 bytes to 2635 lines / 133421 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
   - Exact next slice: extract `steeringButtonState` keyboard/touch presentation state into `game/scenes/play_steering_input.lua`; do not add a pending feature to `play.lua`.
+
+## Archived from STATUS.md (2026-09-08 14:53)
+
+- R1: `play.lua` update-loop extraction and preflight repair.
+  - Added `game/scenes/play_update.lua`; `M:update(dt)` now installs through explicit world, expedition, SFX, i18n, timing, haptic, and viewport dependencies while preserving the scene API.
+  - Updated the collect, galaxy-discovery, and collision SFX structural tests to inspect the owning update module; this fixes the preflight failure `game/tests/sfx.lua:53`.
+  - `play.lua` reduced from 2635 lines / 133421 bytes to 1974 lines / 100186 bytes; the extracted module is 700 lines / 34531 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
+  - Exact next slice: extract the remaining `M:draw()` scene orchestration into `game/scenes/play_scene_draw.lua`; do not add pending features to `play.lua`.
