@@ -4920,12 +4920,12 @@
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
-    "note": "Unwired central-star candidate; actual runtime load path waits for Lane D.",
+    "note": "Lane D maps this approved central-star candidate to lava-type galaxies.",
     "downloaded_at": "2026-09-09T01:32:12+09:00",
     "sha256": "4925ef241b546e8bc6e371b51914d8fbcf90e7eda55f0dbe2002bd6f5d651ac5",
     "width": 128,
     "height": 128,
-    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+    "qa": "Lane D runtime wired; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, live API validation 5/5, decoded-image precedence, legacy fallback, lava-type isolation, and unchanged central-star geometry verified"
   },
   {
     "path": "assets/star/studio/star_cme.png",

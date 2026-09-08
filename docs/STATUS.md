@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 78 Lane D wired the first approved photo-derived hub candidate, `hub_neptune_nasa_pia00046`, to ice-type hubs only.
-  - New `game/hub_planet_asset_manifest.lua` allowlists `assets/planet/studio/hub_neptune.png`; its Asset Studio and asset-catalog records are marked wired.
-  - A decoded 128×128 RGBA studio Neptune takes precedence in the hub-only draw path. Decode failure preserves the existing typed PixelPlanets/hub-sheet fallback chain.
-  - Engine-hosted tests cover manifest routing, decoded-image precedence, load-failure fallback, ordinary-planet isolation, and the existing hub geometry suite; `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
+- INBOX 78 Lane D wired the second approved photo-derived central-star candidate, `star_filament_nasa_gsfc_20171208_archive_e002069`, to lava-type galaxies only.
+  - `game/central_star_asset_manifest.lua` now allowlists `assets/star/studio/star_filament.png`; its Asset Studio and asset-catalog records are marked wired.
+  - A decoded 128×128 RGBA studio filament takes precedence over the legacy lava sheet. Decode failure keeps the existing exact-type/sun/circle fallback chain.
+  - Engine-hosted tests cover manifest routing, decoded-image precedence, other-type isolation, and unchanged center/diameter geometry; the existing world suite continues to cover central-star gravity and collision behavior. `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
 
 ## Next slice
 

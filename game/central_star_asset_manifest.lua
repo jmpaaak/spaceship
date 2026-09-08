@@ -11,6 +11,14 @@ M.stars = {
         height = 128,
         sha256 = "ab996356769c32c16a0967329f94612092a45f4d93307780ee88dc12bd939a5a",
     },
+    lava = {
+        id = "star_filament_nasa_gsfc_20171208_archive_e002069",
+        runtimePath = "assets/star/studio/star_filament.png",
+        masterPath = "docs/assets/masters/star/star_filament_nasa_gsfc_20171208_archive_e002069_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "4925ef241b546e8bc6e371b51914d8fbcf90e7eda55f0dbe2002bd6f5d651ac5",
+    },
 }
 
 return M

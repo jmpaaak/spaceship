@@ -45,6 +45,8 @@ function M.run()
     local studioPaths = play_star.studioStarImagePaths()
     assert(studioPaths.earth == "assets/star/studio/star_sun.png",
         "INBOX 78: the home central star must load the approved Asset Studio derivative")
+    assert(studioPaths.lava == "assets/star/studio/star_filament.png",
+        "INBOX 78: lava central stars must load the approved filament derivative")
 
     calls = {}
     local studioSun = { getDimensions = function() return 128, 128 end }
@@ -60,6 +62,31 @@ function M.run()
             and calls[1].args[4] == 1.25 and calls[1].args[5] == 1.25
             and calls[1].args[6] == 64 and calls[1].args[7] == 64,
         "INBOX 78: studio Sun drawing must preserve the central-star center and diameter")
+
+    calls = {}
+    local studioFilament = { getDimensions = function() return 128, 128 end }
+    local lavaStudioState = {
+        studioStarImages = { lava = studioFilament },
+        starTypeImages = dummyPlayState.starTypeImages,
+        starSheetImages = dummyPlayState.starSheetImages,
+    }
+    play_star.drawCentralStar(lavaStudioState, 30, 55, 96, {starType = "lava"}, 0)
+    assert(#calls == 1 and calls[1].img == studioFilament,
+        "INBOX 78: a decoded studio filament must take priority for lava central stars")
+    assert(calls[1].args[1] == 30 and calls[1].args[2] == 55
+            and calls[1].args[4] == 1.5 and calls[1].args[5] == 1.5
+            and calls[1].args[6] == 64 and calls[1].args[7] == 64,
+        "INBOX 78: studio filament drawing must preserve the central-star center and diameter")
+
+    calls = {}
+    local isolatedLavaState = {
+        studioStarImages = { lava = studioFilament },
+        starTypeImages = { dry = dummyPlayState.starTypeImages.earth },
+        starSheetImages = { dry = dummyPlayState.starSheetImages.earth },
+    }
+    play_star.drawCentralStar(isolatedLavaState, 0, 0, 80, {starType = "dry"}, 0)
+    assert(#calls == 1 and calls[1].img == isolatedLavaState.starSheetImages.dry,
+        "INBOX 78: the lava candidate must not replace another central-star type")
 
     calls = {}
     local unrelatedStudioState = {
