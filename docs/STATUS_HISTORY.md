@@ -1712,3 +1712,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 8,191 to 8,149 lines.
   - Preserved the hull-only effect set, per-engine-card traversal, and dead-card assertion unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 17:27)
+
+- R1 (Lane C, partial): extracted gear category/content coverage to `game/tests/legacy_gear_category_coverage.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,149 to 8,030 lines.
+  - Preserved edition-scope, hull-card viability, and engine effect-category assertions; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract the cohesive gear run/loadout wiring tests beginning at `testGearRunWiring` into one `game/tests/legacy_*.lua` module.
