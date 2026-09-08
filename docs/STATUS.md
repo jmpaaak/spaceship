@@ -1,8 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted the specimen tier/catalog characterization block into `game/tests/legacy_specimen_catalog.lua`.
-  - Preserved tier boundaries, catalog uniqueness, and stable specimen ID/label assertions unchanged behind `run()`; `game/tests/self_test_specimen_catalog_extraction.lua` enforces delegation.
-  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,216 to 3,192 lines.
-  - Exact next slice: extract the initial viewport/ship/world smoke checks from `game/self_test.lua` into one legacy suite without changing their order or assertions.
+- R1 (Lane C, partial): extracted the initial viewport, ship movement, and deterministic world smoke checks into `game/tests/legacy_initial_smoke.lua`.
+  - Preserved assertion order and inputs behind `run()`; `game/tests/self_test_initial_smoke_extraction.lua` enforces delegation.
+  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,192 to 3,167 lines.
+  - Exact next slice: extract the collision-risk preview characterization block into one legacy suite while preserving the configured `riskScene` state consumed by subsequent HUD checks.
 
 - INBOX 61(28): Boost button UI & Boost FX
   - Created `game/scenes/play_boost.lua` to extract boost logic and avoid bloating `play.lua`.
