@@ -200,3 +200,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-09T03:32:12+0900 | assets/planet/studio/pp_ice_nasa_pia00353.png | INBOX (78) Lane D: approved NASA PIA00353 Asset Studio 128x128 RGBA derivative wired for ordinary ice planets via runtime manifest
 2026-09-09T03:41:11+0900 | assets/planet/studio/pp_lava_nasa_pia00703.png | INBOX (78) Lane D: approved NASA PIA00703 Asset Studio 128x128 RGBA derivative wired for ordinary lava planets via runtime manifest
 2026-09-09T03:47:07+0900 | assets/planet/studio/pp_earth.png | INBOX (78) Lane D: approved NASA Apollo 17 AS17-148-22727 Asset Studio 128x128 RGBA derivative wired for ordinary earth planets via runtime manifest
+2026-09-09T03:55:39+0900 | assets/star/studio/star_sun.png | INBOX (78) Lane D: approved NASA GSFC SDO/AIA Asset Studio 128x128 RGBA derivative wired for the home galaxy central star via dedicated runtime manifest

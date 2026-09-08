@@ -25,7 +25,7 @@ function M.run()
     local origSetColor = love.graphics.setColor
     
     love.graphics.draw = function(img, ...)
-        table.insert(calls, {type = "draw", img = img})
+        table.insert(calls, {type = "draw", img = img, args = {...}})
     end
     love.graphics.circle = function(mode, x, y, r)
         table.insert(calls, {type = "circle", mode = mode})
@@ -41,6 +41,35 @@ function M.run()
     assert(#calls == 1, "Should draw something")
     assert(calls[1].type == "draw", "Should use draw (sheet/image)")
     assert(calls[1].img == dummyPlayState.starSheetImages.earth, "Should use earth sheet")
+
+    local studioPaths = play_star.studioStarImagePaths()
+    assert(studioPaths.earth == "assets/star/studio/star_sun.png",
+        "INBOX 78: the home central star must load the approved Asset Studio derivative")
+
+    calls = {}
+    local studioSun = { getDimensions = function() return 128, 128 end }
+    local studioState = {
+        studioStarImages = { earth = studioSun },
+        starTypeImages = dummyPlayState.starTypeImages,
+        starSheetImages = dummyPlayState.starSheetImages,
+    }
+    play_star.drawCentralStar(studioState, 25, 40, 80, {starType = "earth"}, 0)
+    assert(#calls == 1 and calls[1].img == studioSun,
+        "INBOX 78: a decoded studio Sun must take priority over the legacy earth sheet")
+    assert(calls[1].args[1] == 25 and calls[1].args[2] == 40
+            and calls[1].args[4] == 1.25 and calls[1].args[5] == 1.25
+            and calls[1].args[6] == 64 and calls[1].args[7] == 64,
+        "INBOX 78: studio Sun drawing must preserve the central-star center and diameter")
+
+    calls = {}
+    local unrelatedStudioState = {
+        studioStarImages = { earth = studioSun },
+        starTypeImages = dummyPlayState.starTypeImages,
+        starSheetImages = dummyPlayState.starSheetImages,
+    }
+    play_star.drawCentralStar(unrelatedStudioState, 0, 0, 80, {starType = "sun"}, 0)
+    assert(#calls == 1 and calls[1].img == dummyPlayState.starSheetImages.sun,
+        "INBOX 78: the home-star candidate must not replace other central-star types")
     
     calls = {}
     local missingEarthSheetState = {

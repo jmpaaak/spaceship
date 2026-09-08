@@ -1,14 +1,34 @@
+local centralStarAssets = require("game.central_star_asset_manifest")
+
 local play_star = {}
+
+function play_star.studioStarImagePaths()
+    local paths = {}
+    for starType, asset in pairs(centralStarAssets.stars) do
+        paths[starType] = asset.runtimePath
+    end
+    return paths
+end
 
 function play_star.drawCentralStar(playState, sx, sy, worldStarRadius, wellGalaxy, time)
     -- Fallback sequence:
-    -- 1. Exact starType sheet
-    -- 2. Exact starType static image
-    -- 3. "sun" sheet fallback
-    -- 4. "sun" static image fallback
-    -- 5. circle (last resort)
+    -- 1. Approved exact starType static image
+    -- 2. Exact starType sheet
+    -- 3. Exact starType legacy static image
+    -- 4. "sun" sheet fallback
+    -- 5. "sun" static image fallback
+    -- 6. circle (last resort)
 
     local starType = (wellGalaxy and wellGalaxy.starType) or "sun"
+
+    local studioStarImg = playState.studioStarImages and playState.studioStarImages[starType]
+    if studioStarImg then
+        local iw, ih = studioStarImg:getDimensions()
+        local starScale = (worldStarRadius * 2) / math.max(iw, ih)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(studioStarImg, sx, sy, 0, starScale, starScale, iw / 2, ih / 2)
+        return
+    end
 
     local starSheet = playState.starSheetImages and playState.starSheetImages[starType]
     if starSheet then

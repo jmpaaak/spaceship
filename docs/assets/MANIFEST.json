@@ -4846,12 +4846,12 @@
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
-    "note": "Unwired central-star candidate; actual runtime load path waits for Lane D.",
+    "note": "Wired through game/central_star_asset_manifest.lua for the home galaxy central star; legacy earth/sun star artwork remains the decode-failure fallback.",
     "downloaded_at": "2026-09-09T01:15:12+09:00",
     "sha256": "ab996356769c32c16a0967329f94612092a45f4d93307780ee88dc12bd939a5a",
     "width": 128,
     "height": 128,
-    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+    "qa": "Lane D runtime wired; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, live API validation 5/5, decoded-image precedence, legacy fallback, star-type isolation, and unchanged center/diameter verified"
   },
   {
     "path": "assets/planet/studio/hub_neptune.png",

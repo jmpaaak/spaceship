@@ -393,6 +393,8 @@ function M.new(options)
         earth = "assets/star/star_sun.png",
     }
     local starTypeImages = loadSpriteMap(starImagePaths)
+    local studioStarImagePaths = play_star.studioStarImagePaths()
+    local studioStarImages = loadSpriteMap(studioStarImagePaths)
     -- Rotation sprite sheets (4 frames, 64x256 vertical strip)
     local starSheetPaths = {
         sun   = "assets/star/star_sun_sheet.png",
@@ -541,6 +543,8 @@ function M.new(options)
         ppPlanetImagePaths = ppPlanetImagePaths,
         studioPlanetImages = studioPlanetImages,
         studioPlanetImagePaths = studioPlanetImagePaths,
+        studioStarImages = studioStarImages,
+        studioStarImagePaths = studioStarImagePaths,
         starTypeImages = starTypeImages,
         starImagePaths = starImagePaths,
         starSheetImages = starSheetImages,
