@@ -1648,3 +1648,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates the unchanged bundled-pool, tag matching, additive aggregation, and speed-synergy assertions.
   - Engine-hosted unit/smoke tests are GREEN after resolving the concurrent `game/expedition.lua` extraction conflict.
   - Next slice: extract engine-parts slot-separation legacy coverage from `game/self_test.lua`.
+
+## Archived from STATUS.md (2026-09-08 16:39)
+
+- R1 (Lane C, partial): extracted engine-parts slot-separation legacy coverage to `game/tests/legacy_engine_parts_slots.lua`.
+  - `game/self_test.lua` delegates the unchanged engine pool, independent hull/engine slot, capacity, overflow, and duplicate-id assertions.
+  - `game/self_test.lua` shrank from 8,894 to 8,839 lines; the extracted module has no `love.*` dependency.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.

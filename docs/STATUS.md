@@ -1,8 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted engine-parts slot-separation legacy coverage to `game/tests/legacy_engine_parts_slots.lua`.
-  - `game/self_test.lua` delegates the unchanged engine pool, independent hull/engine slot, capacity, overflow, and duplicate-id assertions.
-  - `game/self_test.lua` shrank from 8,894 to 8,839 lines; the extracted module has no `love.*` dependency.
+- R1 (Lane C, partial): extracted gear rarity/edition legacy coverage to `game/tests/legacy_gear_rarity_editions.lua`.
+  - `game/self_test.lua` delegates the unchanged rarity roll, edition roll/effect, pool-candidate, and mutation/error assertions.
+  - `game/self_test.lua` shrank from 8,839 to 8,742 lines; the extracted module has no direct `love.*` dependency.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Next slice: extract the gear-editor sync regression suite from `game/self_test.lua` into one `game/tests/legacy_*.lua` module.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
