@@ -1,4 +1,9 @@
 ## Current Status
+- R1 (Lane C, partial): extracted gear-buy economy wiring coverage to `game/tests/legacy_gear_buy_economy_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,848 to 6,721 lines.
+  - Preserved settlement gating, affordability, duplicate/slot occupancy, discount, galaxy-exclusive rejection, sale stat refresh, and hull/engine slot-independence assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
 - R1 (Lane C, partial): extracted crystallized sell-premium wiring coverage to `game/tests/legacy_gear_crystallized_sell_premium_wiring.lua`.
   - `game/self_test.lua` now delegates through `run()` and shrank from 6,930 to 6,848 lines.
   - Preserved shared-edition pricing, crystallized rarity scaling, buy/sell loss, fallback rarity, settlement credit, and hull/engine slot-independence assertions unchanged; the extracted module has no `love.*` boundary.
@@ -151,6 +156,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearBuyEconomyWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving settlement gating, affordability, slot occupancy, discount, refund, and hull/engine slot-independence assertions.
+- R1 (Lane C): extract `testGearShopPlanetPurchaseWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving phase gating, affordability, discount, galaxy-exclusive purchase, duplicate rejection, and hull/engine slot-independence assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
