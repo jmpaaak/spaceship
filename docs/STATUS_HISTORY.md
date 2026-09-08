@@ -2209,3 +2209,9 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added `tools/test_legacy_asset_studio_removed.py`; observed two expected RED failures before deletion, then focused GREEN.
   - Stopped only `/tmp/serve_editors.py` PID 48293 and its two 8766 cloudflared tunnels (PIDs 7733/41470); verified TCP 8766 has no listener. The separate MOK service on 8767 was not touched.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, Python 26/26, smoke/package/bundle/asset-manifest checks).
+
+## Archived from STATUS.md (2026-09-08 23:32)
+
+- R1 (Lane C, partial): extracted the sample-tier color, pickup-particle, sparkle, scene-time, and anticipation characterization block into `game/tests/legacy_sample_tier_visuals.lua`.
+  - Preserved the existing assertions and execution order behind `run()`; `game/tests/self_test_sample_visuals_extraction.lua` enforces delegation and prevents the body from returning to the runner.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,360 to 3,263 lines.

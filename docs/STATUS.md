@@ -1,7 +1,7 @@
 ## Current Status
-- R1 (Lane C, partial): extracted the sample-tier color, pickup-particle, sparkle, scene-time, and anticipation characterization block into `game/tests/legacy_sample_tier_visuals.lua`.
-  - Preserved the existing assertions and execution order behind `run()`; `game/tests/self_test_sample_visuals_extraction.lua` enforces delegation and prevents the body from returning to the runner.
-  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,360 to 3,263 lines.
+- R1 (Lane C, partial): extracted the collision-impact and score-proportional screen-shake characterization block into `game/tests/legacy_collision_shake.lua`.
+  - Preserved the collision update setup, common/rare/epic shake ordering, and magnitude assertions unchanged behind `run()`; `game/tests/self_test_collision_shake_extraction.lua` enforces delegation.
+  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,263 to 3,216 lines.
 
 - INBOX 61(28): Boost button UI & Boost FX
   - Created `game/scenes/play_boost.lua` to extract boost logic and avoid bloating `play.lua`.
@@ -119,6 +119,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract the adjacent collision-impact and score-proportional screen-shake characterization block from `game/self_test.lua` into one `game/tests/legacy_*.lua` suite, preserving execution order and assertions.
+- R1 (Lane C): extract the adjacent collision-risk and SAMPLE YIELD preview characterization block from `game/self_test.lua` into one `game/tests/legacy_*.lua` suite, preserving execution order and assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
