@@ -1,9 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted slot-swap economy wiring coverage to `game/tests/legacy_gear_slot_swap_economy_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 7,001 to 6,930 lines.
-  - Preserved rarity/edition sell values, in-flight rejection, settlement refunds, hull/engine slot independence, and unknown-ID rejection assertions unchanged; the extracted module has no `love.*` boundary.
+- R1 (Lane C, partial): extracted crystallized sell-premium wiring coverage to `game/tests/legacy_gear_crystallized_sell_premium_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 6,930 to 6,848 lines.
+  - Preserved shared-edition pricing, crystallized rarity scaling, buy/sell loss, fallback rarity, settlement credit, and hull/engine slot-independence assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testGearCrystallizedSellPremiumWiring` into one `game/tests/legacy_*.lua` module.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
@@ -152,6 +151,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearHullDurabilityRunWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving baseline, equip/launch refresh, stacking, engine exclusion, upgrade, ship-switch, and meta-wipe assertions.
+- R1 (Lane C): extract `testGearBuyEconomyWiring` from `game/self_test.lua` into one `game/tests/legacy_*.lua` module, preserving settlement gating, affordability, slot occupancy, discount, refund, and hull/engine slot-independence assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

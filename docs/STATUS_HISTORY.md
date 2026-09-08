@@ -1836,3 +1836,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved no-budget rejection, atomic reroll consumption/offer generation, and exhausted-budget assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearSlotSwapEconomyWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 18:56)
+
+- R1 (Lane C, partial): extracted slot-swap economy wiring coverage to `game/tests/legacy_gear_slot_swap_economy_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,001 to 6,930 lines.
+  - Preserved rarity/edition sell values, in-flight rejection, settlement refunds, hull/engine slot independence, and unknown-ID rejection assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearCrystallizedSellPremiumWiring` into one `game/tests/legacy_*.lua` module.
