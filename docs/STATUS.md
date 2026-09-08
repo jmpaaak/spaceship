@@ -1,14 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted quantum-flawed engine drawback wiring coverage to `game/tests/legacy_gear_quantum_flawed_engine_drawback_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,925 to 5,833 lines.
-  - Preserved engine-slot negative-only hull drawback stacking, positive hull isolation, edition materialization, unequip restoration, and live singularity-drive assertions without adding a `love.*` boundary.
-  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testGearEngineSynergyMultiplierWiring` to `game/tests/legacy_gear_engine_synergy_multiplier_wiring.lua` without changing assertions.
-
-- R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
-  - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
-  - Preserved joystick vectors, touch/mouse movement, heading, thrust, and RCS assertions unchanged.
-  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+- R1 (Lane C, partial): extracted engine synergy multiplier wiring coverage to `game/tests/legacy_gear_engine_synergy_multiplier_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,833 to 5,742 lines.
+  - Preserved shared-tag engine speed multiplication, unrelated-tag additive behavior, and irradiated fusion-core amplification assertions without adding a `love.*` boundary.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearBoostsUsedDestroyReset` to `game/tests/legacy_gear_boosts_used_destroy_reset.lua` without changing assertions.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -152,6 +147,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearQuantumFlawedEngineDrawbackWiring` from `game/self_test.lua` to `game/tests/legacy_gear_quantum_flawed_engine_drawback_wiring.lua`, preserving engine-slot negative hull drawback, positive hull bonus exclusion, max-durability wiring, and equipped-effect immutability assertions.
+- R1 (Lane C): extract `testGearBoostsUsedDestroyReset` from `game/self_test.lua` to `game/tests/legacy_gear_boosts_used_destroy_reset.lua`, preserving destroy/launch reset parity for boost, insurance, and reroll counters.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
