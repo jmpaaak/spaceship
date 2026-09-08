@@ -1,10 +1,4 @@
 ## Current Status
-- R1 lane C: extracted dead in-flight slot artifact characterization coverage from `game/self_test.lua` into `game/tests/legacy_dead_slot_constants.lua`.
-  - The runner now delegates through the module's `run()` entry point; removed constants, return-control fields, fresh-scene state assertions, and execution order remain unchanged.
-  - TDD evidence: missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; final `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - `game/self_test.lua` decreased by 32 lines (4,289 → 4,257); `play.lua` and `expedition.lua` were not changed.
-  - Next R1 slice: extract the RCS 0–999 gradient characterization block into `game/tests/legacy_rcs_gradient.lua`.
-
 - INBOX 61(25): Slot cost/rewards scale with galaxy distance.
   - `expedition.slotTier(run, galaxyId)` = `1 + floor(galaxyDistance / galaxyCellSize)`.
   - Named ids `galaxy:gx:gy` use hypot(gx, gy)*cellSize; home/nil → tier 1. Fallback: lastHubX/Y distance.
@@ -141,8 +135,12 @@
   - Preserved pure `rcsVisual` color/radius/clamping calculations, low-/high-speed scene particle assertions, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,257 to 4,180 lines.
 
+- R1 (Lane C, partial): extracted the comet-system characterization block into `game/tests/legacy_comet_system.lua`.
+  - Preserved comet reset, timed spawn, motion, sample value, collision damage, pruning, next-spawn interval, fresh-scene state, cleanup, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,180 to 4,103 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the comet-system characterization block from `game/self_test.lua` into `game/tests/legacy_comet_system.lua`, preserving reset, spawn/update, collision, collect, rarity, and output behavior.
+- R1 (Lane C): extract the flat-$1 planet sample characterization block from `game/self_test.lua` into `game/tests/legacy_flat_sample_value.lua`, preserving sample value/tier, collision damage, comet multiplier, and output behavior.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

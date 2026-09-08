@@ -2101,3 +2101,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved specific rigid values for test fixtures like `engine_emergency_boost_pod` by migrating them to appropriate rarities (`uncommon`) to maintain test stability and logical coherence.
   - Test suites verifying gear categorization and edition compatibility remained fully intact and GREEN.
   - Moved item 26 to '처리 완료' in `INBOX.md` as its final step is complete.
+
+## Archived from STATUS.md (2026-09-08 22:20)
+
+- R1 lane C: extracted dead in-flight slot artifact characterization coverage from `game/self_test.lua` into `game/tests/legacy_dead_slot_constants.lua`.
+  - The runner now delegates through the module's `run()` entry point; removed constants, return-control fields, fresh-scene state assertions, and execution order remain unchanged.
+  - TDD evidence: missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; final `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - `game/self_test.lua` decreased by 32 lines (4,289 → 4,257); `play.lua` and `expedition.lua` were not changed.
+  - Next R1 slice: extract the RCS 0–999 gradient characterization block into `game/tests/legacy_rcs_gradient.lua`.
