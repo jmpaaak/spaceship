@@ -23,6 +23,20 @@
   - 달/혜성 충돌은 이번 항목 범위 아님.
   - 테스트: `game/tests/debris_collision_sfx.lua`
 
+(55) **새게임/이어하기 → 탭하여 출발 화면을 반드시 거침** (OOB 2026-09-08)
+  - 담당: `main.lua` `startGame` + `game/scenes/play.lua` launch 입력. play.lua는 한 줄 위임/가드만.
+  - 타이틀 CONTINUE/NEW GAME 탭이 같은 터치/마우스다운으로 launch 페이즈 `space`를 눌러 바로 ascending 됨 (click-through).
+  - `play_joystick.lua`도 launch 중 마우스다운이면 `keypressed("space")`.
+  - 새게임·이어하기 둘 다 PlayScene은 **phase=launch** 로 진입. 탭하여 출발 화면을 보여 주고, 그 화면에서 한 번 더 탭해야 `expedition.launch` → ascending.
+  - 타이틀에서 넘어온 첫 입력(같은 프레임/같은 손가락/마우스 홀드)은 발사로 쓰지 말 것. 손가락/마우스 릴리즈 후 다음 탭만 발사.
+  - 테스트: `game/tests/title_to_launch_gate.lua`
+
+(56) **HUD 최고기록 → 기록, 제로패딩 제거** (OOB 2026-09-08)
+  - 담당: `game/i18n.lua` (`hud_personal_best`). play.lua 금지.
+  - KO: `최고기록 %04d` → `기록 %d`. EN: `PERSONAL BEST %04d` → `RECORD %d`.
+  - 왼쪽 상단 HUD. 0은 `0000`이 아니라 `0`.
+  - 테스트: `game/tests/hud_record_label.lua`
+
 ## 처리 완료
 (51) **수확 1업 +0.1, 슬롯 HARVEST도 맞춤** (msg `1546492087749320774`)
   - 완료: `sampleYieldUpgradeAmount` 0.05→**0.10**. 슬롯 2매치 +0.10 / 3매치 +0.50 (×tier). Shop preview `x1.00 -> x1.10`. Test GREEN.
