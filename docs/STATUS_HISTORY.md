@@ -2140,3 +2140,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `i18n`: EN `title_new_game`="NEW GAME", KO="새 게임". `title_start` removed.
   - `main.lua`: `hasSave` from `best_altitude_store:load() > 0`. NEW GAME calls `altStore:reset()` + `specStore:reset()` then fresh PlayScene at Earth. CONTINUE starts PlayScene with persisted bestAltitude.
   - Test `INBOX-61(24b)` GREEN.
+
+## Archived from STATUS.md (2026-09-08 22:43)
+
+- INBOX 61(26a/b): Added `mode = "flat"|"multiply"` gear effect schema
+  - Modified `gear.lua` and `expedition.lua` to separate flat and mult calculations for stats.
+  - Applied product multiplier in `effectiveSpeed`, `effectiveSampleBonus`, `effectiveCollisionRadius`, `effectiveDetectionRadius`, `effectiveShopPrice`.
+  - Added `mode` field support to `tools/gear-editor` UI (default flat, toggles flat/multiply, live previews updated).
+  - Documented `mode` in `docs/GEAR_SCHEMA.md`.
+  - Test suite (INBOX-61(26) infra part) GREEN. Code infrastructure complete.

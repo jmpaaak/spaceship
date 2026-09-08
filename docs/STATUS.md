@@ -1,11 +1,4 @@
 ## Current Status
-- INBOX 61(26a/b): Added `mode = "flat"|"multiply"` gear effect schema
-  - Modified `gear.lua` and `expedition.lua` to separate flat and mult calculations for stats.
-  - Applied product multiplier in `effectiveSpeed`, `effectiveSampleBonus`, `effectiveCollisionRadius`, `effectiveDetectionRadius`, `effectiveShopPrice`.
-  - Added `mode` field support to `tools/gear-editor` UI (default flat, toggles flat/multiply, live previews updated).
-  - Documented `mode` in `docs/GEAR_SCHEMA.md`.
-  - Test suite (INBOX-61(26) infra part) GREEN. Code infrastructure complete.
-
 - INBOX 61(38): Title/Game BGM playlist
   - Implemented `game/bgm.lua` to handle playlist looping between `title_bgm.mp3` and `observing_the_star.ogg`.
   - Hooked `bgm.update()` in `main.lua` and `bgm.start()` in `title.lua:enter()`. Playback continues seamlessly during gameplay.
@@ -129,8 +122,12 @@
   - Preserved the `getPartIcon` helper, 48px HUD gear-slot assertion, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,928 to 3,918 lines.
 
+- R1 (Lane C, partial): extracted the ship-stats-summary characterization block into `game/tests/legacy_ship_stats_summary.lua`.
+  - Preserved graphics restoration, ascending/settlement visibility, localized ship/speed/hull/harvest lines, right alignment and positioning, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,918 to 3,820 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the ship-stats-summary characterization block from `game/self_test.lua` into `game/tests/legacy_ship_stats_summary.lua`, preserving graphics restoration, ascending/settlement behavior, localized lines, right alignment, and output.
+- R1 (Lane C): extract the galaxy-ring-opacity characterization block from `game/self_test.lua` into `game/tests/legacy_galaxy_ring_opacity.lua`, preserving the chart-line alpha threshold and output.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
