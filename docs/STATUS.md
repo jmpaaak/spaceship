@@ -137,8 +137,12 @@
   - Preserved its 200 evenly swept deterministic spins, explicit full-weight-range sweep, all-five-symbol assertions, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,382 to 4,348 lines.
 
+- R1 (Lane C, partial): extracted the RCS 0–999 gradient characterization block into `game/tests/legacy_rcs_gradient.lua`.
+  - Preserved pure `rcsVisual` color/radius/clamping calculations, low-/high-speed scene particle assertions, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,257 to 4,180 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the RCS 0–999 gradient characterization block from `game/self_test.lua` into `game/tests/legacy_rcs_gradient.lua`, preserving pure visual calculations, scene particle assertions, and output.
+- R1 (Lane C): extract the comet-system characterization block from `game/self_test.lua` into `game/tests/legacy_comet_system.lua`, preserving reset, spawn/update, collision, collect, rarity, and output behavior.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
