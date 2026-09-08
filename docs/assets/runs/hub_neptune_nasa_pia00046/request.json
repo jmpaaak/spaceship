@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T01:23:19+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/hub_neptune_nasa_pia00046.jpg",
+  "source_dimensions": [
+    1000,
+    1000
+  ],
+  "input_preparation": {
+    "resize": [
+      976,
+      976
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 24,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "hub_neptune",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 28,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "93f3a804fb645439d2c1bbea9dee83d6247ad99878346eb2428909d35d0450a7",
+  "payload_bytes": 17924709,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

@@ -4825,5 +4825,33 @@
     "width": 128,
     "height": 128,
     "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+  },
+  {
+    "path": "assets/planet/studio/hub_neptune.png",
+    "source_url": "https://images-assets.nasa.gov/image/PIA00046/PIA00046~orig.jpg",
+    "terms_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "asset_id": "hub_neptune_nasa_pia00046",
+    "prompt": "NASA/JPL Voyager 2 Neptune Full Disk photograph PIA00046 converted by the unified local Asset Studio POST /api/pixel-perfect endpoint",
+    "model": "Unified Asset Studio local Pixel Perfect API",
+    "style": "photo-derived high-resolution pixel art",
+    "settings": {
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "targetWidth": 512,
+      "targetHeight": 512,
+      "pixelBlock": 4,
+      "backgroundTolerance": 28,
+      "paletteLimit": 64,
+      "source_dimensions": [1000, 1000],
+      "input_dimensions": [1024, 1024],
+      "master_dimensions": [512, 512],
+      "runtime_derivation": "integer 4x NEAREST downscale",
+      "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
+    },
+    "note": "Unwired hub-planet candidate; actual runtime load path waits for Lane D.",
+    "downloaded_at": "2026-09-09T01:23:19+09:00",
+    "sha256": "52e387259e424c323a4e1417e5670b60c4c375ac30b9d7be24c9386b8295a29a",
+    "width": 128,
+    "height": 128,
+    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
   }
 ]
