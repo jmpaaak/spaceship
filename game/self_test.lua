@@ -151,17 +151,7 @@ function M.run()
     require("game.tests.legacy_reentry_shake").run()
     runGearTests()
 
-    -- ComfyUI HUD wiring (group 1): drawHudSpriteOrPoly is exported and
-    -- behaves correctly when image is nil (falls back to polygon).
-    do
-        local PlayScene = require("game.scenes.play")
-        assert(type(PlayScene.drawHudSpriteOrPoly) == "function",
-            "drawHudSpriteOrPoly must be exported on PlayScene")
-        -- With a real love.graphics stub (headless), confirm nil image + nil
-        -- pointsFn does not error (no-op branch).
-        local ok, err = pcall(PlayScene.drawHudSpriteOrPoly, nil, nil, 10, 10, 8)
-        assert(ok, "drawHudSpriteOrPoly(nil,nil,...) must not throw: " .. tostring(err))
-    end
+    require("game.tests.legacy_hud_sprite_fallback").run()
 
     -- ComfyUI planet effect wiring (group 3): drawPlanetEffectSprite is
     -- exported and returns false when image is nil (fallback to polygon).
@@ -1790,6 +1780,7 @@ function M.run()
     require("game.tests.self_test_earth_slot_reward_profile_extraction").run()
     require("game.tests.self_test_dead_settlement_slot_fields_extraction").run()
     require("game.tests.self_test_earth_shop_gear_offer_keyboard_extraction").run()
+    require("game.tests.self_test_hud_sprite_fallback_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
