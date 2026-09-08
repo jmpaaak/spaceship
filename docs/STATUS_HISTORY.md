@@ -2039,3 +2039,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved spawn-distance, first ascending-frame no-settlement, and post-departure Earth settlement assertions; production behavior is unchanged.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
   - `game/self_test.lua` shrank from 4,674 to 4,650 lines. Next slice: extract `testFaintCollectOrbitRing` into `game/tests/legacy_faint_collect_orbit_ring.lua`.
+
+## Archived from STATUS.md (2026-09-08 21:34)
+
+- R1 lane C: extracted faint collect-orbit ring regression coverage from `game/self_test.lua` into `game/tests/legacy_faint_collect_orbit_ring.lua`.
+  - Preserved collect-radius padding, ring alpha/width, sprite bypass, draw count, and line-width restoration assertions; production behavior is unchanged.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
+  - `game/self_test.lua` shrank from 4,650 to 4,600 lines. Next slice: extract `testHudBackgroundNotFullWidth` into `game/tests/legacy_hud_background.lua`.
