@@ -65,7 +65,8 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 
 ## Asset generation rule (2026-09-05 updated)
 
-- **ComfyUI는 더 이상 사용하지 않는다.** 모든 도트 그래픽 에셋은 다음 두 방식으로 생성한다:
+- **사진 기반 에셋 구속 규칙:** `docs/ASSET_PIPELINE.md`의 **‘사진 기반 Asset Studio 고품질 픽셀 변환’**이 최신 공통 baseline이며 새로 사진에서 파생하는 raster 에셋을 지배한다. 구매·라이선스 팩이 1순위다. 과거 AetherAI/SpriteCook 등 provider-only 문구는 사진에 적합한 에셋의 Asset Studio 경로를 금지하지 않지만, identity lock과 genuinely incompatible한 도메인 규칙은 유지한다. 이 이름은 PixelPerfect 엔진을 뜻하지 않는다.
+- **ComfyUI는 더 이상 사용하지 않는다.** 새 photo-derived raster는 위 Asset Studio 표준을 적용하고, 그 밖의 절차 생성 도트 에셋은 다음 두 방식으로 생성한다:
   - (1) 배경·큰 에셋: Python PIL/Pillow 스크립트 (`tools/` 아래 저장, 50줄 이내, 도형·패턴·노이즈 함수 조합, 수천 줄 하드코딩 픽셀 좌표 금지)
   - (2) 작은 스프라이트·아이콘: LÖVE `love.graphics`로 그려서 PNG 저장
 - 사용자가 직접 제공하겠다고 한 에셋(함선/지구/행성, 사람 스프라이트)은 자동 생성 금지. 해당 에셋이 올 때까지 기존 다각형 폴백 유지.
