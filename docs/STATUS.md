@@ -126,8 +126,12 @@
   - Preserved graphics restoration, ascending/settlement visibility, localized ship/speed/hull/harvest lines, right alignment and positioning, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,918 to 3,820 lines.
 
+- R1 (Lane C, partial): extracted the galaxy-ring-opacity characterization block into `game/tests/legacy_galaxy_ring_opacity.lua`.
+  - Preserved the chart-line alpha threshold, the existing minimap-rim coverage note, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,820 to 3,810 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the galaxy-ring-opacity characterization block from `game/self_test.lua` into `game/tests/legacy_galaxy_ring_opacity.lua`, preserving the chart-line alpha threshold and output.
+- R1 (Lane C): extract the hub-full-settlement-shop characterization block from `game/self_test.lua` into `game/tests/legacy_hub_full_settlement_shop.lua`, preserving settlement payout/state, hub-position lifecycle, i18n assertions, and output.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

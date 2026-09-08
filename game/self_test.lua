@@ -2482,17 +2482,7 @@ function M.run()
 
     require("game.tests.legacy_ship_stats_summary").run()
 
-    -- INBOX-45: galaxy density ≤ 0.85 threshold, concentric ring alpha 0.15,
-    -- galaxy boundary ring alpha 0.12
-    do
-        local play = require("game.scenes.play")
-        -- (a) galaxyChartLineColor alpha must be <= 0.12
-        local _, _, _, la = play.galaxyChartLineColor("test")
-        assert(la ~= nil and la <= 0.13,
-            string.format("INBOX-45(b): galaxyChartLineColor alpha should be ~0.12, got %s", tostring(la)))
-        -- (b) galaxyExistenceThreshold already tested in testMinimapGalaxyRimMarker
-        print("  INBOX-45 galaxy ring opacity OK")
-    end
+    require("game.tests.legacy_galaxy_ring_opacity").run()
 
     -- INBOX-47: Hub planets open full settlement shop (not just settleAtHub).
     -- Hub relaunch stores lastHubX/lastHubY; launch clears them.
