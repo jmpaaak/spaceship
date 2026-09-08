@@ -46,6 +46,13 @@ local sampleTierShakeMultiplier = sampleVisuals.sampleTierShakeMultiplier
 local shipPunchDuration = sampleVisuals.shipPunchDuration
 local shipShakeDuration = sampleVisuals.shipShakeDuration
 
+-- Pure sample floating-label placement and numeric roll-up rules.
+local sampleFeedback = require("game.scenes.play_sample_feedback")
+sampleFeedback.install(M)
+local clampLabelX = sampleFeedback.clampLabelX
+local sampleRollupDuration = sampleFeedback.sampleRollupDuration
+local rollupAmount = sampleFeedback.rollupAmount
+
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
 -- install() copies drawMinimap, drawShipStatsSummary, galaxyChartLineColor/FillColor,
 -- drawMinimapSprite, rimMarker constants, shipStats constants back onto M so
@@ -377,39 +384,8 @@ local function planetColor(hue)
     return 0.65, 0.45, 0.95
 end
 
--- sample-tier color/effect/sparkle/shake rules and timing constants are
--- installed from play_sample_visuals.lua above.
-
-local warningLabelMargin = 2
-
-local function clampLabelX(centerX, textWidth, viewportWidth, margin)
-    margin = margin or warningLabelMargin
-    local x = centerX - textWidth / 2
-    local maxX = viewportWidth - margin - textWidth
-    if x > maxX then x = maxX end
-    if x < margin then x = margin end
-    return x
-end
-M.clampLabelX = clampLabelX
-
--- Numeric roll-up feedback (docs/feedback/INBOX.md 2026-09-02 후속 확정
--- 사항 #2): rather than a sample's "+$N" floating text popping in at its
--- final value instantly, it now counts up from $0 to the awarded amount
--- over this duration, like a slot-machine reel/chip counter settling on
--- its result, before holding steady for the rest of its lifetime.
-local sampleRollupDuration = 0.3
-M.sampleRollupDuration = sampleRollupDuration
-
--- Computes the "in progress" displayed roll-up value for a sample floating
--- text: 0 at elapsed<=0, linearly interpolated up to the full awarded
--- amount at elapsed>=duration (rounded to the nearest whole dollar so the
--- counter reads as discrete ticking digits, not fractional cents).
-local function rollupAmount(awarded, elapsed, duration)
-    if duration <= 0 then return awarded end
-    local progress = math.max(0, math.min(1, elapsed / duration))
-    return math.floor(awarded * progress + 0.5)
-end
-M.rollupAmount = rollupAmount
+-- Sample-tier presentation and floating-label feedback rules are installed
+-- from play_sample_visuals.lua and play_sample_feedback.lua above.
 
 -- EARTH SHOP action/status two-column layout for the hull/steering/
 -- yield/ship rows. Measured with a real LÖVE font probe

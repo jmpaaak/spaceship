@@ -10424,6 +10424,7 @@ function M.run()
     require("game.tests.play_hud_layout").run()
     require("game.tests.play_hud_gear").run()
     require("game.tests.play_sample_visuals").run()
+    require("game.tests.play_sample_feedback").run()
 
     print("SPACESHIP_UNIT_OK")
 end
