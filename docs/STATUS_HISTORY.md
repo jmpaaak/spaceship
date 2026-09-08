@@ -1773,3 +1773,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved hull/engine sell-multiplier scope, additive sample-value, and collection-award assertions; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then focused engine-hosted tests and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearCollisionRadiusRunWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 18:15)
+
+- R1 (Lane C, partial): extracted collision-radius run wiring coverage to `game/tests/legacy_gear_collision_radius_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,471 to 7,429 lines.
+  - Preserved the unequipped baseline and hull/engine collision-radius effect assertions; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then focused engine-hosted tests and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
