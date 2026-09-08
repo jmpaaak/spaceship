@@ -39,6 +39,13 @@
   - 현재 은하와 이미 발견한 은하는 alpha=1. 다음 미발견 은하에만 적용. 미니맵 boundary ring 중심은 계속 `sunPosition` 기준.
   - 테스트: 탐지구간 바깥 alpha=0, 중간 0<alpha<1, 발견선 alpha=1, 연속성/단조 증가, 이미 발견 alpha=1. 캡처 비교에서 한 프레임 팝인 없음.
 
+(76) **Asset Studio 8766 POST 501 수정 + 클립보드 이미지 붙여넣기** (msg `1546748006118858835`)
+  - 담당: `tools/serve_editors.py`, `tools/asset-studio/editor.js`, `tools/asset-studio/index.html`, 관련 Python 테스트. 게임 Lua 불변.
+  - 원인: 현재 8766은 `/tmp/serve_editors.py`의 GET-only `BaseHTTPRequestHandler`로 실행되어 `POST /api/sprite-gen`이 501. 저장소의 POST 지원 서버를 8766에서 실행하고 `/asset-studio/` 기존 URL도 그대로 alias 제공한다.
+  - `Ctrl+V`/macOS `Cmd+V` paste 이벤트에서 `clipboardData.items`의 첫 `image/*` blob을 읽어 source image로 로드. URL/파일 업로드와 동일 파이프라인 사용. 텍스트만 붙여넣으면 일반 입력 동작 방해 금지.
+  - 클립보드 이미지는 `sourceKind="clipboard"`; 체크무늬를 원본에 굽지 말고 깨끗한 RGBA로 POST. 상태창에 붙여넣기 성공/실패 표시.
+  - 테스트: POST가 501이 아닌 200/503 계약, `/asset-studio/` alias 200, paste image 핸들러 존재·sourceKind clipboard, 텍스트 paste 무시, no-store 캐시.
+
 (59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
   - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
   - 충돌: `assets/sfx/collision.mp3`를 Pixabay **Space Explosion with reverb** (id 101449, morganpurkis/Freesound, ~4s, Pixabay Content License)로 교체.
