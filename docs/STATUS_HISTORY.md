@@ -2264,3 +2264,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Recorded source license/provenance, dimensions, file hashes, exact request-payload/response-body hashes, output RGBA hash, and the API's valid 5/5 report in `docs/assets/CELESTIAL_ASSET_STUDIO.json` and per-run logs.
   - Added `tools/test_celestial_asset_studio_manifest.py`; observed missing-manifest RED, then focused manifest/baseline GREEN. The candidate remains deliberately unwired until Lane D.
 - Next slice: generate one high-resolution photo-derived `pp_dry` ordinary-planet candidate through the same live endpoint and append its provenance/run record without changing runtime draw paths.
+
+## Archived from STATUS.md (2026-09-09 00:19)
+
+- INBOX 78 Lane B: generated `pp_bare_nasa_pia00405`, the first photo-derived celestial candidate, through the live unified Asset Studio `POST /api/pixel-perfect` endpoint.
+  - Preserved the 1986×1986 NASA/JPL/USGS source, 512×512 RGBA/4px-grid master, 128×128 integer-NEAREST unwired runtime derivative, request/response hashes, provenance, and API valid 5/5 report.
+  - `make verify LOVE=/Users/jm/.local/bin/love` is GREEN, including the new celestial manifest test and `ASSET_MANIFEST_OK`.
+- Next slice: generate one high-resolution photo-derived `pp_dry` candidate through the same endpoint and append its provenance/run record without changing runtime draw paths.

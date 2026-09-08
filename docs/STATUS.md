@@ -1,8 +1,10 @@
 ## Current Status
-- INBOX 78 Lane B: generated `pp_bare_nasa_pia00405`, the first photo-derived celestial candidate, through the live unified Asset Studio `POST /api/pixel-perfect` endpoint.
-  - Preserved the 1986×1986 NASA/JPL/USGS source, 512×512 RGBA/4px-grid master, 128×128 integer-NEAREST unwired runtime derivative, request/response hashes, provenance, and API valid 5/5 report.
-  - `make verify LOVE=/Users/jm/.local/bin/love` is GREEN, including the new celestial manifest test and `ASSET_MANIFEST_OK`.
-- Next slice: generate one high-resolution photo-derived `pp_dry` candidate through the same endpoint and append its provenance/run record without changing runtime draw paths.
+- INBOX 78 Lane B: generated `pp_gas_nasa_pia01518`, the second photo-derived celestial candidate, through the live unified Asset Studio `POST /api/pixel-perfect` endpoint.
+  - Used NASA/JPL/USGS Jupiter PIA01518 photo as the high-resolution source.
+  - Requested 1024x1024 LANCZOS resized RGBA input with targetWidth/Height 512, pixelBlock 4, backgroundTolerance 28, paletteLimit 64.
+  - Saved 512x512 master and 128x128 nearest-neighbor runtime PNG under `docs/assets/masters/` and `assets/planet/studio/`.
+  - Appended request, response, metadata and SHA256 hashes to `docs/assets/CELESTIAL_ASSET_STUDIO.json` and `docs/assets/MANIFEST.json`.
+  - Verified manifest with `make verify` and test scripts.
 
 - INBOX 61(32): play_gameover.lua extraction
   - Created `game/scenes/play_gameover.lua` — gameover/destroyed-phase layout module.
@@ -114,6 +116,6 @@
 
 ## Next slice
 
-- INBOX 78 Lane B (`docs/assets/`, `assets/planet/`): select one provenance-safe high-resolution ordinary-planet photo master, send its decoded RGBA pixels through the actual `POST http://127.0.0.1:4176/api/pixel-perfect`, and record the request, response, dimensions, and hashes without wiring it into runtime yet.
+- INBOX 78 Lane B (`docs/assets/`, `assets/planet/`): select the next provenance-safe high-resolution ordinary-planet photo master (e.g. ice, lava, dry) and send its decoded RGBA pixels through the actual `POST http://127.0.0.1:4176/api/pixel-perfect`, and record the request, response, dimensions, and hashes without wiring it into runtime yet.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
