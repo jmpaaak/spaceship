@@ -1,9 +1,9 @@
 ## Current Status
-- R1: `play.lua` sprite-drawing primitive extraction.
-  - Added `game/scenes/play_draw.lua`; `play.lua` now installs and delegates eight sprite/orbit drawing helpers while preserving its public helper API.
-  - Added engine-hosted `game/tests/play_draw.lua`; observed RED for the missing module, then GREEN after extraction.
-  - `play.lua` reduced from 3837 lines / 185925 bytes to 3726 lines / 181093 bytes.
-  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, smoke source/package, bundle, and asset manifest).
+- R1: `play.lua` icon helper extraction.
+  - Added `game/scenes/play_icons.lua`; `play.lua` installs the module while keeping the existing icon geometry, sizing constants, and centered icon/text API stable.
+  - Added engine-hosted `game/tests/play_icons.lua`; observed RED for the missing module, then GREEN after extraction.
+  - `play.lua` reduced from 3726 lines / 181093 bytes to 3602 lines / 176139 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, and `ASSET_MANIFEST_OK`).
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -153,6 +153,6 @@
 
 ## Next slice
 
-- R1: extract icon geometry and centered icon/text rendering from `game/scenes/play.lua` into `game/scenes/play_icons.lua`; keep function names/API stable and reduce `play.lua` further before INBOX feature work.
+- R1: extract HUD sizing rules (`hudHeight`, `hudBackgroundWidth`, and related constants) from `game/scenes/play.lua` into `game/scenes/play_hud_layout.lua`; preserve the scene API and reduce `play.lua` further before INBOX feature work.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

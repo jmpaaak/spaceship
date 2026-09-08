@@ -1434,3 +1434,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Mapped `earth` home galaxy to use `star_sun.png` and `star_sun_sheet.png`.
   - Wrote robust headless-compatible `game/tests/star_sprite.lua` verifying the correct fallback logic and sheet application. Tests GREEN.
   - Manifest checksums and resolutions for all star assets updated.
+
+## Archived from STATUS.md (2026-09-08 12:56)
+
+- R1: `play.lua` sprite-drawing primitive extraction.
+  - Added `game/scenes/play_draw.lua`; `play.lua` now installs and delegates eight sprite/orbit drawing helpers while preserving its public helper API.
+  - Added engine-hosted `game/tests/play_draw.lua`; observed RED for the missing module, then GREEN after extraction.
+  - `play.lua` reduced from 3837 lines / 185925 bytes to 3726 lines / 181093 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, smoke source/package, bundle, and asset manifest).
