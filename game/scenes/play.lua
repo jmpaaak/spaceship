@@ -11,6 +11,7 @@ local fonts = require("game.fonts")
 local leaderboardClient = require("game.leaderboard_client")
 local sfx = require("game.sfx")
 local M = {}
+local play_star = require("game.scenes.play_star")
 M.__index = M
 
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
@@ -1153,6 +1154,7 @@ function M.new(options)
         dry   = "assets/star/star_dry.png",
         gas   = "assets/star/star_gas.png",
         bare  = "assets/star/star_bare.png",
+        earth = "assets/star/star_sun.png",
     }
     local starTypeImages = loadSpriteMap(starImagePaths)
     -- Rotation sprite sheets (4 frames, 64x256 vertical strip)
@@ -1163,6 +1165,7 @@ function M.new(options)
         dry   = "assets/star/star_dry_sheet.png",
         gas   = "assets/star/star_gas_sheet.png",
         bare  = "assets/star/star_bare_sheet.png",
+        earth = "assets/star/star_sun_sheet.png",
     }
     local starSheetImages = loadSpriteMap(starSheetPaths)
     local planetSheetPaths = {
@@ -3117,30 +3120,8 @@ function M:draw()
                 love.graphics.circle("line", sx, sy, world.starWellRadius * 0.7)
                 -- Inner glow
                 love.graphics.setColor(1.0, 0.85, 0.25, pulse * 0.08)
-                -- Draw star sprite: prefer rotation sheet (4-frame), fallback to static
-                local starType = (wellGalaxy and wellGalaxy.starType) or "sun"
-                local starSheet = self.starSheetImages and self.starSheetImages[starType]
-                if starSheet then
-                    local sw, sh = starSheet:getDimensions()
-                    local frameH = sw  -- each frame is sw x sw (64x64 in a 64x256 sheet)
-                    local frameCount = math.floor(sh / frameH)
-                    local frameIdx = math.floor((self.time or 0) * 2) % frameCount
-                    local quad = love.graphics.newQuad(0, frameIdx * frameH, sw, frameH, sw, sh)
-                    local starScale = (world.starRadius * 2) / sw
-                    love.graphics.setColor(1, 1, 1, 1)
-                    love.graphics.draw(starSheet, quad, sx - world.starRadius, sy - world.starRadius, 0, starScale, starScale)
-                else
-                    local starImg = self.starTypeImages and self.starTypeImages[starType]
-                    if not starImg and self.starTypeImages then starImg = self.starTypeImages["sun"] end
-                    if starImg then
-                        local iw, ih = starImg:getDimensions()
-                        local starScale = (world.starRadius * 2) / math.max(iw, ih)
-                        love.graphics.setColor(1, 1, 1, 1)
-                        love.graphics.draw(starImg, sx, sy, 0, starScale, starScale, iw / 2, ih / 2)
-                    else
-                        love.graphics.circle("fill", sx, sy, world.starRadius)
-                    end
-                end
+                -- Draw star sprite
+                play_star.drawCentralStar(self, sx, sy, world.starRadius, wellGalaxy, self.time)
                 -- INBOX 61(22): "DANGER" blinking red text near the well boundary
                 do
                     local sdx = wellSun.x - self.ship.x

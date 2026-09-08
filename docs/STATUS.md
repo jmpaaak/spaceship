@@ -1,9 +1,4 @@
 ## Current Status
-- INBOX 61(42): game-wide BGM is one looping Space orchestral track.
-  - `game/bgm.lua`: `tracks = { assets/sfx/space_orchestral.mp3 }`, `looping = true`, headless `love.audio` nil guard kept.
-  - i18n EN/KO `title_bgm_credit` = `BGM: Space — lasercheese (CC-BY 3.0)`. Title still starts BGM on enter; `main.lua` still calls `bgm.update()`.
-  - Test `game/tests/bgm.lua` (`INBOX-61(42)`) GREEN. play.lua untouched.
-
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
   - `autoLoadDefaults()` fetches hull only. First Engine tab click `ensureEngineLoaded()` fetches `/gear-editor/data/engine_parts.json`.

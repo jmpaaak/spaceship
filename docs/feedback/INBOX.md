@@ -4,8 +4,10 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-
-
+(R1) **거대 파일 모듈 분리 최우선** (msg `1546726613721415681`)
+  - 담당: `game/scenes/play.lua` (3856줄) 남은 덩어리를 `play_*.lua`로 계속 쪼갬. `game/self_test.lua`(10425줄)는 신규 테스트를 `game/tests/`로만. `game/expedition.lua`(1639줄)는 슬롯/정산/부스트 하위 모듈.
+  - INBOX (58)~ 기능보다 **이 분리가 먼저**. 독립 모듈 경로가 있는 항목만 기능 진행.
+  - 테스트: `make verify` GREEN 유지. play.lua 줄 수 감소.
 
 (58) **중심별(태양) 스프라이트가 실제로 보이게** (OOB 2026-09-08, 반복 요청)
   - 담당: `game/scenes/play_star.lua` (새 모듈) + `play.lua`는 require/한 줄 위임만. `world.lua` starType 매핑.

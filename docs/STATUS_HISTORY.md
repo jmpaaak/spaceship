@@ -1417,3 +1417,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/expedition.lua`: default `sampleYieldUpgradeAmount` 0.01→0.05. Shop copy becomes `HARVEST x1.00 -> x1.05`.
   - `buyDurabilityUpgrade`: after `refreshShipStats`, current `durability` += gained max (capped at max). Earth shop is not a full heal.
   - Test `game/tests/harvest_hull_upgrade.lua` GREEN. play.lua untouched.
+
+## Archived from STATUS.md (2026-09-08 12:29)
+
+- INBOX 61(42): game-wide BGM is one looping Space orchestral track.
+  - `game/bgm.lua`: `tracks = { assets/sfx/space_orchestral.mp3 }`, `looping = true`, headless `love.audio` nil guard kept.
+  - i18n EN/KO `title_bgm_credit` = `BGM: Space — lasercheese (CC-BY 3.0)`. Title still starts BGM on enter; `main.lua` still calls `bgm.update()`.
+  - Test `game/tests/bgm.lua` (`INBOX-61(42)`) GREEN. play.lua untouched.
