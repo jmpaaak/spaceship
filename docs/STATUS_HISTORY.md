@@ -1450,3 +1450,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added engine-hosted `game/tests/play_icons.lua`; observed RED for the missing module, then GREEN after extraction.
   - `play.lua` reduced from 3726 lines / 181093 bytes to 3602 lines / 176139 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, and `ASSET_MANIFEST_OK`).
+
+## Archived from STATUS.md (2026-09-08 13:08)
+
+- R1: `play.lua` HUD sizing extraction.
+  - Added pure layout module `game/scenes/play_hud_layout.lua`; `play.lua` delegates HUD height, background-width cap, and spacing constants while preserving its public scene API.
+  - Added engine-hosted `game/tests/play_hud_layout.lua`; observed RED for the missing module, then GREEN after extraction.
+  - `play.lua` reduced from 3602 lines / 176139 bytes to 3521 lines / 172556 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).

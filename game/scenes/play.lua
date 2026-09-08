@@ -31,6 +31,9 @@ require("game.scenes.play_icons").install(M)
 -- Pure HUD band sizing rules (height, text-width cap, and spacing constants).
 require("game.scenes.play_hud_layout").install(M)
 
+-- Pure equipped-gear HUD layout and hit testing.
+require("game.scenes.play_hud_gear").install(M)
+
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
 -- install() copies drawMinimap, drawShipStatsSummary, galaxyChartLineColor/FillColor,
 -- drawMinimapSprite, rimMarker constants, shipStats constants back onto M so
@@ -338,61 +341,6 @@ M.launchGearBoxH = 21
 -- Shop-planet modal layout (720×1280). Titles use 22px Galmuri with 36px
 -- line gaps so Korean HUD font does not collide. Buy/Leave sit centered.
 
-
--- HUD gear-slot hitboxes (same math as drawHudGearSlots).
-function M.hudGearSlotLayout(hudHeight)
-    local slotSize = M.hudGearSlotSize
-    local gap = M.hudGearSlotGap
-    local groupGap = 8
-    local labelY = (hudHeight or 0) + 2
-    local gridStartY = labelY + M.hudGearLabelFontSize + 4
-    local startX = 5
-    local hull = {}
-    for i = 1, 6 do
-        hull[i] = {
-            x = startX,
-            y = gridStartY + (i - 1) * (slotSize + gap),
-            w = slotSize, h = slotSize,
-        }
-    end
-    local engineLabelY = gridStartY + 6 * (slotSize + gap) + groupGap
-    local engineStartY = engineLabelY + M.hudGearLabelFontSize + 4
-    local engine = {}
-    for i = 1, 3 do
-        engine[i] = {
-            x = startX,
-            y = engineStartY + (i - 1) * (slotSize + gap),
-            w = slotSize, h = slotSize,
-        }
-    end
-    return { hull = hull, engine = engine, labelY = labelY, engineLabelY = engineLabelY }
-end
-
-function M.hitHudGearSlot(scene, x, y)
-    if not scene or not scene.expedition then return nil end
-    local hud = scene.hudLines and scene:hudLines() or {}
-    local hudHeight = M.hudHeight(scene.expedition.phase, hud, 0)
-    local layout = M.hudGearSlotLayout(hudHeight)
-    local hullGear = scene.expedition.equippedGear or {}
-    local engineGear = scene.expedition.equippedEngineParts or {}
-    for i, rect in ipairs(layout.hull) do
-        if x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h then
-            if hullGear[i] then
-                return { part = hullGear[i], category = "hull", index = i, rect = rect }
-            end
-            return nil
-        end
-    end
-    for i, rect in ipairs(layout.engine) do
-        if x >= rect.x and x < rect.x + rect.w and y >= rect.y and y < rect.y + rect.h then
-            if engineGear[i] then
-                return { part = engineGear[i], category = "engine", index = i, rect = rect }
-            end
-            return nil
-        end
-    end
-    return nil
-end
 
 -- destroyedPanelY/H, destroyedRestartTextY, destroyedKeepPartRects,
 -- keepConfirmPopupW/H/BtnH, keepConfirmButtons, rarityRgb, drawBalatroCard
@@ -1326,10 +1274,7 @@ end
 -- INBOX-40: gear slots grid constants for the HUD (below left stats).
 -- 32×32px slots, hull 6 + engine 3 = 9 max, horizontal row, with a
 -- small "GEAR" label above the grid in 22px font.
-M.hudGearSlotSize = 48
 M.gearPopupChipVertical = true  -- INBOX 61(7): chips stacked vertically
-M.hudGearSlotGap  = 4
-M.hudGearLabelFontSize = 22
 
 -- INBOX-40: draw the equipped gear grid below the left HUD stats band.
 -- Called from draw() for non-settlement/destroyed phases.
