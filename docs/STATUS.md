@@ -1,4 +1,9 @@
 ## Current Status
+- R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
+  - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
+  - Preserved joystick vectors, touch/mouse movement, heading, thrust, and RCS assertions unchanged.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
   - `autoLoadDefaults()` fetches hull only. First Engine tab click `ensureEngineLoaded()` fetches `/gear-editor/data/engine_parts.json`.
@@ -134,7 +139,7 @@
 
 ## Next slice
 
-- R1 (Lane C): Extract `game/self_test.lua` (currently ~10k lines) legacy tests into `game/tests/legacy_*.lua`.
+- R1 (Lane C): extract the galaxy-structure legacy block from `game/self_test.lua` into `game/tests/legacy_galaxy_structure.lua`.
 - R1 (Lane B): Extract remaining `game/expedition.lua` logic (e.g. `expedition_shop.lua`, `expedition_upgrades.lua`).
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
