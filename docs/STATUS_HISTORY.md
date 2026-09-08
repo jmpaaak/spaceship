@@ -2032,3 +2032,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved far/mid/near shake and heat thresholds, slow-motion timing, Earth settlement reset, draw-offset math, and ship-shake independence assertions; production behavior is unchanged.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
   - `game/self_test.lua` shrank from 4,755 to 4,674 lines. Next slice: extract `testEarthShopStartTrap` into `game/tests/legacy_earth_shop_start_trap.lua`.
+
+## Archived from STATUS.md (2026-09-08 21:30)
+
+- R1 lane C: extracted Earth-shop launch/return regression coverage from `game/self_test.lua` into `game/tests/legacy_earth_shop_start_trap.lua`.
+  - Preserved spawn-distance, first ascending-frame no-settlement, and post-departure Earth settlement assertions; production behavior is unchanged.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
+  - `game/self_test.lua` shrank from 4,674 to 4,650 lines. Next slice: extract `testFaintCollectOrbitRing` into `game/tests/legacy_faint_collect_orbit_ring.lua`.
