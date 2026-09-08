@@ -61,8 +61,8 @@ function M.run()
         "INBOX 78: gas planets must load the approved Asset Studio runtime derivative")
     assert(studioPaths.dry == "assets/planet/studio/pp_dry.png",
         "INBOX 78: dry planets must load the approved Asset Studio runtime derivative")
-    assert(studioPaths.ice == nil,
-        "INBOX 78: unwired Asset Studio candidates must remain out of the runtime manifest")
+    assert(studioPaths.ice == "assets/planet/studio/pp_ice_nasa_pia00353.png",
+        "INBOX 78: ice planets must load the approved Asset Studio runtime derivative")
 
     local legacyBare = {}
     local legacyBareSheet = {}
@@ -136,6 +136,47 @@ function M.run()
     })
     assert(sprite == legacyDry and sheet == legacyDrySheet,
         "INBOX 78: ordinary dry studio artwork must not replace hub artwork")
+
+    local legacyIce = {}
+    local legacyIceSheet = {}
+    local studioIce = {}
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "ice" }, {
+        default = {},
+        pixel = { ice = legacyIce },
+        sheets = { ice = legacyIceSheet },
+        studio = { ice = studioIce },
+    })
+    assert(sprite == studioIce and sheet == nil,
+        "INBOX 78: decoded ice studio artwork must take priority over the legacy sheet")
+
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "ice" }, {
+        default = {},
+        pixel = { ice = legacyIce },
+        sheets = { ice = legacyIceSheet },
+        studio = {},
+    })
+    assert(sprite == legacyIce and sheet == legacyIceSheet,
+        "INBOX 78: failed ice studio loading must preserve the legacy ice artwork")
+
+    sprite, sheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "ice" }, {
+        default = {},
+        pixel = { ice = legacyIce },
+        sheets = { ice = legacyIceSheet },
+        studio = { ice = studioIce },
+        hubSheet = legacyIceSheet,
+    })
+    assert(sprite == legacyIce and sheet == legacyIceSheet,
+        "INBOX 78: ordinary ice studio artwork must not replace hub artwork")
+
+    sprite, sheet = api.selectPlanetArtwork({ isShop = true, galaxyStarType = "ice" }, {
+        default = {},
+        pixel = { ice = legacyIce },
+        sheets = { ice = legacyIceSheet },
+        studio = { ice = studioIce },
+        shopSprite = legacyIce,
+    })
+    assert(sprite == legacyIce and sheet == legacyIceSheet,
+        "INBOX 78: ordinary ice studio artwork must not replace shop artwork")
 
     local hubGas = {}
     local hubGasSheet = {}

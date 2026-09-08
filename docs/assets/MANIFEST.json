@@ -4735,12 +4735,12 @@
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
-    "note": "Unwired candidate; actual runtime load path waits for Lane D.",
+    "note": "Wired through game/celestial_asset_manifest.lua for ordinary ice planets; hub and shop artwork remain isolated.",
     "downloaded_at": "2026-09-09T00:51:35+09:00",
     "sha256": "8963191009096a3ccd9e16755f4aa55cca10059a08f316d73ce8f7254e83c537",
     "width": 128,
     "height": 128,
-    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+    "qa": "Lane D runtime wired; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, live API validation 5/5, decoded-image precedence, legacy fallback, and hub isolation verified"
   },
   {
     "path": "assets/planet/studio/pp_lava_nasa_pia00703.png",

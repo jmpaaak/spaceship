@@ -27,6 +27,14 @@ M.planets = {
         height = 128,
         sha256 = "e05a74ddaadb122957e0a7e839aaa835f2af3cc2b5387eeb1c28f7d71b3fbebd",
     },
+    ice = {
+        id = "pp_ice_nasa_pia00353",
+        runtimePath = "assets/planet/studio/pp_ice_nasa_pia00353.png",
+        masterPath = "docs/assets/masters/planet/pp_ice_nasa_pia00353_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "8963191009096a3ccd9e16755f4aa55cca10059a08f316d73ce8f7254e83c537",
+    },
 }
 
 return M

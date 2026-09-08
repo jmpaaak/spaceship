@@ -1932,8 +1932,8 @@ function M.run()
         local resolve = PlayScene.planetImagePathForPlanet
 
         -- Regular planet with starType → pp_<type>
-        assert(resolve({ galaxyStarType = "ice" }) == "assets/planet/pp_ice.png",
-            "regular ice planet must resolve to pp_ice.png")
+        assert(resolve({ galaxyStarType = "ice" }) == "assets/planet/studio/pp_ice_nasa_pia00353.png",
+            "regular ice planet must resolve to the wired Asset Studio derivative")
         assert(resolve({ galaxyStarType = "lava" }) == "assets/planet/pp_lava.png",
             "regular lava planet must resolve to pp_lava.png")
         assert(resolve({ galaxyStarType = "bare" }) == "assets/planet/studio/pp_bare.png",
