@@ -31,6 +31,14 @@
   - 손가락을 버튼에서 시작해 밖으로 움직이거나 떼어도 이동 제어가 뒤늦게 활성화되지 않도록 해당 pointer ID를 release까지 캡처한다.
   - 테스트: `game/tests/play_boost_input.lua` — 버튼 내부 press→boost 1회/이동 0회; 외부 press→이동; 버튼 시작 후 drag/release→이동 0회; 충전 0이어도 버튼 터치는 소비.
 
+(75) **미니맵 다음 은하계 팝인 제거 — 거리 기반 조기 탐지 페이드** (msg `1546747455004213329`)
+  - 담당: 미니맵 표현 모듈 `game/scenes/play_minimap.lua` 또는 현재 미니맵 전용 모듈. `play.lua`에는 계산/드로우 로직을 붙이지 않는다.
+  - 현재 다음 은하가 탐지 임계값을 넘는 순간 아이콘/중심별/경계가 한꺼번에 나타나 “갑자기 생김”. 이산 visible boolean을 제거하고 거리 기반 연속 `discoveryAlpha`를 사용한다.
+  - 실제 발견 반경보다 바깥의 사전 탐지 구간에서 alpha 0으로 시작해 접근할수록 smoothstep으로 1까지 증가. 처음에는 희미한 점/안개 실루엣만, 가까워질수록 중심별→경계 링→세부 천체 순서로 드러난다.
+  - 탐지 중 아이콘 위치는 고정하고 크기 점프 금지. 랜덤 깜빡임·즉시 완전 표시 금지. 멀어질 때는 같은 곡선으로 자연스럽게 사라지되 실제 `discovered` 저장 상태는 기존 규칙 유지.
+  - 현재 은하와 이미 발견한 은하는 alpha=1. 다음 미발견 은하에만 적용. 미니맵 boundary ring 중심은 계속 `sunPosition` 기준.
+  - 테스트: 탐지구간 바깥 alpha=0, 중간 0<alpha<1, 발견선 alpha=1, 연속성/단조 증가, 이미 발견 alpha=1. 캡처 비교에서 한 프레임 팝인 없음.
+
 (59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
   - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
   - 충돌: `assets/sfx/collision.mp3`를 Pixabay **Space Explosion with reverb** (id 101449, morganpurkis/Freesound, ~4s, Pixabay Content License)로 교체.
