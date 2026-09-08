@@ -9,6 +9,12 @@
   - INBOX (58)~ 기능보다 **이 분리가 먼저**. 독립 모듈 경로가 있는 항목만 기능 진행.
   - 테스트: `make verify` GREEN 유지. play.lua 줄 수 감소.
 
+(72) **속도 HUD를 기본 속도 대비 0부터 표시** (msg `1546739180812509205`)
+  - 담당: 새 순수 모듈 `game/speed_display.lua` + `game/scenes/play_hud.lua` 소비. `play.lua`/`expedition.lua` 거대 파일에는 표시 계산을 추가하지 말 것.
+  - 물리/조작감은 현재 기본 속도 `baseSpeed=60`을 그대로 유지한다. HUD·상점 등 사용자에게 보이는 **현재 속도만** `effectiveSpeed - baseSpeed`로 정규화하여 시작값을 `0`으로 표시한다.
+  - 따라서 기본 상태 `0`, 속도 +1 업그레이드 후 `1`, 부품/부스트 포함 시 실제 증가분을 표시한다. 내부 이동·RCS 색상 계산(실제 `effectiveSpeed/999`)은 바꾸지 않는다.
+  - 상점 미리보기도 `속도 0 -> 1`로 통일하여 `60 -> 61`과 섞이지 않게 한다. 번역 KO/EN 동일 기준.
+  - 테스트: `game/tests/speed_display.lua` — base 60/effective 60→0, 61→1, 80→20; 물리 `effectiveSpeed`는 60 유지; RCS 실제속도 기준 유지.
 
 (59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
   - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
