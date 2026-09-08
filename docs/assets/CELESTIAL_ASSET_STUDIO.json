@@ -765,7 +765,7 @@
         ],
         "mode": "RGBA",
         "derivation": "integer 4x NEAREST downscale from master",
-        "wired": false,
+        "wired": true,
         "sha256": "257e083294aa7634e482024a935262ec854c17d0df1ef5d400797720ca711b72"
       }
     },

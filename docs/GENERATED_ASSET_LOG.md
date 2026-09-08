@@ -205,3 +205,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-09T04:14:38+0900 | assets/star/studio/star_filament.png | INBOX (78) Lane D: approved NASA GSFC SDO/AIA filament Asset Studio 128x128 RGBA derivative wired for lava-type central stars via dedicated runtime manifest
 2026-09-09T04:30:10+0900 | assets/star/studio/star_flare.png | INBOX (78) Lane D: approved NASA GSFC SDO X-class solar-flare Asset Studio 128x128 RGBA derivative wired for gas-type central stars via dedicated runtime manifest
 2026-09-09T04:36:28+0900 | assets/star/studio/star_sdo.png | INBOX (78) Lane D: approved NASA PIA26681 SDO Asset Studio 128x128 RGBA derivative wired for bare-type central stars via dedicated runtime manifest
+2026-09-09T04:45:05+0900 | assets/planet/studio/hub_pluto.png | INBOX (78) Lane D: approved NASA PIA19952 Asset Studio 128x128 RGBA derivative wired for bare-type hub planets via dedicated runtime manifest

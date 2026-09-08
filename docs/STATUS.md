@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 78 Lane D wired the fifth approved photo-derived central-star candidate, `star_sdo_nasa_pia26681`, to bare-type galaxies only.
-  - `game/central_star_asset_manifest.lua` now allowlists `assets/star/studio/star_sdo.png`; its Asset Studio and asset-catalog records are marked wired.
-  - A decoded 128×128 RGBA studio SDO image takes precedence over the legacy bare sheet. Decode failure keeps the existing exact-type/sun/circle fallback chain.
-  - Engine-hosted tests cover manifest routing, decoded-image precedence, ice-type isolation, and unchanged center/diameter geometry; the existing world suite continues to cover central-star gravity and collision behavior. `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
+- INBOX 78 Lane D wired the second approved photo-derived hub candidate, `hub_pluto_nasa_pia19952`, to bare-type galaxy hubs only.
+  - `game/hub_planet_asset_manifest.lua` now allowlists `assets/planet/studio/hub_pluto.png`; its Asset Studio and asset-catalog records are marked wired.
+  - A decoded 128×128 RGBA Pluto image takes precedence over legacy bare hub artwork. Decode failure retains the existing PixelPlanets/hub-sheet fallback, and ordinary planets remain isolated.
+  - Engine-hosted tests cover manifest routing, decoded-image precedence, bare-type isolation, and decode-failure fallback; the existing world suite continues to cover hub location, radius, and collision behavior. `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
 
 ## Next slice
 
