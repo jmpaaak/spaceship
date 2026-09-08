@@ -18,63 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 10(b)/9 gap audit: item 10's own text names climb acceleration
--- ("상승 가속") as one of the engine-specialized effects engine parts should
--- carry, and 7 of the 24 bundled engine_parts.json cards (engine_afterburner,
--- engine_fusion_core, engine_ion_drive, engine_ember_burst_valve,
--- engine_void_phase_thruster, engine_solar_sail_flap,
--- engine_singularity_drive) do carry a `climbSpeed` effect -- but
--- M.effectiveSpeed (the ONLY function that ever reads speed into
--- run.altitude gain) has only ever read gearModule.equippedTotals(
--- run.equippedGear), i.e. hull-slot parts. Every engine card's climbSpeed
--- value is validated, loaded, and even synergy-tagged, but never actually
--- read for an engine-slot part: equipping any of those 7 cards in the
--- engine slot raises the ship's advertised stat with zero effect on actual
--- ascent speed -- the same "documented, loaded, never READ" class of gap
--- this lane closed for hull speed/money/hullDurability. Kept as a flat
--- additive contribution (no tag-synergy multiplier) since item 9 explicitly
--- scopes the tag-synergy combo engine to hull ("선체(조커형)") parts; the
--- engine slot's own climbSpeed is a plain propulsion stat, matching how
--- engine steeringResponsiveness/fuelEfficiency are plain percentage
--- conversions rather than synergy-multiplied.
-local function testGearEngineSpeedRunWiring()
-    local expedition = require("game.expedition")
-
-    -- No gear equipped: baseline (regression guard).
-    local bareRun = expedition.new({ baseSpeed = 20 })
-    assert(expedition.effectiveSpeed(bareRun) == 20,
-        "an unequipped fresh run's effectiveSpeed must equal run.baseSpeed 20, got "
-            .. tostring(expedition.effectiveSpeed(bareRun)))
-
-    -- Equipping an ENGINE-slot card with a `climbSpeed` effect must raise
-    -- effectiveSpeed by exactly that additive amount.
-    local engineClimbCard = {
-        id = "engine-climb-fixture", name = "Climb Thruster", nameKo = "Climb Thruster", icon = "*",
-        rarity = "common", tags = {}, editions = {},
-        effects = { { type = "speed", value = 5 } },
-    }
-    local run = expedition.new({ baseSpeed = 20 })
-    assert(expedition.equipGear(run, "engine", engineClimbCard))
-    local boosted = expedition.effectiveSpeed(run)
-    assert(boosted == 25,
-        "equipping an engine speed +5 card must raise effectiveSpeed from 20 to 25, got "
-            .. tostring(boosted))
-
-    -- Hull and engine speed contributions must stack additively.
-    local hullClimbCard = {
-        id = "hull-climb-fixture", name = "Hull Booster", nameKo = "Hull Booster", icon = "*",
-        rarity = "common", tags = {}, editions = {},
-        effects = { { type = "speed", value = 7 } },
-    }
-    local stackedRun = expedition.new({ baseSpeed = 20 })
-    assert(expedition.equipGear(stackedRun, "hull", hullClimbCard))
-    assert(expedition.equipGear(stackedRun, "engine", engineClimbCard))
-    local stacked = expedition.effectiveSpeed(stackedRun)
-    assert(stacked == 32,
-        "hull speed +7 and engine speed +5 must both stack onto base 20 for 32, got "
-            .. tostring(stacked))
-end
-
 -- Item 9/14 (A) `money` gap: gear.equippedTotals has additively summed a
 -- part's `money` effect since item 14's very first slice, and the bundled
 -- hull_parts.json pool has carried 3 `money` cards (hull_reserve_tank +2
@@ -2584,7 +2527,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_collision_radius_wiring").run()
     require("game.tests.legacy_gear_hull_durability_wiring").run()
     require("game.tests.legacy_gear_hull_speed_wiring").run()
-    testGearEngineSpeedRunWiring()
+    require("game.tests.legacy_gear_engine_speed_wiring").run()
     testGearMoneyRunWiring()
     testGearStreakMultiplierWiring()
     testGearChainTriggerConsumptionWiring()
