@@ -1812,3 +1812,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved unequipped payout, hull money bonus, and engine-slot exclusion assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearStreakMultiplierWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 18:41)
+
+- R1 (Lane C, partial): extracted streak-multiplier wiring coverage to `game/tests/legacy_gear_streak_multiplier_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,181 to 7,121 lines.
+  - Preserved bare-run fallback, hull/engine gear bonus, and end-to-end sample streak assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearChainTriggerConsumptionWiring` into one `game/tests/legacy_*.lua` module.

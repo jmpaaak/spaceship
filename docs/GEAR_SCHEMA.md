@@ -1213,7 +1213,7 @@ awarded value once per chain-trigger point.
 - `M.collectSample` now returns a 4th value, `retriggers` (the exact count
   applied), so tests/future UI can display how many times a collection was
   chain-retriggered without recomputing `chainTriggerCount` separately.
-- `game/self_test.lua`'s new `testGearChainTriggerConsumptionWiring()`
+- `game/tests/legacy_gear_chain_trigger_consumption_wiring.lua`'s `run()`
   regression-checks: an unequipped run's awarded value and reported
   retrigger count are unchanged (100, 0 retriggers); a `chainTrigger +1`
   hull card doubles the awarded value (100 -> 200, 1 retrigger reported)
