@@ -217,20 +217,7 @@ function M.run()
 
     require("game.tests.legacy_rim_marker_styling").run()
 
-    -- INBOX 61(10): paused/gearPopup must NOT increment self.time
-    do
-        -- The update function's early-return paths for paused/gearPopup must
-        -- not touch self.time. We verify by checking that the source lines
-        -- around the pause guard don't contain self.time += dt.
-        -- Since we can't easily source-inspect at runtime, we test behaviour:
-        -- create a minimal scene mock and verify time doesn't advance.
-        -- (The actual code change removed self.time = self.time + dt from
-        --  both pause early returns; verifiable via the diff.)
-        -- Structural assertion: PlayScene.update exists
-        assert(type(PlayScene.update) == "function",
-            "INBOX 61(10): PlayScene.update must be a function")
-        print("  INBOX-61(10) pause time freeze (structural) OK")
-    end
+    require("game.tests.legacy_pause_time_freeze").run()
 
     -- INBOX 61(11): star scan range must cover canvas height
     do
@@ -1284,6 +1271,7 @@ function M.run()
     require("game.tests.self_test_solar_system_settlement_extraction").run()
     require("game.tests.self_test_gear_popup_chip_layout_extraction").run()
     require("game.tests.self_test_rim_marker_styling_extraction").run()
+    require("game.tests.self_test_pause_time_freeze_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
