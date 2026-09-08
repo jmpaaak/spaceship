@@ -566,6 +566,53 @@
         "wired": false,
         "sha256": "e049d64e81561b3b66540972b0060016f6c57ea622d1a4d99bbb3349d5d34665"
       }
+    },
+    {
+      "id": "star_sdo_nasa_pia26681",
+      "kind": "central_star",
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "generated_at": "2026-09-09T02:22:51+09:00",
+      "source": {
+        "path": "docs/assets/sources/star/sun_sdo_nasa_pia26681.jpg",
+        "url": "https://images-assets.nasa.gov/image/PIA26681/PIA26681~orig.jpg",
+        "nasa_id": "PIA26681",
+        "creator": "NASA/GSFC/Solar Dynamics Observatory",
+        "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
+        "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+        "dimensions": [4096, 4096],
+        "sha256": "8b829280455d14fa7bbeac4d5ebe18fabacb74221344634947359ed0efd28a82"
+      },
+      "request": {
+        "log_path": "docs/assets/runs/star_sdo_nasa_pia26681/request.json",
+        "input_dimensions": [1024, 1024],
+        "target_width": 512,
+        "target_height": 512,
+        "pixel_block": 4,
+        "background_tolerance": 64,
+        "palette_limit": 64,
+        "payload_sha256": "37302c790081a2889bbeb5fb15efc4427d6405c8fa8e462bc896357188252610"
+      },
+      "response": {
+        "log_path": "docs/assets/runs/star_sdo_nasa_pia26681/response.json",
+        "http_status": 200,
+        "report_valid": true,
+        "body_sha256": "5a9469fcc978bd2df605030a197156226a4c47ec49bf0d95951353d5e3e3b2b9",
+        "image_rgba_sha256": "45c8b572601c702e76e5f00cc5dc5cc7d07cb54edf756ee72e9c94a010adf056"
+      },
+      "master": {
+        "path": "docs/assets/masters/star/star_sdo_nasa_pia26681_master.png",
+        "dimensions": [512, 512],
+        "mode": "RGBA",
+        "sha256": "72102997976e5edcf34ef2423efc466295484c00e88a4de57f1115713771b8f8"
+      },
+      "runtime": {
+        "path": "assets/star/studio/star_sdo.png",
+        "dimensions": [128, 128],
+        "mode": "RGBA",
+        "derivation": "integer 4x NEAREST downscale from master",
+        "wired": false,
+        "sha256": "6774e2999a2bfc2cdd15d3a579db2b0312c8eb035417470aa38e87741a7b7d0f"
+      }
     }
   ]
 }

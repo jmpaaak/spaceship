@@ -1,0 +1,36 @@
+{
+  "requested_at": "2026-09-09T02:22:51+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/star/sun_sdo_nasa_pia26681.jpg",
+  "source_dimensions": [
+    4096,
+    4096
+  ],
+  "input_preparation": {
+    "resize": [
+      1024,
+      1024
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 0,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "runtime_stem": "star_sdo",
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 64,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "37302c790081a2889bbeb5fb15efc4427d6405c8fa8e462bc896357188252610",
+  "payload_bytes": 17078727,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}
