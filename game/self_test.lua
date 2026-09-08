@@ -111,32 +111,7 @@ function M.run()
 
     require("game.tests.legacy_collection_store").run()
 
-    local savedBest = 40
-    local fakeStore = {
-        load = function() return savedBest end,
-        save = function(_, altitude)
-            if altitude <= savedBest then return false end
-            savedBest = altitude
-            return true
-        end,
-    }
-    local persistedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
-    assert(persistedScene.expedition.bestAltitude == 40)
-    assert(persistedScene:hudLines().best == "RECORD 40")
-    persistedScene.expedition.phase = "settlement"
-    assert(persistedScene:hudLines().best == "RECORD 40")
-    persistedScene.expedition.phase = "launch"
-    persistedScene.expedition.baseSpeed = 60
-    assert(expedition.launch(persistedScene.expedition))
-    persistedScene.expedition.altitude = 60
-    persistedScene.expedition.maxAltitude = 60
-    persistedScene.expedition.bestAltitude = 60
-    persistedScene.expedition.phase = "returning"
-    persistedScene:persistBestAltitude()
-    assert(persistedScene.expedition.phase == "returning" and savedBest == 60)
-    local restartedScene = PlayScene.new({ bestAltitudeStore = fakeStore })
-    assert(restartedScene.expedition.bestAltitude == 60)
-    assert(restartedScene:hudLines().best == "RECORD 60")
+    require("game.tests.legacy_best_altitude_persistence").run()
 
     local floatingTextScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
@@ -2475,6 +2450,7 @@ function M.run()
     require("game.tests.self_test_shop_loadout_lines_extraction").run()
     require("game.tests.self_test_destruction_persistence_extraction").run()
     require("game.tests.self_test_collection_store_extraction").run()
+    require("game.tests.self_test_best_altitude_persistence_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
