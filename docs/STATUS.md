@@ -1,9 +1,4 @@
 ## Current Status
-- R1 lane C: extracted Earth settle-radius regression coverage from `game/self_test.lua` into `game/tests/legacy_earth_settle_radius.lua`.
-  - Preserved visual/settle/reentry radii, launch spawn offset, and outside-settle-radius assertions; production behavior is unchanged.
-  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN. `game/self_test.lua` shrank from 4,501 to 4,484 lines.
-  - Next slice: extract the sample collect zoom/time-slip regression block into `game/tests/legacy_collect_zoom.lua`.
-
 - INBOX 61(40): gear-editor KO/EN locale toggle.
   - Toolbar KO | EN buttons; preference in `localStorage` (`gear-editor-locale`).
   - KO: card title = `nameKo`, effects = i18n `effect_*` KO, rarity/suit/synergy Korean.
@@ -146,8 +141,12 @@
   - Preserved the runtime JSON defaults, profile fallback/override, and slot-editor source assertions unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,883 to 4,798 lines.
 
+- R1 (Lane C, partial): extracted `testPauseButton` into `game/tests/legacy_pause_button.lua`.
+  - Preserved its 44×44 touch area, ascending-only phase gate, toggle/unpause behavior, paused update freeze, and phase-change auto-clear assertions unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,485 to 4,426 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract `testPauseButton` from `game/self_test.lua` into `game/tests/legacy_pause_button.lua`, preserving its touch-area, phase gating, toggle, and draw-state assertions.
+- R1 (Lane C): extract `testGearPopupAndKeepPart` from `game/self_test.lua` into `game/tests/legacy_gear_popup_and_keep_part.lua`, preserving its i18n, equipped-slot popup, destruction snapshot, and keep-one relaunch assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
