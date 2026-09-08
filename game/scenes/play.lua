@@ -28,6 +28,9 @@ local drawPixelStar = M.drawPixelStar
 -- Pure HUD icon geometry and centered icon/text rendering.
 require("game.scenes.play_icons").install(M)
 
+-- Pure HUD band sizing rules (height, text-width cap, and spacing constants).
+require("game.scenes.play_hud_layout").install(M)
+
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
 -- install() copies drawMinimap, drawShipStatsSummary, galaxyChartLineColor/FillColor,
 -- drawMinimapSprite, rimMarker constants, shipStats constants back onto M so
@@ -315,11 +318,6 @@ M.launchTouchArea = launchTouchArea
 -- the same small font inside a background box extended all the way to
 -- the canvas bottom (viewport.height) so the Earth disc can no longer
 -- show through below the box.
--- Mobile-UI sub-item (1): HUD font enlarged from 8px to 14px; every HUD
--- band height scales proportionally so text lines never overlap and the
--- minimap sits below the taller band.
-M.hudFontSize = 22   -- item 41: same font across all phases (was 44 launch-only)
-M.hudLineStep = 30   -- item 41: proportional step for 22px font
 -- Regression fix (2026-09-02, same feedback item, follow-up capture): the
 -- Earth disc drawn behind the scene (center y=75-cameraY for a ship parked
 -- at the world origin, radius 58) tops out at y=202, two pixels above the
@@ -412,85 +410,6 @@ M.showLaunchLoadoutTitle = false
 
 -- drawMinimapSprite / rimMarker* / galaxyChartLineColor / galaxyChartFillColor
 -- → moved to game/scenes/play_minimap.lua (installed on M at top of file)
-
--- "고도(ALT)" mislabeling fix (docs/feedback/INBOX.md item 2, 2026-09-03):
--- hud_primary is relabeled ALT->DIST ("고도"->"거리") below. This gap keeps
--- the primary distance/cash row visually separate from secondary status.
-M.hudPrimaryStatusGap = 6   -- item 41: gap matching 22px font (was 12)
-M.hudGalaxyShift = 30       -- item 41: one lineStep when galaxy name shown (was 52)
-
--- docs/feedback/INBOX.md UI/HUD item 5: the returning-phase slot-odds line
--- (C%/P%/S%/AVG$ above the minimap) was removed when item-15(a) abolished
--- in-flight slots. The hudOddsLineHeight that used to reserve 10px for it is
--- no longer needed; the returning HUD band height is now 70 + hudPrimaryStatusGap
--- (same as the ascending phase with returnProgress showing).
--- Constant kept as a zero-read alias for any call site that referenced it,
--- so old assertions that check "hudOddsLineHeight > 0" will need updating to
--- reflect item-15(a). See self_test.lua item-15(a) follow-up assertion.
-M.hudOddsLineHeight = 0
-
--- Shared HUD background-box height so the minimap placement (drawMinimap)
--- and the actual text draw (draw) never disagree about how tall the top
--- HUD band is.
-function M.hudHeight(phase, hud, galaxyShift)
-    -- Item 38b: one stat per line. Count lines: dist + cash + status = 3 base,
-    -- +1 if galaxy, +1 if best. Height = 4 + lines * hudLineStep.
-    -- galaxyShift is no longer used (galaxy is counted as a line), kept for API compat.
-    local lines = 3  -- distance, cash, status
-    if hud and hud.galaxy then lines = lines + 1 end
-    if hud and hud.best then lines = lines + 1 end
-    return 4 + lines * M.hudLineStep
-end
-
--- INBOX (16): HUD fill is left-text width only (icons + padding), never a
--- full-width 720px black band. hudHeight() still anchors the minimap.
-M.hudBackgroundMaxWidth = 280  -- item 41: narrower for 22px font (was 500)
-M.hudBackgroundPad = 8
-
-function M.hudBackgroundWidth(hud, font)
-    hud = hud or {}
-    local function textW(s)
-        if not s or s == "" then return 0 end
-        if font and font.getWidth then
-            return font:getWidth(s)
-        end
-        return 0
-    end
-    local icon = M.hullIconSize
-    local gap = M.hullIconGap
-    local left = 5
-    local widest = 0
-    local function consider(right)
-        if right > widest then widest = right end
-    end
-    if hud.galaxy then
-        consider(left + icon + gap + textW(hud.galaxy))
-    end
-    -- Item 38b: cash is its own line now, not appended after distance.
-    consider(left + icon + gap + textW(hud.distance))
-    consider(left + icon + gap + textW(hud.cash))
-    -- Item 38c: status uses HP blocks now, so calculate their visual width.
-    if hud.maxDurability then
-        local blocksW = (hud.maxDurability * M.hpBlockSize) + math.max(0, hud.maxDurability - 1) * M.hpBlockGap
-        consider(left + icon + gap + blocksW)
-    elseif hud.status then
-        consider(left + icon + gap + textW(hud.status))
-    end
-    if hud.best then
-        consider(left + icon + gap + textW(hud.best))
-    end
-    if hud.earth then
-        consider(left + icon + gap + textW(hud.earth))
-    end
-    if hud.returnProgress then
-        consider(left + icon + gap + textW(hud.returnProgress))
-    end
-    local w = widest + M.hudBackgroundPad
-    if w > M.hudBackgroundMaxWidth then
-        return M.hudBackgroundMaxWidth
-    end
-    return w
-end
 
 local function planetColor(hue)
     if hue < 0.33 then return 0.35, 0.75, 1 end

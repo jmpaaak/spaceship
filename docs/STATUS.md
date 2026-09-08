@@ -1,9 +1,9 @@
 ## Current Status
-- R1: `play.lua` icon helper extraction.
-  - Added `game/scenes/play_icons.lua`; `play.lua` installs the module while keeping the existing icon geometry, sizing constants, and centered icon/text API stable.
-  - Added engine-hosted `game/tests/play_icons.lua`; observed RED for the missing module, then GREEN after extraction.
-  - `play.lua` reduced from 3726 lines / 181093 bytes to 3602 lines / 176139 bytes.
-  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, and `ASSET_MANIFEST_OK`).
+- R1: `play.lua` HUD sizing extraction.
+  - Added pure layout module `game/scenes/play_hud_layout.lua`; `play.lua` delegates HUD height, background-width cap, and spacing constants while preserving its public scene API.
+  - Added engine-hosted `game/tests/play_hud_layout.lua`; observed RED for the missing module, then GREEN after extraction.
+  - `play.lua` reduced from 3602 lines / 176139 bytes to 3521 lines / 172556 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, and 28 Python tests).
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -153,6 +153,6 @@
 
 ## Next slice
 
-- R1: extract HUD sizing rules (`hudHeight`, `hudBackgroundWidth`, and related constants) from `game/scenes/play.lua` into `game/scenes/play_hud_layout.lua`; preserve the scene API and reduce `play.lua` further before INBOX feature work.
+- R1: extract HUD gear-slot layout and hit testing (`hudGearSlotLayout`, `hitHudGearSlot`) from `game/scenes/play.lua` into `game/scenes/play_hud_gear.lua`; preserve the scene API and reduce `play.lua` further before INBOX feature work.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

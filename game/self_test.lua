@@ -10421,6 +10421,7 @@ function M.run()
     require("game.tests.star_sprite").run()
     require("game.tests.play_draw").run()
     require("game.tests.play_icons").run()
+    require("game.tests.play_hud_layout").run()
 
     print("SPACESHIP_UNIT_OK")
 end

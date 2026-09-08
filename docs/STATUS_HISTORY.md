@@ -1442,3 +1442,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Added engine-hosted `game/tests/play_draw.lua`; observed RED for the missing module, then GREEN after extraction.
   - `play.lua` reduced from 3837 lines / 185925 bytes to 3726 lines / 181093 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, smoke source/package, bundle, and asset manifest).
+
+## Archived from STATUS.md (2026-09-08 13:02)
+
+- R1: `play.lua` icon helper extraction.
+  - Added `game/scenes/play_icons.lua`; `play.lua` installs the module while keeping the existing icon geometry, sizing constants, and centered icon/text API stable.
+  - Added engine-hosted `game/tests/play_icons.lua`; observed RED for the missing module, then GREEN after extraction.
+  - `play.lua` reduced from 3726 lines / 181093 bytes to 3602 lines / 176139 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, and `ASSET_MANIFEST_OK`).
