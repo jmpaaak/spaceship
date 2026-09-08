@@ -2215,3 +2215,9 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
 - R1 (Lane C, partial): extracted the sample-tier color, pickup-particle, sparkle, scene-time, and anticipation characterization block into `game/tests/legacy_sample_tier_visuals.lua`.
   - Preserved the existing assertions and execution order behind `run()`; `game/tests/self_test_sample_visuals_extraction.lua` enforces delegation and prevents the body from returning to the runner.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,360 to 3,263 lines.
+
+## Archived from STATUS.md (2026-09-08 23:36)
+
+- R1 (Lane C, partial): extracted the collision-impact and score-proportional screen-shake characterization block into `game/tests/legacy_collision_shake.lua`.
+  - Preserved the collision update setup, common/rare/epic shake ordering, and magnitude assertions unchanged behind `run()`; `game/tests/self_test_collision_shake_extraction.lua` enforces delegation.
+  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,263 to 3,216 lines.

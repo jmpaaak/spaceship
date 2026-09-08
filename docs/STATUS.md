@@ -1,7 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted the collision-impact and score-proportional screen-shake characterization block into `game/tests/legacy_collision_shake.lua`.
-  - Preserved the collision update setup, common/rare/epic shake ordering, and magnitude assertions unchanged behind `run()`; `game/tests/self_test_collision_shake_extraction.lua` enforces delegation.
-  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,263 to 3,216 lines.
+- R1 (Lane C, partial): extracted the specimen tier/catalog characterization block into `game/tests/legacy_specimen_catalog.lua`.
+  - Preserved tier boundaries, catalog uniqueness, and stable specimen ID/label assertions unchanged behind `run()`; `game/tests/self_test_specimen_catalog_extraction.lua` enforces delegation.
+  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,216 to 3,192 lines.
+  - Exact next slice: extract the initial viewport/ship/world smoke checks from `game/self_test.lua` into one legacy suite without changing their order or assertions.
 
 - INBOX 61(28): Boost button UI & Boost FX
   - Created `game/scenes/play_boost.lua` to extract boost logic and avoid bloating `play.lua`.
