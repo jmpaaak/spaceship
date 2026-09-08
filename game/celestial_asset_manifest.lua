@@ -35,6 +35,14 @@ M.planets = {
         height = 128,
         sha256 = "8963191009096a3ccd9e16755f4aa55cca10059a08f316d73ce8f7254e83c537",
     },
+    lava = {
+        id = "pp_lava_nasa_pia00703",
+        runtimePath = "assets/planet/studio/pp_lava_nasa_pia00703.png",
+        masterPath = "docs/assets/masters/planet/pp_lava_nasa_pia00703_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "e155a770f2586e79616e302b1e8d821097b7085a9d044c58dcd86c9d823e3f32",
+    },
 }
 
 return M

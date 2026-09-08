@@ -1934,8 +1934,8 @@ function M.run()
         -- Regular planet with starType → pp_<type>
         assert(resolve({ galaxyStarType = "ice" }) == "assets/planet/studio/pp_ice_nasa_pia00353.png",
             "regular ice planet must resolve to the wired Asset Studio derivative")
-        assert(resolve({ galaxyStarType = "lava" }) == "assets/planet/pp_lava.png",
-            "regular lava planet must resolve to pp_lava.png")
+        assert(resolve({ galaxyStarType = "lava" }) == "assets/planet/studio/pp_lava_nasa_pia00703.png",
+            "regular lava planet must resolve to the wired Asset Studio derivative")
         assert(resolve({ galaxyStarType = "bare" }) == "assets/planet/studio/pp_bare.png",
             "regular bare planet must resolve to the wired Asset Studio derivative")
 

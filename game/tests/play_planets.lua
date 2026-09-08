@@ -48,8 +48,8 @@ function M.run()
             == "assets/planet/planet_shop.png",
         "R1: untyped shops must use the shop fallback")
     assert(api.planetImagePathForPlanet({ galaxyStarType = "lava" })
-            == "assets/planet/pp_lava.png",
-        "R1: typed planets must use their PixelPlanets sprite")
+            == "assets/planet/studio/pp_lava_nasa_pia00703.png",
+        "INBOX 78: ordinary lava planets must use the approved Asset Studio derivative")
     assert(api.planetImagePathForPlanet({ galaxyStarType = "unknown" })
             == "assets/planet/planet_generic.png",
         "R1: unknown planet types must use the generic fallback")
@@ -63,6 +63,8 @@ function M.run()
         "INBOX 78: dry planets must load the approved Asset Studio runtime derivative")
     assert(studioPaths.ice == "assets/planet/studio/pp_ice_nasa_pia00353.png",
         "INBOX 78: ice planets must load the approved Asset Studio runtime derivative")
+    assert(studioPaths.lava == "assets/planet/studio/pp_lava_nasa_pia00703.png",
+        "INBOX 78: lava planets must load the approved Asset Studio runtime derivative")
 
     local legacyBare = {}
     local legacyBareSheet = {}
@@ -177,6 +179,47 @@ function M.run()
     })
     assert(sprite == legacyIce and sheet == legacyIceSheet,
         "INBOX 78: ordinary ice studio artwork must not replace shop artwork")
+
+    local legacyLava = {}
+    local legacyLavaSheet = {}
+    local studioLava = {}
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "lava" }, {
+        default = {},
+        pixel = { lava = legacyLava },
+        sheets = { lava = legacyLavaSheet },
+        studio = { lava = studioLava },
+    })
+    assert(sprite == studioLava and sheet == nil,
+        "INBOX 78: decoded lava studio artwork must take priority over the legacy sheet")
+
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "lava" }, {
+        default = {},
+        pixel = { lava = legacyLava },
+        sheets = { lava = legacyLavaSheet },
+        studio = {},
+    })
+    assert(sprite == legacyLava and sheet == legacyLavaSheet,
+        "INBOX 78: failed lava studio loading must preserve the legacy lava artwork")
+
+    sprite, sheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "lava" }, {
+        default = {},
+        pixel = { lava = legacyLava },
+        sheets = { lava = legacyLavaSheet },
+        studio = { lava = studioLava },
+        hubSheet = legacyLavaSheet,
+    })
+    assert(sprite == legacyLava and sheet == legacyLavaSheet,
+        "INBOX 78: ordinary lava studio artwork must not replace hub artwork")
+
+    sprite, sheet = api.selectPlanetArtwork({ isShop = true, galaxyStarType = "lava" }, {
+        default = {},
+        pixel = { lava = legacyLava },
+        sheets = { lava = legacyLavaSheet },
+        studio = { lava = studioLava },
+        shopSprite = legacyLava,
+    })
+    assert(sprite == legacyLava and sheet == legacyLavaSheet,
+        "INBOX 78: ordinary lava studio artwork must not replace shop artwork")
 
     local hubGas = {}
     local hubGasSheet = {}

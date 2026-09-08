@@ -198,3 +198,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-09T03:21:20+0900 | assets/planet/studio/pp_gas.png | INBOX (78) Lane D: approved NASA PIA01518 Asset Studio 128x128 RGBA derivative wired for ordinary gas planets via runtime manifest
 2026-09-09T03:26:04+0900 | assets/planet/studio/pp_dry.png | INBOX (78) Lane D: approved NASA PIA00407 Asset Studio 128x128 RGBA derivative wired for ordinary dry planets via runtime manifest
 2026-09-09T03:32:12+0900 | assets/planet/studio/pp_ice_nasa_pia00353.png | INBOX (78) Lane D: approved NASA PIA00353 Asset Studio 128x128 RGBA derivative wired for ordinary ice planets via runtime manifest
+2026-09-09T03:41:11+0900 | assets/planet/studio/pp_lava_nasa_pia00703.png | INBOX (78) Lane D: approved NASA PIA00703 Asset Studio 128x128 RGBA derivative wired for ordinary lava planets via runtime manifest
