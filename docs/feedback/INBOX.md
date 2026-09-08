@@ -4,7 +4,14 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(77) **은하 상점 장비 구매·판매·정찰선 문구·회복 밸런스 정리** (msg `1546761251697328169`)
+(R1) **거대 파일 모듈 분리 최우선** (msg `1546726613721415681`, 재확정 msg `1546762371908173865`)
+  - **기능 작업을 멈추고 이 항목부터 완료한다.** INBOX (58)~ 및 (77)은 R1 완료 전 보류한다.
+  - 병렬 레인 A — `game/scenes/play.lua`(현재 약 1,140줄): `keypressed`/`touchpressed`/`touchmoved`/`touchreleased`를 `game/scenes/play_input.lua`로 추출. scene API·입력 소비 순서·모바일 터치 동작 불변.
+  - 병렬 레인 B — `game/expedition.lua`(현재 약 1,639줄): 상점/장비/업그레이드·슬롯·정산/런 상태를 책임별 `game/expedition_*.lua`로 추출하고 기존 public API를 호환 래퍼로 유지.
+  - 병렬 레인 C — `game/self_test.lua`(현재 약 10,441줄): 기존 테스트 본문을 영역별 `game/tests/legacy_*.lua`로 이동. 신규 테스트는 계속 `game/tests/`에만 추가하고 `self_test.lua`는 runner/공통 fixture 중심으로 축소.
+  - 각 레인은 독립 worktree에서 작업·검증·커밋 후 main에 순차 통합한다. 최종 기준: 세 거대 파일 모두 실질 감소, 동작 변경 없음, `make test` + `make verify` GREEN.
+
+(77) **은하 상점 장비 구매·판매·정찰선 문구·회복 밸런스 정리** (msg `1546761251697328169`, R1 완료 후 진행)
   - (1) 은하계 별 상점에서 한 번에 구매 가능한 장비는 **최대 1개**로 제한한다. 담당: 새 순수 모듈 `game/shop_gear_rules.lua` + `game/scenes/play_shop.lua` 소비. 상점 오퍼/구매 상태를 별·은하 상점 방문 단위로 추적하고, 1개 구매 후 같은 상점의 추가 장비 구매 버튼은 비활성화한다. 지구 업그레이드·슬롯 구매에는 적용하지 않는다.
   - (2) 장착 장비 상세 툴팁에서 선택한 장비를 **언제든 판매**할 수 있게 한다. 담당: `game/shop_gear_rules.lua` 판매가 계산/인벤토리 제거 + `game/scenes/play_shop.lua` 또는 신규 `game/scenes/play_gear_popup.lua` 판매 버튼. 비행 중 판매도 가능하며 판매 직후 슬롯·시너지·스탯을 즉시 갱신하고 현금을 지급한다. 확인 버튼/터치영역은 44px 이상, 빈 슬롯·중복 탭 방어.
   - (3) 정찰선 구매 후 상점 카드에 남는 `SCOUT X`/`SCOUT ✓` 상태 텍스트를 전부 제거한다. 담당: `game/scenes/play_loadout_data.lua` + i18n 소비부. 정찰선을 이미 구매/선택한 경우 카드에는 불필요한 상태표시를 남기지 않는다.
