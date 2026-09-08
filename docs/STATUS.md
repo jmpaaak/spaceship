@@ -1,9 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted basic hub partial-settlement coverage to `game/tests/legacy_hub_partial_settlement.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,612 to 5,585 lines.
-  - Preserved pending-sample conversion, payout, and repeated-settlement assertions without changing production behavior or adding a `love.*` boundary.
-  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testHubPartialSettlementGearInteraction` to `game/tests/legacy_hub_partial_settlement_gear_interaction.lua` without changing assertions.
+- R1 (Lane C, partial): extracted hub partial-settlement gear-interaction coverage to `game/tests/legacy_hub_partial_settlement_gear_interaction.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,585 to 5,499 lines.
+  - Preserved sample-sell-value gear, Earth-only money gear, sample-count persistence, and phase-independent return assertions without changing production behavior or adding a `love.*` boundary.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testHubSettleStreakPersistence` to `game/tests/legacy_hub_settle_streak_persistence.lua` without changing assertions.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).

@@ -1952,3 +1952,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved the safe-relaunch and destruction-reset assertions without changing production behavior or adding a `love.*` boundary.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testHubPartialSettlement` to `game/tests/legacy_hub_partial_settlement.lua` without changing assertions.
+
+## Archived from STATUS.md (2026-09-08 20:24)
+
+- R1 (Lane C, partial): extracted basic hub partial-settlement coverage to `game/tests/legacy_hub_partial_settlement.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,612 to 5,585 lines.
+  - Preserved pending-sample conversion, payout, and repeated-settlement assertions without changing production behavior or adding a `love.*` boundary.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testHubPartialSettlementGearInteraction` to `game/tests/legacy_hub_partial_settlement_gear_interaction.lua` without changing assertions.
