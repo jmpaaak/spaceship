@@ -144,8 +144,12 @@
   - Trusted this repository and verified an actual Hermes invocation preloaded both skills and returned both exact names.
   - R1 lanes now follow the documented scan → one responsibility/one pattern → existing tests → reference update sequence.
 
+- R1 (Lane C, partial): extracted `testEarthSlotSpinPartRarityGate` from `game/self_test.lua` into `game/tests/legacy_earth_slot_part_rarity_gate.lua`.
+  - Preserved the engine-hosted two-/three-match rarity gates and combined hull/engine PART-pool coverage unchanged behind `run()`.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,979 to 4,883 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract `testEarthSlotSpinPartRarityGate` from `game/self_test.lua` to `game/tests/legacy_earth_slot_part_rarity_gate.lua`, preserving two/three-match rarity gates and combined hull/engine pool coverage.
+- R1 (Lane C): extract `testSlotEditorWebUi` from `game/self_test.lua` to `game/tests/legacy_slot_editor_web_ui.lua`, preserving the runtime JSON defaults, profile fallback/override, and editor-source assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
