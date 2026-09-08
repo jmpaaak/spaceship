@@ -49,6 +49,8 @@ function M.run()
         "INBOX 78: lava central stars must load the approved filament derivative")
     assert(studioPaths.dry == "assets/star/studio/star_cme.png",
         "INBOX 78: dry central stars must load the approved CME derivative")
+    assert(studioPaths.gas == "assets/star/studio/star_flare.png",
+        "INBOX 78: gas central stars must load the approved solar-flare derivative")
 
     calls = {}
     local studioSun = { getDimensions = function() return 128, 128 end }
@@ -114,6 +116,31 @@ function M.run()
     play_star.drawCentralStar(isolatedCmeState, 0, 0, 80, {starType = "gas"}, 0)
     assert(#calls == 1 and calls[1].img == isolatedCmeState.starSheetImages.gas,
         "INBOX 78: the CME candidate must not replace another central-star type")
+
+    calls = {}
+    local studioFlare = { getDimensions = function() return 128, 128 end }
+    local gasStudioState = {
+        studioStarImages = { gas = studioFlare },
+        starTypeImages = { gas = dummyPlayState.starTypeImages.earth },
+        starSheetImages = { gas = dummyPlayState.starSheetImages.earth },
+    }
+    play_star.drawCentralStar(gasStudioState, 35, 60, 88, {starType = "gas"}, 0)
+    assert(#calls == 1 and calls[1].img == studioFlare,
+        "INBOX 78: a decoded studio flare must take priority for gas central stars")
+    assert(calls[1].args[1] == 35 and calls[1].args[2] == 60
+            and calls[1].args[4] == 1.375 and calls[1].args[5] == 1.375
+            and calls[1].args[6] == 64 and calls[1].args[7] == 64,
+        "INBOX 78: studio flare drawing must preserve the central-star center and diameter")
+
+    calls = {}
+    local isolatedFlareState = {
+        studioStarImages = { gas = studioFlare },
+        starTypeImages = { bare = dummyPlayState.starTypeImages.earth },
+        starSheetImages = { bare = dummyPlayState.starSheetImages.earth },
+    }
+    play_star.drawCentralStar(isolatedFlareState, 0, 0, 80, {starType = "bare"}, 0)
+    assert(#calls == 1 and calls[1].img == isolatedFlareState.starSheetImages.bare,
+        "INBOX 78: the flare candidate must not replace another central-star type")
 
     calls = {}
     local unrelatedStudioState = {

@@ -1,8 +1,8 @@
 ## Current Status
 
-- INBOX 78 Lane D wired the third approved photo-derived central-star candidate, `star_cme_nasa_gsfc_20171208_archive_e001770`, to dry-type galaxies only.
-  - `game/central_star_asset_manifest.lua` now allowlists `assets/star/studio/star_cme.png`; its Asset Studio and asset-catalog records are marked wired.
-  - A decoded 128×128 RGBA studio CME takes precedence over the legacy dry sheet. Decode failure keeps the existing exact-type/sun/circle fallback chain.
+- INBOX 78 Lane D wired the fourth approved photo-derived central-star candidate, `star_flare_nasa_gsfc_20171208_archive_e001058`, to gas-type galaxies only.
+  - `game/central_star_asset_manifest.lua` now allowlists `assets/star/studio/star_flare.png`; its Asset Studio and asset-catalog records are marked wired.
+  - A decoded 128×128 RGBA studio flare takes precedence over the legacy gas sheet. Decode failure keeps the existing exact-type/sun/circle fallback chain.
   - Engine-hosted tests cover manifest routing, decoded-image precedence, other-type isolation, and unchanged center/diameter geometry; the existing world suite continues to cover central-star gravity and collision behavior. `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
 
 ## Next slice
