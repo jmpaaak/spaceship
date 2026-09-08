@@ -1,9 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted engine speed run wiring coverage to `game/tests/legacy_gear_engine_speed_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 7,300 to 7,243 lines.
-  - Preserved baseline, engine speed, and additive hull/engine stacking assertions; the extracted module has no `love.*` boundary.
+- R1 (Lane C, partial): extracted gear settlement-money wiring coverage to `game/tests/legacy_gear_money_run_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,243 to 7,181 lines.
+  - Preserved unequipped payout, hull money bonus, and engine-slot exclusion assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testGearMoneyRunWiring` into one `game/tests/legacy_*.lua` module.
+  - Exact next slice: extract `testGearStreakMultiplierWiring` into one `game/tests/legacy_*.lua` module.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.

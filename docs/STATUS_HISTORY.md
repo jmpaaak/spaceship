@@ -1796,3 +1796,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved the base-speed, hull speed, engine speed, and additive stacking assertions; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearEngineSpeedRunWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 18:32)
+
+- R1 (Lane C, partial): extracted engine speed run wiring coverage to `game/tests/legacy_gear_engine_speed_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,300 to 7,243 lines.
+  - Preserved baseline, engine speed, and additive hull/engine stacking assertions; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearMoneyRunWiring` into one `game/tests/legacy_*.lua` module.
