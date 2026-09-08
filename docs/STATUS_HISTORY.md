@@ -1996,3 +1996,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 5,253 to 5,145 lines.
   - Preserved deterministic solar/fringe/void HARVEST reels, exposed reward profiles, and void-versus-solar no-match risk assertions without changing production code.
   - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
+
+## Archived from STATUS.md (2026-09-08 20:59)
+
+- R1 (Lane C, partial): extracted slot spin cost/miss settlement coverage to `game/tests/legacy_slot_spin_cost_and_miss.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,145 to 5,052 lines.
+  - Preserved configured spin cost, deterministic miss/pair/triple rewards, insufficient-funds rejection, and settlement money application without changing production code.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.

@@ -1,8 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): extracted slot spin cost/miss settlement coverage to `game/tests/legacy_slot_spin_cost_and_miss.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,145 to 5,052 lines.
-  - Preserved configured spin cost, deterministic miss/pair/triple rewards, insufficient-funds rejection, and settlement money application without changing production code.
-  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN.
+- R1 (Lane C, partial): extracted Earth slot part replacement coverage to `game/tests/legacy_earth_slot_part_replacement.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,052 to 4,979 lines.
+  - Preserved part equip, duplicate-cost refund, and full-loadout replacement-modal assertions without changing production code.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` is GREEN.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -146,6 +146,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testEarthSlotPartReplacement` from `game/self_test.lua` to `game/tests/legacy_earth_slot_part_replacement.lua`, preserving part equip, duplicate refund, and full-loadout replacement-modal assertions.
+- R1 (Lane C): extract `testEarthSlotSpinPartRarityGate` from `game/self_test.lua` to `game/tests/legacy_earth_slot_part_rarity_gate.lua`, preserving two/three-match rarity gates and combined hull/engine pool coverage.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
