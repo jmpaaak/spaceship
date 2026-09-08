@@ -38,6 +38,9 @@ function M.run()
     assert(api.planetImagePathForPlanet({ hub = true, galaxyStarType = "ice" })
             == "assets/planet/pp_ice.png",
         "R1: typed hubs must use their PixelPlanets sprite")
+    assert(api.planetImagePathForPlanet({ hub = true, galaxyStarType = "gas" })
+            == "assets/planet/pp_gas.png",
+        "INBOX 78: ordinary-planet candidates must not replace hub artwork")
     assert(api.planetImagePathForPlanet({ hub = true, galaxyStarType = "unknown" })
             == "assets/planet/planet_hub.png",
         "R1: unknown hub types must use the hub fallback")
@@ -54,6 +57,8 @@ function M.run()
     local studioPaths = api.studioPlanetImagePaths()
     assert(studioPaths.bare == "assets/planet/studio/pp_bare.png",
         "INBOX 78: bare planets must load the approved Asset Studio runtime derivative")
+    assert(studioPaths.gas == "assets/planet/studio/pp_gas.png",
+        "INBOX 78: gas planets must load the approved Asset Studio runtime derivative")
     assert(studioPaths.ice == nil,
         "INBOX 78: unwired Asset Studio candidates must remain out of the runtime manifest")
 
@@ -77,6 +82,39 @@ function M.run()
     })
     assert(sprite == legacyBare and sheet == legacyBareSheet,
         "INBOX 78: a failed studio image load must preserve the existing legacy fallback")
+
+    local legacyGas = {}
+    local legacyGasSheet = {}
+    local studioGas = {}
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "gas" }, {
+        default = {},
+        pixel = { gas = legacyGas },
+        sheets = { gas = legacyGasSheet },
+        studio = { gas = studioGas },
+    })
+    assert(sprite == studioGas and sheet == nil,
+        "INBOX 78: decoded gas studio artwork must take priority over the legacy sheet")
+
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "gas" }, {
+        default = {},
+        pixel = { gas = legacyGas },
+        sheets = { gas = legacyGasSheet },
+        studio = {},
+    })
+    assert(sprite == legacyGas and sheet == legacyGasSheet,
+        "INBOX 78: failed gas studio loading must preserve the legacy gas artwork")
+
+    local hubGas = {}
+    local hubGasSheet = {}
+    sprite, sheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "gas" }, {
+        default = {},
+        pixel = { gas = hubGas },
+        sheets = { gas = legacyGasSheet },
+        studio = { gas = studioGas },
+        hubSheet = hubGasSheet,
+    })
+    assert(sprite == hubGas and sheet == hubGasSheet,
+        "INBOX 78: ordinary-planet studio artwork must not replace hub artwork")
 
     local playSource = love.filesystem.read("game/scenes/play.lua") or ""
     assert(playSource:find('require%("game%.scenes%.play_planets"%)'),

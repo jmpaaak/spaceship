@@ -33,7 +33,7 @@ end
 
 function M.planetImagePathForPlanet(planet)
     local studioAsset = celestialAssets.planets[planet.galaxyStarType]
-    if studioAsset then
+    if studioAsset and not planet.hub and not planet.isShop then
         return studioAsset.runtimePath
     end
 
@@ -69,7 +69,7 @@ function M.selectPlanetArtwork(planet, assets)
     assets = assets or {}
     local planetType = planet.galaxyStarType
     local studioSprite = (assets.studio or {})[planetType]
-    if studioSprite then
+    if studioSprite and not planet.hub and not planet.isShop then
         return studioSprite, nil
     end
 
