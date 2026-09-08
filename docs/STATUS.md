@@ -1,12 +1,9 @@
 ## Current Status
-- INBOX 61(26) (c): Gear part balance and tier differentiation (hull_parts.json / engine_parts.json rebalance).
-  - Common cards rebalanced to always feature a single flat effect, boosted to a 5~12 minimum value range, enforcing their identity as solid foundational pieces.
-  - Uncommon cards rebalanced to precisely dual flat effects (guaranteed combination).
-  - Rare cards reworked to fully adopt the `multiply` mode (`×배수`), amplifying values by a ratio rather than flat addition.
-  - Legendary cards rebalanced to feature exactly one flat additive effect and one multiplicative effect (`+배수 AND ×배수`).
-  - Preserved specific rigid values for test fixtures like `engine_emergency_boost_pod` by migrating them to appropriate rarities (`uncommon`) to maintain test stability and logical coherence.
-  - Test suites verifying gear categorization and edition compatibility remained fully intact and GREEN.
-  - Moved item 26 to '처리 완료' in `INBOX.md` as its final step is complete.
+- R1 lane C: extracted collect-zoom/time-slip characterization coverage from `game/self_test.lua` into `game/tests/legacy_collect_zoom_and_timeslip.lua`.
+  - The runner now delegates through the module's `run()` entry point; assertions, update order, scene setup, and output remain unchanged.
+  - TDD evidence: missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; final `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - `game/self_test.lua` decreased by 59 lines (4,348 → 4,289); `play.lua` and `expedition.lua` were not changed.
+  - Next R1 slice: extract the adjacent RCS 0–999 gradient characterization block into `game/tests/legacy_rcs_gradient.lua`.
 
 - INBOX 61(25): Slot cost/rewards scale with galaxy distance.
   - `expedition.slotTier(run, galaxyId)` = `1 + floor(galaxyDistance / galaxyCellSize)`.
