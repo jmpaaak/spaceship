@@ -1743,3 +1743,17 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved first-hit insurance survival, second-hit destruction, uninsured destruction, discounted purchase, and full-price purchase assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
   - Exact next slice: extract `testGearInsuranceCategoryAgnosticWiring` into one `game/tests/legacy_*.lua` module.
+
+## Archived from STATUS.md (2026-09-08 17:55)
+
+- R1 (Lane C, partial): extracted gear-offer rolling coverage to `game/tests/legacy_gear_offer_rolling.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,803 to 7,688 lines.
+  - Preserved deterministic rarity, edition transform, empty-tier fallback, and hull/engine luck assertions; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearRunEffectWiring` into one `game/tests/legacy_*.lua` module.
+
+- R1 (Lane C, partial): extracted engine escape-pod effect coverage to `game/tests/legacy_gear_insurance_category_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,831 to 7,803 lines.
+  - Preserved the engine escape-pod fixture and `boostCharge` assertions unchanged; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearOfferRolling` into one `game/tests/legacy_*.lua` module.

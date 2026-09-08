@@ -18,146 +18,6 @@ local function testGearEditorSyncSuite()
     require("game.tests.legacy_gear_editor_whitelists").runAll()
 end
 
--- Item 14 (C) chainTrigger/rerollBonus + (E) detectionRadius/autoCollect run
--- wiring: gear.chainTriggerCount/rerollCount/effectiveDetectionRadius/
--- autoCollectEnabled have existed as pure gear.lua conversion functions
--- since item 14's first slice, but until now no run-facing wrapper in
--- game/expedition.lua actually combined them with an equipped-gear list
--- (the same "최소한의 로더 호출" wiring pattern already used for climbSpeed
--- synergy/propulsion/insurance/shopDiscount/drop-RNG above). This closes
--- the last remaining gap named in docs/STATUS.md's "여전히 미착수" list.
-local function testGearRunEffectWiring()
-    local expedition = require("game.expedition")
-
-    -- No gear equipped: all four must resolve to their documented
-    -- zero/false/baseline defaults (regression safety, same shape as the
-    -- insurance/boostCharge "no gear" baselines above).
-    local bareRun = expedition.new()
-    assert(expedition.chainTriggerCount(bareRun) == 0,
-        "an unequipped run must have zero chain-trigger re-activations")
-    assert(expedition.rerollCount(bareRun) == 0,
-        "an unequipped run must have zero free rerolls")
-    assert(math.abs(expedition.detectionRadius(bareRun, 20) - 20) < 1e-9,
-        "an unequipped run's detection radius must equal the unmodified base radius")
-    assert(expedition.autoCollectEnabled(bareRun) == false,
-        "an unequipped run must not have auto-collect enabled")
-    assert(expedition.rerollsRemaining(bareRun) == 0,
-        "an unequipped run must have zero remaining free rerolls")
-    local spent, err = expedition.spendReroll(bareRun)
-    assert(spent == false and type(err) == "string",
-        "spendReroll must refuse (false + message) when no free rerolls remain")
-
-    -- Equip one hull card carrying all four (C)/(E) effect types at once
-    -- and confirm the run-level wrappers combine gearModule's pure
-    -- conversions with the actual equipped list (hull + engine slots are
-    -- independent per item 10, so this also proves engine-only equips
-    -- don't leak into hull totals or vice versa).
-    local run = expedition.new()
-    local comboCard = {
-        id = "combo-fixture", name = "Combo", nameKo = "Combo", icon = "*",
-        rarity = "common", tags = {}, editions = {},
-        effects = {
-            { type = "chainTrigger", value = 1.9 },
-            { type = "rerollBonus", value = 2.4 },
-            { type = "detectionRadius", value = 50 },
-            { type = "autoCollect", value = 1 },
-        },
-    }
-    assert(expedition.equipGear(run, "hull", comboCard))
-    assert(expedition.chainTriggerCount(run) == 1,
-        "chainTrigger total must floor to a whole re-trigger count through the run wrapper")
-    assert(expedition.rerollCount(run) == 2,
-        "rerollBonus total must floor to a whole free-reroll count through the run wrapper")
-    assert(math.abs(expedition.detectionRadius(run, 20) - 30) < 1e-9,
-        "detectionRadius +50%% of base 20 must resolve to 30 through the run wrapper")
-    assert(expedition.autoCollectEnabled(run) == true,
-        "a positive autoCollect effect must enable auto-collect through the run wrapper")
-
-    -- rerollBonus (item 14(C)) has, until this slice, only ever exposed a
-    -- pure COUNT (rerollCount) with no run-state consumer -- unlike its (C)
-    -- sibling luck (spent via gear.totalLuckBonus feeding rollRarity/
-    -- rollEdition) or insurance (a one-shot boolean gate consumed by
-    -- M.damage), a "free reroll count" is meaningless unless something can
-    -- actually SPEND one. M.rerollsRemaining(run)/M.spendReroll(run) close
-    -- that last (C) consumption gap: spending decrements a per-expedition
-    -- counter (not the raw equipped total, which is re-derived from gear
-    -- and would never deplete) down to zero, then refuses further spends.
-    assert(expedition.rerollsRemaining(run) == 2,
-        "a run with rerollBonus == 2 (floored) must start with 2 remaining free rerolls")
-    local ok1 = expedition.spendReroll(run)
-    assert(ok1 == true, "spendReroll must succeed while rerolls remain")
-    assert(expedition.rerollsRemaining(run) == 1,
-        "spending one reroll must decrement the remaining count by exactly one")
-    local ok2 = expedition.spendReroll(run)
-    assert(ok2 == true, "spendReroll must succeed for the last remaining reroll")
-    assert(expedition.rerollsRemaining(run) == 0,
-        "rerollsRemaining must reach exactly zero once every free reroll is spent")
-    local ok3, err3 = expedition.spendReroll(run)
-    assert(ok3 == false and type(err3) == "string",
-        "spendReroll must refuse (false + message), not go negative, once rerolls are exhausted")
-    assert(expedition.rerollsRemaining(run) == 0,
-        "a refused spendReroll call must not further decrement the remaining count")
-
-    -- Re-launching a fresh expedition must refill the remaining-reroll
-    -- counter back up to the current equipped total (same "per-expedition
-    -- resource" shape as run.insuranceUsed being reset on M.launch).
-    run.phase = "settlement"
-    assert(expedition.launch(run))
-    assert(expedition.rerollsRemaining(run) == 2,
-        "launching a new expedition must refill remaining rerolls back to the equipped rerollBonus total")
-
-    -- Item 9/14 gap audit: gear.equippedTotals already computes a combined
-    -- (A) sampleSellValue flat bonus + (B) sellMultiplier scaling (see the
-    -- "sellA"/"sellB" fixture in legacy_gear_effect_schema), but until
-    -- this slice NOTHING in expedition.lua ever read that total -- equipping
-    -- 8 bundled sampleSellValue hull cards (or the sellMultiplier
-    -- hull_market_broker card) had literally zero effect on the actual
-    -- money a player earned from M.collectSample. This is item 9's core
-    -- "combo synergy multiplies the payoff" promise for the ECONOMY stat,
-    -- not just climbSpeed.
-    local sellRun = expedition.new()
-    local sellCard = {
-        id = "sell-fixture", name = "Sell", nameKo = "Sell", icon = "*",
-        rarity = "common", tags = {}, editions = {},
-        effects = {
-            { type = "sampleSellValue", value = 10 },
-            { type = "sellMultiplier", value = 50 },
-        },
-    }
-    assert(expedition.equipGear(sellRun, "hull", sellCard))
-    -- equippedTotals: flat sampleSellValue 10, sellMultiplier +50% ->
-    -- combined bonus = 10 * 1.5 = 15.
-    assert(math.abs(expedition.effectiveSampleBonus(sellRun) - 15) < 1e-9,
-        "equipped sampleSellValue+sellMultiplier gear must resolve to a flat +15 sample bonus")
-    sellRun.phase = "ascending"
-    local sellOk, sellAwarded = expedition.collectSample(sellRun, 100)
-    -- base 100 * sampleYieldMultiplier(1, no upgrade) * streakMultiplier(1,
-    -- first collect) + gear bonus 15 = 115.
-    assert(sellOk and sellAwarded == 115,
-        "collectSample must add the equipped gear's flat sampleSellValue/sellMultiplier bonus: got " .. tostring(sellAwarded))
-
-    -- An unequipped run must be a strict no-op (regression safety matching
-    -- every other item 14 "no gear" baseline in this test).
-    local bareSellRun = expedition.new()
-    assert(expedition.effectiveSampleBonus(bareSellRun) == 0,
-        "an unequipped run must have zero gear sample bonus")
-
-    -- Engine-slot equips must feed the same wrappers too (item 10: hull and
-    -- engine are independent slot lists, but both should count toward these
-    -- run-wide totals, matching how boostChargeCount/effectiveFuelBurnRate
-    -- already read only from equippedEngineParts and climbSpeed synergy
-    -- only from equippedGear -- here (C)/(E) are gear-category-agnostic).
-    local engineRun = expedition.new()
-    local engineComboCard = {
-        id = "engine-combo-fixture", name = "EngineCombo", nameKo = "EngineCombo", icon = "*",
-        rarity = "common", tags = {}, editions = {},
-        effects = { { type = "chainTrigger", value = 1 } },
-    }
-    assert(expedition.equipGear(engineRun, "engine", engineComboCard))
-    assert(expedition.chainTriggerCount(engineRun) == 1,
-        "chainTrigger effects on an engine-slot part must also count toward the run-wide total")
-end
-
 -- Item 10/14 (B) sellMultiplier engine-slot gap: docs/GEAR_SCHEMA.md and
 -- legacy_gear_category_coverage treat sellMultiplier as
 -- hull/engine category-agnostic (combinedGearList), and engine_parts.json
@@ -220,7 +80,7 @@ local function testGearSellMultiplierEngineSlotWiring()
         "an engine-only sellMultiplier card must not invent a sample bonus without hull sampleSellValue")
 
     -- Hull sellMultiplier must keep working (regression vs the original
-    -- hull-only equippedTotals path in testGearRunEffectWiring).
+    -- hull-only equippedTotals path in legacy_gear_run_effect_wiring).
     local hullBoth = expedition.new()
     assert(expedition.equipGear(hullBoth, "hull", hullSell))
     assert(expedition.equipGear(hullBoth, "hull", hullMult))
@@ -586,7 +446,7 @@ local function testGearStreakMultiplierWiring()
 end
 
 -- Item 14 (C) chainTrigger consumption gap audit: expedition.chainTriggerCount
--- (above, testGearRunEffectWiring) has existed only as a stateless re-derived
+-- (above, legacy_gear_run_effect_wiring) has existed only as a stateless re-derived
 -- COUNT since item 14's (C)/(E) run-wiring slice -- exactly the same "count
 -- exists but nothing ever actually retriggers anything" gap this lane found
 -- and closed for rerollBonus (M.spendReroll) and boostCharge (M.spendBoost).
@@ -638,7 +498,7 @@ local function testGearChainTriggerConsumptionWiring()
     assert(ok3 and awarded3 == 200, "an engine-slot chainTrigger card must also double the awarded value, got " .. tostring(awarded3))
 end
 
--- Item 14(C) rerollBonus gap, one level deeper than testGearRunEffectWiring's
+-- Item 14(C) rerollBonus gap, one level deeper than legacy_gear_run_effect_wiring's
 -- coverage: M.spendReroll(run) (a prior slice) only decrements a per-
 -- expedition counter -- it never actually re-rolls anything, so a shop/hub
 -- UI wired to it would spend the resource for literally no effect. Likewise
@@ -2967,7 +2827,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_survival_economy_wiring").run()
     require("game.tests.legacy_gear_insurance_category_wiring").run()
     require("game.tests.legacy_gear_offer_rolling").run()
-    testGearRunEffectWiring()
+    require("game.tests.legacy_gear_run_effect_wiring").run()
     testGearSellMultiplierEngineSlotWiring()
     testGearCollisionRadiusRunWiring()
     testGearHullDurabilityRunWiring()
