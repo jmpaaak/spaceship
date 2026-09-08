@@ -120,6 +120,23 @@
   - 스트릭 규칙은 그대로 (같은 계열 연속 +0.2/스텝). 시너지 pulsarBurst/darkMatter는 기어 수트 기준 유지 — 표본 계열과 이름이 같아져도 로직은 기어 장착 수트.
   - 테스트: `game/tests/sample_suits.lua` — hueFamily 4키, 같은 solar 연속 시 스트릭, nebula로 바꾸면 리셋.
 
+(70) **타이틀 함선과 Jimmy's/우주선 텍스트 간격 거의 없음** (msg `1546720287251243148`)
+  - 담당: `game/scenes/title.lua` `shipLayout`. play.lua 금지.
+  - 지금: 함선 하단과 Jimmy's(y=488) 사이 **24px** + idle bob |oy|≤8 이라 더 벌어짐.
+  - 함선 하단을 Jimmy's 바로 위에 붙임. 갭 **0~4px** (bob이 겹치지 않을 최소만). 스케일 ×7 nearest 유지.
+  - 테스트: `game/tests/title_ship_icon.lua` — ship bottom ≈ 488 (갭 ≤4).
+
+(71) **타이틀에 만든이 메뉴 (mok 참고)** (msg `1546720287251243148`)
+  - 담당: `game/scenes/credits.lua` (새 씬) + `title.lua` 버튼 + `main.lua` 전환. play.lua 금지.
+  - mok `story/main_menu.lua` `drawCredits`: 제목 만든이, `기획 · 개발` + 메일.
+  - 타이틀 버튼 추가: KO `만든이` / EN `CREDITS` (SETTINGS 아래 또는 동등한 5번째).
+  - 본문:
+    - 기획 · 개발
+    - `jmpaxk@gmail.com (jimmy)`  ← 메일 옆에 이름 (jimmy)
+    - 엔진 LÖVE 11.5 · 한글 픽셀 폰트 Galmuri
+    - BGM 크레딧은 기존 `title_bgm_credit` 재사용
+  - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
+
 ## 처리 완료
 (54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
   - 완료: `sfx.play(name, uniqueKey, volume?)` — default 0.6. Planet keeps `sfx.play("collision")`. Debris loop one-line `sfx.play("collision", nil, 0.9)`. Moon/comet unchanged.
