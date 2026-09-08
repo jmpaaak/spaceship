@@ -5021,5 +5021,33 @@
     "width": 128,
     "height": 128,
     "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+  },
+  {
+    "path": "assets/planet/studio/hub_venus.png",
+    "source_url": "https://images-assets.nasa.gov/image/PIA00104/PIA00104~orig.jpg",
+    "terms_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+    "asset_id": "hub_venus_nasa_pia00104",
+    "prompt": "NASA/JPL Magellan computer-simulated global view of Venus PIA00104 converted by the unified local Asset Studio POST /api/pixel-perfect endpoint",
+    "model": "Unified Asset Studio local Pixel Perfect API",
+    "style": "photo-derived high-resolution pixel art",
+    "settings": {
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "targetWidth": 512,
+      "targetHeight": 512,
+      "pixelBlock": 4,
+      "backgroundTolerance": 64,
+      "paletteLimit": 64,
+      "source_dimensions": [4096, 4096],
+      "input_dimensions": [1024, 1024],
+      "master_dimensions": [512, 512],
+      "runtime_derivation": "integer 4x NEAREST downscale",
+      "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
+    },
+    "note": "Unwired hub-planet candidate; actual runtime load path waits for Lane D.",
+    "downloaded_at": "2026-09-09T02:53:26+09:00",
+    "sha256": "53cabe7fa57bdb551aff57502d97c203dac4c4c1fbcb3d05d81da62618b911b4",
+    "width": 128,
+    "height": 128,
+    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
   }
 ]
