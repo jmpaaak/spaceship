@@ -114,39 +114,27 @@
   - play.lua 4169→4037 lines (~132 lines removed).
   - Test `INBOX-61(32) play_gameover.lua extraction` GREEN. All existing tests pass unchanged.
 
-## Next slice
+- R1-A1 (Lane A): Extracted  and its comprehensive test .
+  - Enforced rigorous input consumption contract (popup -> overlay -> phase UI -> joystick).
+  - Fixed the shop relaunch button bug where touches were bleeding into world coordinates.
 
-- INBOX 61(32) (completed): `play_slot.lua` and `play_joystick.lua` extraction.
-  - Created `game/scenes/play_slot.lua` to extract slot machine spin and update logic.
-  - Created `game/scenes/play_joystick.lua` to extract joystick touch handling, drawing, and mouse polling.
-  - Updated `play.lua` to delegate slot logic (`updateSlotMachine`, `spinSlotMachine`) and joystick logic (`joystickVector`, `joystickKnob`, `joystickOrigin`, `pollDesktopMouse`).
-  - Adjusted `self_test.lua` INBOX 61(3) test to properly include `play_slot.lua` in its source check for `slotLeverPull`.
-  - `play.lua` size reduced significantly. Extraction of major independent systems complete.
-  - Tests pass (`make verify LOVE=...` GREEN).
+- R1 (Lane B, partial): Extracted slot machine logic to .
+  - Moved , , ,  etc., from .
+  - Reduced  by ~250 lines.
+  - Retained  API wrappers in  ensuring all tests and caller modules work transparently.
 
-- INBOX (46): Scout card update
-  - Replaced fixed `-1` scout hull penalty with a dynamic calculation: `-math.floor(maxDurability * 0.5)` (minimum 1 remaining) via `expedition.getScoutDurabilityBonus(run)`.
-  - Updated `scoutClimbSpeedBonus` from `50` to `120`.
-  - Updated translation strings for EN `SCOUT $%d` and KO `정찰선 구매 $%d` in `buy_scout_compact`.
-  - Refactored shop preview logic in `play.lua` to calculate dynamic `nextMaxDurability` correctly when scout is selected, ensuring the `HULL` previews reflect the percentage-based tradeoff accurately.
-  - Assertions in `self_test.lua` adjusted to expect correct scaled stat previews.
-  - Tests pass (`make verify LOVE=...` GREEN).
+- R1-A1 (Lane A): Extracted `game/scenes/play_input.lua` and its comprehensive test `game/tests/play_input.lua`.
+  - Enforced rigorous input consumption contract (popup -> overlay -> phase UI -> joystick).
+  - Fixed the shop relaunch button bug where touches were bleeding into world coordinates.
 
-- INBOX (55): CONTINUE/NEW GAME must land on launch
-  - `main.lua`: `startGame` sets `fromTitle = true`, `play.expedition.phase = "launch"`.
-  - `play.lua` / `play_joystick.lua`: `launchInputArmed` gate prevents immediate launch from title tap click-through.
-  - Tests pass (`game/tests/title_to_launch_gate.lua` GREEN).
-
-- INBOX (56): HUD RECORD label zero-padding removed
-  - `game/i18n.lua`: changed format string from `%04d` to `%d` (RECORD %d / 기록 %d).
-  - Tests pass (`game/tests/hud_record_label.lua` GREEN).
-
-- INBOX (57): BGM volume reduced to 75%
-  - `game/bgm.lua`: `src:setVolume` updated from `0.25` to `0.1875`.
-  - Tests pass (`game/tests/bgm.lua` GREEN).
+- R1 (Lane B, partial): Extracted slot machine logic to `game/expedition_slot.lua`.
+  - Moved `loadSlotConfig`, `earthSlotSpin`, `slotTier`, `slotReward` etc., from `game/expedition.lua`.
+  - Reduced `game/expedition.lua` by ~250 lines.
+  - Retained `M.*` API wrappers in `game/expedition.lua` ensuring all tests and caller modules work transparently.
 
 ## Next slice
 
-- R1: extract `loadoutLines`, `scoutTradeoffLines`, and `shopLoadoutLines` presentation assembly from `game/scenes/play.lua` into `game/scenes/play_loadout_data.lua`; preserve current formatting and scene APIs without adding gameplay behavior.
+- R1 (Lane C): Extract `game/self_test.lua` (currently ~10k lines) legacy tests into `game/tests/legacy_*.lua`.
+- R1 (Lane B): Extract remaining `game/expedition.lua` logic (e.g. `expedition_shop.lua`, `expedition_upgrades.lua`).
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
