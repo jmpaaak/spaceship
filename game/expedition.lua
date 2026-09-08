@@ -5,10 +5,10 @@ local M = {}
 -- 호출" to wire game/gear.lua (item 9/13) and game/engine_parts.lua (item
 -- 10) into actual run state. requiring these here (rather than in play.lua)
 -- keeps that wiring inside this lane's owned files.
-local gearModule = require("game.gear")
-local enginePartsModule = require("game.engine_parts")
-local json = require("game.json")
 local lifecycle = require("game.expedition_lifecycle")
+local expeditionGear = require("game.expedition_gear")
+local expeditionUpgrade = require("game.expedition_upgrade")
+local expeditionRun = require("game.expedition_run")
 
 
 local expedition_slot = require('game.expedition_slot')
@@ -91,19 +91,13 @@ end
 -- Exception: item 12 quantum_flawed's hullDurability -1 drawback on an
 -- ENGINE card is the edition's unique cost and must still land on
 -- maxDurability. Positive engine-slot hullDurability stays 0.
-local function equippedHullDurabilityBonus(run)
-    return lifecycle.equippedHullDurabilityBonus(run)
+function M.equippedHullDurabilityBonus(run)
+    return expeditionGear.equippedHullDurabilityBonus(M, run)
 end
-M.equippedHullDurabilityBonus = equippedHullDurabilityBonus
 
 function M.getScoutDurabilityBonus(run)
-    return lifecycle.getScoutDurabilityBonus(run)
+    return expeditionGear.getScoutDurabilityBonus(M, run)
 end
-
-local function refreshShipStats(run)
-    return lifecycle.refreshShipStats(run)
-end
-
 
 -- Item 2: beginReturn abolished. The returning phase no longer exists;
 -- players steer back to Earth during ascending, and proximity triggers
@@ -120,7 +114,7 @@ end
 -- and applied once per settlement (a flat bonus, not a per-sample/per-tick
 -- rate like its (A) siblings) rather than per-sample.
 function M.equippedHullMoneyBonus(run)
-    return lifecycle.equippedHullMoneyBonus(run)
+    return expeditionGear.equippedHullMoneyBonus(M, run)
 end
 
 local function settle(run)
@@ -166,29 +160,8 @@ end
 -- mutated (same contract as gear.applyEditionEffects) and (b) already-
 -- transformed offers (rollGearOffer / a previous equip) are not doubled
 -- (gated by `editionApplied`).
-local function materializeEdition(part)
-    if type(part) ~= "table" then return part end
-    if not part.edition or part.editionApplied then return part end
-    local copy = {}
-    for k, v in pairs(part) do copy[k] = v end
-    copy.effects = gearModule.applyEditionEffects(part, part.edition)
-    copy.editionApplied = true
-    return copy
-end
-
 function M.equipGear(run, category, part)
-    local ok, err = enginePartsModule.equip(run.gearLoadout, category, materializeEdition(part))
-    if not ok then return false, err end
-    if category == "hull" then
-        run.equippedGear = run.gearLoadout.hull
-    else
-        run.equippedEngineParts = run.gearLoadout.engine
-    end
-    -- Hull plating AND engine-slot quantum_flawed drawbacks both shift
-    -- maxDurability, so every category recomputes immediately.
-    refreshShipStats(run)
-    if run.phase == "launch" then run.durability = run.maxDurability end
-    return true
+    return expeditionGear.equipGear(M, run, category, part)
 end
 
 -- Unequips by id from the given category; keeps run.equippedGear /
@@ -200,19 +173,7 @@ end
 -- guard as equipGear -- mid-flight durability is never silently reduced
 -- by a shop/loadout-only action).
 function M.unequipGear(run, category, id)
-    local removed = enginePartsModule.unequip(run.gearLoadout, category, id)
-    if removed then
-        if category == "hull" then
-            run.equippedGear = run.gearLoadout.hull
-        else
-            run.equippedEngineParts = run.gearLoadout.engine
-        end
-        refreshShipStats(run)
-        if run.phase == "launch" then
-            run.durability = math.min(run.durability, run.maxDurability)
-        end
-    end
-    return removed
+    return expeditionGear.unequipGear(M, run, category, id)
 end
 
 -- Item 9(c): "카드 획득... 과 교체가 잦아지는 루프". With a fixed 6/3-slot
@@ -226,31 +187,7 @@ end
 -- on failure (wrong phase, unknown id) -- never partially applies (no
 -- money change without a successful unequip, and vice versa).
 function M.sellGear(run, category, id)
-    if run.phase ~= "settlement" then
-        return false, "sellGear: only allowed during the settlement/shop phase"
-    end
-    local list = category == "hull" and run.equippedGear or run.equippedEngineParts
-    local part
-    for _, candidate in ipairs(list or {}) do
-        if candidate.id == id then
-            part = candidate
-            break
-        end
-    end
-    if not part then
-        return false, string.format("sellGear: '%s' is not equipped in %s", tostring(id), tostring(category))
-    end
-    local value = gearModule.sellValue(part)
-    -- Route through M.unequipGear (not engine_parts.unequip directly) so a
-    -- sold hullDurability card immediately shrinks maxDurability the same
-    -- way M.unequipGear already does for a loadout-screen unequip. Direct
-    -- unequip left run.maxDurability stale after the slot-swap slice.
-    local removed = M.unequipGear(run, category, id)
-    if not removed then
-        return false, "sellGear: unequip failed unexpectedly"
-    end
-    run.money = run.money + value
-    return true, value
+    return expeditionGear.sellGear(M, run, category, id)
 end
 
 -- Item 9(c) Earth-shop purchase counterpart to M.sellGear: spend money to
@@ -262,25 +199,7 @@ end
 -- sold on Earth) is enforced here because this IS that Earth-shop action.
 -- Returns true, price on success or false, error-message on failure.
 function M.buyGear(run, category, part)
-    if run.phase ~= "settlement" then
-        return false, "buyGear: only allowed during the settlement/shop phase"
-    end
-    if type(part) ~= "table" then
-        return false, "buyGear: part must be a table"
-    end
-    if part.galaxyExclusive then
-        return false, "buyGear: galaxy-exclusive parts are not sold on Earth"
-    end
-    local price = M.shopPrice(run, gearModule.buyPrice(part))
-    if run.money < price then
-        return false, "buyGear: not enough money"
-    end
-    local ok, err = M.equipGear(run, category, part)
-    if not ok then
-        return false, err
-    end
-    run.money = run.money - price
-    return true, price
+    return expeditionGear.buyGear(M, run, category, part)
 end
 
 -- Item 7(a) gap: `world.shopPlanet(galaxy)` has generated a deterministic
@@ -308,22 +227,7 @@ end
 -- legitimately sell that galaxy's own exclusive card. Returns
 -- `true, price` on success or `false, error-message` on failure.
 function M.buyGearFromShopPlanet(run, category, part)
-    if run.phase ~= "ascending" then
-        return false, "buyGearFromShopPlanet: only allowed while in flight (ascending) near a shop planet"
-    end
-    if type(part) ~= "table" then
-        return false, "buyGearFromShopPlanet: part must be a table"
-    end
-    local price = M.shopPrice(run, gearModule.buyPrice(part))
-    if run.money < price then
-        return false, "buyGearFromShopPlanet: not enough money"
-    end
-    local ok, err = M.equipGear(run, category, part)
-    if not ok then
-        return false, err
-    end
-    run.money = run.money - price
-    return true, price
+    return expeditionGear.buyGearFromShopPlanet(M, run, category, part)
 end
 
 function M.launch(run)
@@ -337,32 +241,16 @@ end
 -- the discounted price before a purchase, same pattern as
 -- M.effectiveSpeed above.
 function M.shopPrice(run, basePrice)
-    local parts = {}
-    for _, part in ipairs(run.equippedGear or {}) do parts[#parts + 1] = part end
-    for _, part in ipairs(run.equippedEngineParts or {}) do parts[#parts + 1] = part end
-    return gearModule.effectiveShopPrice(basePrice, parts)
+    return expeditionGear.shopPrice(M, run, basePrice)
 end
 
 -- Upgrade price escalation: base * 1.05^level (user 2026-09-07)
 function M.upgradeCost(run, baseCost, level)
-    return math.floor(baseCost * (1.05 ^ (level or 0)) + 0.5)
+    return expeditionUpgrade.upgradeCost(M, run, baseCost, level)
 end
 
 function M.buyDurabilityUpgrade(run)
-    local base = M.upgradeCost(run, run.durabilityUpgradeCost, run.durabilityUpgradeLevel)
-    local price = M.shopPrice(run, base)
-    if run.phase ~= "settlement" or run.money < price then return false end
-    run.money = run.money - price
-    run.durabilityUpgradeLevel = run.durabilityUpgradeLevel + 1
-    local beforeMax = run.maxDurability or 0
-    refreshShipStats(run)
-    -- INBOX (45): fill the newly added cell; Earth shop is not a full heal.
-    local gained = (run.maxDurability or 0) - beforeMax
-    run.durability = math.min(
-        run.maxDurability,
-        (run.durability or 0) + math.max(gained, run.durabilityUpgradeAmount or 1)
-    )
-    return true
+    return expeditionUpgrade.buyDurabilityUpgrade(M, run)
 end
 
 -- Sample yield scales the money value of every collected sample (not just durability
@@ -370,21 +258,11 @@ end
 -- Stellar Origin (item 16, 2026-09-05): nebulaField synergy (nebula 3+) applies an
 -- additional ×1.5 multiplier on top of the upgrade-derived base.
 function M.sampleYieldMultiplier(run)
-    local base = 1 + run.sampleYieldUpgradeLevel * run.sampleYieldUpgradeAmount
-    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
-    if syn.nebulaField then
-        base = base * 1.5
-    end
-    return base
+    return expeditionUpgrade.sampleYieldMultiplier(M, run)
 end
 
 function M.buySampleYieldUpgrade(run)
-    local base = M.upgradeCost(run, run.sampleYieldUpgradeCost, run.sampleYieldUpgradeLevel)
-    local price = M.shopPrice(run, base)
-    if run.phase ~= "settlement" or run.money < price then return false end
-    run.money = run.money - price
-    run.sampleYieldUpgradeLevel = run.sampleYieldUpgradeLevel + 1
-    return true
+    return expeditionUpgrade.buySampleYieldUpgrade(M, run)
 end
 
 -- Steering is the fourth meta upgrade axis named in
@@ -402,69 +280,21 @@ end
 -- white→red (t<0.33) → red→blue (t<0.66) → rainbow HSV (t≥0.66)
 -- radius = 1.5 + t * 2.5
 function M.rcsVisual(run, time, particleCount)
-    local speed = M.effectiveSpeed(run)
-    local t = math.min(math.max(speed, 0) / 999, 1)
-    local radius = 1.5 + t * 2.5
-    local r, g, b
-    if t < 0.33 then
-        local u = t / 0.33
-        r, g, b = 1, 1 - 0.6 * u, 1 - 0.8 * u
-    elseif t < 0.66 then
-        local u = (t - 0.33) / 0.33
-        r = 1 - 0.7 * u
-        g = 0.4 + 0.1 * u
-        b = 0.2 + 0.8 * u
-    else
-        local hue = (((time or 0) * 3) + (particleCount or 0) * 0.2) % 1
-        local h6 = hue * 6
-        local c = 1
-        local x2 = c * (1 - math.abs(h6 % 2 - 1))
-        local hi = math.floor(h6)
-        if hi == 0 then r, g, b = c, x2, 0
-        elseif hi == 1 then r, g, b = x2, c, 0
-        elseif hi == 2 then r, g, b = 0, c, x2
-        elseif hi == 3 then r, g, b = 0, x2, c
-        elseif hi == 4 then r, g, b = x2, 0, c
-        else r, g, b = c, 0, x2 end
-    end
-    return r, g, b, radius, t
+    return expeditionUpgrade.rcsVisual(M, run, time, particleCount)
 end
 
 -- Kept for callers that still want a coarse bucket; derived from 0–999 t.
 function M.rcsSpeedLevel(run)
-    local _, _, _, _, t = M.rcsVisual(run, 0, 0)
-    if t >= 0.66 then return 3
-    elseif t >= 0.33 then return 2
-    elseif t >= 0.10 then return 1
-    else return 0 end
+    return expeditionUpgrade.rcsSpeedLevel(M, run)
 end
 
 function M.buySteeringUpgrade(run)
-    local base = M.upgradeCost(run, run.steeringUpgradeCost, run.steeringUpgradeLevel)
-    local price = M.shopPrice(run, base)
-    if run.phase ~= "settlement" or run.money < price then return false end
-    run.money = run.money - price
-    run.steeringUpgradeLevel = run.steeringUpgradeLevel + 1
-    return true
+    return expeditionUpgrade.buySteeringUpgrade(M, run)
 end
 
 -- Dev/admin: free +1 on speed / hull / yield, any phase. No money cost.
 function M.adminUpgrade(run, kind)
-    if kind == "speed" then
-        run.steeringUpgradeLevel = (run.steeringUpgradeLevel or 0) + 1
-        return true
-    elseif kind == "hull" then
-        run.durabilityUpgradeLevel = (run.durabilityUpgradeLevel or 0) + 1
-        local before = run.maxDurability or 0
-        refreshShipStats(run)
-        local gained = (run.maxDurability or 0) - before
-        run.durability = (run.durability or 0) + math.max(gained, run.durabilityUpgradeAmount or 1)
-        return true
-    elseif kind == "yield" then
-        run.sampleYieldUpgradeLevel = (run.sampleYieldUpgradeLevel or 0) + 1
-        return true
-    end
-    return false
+    return expeditionUpgrade.adminUpgrade(M, run, kind)
 end
 
 -- Ship trade-offs expressed as explicit GAINS/LOSSES rows, matching the
@@ -472,34 +302,15 @@ end
 -- same shape can later describe per-planet-style risk/reward without a
 -- separate ad-hoc string format for each source.
 function M.shipTradeoff(run, shipId)
-    if shipId == "scout" then
-        return {
-            gains = { { label = "SPEED", value = string.format("%+d", run.scoutClimbSpeedBonus) } },
-            losses = { { label = "HULL", value = string.format("%+d", M.getScoutDurabilityBonus(run)) } },
-        }
-    end
-    return { gains = {}, losses = {} }
+    return expeditionUpgrade.shipTradeoff(M, run, shipId)
 end
 
 function M.buyShip(run, shipId)
-    if run.phase ~= "settlement" or shipId ~= "scout" or run.ownedShips.scout then
-        return false
-    end
-    local price = M.shopPrice(run, run.scoutShipCost)
-    if run.money < price then return false end
-    run.money = run.money - price
-    run.ownedShips.scout = true
-    return true
+    return expeditionUpgrade.buyShip(M, run, shipId)
 end
 
 function M.selectShip(run, shipId)
-    if run.phase ~= "settlement" or not run.ownedShips[shipId]
-        or (shipId ~= "starter" and shipId ~= "scout") then
-        return false
-    end
-    run.selectedShipId = shipId
-    refreshShipStats(run)
-    return true
+    return expeditionUpgrade.selectShip(M, run, shipId)
 end
 
 
@@ -508,21 +319,6 @@ end
 -- collecting consecutive same-hue-family samples, mirroring a card game's
 -- combo scaling. streakCount 0 or 1 is the base x1.0 rate; each additional
 -- consecutive same-family sample adds +0.2 (x1.2, x1.4, x1.6, ...).
-local baseStreakBonusPerStep = 0.2
-
--- Shared by every category-agnostic (C)/(E)/(B) gear-effect wrapper below:
--- both run.equippedGear (hull) and run.equippedEngineParts (engine) count
--- toward these totals even though item 10 keeps the two SLOT lists
--- independent -- effect types like streakMultiplier/chainTrigger/
--- rerollBonus/detectionRadius/autoCollect aren't restricted to one
--- category in the schema, so a card on either slot should contribute.
-local function combinedGearList(run)
-    local parts = {}
-    for _, part in ipairs(run.equippedGear or {}) do parts[#parts + 1] = part end
-    for _, part in ipairs(run.equippedEngineParts or {}) do parts[#parts + 1] = part end
-    return parts
-end
-
 -- Item 14(B) streakMultiplier wiring: equipped hull/engine parts carrying
 -- a streakMultiplier effect raise the per-step growth rate above the base
 -- 0.2 (gear.effectiveStreakBonusPerStep is the pure percentage-point
@@ -530,8 +326,7 @@ end
 -- agnostic here, matching item 14 (C)/(E)'s combinedGearList design since
 -- a streak-boosting card could plausibly live on either slot type).
 function M.streakBonusPerStep(run)
-    if not run then return baseStreakBonusPerStep end
-    return gearModule.effectiveStreakBonusPerStep(baseStreakBonusPerStep, combinedGearList(run))
+    return expeditionGear.streakBonusPerStep(M, run)
 end
 
 -- Stellar Origin (item 16, 2026-09-05): pulsarBurst (pulsar 2+) doubles the
@@ -539,18 +334,7 @@ end
 -- on top of the base computed value. Both are applied AFTER the gear-based
 -- per-step bonus so synergy rewards compound correctly with equipped gear.
 function M.streakMultiplier(streakCount, run)
-    if not streakCount or streakCount <= 1 then return 1 end
-    local base = 1 + (streakCount - 1) * M.streakBonusPerStep(run)
-    if run then
-        local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
-        if syn.pulsarBurst then
-            base = base * 2
-        end
-        if syn.darkMatter then
-            base = base * 1.5
-        end
-    end
-    return base
+    return expeditionGear.streakMultiplier(M, streakCount, run)
 end
 
 -- hueKey is the optional hue-family key from world.hueFamily/specimenKind
@@ -559,38 +343,7 @@ end
 -- the SAMPLE YIELD upgrade; a different hueKey (or no hueKey) resets the
 -- streak back to the base rate for that call.
 function M.collectSample(run, value, hueKey)
-    if run.phase ~= "ascending" or type(value) ~= "number" or value <= 0 then return false end
-    if hueKey ~= nil and hueKey == run.sampleStreakFamily then
-        run.sampleStreakCount = run.sampleStreakCount + 1
-    else
-        run.sampleStreakCount = 1
-    end
-    run.sampleStreakFamily = hueKey
-    local streakMultiplier = M.streakMultiplier(run.sampleStreakCount, run)
-    -- Item 9/14: equipped hull gear's flat sampleSellValue+sellMultiplier
-    -- bonus (M.effectiveSampleBonus, already synergy-scaled by
-    -- gear.equippedTotals) is added AFTER the yield/streak multipliers are
-    -- applied to the base value, matching insurance/collisionRadius's
-    -- posture of "gear modifies the final resolved quantity" rather than
-    -- being folded into the multiplier chain itself.
-    local awarded = math.floor(value * M.sampleYieldMultiplier(run) * streakMultiplier + 0.5)
-        + M.effectiveSampleBonus(run)
-    -- Item 14(C) chainTrigger consumption gap: M.chainTriggerCount(run) had
-    -- existed only as a stateless re-derived count since the (C)/(E) run
-    -- wiring slice -- nothing ever actually consumed it. Per item 14's own
-    -- description ("특정 조건마다 다른 장착 카드 효과 재발동, 발라트로
-    -- Blueprint/Brainstorm 컨셉"), the concrete payoff wired here is
-    -- re-applying this same sample collection's awarded value once per
-    -- chainTrigger point (1 base application + N retriggers), without
-    -- creating additional collection events (sampleCount/streak state
-    -- still advance exactly once per collectSample call).
-    local retriggers = M.chainTriggerCount(run)
-    if retriggers > 0 then
-        awarded = awarded * (1 + retriggers)
-    end
-    run.sampleCount = run.sampleCount + 1
-    run.pendingSampleValue = run.pendingSampleValue + awarded
-    return true, awarded, streakMultiplier, retriggers
+    return expeditionRun.collectSample(M, run, value, hueKey)
 end
 
 function M.damage(run, amount)
@@ -634,15 +387,7 @@ end
 --   + engine gear `speed` (synergy-multiplied via tagSynergyMultiplier)
 --   + scout ship bonus
 function M.effectiveSpeed(run)
-    local gearTotals, gearMults = gearModule.equippedTotals(run.equippedGear or {})
-    local engineParts = run.equippedEngineParts or {}
-    local engineSpeedRaw, engineMultsRaw = gearModule.aggregateEffects(engineParts)
-    local engineSpeed = (engineSpeedRaw.speed or 0) * gearModule.tagSynergyMultiplier(engineParts)
-    local shipBonus = run.selectedShipId == "scout" and run.scoutClimbSpeedBonus or 0
-    local base = (run.baseSpeed or 0) + (run.steeringUpgradeLevel or 0) * (run.steeringUpgradeAmount or 0)
-    local flat = base + (run.slotSpeedBonus or 0) + (shipBonus or 0) + (gearTotals.speed or 0) + engineSpeed
-    local mult = (gearMults and gearMults.speed or 1) * (engineMultsRaw and engineMultsRaw.speed or 1)
-    return flat * mult
+    return expeditionGear.effectiveSpeed(M, run)
 end
 
 -- Item 9/14 economy-stat gap audit: gear.equippedTotals already combines a
@@ -665,12 +410,7 @@ end
 -- sellMultiplier; this recomputes the same additive-then-multiply once
 -- across hull sampleSellValue + hull/engine sellMultiplier.
 function M.effectiveSampleBonus(run)
-    local hullAdditiveRaw, hullMults = gearModule.aggregateEffects(run.equippedGear or {})
-    local hullAdditive = hullAdditiveRaw.sampleSellValue or 0
-    if hullAdditive == 0 then return 0 end
-    local sellMult = gearModule.totalEffect(combinedGearList(run), "sellMultiplier")
-    local mult = hullMults.sampleSellValue or 1
-    return hullAdditive * (1 + sellMult / 100) * mult
+    return expeditionGear.effectiveSampleBonus(M, run)
 end
 
 -- Stellar Origin (item 16, 2026-09-05): supernova (all 4 suits 1+) scales
@@ -679,20 +419,7 @@ end
 -- result table has the same shape and is a drop-in replacement for callers
 -- that already have access to a `run` (and therefore know the synergy state).
 function M.aggregateEffectsWithSynergies(run, parts)
-    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
-    local totals = {}
-    local multTotals = {}
-    for _, part in ipairs(parts) do
-        local scale = (syn.supernova and part.rarity == "legendary") and 1.5 or 1
-        for _, effect in ipairs(part.effects) do
-            if effect.mode == "multiply" then
-                multTotals[effect.type] = (multTotals[effect.type] or 1) * (effect.value * scale)
-            else
-                totals[effect.type] = (totals[effect.type] or 0) + effect.value * scale
-            end
-        end
-    end
-    return totals, multTotals
+    return expeditionGear.aggregateEffectsWithSynergies(M, run, parts)
 end
 
 -- Run-level equippedTotals wrapper that incorporates Stellar Origin synergies.
@@ -700,17 +427,7 @@ end
 -- aggregated effect totals; the tag-synergy multiplier and sellMultiplier
 -- combine pass from gear.equippedTotals are preserved exactly.
 function M.equippedTotals(run, parts)
-    local combined = parts or combinedGearList(run)
-    local totals, multTotals = M.aggregateEffectsWithSynergies(run, combined)
-    local multiplier = gearModule.tagSynergyMultiplier(combined)
-    if totals.speed then
-        totals.speed = totals.speed * multiplier
-    end
-    totals.synergyMultiplier = multiplier
-    if totals.sellMultiplier and totals.sampleSellValue then
-        totals.sampleSellValue = totals.sampleSellValue * (1 + totals.sellMultiplier / 100)
-    end
-    return totals, multTotals
+    return expeditionGear.equippedTotals(M, run, parts)
 end
 
 -- Item 10(b)/14(G) wiring: how many one-shot emergency boost charges the
@@ -719,7 +436,7 @@ end
 -- charge belongs to play.lua (out of this lane's scope) -- this just
 -- exposes the count so that future wiring has a single source of truth.
 function M.boostChargeCount(run)
-    return gearModule.boostChargeCount(run.equippedEngineParts or {})
+    return expeditionGear.boostChargeCount(M, run)
 end
 
 -- Item 10(b)/14(G) boostCharge consumption wiring: boostChargeCount(run)
@@ -736,9 +453,7 @@ end
 -- M.launch resets run.boostsUsed to 0 alongside run.insuranceUsed/
 -- run.rerollsUsed.
 function M.boostsRemaining(run)
-    local remaining = M.boostChargeCount(run) - (run.boostsUsed or 0)
-    if remaining < 0 then remaining = 0 end
-    return remaining
+    return expeditionGear.boostsRemaining(M, run)
 end
 
 -- Spends one emergency boost charge if any remain. Returns true on
@@ -749,11 +464,7 @@ end
 -- (play.lua) per loop/PROMPT.md -- this establishes the single
 -- run-level source of truth a future consumer will read from.
 function M.spendBoost(run)
-    if M.boostsRemaining(run) <= 0 then
-        return false, "no boost charges remaining"
-    end
-    run.boostsUsed = (run.boostsUsed or 0) + 1
-    return true
+    return expeditionGear.spendBoost(M, run)
 end
 
 -- Item 14 (C)/(E) run wiring: gear.chainTriggerCount/rerollCount/
@@ -767,11 +478,11 @@ end
 -- matching item 10's design that hull/engine are independent SLOTS but
 -- not independent stat pools for every effect type.
 function M.chainTriggerCount(run)
-    return gearModule.chainTriggerCount(combinedGearList(run))
+    return expeditionGear.chainTriggerCount(M, run)
 end
 
 function M.rerollCount(run)
-    return gearModule.rerollCount(combinedGearList(run))
+    return expeditionGear.rerollCount(M, run)
 end
 
 -- Item 14(C) rerollBonus consumption wiring: rerollCount(run) above has
@@ -788,20 +499,14 @@ end
 -- extra bookkeeping. M.launch resets run.rerollsUsed to 0 alongside
 -- run.insuranceUsed, matching the "resets once per expedition" contract.
 function M.rerollsRemaining(run)
-    local remaining = M.rerollCount(run) - (run.rerollsUsed or 0)
-    if remaining < 0 then remaining = 0 end
-    return remaining
+    return expeditionGear.rerollsRemaining(M, run)
 end
 
 -- Spends one free reroll if any remain. Returns true on success, or
 -- false, error-message (never throws) if none remain -- same "atomic,
 -- reject-don't-partial-apply" contract as M.sellGear/M.equipGear.
 function M.spendReroll(run)
-    if M.rerollsRemaining(run) <= 0 then
-        return false, "no free rerolls remaining"
-    end
-    run.rerollsUsed = (run.rerollsUsed or 0) + 1
-    return true
+    return expeditionGear.spendReroll(M, run)
 end
 
 -- Item 14(C) rerollBonus consumption: M.spendReroll(run) above only ever
@@ -817,18 +522,7 @@ end
 -- reject-don't-partial-apply contract as every other atomic run mutator in
 -- this file (M.equipGear/M.sellGear/M.buyGear/M.spendReroll/M.spendBoost).
 function M.rerollGearOffer(run, pool, rolls)
-    if M.rerollsRemaining(run) <= 0 then
-        return false, "rerollGearOffer: no free rerolls remaining"
-    end
-    local offer = M.rollGearOffer(run, pool, rolls)
-    if not offer then
-        return false, "rerollGearOffer: pool produced no offer"
-    end
-    local ok, err = M.spendReroll(run)
-    if not ok then
-        return false, err
-    end
-    return true, offer
+    return expeditionGear.rerollGearOffer(M, run, pool, rolls)
 end
 
 -- INBOX 61(16): hub-only restock — pay hubRestockCost to re-roll a gear
@@ -836,30 +530,15 @@ end
 -- set (i.e. settled at a hub, not Earth). Pure function: deducts money,
 -- returns new offer.
 function M.hubRestock(run, pool, rolls)
-    if run.phase ~= "settlement" then
-        return false, "hubRestock: only during settlement"
-    end
-    if not run.lastVisitedGalaxyId then
-        return false, "hubRestock: hub only"
-    end
-    local cost = M.hubRestockCost or 5
-    if run.money < cost then
-        return false, "hubRestock: not enough money"
-    end
-    local offer = M.rollGearOffer(run, pool, rolls)
-    if not offer then
-        return false, "hubRestock: pool produced no offer"
-    end
-    run.money = run.money - cost
-    return true, offer
+    return expeditionGear.hubRestock(M, run, pool, rolls)
 end
 
 function M.detectionRadius(run, baseRadius)
-    return gearModule.effectiveDetectionRadius(baseRadius, combinedGearList(run))
+    return expeditionGear.detectionRadius(M, run, baseRadius)
 end
 
 function M.autoCollectEnabled(run)
-    return gearModule.autoCollectEnabled(combinedGearList(run))
+    return expeditionGear.autoCollectEnabled(M, run)
 end
 
 -- Item 14(D) run wiring: gear.effectiveCollisionRadius (percentage shrink
@@ -878,18 +557,12 @@ end
 -- INBOX item 6 (2026-09-07): changed from collisionRadius −30% to
 -- collectOrbitRadius +30% per user request.
 function M.collisionRadius(run, baseRadius)
-    local combined = combinedGearList(run)
-    local gearPct = gearModule.totalEffect(combined, "collisionRadius")
-    local radius = baseRadius * (1 - gearPct / 100)
-    if radius < 0 then radius = 0 end
-    return radius
+    return expeditionGear.collisionRadius(M, run, baseRadius)
 end
 
 -- eventHorizon (void 3+) synergy: +30% collect orbit radius.
 function M.collectOrbitRadius(run, baseCollectRadius)
-    local syn = gearModule.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
-    local bonus = syn.eventHorizon and 0.30 or 0
-    return baseCollectRadius * (1 + bonus)
+    return expeditionGear.collectOrbitRadius(M, run, baseCollectRadius)
 end
 
 -- Item 12's drop RNG (gear.rollRarity / gear.rollEdition), wired into an
@@ -911,44 +584,7 @@ end
 -- edition, effects } -- NOT a loadout entry; callers equip it explicitly
 -- via M.equipGear once accepted.
 function M.rollGearOffer(run, pool, rolls)
-    rolls = rolls or {}
-    -- luck (item 14(C)) is category-agnostic like chainTrigger/rerollBonus/
-    -- detectionRadius/autoCollect above -- an ENGINE-slot luck card (e.g.
-    -- the bundled engine_probability_core) must contribute to drop-RNG
-    -- luck exactly like a hull-slot one. combinedGearList(run) is the same
-    -- hull+engine union every other category-agnostic wrapper in this file
-    -- already uses.
-    local luckBonus = gearModule.totalLuckBonus(combinedGearList(run))
-    local targetRarity = gearModule.rollRarity(rolls.rarity or 0, luckBonus)
-
-    local matching = {}
-    for _, part in ipairs(pool) do
-        if part.rarity == targetRarity then matching[#matching + 1] = part end
-    end
-    local candidates = #matching > 0 and matching or pool
-    if #candidates == 0 then return nil end
-    local idx = math.floor((rolls.pick or 0) * #candidates) + 1
-    if idx > #candidates then idx = #candidates end
-    if idx < 1 then idx = 1 end
-    local part = candidates[idx]
-
-    local edition = gearModule.rollEdition(part, rolls.editionChance or 1, rolls.editionPick or 0, luckBonus)
-    local effects = gearModule.applyEditionEffects(part, edition)
-
-    return {
-        id = part.id,
-        name = part.name,
-        nameKo = part.nameKo,
-        icon = part.icon,
-        rarity = part.rarity,
-        tags = part.tags,
-        edition = edition,
-        effects = effects,
-        -- editionApplied gates M.equipGear's materializeEdition so a
-        -- shop/hub UI that equips this offer as-is does not double-apply
-        -- crystallized / quantum_flawed / refined.
-        editionApplied = edition ~= nil,
-    }
+    return expeditionGear.rollGearOffer(M, run, pool, rolls)
 end
 
 -- Item 8: Partial settlement at a galaxy hub. Converts pending samples
@@ -1062,25 +698,7 @@ function M.exploreHub(run, galaxyId, pool, rolls)
 end
 
 function M.update(run, dt)
-    if dt <= 0 then return end
-
-    -- Item 2: returning phase abolished. Only ascending drives altitude.
-    if run.phase ~= "ascending" then return end
-
-    run.altitude = run.altitude + M.effectiveSpeed(run) * dt
-    run.maxAltitude = math.max(run.maxAltitude, run.altitude)
-    run.bestAltitude = math.max(run.bestAltitude, run.altitude)
-
-    -- INBOX 61(31): hullRegen HP/s from equipped parts, integer via accumulator.
-    local regen = gearModule.totalEffect(combinedGearList(run), "hullRegen")
-    if regen > 0 and run.durability < run.maxDurability then
-        run.durabilityRegenAcc = (run.durabilityRegenAcc or 0) + regen * dt
-        local whole = math.floor(run.durabilityRegenAcc)
-        if whole >= 1 then
-            run.durability = math.min(run.maxDurability, run.durability + whole)
-            run.durabilityRegenAcc = run.durabilityRegenAcc - whole
-        end
-    end
+    return expeditionRun.update(M, run, dt)
 end
 
 return M

@@ -2,6 +2,7 @@
 local M = {}
 
 function M.run()
+    require("game.tests.expedition_gear").run()
     local expedition = require("game.expedition")
 
     local yieldRun = expedition.new()
