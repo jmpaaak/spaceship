@@ -1,8 +1,8 @@
 ## Current Status
-- R1 (Lane C, partial): completed the gear-editor sync-suite extraction into `game/tests/legacy_gear_editor_whitelists.lua`.
-  - Moved edition-effect preview, effect-range, economy-preview, galaxy-exclusive, and suit/synergy checks without changing assertions or filesystem boundaries.
-  - Preserved the extracted module's existing `run()` entry point; `self_test.lua` now delegates the full suite through `runAll()` and shrank from 8,706 to 8,407 lines.
-  - Observed missing-`runAll` RED; `make test` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+- R1 (Lane C, partial): extracted the galaxy-exclusive schema documentation check to `game/tests/legacy_gear_schema_docs.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,407 to 8,377 lines.
+  - Preserved the engine-hosted `love.filesystem` contract and every existing schema assertion unchanged.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
@@ -151,6 +151,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearSchemaDocumentsGalaxyExclusive` from `game/self_test.lua` into `game/tests/legacy_gear_schema_docs.lua`, preserving its engine-hosted filesystem contract.
+- R1 (Lane C): extract `testGearEffectSchemaExpansion` from `game/self_test.lua` into `game/tests/legacy_gear_effect_schema.lua`, preserving its existing gear, expedition, JSON, and filesystem assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

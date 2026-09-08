@@ -1670,3 +1670,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` delegates the unchanged `KNOWN_EDITIONS` / `KNOWN_RARITIES` sync assertions and shrank from 8,742 to 8,706 lines.
   - The engine-hosted module preserves the existing `game.gear` and `love.filesystem` boundaries.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 16:54)
+
+- R1 (Lane C, partial): completed the gear-editor sync-suite extraction into `game/tests/legacy_gear_editor_whitelists.lua`.
+  - Moved edition-effect preview, effect-range, economy-preview, galaxy-exclusive, and suit/synergy checks without changing assertions or filesystem boundaries.
+  - Preserved the extracted module's existing `run()` entry point; `self_test.lua` now delegates the full suite through `runAll()` and shrank from 8,706 to 8,407 lines.
+  - Observed missing-`runAll` RED; `make test` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
