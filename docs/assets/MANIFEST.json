@@ -2685,9 +2685,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(bare)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "d5e4f6e402ff8e8629ff2df7de324c76eda688e0687b9213d0eb7fc97c282f2f",
-    "width": 64,
-    "height": 64,
+    "sha256": "ad80f472b405d0aa4aa31936604b77e4bf2aacb662147a5889adca098a340eeb",
+    "width": 256,
+    "height": 256,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=bare"
   },
   {
@@ -2701,9 +2701,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(dry)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "2c33012ee443590b76645a01f8240358d7c248c031917b9155a3ef2498b2d13b",
-    "width": 64,
-    "height": 64,
+    "sha256": "6de2c7f22ebc0ea5cdcb8ef4434abac44c00ae43b59b8cbe0f7f603bbff7b661",
+    "width": 256,
+    "height": 256,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=dry"
   },
   {
@@ -2717,9 +2717,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(gas)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "b2b28505574aaa1f35eb6f7e40d565db48da9d58a214a65971f88a6bd364f6ff",
-    "width": 64,
-    "height": 64,
+    "sha256": "73607c6d01392f51bf7674ca753464e0a0bda6f96e839b8fc5491ca7a4af03d6",
+    "width": 256,
+    "height": 256,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=gas"
   },
   {
@@ -2733,9 +2733,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(ice)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "78d4e1de9333adcd36fb4c8e256b914634efd3939112867fdd9863e1cbaa6b26",
-    "width": 64,
-    "height": 64,
+    "sha256": "0cfe21adfb2fbb990f6841929ac3aa9d2d711600f5780317b4809c61b090d76e",
+    "width": 256,
+    "height": 256,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=ice"
   },
   {
@@ -2749,9 +2749,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(lava)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "b94f7e24a4f909ab5f5e3f2d1ba50cce848995ca711cbbcbb74a612fe0493301",
-    "width": 64,
-    "height": 64,
+    "sha256": "eeadff52a7b0729049a2753b98b429875a73a8af2c6072380e12597571ffee3e",
+    "width": 256,
+    "height": 256,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=lava"
   },
   {
@@ -2765,9 +2765,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(sun)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "83501bab2c4c18c62ad1716f10468f8fe08fb15feb1e56f14319b3a5bafaaf47",
-    "width": 64,
-    "height": 64,
+    "sha256": "7683c67618174f674bcef90ec151545703d7c80bf98816e3f4bb2b915e8f8cdb",
+    "width": 256,
+    "height": 256,
     "qa": "PIL-generated 64x64 star sprite for galaxy starType=sun"
   },
   {
@@ -2781,9 +2781,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(sun)\"}",
     "downloaded_at": "2026-09-06T23:53:00+09:00",
-    "sha256": "1fa94bdd9a1573fb0281182683ef1c6c470200e0ad1fbd5b9cb125d4ae9c9269",
-    "width": 64,
-    "height": 256,
+    "sha256": "5347986336503c7e2cab90989cf893cad5dd4787539a23bb375edf8eff77d8db",
+    "width": 256,
+    "height": 1024,
     "qa": "PIL-generated 64x256 4-frame sun star animation sheet"
   },
   {
@@ -3028,9 +3028,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(bare)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "01fa5194c71d9a936c09b27cf73e3d55dce9cb1671f810cdb9785a58f7520292",
-    "width": 64,
-    "height": 256,
+    "sha256": "a398f44443f5a32560647f70a7113922550aee8d3e956908699af26e0e59a36b",
+    "width": 256,
+    "height": 1024,
     "qa": "PIL-generated 64x256 4-frame bare star rotation sheet"
   },
   {
@@ -3044,9 +3044,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(dry)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "40c79c8da58906b523d9bf767a0e35fb5a04079f4a2f1fe97d813eda0541f5a0",
-    "width": 64,
-    "height": 256,
+    "sha256": "321705d16fc981a593f7859dd12d1afccf46bf114b80237246769310f9498ea7",
+    "width": 256,
+    "height": 1024,
     "qa": "PIL-generated 64x256 4-frame dry star rotation sheet"
   },
   {
@@ -3060,9 +3060,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(gas)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "20ab67abbfca2cfa195f73143cad86502e9559147b22f98092c25c10dd6d2dc6",
-    "width": 64,
-    "height": 256,
+    "sha256": "b7f823349ae58f7e3b197aabd3f74787e8e4a8aa81c88b7d137635715187f409",
+    "width": 256,
+    "height": 1024,
     "qa": "PIL-generated 64x256 4-frame gas star rotation sheet"
   },
   {
@@ -3076,9 +3076,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(ice)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "0bd25e598fd84f8eedc9fb1b27d9049312368b6803e2cfeda0df4e12177ed02d",
-    "width": 64,
-    "height": 256,
+    "sha256": "2a042c6bc1ed4fccc0566627303f48a35c9ee2105210e62546ffe7d735d72827",
+    "width": 256,
+    "height": 1024,
     "qa": "PIL-generated 64x256 4-frame ice star rotation sheet"
   },
   {
@@ -3092,9 +3092,9 @@
     "style": "procedural",
     "settings": "{\"generator\":\"tools/gen_star_sheets.py\",\"method\":\"PIL\",\"seed\":\"hash(lava)\"}",
     "downloaded_at": "2026-09-07T10:00:00+09:00",
-    "sha256": "96577ac5d3fe5b68bce1a8daeae599ff587dcb5aafce57df4d0d18bd8a96d8d7",
-    "width": 64,
-    "height": 256,
+    "sha256": "482c9df421970bfa3371a96edaca7e4c68ca49bc25673cdc7b7ca884d4a270e6",
+    "width": 256,
+    "height": 1024,
     "qa": "PIL-generated 64x256 4-frame lava star rotation sheet"
   },
   {
@@ -4573,8 +4573,8 @@
     },
     "downloaded_at": "2026-09-07T20:02:12+09:00",
     "sha256": "ade237057563834bc448c7adfa7c379727337e48681cee6dbdafbcb8dacd3a4b",
-    "width": 128,
-    "height": 128,
+    "width": 256,
+    "height": 256,
     "qa": "128x128 RGBA star sprite, tools/gen_stars.py"
   },
   {

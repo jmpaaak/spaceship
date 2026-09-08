@@ -17,9 +17,12 @@ function M.run()
         }
     }
     
+    local oldGraphics = love.graphics
+    love.graphics = love.graphics or {}
     local origDraw = love.graphics.draw
     local origCircle = love.graphics.circle
     local origNewQuad = love.graphics.newQuad
+    local origSetColor = love.graphics.setColor
     
     love.graphics.draw = function(img, ...)
         table.insert(calls, {type = "draw", img = img})
@@ -29,6 +32,8 @@ function M.run()
     end
     love.graphics.newQuad = function(...)
         return "quad"
+    end
+    love.graphics.setColor = function(...)
     end
     
     calls = {}
@@ -66,6 +71,10 @@ function M.run()
     love.graphics.draw = origDraw
     love.graphics.circle = origCircle
     love.graphics.newQuad = origNewQuad
+    love.graphics.setColor = origSetColor
+    if oldGraphics == nil then
+        love.graphics = nil
+    end
     
     print("  INBOX-58 star_sprite OK")
 end

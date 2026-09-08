@@ -9,15 +9,6 @@
   - INBOX (58)~ 기능보다 **이 분리가 먼저**. 독립 모듈 경로가 있는 항목만 기능 진행.
   - 테스트: `make verify` GREEN 유지. play.lua 줄 수 감소.
 
-(58) **중심별(태양) 스프라이트가 실제로 보이게** (OOB 2026-09-08, 반복 요청)
-  - 담당: `game/scenes/play_star.lua` (새 모듈) + `play.lua`는 require/한 줄 위임만. `world.lua` starType 매핑.
-  - 원인: 홈 은하 `starType = "earth"` 인데 `starImagePaths`/`starSheetPaths`에 **earth 키 없음**. 시트 미스 → 정적 미스 → `circle("fill")` 폴백. 밋밋한 노란 원.
-  - 필수:
-    (a) `earth` → `star_sun` (시트+정적) 매핑. 다른 타입도 시트 실패 시 정적, 정적 실패 시 원에 떨어지지 않게 sun 폴백.
-    (b) 런타임에 시트가 로드됐는지 assert. `shouldLoadRuntimeSprite`가 star PNG를 스킵하면 고친다.
-    (c) 현재 `star_sun.png` ~3KB PIL 원형이면 **교체**: 코로나가 있는 노란 태양 스프라이트, nearest, 화면상 ≥별 반지름 80px.
-    (d) 회전 시트 4프레임이 실제로 돌아가게. 원 폴백은 최후.
-  - 테스트: `game/tests/star_sprite.lua` — earth 은하가 sun 시트/정적 경로를 쓰고, circle 폴백 경로를 타지 않음.
 
 (59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
   - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
@@ -723,3 +714,7 @@
     - `scoutClimbSpeedBonus` 50→**120**. 내구는 고정 -1이 아니라 **현재 max의 50%** (`floor(maxDurability * 0.5)` 차감, 최소 1 남김).
     - ✅ 완료: commit (will be pushed)
 
+
+(58) **중심별(태양) 스프라이트가 실제로 보이게** (OOB 2026-09-08, 완료)
+  - 담당: `game/scenes/play_star.lua`
+  - 완료: star rendering extraction, fallback sequence, PIL star rework, tests added.

@@ -1,4 +1,12 @@
 ## Current Status
+- INBOX 58: Central star sprite extraction and visual upgrade.
+  - Extracted star rendering logic from `play.lua` into `game/scenes/play_star.lua`.
+  - Defined fallback sequence: exact starType sheet -> static image -> sun sheet -> sun static -> simple circle.
+  - Reworked `tools/gen_stars.py` to generate 256x256 chunky retro star sprites with jagged coronas and procedural noise instead of strict circles. Generates 4-frame rotation sheets (256x1024) for all 6 star types.
+  - Mapped `earth` home galaxy to use `star_sun.png` and `star_sun_sheet.png`.
+  - Wrote robust headless-compatible `game/tests/star_sprite.lua` verifying the correct fallback logic and sheet application. Tests GREEN.
+  - Manifest checksums and resolutions for all star assets updated.
+
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
   - `autoLoadDefaults()` fetches hull only. First Engine tab click `ensureEngineLoaded()` fetches `/gear-editor/data/engine_parts.json`.
