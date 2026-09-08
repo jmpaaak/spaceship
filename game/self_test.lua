@@ -213,12 +213,7 @@ function M.run()
 
     require("game.tests.legacy_solar_system_settlement").run()
 
-    -- INBOX 61(7): gear popup chips must be vertical (one line each)
-    do
-        assert(PlayScene.gearPopupChipVertical == true,
-            "INBOX 61(7): gearPopupChipVertical flag must be true for vertical stacking")
-        print("  INBOX-61(7) gearPopupChipVertical OK")
-    end
+    require("game.tests.legacy_gear_popup_chip_layout").run()
 
     -- INBOX 61(9): second galaxy rim marker must be cyan (same hue as first), alpha ~0.45, smaller dot
     do
@@ -1303,6 +1298,7 @@ function M.run()
     require("game.tests.self_test_pixelplanets_planet_sprite_extraction").run()
     require("game.tests.self_test_planet_variation_extraction").run()
     require("game.tests.self_test_solar_system_settlement_extraction").run()
+    require("game.tests.self_test_gear_popup_chip_layout_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
