@@ -165,27 +165,7 @@ function M.run()
 
     require("game.tests.legacy_nearby_search_radius").run()
 
-    -- Item 2: Auto-settle on Earth proximity during ascending.
-    do
-        local rtScene = PlayScene.new({
-            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        })
-        rtScene:touchpressed("launch-rt", 90, 280)
-        assert(rtScene.expedition.phase == "ascending", "should be ascending")
-        
-        -- Fly away from Earth
-        rtScene.ship.x = 0
-        rtScene.ship.y = -500
-        rtScene:update(0.1)
-        assert(rtScene.expedition.phase == "ascending", "should stay ascending")
-        
-        -- Fly back to Earth proximity
-        rtScene.ship.x = PlayScene.earthCenterX
-        rtScene.ship.y = PlayScene.earthCenterY - PlayScene.earthSettleRadius + 10
-        rtScene:update(0.1)
-        assert(rtScene.expedition.phase == "settlement",
-            "proximity to earth should auto-settle, got " .. rtScene.expedition.phase)
-    end
+    require("game.tests.legacy_earth_proximity_auto_settlement").run()
 
     -- Item 9: Central star gravity well tests
     do
@@ -1622,6 +1602,7 @@ function M.run()
     require("game.tests.self_test_shop_control_sprite_extraction").run()
     require("game.tests.self_test_pixel_star_sprite_extraction").run()
     require("game.tests.self_test_nearby_search_radius_extraction").run()
+    require("game.tests.self_test_earth_proximity_auto_settlement_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
