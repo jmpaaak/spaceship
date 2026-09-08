@@ -1,5 +1,4 @@
 require("game.i18n").setLocale("en")
-local viewport = require("game.viewport")
 local shipModule = require("game.ship")
 local world = require("game.world")
 local expedition = require("game.expedition")
@@ -118,71 +117,7 @@ function M.run()
     require("game.tests.legacy_settlement_touch_layout").run()
 
 
-    local destroyedArea = PlayScene.destroyedTouchArea
-    -- Mobile-UI sub-item (6): destroyed touch area must span the full
-    -- 720×1280 canvas so any tap restarts.
-    assert(destroyedArea.left == 0 and destroyedArea.top == 0,
-        "destroyed touch area must start at (0,0)")
-    assert(destroyedArea.right == 720 and destroyedArea.bottom == 1280,
-        "destroyed touch area must span full 720×1280 canvas")
-    assert(destroyedArea.bottom - destroyedArea.top >= 34,
-        "destroyed touch area height is under the 34px minimum")
-    assert(destroyedArea.right - destroyedArea.left >= 34,
-        "destroyed touch area width is under the 34px minimum")
-    local destroyedAreaPoints = viewport.canvasPixelsToPoints(
-        destroyedArea.bottom - destroyedArea.top, 720, 1280, 1, false)
-    assert(destroyedAreaPoints >= 44,
-        "destroyed touch area is under the 44pt accessibility minimum at scale 1 (" .. destroyedAreaPoints .. "pt)")
-    local destroyedCorners = {
-        { x = destroyedArea.left, y = destroyedArea.top },
-        { x = destroyedArea.right - 1, y = destroyedArea.top },
-        { x = destroyedArea.left, y = destroyedArea.bottom - 1 },
-        { x = destroyedArea.right - 1, y = destroyedArea.bottom - 1 },
-        { x = math.floor((destroyedArea.left + destroyedArea.right) / 2),
-          y = math.floor((destroyedArea.top + destroyedArea.bottom) / 2) },
-    }
-    for _, point in ipairs(destroyedCorners) do
-        local destroyedTouchScene = PlayScene.new({
-            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        })
-        destroyedTouchScene.expedition.phase = "destroyed"
-        destroyedTouchScene:touchpressed("destroyed-tap", point.x, point.y)
-        assert(destroyedTouchScene.expedition.phase == "ascending",
-            "destroyed tap at (" .. point.x .. "," .. point.y .. ") did not restart the run")
-    end
-
-    -- LAUNCH phase's TAP TO LAUNCH action already accepts any tap on the
-    -- internal canvas regardless of x/y (unconditional touchpressed branch),
-    -- so the functional touch target has always spanned the full 180x320
-    -- canvas -- but unlike destroyedTouchArea, this was never given a named
-    -- constant or an explicit corner-touch regression test. Documented and
-    -- tested here to close out the remaining unverified touch surface noted
-    -- in docs/STATUS.md's next-slice note.
-    local launchArea = PlayScene.launchTouchArea
-    assert(launchArea.bottom - launchArea.top >= 34,
-        "launch touch area height is under the 34px minimum")
-    assert(launchArea.right - launchArea.left >= 34,
-        "launch touch area width is under the 34px minimum")
-    local launchAreaPoints = viewport.canvasPixelsToPoints(
-        launchArea.bottom - launchArea.top, 720, 1280, 1, false)
-    assert(launchAreaPoints >= 44,
-        "launch touch area is under the 44pt accessibility minimum at scale 1 (" .. launchAreaPoints .. "pt)")
-    local launchCorners = {
-        { x = launchArea.left, y = launchArea.top },
-        { x = launchArea.right - 1, y = launchArea.top },
-        { x = launchArea.left, y = launchArea.bottom - 1 },
-        { x = launchArea.right - 1, y = launchArea.bottom - 1 },
-        { x = math.floor((launchArea.left + launchArea.right) / 2),
-          y = math.floor((launchArea.top + launchArea.bottom) / 2) },
-    }
-    for _, point in ipairs(launchCorners) do
-        local launchTouchScene = PlayScene.new({
-            bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        })
-        launchTouchScene:touchpressed("launch-tap", point.x, point.y)
-        assert(launchTouchScene.expedition.phase == "ascending",
-            "launch tap at (" .. point.x .. "," .. point.y .. ") did not start the run")
-    end
+    require("game.tests.legacy_destroyed_launch_touch").run()
 
     -- Regression: a real LÖVE runtime capture after the launch-screen
     -- text/layout cleanup still showed a faint blue crescent peeking out
@@ -225,10 +160,10 @@ function M.run()
         "gear slot box width should be ≥15px (1.5× old 10px), got " .. PlayScene.launchGearBoxW)
     assert(PlayScene.launchGearBoxH >= 21,
         "gear slot box height should be ≥21px (1.5× old 14px), got " .. PlayScene.launchGearBoxH)
-    assert(launchArea.right >= 720,
-        "launch touch area should span full 720px canvas width, got right=" .. launchArea.right)
-    assert(launchArea.bottom >= 1280,
-        "launch touch area should span full 1280px canvas height, got bottom=" .. launchArea.bottom)
+    assert(PlayScene.launchTouchArea.right >= 720,
+        "launch touch area should span full 720px canvas width, got right=" .. PlayScene.launchTouchArea.right)
+    assert(PlayScene.launchTouchArea.bottom >= 1280,
+        "launch touch area should span full 1280px canvas height, got bottom=" .. PlayScene.launchTouchArea.bottom)
     assert(PlayScene.launchLoadoutFontSize >= 12,
         "loadout font should be ≥12px for mobile, got " .. PlayScene.launchLoadoutFontSize)
 
@@ -2319,6 +2254,7 @@ function M.run()
     require("game.tests.self_test_best_altitude_persistence_extraction").run()
     require("game.tests.self_test_sample_collection_floating_text_extraction").run()
     require("game.tests.self_test_settlement_touch_layout_extraction").run()
+    require("game.tests.self_test_destroyed_launch_touch_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
