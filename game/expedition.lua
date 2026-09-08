@@ -9,121 +9,40 @@ local gearModule = require("game.gear")
 local enginePartsModule = require("game.engine_parts")
 local json = require("game.json")
 
--- INBOX (52b): 5-symbol slot system replacing COMET/PLANET/STAR.
--- Weights: MONEY 30%, PART 15%, SPEED 20%, DURABILITY 15%, HARVEST 20%
--- expressed as integer weights summing to 20.
-local slotSymbols = { "MONEY", "PART", "SPEED", "DURABILITY", "HARVEST" }
-M.slotSymbols = slotSymbols
 
-local slotWeights = { MONEY = 6, PART = 3, SPEED = 4, DURABILITY = 3, HARVEST = 4 }
-M.slotWeights = slotWeights
+local expedition_slot = require('game.expedition_slot')
+M.slotSymbols = expedition_slot.slotSymbols
+M.slotWeights = expedition_slot.slotWeights
+M.slotTotalWeight = expedition_slot.slotTotalWeight
+M.slotPayouts = expedition_slot.slotPayouts
+M.earthSlotOddsProfiles = expedition_slot.earthSlotOddsProfiles
+M.earthSlotRewardMultipliers = expedition_slot.earthSlotRewardMultipliers
+M.slotSpinCost = expedition_slot.slotSpinCost
+M.slotConfigPath = expedition_slot.slotConfigPath
+M.slotReward = expedition_slot.slotReward
 
-local slotTotalWeight = 0
-for _, symbol in ipairs(slotSymbols) do
-    slotTotalWeight = slotTotalWeight + slotWeights[symbol]
-end
-M.slotTotalWeight = slotTotalWeight
-
--- INBOX (52b) payouts: miss=0, pair=cost×3, triple=cost×10.
--- jackpot field kept for backward-compat but not used by new slotReward.
-M.slotPayouts = { miss = 0, pair = 3, triple = 10 }
-M.earthSlotOddsProfiles = {
-    solar  = { MONEY = 6, PART = 3, SPEED = 4, DURABILITY = 3, HARVEST = 4 },
-    fringe = { MONEY = 5, PART = 3, SPEED = 4, DURABILITY = 3, HARVEST = 5 },
-    void   = { MONEY = 4, PART = 4, SPEED = 4, DURABILITY = 4, HARVEST = 4 },
-}
--- Galaxy reward multipliers: void pays higher multiples on triples.
-M.earthSlotRewardMultipliers = {
-    solar  = { tripleMultiplier = 1.0 },
-    fringe = { tripleMultiplier = 1.5 },
-    void   = { tripleMultiplier = 2.0 },
-}
-
-M.slotSpinCost = 10
-M.hubRestockCost = 5       -- INBOX 61(16): cost to re-roll gear offer at hub shop
-M.slotConfigPath = "data/slot_config.json"
 
 function M.loadSlotConfig(fsOverride)
-    local fs = fsOverride or love.filesystem
-    local contents = fs.read(M.slotConfigPath)
-    if not contents then
-        -- Restore defaults (INBOX 52b: 5-symbol system)
-        M.slotSpinCost = 10
-        M.slotSymbols = { "MONEY", "PART", "SPEED", "DURABILITY", "HARVEST" }
-        M.slotWeights = { MONEY = 6, PART = 3, SPEED = 4, DURABILITY = 3, HARVEST = 4 }
-        M.slotPayouts = { miss = 0, pair = 3, triple = 10 }
-        M.earthSlotOddsProfiles = {
-            solar  = { MONEY = 6, PART = 3, SPEED = 4, DURABILITY = 3, HARVEST = 4 },
-            fringe = { MONEY = 5, PART = 3, SPEED = 4, DURABILITY = 3, HARVEST = 5 },
-            void   = { MONEY = 4, PART = 4, SPEED = 4, DURABILITY = 4, HARVEST = 4 },
-        }
-        M.earthSlotRewardMultipliers = {
-            solar  = { tripleMultiplier = 1.0 },
-            fringe = { tripleMultiplier = 1.5 },
-            void   = { tripleMultiplier = 2.0 },
-        }
-        slotSymbols = M.slotSymbols
-        slotWeights = M.slotWeights
-        local w = 0
-        for _, s in ipairs(slotSymbols) do w = w + slotWeights[s] end
-        M.slotTotalWeight = w
-        slotTotalWeight = w
-        return false, "file missing"
-    end
-    
-    local ok, doc = pcall(json.decode, contents)
-    if not ok then return false, "json error" end
-    
-    M.slotSpinCost = doc.spinCost or 10
-    
-    if doc.symbols then
-        M.slotSymbols = {}
-        M.slotWeights = {}
-        for _, s in ipairs(doc.symbols) do
-            table.insert(M.slotSymbols, s.id)
-            M.slotWeights[s.id] = s.weight
-        end
-        slotSymbols = M.slotSymbols
-        slotWeights = M.slotWeights
-        local w = 0
-        for _, s in ipairs(slotSymbols) do w = w + slotWeights[s] end
-        M.slotTotalWeight = w
-        slotTotalWeight = w
-    end
-    
-    if doc.payouts then
-        M.slotPayouts = doc.payouts
-    end
-    
-    if doc.profiles then
-        M.earthSlotOddsProfiles = {}
-        M.earthSlotRewardMultipliers = {}
-        for k, v in pairs(doc.profiles) do
-            M.earthSlotOddsProfiles[k] = v.weights or {}
-            M.earthSlotRewardMultipliers[k] = v.multipliers or {}
-        end
-    end
-    
-    return true
+    local slot = require('game.expedition_slot')
+    local r1, r2 = slot.loadSlotConfig(fsOverride)
+    M.slotSymbols = slot.slotSymbols
+    M.slotWeights = slot.slotWeights
+    M.slotTotalWeight = slot.slotTotalWeight
+    M.slotPayouts = slot.slotPayouts
+    M.earthSlotOddsProfiles = slot.earthSlotOddsProfiles
+    M.earthSlotRewardMultipliers = slot.earthSlotRewardMultipliers
+    M.slotSpinCost = slot.slotSpinCost
+    return r1, r2
 end
 
 function M.slotSymbolProbability(symbol)
-    return slotWeights[symbol] / slotTotalWeight
+    return require('game.expedition_slot').slotSymbolProbability(symbol)
 end
 
 -- INBOX (52b): slotReward now returns a multiplier (pair=3, triple=10).
 -- The actual money value is computed by the caller as spinCost * multiplier.
 -- matchCount and matchSymbol are returned by earthSlotSpin for effect dispatch.
-local function slotReward(symbols)
-    if symbols[1] == symbols[2] and symbols[2] == symbols[3] then
-        return M.slotPayouts.triple  -- 10 (×cost)
-    end
-    if symbols[1] == symbols[2] or symbols[1] == symbols[3] or symbols[2] == symbols[3] then
-        return M.slotPayouts.pair  -- 3 (×cost)
-    end
-    return M.slotPayouts.miss  -- 0
-end
-M.slotReward = slotReward
+
 
 local function weightedSlotSymbol(roll)
     local cumulative = 0
@@ -139,20 +58,7 @@ M.weightedSlotSymbol = weightedSlotSymbol
 -- computed by brute-forcing every reel combination (used for balance tests
 -- and future UI display, not just an approximation).
 function M.slotExpectedValue()
-    local total = 0
-    local probabilitySum = 0
-    for _, a in ipairs(slotSymbols) do
-        for _, b in ipairs(slotSymbols) do
-            for _, c in ipairs(slotSymbols) do
-                local probability = M.slotSymbolProbability(a)
-                    * M.slotSymbolProbability(b)
-                    * M.slotSymbolProbability(c)
-                total = total + probability * slotReward({ a, b, c })
-                probabilitySum = probabilitySum + probability
-            end
-        end
-    end
-    return total, probabilitySum
+    return require('game.expedition_slot').slotExpectedValue()
 end
 
 
@@ -1332,34 +1238,15 @@ M.homeGalaxies = { milkyway = true }
 -- slotTier = 1 + floor(galaxyDistance / galaxyCellSize). Home/nil → tier 1.
 -- Named ids like "galaxy:gx:gy" use hypot(gx, gy) * cellSize so (1,0) is tier 2.
 function M.galaxyDistance(run, galaxyId)
-    local id = galaxyId or (run and run.lastVisitedGalaxyId)
-    if id and not M.homeGalaxies[id] then
-        local gx, gy = id:match("^galaxy:(-?%d+):(-?%d+)$")
-        if gx then
-            gx, gy = tonumber(gx), tonumber(gy)
-            local worldMod = require("game.world")
-            local cell = worldMod.galaxyCellSize or 4608
-            return math.sqrt((gx * cell) ^ 2 + (gy * cell) ^ 2)
-        end
-    end
-    local hx = run and run.lastHubX
-    local hy = run and run.lastHubY
-    if hx and hy then
-        return math.sqrt(hx * hx + hy * hy)
-    end
-    return 0
+    return require('game.expedition_slot').galaxyDistance(run, galaxyId)
 end
 
 function M.slotTier(run, galaxyId)
-    local worldMod = require("game.world")
-    local cell = worldMod.galaxyCellSize or 4608
-    local dist = M.galaxyDistance(run, galaxyId)
-    return 1 + math.floor(dist / cell)
+    return require('game.expedition_slot').slotTier(run, galaxyId)
 end
 
 function M.slotSpinCostFor(run, galaxyId)
-    local base = M.slotSpinCost or 10
-    return base * M.slotTier(run, galaxyId)
+    return require('game.expedition_slot').slotSpinCostFor(run, galaxyId)
 end
 
 -- Maps a galaxyId string to one of the three profile names. nil or any
@@ -1369,39 +1256,20 @@ end
 -- void — outer galaxies are mostly fringe-grade with occasional deep-void
 -- anomalies, matching the game's tone of gradual risk escalation).
 function M.galaxySlotOddsProfile(galaxyId)
-    if not galaxyId or M.homeGalaxies[galaxyId] then
-        return "solar"
-    end
-    local h = 0
-    for i = 1, #galaxyId do
-        h = (h * 31 + string.byte(galaxyId, i)) % 2147483647
-    end
-    local bucket = h % 3
-    if bucket == 1 then return "void" end
-    return "fringe"
+    return require('game.expedition_slot').galaxySlotOddsProfile(galaxyId)
 end
 
 -- Returns the base slot weight table for a given galaxy. Callers can then
 -- apply the luck modifier (see M.earthSlotSpin) on top.
 function M.earthSlotWeights(galaxyId)
-    local profile = M.galaxySlotOddsProfile(galaxyId)
-    local base = M.earthSlotOddsProfiles[profile] or M.earthSlotOddsProfiles["solar"]
-    -- Return a copy so callers can safely modify without corrupting the table.
-    local copy = {}
-    for _, sym in ipairs(slotSymbols) do copy[sym] = base[sym] end
-    return copy
+    return require('game.expedition_slot').earthSlotWeights(galaxyId)
 end
 
 -- INBOX 61(35): Compute the effective total weight for a given run + galaxy,
 -- including the luck-boosted HARVEST weight. Callers use this to generate
 -- uniformly distributed reel rolls in [0, totalWeight - 1].
 function M.earthSlotTotalWeight(run, galaxyId)
-    local weights = M.earthSlotWeights(galaxyId)
-    local luckBonus = gearModule.totalLuckBonus(combinedGearList(run))
-    weights.HARVEST = weights.HARVEST * (1 + luckBonus)
-    local total = 0
-    for _, sym in ipairs(slotSymbols) do total = total + weights[sym] end
-    return math.floor(total)
+    return require('game.expedition_slot').earthSlotTotalWeight(run, galaxyId)
 end
 
 -- Item 15(c) + Item 14(C) luck: Earth-shop slot spin with per-galaxy odds
@@ -1438,127 +1306,9 @@ end
 -- INBOX (52b): profile-aware reward multiplier for triples.
 -- Non-triples and misses use the base slotReward. Triples get scaled
 -- by the profile's tripleMultiplier so void pays more on triple hits.
-local function earthSlotReward(symbols, profile)
-    local isTriple = (symbols[1] == symbols[2] and symbols[2] == symbols[3])
-    if isTriple then
-        local mults = M.earthSlotRewardMultipliers[profile or "solar"]
-        local mult = (mults and mults.tripleMultiplier) or 1.0
-        return math.floor(M.slotPayouts.triple * mult)
-    end
-    return slotReward(symbols)
-end
 
 function M.earthSlotSpin(run, galaxyId, rolls)
-    local profile = M.galaxySlotOddsProfile(galaxyId)
-    local weights = M.earthSlotWeights(galaxyId)
-    -- Item 14(C) luck: boost HARVEST weight by the equipped gear's luck total.
-    local luckBonus = gearModule.totalLuckBonus(combinedGearList(run))
-    local effectiveHarvestWeight = weights.HARVEST * (1 + luckBonus)
-    weights.HARVEST = effectiveHarvestWeight
-    local total = 0
-    for _, sym in ipairs(slotSymbols) do total = total + weights[sym] end
-    -- Resolve each reel
-    local reelRolls = (rolls and rolls.reels) or { 0, 0, 0 }
-    local symbols = {}
-    for _, roll in ipairs(reelRolls) do
-        local cumulative = 0
-        local chosen = slotSymbols[#slotSymbols]
-        for _, sym in ipairs(slotSymbols) do
-            cumulative = cumulative + weights[sym]
-            if roll < cumulative then
-                chosen = sym
-                break
-            end
-        end
-        symbols[#symbols + 1] = chosen
-    end
-    -- INBOX (52b): compute matchCount and matchSymbol for effect dispatch.
-    local matchCount = 0
-    local matchSymbol = nil
-    if symbols[1] == symbols[2] and symbols[2] == symbols[3] then
-        matchCount = 3
-        matchSymbol = symbols[1]
-    elseif symbols[1] == symbols[2] then
-        matchCount = 2; matchSymbol = symbols[1]
-    elseif symbols[1] == symbols[3] then
-        matchCount = 2; matchSymbol = symbols[1]
-    elseif symbols[2] == symbols[3] then
-        matchCount = 2; matchSymbol = symbols[2]
-    end
-    local rewardMultiplier = earthSlotReward(symbols, profile)
-    local tier = M.slotTier(run, galaxyId)
-    local spinCost = M.slotSpinCostFor(run, galaxyId)
-    -- Symbol-specific rewards instead of money-only
-    local rewardType = "money"
-    local rewardValue = spinCost * rewardMultiplier
-    local rewardPart = nil
-    if matchCount >= 2 and matchSymbol then
-        if matchSymbol == "SPEED" then
-            rewardType = "speed"
-            -- INBOX 61(25): SPEED (5*tier)/(20*tier)
-            rewardValue = (matchCount == 3 and 20 or 5) * tier
-        elseif matchSymbol == "DURABILITY" then
-            rewardType = "durability"
-            -- INBOX 61(25): DURABILITY (3*tier)/(10*tier)
-            rewardValue = (matchCount == 3 and 10 or 3) * tier
-        elseif matchSymbol == "HARVEST" then
-            rewardType = "harvest"
-            -- Shop harvest step is 0.10 (INBOX 51). 2-match = 1 shop buy, 3-match = 5.
-            rewardValue = (matchCount == 3 and 0.50 or 0.10) * tier
-        elseif matchSymbol == "PART" then
-            rewardType = "part"
-            rewardValue = 0
-            local gearMod = require("game.gear")
-            local basePool = {}
-            for _, p in ipairs(gearMod.loadHullParts() or {}) do basePool[#basePool + 1] = p end
-            for _, p in ipairs(gearMod.loadEngineParts() or {}) do basePool[#basePool + 1] = p end
-            -- INBOX 61(15): prefer slot-exclusive parts; fall back to full pool
-            local slotOnly = gearMod.slotPool(basePool)
-            local sourcePool = #slotOnly > 0 and slotOnly or basePool
-            local filteredPool = {}
-            for _, p in ipairs(sourcePool) do
-                if matchCount == 2 and (p.rarity == "common" or p.rarity == "uncommon") then
-                    filteredPool[#filteredPool + 1] = p
-                elseif matchCount == 3 and (p.rarity == "rare" or p.rarity == "legendary") then
-                    filteredPool[#filteredPool + 1] = p
-                end
-            end
-            -- If rarity filter emptied the slot pool, fall back to full pool
-            if #filteredPool == 0 then
-                for _, p in ipairs(basePool) do
-                    if matchCount == 2 and (p.rarity == "common" or p.rarity == "uncommon") then
-                        filteredPool[#filteredPool + 1] = p
-                    elseif matchCount == 3 and (p.rarity == "rare" or p.rarity == "legendary") then
-                        filteredPool[#filteredPool + 1] = p
-                    end
-                end
-            end
-            local partRolls = {
-                rarity = rolls and rolls.partRarity or 0,
-                pick = rolls and rolls.partPick or 0,
-                editionChance = rolls and rolls.partEditionChance or 1,
-                editionPick = rolls and rolls.partEditionPick or 0,
-            }
-            rewardPart = M.rollGearOffer(run, filteredPool, partRolls)
-        end
-        -- MONEY match stays as money reward
-    end
-    return {
-        symbols = symbols,
-        reward = rewardType == "money" and rewardValue or 0,
-        rewardType = rewardType,
-        rewardValue = rewardValue,
-        rewardMultiplier = rewardMultiplier,
-        rewardPart = rewardPart,
-        totalWeight = total,
-        effectiveHarvestWeight = effectiveHarvestWeight,
-        effectiveStarWeight = effectiveHarvestWeight,
-        matchCount = matchCount,
-        matchSymbol = matchSymbol,
-        rewardProfile = profile,
-        spinCost = spinCost,
-        slotTier = tier,
-    }
+    return require('game.expedition_slot').earthSlotSpin(run, galaxyId, rolls)
 end
 
 -- Item 7(b): Exploring a galaxy hub deterministically drops a specific
