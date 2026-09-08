@@ -1,9 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted engine synergy multiplier wiring coverage to `game/tests/legacy_gear_engine_synergy_multiplier_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 5,833 to 5,742 lines.
-  - Preserved shared-tag engine speed multiplication, unrelated-tag additive behavior, and irradiated fusion-core amplification assertions without adding a `love.*` boundary.
+- R1 (Lane C, partial): extracted boost-counter destruction-reset coverage to `game/tests/legacy_gear_boosts_used_destroy_reset.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 5,742 to 5,692 lines.
+  - Preserved the boost, insurance, and reroll reset assertions without changing production behavior or adding a `love.*` boundary.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
-  - Exact next slice: extract `testGearBoostsUsedDestroyReset` to `game/tests/legacy_gear_boosts_used_destroy_reset.lua` without changing assertions.
+  - Exact next slice: extract `testHubExploredResetsOnLaunch` to `game/tests/legacy_hub_explored_resets_on_launch.lua` without changing assertions.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).
@@ -147,6 +147,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearBoostsUsedDestroyReset` from `game/self_test.lua` to `game/tests/legacy_gear_boosts_used_destroy_reset.lua`, preserving destroy/launch reset parity for boost, insurance, and reroll counters.
+- R1 (Lane C): extract `testHubExploredResetsOnLaunch` from `game/self_test.lua` to `game/tests/legacy_hub_explored_resets_on_launch.lua`, preserving hub exploration and last-visited-galaxy reset behavior across safe relaunch.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
