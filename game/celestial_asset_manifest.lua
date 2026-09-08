@@ -19,6 +19,14 @@ M.planets = {
         height = 128,
         sha256 = "b03789fa874d42fe1c627ca0742883ffebbdc7a6fe89a5e0b85a036d5cadbd25",
     },
+    dry = {
+        id = "pp_dry_nasa_pia00407",
+        runtimePath = "assets/planet/studio/pp_dry.png",
+        masterPath = "docs/assets/masters/planet/pp_dry_nasa_pia00407_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "e05a74ddaadb122957e0a7e839aaa835f2af3cc2b5387eeb1c28f7d71b3fbebd",
+    },
 }
 
 return M

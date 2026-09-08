@@ -59,6 +59,8 @@ function M.run()
         "INBOX 78: bare planets must load the approved Asset Studio runtime derivative")
     assert(studioPaths.gas == "assets/planet/studio/pp_gas.png",
         "INBOX 78: gas planets must load the approved Asset Studio runtime derivative")
+    assert(studioPaths.dry == "assets/planet/studio/pp_dry.png",
+        "INBOX 78: dry planets must load the approved Asset Studio runtime derivative")
     assert(studioPaths.ice == nil,
         "INBOX 78: unwired Asset Studio candidates must remain out of the runtime manifest")
 
@@ -103,6 +105,37 @@ function M.run()
     })
     assert(sprite == legacyGas and sheet == legacyGasSheet,
         "INBOX 78: failed gas studio loading must preserve the legacy gas artwork")
+
+    local legacyDry = {}
+    local legacyDrySheet = {}
+    local studioDry = {}
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "dry" }, {
+        default = {},
+        pixel = { dry = legacyDry },
+        sheets = { dry = legacyDrySheet },
+        studio = { dry = studioDry },
+    })
+    assert(sprite == studioDry and sheet == nil,
+        "INBOX 78: decoded dry studio artwork must take priority over the legacy sheet")
+
+    sprite, sheet = api.selectPlanetArtwork({ galaxyStarType = "dry" }, {
+        default = {},
+        pixel = { dry = legacyDry },
+        sheets = { dry = legacyDrySheet },
+        studio = {},
+    })
+    assert(sprite == legacyDry and sheet == legacyDrySheet,
+        "INBOX 78: failed dry studio loading must preserve the legacy dry artwork")
+
+    sprite, sheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "dry" }, {
+        default = {},
+        pixel = { dry = legacyDry },
+        sheets = { dry = legacyDrySheet },
+        studio = { dry = studioDry },
+        hubSheet = legacyDrySheet,
+    })
+    assert(sprite == legacyDry and sheet == legacyDrySheet,
+        "INBOX 78: ordinary dry studio artwork must not replace hub artwork")
 
     local hubGas = {}
     local hubGasSheet = {}

@@ -196,3 +196,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-07T21:16:00+0900 | assets/sfx/boost.ogg | rubberduck rocket_01 CC0, boost whoosh
 2026-09-09T03:14:25+0900 | assets/planet/studio/pp_bare.png | INBOX (78) Lane D: approved NASA PIA00405 Asset Studio 128x128 RGBA derivative wired for bare planets via runtime manifest
 2026-09-09T03:21:20+0900 | assets/planet/studio/pp_gas.png | INBOX (78) Lane D: approved NASA PIA01518 Asset Studio 128x128 RGBA derivative wired for ordinary gas planets via runtime manifest
+2026-09-09T03:26:04+0900 | assets/planet/studio/pp_dry.png | INBOX (78) Lane D: approved NASA PIA00407 Asset Studio 128x128 RGBA derivative wired for ordinary dry planets via runtime manifest
