@@ -1780,3 +1780,11 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `game/self_test.lua` now delegates through `run()` and shrank from 7,471 to 7,429 lines.
   - Preserved the unequipped baseline and hull/engine collision-radius effect assertions; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then focused engine-hosted tests and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 18:22)
+
+- R1 (Lane C, partial): extracted hull-durability run wiring coverage to `game/tests/legacy_gear_hull_durability_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,429 to 7,358 lines.
+  - Preserved baseline, hull-only gear scope, launch refill, and durability-upgrade stacking assertions; the extracted module has no `love.*` boundary.
+  - Observed missing-module RED, then the engine-hosted suite and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearHullSpeedRunWiring` into one `game/tests/legacy_*.lua` module.
