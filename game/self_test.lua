@@ -46,72 +46,6 @@ local function testGearInsuranceCategoryAgnosticWiring()
     assert(hasBoost, "engine_escape_pod_thruster must have boostCharge (insurance moved to hull-only)")
 end
 
--- Next slice within item 14: (D) insurance / (F) shopDiscount were only
--- pure gear.lua conversion functions (M.hasInsurance/M.effectiveShopPrice)
--- until now -- never actually consumed by a run's destroy()/shop-purchase
--- code paths. This wires them the same "최소한의 로더 호출" way item 9's
--- climbSpeed synergy and item 10(b)'s propulsion effects were already
--- wired above (game/expedition.lua only; play.lua/world.lua untouched).
-local function testGearSurvivalAndEconomyWiring()
-    local expedition = require("game.expedition")
-    local hullPool = gear.loadHullParts()
-
-    -- (D) insurance: an equipped hull_emergency_beacon (insurance +1) must
-    -- survive a lethal hit ONCE without triggering the full meta wipe
-    -- (money/ships/upgrades/best-height-preserving destroy()), then a
-    -- SECOND lethal hit (insurance already spent) must destroy normally.
-    local beaconCard = gear.findById(hullPool, "hull_emergency_beacon")
-    assert(beaconCard, "fixture hull card 'hull_emergency_beacon' must exist in the bundled pool")
-    local insuredRun = expedition.new({ durability = 2, money = 40 })
-    assert(expedition.equipGear(insuredRun, "hull", beaconCard))
-    expedition.launch(insuredRun)
-    insuredRun.durability = 1
-
-    local destroyedFirstHit = expedition.damage(insuredRun, 5)
-    assert(destroyedFirstHit == false,
-        "an equipped insurance part must prevent destruction on the first lethal hit")
-    assert(insuredRun.phase == "ascending", "an insured survival must keep the run in its current phase")
-    assert(insuredRun.durability > 0, "an insured survival must restore at least 1 durability")
-    assert(insuredRun.money == 40, "an insured survival must NOT trigger the meta wipe (money must be untouched)")
-    assert(#insuredRun.equippedGear == 1, "an insured survival must keep equipped gear (no meta wipe)")
-
-    insuredRun.durability = 1
-    local destroyedSecondHit = expedition.damage(insuredRun, 5)
-    assert(destroyedSecondHit == true,
-        "insurance is a one-time save; a second lethal hit must destroy normally")
-    assert(insuredRun.phase == "destroyed")
-    assert(insuredRun.money == 0, "the second (uninsured) destruction must still perform the full meta wipe")
-
-    -- Without any insurance-carrying gear equipped, the very first lethal
-    -- hit destroys normally (baseline unaffected by this wiring).
-    local uninsuredRun = expedition.new({ durability = 1, money = 10 })
-    expedition.launch(uninsuredRun)
-    assert(expedition.damage(uninsuredRun, 5) == true,
-        "a run with no insurance gear must destroy on the first lethal hit, same as before this slice")
-
-    -- (F) shopDiscount: an equipped hull_trade_license (shopDiscount +20%)
-    -- must reduce the money actually spent on a settlement-phase purchase
-    -- by exactly 20%, while a run with no discount gear pays full price.
-    local tradeCard = gear.findById(hullPool, "hull_trade_license")
-    assert(tradeCard, "fixture hull card 'hull_trade_license' must exist in the bundled pool")
-    local discountRun = expedition.new({ durabilityUpgradeCost = 50, money = 50 })
-    assert(expedition.equipGear(discountRun, "hull", tradeCard))
-    discountRun.phase = "settlement"
-    assert(expedition.shopPrice(discountRun, discountRun.durabilityUpgradeCost) == 40,
-        "shopPrice must apply the equipped shopDiscount percentage")
-    assert(expedition.buyDurabilityUpgrade(discountRun),
-        "a discounted purchase must still succeed at the reduced price")
-    assert(discountRun.money == 10,
-        "buying with an equipped shopDiscount card must charge the discounted price (50 - 40 = 10 left), got "
-            .. tostring(discountRun.money))
-
-    local fullPriceRun = expedition.new({ durabilityUpgradeCost = 50, money = 50 })
-    fullPriceRun.phase = "settlement"
-    assert(expedition.buyDurabilityUpgrade(fullPriceRun))
-    assert(fullPriceRun.money == 0,
-        "a run with no shopDiscount gear must still pay the full base price, got " .. tostring(fullPriceRun.money))
-end
-
 -- Item 12's rarity/edition RNG (gear.rollRarity/gear.rollEdition) has
 -- existed only as pure functions until now -- never actually called from a
 -- run's shop/checkpoint drop path. This wires an explicit-roll offer
@@ -3173,7 +3107,7 @@ local function runGearTests()
     require("game.tests.legacy_gear_category_coverage").run()
     require("game.tests.legacy_gear_run_wiring").run()
     require("game.tests.legacy_gear_propulsion_run_wiring").run()
-    testGearSurvivalAndEconomyWiring()
+    require("game.tests.legacy_gear_survival_economy_wiring").run()
     testGearInsuranceCategoryAgnosticWiring()
     testGearOfferRolling()
     testGearRunEffectWiring()
