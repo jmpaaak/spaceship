@@ -207,6 +207,7 @@ function M:draw()
                 sheets = self.planetSheetImages,
                 hubSheet = self.hubSheetImage,
                 studio = self.studioPlanetImages,
+                studioHub = self.studioHubPlanetImages,
             })
             local rot, scaleMul = M.planetVariation(planet)
             local tR = math.min(1, baseR * 0.35 + 0.65)

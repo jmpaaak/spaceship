@@ -36,8 +36,8 @@ function M.run()
         "R1: planet variation must stay in its presentation bounds")
 
     assert(api.planetImagePathForPlanet({ hub = true, galaxyStarType = "ice" })
-            == "assets/planet/pp_ice.png",
-        "R1: typed hubs must use their PixelPlanets sprite")
+            == "assets/planet/studio/hub_neptune.png",
+        "INBOX 78: ice hubs must use the approved Neptune Asset Studio derivative")
     assert(api.planetImagePathForPlanet({ hub = true, galaxyStarType = "gas" })
             == "assets/planet/pp_gas.png",
         "INBOX 78: ordinary-planet candidates must not replace hub artwork")
@@ -70,6 +70,42 @@ function M.run()
         "INBOX 78: lava planets must load the approved Asset Studio runtime derivative")
     assert(studioPaths.earth == "assets/planet/studio/pp_earth.png",
         "INBOX 78: earth planets must load the approved Asset Studio runtime derivative")
+
+    local studioHubPaths = api.studioHubPlanetImagePaths()
+    assert(studioHubPaths.ice == "assets/planet/studio/hub_neptune.png",
+        "INBOX 78: the approved Neptune derivative must load only for ice hubs")
+
+    local studioNeptune = {}
+    local legacyIceHub = {}
+    local legacyHubSheet = {}
+    local hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "ice" }, {
+        default = {},
+        pixel = { ice = legacyIceHub },
+        hubSheet = legacyHubSheet,
+        studioHub = { ice = studioNeptune },
+    })
+    assert(hubSprite == studioNeptune and hubSheet == nil,
+        "INBOX 78: a decoded Neptune derivative must take priority in the ice-hub draw path")
+
+    hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "ice" }, {
+        default = {},
+        pixel = { ice = legacyIceHub },
+        hubSheet = legacyHubSheet,
+        studioHub = {},
+    })
+    assert(hubSprite == legacyIceHub and hubSheet == legacyHubSheet,
+        "INBOX 78: failed Neptune loading must preserve the existing hub artwork")
+
+    local ordinaryIceStudio = {}
+    hubSprite, hubSheet = api.selectPlanetArtwork({ galaxyStarType = "ice" }, {
+        default = {},
+        pixel = { ice = legacyIceHub },
+        sheets = { ice = legacyHubSheet },
+        studio = { ice = ordinaryIceStudio },
+        studioHub = { ice = studioNeptune },
+    })
+    assert(hubSprite == ordinaryIceStudio and hubSheet == nil,
+        "INBOX 78: hub candidates must not replace ordinary planet artwork")
 
     local legacyBare = {}
     local legacyBareSheet = {}
