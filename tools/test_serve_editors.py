@@ -7,6 +7,7 @@ import sys
 import threading
 import unittest
 from http.server import ThreadingHTTPServer
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -34,21 +35,13 @@ class SpriteGenApiTests(unittest.TestCase):
         with urlopen(req, timeout=5) as resp:
             return resp.status, json.loads(resp.read().decode("utf-8"))
 
-    def test_prompt_returns_png_base64(self):
-        status, data = self._post({"prompt": "gold asteroid", "width": 32, "height": 32})
-        self.assertEqual(status, 200)
-        self.assertIn(data["engine"], ("sprite-gen", "pil-fallback"))
-        raw = base64.b64decode(data["png_b64"])
-        img = Image.open(io.BytesIO(raw))
-        self.assertEqual(img.size, (32, 32))
-        self.assertEqual(data["width"], 32)
-        self.assertEqual(data["height"], 32)
-        self.assertEqual(data["mime"], "image/png")
-
-    def test_same_prompt_is_deterministic(self):
-        _, a = self._post({"prompt": "void crystal", "width": 16, "height": 16})
-        _, b = self._post({"prompt": "void crystal", "width": 16, "height": 16})
-        self.assertEqual(a["png_b64"], b["png_b64"])
+    def test_prompt_without_generator_is_503_not_fake_shape(self):
+        with patch.object(se, "try_sprite_gen", return_value=None):
+            with self.assertRaises(HTTPError) as ctx:
+                self._post({"prompt": "gold asteroid", "width": 32, "height": 32})
+        self.assertEqual(ctx.exception.code, 503)
+        body = json.loads(ctx.exception.read().decode("utf-8"))
+        self.assertIn("generator unavailable", body["error"])
 
     def test_missing_prompt_is_400(self):
         body = json.dumps({"width": 32}).encode("utf-8")
@@ -57,27 +50,37 @@ class SpriteGenApiTests(unittest.TestCase):
             urlopen(req, timeout=5)
         self.assertEqual(ctx.exception.code, 400)
 
-    def test_image_conditioning_accepted(self):
-        tiny = Image.new("RGBA", (8, 8), (12, 34, 56, 255))
+    @staticmethod
+    def _png_b64(color, size=(8, 8)):
+        tiny = Image.new("RGBA", size, color)
         buf = io.BytesIO()
         tiny.save(buf, format="PNG")
-        b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-        status, data = self._post({
-            "prompt": "conditioned nebula",
-            "width": 16,
-            "height": 16,
-            "image": b64,
-        })
-        self.assertEqual(status, 200)
-        raw = base64.b64decode(data["png_b64"])
-        img = Image.open(io.BytesIO(raw))
-        self.assertEqual(img.size, (16, 16))
+        return base64.b64encode(buf.getvalue()).decode("ascii")
 
-    def test_generate_sprite_helper_without_http(self):
-        result = se.generate_sprite("tiny moon", 24, 24)
-        self.assertEqual(result["engine"], "pil-fallback")
-        img = Image.open(io.BytesIO(base64.b64decode(result["png_b64"])))
-        self.assertEqual(img.size, (24, 24))
+    def test_uploaded_image_is_preserved_without_shape_overlay(self):
+        color = (12, 34, 56, 255)
+        with patch.object(se, "try_sprite_gen", return_value=None):
+            status, data = self._post({
+                "prompt": "conditioned nebula",
+                "width": 16,
+                "height": 16,
+                "image": self._png_b64(color),
+            })
+        self.assertEqual(status, 200)
+        self.assertEqual(data["engine"], "uploaded-image")
+        img = Image.open(io.BytesIO(base64.b64decode(data["png_b64"]))).convert("RGBA")
+        self.assertEqual(img.size, (16, 16))
+        self.assertEqual(set(list(img.getdata())), {color})
+
+    def test_different_uploads_produce_different_results(self):
+        with patch.object(se, "try_sprite_gen", return_value=None):
+            _, red = self._post({"prompt": "same", "image": self._png_b64((255, 0, 0, 255))})
+            _, blue = self._post({"prompt": "same", "image": self._png_b64((0, 0, 255, 255))})
+        self.assertNotEqual(red["png_b64"], blue["png_b64"])
+
+    def test_static_assets_disable_cache(self):
+        with urlopen("http://127.0.0.1:%d/tools/asset-studio/editor.js" % self.port, timeout=5) as resp:
+            self.assertEqual(resp.headers.get("Cache-Control"), "no-store, max-age=0")
 
 
 if __name__ == "__main__":
