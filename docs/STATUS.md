@@ -1,14 +1,7 @@
 ## Current Status
-- R1 (Lane C, partial): extracted the initial viewport, ship movement, and deterministic world smoke checks into `game/tests/legacy_initial_smoke.lua`.
-  - Preserved assertion order and inputs behind `run()`; `game/tests/self_test_initial_smoke_extraction.lua` enforces delegation.
-  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,192 to 3,167 lines.
-  - Exact next slice: extract the collision-risk preview characterization block into one legacy suite while preserving the configured `riskScene` state consumed by subsequent HUD checks.
-
-- INBOX 61(28): Boost button UI & Boost FX
-  - Created `game/scenes/play_boost.lua` to extract boost logic and avoid bloating `play.lua`.
-  - Added BOOST button UI in bottom-right corner with charge counter.
-  - Enhanced RCS particles during boost (golden color, 2.5x radius, faster spawn).
-  - Added vertical speed lines visual effect during boost.
+- R1 (Lane C, partial): extracted the collision-risk preview characterization block into `game/tests/legacy_collision_risk.lua`.
+  - Preserved assertion order and inputs behind `run()` and returned the configured `riskScene` consumed by subsequent HUD/collision checks; `game/tests/self_test_collision_risk_extraction.lua` enforces delegation and state handoff.
+  - Observed the expected missing-suite RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 3,167 to 3,140 lines.
 
 - INBOX 61(32): play_gameover.lua extraction
   - Created `game/scenes/play_gameover.lua` — gameover/destroyed-phase layout module.
@@ -120,6 +113,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract the adjacent collision-risk and SAMPLE YIELD preview characterization block from `game/self_test.lua` into one `game/tests/legacy_*.lua` suite, preserving execution order and assertions.
+- R1 (Lane C): extract the HUD constants/status/distance characterization block into one legacy suite while preserving the configured `riskScene` state consumed by the following collision checks.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
