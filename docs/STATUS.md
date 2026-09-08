@@ -134,8 +134,12 @@
   - Preserved flat sample values, distance-based sample tiers and collision damage, the 50× comet multiplier, and output unchanged behind `run()`.
   - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,103 to 4,085 lines.
 
+- R1 (Lane C, partial): extracted the moon-system characterization block into `game/tests/legacy_moon_system.lua`.
+  - Preserved deterministic spawn-rate coverage, orbit geometry and motion, sample value, collision damage, i18n assertion, and output unchanged behind `run()`.
+  - Observed the expected missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN; `game/self_test.lua` decreased from 4,085 to 3,996 lines.
+
 ## Next slice
 
-- R1 (Lane C): extract the moon-system characterization block from `game/self_test.lua` into `game/tests/legacy_moon_system.lua`, preserving deterministic spawn-rate, orbit geometry/motion, sample value, collision damage, and output behavior.
+- R1 (Lane C): extract the gear-slots-grid characterization block from `game/self_test.lua` into `game/tests/legacy_gear_slots_grid.lua`, preserving HUD constants, draw-call mocking/restoration, slot dimensions, and output behavior.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.
