@@ -43,6 +43,14 @@ M.planets = {
         height = 128,
         sha256 = "e155a770f2586e79616e302b1e8d821097b7085a9d044c58dcd86c9d823e3f32",
     },
+    earth = {
+        id = "pp_earth_nasa_as17_148_22727",
+        runtimePath = "assets/planet/studio/pp_earth.png",
+        masterPath = "docs/assets/masters/planet/pp_earth_nasa_as17_148_22727_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "9f6d517594f696491165c4fe4a5af8ae137b496d5593a175155d4e6b67cffb8e",
+    },
 }
 
 return M

@@ -4809,12 +4809,12 @@
       "runtime_derivation": "integer 4x NEAREST downscale",
       "provenance_manifest": "docs/assets/CELESTIAL_ASSET_STUDIO.json"
     },
-    "note": "Unwired candidate; actual runtime load path waits for Lane D.",
+    "note": "Wired through game/celestial_asset_manifest.lua for ordinary earth planets; legacy pp_earth remains the decode-failure fallback.",
     "downloaded_at": "2026-09-09T01:06:57+09:00",
     "sha256": "9f6d517594f696491165c4fe4a5af8ae137b496d5593a175155d4e6b67cffb8e",
     "width": 128,
     "height": 128,
-    "qa": "unwired Lane B candidate; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, and live API validation 5/5 verified by tools/test_celestial_asset_studio_manifest.py"
+    "qa": "Lane D runtime wired; RGBA alpha boundary, hard 4px master grid, integer NEAREST derivative, live API validation 5/5, decoded-image precedence, legacy fallback, and hub/shop isolation verified"
   },
   {
     "path": "assets/star/studio/star_sun.png",
