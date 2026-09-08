@@ -1,0 +1,35 @@
+{
+  "requested_at": "2026-09-09T01:00:01+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/lava_io_nasa_pia00703.jpg",
+  "source_dimensions": [
+    1000,
+    800
+  ],
+  "input_preparation": {
+    "resize": [
+      976,
+      976
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "margin": 24,
+    "auto_crop": "square",
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 28,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "4eedbf0d2eb47b4a8a6ac6cc363a6276743498cd56d07b7d9ccffb835858411c",
+  "payload_bytes": 16257146,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

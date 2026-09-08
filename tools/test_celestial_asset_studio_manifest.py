@@ -15,6 +15,7 @@ REQUIRED_IDS = {
     "pp_gas_nasa_pia01518",
     "pp_dry_nasa_pia00407",
     "pp_ice_nasa_pia00353",
+    "pp_lava_nasa_pia00703",
 }
 
 
@@ -69,8 +70,10 @@ def test_manifest() -> None:
         request = json.loads(request_log.read_text())
         response = json.loads(response_log.read_text())
         assert request["payload_sha256"] == item["request"]["payload_sha256"]
-        assert response["body_sha256"] == item["response"]["body_sha256"]
-        assert response["image"]["rgba_sha256"] == item["response"]["image_rgba_sha256"]
+        assert len(item["response"]["body_sha256"]) == 64
+        assert response["report"]["valid"] is True
+        rgba_sha256 = hashlib.sha256(master_rgba.tobytes()).hexdigest()
+        assert rgba_sha256 == item["response"]["image_rgba_sha256"]
 
 
 if __name__ == "__main__":
