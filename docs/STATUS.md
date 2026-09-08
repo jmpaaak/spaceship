@@ -1,8 +1,9 @@
 ## Current Status
-- R1 (Lane C, partial): extracted base gear run/loadout wiring coverage to `game/tests/legacy_gear_run_wiring.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 8,030 to 7,972 lines.
-  - Preserved fresh loadout, hull/engine slot independence, climb-speed application, unequip, and destruction-wipe assertions unchanged; the extracted module has no `love.*` boundary.
+- R1 (Lane C, partial): extracted propulsion run-wiring coverage to `game/tests/legacy_gear_propulsion_run_wiring.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 7,972 to 7,897 lines.
+  - Preserved engine-speed, boost-charge spend/exhaustion, independent hull-slot, and relaunch-refill assertions unchanged; the extracted module has no `love.*` boundary.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
+  - Exact next slice: extract `testGearSurvivalAndEconomyWiring` into one `game/tests/legacy_*.lua` module.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
   - `game/self_test.lua` now delegates to the module and shrank from 10,443 to 10,255 lines.
