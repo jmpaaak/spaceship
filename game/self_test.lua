@@ -121,23 +121,7 @@ function M.run()
 
     require("game.tests.legacy_launch_loadout_layout").run()
 
-    -- Ascending no longer draws HOLD LEFT/HOLD RIGHT boxes; the full
-    -- canvas is still a tap-hold fallback (left half / right half).
-    local ascendControls = PlayScene.ascendControls
-    local ascendEdgeScene = PlayScene.new({
-        bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-    })
-    ascendEdgeScene.expedition.phase = "ascending"
-    ascendEdgeScene:touchpressed("ascend-edge-left", 20, ascendControls.top)
-    local ascendEdgeLeftSteering = ascendEdgeScene:steeringButtonState()
-    assert(ascendEdgeLeftSteering.leftActive and not ascendEdgeLeftSteering.rightActive,
-        "ascending tap on the left half must still register left steering")
-    ascendEdgeScene:touchreleased("ascend-edge-left")
-    ascendEdgeScene:touchpressed("ascend-edge-right", 500, ascendControls.bottom - 1)
-    local ascendEdgeRightSteering = ascendEdgeScene:steeringButtonState()
-    assert(not ascendEdgeRightSteering.leftActive and ascendEdgeRightSteering.rightActive,
-        "ascending tap on the right half must still register right steering")
-    ascendEdgeScene:touchreleased("ascend-edge-right")
+    require("game.tests.legacy_ascending_touch_steering").run()
 
     -- Omnidirectional joystick movement (docs/GAME_DESIGN.md 이동 방식 개선
     -- 항목 1, "조이스틱을 통해 전방향으로 이동 가능함").
@@ -2210,6 +2194,7 @@ function M.run()
     require("game.tests.self_test_settlement_touch_layout_extraction").run()
     require("game.tests.self_test_destroyed_launch_touch_extraction").run()
     require("game.tests.self_test_launch_loadout_layout_extraction").run()
+    require("game.tests.self_test_ascending_touch_steering_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
