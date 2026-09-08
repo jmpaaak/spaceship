@@ -1,7 +1,7 @@
 ## Current Status
-- R1 (Lane C, partial): extracted the galaxy-exclusive schema documentation check to `game/tests/legacy_gear_schema_docs.lua`.
-  - `game/self_test.lua` now delegates through `run()` and shrank from 8,407 to 8,377 lines.
-  - Preserved the engine-hosted `love.filesystem` contract and every existing schema assertion unchanged.
+- R1 (Lane C, partial): extracted effect-schema expansion coverage to `game/tests/legacy_gear_effect_schema.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,377 to 8,270 lines.
+  - Preserved all gear calculations, editor-source sync assertions, and the engine-hosted `love.filesystem` boundary unchanged.
   - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
 
 - R1 (Lane C, partial): extracted joystick legacy coverage to `game/tests/legacy_joystick.lua`.
@@ -151,6 +151,6 @@
 
 ## Next slice
 
-- R1 (Lane C): extract `testGearEffectSchemaExpansion` from `game/self_test.lua` into `game/tests/legacy_gear_effect_schema.lua`, preserving its existing gear, expedition, JSON, and filesystem assertions.
+- R1 (Lane C): extract `testEnginePropulsionSpecialization` from `game/self_test.lua` into `game/tests/legacy_engine_propulsion.lua`, preserving its gear, JSON, and bundled hull/engine pool assertions.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

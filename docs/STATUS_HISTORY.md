@@ -1677,3 +1677,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Moved edition-effect preview, effect-range, economy-preview, galaxy-exclusive, and suit/synergy checks without changing assertions or filesystem boundaries.
   - Preserved the extracted module's existing `run()` entry point; `self_test.lua` now delegates the full suite through `runAll()` and shrank from 8,706 to 8,407 lines.
   - Observed missing-`runAll` RED; `make test` and `make verify LOVE=/Users/jm/.local/bin/love` GREEN.
+
+## Archived from STATUS.md (2026-09-08 16:59)
+
+- R1 (Lane C, partial): extracted the galaxy-exclusive schema documentation check to `game/tests/legacy_gear_schema_docs.lua`.
+  - `game/self_test.lua` now delegates through `run()` and shrank from 8,407 to 8,377 lines.
+  - Preserved the engine-hosted `love.filesystem` contract and every existing schema assertion unchanged.
+  - Observed missing-module RED, then `make test LOVE=/Users/jm/.local/bin/love` GREEN.
