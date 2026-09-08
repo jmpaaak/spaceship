@@ -2053,3 +2053,9 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved the 280px cap, text measurement, viewport-width guard, minimum coverage, and oversized-text clamp assertions; production behavior is unchanged.
   - Observed the expected missing-module RED; `make verify LOVE=/Users/jm/.local/bin/love` is GREEN. `game/self_test.lua` shrank from 4,600 to 4,565 lines.
   - Next slice: extract `testSettlementSlotRowDoesNotOverlapShop` into `game/tests/legacy_settlement_slot_row.lua`.
+
+## Archived from STATUS.md (2026-09-08 21:42)
+
+- R1 lane C: extracted settlement slot-row regression coverage from `game/self_test.lua` into `game/tests/legacy_settlement_slot_row.lua`.
+  - Preserved the five contiguous touch rows and the slot-result, gear, scout, and relaunch draw-band containment assertions; production behavior is unchanged.
+  - Observed the expected missing-module RED; `make test LOVE=/Users/jm/.local/bin/love` and `make verify LOVE=/Users/jm/.local/bin/love` are GREEN. `game/self_test.lua` shrank from 4,565 to 4,520 lines.
