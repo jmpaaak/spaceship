@@ -54,17 +54,21 @@ end
 --- Play a one-shot SFX. For galaxy_discover, pass a unique key to avoid repeats.
 --- @param name string  One of: "galaxy_discover", "star_sample", "collision"
 --- @param uniqueKey string|nil  Optional dedup key (e.g. galaxyId for galaxy_discover)
-function M.play(name, uniqueKey)
+--- @param volume number|nil  Optional volume (default 0.6). Debris uses 0.9 (1.5x).
+function M.play(name, uniqueKey, volume)
     if uniqueKey then
         local guardKey = name .. ":" .. tostring(uniqueKey)
         if M.played[guardKey] then return end
         M.played[guardKey] = true
     end
+    local vol = volume or 0.6
+    M.lastVolume = vol
     local src = getSource(name)
     if not src then return end
     if src:isPlaying() and not M.defs[name].loop then
         src:stop()
     end
+    src:setVolume(vol)
     src:play()
 end
 
@@ -85,6 +89,7 @@ end
 --- Reset one-shot guards (call on new expedition).
 function M.resetGuards()
     M.played = {}
+    M.lastVolume = nil
 end
 
 --- Release all sources (cleanup).
@@ -95,6 +100,7 @@ function M.releaseAll()
     end
     M.sources = {}
     M.played = {}
+    M.lastVolume = nil
 end
 
 return M

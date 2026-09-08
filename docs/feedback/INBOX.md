@@ -4,13 +4,6 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
-  - 담당: `game/sfx.lua` + 파편 히트 호출. play.lua 거대 파일에 로직 붙이지 말고 한 줄 위임 (`game/scenes/play.lua` debris 루프).
-  - 행성 충돌은 `sfx.play("collision")` (vol 0.6). 파편(`nearbyDebris`) 히트에는 같은 클립을 **1.5배(0.9)** 로 재생.
-  - `sfx.play(name, uniqueKey, volume?)` 또는 동등한 volume 인자. 행성 충돌 볼륨은 그대로.
-  - 달/혜성 충돌은 이번 항목 범위 아님.
-  - 테스트: `game/tests/debris_collision_sfx.lua`
-
 (55) **새게임/이어하기 → 탭하여 출발 화면을 반드시 거침** (OOB 2026-09-08)
   - 담당: `main.lua` `startGame` + `game/scenes/play.lua` launch 입력. play.lua는 한 줄 위임/가드만.
   - 타이틀 CONTINUE/NEW GAME 탭이 같은 터치/마우스다운으로 launch 페이즈 `space`를 눌러 바로 ascending 됨 (click-through).
@@ -69,6 +62,10 @@
   - 테스트: `game/tests/slot_payout_audit.lua` — 2매치 HARVEST 후 multiplier +0.10, 3매치 후 +0.50 (level +1 / +5). 기존 `harvest_hull_upgrade.lua` rewardValue 0.10/0.50 유지.
 
 ## 처리 완료
+(54) **파편 충돌에도 행성 충돌음, 볼륨 1.5배** (OOB 2026-09-08)
+  - 완료: `sfx.play(name, uniqueKey, volume?)` — default 0.6. Planet keeps `sfx.play("collision")`. Debris loop one-line `sfx.play("collision", nil, 0.9)`. Moon/comet unchanged.
+  - Test `game/tests/debris_collision_sfx.lua` GREEN.
+
 (53) **이어하기/새게임 출발 SFX 제거** (OOB 2026-09-08)
   - 완료: `sfx.playGalaxyDiscover(galaxy)` skips milkyway / `galaxy:0:0` / (gx,gy)=(0,0). play.lua one-line delegate. Title has no button tap SFX; BGM `bgm.start()` kept.
   - Test `game/tests/title_start_sfx.lua` GREEN.

@@ -1399,3 +1399,10 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `title.lua` `shipIdlePose(t)`: ±7° diagonal tilt, slow bob (|oy|≤8), tiny left-right sway (|ox|≤3). `update` advances `shipIdleTime`. Draw rotates around sprite center.
   - Asset unchanged: `assets/ship/ship_default.png`, nearest ×7, same `shipLayout`.
   - Test `game/tests/title_ship_idle.lua` GREEN. play.lua untouched except self_test require.
+
+## Archived from STATUS.md (2026-09-08 11:53)
+
+- INBOX (53): skip galaxy_discover on CONTINUE / NEW GAME (home/start galaxy).
+  - `game/sfx.lua` `playGalaxyDiscover(galaxy)`: skip milkyway, `galaxy:0:0`, and (gx,gy)=(0,0). Non-home galaxies still play once via uniqueKey.
+  - `play.lua` one-line: `sfx.playGalaxyDiscover(wellGalaxy)`. Title has no tap SFX; `bgm.start()` kept.
+  - Test `game/tests/title_start_sfx.lua` GREEN.
