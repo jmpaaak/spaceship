@@ -1,10 +1,10 @@
 ## Current Status
-- R1: `play.lua` HUD data extraction.
-  - Added pure `game/scenes/play_hud_data.lua` for Earth-distance calculation and localized HUD line assembly; injected `i18n`/`world` dependencies and `install()` preserve the scene API.
-  - Added engine-hosted `game/tests/play_hud_data.lua`; observed RED for the missing module, then GREEN after extraction and registered only its test entry point in `self_test.lua`.
-  - `play.lua` reduced from 2985 lines / 149987 bytes to 2950 lines / 148506 bytes.
+- R1: `play.lua` equipped-gear HUD rendering extraction.
+  - Added `game/scenes/play_hud_gear_draw.lua`; rarity fills, part icons, hull/engine labels, nine slot outlines, font caching/restoration, and the existing scene method API are preserved through injected dependencies.
+  - Extended engine-hosted `game/tests/play_hud_gear.lua`; observed RED for the missing module, then GREEN after extraction. `self_test.lua` was not expanded.
+  - `play.lua` reduced from 2950 lines / 148506 bytes to 2877 lines / 144922 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
-  - Exact next slice: extract `drawHudGearSlots` rendering into `game/scenes/play_hud_gear_draw.lua`; do not add a pending feature to `play.lua`.
+  - Exact next slice: extract `drawGearSlots` rendering into `game/scenes/play_loadout_draw.lua`; do not add a pending feature to `play.lua`.
 
 - INBOX 61(43): gear-editor engine-tab auto-load.
   - Hull | Engine tabs wired (`selectPool` / `wirePoolTabs`). Pools kept separately (`hullPool`, `enginePool`).

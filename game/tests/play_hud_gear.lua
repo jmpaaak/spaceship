@@ -1,4 +1,5 @@
 local hudGear = require("game.scenes.play_hud_gear")
+local hudGearDraw = require("game.scenes.play_hud_gear_draw")
 
 local M = {}
 
@@ -27,6 +28,35 @@ function M.run()
     assert(layout.engineLabelY == 448 and layout.engine[1].y == 474,
         "R1: engine label and slots must remain below hull slots")
 
+    local calls = { labels = {}, rectangles = 0 }
+    local graphics = {
+        getFont = function() return "previous-font" end,
+        setFont = function(font) calls.lastFont = font end,
+        setColor = function() end,
+        printf = function(text) calls.labels[#calls.labels + 1] = text end,
+        rectangle = function() calls.rectangles = calls.rectangles + 1 end,
+        draw = function() end,
+    }
+    hudGearDraw.install(api, {
+        graphics = graphics,
+        fonts = { get = function(size) return "font-" .. size end },
+        i18n = { t = function(key) return key end },
+        getPartIcon = function() return nil end,
+    })
+    local drawScene = {
+        expedition = {
+            equippedGear = { { id = "hull-test", rarity = "legendary" } },
+            equippedEngineParts = {},
+        },
+    }
+    api.drawHudGearSlots(drawScene, 100)
+    assert(calls.labels[1] == "hud_hull_label" and calls.labels[2] == "hud_engine_label",
+        "R1: extracted renderer must preserve both localized labels")
+    assert(calls.rectangles == 10,
+        "R1: renderer must preserve one fill plus nine slot outlines")
+    assert(calls.lastFont == "previous-font",
+        "R1: renderer must restore the previous font")
+
     local hullPart = { id = "hull-test" }
     local enginePart = { id = "engine-test" }
     local scene = {
@@ -53,6 +83,10 @@ function M.run()
     local playSource = love.filesystem.read("game/scenes/play.lua") or ""
     assert(playSource:find('require%("game%.scenes%.play_hud_gear"%)'),
         "R1: play.lua must delegate HUD gear layout to play_hud_gear")
+    assert(playSource:find('require%("game%.scenes%.play_hud_gear_draw"%)'),
+        "R1: play.lua must delegate HUD gear rendering to play_hud_gear_draw")
+    assert(not playSource:find("function M:drawHudGearSlots"),
+        "R1: drawHudGearSlots implementation must leave play.lua")
     assert(not playSource:find("function M%.hudGearSlotLayout"),
         "R1: hudGearSlotLayout implementation must leave play.lua")
     assert(not playSource:find("function M%.hitHudGearSlot"),

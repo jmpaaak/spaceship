@@ -80,6 +80,14 @@ local loadSprite = playSprites.loadSprite
 local getPartIcon = playSprites.getPartIcon
 local loadSpriteMap = playSprites.loadSpriteMap
 
+-- Equipped-gear HUD rendering, consuming the extracted pure layout.
+require("game.scenes.play_hud_gear_draw").install(M, {
+    graphics = love.graphics,
+    fonts = fonts,
+    i18n = i18n,
+    getPartIcon = getPartIcon,
+})
+
 -- Minimap + ship-stats overlay extracted to play_minimap.lua (MODULE_STRUCTURE).
 -- install() copies drawMinimap, drawShipStatsSummary, galaxyChartLineColor/FillColor,
 -- drawMinimapSprite, rimMarker constants, shipStats constants back onto M so
@@ -759,87 +767,6 @@ end
 -- 32×32px slots, hull 6 + engine 3 = 9 max, horizontal row, with a
 -- small "GEAR" label above the grid in 22px font.
 M.gearPopupChipVertical = true  -- INBOX 61(7): chips stacked vertically
-
--- INBOX-40: draw the equipped gear grid below the left HUD stats band.
--- Called from draw() for non-settlement/destroyed phases.
-function M:drawHudGearSlots(hudHeight)
-    local run = self.expedition
-    local hullGear = run.equippedGear or {}
-    local engineGear = run.equippedEngineParts or {}
-    local hullSlots = 6
-    local engineSlots = 3
-    local slotSize = M.hudGearSlotSize
-    local gap = M.hudGearSlotGap
-    local groupGap = 8
-
-    -- Hull label
-    self.hudGearLabelFont = self.hudGearLabelFont or fonts.get(M.hudGearLabelFontSize)
-    local prevFont = love.graphics.getFont()
-    love.graphics.setFont(self.hudGearLabelFont)
-    local labelY = hudHeight + 2
-    love.graphics.setColor(0.5, 0.6, 0.7, 0.7)
-    love.graphics.printf(i18n.t("hud_hull_label"), 5, labelY, 200, "left")
-
-    local gridStartY = labelY + M.hudGearLabelFontSize + 4
-    local startX = 5
-
-    -- Draw hull gear slots (vertical column)
-    for i = 1, hullSlots do
-        local y = gridStartY + (i - 1) * (slotSize + gap)
-        local part = hullGear[i]
-        if part then
-            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0, 0.7)
-            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1, 0.7)
-            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4, 0.7)
-            else love.graphics.setColor(0.5, 0.5, 0.5, 0.7) end
-            love.graphics.rectangle("fill", startX, y, slotSize, slotSize)
-            -- Part icon (replaces shield fallback)
-            local icon = getPartIcon(part.id)
-            if icon then
-                love.graphics.setColor(1, 1, 1, 0.9)
-                local iw, ih = icon:getDimensions()
-                local sc = (slotSize - 4) / math.max(iw, ih)
-                love.graphics.draw(icon, startX + slotSize/2, y + slotSize/2, 0, sc, sc, iw/2, ih/2)
-            end
-            love.graphics.setColor(0.1, 0.1, 0.1, 1)
-            love.graphics.rectangle("line", startX, y, slotSize, slotSize)
-        else
-            love.graphics.setColor(0.3, 0.35, 0.45, 0.5)
-            love.graphics.rectangle("line", startX, y, slotSize, slotSize)
-        end
-    end
-
-    -- Engine gear slots (below hull with engine label)
-    local engineStartY = gridStartY + hullSlots * (slotSize + gap) + groupGap
-    love.graphics.setColor(0.5, 0.6, 0.7, 0.7)
-    love.graphics.printf(i18n.t("hud_engine_label"), 5, engineStartY, 200, "left")
-    engineStartY = engineStartY + M.hudGearLabelFontSize + 4
-    for i = 1, engineSlots do
-        local y = engineStartY + (i - 1) * (slotSize + gap)
-        local part = engineGear[i]
-        if part then
-            if part.rarity == "legendary" then love.graphics.setColor(1, 0.6, 0, 0.7)
-            elseif part.rarity == "rare" then love.graphics.setColor(0.3, 0.6, 1, 0.7)
-            elseif part.rarity == "uncommon" then love.graphics.setColor(0.4, 0.8, 0.4, 0.7)
-            else love.graphics.setColor(0.5, 0.5, 0.5, 0.7) end
-            love.graphics.rectangle("fill", startX, y, slotSize, slotSize)
-            -- Part icon (replaces circle fallback)
-            local icon = getPartIcon(part.id)
-            if icon then
-                love.graphics.setColor(1, 1, 1, 0.9)
-                local iw, ih = icon:getDimensions()
-                local sc = (slotSize - 4) / math.max(iw, ih)
-                love.graphics.draw(icon, startX + slotSize/2, y + slotSize/2, 0, sc, sc, iw/2, ih/2)
-            end
-            love.graphics.setColor(0.1, 0.1, 0.1, 1)
-            love.graphics.rectangle("line", startX, y, slotSize, slotSize)
-        else
-            love.graphics.setColor(0.3, 0.35, 0.45, 0.5)
-            love.graphics.rectangle("line", startX, y, slotSize, slotSize)
-        end
-    end
-    if prevFont then love.graphics.setFont(prevFont) end
-end
 
 function M:loadoutLines()
     local run = self.expedition
