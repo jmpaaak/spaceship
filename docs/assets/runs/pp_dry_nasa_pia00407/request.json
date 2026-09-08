@@ -1,0 +1,29 @@
+{
+  "requested_at": "2026-09-09T00:26:07+09:00",
+  "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+  "method": "POST",
+  "content_type": "application/json",
+  "source_path": "docs/assets/sources/planet/dry_mars_nasa_pia00407.jpg",
+  "source_dimensions": [
+    6787,
+    6787
+  ],
+  "input_preparation": {
+    "resize": [
+      1024,
+      1024
+    ],
+    "resampling": "Pillow LANCZOS",
+    "mode": "RGBA"
+  },
+  "parameters": {
+    "targetWidth": 512,
+    "targetHeight": 512,
+    "pixelBlock": 4,
+    "backgroundTolerance": 28,
+    "paletteLimit": 64
+  },
+  "payload_sha256": "7b7d96467d663733928e0464e8a3c3fad009631e6f8856c0e0d6dd4b39592fa3",
+  "payload_bytes": 18201218,
+  "note": "payload hash covers the exact compact JSON body, including RGBA input data; raw pixels are reproducible from the preserved source and input_preparation"
+}

@@ -2271,3 +2271,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - Preserved the 1986×1986 NASA/JPL/USGS source, 512×512 RGBA/4px-grid master, 128×128 integer-NEAREST unwired runtime derivative, request/response hashes, provenance, and API valid 5/5 report.
   - `make verify LOVE=/Users/jm/.local/bin/love` is GREEN, including the new celestial manifest test and `ASSET_MANIFEST_OK`.
 - Next slice: generate one high-resolution photo-derived `pp_dry` candidate through the same endpoint and append its provenance/run record without changing runtime draw paths.
+
+## Archived from STATUS.md (2026-09-09 00:21)
+
+- INBOX 78 Lane B: generated `pp_gas_nasa_pia01518`, the second photo-derived celestial candidate, through the live unified Asset Studio `POST /api/pixel-perfect` endpoint.
+  - Used NASA/JPL/USGS Jupiter PIA01518 photo as the high-resolution source.
+  - Requested 1024x1024 LANCZOS resized RGBA input with targetWidth/Height 512, pixelBlock 4, backgroundTolerance 28, paletteLimit 64.
+  - Saved 512x512 master and 128x128 nearest-neighbor runtime PNG under `docs/assets/masters/` and `assets/planet/studio/`.
+  - Appended request, response, metadata and SHA256 hashes to `docs/assets/CELESTIAL_ASSET_STUDIO.json` and `docs/assets/MANIFEST.json`.
+  - Verified manifest with `make verify` and test scripts.

@@ -1,10 +1,9 @@
 ## Current Status
-- INBOX 78 Lane B: generated `pp_gas_nasa_pia01518`, the second photo-derived celestial candidate, through the live unified Asset Studio `POST /api/pixel-perfect` endpoint.
-  - Used NASA/JPL/USGS Jupiter PIA01518 photo as the high-resolution source.
-  - Requested 1024x1024 LANCZOS resized RGBA input with targetWidth/Height 512, pixelBlock 4, backgroundTolerance 28, paletteLimit 64.
-  - Saved 512x512 master and 128x128 nearest-neighbor runtime PNG under `docs/assets/masters/` and `assets/planet/studio/`.
-  - Appended request, response, metadata and SHA256 hashes to `docs/assets/CELESTIAL_ASSET_STUDIO.json` and `docs/assets/MANIFEST.json`.
-  - Verified manifest with `make verify` and test scripts.
+- INBOX 78 Lane B: generated `pp_dry_nasa_pia00407`, the third photo-derived ordinary-planet candidate, through the live unified Asset Studio `POST /api/pixel-perfect` endpoint.
+  - Preserved the 6787×6787 NASA/JPL/USGS Mars source, a 512×512 RGBA/4px-grid master, and a 128×128 integer-NEAREST unwired runtime derivative.
+  - Recorded request, response, source/master/runtime dimensions and SHA-256 hashes in `docs/assets/CELESTIAL_ASSET_STUDIO.json`, `docs/assets/MANIFEST.json`, and the per-run logs.
+  - Added manifest coverage requiring the three completed ordinary-planet IDs; `make verify LOVE=/Users/jm/.local/bin/love` is GREEN, including engine tests, packaged smoke, bundle verification, and `ASSET_MANIFEST_OK`.
+- Next slice: generate one high-resolution photo-derived `pp_ice` candidate through the same endpoint and append its provenance/run record without changing runtime draw paths.
 
 - INBOX 61(32): play_gameover.lua extraction
   - Created `game/scenes/play_gameover.lua` — gameover/destroyed-phase layout module.

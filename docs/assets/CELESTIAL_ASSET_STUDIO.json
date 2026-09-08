@@ -119,6 +119,65 @@
         "wired": false,
         "sha256": "b03789fa874d42fe1c627ca0742883ffebbdc7a6fe89a5e0b85a036d5cadbd25"
       }
+    },
+    {
+      "id": "pp_dry_nasa_pia00407",
+      "kind": "ordinary_planet",
+      "endpoint": "http://127.0.0.1:4176/api/pixel-perfect",
+      "generated_at": "2026-09-09T00:26:08+09:00",
+      "source": {
+        "path": "docs/assets/sources/planet/dry_mars_nasa_pia00407.jpg",
+        "url": "https://images-assets.nasa.gov/image/PIA00407/PIA00407~orig.jpg",
+        "nasa_id": "PIA00407",
+        "creator": "NASA/JPL/USGS",
+        "license": "NASA media usage guidelines (generally not subject to copyright in the United States; guideline restrictions still apply)",
+        "license_url": "https://www.nasa.gov/nasa-brand-center/images-and-media/",
+        "dimensions": [
+          6787,
+          6787
+        ],
+        "sha256": "076d0be8f7cf603f05e8b7281709400d9d39f21c6f615e8e385b8dfffc9bafdd"
+      },
+      "request": {
+        "log_path": "docs/assets/runs/pp_dry_nasa_pia00407/request.json",
+        "input_dimensions": [
+          1024,
+          1024
+        ],
+        "target_width": 512,
+        "target_height": 512,
+        "pixel_block": 4,
+        "background_tolerance": 28,
+        "palette_limit": 64,
+        "payload_sha256": "7b7d96467d663733928e0464e8a3c3fad009631e6f8856c0e0d6dd4b39592fa3"
+      },
+      "response": {
+        "log_path": "docs/assets/runs/pp_dry_nasa_pia00407/response.json",
+        "http_status": 200,
+        "report_valid": true,
+        "body_sha256": "a083af0ef3fbe80a99256548d093158b991f4d3c582f6c7315e8810c5dbbcdae",
+        "image_rgba_sha256": "e1b15b64b7036dcc76bdca21e1224204ce1f9c9b50d9450e6353cee2f7ac8f85"
+      },
+      "master": {
+        "path": "docs/assets/masters/planet/pp_dry_nasa_pia00407_master.png",
+        "dimensions": [
+          512,
+          512
+        ],
+        "mode": "RGBA",
+        "sha256": "834d9f1bfedda1ee21935eec20c802eebbde3ed174582097ccebb1a1cbfa2280"
+      },
+      "runtime": {
+        "path": "assets/planet/studio/pp_dry.png",
+        "dimensions": [
+          128,
+          128
+        ],
+        "mode": "RGBA",
+        "derivation": "integer 4x NEAREST downscale from master",
+        "wired": false,
+        "sha256": "e05a74ddaadb122957e0a7e839aaa835f2af3cc2b5387eeb1c28f7d71b3fbebd"
+      }
     }
   ]
 }

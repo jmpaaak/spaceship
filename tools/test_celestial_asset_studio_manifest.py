@@ -10,6 +10,11 @@ from PIL import Image, ImageChops
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "docs/assets/CELESTIAL_ASSET_STUDIO.json"
 EXPECTED_ENDPOINT = "http://127.0.0.1:4176/api/pixel-perfect"
+REQUIRED_IDS = {
+    "pp_bare_nasa_pia00405",
+    "pp_gas_nasa_pia01518",
+    "pp_dry_nasa_pia00407",
+}
 
 
 def sha256(path: Path) -> str:
@@ -20,6 +25,7 @@ def test_manifest() -> None:
     data = json.loads(MANIFEST.read_text())
     assert data["schema_version"] == 1
     assert data["assets"], "at least one generated celestial asset is required"
+    assert REQUIRED_IDS <= {item["id"] for item in data["assets"]}
     for item in data["assets"]:
         assert item["endpoint"] == EXPECTED_ENDPOINT
         assert item["source"]["url"].startswith("https://images-assets.nasa.gov/")
