@@ -28,6 +28,7 @@ local function settleRun(overrides)
 end
 
 function M.run()
+    require("game.tests.expedition_lifecycle").run()
     local expedition = require("game.expedition")
     local i18n = require("game.i18n")
     local binaryGear = {
