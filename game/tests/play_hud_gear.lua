@@ -1,6 +1,7 @@
 local hudGear = require("game.scenes.play_hud_gear")
 local hudGearDraw = require("game.scenes.play_hud_gear_draw")
 local loadoutDraw = require("game.scenes.play_loadout_draw")
+local loadoutData = require("game.scenes.play_loadout_data")
 
 local M = {}
 
@@ -89,6 +90,53 @@ function M.run()
     assert(loadoutCalls.lastFont == "loadout-previous-font",
         "R1: launch loadout renderer must restore the previous font")
 
+    local function translate(key, ...)
+        local values = { ... }
+        for index, value in ipairs(values) do values[index] = tostring(value) end
+        return key .. (next(values) and ":" .. table.concat(values, ",") or "")
+    end
+    local dataApi = {}
+    loadoutData.install(dataApi, {
+        i18n = { t = translate },
+        gear = { activeSynergies = function() return { solarSystem = true } end },
+        expedition = {
+            effectiveSpeed = function() return 65 end,
+            shipTradeoff = function()
+                return {
+                    gains = { { value = 20, label = "SPEED" } },
+                    losses = { { value = 5, label = "HULL" } },
+                }
+            end,
+            equippedHullDurabilityBonus = function() return 2 end,
+            getScoutDurabilityBonus = function() return -6 end,
+            upgradeCost = function(_, cost, level) return cost + level end,
+            sampleYieldMultiplier = function() return 1.1 end,
+        },
+    })
+    local dataRun = {
+        ownedShips = { scout = false }, selectedShipId = "starter", maxDurability = 12,
+        durabilityUpgradeLevel = 1, equippedGear = {}, equippedEngineParts = {}, money = 50,
+        scoutShipCost = 100, baseDurability = 10, durabilityUpgradeAmount = 2,
+        durabilityUpgradeCost = 20, sampleYieldUpgradeCost = 30, steeringUpgradeCost = 40,
+        sampleYieldUpgradeLevel = 1, sampleYieldUpgradeAmount = 0.1,
+        steeringUpgradeLevel = 2, steeringUpgradeAmount = 1, scoutClimbSpeedBonus = 20,
+    }
+    local dataScene = setmetatable({ expedition = dataRun }, { __index = dataApi })
+    local launchLines = dataApi.loadoutLines(dataScene)
+    assert(launchLines.ship == nil and launchLines.shipLabel == "STARTER"
+        and launchLines.steering == "steer_speed_line:65",
+        "R1: extracted launch presentation data must preserve labels and effective speed")
+    assert(#launchLines.synergies == 1 and launchLines.synergies[1] == "synergy_solarSystem",
+        "R1: extracted launch presentation data must preserve ordered active synergies")
+    local tradeoff = dataApi.scoutTradeoffLines(dataRun)
+    assert(tradeoff[1] == "scout_gains_line:20,SPEED"
+        and tradeoff[2] == "scout_losses_line:5,HULL",
+        "R1: extracted scout tradeoff must preserve gains/losses formatting")
+    local shopLines = dataApi.shopLoadoutLines(dataScene)
+    assert(shopLines.shipAction == "buy_scout:100" and shopLines.shipAffordable == false
+        and shopLines.hullPreview == "stats_line:16",
+        "R1: extracted shop presentation data must preserve purchase and preview values")
+
     local hullPart = { id = "hull-test" }
     local enginePart = { id = "engine-test" }
     local scene = {
@@ -123,6 +171,14 @@ function M.run()
         "R1: play.lua must delegate launch loadout rendering to play_loadout_draw")
     assert(not playSource:find("function M:drawGearSlots"),
         "R1: drawGearSlots implementation must leave play.lua")
+    assert(playSource:find('require%("game%.scenes%.play_loadout_data"%)'),
+        "R1: play.lua must delegate loadout presentation assembly to play_loadout_data")
+    assert(not playSource:find("function M:loadoutLines"),
+        "R1: loadoutLines implementation must leave play.lua")
+    assert(not playSource:find("function M%.scoutTradeoffLines"),
+        "R1: scoutTradeoffLines implementation must leave play.lua")
+    assert(not playSource:find("function M:shopLoadoutLines"),
+        "R1: shopLoadoutLines implementation must leave play.lua")
     assert(not playSource:find("function M%.hudGearSlotLayout"),
         "R1: hudGearSlotLayout implementation must leave play.lua")
     assert(not playSource:find("function M%.hitHudGearSlot"),

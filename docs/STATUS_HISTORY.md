@@ -1560,3 +1560,12 @@ preflight READY(engine tests/package PASS, git diff clean). INBOX 최우선 항�
   - `play.lua` reduced from 2950 lines / 148506 bytes to 2877 lines / 144922 bytes.
   - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
   - Exact next slice: extract `drawGearSlots` rendering into `game/scenes/play_loadout_draw.lua`; do not add a pending feature to `play.lua`.
+
+## Archived from STATUS.md (2026-09-08 14:22)
+
+- R1: `play.lua` launch loadout renderer extraction.
+  - Added `game/scenes/play_loadout_draw.lua`; six hull slots, three engine slots, rarity fills, part icons, edition outlines, localized label, font caching/restoration, and the existing `drawGearSlots` scene API are preserved through injected dependencies.
+  - Extended engine-hosted `game/tests/play_hud_gear.lua`; observed RED for the missing module, then GREEN after extraction. `self_test.lua` was not expanded.
+  - `play.lua` reduced from 2877 lines / 144922 bytes to 2793 lines / 141142 bytes.
+  - `make verify LOVE=/Users/jm/.local/bin/love` GREEN (`SPACESHIP_UNIT_OK`, source/package smoke, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`, 28 Python tests).
+  - Exact next slice: extract `loadoutLines`, `scoutTradeoffLines`, and `shopLoadoutLines` presentation assembly into `game/scenes/play_loadout_data.lua`; do not add a pending feature to `play.lua`.
