@@ -5,12 +5,14 @@ LOVE_PACKAGE ?= $(BUILD_DIR)/game.love
 
 .PHONY: test smoke love verify clean
 
+HEADLESS_ENV = GAME_HEADLESS=1 SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy
+
 test:
-	GAME_HEADLESS=1 GAME_UNIT=1 $(LOVE) .
+	$(HEADLESS_ENV) GAME_UNIT=1 $(LOVE) .
 	python3 -m unittest tools.test_verify_asset_manifest tools.test_celestial_asset_baseline tools.test_celestial_asset_studio_manifest tools.test_legacy_asset_studio_removed tools.test_gear_editor_locale tools.test_gear_editor_engine_tab tools.test_project_skills -v
 
 smoke:
-	GAME_HEADLESS=1 $(LOVE) .
+	$(HEADLESS_ENV) $(LOVE) .
 
 love:
 	@mkdir -p "$(BUILD_DIR)"
@@ -21,7 +23,7 @@ love:
 		-x '.env' -x '.env.*' -x '.DS_Store' -x '*.swp'
 
 verify: test smoke love
-	GAME_HEADLESS=1 $(LOVE) "$(LOVE_PACKAGE)"
+	$(HEADLESS_ENV) $(LOVE) "$(LOVE_PACKAGE)"
 	python3 tools/verify_bundle.py "$(LOVE_PACKAGE)"
 	python3 tools/verify_asset_manifest.py
 

@@ -4,12 +4,13 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(79) **Love2D 테스트 창이 켜졌다 꺼졌다 반복하지 않게** (msg `1547191744909549568`)
-  - 재현: 자율 루프/`make test`/`make verify`가 Love 창을 연속으로 띄워 다른 작업이 어려움.
-  - 담당: Spaceship `conf.lua` + `Makefile` 헤드리스 경로. `GAME_HEADLESS=1`에서 `t.window = nil` 및 `SDL_VIDEODRIVER=dummy`. 사용자 플레이 창은 그대로.
-  - 검증: 헤드리스 `love` 실행 중 Love 창/포커스 스틸 없음. `make test` GREEN.
-
 ## 처리 완료
+(79) **Love2D 테스트 창이 켜졌다 꺼졌다 반복하지 않게** (msg `1547191744909549568`)
+  - 원인: Spaceship 헤드리스는 창 모듈을 꺼도 macOS Love.app이 Dock 아이콘을 띄울 수 있고, gostro `make verify`의 시각 QA는 `love.window.setMode`로 창을 연속 생성함.
+  - Spaceship/`love2d-game-skeleton`/`gostro` `conf.lua`: `GAME_HEADLESS=1`이면 `t.window=false` + window/graphics/audio 모듈 비활성. Makefile은 `SDL_VIDEODRIVER=dummy`.
+  - gostro 시각 QA: `game/qa/offscreen_window.lua`로 1×1 보더리스 창을 화면 밖(-32000)에 만들고 `minimize`. 캡처는 canvas에 유지. `make card-overlap-qa` GREEN.
+  - 사용자 플레이 창은 변경하지 않음. [DONE 2026-09-09]
+
 (78-E) **Grok sprite-gen으로 중심별·허브 회전 시트 재시도** (msg `1547172375605547069`)
   - Codex 로그인 중단. 담당: 실제 `POST http://127.0.0.1:4176/api/sprite-generate` provider=`grok`.
   - 대상: 중심별 sun + 허브 neptune 8프레임 rotate. extract/chroma 실패분은 런타임에 넣지 않음.
