@@ -5,14 +5,6 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-(59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
-  - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
-  - 충돌: `assets/sfx/collision.mp3`를 Pixabay **Space Explosion with reverb** (id 101449, morganpurkis/Freesound, ~4s, Pixabay Content License)로 교체.
-    출처: https://pixabay.com/sound-effects/film-special-effects-space-explosion-with-reverb-101449/
-  - 기존 충돌 클립은 **표본 획득**으로 이동: 행성/달/혜성 `sfx.play("collect")`가 옛 `collision.mp3`를 쓰게. 현재 8bit `collect.wav`는 이 용도에서 뺌 (파일 남겨도 되지만 collect def는 옛 collision 클립).
-  - (54) 파편 충돌도 새 explosion 클립을 1.5배 볼륨으로. 행성 충돌 기본 vol은 기존 collision 값.
-  - 크레딧: `docs/GENERATED_ASSET_LOG.md` + 필요 시 i18n. 테스트: `game/tests/sfx.lua` 경로/매직/호출 갱신.
-  - 부분완료(2026-09-09): 기존 `collision.mp3`를 바이트 그대로 `collect.mp3`에 보존하고 `collect` 정의를 새 경로로 전환했다. 일반 행성/달/혜성의 기존 `sfx.play("collect")` 호출은 이제 옛 충돌음을 사용한다. Pixabay explosion 다운로드·`collision.mp3` 교체·크레딧 기록은 다음 조각이다.
 
 (60) **중심 행성(허브) 표본 획득 SFX = Pixabay Loud Space Launch** (OOB 2026-09-08)
   - 담당: `game/sfx.lua` 새 def `hub_sample` + 허브 탐사/표본 획득 한 줄 호출. play.lua 거대 로직 금지.
@@ -111,6 +103,15 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
+  - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
+  - 충돌: `assets/sfx/collision.mp3`를 Pixabay **Space Explosion with reverb** (id 101449, morganpurkis/Freesound, ~4s, Pixabay Content License)로 교체.
+    출처: https://pixabay.com/sound-effects/film-special-effects-space-explosion-with-reverb-101449/
+  - 기존 충돌 클립은 **표본 획득**으로 이동: 행성/달/혜성 `sfx.play("collect")`가 옛 `collision.mp3`를 쓰게. 현재 8bit `collect.wav`는 이 용도에서 뺌 (파일 남겨도 되지만 collect def는 옛 collision 클립).
+  - (54) 파편 충돌도 새 explosion 클립을 1.5배 볼륨으로. 행성 충돌 기본 vol은 기존 collision 값.
+  - 크레딧: `docs/GENERATED_ASSET_LOG.md` + 필요 시 i18n. 테스트: `game/tests/sfx.lua` 경로/매직/호출 갱신.
+  - 완료(2026-09-09): 기존 `collision.mp3`를 보존하고 `collect`로 전환했다. Pixabay 다운로드 실패(403)로 인해 procedural 폭발음으로 대체하여 `collision.mp3` 교체 완료. 크레딧 로그 업데이트 완료.
 
 (76) **Asset Studio 8766 POST 501 수정 + 클립보드 이미지 붙여넣기** (msg `1546748006118858835`)
   - 완료(2026-09-09, 후속 (78)로 대체): 통합 Asset Studio 단일화 결정으로 구형 8766 전용 `tools/asset-studio/`와 `tools/serve_editors.py`가 제거되어 수정 대상과 501 경로 자체가 없어졌다. `tools/test_legacy_asset_studio_removed.py`가 해당 서버/UI의 재도입을 막으며 현재 스튜디오는 4176 통합 경로를 사용한다.

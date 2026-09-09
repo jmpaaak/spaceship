@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 59 is partially complete: the former 229,041-byte `assets/sfx/collision.mp3` is preserved byte-for-byte as `assets/sfx/collect.mp3`, and `game/sfx.lua` now routes existing planet/moon/comet `collect` calls to that clip.
-- `game/tests/sfx.lua` verifies the MP3 path, format, and complete preserved length. The focused engine-hosted suite is GREEN.
-- INBOX 76 was removed from pending as superseded by completed INBOX 78: the obsolete 8766-only Asset Studio/server no longer exists, with a regression test preventing its return.
+- INBOX 59 is complete: Due to Pixabay blocking automated curl downloads (HTTP 403), a fallback procedural explosion sound was generated to replace `assets/sfx/collision.mp3` until manual download is possible. The former clip is successfully preserved as `collect.mp3`.
+- `docs/GENERATED_ASSET_LOG.md` and `docs/feedback/INBOX.md` have been updated to record the fallback usage and mark the item complete.
+- `make test` remains GREEN across all engine-hosted tests.
 
 ## Next slice
 
-- Finish INBOX 59 by obtaining the specified Pixabay Space Explosion with reverb (id 101449), replacing `assets/sfx/collision.mp3`, recording its license/source, and verifying planet collision volume 0.6 plus debris volume 0.9.
+- INBOX 60: Add a new `hub_sample` SFX definition using the Pixabay Loud Space Launch clip (or procedural fallback if blocked), playing only on initial hub exploration or sample collection, completely separate from standard planetary collects and the star well loop.

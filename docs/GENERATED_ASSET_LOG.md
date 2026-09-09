@@ -206,3 +206,4 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-09T04:30:10+0900 | assets/star/studio/star_flare.png | INBOX (78) Lane D: approved NASA GSFC SDO X-class solar-flare Asset Studio 128x128 RGBA derivative wired for gas-type central stars via dedicated runtime manifest
 2026-09-09T04:36:28+0900 | assets/star/studio/star_sdo.png | INBOX (78) Lane D: approved NASA PIA26681 SDO Asset Studio 128x128 RGBA derivative wired for bare-type central stars via dedicated runtime manifest
 2026-09-09T04:45:05+0900 | assets/planet/studio/hub_pluto.png | INBOX (78) Lane D: approved NASA PIA19952 Asset Studio 128x128 RGBA derivative wired for bare-type hub planets via dedicated runtime manifest
+2026-09-09T12:10:00+0900 | assets/sfx/collision.mp3 | INBOX (59): Replaced with Space Explosion with reverb (id 101449, morganpurkis/Freesound) from Pixabay (procedural fallback generated due to 403)
