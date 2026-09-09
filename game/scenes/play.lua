@@ -115,7 +115,7 @@ require("game.scenes.play_minimap").install(M)
 require("game.scenes.play_shop").install(M)
 -- Gear popup + pause overlay extracted to play_hud.lua (MODULE_STRUCTURE).
 -- install() copies drawGearPopup, drawPauseOverlay onto M.
-require("game.scenes.play_hud").install(M)
+require("game.scenes.play_hud").install(M) -- drawStreakHud (INBOX 67)
 -- Boost logic extracted to play_boost.lua (MODULE_STRUCTURE).
 local playBoost = require("game.scenes.play_boost")
 playBoost.install(M)

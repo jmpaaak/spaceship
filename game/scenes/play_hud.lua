@@ -1,5 +1,5 @@
---- play_hud.lua — Gear popup tooltip + pause overlay, extracted from play.lua
--- Provides: drawGearPopup, drawPauseOverlay
+--- play_hud.lua — Gear popup tooltip + pause overlay + streak HUD, extracted from play.lua
+-- Provides: drawGearPopup, drawPauseOverlay, streakHudLabel, drawStreakHud
 -- Called by play.lua via  require("game.scenes.play_hud").install(M)
 
 local i18n       = require("game.i18n")
@@ -181,6 +181,46 @@ function PH.drawGearPopup(self)
 end
 
 ---------------------------------------------------------------------------
+-- streakHudLabel(run) — INBOX 67: always-on specimen streak multiplier
+-- Uses expedition.streakMultiplier(sampleStreakCount, run). Streak 0/1
+-- still shows x1.0 (never blank). With a hue family: "AZURE x1.4".
+---------------------------------------------------------------------------
+local familyLabels = {
+    azure = "AZURE",
+    ember = "EMBER",
+    void = "VOID",
+}
+
+function PH.streakHudLabel(run)
+    run = run or {}
+    local count = run.sampleStreakCount or 0
+    local mult = expedition.streakMultiplier(count, run)
+    local rate = string.format("x%.1f", mult)
+    local family = run.sampleStreakFamily
+    if type(family) == "string" and family ~= "" then
+        local name = familyLabels[family] or string.upper(family)
+        return name .. " " .. rate
+    end
+    return rate
+end
+
+---------------------------------------------------------------------------
+-- drawStreakHud(self) — 11px Galmuri under pause/help (admin-button stack)
+---------------------------------------------------------------------------
+function PH.drawStreakHud(self)
+    if not self.expedition or self.expedition.phase ~= "ascending" then return end
+    local pb = _M and _M.pauseButton
+    if not pb then return end
+    local label = PH.streakHudLabel(self.expedition)
+    local prevFont = love.graphics.getFont()
+    love.graphics.setFont(fonts.get(11))
+    love.graphics.setColor(0.85, 0.9, 1, 0.9)
+    local textY = pb.y + pb.h + 8
+    love.graphics.printf(label, pb.x - 40, textY, pb.w + 92, "right")
+    love.graphics.setFont(prevFont)
+end
+
+---------------------------------------------------------------------------
 -- drawPauseOverlay(self) — INBOX 61(21) pause with restart/main-menu
 ---------------------------------------------------------------------------
 function PH.drawPauseOverlay(self)
@@ -223,6 +263,8 @@ function PH.install(M)
     M.gearPopupSellRect = PH.gearPopupSellRect
     M.sellGearPopup     = PH.sellGearPopup
     M.drawPauseOverlay  = PH.drawPauseOverlay
+    M.streakHudLabel    = PH.streakHudLabel
+    M.drawStreakHud     = PH.drawStreakHud
 end
 
 return PH

@@ -775,6 +775,7 @@ function M:draw()
         end
         love.graphics.setFont(prevAdminFont)
         self:drawHelpButton()
+        self:drawStreakHud()
     end
     self:drawPauseOverlay()
     self:drawHelpOverlay()

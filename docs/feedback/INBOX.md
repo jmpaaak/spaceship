@@ -9,12 +9,6 @@
 
 
 
-(67) **표본 연속 배율을 우측 도움말/일시정지 아래에 상시 표시** (msg `1546718466558533652`)
-  - 담당: `game/scenes/play_hud.lua` (또는 play_help 옆). play.lua는 한 줄 위임. 어드민 버튼이 있던 자리.
-  - `expedition.streakMultiplier(sampleStreakCount, run)` 현재 값. 예: `x1.0` / `x1.2` / `AZURE x1.4`. 계열 이름(azure/ember/void) + 배수.
-  - Galmuri 11px 배수. 연속 0/1이면 `x1.0`도 보여 줌 (빈칸 금지).
-  - 테스트: `game/tests/streak_hud.lua`.
-
 (68) **어드민 속도+/내구+/수확+ 버튼 3개 제거** (msg `1546718466558533652`)
   - 담당: `game/scenes/play.lua`의 `adminButtons` / `adminButtonRect` / draw+touch. 함수 `expedition.adminUpgrade`는 테스트용으로 남겨도 됨 — **화면 버튼만 삭제**.
   - 우측 상단 pause 아래 스택 전부 제거. (67) 배율 표시만 남김.
@@ -51,6 +45,13 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+(67) **표본 연속 배율을 우측 도움말/일시정지 아래에 상시 표시** (msg `1546718466558533652`)
+  - 담당: `game/scenes/play_hud.lua` (또는 play_help 옆). play.lua는 한 줄 위임. 어드민 버튼이 있던 자리.
+  - `expedition.streakMultiplier(sampleStreakCount, run)` 현재 값. 예: `x1.0` / `x1.2` / `AZURE x1.4`. 계열 이름(azure/ember/void) + 배수.
+  - Galmuri 11px 배수. 연속 0/1이면 `x1.0`도 보여 줌 (빈칸 금지).
+  - 테스트: `game/tests/streak_hud.lua`.
+  - 완료(2026-09-09): `play_hud.lua`에 `streakHudLabel`/`drawStreakHud` 추가. 상승 중 pause/help 아래에 Galmuri 11px로 `x1.0` / `AZURE x1.2` / `AZURE x1.4` 상시 표시. `play.lua`는 install 한 줄 위임, `play_scene_draw.lua`는 `self:drawStreakHud()` 한 줄. `game/tests/streak_hud.lua` GREEN.
+
 (66) **부스터+ 있으면 5초마다 1개 충전, 효과 1초** (msg `1546717606822674452`)
   - 완료(2026-09-09): `game/expedition_run.lua`에 `expeditionGear.tickBoostRegen`을 연결하여 부스터 5초 충전 및 캡 제한을 구현(테스트 시 altitude nil 버그 해결). `game/tests/boost_regen.lua`의 locale 버그를 수정(테스트 전 EN 설정). `help_boost` 텍스트와 play_boost.lua의 duration 1.0초도 확인/검증 완료됨.
 (65) **내구 칸이 1칸=10HP일 때 끝에 x10** (OOB 2026-09-08)

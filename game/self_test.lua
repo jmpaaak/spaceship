@@ -404,6 +404,7 @@ function M.run()
     require("game.tests.planet_scatter").run()
     require("game.tests.hp_block_x10").run()
     require("game.tests.boost_regen").run()
+    require("game.tests.streak_hud").run()
 
     print("SPACESHIP_UNIT_OK")
 end
