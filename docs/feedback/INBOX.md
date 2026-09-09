@@ -4,13 +4,7 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-
-
-
-
-
-
-
+## 처리 완료
 (71) **타이틀에 만든이 메뉴 (mok 참고)** (msg `1546720287251243148`)
   - 담당: `game/scenes/credits.lua` (새 씬) + `title.lua` 버튼 + `main.lua` 전환. play.lua 금지.
   - mok `story/main_menu.lua` `drawCredits`: 제목 만든이, `기획 · 개발` + 메일.
@@ -21,8 +15,8 @@
     - 엔진 LÖVE 11.5 · 한글 픽셀 폰트 Galmuri
     - BGM 크레딧은 기존 `title_bgm_credit` 재사용
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
+  - 완료(2026-09-09): 타이틀 5번째 버튼 CREDITS/만든이 (SETTINGS 아래). 새 `game/scenes/credits.lua` 본문 역할·메일·LÖVE 11.5/Galmuri·`title_bgm_credit`. 뒤로/escape → 타이틀. `main.lua` onCredits 전환. play.lua 미변경. `game/tests/credits_menu.lua` GREEN.
 
-## 처리 완료
 (70) **타이틀 함선과 Jimmy's/우주선 텍스트 간격 거의 없음** (msg `1546720287251243148`)
   - 담당: `game/scenes/title.lua` `shipLayout`. play.lua 금지.
   - 지금: 함선 하단과 Jimmy's(y=488) 사이 **24px** + idle bob |oy|≤8 이라 더 벌어짐.

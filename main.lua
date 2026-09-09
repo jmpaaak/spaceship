@@ -3,6 +3,7 @@ local sceneStack = require("game.scene_stack")
 local PlayScene = require("game.scenes.play")
 local TitleScene = require("game.scenes.title")
 local LeaderboardScene = require("game.scenes.leaderboard")
+local CreditsScene = require("game.scenes.credits")
 
 local canvas
 local scenes
@@ -97,6 +98,12 @@ function love.load()
                     })
                     sceneStack.switch(scenes, lb)
                 end,
+                onCredits = function()
+                    local credits = CreditsScene.new({
+                        onBack = function() goToTitle() end,
+                    })
+                    sceneStack.switch(scenes, credits)
+                end,
             })
             sceneStack.switch(scenes, title)
         end
@@ -121,6 +128,12 @@ function love.load()
                     onBack = function() goToTitle() end,
                 })
                 sceneStack.switch(scenes, lb)
+            end,
+            onCredits = function()
+                local credits = CreditsScene.new({
+                    onBack = function() goToTitle() end,
+                })
+                sceneStack.switch(scenes, credits)
             end,
         })
         scenes = sceneStack.new(title)

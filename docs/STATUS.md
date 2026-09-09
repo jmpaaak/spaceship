@@ -1,8 +1,8 @@
 ## Current Status
 
-- Resolved INBOX 70: title starter ship rest gap above Jimmy's (y=488) is now 4px (`shipLayout` y = 488 - h - 4). Nearest scale ×7 unchanged. Idle bob amplitude unchanged.
-- Verified by `game/tests/title_ship_icon.lua` (gap ≤4, scale==7) and full engine unit run (`SPACESHIP_UNIT_OK`).
+- Resolved INBOX 71: title Credits/만든이 menu. Fifth title button under SETTINGS (KO 만든이 / EN CREDITS). New `game/scenes/credits.lua` body: 기획 · 개발, jmpaxk@gmail.com (jimmy), LÖVE 11.5 · Galmuri, reused `title_bgm_credit`. Back/escape returns to title via `main.lua` onCredits. play.lua unchanged.
+- Verified by `game/tests/credits_menu.lua` and full engine unit run (`SPACESHIP_UNIT_OK`).
 
 ## Next slice
 
-- INBOX 71: add a title Credits/만든이 menu (new `game/scenes/credits.lua` + title button + main.lua transition).
+- Next pending INBOX item after 71 (처리 대기 is empty after this cycle — IDLE unless new Discord rows land).

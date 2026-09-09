@@ -407,6 +407,7 @@ function M.run()
     require("game.tests.streak_hud").run()
     require("game.tests.admin_buttons_gone").run()
     require("game.tests.sample_suits").run()
+    require("game.tests.credits_menu").run()
 
     print("SPACESHIP_UNIT_OK")
 end

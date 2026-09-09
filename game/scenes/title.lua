@@ -1,5 +1,5 @@
 -- INBOX 61(21)+61(24b): Title scene — game start screen.
--- Menu: CONTINUE / NEW GAME / LEADERBOARD / SETTINGS.
+-- Menu: CONTINUE / NEW GAME / LEADERBOARD / SETTINGS / CREDITS.
 -- "CONTINUE" is enabled only when a saved expedition exists (hasSave).
 -- "NEW GAME" = full reset (bestAltitude, specimens, money, upgrades, checkpoint).
 
@@ -25,6 +25,7 @@ function M.new(options)
         onContinue = options.onContinue,      -- callback: resume last checkpoint
         onSettings = options.onSettings,      -- callback: settings (stub)
         onLeaderboard = options.onLeaderboard, -- callback: leaderboard
+        onCredits = options.onCredits,         -- callback: credits / 만든이
         -- Legacy compat: onStart maps to onNewGame
         onStart = options.onStart,
         -- Background star field (simple)
@@ -98,6 +99,9 @@ function M:buttonRects()
     y = y + M.buttonH + M.buttonGap
     -- SETTINGS
     rects.settings = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
+    y = y + M.buttonH + M.buttonGap
+    -- CREDITS / 만든이 (INBOX 71)
+    rects.credits = { x = bx, y = y, w = M.buttonW, h = M.buttonH }
     return rects
 end
 
@@ -164,6 +168,8 @@ function M:draw()
     self:_drawButton(rects.leaderboard, i18n.t("title_leaderboard"), true)
     -- SETTINGS button (stub, always enabled visually)
     self:_drawButton(rects.settings, i18n.t("title_settings"), true)
+    -- CREDITS / 만든이
+    self:_drawButton(rects.credits, i18n.t("title_credits"), true)
 
     love.graphics.setFont(fonts.get(11))
     love.graphics.setColor(0.55, 0.55, 0.58, 0.7)
@@ -207,6 +213,11 @@ function M:touchpressed(id, x, y)
     -- Settings: stub, do nothing for now
     if self:_hitRect(rects.settings, x, y) then
         if self.onSettings then self.onSettings() end
+        return
+    end
+    -- Credits / 만든이
+    if self:_hitRect(rects.credits, x, y) then
+        if self.onCredits then self.onCredits() end
         return
     end
 end
