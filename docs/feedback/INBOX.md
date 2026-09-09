@@ -5,24 +5,12 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-(R1) **거대 파일 모듈 분리 최우선** (msg `1546726613721415681`, 재확정 msg `1546762371908173865`)
-  - **기능 작업을 멈추고 이 항목부터 완료한다.** INBOX (58)~ 및 (77)은 R1 완료 전 보류한다.
-  - 병렬 레인 A — `game/scenes/play.lua`(현재 약 1,140줄): `keypressed`/`touchpressed`/`touchmoved`/`touchreleased`를 `game/scenes/play_input.lua`로 추출. scene API·입력 소비 순서·모바일 터치 동작 불변.
-  - 병렬 레인 B — `game/expedition.lua`(현재 약 1,639줄): 상점/장비/업그레이드·슬롯·정산/런 상태를 책임별 `game/expedition_*.lua`로 추출하고 기존 public API를 호환 래퍼로 유지.
-  - 병렬 레인 C — `game/self_test.lua`(현재 약 10,441줄): 기존 테스트 본문을 영역별 `game/tests/legacy_*.lua`로 이동. 신규 테스트는 계속 `game/tests/`에만 추가하고 `self_test.lua`는 runner/공통 fixture 중심으로 축소.
-  - 각 레인은 독립 worktree에서 작업·검증·커밋 후 main에 순차 통합한다. 최종 기준: 세 거대 파일 모두 실질 감소, 동작 변경 없음, `make test` + `make verify` GREEN.
-
 (77) **은하 상점 장비 구매·판매·정찰선 문구·회복 밸런스 정리** (msg `1546761251697328169`, R1 완료 후 진행)
   - (1) 은하계 별 상점에서 한 번에 구매 가능한 장비는 **최대 1개**로 제한한다. 담당: 새 순수 모듈 `game/shop_gear_rules.lua` + `game/scenes/play_shop.lua` 소비. 상점 오퍼/구매 상태를 별·은하 상점 방문 단위로 추적하고, 1개 구매 후 같은 상점의 추가 장비 구매 버튼은 비활성화한다. 지구 업그레이드·슬롯 구매에는 적용하지 않는다.
   - (2) 장착 장비 상세 툴팁에서 선택한 장비를 **언제든 판매**할 수 있게 한다. 담당: `game/shop_gear_rules.lua` 판매가 계산/인벤토리 제거 + `game/scenes/play_shop.lua` 또는 신규 `game/scenes/play_gear_popup.lua` 판매 버튼. 비행 중 판매도 가능하며 판매 직후 슬롯·시너지·스탯을 즉시 갱신하고 현금을 지급한다. 확인 버튼/터치영역은 44px 이상, 빈 슬롯·중복 탭 방어.
   - (3) 정찰선 구매 후 상점 카드에 남는 `SCOUT X`/`SCOUT ✓` 상태 텍스트를 전부 제거한다. 담당: `game/scenes/play_loadout_data.lua` + i18n 소비부. 정찰선을 이미 구매/선택한 경우 카드에는 불필요한 상태표시를 남기지 않는다.
   - (4) `hullRegen` 등 회복류 아이템의 실제 초당 회복량을 현재의 **1/20**로 낮춘다. 담당: 새 순수 모듈 `game/recovery_effects.lua`를 `game/expedition.lua`가 소비하거나 JSON 값을 일괄 조정. 표시값과 실제 틱이 반드시 일치하며 최소 5 HP/s처럼 적용되던 값은 0.25 HP/s 수준으로 감소한다. 상점/도킹의 즉시 완전회복은 아이템 지속회복이 아니므로 제외한다.
   - 테스트: `game/tests/shop_gear_rules.lua`(상점당 1개 한도, 두 번째 구매 거부, 다른 상점 독립), `game/tests/gear_sell.lua`(비행/정착 중 판매, 돈·슬롯·시너지 즉시 반영), `game/tests/scout_status_hidden.lua`, `game/tests/recovery_effects.lua`(기존 회복량 대비 정확히 1/20 및 표시 일치). 최종 `make test` + `make verify` GREEN.
-
-(R1) **거대 파일 모듈 분리 최우선** (msg `1546726613721415681`)
-  - 담당: `game/scenes/play.lua` (3856줄) 남은 덩어리를 `play_*.lua`로 계속 쪼갬. `game/self_test.lua`(10425줄)는 신규 테스트를 `game/tests/`로만. `game/expedition.lua`(1639줄)는 슬롯/정산/부스트 하위 모듈.
-  - INBOX (58)~ 기능보다 **이 분리가 먼저**. 독립 모듈 경로가 있는 항목만 기능 진행.
-  - 테스트: `make verify` GREEN 유지. play.lua 줄 수 감소.
 
 (72) **속도 HUD를 기본 속도 대비 0부터 표시** (msg `1546739180812509205`)
   - 담당: 새 순수 모듈 `game/speed_display.lua` + `game/scenes/play_hud.lua` 소비. `play.lua`/`expedition.lua` 거대 파일에는 표시 계산을 추가하지 말 것.
@@ -166,6 +154,10 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(R1) **거대 파일 모듈 분리 최우선** (msg `1546726613721415681`, 재확정 msg `1546762371908173865`)
+  - 완료(2026-09-09): 독립 레인의 순차 통합을 마쳤다. 입력 처리는 `game/scenes/play_input.lua`로, expedition의 장비·업그레이드·슬롯·정산/런 상태는 `game/expedition_gear.lua`, `game/expedition_upgrade.lua`, `game/expedition_slot.lua`, `game/expedition_lifecycle.lua`, `game/expedition_run.lua`로 분리했으며 기존 public API는 `game/expedition.lua`의 호환 위임으로 유지했다. 기존 self-test 본문은 영역별 `game/tests/legacy_*.lua`로 이전했고 `game/self_test.lua`는 runner 중심으로 축소했다.
+  - 최종 줄 수: `game/scenes/play.lua` 766줄, `game/expedition.lua` 704줄, `game/self_test.lua` 400줄. 입력 소비·모바일 pointer capture와 expedition 위임 회귀 테스트를 포함해 `make test` 및 `make verify`가 모두 GREEN이다.
 
 (78) **고해상도 천체·함선 에셋 전환 + 통합 Asset Studio 단일화** (msg `1546885407764127837`)
   - MOK의 승인된 사진 기반 고해상도 픽셀 규칙을 적용한다: 고해상도 원본/마스터와 런타임 파생본 분리, 원본 색상·알파·재질 디테일 보존, 하드 픽셀 격자, 정수 NEAREST 스케일, 저해상도 결과 단순 확대 금지. 현재 런타임 파일 치수·프레임 치수·화면상 크기를 먼저 측정한다.
