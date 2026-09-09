@@ -1,4 +1,5 @@
 local planets = require("game.scenes.play_planets")
+local captureScenarios = require("game.capture_scenarios")
 
 local M = {}
 
@@ -8,6 +9,23 @@ end
 
 function M.run()
     print("  [R1] play_planets module tests...")
+
+    local fixture = captureScenarios.ordinaryPlanetFixture()
+    assert(fixture.phase == "ascending" and fixture.altitude == 900,
+        "INBOX 78: ordinary-planet runtime capture must use a stable ascending fixture")
+    assert(#fixture.planets == 1 and fixture.planets[1].galaxyStarType == "bare"
+            and fixture.planets[1].hub ~= true and fixture.planets[1].isShop ~= true,
+        "INBOX 78: representative capture must isolate one ordinary bare planet")
+    assert(planets.planetImagePathForPlanet(fixture.planets[1])
+            == "assets/planet/studio/pp_bare.png",
+        "INBOX 78: representative capture fixture must resolve to the approved derivative")
+    local evidence = captureScenarios.ordinaryPlanetArtworkEvidence({
+        studioPlanetImages = {
+            bare = { getDimensions = function() return 128, 128 end },
+        },
+    })
+    assert(evidence == "assets/planet/studio/pp_bare.png:128x128",
+        "INBOX 78: representative capture must report decoded runtime artwork dimensions")
 
     local api = {}
     planets.install(api)

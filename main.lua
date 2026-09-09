@@ -157,6 +157,12 @@ function love.load()
         -- sample-only; lastSettlement = lastSampleSettlement (no slot payout).
         run.lastSettlement = 80
         run.money = 80
+    elseif capturePhase == "ascending-studio-ordinary" then
+        local captureScenarios = require("game.capture_scenarios")
+        captureScenarios.applyOrdinaryPlanet(
+            scenes.current, require("game.world"), require("game.expedition"))
+        print("SPACESHIP_CAPTURE_ASSET:" ..
+            captureScenarios.ordinaryPlanetArtworkEvidence(scenes.current))
     elseif capturePhase == "ascending-wide-warning" then
         local scene = scenes.current
         require("game.expedition").launch(scene.expedition)

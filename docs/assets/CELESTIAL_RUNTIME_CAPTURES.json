@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "purpose": "INBOX 78 representative real-runtime capture evidence for wired Asset Studio celestial derivatives.",
+  "captures": [
+    {
+      "kind": "ordinary_planet",
+      "asset_id": "pp_bare_nasa_pia00405",
+      "runtime_asset": "assets/planet/studio/pp_bare.png",
+      "runtime_asset_dimensions": [128, 128],
+      "capture_phase": "ascending-studio-ordinary",
+      "command": "GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-studio-ordinary /Users/jm/.local/bin/love .",
+      "path": "docs/assets/captures/ascending-studio-ordinary.png",
+      "dimensions": [1440, 2560],
+      "pixel_ratio": 2,
+      "sha256": "ad51fd17e055068c833d69c164c6138416ec7d1fb7630fa9d4f46bfdd4c746ac",
+      "fixture": {
+        "phase": "ascending",
+        "ship": [0, -900],
+        "planet": [120, -960],
+        "radius": 33,
+        "galaxy_star_type": "bare",
+        "hub": false,
+        "shop": false
+      },
+      "runtime_evidence": "SPACESHIP_CAPTURE_ASSET:assets/planet/studio/pp_bare.png:128x128",
+      "inspection": {
+        "crop_physical_pixels": [876, 1280, 168, 168],
+        "unique_rgb": 427,
+        "non_dark_pixels": 19952,
+        "result": "PASS: decoded approved derivative is visible at the ordinary-planet maximum measured runtime diameter; hard pixel detail and alpha silhouette remain visible with NEAREST filtering."
+      }
+    }
+  ]
+}
