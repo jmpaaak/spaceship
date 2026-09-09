@@ -11,6 +11,7 @@ local function hash(x, y, salt)
     n = ((n * 48271 + 1) % 2147483647)  -- 3rd round — breaks LCG linearity
     return n / 2147483647
 end
+M.hash = hash
 
 function M.sectorAt(x, y)
     return math.floor(x / M.sectorSize), math.floor(y / M.sectorSize)
@@ -340,48 +341,7 @@ function M.nearbyGalaxies(x, y, cellRadius)
 end
 
 function M.planets(sectorX, sectorY)
-    local centerX = sectorX * M.sectorSize + M.sectorSize / 2
-    local centerY = sectorY * M.sectorSize + M.sectorSize / 2
-    -- Planets only ever generate inside a galaxy's radius; deep space
-    -- between galaxies is empty. See the galaxy structure comment above.
-    local galaxy = M.galaxyContaining(centerX, centerY)
-    if not galaxy then
-        return {}
-    end
-    local count = hash(sectorX, sectorY, 1) > 0.85 and 1 or 0
-    if hash(sectorX, sectorY, 7) > 0.98 then count = 2 end
-    local planets = {}
-    -- Clamp hue within ±0.083 of the galaxy's baseHue so planets in the same
-    -- galaxy share a consistent colour mood. (0.083 ≈ 30°/360°)
-    local baseHue = galaxy.baseHue or 0.5
-    for i = 1, count do
-        local radius = 14 + math.floor(hash(sectorX + i * 7, sectorY + i * 13, 20) * 20)
-        local rawHue = hash(sectorX + i * 11, sectorY + i * 17, 80)
-        -- Map rawHue into [baseHue-0.083, baseHue+0.083], wrapping in 0..1
-        local hue = (baseHue - 0.083 + rawHue * 0.166) % 1
-        planets[#planets + 1] = {
-            id = string.format("%d:%d:%d", sectorX, sectorY, i),
-            x = sectorX * M.sectorSize + 24 + hash(sectorX + i * 7, sectorY, 40) * (M.sectorSize - 48),
-            y = sectorY * M.sectorSize + 24 + hash(sectorX, sectorY + i * 13, 60) * (M.sectorSize - 48),
-            radius = radius,
-            hue = hue,
-            galaxyStarType = galaxy.starType,
-            galaxyStarTypeIdx = galaxy.starTypeIdx,
-        }
-    end
-    -- Overlap prevention: when two planets spawn in the same sector, ensure
-    -- they are at least (r1 + r2 + 10) apart; otherwise drop the second.
-    if #planets == 2 then
-        local p1, p2 = planets[1], planets[2]
-        local dx = p2.x - p1.x
-        local dy = p2.y - p1.y
-        local dist = math.sqrt(dx * dx + dy * dy)
-        local minDist = p1.radius + p2.radius + 10
-        if dist < minDist then
-            planets[2] = nil  -- remove overlapping second planet
-        end
-    end
-    return planets
+    return require("game.world_planets").planets(M, sectorX, sectorY)
 end
 
 function M.nearbyPlanets(x, y, radiusInSectors)
@@ -621,8 +581,6 @@ function M.backgroundStars(sectorX, sectorY)
     end
     return stars
 end
-
-M.hash = hash
 
 ---------------------------------------------------------------------------
 -- Comet system (INBOX 35)

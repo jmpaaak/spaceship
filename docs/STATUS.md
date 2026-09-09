@@ -1,11 +1,9 @@
 ## Current Status
 
-- INBOX 63 is complete: Added abandoned space-station objects (`game/station.lua`).
-- Stations spawn with the same probability/interval as comets (independent stream).
-- Stations rotate slowly and have a 50-degree docking arc.
-- If the ship enters the arc slowly, it docks (heals full HP, rewards 1.5x moon sample value). If it hits outside the arc or too fast, it crashes and takes damage.
-- PIL-generated sprite `assets/station/station.png` added and logged. Tests added in `game/tests/station_dock.lua`.
+- Extracted sector planet generation from `game/world.lua` (838→796 lines) into `game/world_planets.lua`.
+- `world.planets()` remains the public API and delegates to the new module; hash/galaxyContaining/sectorSize are injected.
+- Characterization: `game/tests/world_planets_extraction.lua` (RED before the file existed, then GREEN). Existing world-generation tests still pass.
 
 ## Next slice
 
-- INBOX 64: Refactor planet coordinate generation to avoid grid-like layout (`game/world.lua`).
+- INBOX 64: scatter planet coordinates in `game/world_planets.lua` (polar/hash reseed + adjacent-sector min distance). Do not grow `world.lua`.

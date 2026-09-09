@@ -400,6 +400,7 @@ function M.run()
     require("game.tests.self_test_play_hud_extraction").run()
     require("game.tests.self_test_play_gameover_extraction").run()
     require("game.tests.self_test_help_overlay_luck_extraction").run()
+    require("game.tests.world_planets_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
