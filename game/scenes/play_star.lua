@@ -5,7 +5,19 @@ local play_star = {}
 function play_star.studioStarImagePaths()
     local paths = {}
     for starType, asset in pairs(centralStarAssets.stars) do
-        paths[starType] = asset.runtimePath
+        if asset.runtimePath then
+            paths[starType] = asset.runtimePath
+        end
+    end
+    return paths
+end
+
+function play_star.studioStarSheetImagePaths()
+    local paths = {}
+    for starType, asset in pairs(centralStarAssets.stars) do
+        if asset.runtimeSheetPath then
+            paths[starType] = asset.runtimeSheetPath
+        end
     end
     return paths
 end
@@ -20,6 +32,21 @@ function play_star.drawCentralStar(playState, sx, sy, worldStarRadius, wellGalax
     -- 6. circle (last resort)
 
     local starType = (wellGalaxy and wellGalaxy.starType) or "sun"
+
+    local studioStarSheet = playState.studioStarSheetImages and playState.studioStarSheetImages[starType]
+    if studioStarSheet then
+        local sw, sh = studioStarSheet:getDimensions()
+        local frameH = sw
+        local frameCount = math.floor(sh / frameH)
+        if frameCount > 0 then
+            local frameIdx = math.floor((time or 0) * 2) % frameCount
+            local quad = love.graphics.newQuad(0, frameIdx * frameH, sw, frameH, sw, sh)
+            local starScale = (worldStarRadius * 2) / sw
+            love.graphics.setColor(1, 1, 1, 1)
+            love.graphics.draw(studioStarSheet, quad, sx - worldStarRadius, sy - worldStarRadius, 0, starScale, starScale)
+            return
+        end
+    end
 
     local studioStarImg = playState.studioStarImages and playState.studioStarImages[starType]
     if studioStarImg then

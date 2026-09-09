@@ -14,6 +14,7 @@ M.hubs = {
     ice = {
         id = "hub_neptune_nasa_pia00046",
         runtimePath = "assets/planet/studio/hub_neptune.png",
+        runtimeSheetPath = "assets/planet/studio/hub_neptune_sheet.png",
         masterPath = "docs/assets/masters/planet/hub_neptune_nasa_pia00046_master.png",
         width = 128,
         height = 128,

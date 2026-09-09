@@ -382,6 +382,8 @@ function M.new(options)
     local studioPlanetImages = loadSpriteMap(studioPlanetImagePaths)
     local studioHubPlanetImagePaths = playPlanets.studioHubPlanetImagePaths()
     local studioHubPlanetImages = loadSpriteMap(studioHubPlanetImagePaths)
+    local studioHubSheetImagePaths = playPlanets.studioHubSheetImagePaths()
+    local studioHubSheetImages = loadSpriteMap(studioHubSheetImagePaths)
     -- Central star sprites per starType (PIL gen_stars.py)
     local starImagePaths = {
         sun   = "assets/star/star_sun.png",
@@ -395,6 +397,8 @@ function M.new(options)
     local starTypeImages = loadSpriteMap(starImagePaths)
     local studioStarImagePaths = play_star.studioStarImagePaths()
     local studioStarImages = loadSpriteMap(studioStarImagePaths)
+    local studioStarSheetImagePaths = play_star.studioStarSheetImagePaths()
+    local studioStarSheetImages = loadSpriteMap(studioStarSheetImagePaths)
     -- Rotation sprite sheets (4 frames, 64x256 vertical strip)
     local starSheetPaths = {
         sun   = "assets/star/star_sun_sheet.png",
@@ -546,8 +550,10 @@ function M.new(options)
         studioPlanetImagePaths = studioPlanetImagePaths,
         studioHubPlanetImages = studioHubPlanetImages,
         studioHubPlanetImagePaths = studioHubPlanetImagePaths,
+        studioHubSheetImages = studioHubSheetImages,
         studioStarImages = studioStarImages,
         studioStarImagePaths = studioStarImagePaths,
+        studioStarSheetImages = studioStarSheetImages,
         starTypeImages = starTypeImages,
         starImagePaths = starImagePaths,
         starSheetImages = starSheetImages,

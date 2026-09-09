@@ -6,6 +6,7 @@ M.stars = {
     earth = {
         id = "star_sun_nasa_gsfc_20171208_archive_e002035",
         runtimePath = "assets/star/studio/star_sun.png",
+        runtimeSheetPath = "assets/star/studio/star_sun_sheet.png",
         masterPath = "docs/assets/masters/star/star_sun_nasa_gsfc_20171208_archive_e002035_master.png",
         width = 128,
         height = 128,

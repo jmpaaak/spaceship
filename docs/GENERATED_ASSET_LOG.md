@@ -209,3 +209,5 @@ YYYY-MM-DDTHH:MM:SS+0900 | <relative/path/to.png> | <one-line what/why>
 2026-09-09T12:10:00+0900 | assets/sfx/collision.mp3 | INBOX (59): Replaced with Space Explosion with reverb (id 101449, morganpurkis/Freesound) from Pixabay (procedural fallback generated due to 403)
 2026-09-09T12:18:00+0900 | assets/sfx/hub_sample.mp3 | INBOX (60): Pixabay Loud Space Launch (id 351055, IdoBerg) blocked HTTP 403; procedural 6s launch fallback via tools/gen_hub_sample_sfx.py seed 351055
 2026-09-09T12:44:30+0900 | assets/station/station.png | PIL generated pixel space station
+2026-09-09T18:27:00+0900 | assets/planet/studio/hub_neptune_sheet.png | Grok sprite-gen rotating hub_neptune sheet
+2026-09-09T18:27:00+0900 | assets/star/studio/star_sun_sheet.png | Grok sprite-gen rotating star_sun sheet

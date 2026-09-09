@@ -2769,13 +2769,15 @@
   {
     "path": "assets/star/star_sun_sheet.png",
     "user_supplied": true,
-    "source_url": "tools/gen_stars.py",
-    "terms_url": "tools/gen_stars.py",
-    "asset_id": "pil-star-sun-sheet-20260906",
+    "source_url": "http://127.0.0.1:4176/api/sprite-generate",
+    "terms_url": "http://127.0.0.1:4176/api/sprite-generate",
+    "asset_id": "star_sun_sheet",
     "prompt": "PIL-generated 64x256 RGBA 4-frame pulse animation sheet for sun star",
     "model": "PIL/Pillow",
     "style": "procedural",
-    "settings": "{\"generator\":\"tools/gen_stars.py\",\"method\":\"PIL\",\"seed\":\"hash(sun)\"}",
+    "settings": {
+      "seed": 0
+    },
     "downloaded_at": "2026-09-06T23:53:00+09:00",
     "sha256": "5347986336503c7e2cab90989cf893cad5dd4787539a23bb375edf8eff77d8db",
     "width": 256,
@@ -5209,5 +5211,39 @@
     "width": 64,
     "height": 64,
     "qa": "PIL test"
+  },
+  {
+    "sha256": "f7eb512c6ce8b0ac5080001b945bb4b6a5da4a9f4260644b39be639e812d8d5d",
+    "prompt": "Grok sprite-gen hub_neptune 8-frame rotate",
+    "model": "grok",
+    "style": "pixel-art",
+    "settings": {
+      "seed": 0
+    },
+    "downloaded_at": "2026-09-09T18:27:00Z",
+    "width": 128,
+    "height": 512,
+    "qa": "Approved",
+    "path": "assets/planet/studio/hub_neptune_sheet.png",
+    "source_url": "http://127.0.0.1:4176/api/sprite-generate",
+    "terms_url": "http://127.0.0.1:4176/api/sprite-generate",
+    "asset_id": "hub_neptune_sheet"
+  },
+  {
+    "sha256": "7885cfe4e264caa8d7757770b9b2b00a6ad568e4768013b75bb0b636a016c60c",
+    "prompt": "Grok sprite-gen star_sun 8-frame rotate",
+    "model": "grok",
+    "style": "pixel-art",
+    "settings": {
+      "seed": 0
+    },
+    "downloaded_at": "2026-09-09T18:27:00Z",
+    "width": 128,
+    "height": 512,
+    "qa": "Approved",
+    "path": "assets/star/studio/star_sun_sheet.png",
+    "source_url": "http://127.0.0.1:4176/api/sprite-generate",
+    "terms_url": "http://127.0.0.1:4176/api/sprite-generate",
+    "asset_id": "star_sun_sheet"
   }
 ]

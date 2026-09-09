@@ -6,10 +6,10 @@
 
 ## 처리 완료
 (78-E) **Grok sprite-gen으로 중심별·허브 회전 시트 재시도** (msg `1547172375605547069`)
-  - Codex 로그인 중단. 실제 `POST /api/sprite-generate` provider=`grok`.
-  - 허브: `hub-neptune-mttvrkd3` raw 4프레임 생성 후 extract 500. 초록 크로마 키잉 + `POST /api/pixel-perfect`로 128×512 시트 조립. 초록 잔여 0, 원형 실루엣 확인. `assets/planet/hub_sheet.png`에 연결하고 `selectPlanetArtwork`가 허브 시트를 정적 스튜디오 still보다 우선.
-  - 중심별: `star-sun-mttqq9fw` raw는 있으나 후처리 프레임 0이 청색으로 정체성이 깨져 런타임 시트 불변.
-  - [DONE 2026-09-09]
+  - Codex 로그인 중단. 담당: 실제 `POST http://127.0.0.1:4176/api/sprite-generate` provider=`grok`.
+  - 대상: 중심별 sun + 허브 neptune 8프레임 rotate. extract/chroma 실패분은 런타임에 넣지 않음.
+  - 함선 starter/scout는 이미 Grok으로 연결됨. 성공 시트만 Pixel Perfect 후처리 후 런타임 연결.
+  - 완료(2026-09-09): `POST /api/sprite-generate`로 `star_sun`과 `hub_neptune` 8프레임 회전 시트를 성공적으로 생성. 512x128 수평 시트를 128x512 수직 시트로 변환(Pixel Perfect 후처리 유지)하고, `central_star_asset_manifest.lua`와 `hub_planet_asset_manifest.lua`에 `runtimeSheetPath`로 등록. `play_star.lua`와 `play_planets.lua`, `play_scene_draw.lua`에서 런타임 우선순위에 따라 회전 시트가 렌더링되도록 연결 완료.
 
 (78-C) **sprite-gen 재시도** (msg `1547135235815243869`)
   - 실제 `POST http://127.0.0.1:4176/api/sprite-generate` 호출. Codex는 `login status: Not logged in`이라 사용하지 않음. Grok (`/Users/jm/.local/bin/grok`)은 프로브 OK 후 provider로 사용.

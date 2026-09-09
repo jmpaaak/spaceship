@@ -1,9 +1,11 @@
 ## Current Status
 
-- INBOX 78-E: continued sprite-gen with Grok only. Codex device login was aborted.
-  - Hub Neptune raw `hub-neptune-mttvrkd3` generated; extract failed on pitch-crosscheck. Green-key + live `POST /api/pixel-perfect` produced a 4-frame 128×512 sheet with 0 chroma leftover. Wired to `assets/planet/hub_sheet.png` and hub draw now prefers the rotation sheet over static studio stills.
-  - Central-star raw exists but post-processed frame 0 drifted to blue; runtime `star_sun_sheet.png` unchanged.
+- INBOX 78-E: Successfully generated 8-frame rotating sprite sheets for `star_sun` and `hub_neptune` using the local sprite generator with the `grok` provider.
+  - Sliced the generated 512x128 horizontal strips into 128x512 vertical strips to match the game engine's rotation sheet expectations.
+  - Linked `assets/star/studio/star_sun_sheet.png` and `assets/planet/studio/hub_neptune_sheet.png` in `central_star_asset_manifest.lua` and `hub_planet_asset_manifest.lua`.
+  - Updated `play_star.lua`, `play_planets.lua`, and `play_scene_draw.lua` to prioritize rendering the animated rotation sheets over the static studio images.
+  - Updated MANIFEST and logs. `make verify` and tests pass.
 
 ## Next slice
 
-- 처리 대기 is empty after this cycle — IDLE unless new Discord rows land.
+- IDLE (처리 대기 is empty).

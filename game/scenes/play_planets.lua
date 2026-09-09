@@ -73,7 +73,19 @@ end
 function M.studioHubPlanetImagePaths()
     local paths = {}
     for planetType, asset in pairs(hubAssets.hubs) do
-        paths[planetType] = asset.runtimePath
+        if asset.runtimePath then
+            paths[planetType] = asset.runtimePath
+        end
+    end
+    return paths
+end
+
+function M.studioHubSheetImagePaths()
+    local paths = {}
+    for planetType, asset in pairs(hubAssets.hubs) do
+        if asset.runtimeSheetPath then
+            paths[planetType] = asset.runtimeSheetPath
+        end
     end
     return paths
 end
