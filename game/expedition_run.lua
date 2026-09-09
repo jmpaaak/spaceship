@@ -1,6 +1,7 @@
 local gearModule = require("game.gear")
 local enginePartsModule = require("game.engine_parts")
 local expeditionGear = require("game.expedition_gear")
+local recoveryEffects = require("game.recovery_effects")
 
 local M = {}
 
@@ -231,7 +232,8 @@ function M.update(api, run, dt)
     run.altitude = run.altitude + api.effectiveSpeed(run) * dt
     run.maxAltitude = math.max(run.maxAltitude, run.altitude)
     run.bestAltitude = math.max(run.bestAltitude, run.altitude)
-    local regen = expeditionGear.totalEffect(run, "hullRegen")
+    local regen = recoveryEffects.rate("hullRegen",
+        expeditionGear.totalEffect(run, "hullRegen"))
     if regen > 0 and run.durability < run.maxDurability then
         run.durabilityRegenAcc = (run.durabilityRegenAcc or 0) + regen * dt
         local whole = math.floor(run.durabilityRegenAcc)

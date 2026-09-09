@@ -32,10 +32,13 @@ function M.run()
     regenRun.maxDurability = 3
     assert(expedition.equipGear(regenRun, "hull", regenPart))
     expedition.update(regenRun, 2.1)
+    assert(regenRun.durability == 1,
+        "INBOX 77(4): authored 0.5 regen must be scaled below 1 HP in 2.1s")
+    expedition.update(regenRun, 37.9)
     assert(regenRun.durability == 2,
-        "INBOX 61(31): 0.5 HP/s for 2.1s must restore 1 HP, got " .. tostring(regenRun.durability))
+        "INBOX 77(4): authored 0.5 regen must restore 1 HP in 40s, got " .. tostring(regenRun.durability))
     local i18n = require("game.i18n")
-    assert(i18n.effectLine({ type = "hullRegen", value = 0.5 }) == "REGEN +0.5/s")
+    assert(i18n.effectLine({ type = "hullRegen", value = 0.5 }) == "REGEN +0.025/s")
     print("  INBOX-61(31) hub no-heal + hullRegen OK")
 end
 

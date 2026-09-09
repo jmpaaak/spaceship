@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 77(3): purchased-but-inactive scout cards retain the selection action but no longer show the redundant `OWNED` status; active scout slots no longer render `SCOUT ✓` (or its unsupported-glyph `SCOUT X` fallback).
-- Removed the now-unused `owned_label` translations and added `game/tests/scout_status_hidden.lua` coverage for both purchased and selected scout states.
-- RED was observed on the former owned-card status label; the engine-hosted suite and `make verify LOVE=/Users/jm/.local/bin/love` pass after implementation.
+- INBOX 77 is complete and moved to 처리 완료. Persistent `hullRegen` now applies at exactly 1/20 of its authored rate through pure `game/recovery_effects.lua`; authored 5 restores and displays 0.25 HP/s.
+- `game/expedition_run.lua` and EN/KO `game/i18n.lua` consume the same conversion. Immediate shop/docking heals remain unchanged.
+- Added engine-hosted `game/tests/recovery_effects.lua` and updated the legacy relaunch/regen timing regression. RED was observed for the missing module; `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
 
 ## Next slice
 
-- INBOX 77(4): reduce persistent gear recovery effects such as `hullRegen` to exactly 1/20 of their current effective rate while keeping displayed and applied rates consistent; exclude immediate shop/docking full heals.
+- INBOX 72: add pure `game/speed_display.lua` normalization so user-facing speed starts at 0 (`effectiveSpeed - baseSpeed`) without changing movement physics or RCS calculations, then wire the HUD/shop preview with focused tests.

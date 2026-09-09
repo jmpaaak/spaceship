@@ -9,6 +9,7 @@
 -- sites pass the same positional arguments regardless of language.
 -- The "en" table is byte-for-byte the previous hardcoded English so
 -- game/self_test.lua assertions keep passing when locale is "en".
+local recoveryEffects = require("game.recovery_effects")
 local M = {}
 
 local DEFAULT_LOCALE = "en"
@@ -202,7 +203,7 @@ locales.en = {
     effect_chainTrigger = "CHAIN",
     effect_insurance = "INSURANCE",
     effect_streakMultiplier = "STREAK +%d%%",
-    effect_hullRegen = "REGEN +%.1f/s",
+    effect_hullRegen = "REGEN +%s/s",
     comet_label = "Comet",
     moon_label = "Moon",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
@@ -444,7 +445,7 @@ locales.ko = {
     effect_chainTrigger = "연쇄",
     effect_insurance = "보험",
     effect_streakMultiplier = "연속 +%d%%",
-    effect_hullRegen = "회복 +%.1f/초",
+    effect_hullRegen = "회복 +%s/초",
     comet_label = "혜성",
     moon_label = "위성",
     -- Stellar Origin suit synergy labels (item 16 sub-item 4)
@@ -544,6 +545,10 @@ function M.effectLine(effect)
     if effect.mode == "multiply" then
         local name = (template:match("^([^%%]+)") or tostring(effect.type)):gsub("%s*%+?$", "")
         return string.format("%s ×%.1f", name, effect.value or 0)
+    end
+    if effect.type == "hullRegen" then
+        return string.format(template,
+            recoveryEffects.formatRate(recoveryEffects.displayValue(effect)))
     end
     if template:find("%%") then
         return string.format(template, effect.value or 0)

@@ -261,7 +261,7 @@ function M.run()
     require("game.tests.title_ship_idle").run()
     require("game.tests.title_start_sfx").run()
     require("game.tests.debris_collision_sfx").run()
-
+    require("game.tests.recovery_effects").run()
     require("game.tests.legacy_slot_distance_scaling").run()
 
     require("game.tests.legacy_hub_relaunch_regen").run()

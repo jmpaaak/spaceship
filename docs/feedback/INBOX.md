@@ -5,13 +5,6 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-(77) **은하 상점 장비 구매·판매·정찰선 문구·회복 밸런스 정리** (msg `1546761251697328169`, R1 완료 후 진행)
-  - (1) ✅ 은하계 별 상점에서 한 번에 구매 가능한 장비는 **최대 1개**로 제한한다. 담당: 새 순수 모듈 `game/shop_gear_rules.lua` + `game/scenes/play_shop.lua` 소비. 상점 오퍼/구매 상태를 별·은하 상점 방문 단위로 추적하고, 1개 구매 후 같은 상점의 추가 장비 구매 버튼은 비활성화한다. 지구 업그레이드·슬롯 구매에는 적용하지 않는다. `game/tests/shop_gear_rules.lua` GREEN (2026-09-09).
-  - (2) ✅ 장착 장비 상세 툴팁에서 선택한 장비를 **언제든 판매**할 수 있게 한다. 담당: `game/shop_gear_rules.lua` 판매가 계산/인벤토리 제거 + `game/scenes/play_hud.lua` 판매 버튼. 비행 중 판매, 판매 직후 돈·슬롯·시너지·스탯 갱신, 50px 터치영역, 빈 슬롯·중복 탭 방어를 `game/tests/gear_sell.lua`로 검증 (2026-09-09).
-  - (3) ✅ 정찰선 구매 후 상점 카드에 남는 `SCOUT X`/`SCOUT ✓` 상태 텍스트를 전부 제거한다. 담당: `game/scenes/play_loadout_data.lua` + i18n 소비부. 정찰선을 이미 구매/선택한 경우 카드에는 불필요한 상태표시를 남기지 않는다. `game/tests/scout_status_hidden.lua` GREEN (2026-09-09).
-  - (4) `hullRegen` 등 회복류 아이템의 실제 초당 회복량을 현재의 **1/20**로 낮춘다. 담당: 새 순수 모듈 `game/recovery_effects.lua`를 `game/expedition.lua`가 소비하거나 JSON 값을 일괄 조정. 표시값과 실제 틱이 반드시 일치하며 최소 5 HP/s처럼 적용되던 값은 0.25 HP/s 수준으로 감소한다. 상점/도킹의 즉시 완전회복은 아이템 지속회복이 아니므로 제외한다.
-  - 테스트: `game/tests/shop_gear_rules.lua`(상점당 1개 한도, 두 번째 구매 거부, 다른 상점 독립), `game/tests/gear_sell.lua`(비행/정착 중 판매, 돈·슬롯·시너지 즉시 반영), `game/tests/scout_status_hidden.lua`, `game/tests/recovery_effects.lua`(기존 회복량 대비 정확히 1/20 및 표시 일치). 최종 `make test` + `make verify` GREEN.
-
 (72) **속도 HUD를 기본 속도 대비 0부터 표시** (msg `1546739180812509205`)
   - 담당: 새 순수 모듈 `game/speed_display.lua` + `game/scenes/play_hud.lua` 소비. `play.lua`/`expedition.lua` 거대 파일에는 표시 계산을 추가하지 말 것.
   - 물리/조작감은 현재 기본 속도 `baseSpeed=60`을 그대로 유지한다. HUD·상점 등 사용자에게 보이는 **현재 속도만** `effectiveSpeed - baseSpeed`로 정규화하여 시작값을 `0`으로 표시한다.
@@ -154,6 +147,11 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(77) **은하 상점 장비 구매·판매·정찰선 문구·회복 밸런스 정리** (msg `1546761251697328169`)
+  - 완료(2026-09-09): 은하 상점 방문당 장비 1개 구매 제한, 장착 장비의 비행/정착 중 판매, 정찰선 카드의 중복 `SCOUT X`/`SCOUT ✓` 상태 제거를 각각 `game/shop_gear_rules.lua`, `game/scenes/play_shop.lua`, `game/scenes/play_hud.lua`, `game/scenes/play_loadout_data.lua`에 반영했다.
+  - 지속 회복은 새 순수 모듈 `game/recovery_effects.lua`에서 authored `hullRegen`을 정확히 1/20로 변환하며, `game/expedition_run.lua`의 실제 틱과 `game/i18n.lua`의 EN/KO 표시가 같은 변환값을 사용한다. authored 5는 실제/표시 모두 0.25 HP/s이고 상점·도킹 즉시 회복은 변경하지 않았다.
+  - `game/tests/shop_gear_rules.lua`, `game/tests/gear_sell.lua`, `game/tests/scout_status_hidden.lua`, `game/tests/recovery_effects.lua` 및 기존 허브 재출발 회귀 테스트가 GREEN이며 `make verify LOVE=/Users/jm/.local/bin/love`를 통과했다.
 
 (R1) **거대 파일 모듈 분리 최우선** (msg `1546726613721415681`, 재확정 msg `1546762371908173865`)
   - 완료(2026-09-09): 독립 레인의 순차 통합을 마쳤다. 입력 처리는 `game/scenes/play_input.lua`로, expedition의 장비·업그레이드·슬롯·정산/런 상태는 `game/expedition_gear.lua`, `game/expedition_upgrade.lua`, `game/expedition_slot.lua`, `game/expedition_lifecycle.lua`, `game/expedition_run.lua`로 분리했으며 기존 public API는 `game/expedition.lua`의 호환 위임으로 유지했다. 기존 self-test 본문은 영역별 `game/tests/legacy_*.lua`로 이전했고 `game/self_test.lua`는 runner 중심으로 축소했다.
