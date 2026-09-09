@@ -27,6 +27,14 @@ M.hubs = {
         height = 128,
         sha256 = "6948a4b3eeae108ef495855033e0ab557174947b100a160c7fff528defb52f80",
     },
+    dry = {
+        id = "hub_uranus_nasa_pia18182",
+        runtimePath = "assets/planet/studio/hub_uranus.png",
+        masterPath = "docs/assets/masters/planet/hub_uranus_nasa_pia18182_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "9124d59137bd7016ba170fc1a13932effaade126e45f768bd224aabb120b1764",
+    },
 }
 
 return M

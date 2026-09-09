@@ -44,6 +44,9 @@ function M.run()
     assert(api.planetImagePathForPlanet({ hub = true, galaxyStarType = "gas" })
             == "assets/planet/studio/hub_saturn.png",
         "INBOX 78: gas hubs must use the approved Saturn Asset Studio derivative")
+    assert(api.planetImagePathForPlanet({ hub = true, galaxyStarType = "dry" })
+            == "assets/planet/studio/hub_uranus.png",
+        "INBOX 78: dry hubs must use the approved Uranus Asset Studio derivative")
     assert(api.planetImagePathForPlanet({ hub = true, galaxyStarType = "unknown" })
             == "assets/planet/planet_hub.png",
         "R1: unknown hub types must use the hub fallback")
@@ -81,6 +84,8 @@ function M.run()
         "INBOX 78: the approved Pluto derivative must load only for bare hubs")
     assert(studioHubPaths.gas == "assets/planet/studio/hub_saturn.png",
         "INBOX 78: the approved Saturn derivative must load only for gas hubs")
+    assert(studioHubPaths.dry == "assets/planet/studio/hub_uranus.png",
+        "INBOX 78: the approved Uranus derivative must load only for dry hubs")
 
     local studioNeptune = {}
     local legacyIceHub = {}
@@ -133,6 +138,26 @@ function M.run()
     })
     assert(hubSprite == legacyGasHub and hubSheet == legacyHubSheet,
         "INBOX 78: failed Saturn loading must preserve the existing gas-hub artwork")
+
+    local studioUranus = {}
+    local legacyDryHub = {}
+    hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "dry" }, {
+        default = {},
+        pixel = { dry = legacyDryHub },
+        hubSheet = legacyHubSheet,
+        studioHub = { dry = studioUranus },
+    })
+    assert(hubSprite == studioUranus and hubSheet == nil,
+        "INBOX 78: a decoded Uranus derivative must take priority only in the dry-hub draw path")
+
+    hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "dry" }, {
+        default = {},
+        pixel = { dry = legacyDryHub },
+        hubSheet = legacyHubSheet,
+        studioHub = {},
+    })
+    assert(hubSprite == legacyDryHub and hubSheet == legacyHubSheet,
+        "INBOX 78: failed Uranus loading must preserve the existing dry-hub artwork")
 
     hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "ice" }, {
         default = {},
