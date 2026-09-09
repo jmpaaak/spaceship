@@ -68,7 +68,12 @@ function PS:updateSlotMachine(dt, rawDt)
                 self.expedition.durability = math.min(self.expedition.durability + rv, self.expedition.maxDurability)
                 self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n내구 +" .. rv
             elseif rt == "harvest" then
-                self.expedition.sampleYieldUpgradeLevel = (self.expedition.sampleYieldUpgradeLevel or 0) + 1
+                -- INBOX 61: apply shop-upgrade units, not a hard-coded +1.
+                -- 2-match 0.10 → +1 level; 3-match 0.50 → +5 levels (* tier).
+                local step = self.expedition.sampleYieldUpgradeAmount or 0.10
+                if step <= 0 then step = 0.10 end
+                local levels = math.floor(rv / step + 0.5)
+                self.expedition.sampleYieldUpgradeLevel = (self.expedition.sampleYieldUpgradeLevel or 0) + levels
                 self.slotResultMessage = table.concat(result.symbols, "  ") .. "\n수확 +" .. string.format("%.2f", rv)
             elseif rt == "part" then
                 local drop = result.rewardPart

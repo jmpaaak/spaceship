@@ -6,18 +6,6 @@
 
 
 
-(61) **슬롯 당첨량 전수 점검 — 수확은 상점 1업 단위로 실제 적용** (msg `1546713497088299108`)
-  - 담당: `game/expedition.lua` `earthSlotSpin` + `game/scenes/play_slot.lua` 정산. play.lua 금지.
-  - 계약 (사용자 확정): 슬롯 보상 = **상점 해당 업그레이드 1회분 대비**.
-    HARVEST 상점 1업 = `sampleYieldUpgradeAmount` **+0.10** (`x1.00→x1.10`).
-  - 버그: `earthSlotSpin`은 HARVEST 2매치 `rewardValue=0.10*tier`, 3매치 `0.50*tier`인데, `play_slot.lua`는 **항상 `sampleYieldUpgradeLevel + 1`만** 함. 3매치가 화면엔 +0.50인데 실제는 +0.10.
-  - 수정:
-    (a) HARVEST 정산: `levels = round(rewardValue / sampleYieldUpgradeAmount)` 만큼 레벨 증가. 홈 은하 2매치 = +1업(+0.10), 3매치 = +5업(+0.50).
-    (b) 결과 문구의 `수확 +N`이 **실제로 오른 배수**와 같게 (`+0.10` / `+0.50` * tier).
-    (c) SPEED / DURABILITY / MONEY / PART도 상점 1회분과 비교해 표로 검증. SPEED는 `slotSpeedBonus += rewardValue` (이미 값 적용). DURABILITY는 레벨+=rv. 상점 1회가 +1인데 슬롯 2매치 +3*tier / 3매치 +10*tier면 유지(이미 1회 대비 큰 값). 수확만 미적용이 핵심.
-    (d) `sampleYieldMultiplier`가 슬롯 정산 후 `1 + level * 0.10`으로 맞는지 테스트.
-  - 테스트: `game/tests/slot_payout_audit.lua` — 2매치 HARVEST 후 multiplier +0.10, 3매치 후 +0.50 (level +1 / +5). 기존 `harvest_hull_upgrade.lua` rewardValue 0.10/0.50 유지.
-
 (62) **룰렛 시작 SFX 볼륨 절반** (OOB 2026-09-08)
   - 담당: `game/sfx.lua`. play.lua 금지.
   - `slot_spin` 기본 vol은 전역 `0.6`과 같음. `sfx.play("slot_spin")`를 **0.3** (절반)으로. 다른 SFX 볼륨 건드리지 말 것.
@@ -95,6 +83,19 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(61) **슬롯 당첨량 전수 점검 — 수확은 상점 1업 단위로 실제 적용** (msg `1546713497088299108`)
+  - 담당: `game/expedition.lua` `earthSlotSpin` + `game/scenes/play_slot.lua` 정산. play.lua 금지.
+  - 계약 (사용자 확정): 슬롯 보상 = **상점 해당 업그레이드 1회분 대비**.
+    HARVEST 상점 1업 = `sampleYieldUpgradeAmount` **+0.10** (`x1.00→x1.10`).
+  - 버그: `earthSlotSpin`은 HARVEST 2매치 `rewardValue=0.10*tier`, 3매치 `0.50*tier`인데, `play_slot.lua`는 **항상 `sampleYieldUpgradeLevel + 1`만** 함. 3매치가 화면엔 +0.50인데 실제는 +0.10.
+  - 수정:
+    (a) HARVEST 정산: `levels = round(rewardValue / sampleYieldUpgradeAmount)` 만큼 레벨 증가. 홈 은하 2매치 = +1업(+0.10), 3매치 = +5업(+0.50).
+    (b) 결과 문구의 `수확 +N`이 **실제로 오른 배수**와 같게 (`+0.10` / `+0.50` * tier).
+    (c) SPEED / DURABILITY / MONEY / PART도 상점 1회분과 비교해 표로 검증. SPEED는 `slotSpeedBonus += rewardValue` (이미 값 적용). DURABILITY는 레벨+=rv. 상점 1회가 +1인데 슬롯 2매치 +3*tier / 3매치 +10*tier면 유지(이미 1회 대비 큰 값). 수확만 미적용이 핵심.
+    (d) `sampleYieldMultiplier`가 슬롯 정산 후 `1 + level * 0.10`으로 맞는지 테스트.
+  - 테스트: `game/tests/slot_payout_audit.lua` — 2매치 HARVEST 후 multiplier +0.10, 3매치 후 +0.50 (level +1 / +5). 기존 `harvest_hull_upgrade.lua` rewardValue 0.10/0.50 유지.
+  - 완료(2026-09-09): `play_slot.lua` HARVEST 정산이 `round(rewardValue / sampleYieldUpgradeAmount)` 레벨을 더함. 홈 2매치 +1 (x1.10), 3매치 +5 (x1.50). SPEED/DURABILITY 기존 값 적용 유지. `game/tests/slot_payout_audit.lua` GREEN.
 
 (60) **중심 행성(허브) 표본 획득 SFX = Pixabay Loud Space Launch** (OOB 2026-09-08)
   - 담당: `game/sfx.lua` 새 def `hub_sample` + 허브 탐사/표본 획득 한 줄 호출. play.lua 거대 로직 금지.
