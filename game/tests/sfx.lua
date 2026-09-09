@@ -60,6 +60,46 @@ function M.run()
     assert(boostSrc:find('sfx.play("boost")', 1, true),
         "INBOX (50): play_boost.lua must play boost")
 
+    -- INBOX (62): slot_spin def volume is 0.3 (half of global 0.6).
+    -- play_slot.lua stays a one-line sfx.play("slot_spin") — def overrides.
+    assert(sfx.defs.slot_spin.volume == 0.3,
+        "INBOX (62): slot_spin def volume must be 0.3, got "
+            .. tostring(sfx.defs.slot_spin.volume))
+    assert(sfx.defs.collision.volume == nil,
+        "INBOX (62): other SFX defs must not gain a volume field")
+    assert(sfx.defs.collect.volume == nil,
+        "INBOX (62): collect volume must stay global default")
+    assert(sfx.defs.boost.volume == nil,
+        "INBOX (62): boost volume must stay global default")
+    assert(sfx.defs.galaxy_discover.volume == nil,
+        "INBOX (62): galaxy_discover volume must stay global default")
+    assert(sfx.defs.star_sample.volume == nil,
+        "INBOX (62): star_sample volume must stay global default")
+    assert(sfx.defs.hub_sample.volume == nil,
+        "INBOX (62): hub_sample volume must stay global default")
+    local playSlotSrc = love.filesystem.read("game/scenes/play_slot.lua") or ""
+    local slotPlayCount = 0
+    for _ in playSlotSrc:gmatch('sfx%.play%("slot_spin"%)') do
+        slotPlayCount = slotPlayCount + 1
+    end
+    assert(slotPlayCount == 1,
+        "INBOX (62): play_slot.lua must keep one sfx.play(\"slot_spin\") line, got "
+            .. tostring(slotPlayCount))
+    assert(not playSlotSrc:find('sfx.play("slot_spin",', 1, true),
+        "INBOX (62): play_slot.lua must not pass volume to sfx.play")
+
+    sfx.resetGuards()
+    sfx.lastVolume = nil
+    sfx.play("slot_spin")
+    assert(sfx.lastVolume == 0.3,
+        "INBOX (62): sfx.play(\"slot_spin\") volume must be 0.3, got "
+            .. tostring(sfx.lastVolume))
+    sfx.lastVolume = nil
+    sfx.play("collision")
+    assert(sfx.lastVolume == 0.6,
+        "INBOX (62): other SFX must keep global 0.6, got "
+            .. tostring(sfx.lastVolume))
+
     -- (c) headless: play/stop do not crash when love.audio is nil
     sfx.sources = {}
     sfx.played = {}

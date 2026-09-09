@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 61 is complete: slot HARVEST settlement now applies shop-upgrade units. `play_slot.lua` adds `round(rewardValue / sampleYieldUpgradeAmount)` to `sampleYieldUpgradeLevel` instead of a hard-coded +1.
-- Home-galaxy 2-match HARVEST is +1 level (x1.10); 3-match is +5 levels (x1.50). Result copy still shows the actual `rewardValue` (`+0.10` / `+0.50`). SPEED still uses `slotSpeedBonus += rewardValue`; DURABILITY still adds `rv` hull levels.
-- `earthSlotSpin` HARVEST `rewardValue` 0.10/0.50 (times tier) is unchanged. `game/tests/slot_payout_audit.lua` is GREEN.
+- INBOX 62 is complete: `slot_spin` SFX plays at 0.3 (half of the global 0.6).
+- `sfx.defs.slot_spin` now has `volume = 0.3`; `sfx.play` uses `volume or def.volume or 0.6`. Other SFX defs have no `volume` field and stay at 0.6.
+- `play_slot.lua` still has a single `sfx.play("slot_spin")` line (no per-call volume arg). `game/tests/sfx.lua` is GREEN.
 
 ## Next slice
 
-- INBOX 62: `slot_spin` SFX volume 0.3 (half of the global 0.6) via a def `volume` field in `game/sfx.lua`; `game/tests/sfx.lua`.
+- INBOX 63: rotating abandoned space-station docking (`game/world.lua` + `game/stations.lua` + `game/scenes/play_station.lua`).

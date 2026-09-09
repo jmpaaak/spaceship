@@ -6,12 +6,6 @@
 
 
 
-(62) **룰렛 시작 SFX 볼륨 절반** (OOB 2026-09-08)
-  - 담당: `game/sfx.lua`. play.lua 금지.
-  - `slot_spin` 기본 vol은 전역 `0.6`과 같음. `sfx.play("slot_spin")`를 **0.3** (절반)으로. 다른 SFX 볼륨 건드리지 말 것.
-  - def에 `volume` 필드를 두면 전역 0.6을 덮어쓰게. `play_slot.lua`는 한 줄 유지.
-  - 테스트: `game/tests/sfx.lua` — slot_spin volume 0.3.
-
 (63) **회전 버려진 우주정거장 도킹** (msg `1546715845642682451`)
   - 담당: `game/world.lua` + `game/stations.lua` (새 모듈, 순수) + `game/scenes/play_station.lua` (드로우/도킹). play.lua는 require + 한 줄 위임만. `tools/gen_station.py` 에셋.
   - 행성과 **별도** 오브젝트. 혜성(운성)과 **동일 등장 확률**: `cometSpawnInterval=30`, `cometSpawnChance=0.30`, 첫 스폰 60초 보장과 같은 타이머/롤 (독립 스트림, 혜성과 같은 틱에 안 겹쳐도 됨).
@@ -83,6 +77,13 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(62) **룰렛 시작 SFX 볼륨 절반** (OOB 2026-09-08)
+  - 담당: `game/sfx.lua`. play.lua 금지.
+  - `slot_spin` 기본 vol은 전역 `0.6`과 같음. `sfx.play("slot_spin")`를 **0.3** (절반)으로. 다른 SFX 볼륨 건드리지 말 것.
+  - def에 `volume` 필드를 두면 전역 0.6을 덮어쓰게. `play_slot.lua`는 한 줄 유지.
+  - 테스트: `game/tests/sfx.lua` — slot_spin volume 0.3.
+  - 완료(2026-09-09): `sfx.defs.slot_spin.volume = 0.3`가 전역 0.6을 덮어씀. `play_slot.lua`는 `sfx.play("slot_spin")` 한 줄 유지. 다른 SFX def는 volume 필드 없음. `game/tests/sfx.lua` GREEN.
 
 (61) **슬롯 당첨량 전수 점검 — 수확은 상점 1업 단위로 실제 적용** (msg `1546713497088299108`)
   - 담당: `game/expedition.lua` `earthSlotSpin` + `game/scenes/play_slot.lua` 정산. play.lua 금지.

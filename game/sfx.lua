@@ -10,7 +10,7 @@ M.defs = {
     collision       = { path = "assets/sfx/collision.mp3",       loop = false },
     collect         = { path = "assets/sfx/collect.mp3",         loop = false },
     hub_sample      = { path = "assets/sfx/hub_sample.mp3",      loop = false },
-    slot_spin       = { path = "assets/sfx/slot_spin.ogg",       loop = false },
+    slot_spin       = { path = "assets/sfx/slot_spin.ogg",       loop = false, volume = 0.3 },
     boost           = { path = "assets/sfx/boost.ogg",           loop = false },
 }
 
@@ -36,7 +36,7 @@ local function getSource(name)
     local ok, src = pcall(love.audio.newSource, def.path, "static")
     if not ok or not src then return nil end
     src:setLooping(def.loop == true)
-    src:setVolume(0.6)
+    src:setVolume(def.volume or 0.6)
     M.sources[name] = src
     return src
 end
@@ -62,7 +62,8 @@ function M.play(name, uniqueKey, volume)
         if M.played[guardKey] then return end
         M.played[guardKey] = true
     end
-    local vol = volume or 0.6
+    local def = M.defs[name]
+    local vol = volume or (def and def.volume) or 0.6
     M.lastVolume = vol
     local src = getSource(name)
     if not src then return end
