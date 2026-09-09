@@ -4,6 +4,10 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
+(78-G) **Codex 로그인 후 Grok 생성물과 비교** (msg `1547274394634682429`)
+  - 담당: `codex login --device-auth`. 비밀번호/토큰은 채팅에 붙이지 않음.
+  - 로그인 후 같은 태양 마스터로 Codex sprite-gen을 돌리고 Grok `star-sun-mtu9w4m6` 시트와 비교. 더 나은 쪽만 런타임에 연결.
+
 ## 처리 완료
 (78-F) **Grok으로 중심별 회전 시트 재시도** (msg `1547272019731554365`)
   - Codex 로그인 없음. 실제 `POST /api/sprite-generate` provider=`grok`, run `star-sun-mtu9w4m6`. extract는 pitch 실패(500)였지만 raw 1408×704 4프레임은 생성됨.
