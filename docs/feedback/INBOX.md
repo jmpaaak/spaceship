@@ -5,6 +5,9 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 ## 처리 완료
+(80) **Hermes fallback을 Grok보다 Codex 우선으로** (msg `1547296510545371287`)
+  - `~/.hermes/config.yaml` fallback: Codex `gpt-5.6-sol` → Grok `grok-4.6` → Vertex/Gemini. Discord/CLI/루프 Hermes 세션이 이 체인을 상속.
+  - mok `loop/env.sh`의 Grok primary 고정을 해제(Claude 기본값). 레인 worktree env도 동일. [DONE 2026-09-10]
 (78-G) **Codex 로그인 후 Grok 생성물과 비교** (msg `1547274394634682429`)
   - `codex login status`: Logged in using ChatGPT. 실제 `POST /api/sprite-generate` provider=`codex`, run `star-sun-codex-mtuch3mt` 201 OK, extract 성공.
   - Codex 시트: 512×128 4프레임, 원형 오렌지 광구, 크로마 잔여 0, 표면 텍스처가 프레임마다 이동해 자전이 읽힘.
