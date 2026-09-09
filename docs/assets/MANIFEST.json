@@ -5230,20 +5230,24 @@
     "asset_id": "hub_neptune_sheet"
   },
   {
-    "sha256": "7885cfe4e264caa8d7757770b9b2b00a6ad568e4768013b75bb0b636a016c60c",
-    "prompt": "Grok sprite-gen star_sun 8-frame rotate",
-    "model": "grok",
-    "style": "pixel-art",
+    "sha256": "cd7093f7ef6519e10175888af7ba98438343765f4598405684a546a3352ab2d1",
+    "prompt": "Grok sprite-gen 4-frame sun rotation from NASA SDO master; green chroma keyed; POST /api/pixel-perfect original palette",
+    "model": "grok Imagine via sprite-gen",
+    "style": "pixel-art circular star rotation sheet",
     "settings": {
-      "seed": 0
+      "provider": "grok",
+      "runId": "star-sun-mtu9w4m6",
+      "frames": 4,
+      "cell": 128,
+      "chroma": "green"
     },
-    "downloaded_at": "2026-09-09T18:27:00Z",
+    "downloaded_at": "2026-09-09T15:55:04Z",
     "width": 128,
     "height": 512,
-    "qa": "Approved",
+    "qa": "4 circular yellow-orange frames, 0 green leftover, wired as studio/star_sun_sheet.png 128x512",
     "path": "assets/star/studio/star_sun_sheet.png",
-    "source_url": "http://127.0.0.1:4176/api/sprite-generate",
-    "terms_url": "http://127.0.0.1:4176/api/sprite-generate",
+    "source_url": "http://127.0.0.1:4176/generated/star-sun-mtu9w4m6/",
+    "terms_url": "http://127.0.0.1:4176/",
     "asset_id": "star_sun_sheet"
   }
 ]

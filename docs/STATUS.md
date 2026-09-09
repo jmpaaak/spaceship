@@ -1,7 +1,9 @@
 ## Current Status
 
-- FAIL+dirty cleanup: `make verify LOVE=/Users/jm/.local/bin/love` is GREEN (`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK`, `LOVE_BUNDLE_OK`, `ASSET_MANIFEST_OK`). Preflight Love exec 126 (`cannot execute binary file`) did not reproduce.
-- Committed leftover untracked sprite-gen intermediates (hub-neptune / ship-scout / star-sun runs and frames) and scratch/tools helpers from the prior sheet cycle. Runtime sheets were already wired in `6f395ea`.
+- INBOX 78-F: retried central-star rotation with Grok only.
+  - `POST /api/sprite-generate` run `star-sun-mtu9w4m6` produced a 1408×704 raw 4-frame strip; extract pitch-crosscheck failed.
+  - Green-keyed + circular-masked frames went through live `POST /api/pixel-perfect` (0 leftover green).
+  - Wired `assets/star/studio/star_sun_sheet.png` (128×512). Previous sheet backed up as `star_sun_sheet_pre_v2.png`.
 
 ## Next slice
 

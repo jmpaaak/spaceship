@@ -4,12 +4,11 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(78-F) **Grok으로 중심별 회전 시트 재시도** (msg `1547272019731554365`)
-  - Codex 로그인 없음. 담당: 실제 `POST http://127.0.0.1:4176/api/sprite-generate` provider=`grok`.
-  - 대상: 중심별 sun 8프레임(또는 성공 가능한 4프레임) seamless rotate. extract/chroma 실패·정체성 깨진 프레임은 런타임에 넣지 않음.
-  - 기존 허브/함선 런타임은 유지. Pixel Perfect 후처리 후 원형 실루엣·마젠타 잔여 0 확인.
-
 ## 처리 완료
+(78-F) **Grok으로 중심별 회전 시트 재시도** (msg `1547272019731554365`)
+  - Codex 로그인 없음. 실제 `POST /api/sprite-generate` provider=`grok`, run `star-sun-mtu9w4m6`. extract는 pitch 실패(500)였지만 raw 1408×704 4프레임은 생성됨.
+  - 초록 크로마 키잉 + 원형 마스크 + `POST /api/pixel-perfect`로 128×512 수직 시트 조립. 초록 잔여 0, 4프레임 모두 원형 노란 태양.
+  - `assets/star/studio/star_sun_sheet.png`에 연결. 기존 시트는 `docs/assets/masters/star/star_sun_sheet_pre_v2.png`로 백업. [DONE 2026-09-10]
 (79c) **Love 창이 방금 또 깜빡임** (msg `1547202111937323009`)
   - 실측: gostro 루프 `make test`가 `run_love_qa.sh`로 Love를 다시 켬. `GAME_QA=1` 1×1 창도 Dock 아이콘이 깜빡임. `GOSTRO_LOOP`/`GAME_QA`/`GAME_HEADLESS`면 `t.window=false`로 창 모듈 자체를 끔. `make test` GREEN, 테스트 후 love 프로세스 없음.
   - [DONE 2026-09-09]
