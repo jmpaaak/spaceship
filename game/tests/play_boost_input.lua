@@ -17,6 +17,8 @@ local function sceneWithCharges(count)
             phase = "ascending",
             equippedEngineParts = parts,
             boostsUsed = 0,
+            boostsMinted = count,
+            boostRegenAcc = 0,
         },
         boostBtnRect = { x = 580, y = 1100, w = 120, h = 72 },
         touches = {},

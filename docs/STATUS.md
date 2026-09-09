@@ -1,9 +1,11 @@
 ## Current Status
 
-- Resolved INBOX 65: Added `x10` text label next to the HUD's durability blocks when `maxDurability >= 10`.
-- The text is rendered using the standard Galmuri 11px font setting (`fonts.get(11)`) and colored gray to match the blocks' outline.
-- Test `game/tests/hp_block_x10.lua` added and passing, which asserts the presence of the `x10` print and font configuration in `game/scenes/play_scene_draw.lua`.
+- Resolved INBOX 66: Implemented Booster+ regenerative mechanic.
+- Connected `expeditionGear.tickBoostRegen` inside `game/expedition_run.lua`'s `update` to recharge 1 boost every 5 seconds during ascent up to the `boostCharge` cap.
+- Addressed nil altitude error in tests by properly initializing mock data via `expedition.new()`.
+- Fixed locale assertions in `game/tests/boost_regen.lua` to enforce EN translations before test validation.
+- Confirmed boost effect duration is correctly configured as 1.0s in `game/scenes/play_boost.lua` and UI help text `help_boost`.
 
 ## Next slice
 
-- INBOX 66: Implement Booster+ regenerative mechanic. Update `game/expedition.lua` to treat `boostCharge` as a cap, recharge 1 boost every 5 seconds during ascent, and extend boost duration from 0.8s to 1.0s.
+- INBOX 67: Always display the current specimen streak multiplier below the help/pause button via `game/scenes/play_hud.lua`.

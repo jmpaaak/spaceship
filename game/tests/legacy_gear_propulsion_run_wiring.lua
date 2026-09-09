@@ -36,29 +36,39 @@ function M.run()
     -- hull gear list (item 10's slot-independence guarantee still holds).
     assert(#boostRun.equippedGear == 0, "engine part effects must not touch the hull gear list")
 
-    -- Item 10(b)/14(G) boostCharge CONSUMPTION gap: until this slice,
-    -- boostChargeCount(run) was only ever a pure re-derived total (like
-    -- rerollCount was before M.spendReroll existed) -- nothing could
-    -- actually SPEND a "긴급 부스트/1회성 소모 아이템" charge and see the
-    -- pool deplete, mirroring the exact gap item 14(C)'s rerollBonus had
-    -- before M.rerollsRemaining/M.spendReroll closed it. A fresh run with
-    -- the boost pod equipped must start with 2 remaining boosts (matching
-    -- the equipped total), spending must decrement a per-expedition
-    -- counter down to zero then refuse further spends (never negative,
-    -- never throws), and re-launching must refill back to the current
-    -- equipped total (same lifecycle as insuranceUsed/rerollsUsed).
-    assert(expedition.boostsRemaining(boostRun) == 2,
-        "a run with boostChargeCount == 2 must start with 2 remaining boost charges")
+    -- INBOX 66: boostCharge is a CAP. A fresh run starts empty (0 remaining)
+    -- even with a boost pod equipped; spending still refuses at 0, and
+    -- launch resets remaining to 0 (not a refill to the cap).
+    assert(expedition.boostsRemaining(boostRun) == 0,
+        "INBOX 66: a run with boostChargeCount == 2 must start empty (cap, not fill)")
+    local bOk0, bErr0 = expedition.spendBoost(boostRun)
+    assert(bOk0 == false and type(bErr0) == "string",
+        "spendBoost must refuse (false + message) when remaining is 0")
+    assert(expedition.boostsRemaining(boostRun) == 0,
+        "a refused spendBoost call must not further decrement the remaining count")
+
+    -- Mint two charges via ascent regen, then spend them down.
+    boostRun.phase = "ascending"
+    expedition.update(boostRun, 5)
+    assert(expedition.boostsRemaining(boostRun) == 1,
+        "5s of ascent must mint 1 charge")
     local bOk1 = expedition.spendBoost(boostRun)
     assert(bOk1 == true, "spendBoost must succeed while boost charges remain")
-    assert(expedition.boostsRemaining(boostRun) == 1,
+    assert(expedition.boostsRemaining(boostRun) == 0,
         "spending one boost must decrement the remaining count by exactly one")
+    expedition.update(boostRun, 5)
+    expedition.update(boostRun, 5)
+    assert(expedition.boostsRemaining(boostRun) == 2,
+        "10s more of ascent must mint back up to the cap of 2")
     local bOk2 = expedition.spendBoost(boostRun)
-    assert(bOk2 == true, "spendBoost must succeed for the last remaining boost charge")
+    assert(bOk2 == true, "spendBoost must succeed for a remaining boost charge")
+    assert(expedition.boostsRemaining(boostRun) == 1)
+    local bOk3 = expedition.spendBoost(boostRun)
+    assert(bOk3 == true, "spendBoost must succeed for the last remaining boost charge")
     assert(expedition.boostsRemaining(boostRun) == 0,
         "boostsRemaining must reach exactly zero once every boost charge is spent")
-    local bOk3, bErr3 = expedition.spendBoost(boostRun)
-    assert(bOk3 == false and type(bErr3) == "string",
+    local bOk4, bErr4 = expedition.spendBoost(boostRun)
+    assert(bOk4 == false and type(bErr4) == "string",
         "spendBoost must refuse (false + message), not go negative, once boosts are exhausted")
     assert(expedition.boostsRemaining(boostRun) == 0,
         "a refused spendBoost call must not further decrement the remaining count")
@@ -72,8 +82,8 @@ function M.run()
 
     boostRun.phase = "settlement"
     assert(expedition.launch(boostRun))
-    assert(expedition.boostsRemaining(boostRun) == 2,
-        "launching a new expedition must refill remaining boost charges back to the equipped boostChargeCount total")
+    assert(expedition.boostsRemaining(boostRun) == 0,
+        "launching a new expedition must start remaining at 0 (cap is not a starting fill)")
 end
 
 return M

@@ -8,14 +8,6 @@
 
 
 
-(66) **부스터+ 있으면 5초마다 1개 충전, 효과 1초** (msg `1546717606822674452`)
-  - 담당: `game/expedition.lua` (`boostsRemaining`/`spendBoost`/충전 틱) + `game/scenes/play_boost.lua`. play.lua의 중복 `timer=0.8` 히트는 위임만.
-  - 지금: 장착 `boostCharge` 합이 **런 시작 충전량**이고, 쓰면 줄어들기만 함. 지속 **0.8초**.
-  - 변경:
-    (a) `boostCharge` 합 = **최대 보유량(캡)**. 부스터+가 없으면 충전 0, 버튼 비활성.
-    (b) ascending 중 5초마다 부스터 1개 생성, 캡을 넘지 않음.
-    (c) 효과 지속 **1.0초** (`boostActive.timer = 1.0`). i18n `help_boost`도 1초로.
-  - 테스트: `game/tests/boost_regen.lua`.
 
 (67) **표본 연속 배율을 우측 도움말/일시정지 아래에 상시 표시** (msg `1546718466558533652`)
   - 담당: `game/scenes/play_hud.lua` (또는 play_help 옆). play.lua는 한 줄 위임. 어드민 버튼이 있던 자리.
@@ -59,6 +51,8 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+(66) **부스터+ 있으면 5초마다 1개 충전, 효과 1초** (msg `1546717606822674452`)
+  - 완료(2026-09-09): `game/expedition_run.lua`에 `expeditionGear.tickBoostRegen`을 연결하여 부스터 5초 충전 및 캡 제한을 구현(테스트 시 altitude nil 버그 해결). `game/tests/boost_regen.lua`의 locale 버그를 수정(테스트 전 EN 설정). `help_boost` 텍스트와 play_boost.lua의 duration 1.0초도 확인/검증 완료됨.
 (65) **내구 칸이 1칸=10HP일 때 끝에 x10** (OOB 2026-09-08)
   - 담당: `game/scenes/play_hud.lua`로 HP 블록 드로우를 옮기거나 기존 HUD 블록에 라벨만. play.lua는 한 줄 위임(이미 거대 파일).
   - `maxDurability >= 10`이면 큰 칸=10HP (이미 있음)인데 **칸들 오른쪽 끝에 `x10` 텍스트가 없음**. Galmuri 11px 배수. 색은 HP 칸과 같거나 회색.

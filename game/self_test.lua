@@ -403,6 +403,7 @@ function M.run()
     require("game.tests.world_planets_extraction").run()
     require("game.tests.planet_scatter").run()
     require("game.tests.hp_block_x10").run()
+    require("game.tests.boost_regen").run()
 
     print("SPACESHIP_UNIT_OK")
 end

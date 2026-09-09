@@ -193,14 +193,42 @@ function M.boostChargeCount(_, run)
     return gearModule.boostChargeCount(run.equippedEngineParts or {})
 end
 
+-- INBOX 66: boostCharge is a CAP, not a starting fill. Remaining is
+-- minted charges minus spends, never above the equipped cap.
 function M.boostsRemaining(api, run)
-    return math.max(0, api.boostChargeCount(run) - (run.boostsUsed or 0))
+    local cap = api.boostChargeCount(run)
+    local minted = run.boostsMinted or 0
+    local used = run.boostsUsed or 0
+    return math.max(0, math.min(cap, minted - used))
 end
 
 function M.spendBoost(api, run)
     if api.boostsRemaining(run) <= 0 then return false, "no boost charges remaining" end
     run.boostsUsed = (run.boostsUsed or 0) + 1
     return true
+end
+
+M.BOOST_REGEN_INTERVAL = 5
+
+function M.tickBoostRegen(api, run, dt)
+    if dt <= 0 or run.phase ~= "ascending" then return end
+    local cap = api.boostChargeCount(run)
+    if cap <= 0 then
+        run.boostRegenAcc = 0
+        return
+    end
+    if api.boostsRemaining(run) >= cap then
+        run.boostRegenAcc = 0
+        return
+    end
+    run.boostRegenAcc = (run.boostRegenAcc or 0) + dt
+    while run.boostRegenAcc >= M.BOOST_REGEN_INTERVAL and api.boostsRemaining(run) < cap do
+        run.boostRegenAcc = run.boostRegenAcc - M.BOOST_REGEN_INTERVAL
+        run.boostsMinted = (run.boostsMinted or 0) + 1
+    end
+    if api.boostsRemaining(run) >= cap then
+        run.boostRegenAcc = 0
+    end
 end
 
 function M.chainTriggerCount(_, run)

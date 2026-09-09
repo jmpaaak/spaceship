@@ -437,19 +437,10 @@ function M.boostChargeCount(run)
     return expeditionGear.boostChargeCount(M, run)
 end
 
--- Item 10(b)/14(G) boostCharge consumption wiring: boostChargeCount(run)
--- above has always been a pure re-derived total (equipped engine parts'
--- boostCharge effects summed and floored), which -- exactly like
--- rerollCount(run) before M.spendReroll existed -- is meaningless as a
--- per-expedition resource on its own, since nothing could ever actually
--- SPEND a "긴급 부스트/1회성 소모 아이템" charge and see the pool deplete.
--- run.boostsUsed tracks how many of the CURRENT expedition's boost
--- charges have already been spent; M.boostsRemaining(run) is the live
--- boostChargeCount(run) minus that counter (never negative), so
--- re-equipping more boostCharge gear mid-run raises the ceiling
--- immediately, matching rerollsRemaining's exact contract.
--- M.launch resets run.boostsUsed to 0 alongside run.insuranceUsed/
--- run.rerollsUsed.
+-- INBOX 66: boostCharge is a CAP, not a starting fill. Remaining is
+-- minted during ascent (1 every 5s, never above the equipped cap) minus
+-- spends. M.launch / M.destroy reset minted+used so a new flight starts
+-- empty. spendBoost still refuses at 0 remaining.
 function M.boostsRemaining(run)
     return expeditionGear.boostsRemaining(M, run)
 end

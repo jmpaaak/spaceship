@@ -17,13 +17,15 @@ function M.run()
     local expedition = require("game.expedition")
     local enginePool = gear.loadEngineParts()
 
-    -- Equip a boostCharge card and spend a charge so boostsUsed > 0.
+    -- Equip a boostCharge card, mint one charge via ascent regen, then
+    -- spend it so boostsUsed > 0.
     local run = expedition.new()
     local boostCard = gear.findById(enginePool, "engine_emergency_boost_pod")
     assert(boostCard, "fixture engine card 'engine_emergency_boost_pod' must exist")
     assert(expedition.equipGear(run, "engine", boostCard))
     expedition.launch(run)
-    assert(expedition.spendBoost(run), "spendBoost must succeed with a charge equipped")
+    expedition.update(run, 5)
+    assert(expedition.spendBoost(run), "spendBoost must succeed after 5s of ascent regen")
     -- boostsUsed is now 1 (one charge consumed)
     assert(run.boostsUsed == 1, "boostsUsed must be 1 after spending one boost charge")
 

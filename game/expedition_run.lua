@@ -68,6 +68,8 @@ function M.destroy(api, run)
     run.insuranceUsed = false
     run.rerollsUsed = 0
     run.boostsUsed = 0
+    run.boostsMinted = 0
+    run.boostRegenAcc = 0
     run.hubExplored = {}
     run.lastVisitedGalaxyId = nil
     run.lastHubX = nil
@@ -136,6 +138,8 @@ function M.new(_, options)
         insuranceUsed = false,
         rerollsUsed = 0,
         boostsUsed = 0,
+        boostsMinted = 0,
+        boostRegenAcc = 0,
     }
     run.gearLoadout = enginePartsModule.newLoadout()
     run.equippedGear = run.gearLoadout.hull
@@ -155,6 +159,8 @@ function M.launch(api, run)
         run.insuranceUsed = false
         run.rerollsUsed = 0
         run.boostsUsed = 0
+        run.boostsMinted = 0
+        run.boostRegenAcc = 0
         run.returnDistance = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
@@ -232,6 +238,7 @@ function M.update(api, run, dt)
     run.altitude = run.altitude + api.effectiveSpeed(run) * dt
     run.maxAltitude = math.max(run.maxAltitude, run.altitude)
     run.bestAltitude = math.max(run.bestAltitude, run.altitude)
+    expeditionGear.tickBoostRegen(api, run, dt)
     local regen = recoveryEffects.rate("hullRegen",
         expeditionGear.totalEffect(run, "hullRegen"))
     if regen > 0 and run.durability < run.maxDurability then

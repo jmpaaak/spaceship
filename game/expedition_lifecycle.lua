@@ -103,6 +103,8 @@ function M.destroy(run)
     run.insuranceUsed = false
     run.rerollsUsed = 0
     run.boostsUsed = 0
+    run.boostsMinted = 0
+    run.boostRegenAcc = 0
     run.hubExplored = {}
     run.lastVisitedGalaxyId = nil
     run.lastHubX = nil
@@ -171,6 +173,8 @@ function M.new(options)
         insuranceUsed = false,
         rerollsUsed = 0,
         boostsUsed = 0,
+        boostsMinted = 0,
+        boostRegenAcc = 0,
     }
     run.gearLoadout = engineParts.newLoadout()
     run.equippedGear = run.gearLoadout.hull
@@ -191,6 +195,8 @@ function M.launch(run, equipGear)
         run.insuranceUsed = false
         run.rerollsUsed = 0
         run.boostsUsed = 0
+        run.boostsMinted = 0
+        run.boostRegenAcc = 0
         run.returnDistance = 0
         run.sampleCount = 0
         run.pendingSampleValue = 0
