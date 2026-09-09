@@ -67,6 +67,54 @@ M.galaxyCellRadius = 2
 -- is silently skipped by the dot-drawing "inside" check today).
 M.checkpointSearchCellRadius = M.galaxyCellRadius + 4
 
+-- INBOX-75: an undiscovered galaxy starts resolving before the ship crosses
+-- its real boundary. This is a world-space distance, so approach and retreat
+-- use exactly the same curve and are independent of frame rate.
+M.discoveryLeadDistance = world.galaxyCellSize * 0.35
+
+local function smoothstep(edge0, edge1, value)
+    if edge0 == edge1 then return value < edge0 and 0 or 1 end
+    local t = math.max(0, math.min(1, (value - edge0) / (edge1 - edge0)))
+    return t * t * (3 - 2 * t)
+end
+
+function M.discoveryAlpha(distanceToCenter, discoveryRadius, isCurrent, isDiscovered)
+    if isCurrent or isDiscovered then return 1 end
+    local lead = M.discoveryLeadDistance
+    local linear = (discoveryRadius + lead - distanceToCenter) / lead
+    return smoothstep(0, 1, linear)
+end
+
+function M.discoveryLayerAlphas(discoveryAlpha)
+    local alpha = math.max(0, math.min(1, discoveryAlpha or 0))
+    return {
+        mist = alpha,
+        star = smoothstep(0, 0.35, alpha),
+        ring = smoothstep(0.25, 0.8, alpha),
+        details = smoothstep(0.5, 1, alpha),
+    }
+end
+
+-- Select one deterministic reveal target. Previously visited galaxies are
+-- skipped; they remain fully visible via the caller-owned discovered set.
+function M.nearestUndiscoveredGalaxy(shipX, shipY, discoveredGalaxies)
+    local containing = world.galaxyContaining(shipX, shipY)
+    local nearest, nearestDistance
+    for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.checkpointSearchCellRadius)) do
+        local known = (containing and galaxy.id == containing.id)
+            or (discoveredGalaxies and discoveredGalaxies[galaxy.id])
+        if not known then
+            local sun = world.sunPosition(galaxy)
+            local dx, dy = sun.x - shipX, sun.y - shipY
+            local distance = math.sqrt(dx * dx + dy * dy)
+            if not nearestDistance or distance < nearestDistance then
+                nearest, nearestDistance = galaxy, distance
+            end
+        end
+    end
+    return nearest, nearestDistance
+end
+
 -- docs/feedback/INBOX.md item 13: concentric rings replace the old spiral
 -- arms. Ring count (2-5) is derived from galaxy.radius using the same
 -- bracket table the old spiralArmCount used.
@@ -174,7 +222,7 @@ end
 -- (shipX, shipY). Player is always at the chart origin (player-centered)
 -- so nearby galaxies stay readable as the ship travels; Earth is a
 -- separate marker that clamps to the rim when it falls outside viewRadius.
-function M.view(shipX, shipY)
+function M.view(shipX, shipY, discoveredGalaxies)
     local distEarth = math.sqrt(shipX * shipX + shipY * shipY)
     local beyond = distEarth > M.chartRadius
     local returnDx, returnDy = 0, 0
@@ -198,9 +246,30 @@ function M.view(shipX, shipY)
     local galaxies = {}
     local rings = {}
     local hubMarkers = {}   -- item 10 change B: separate hub markers
-    for _, galaxy in ipairs(world.nearbyGalaxies(shipX, shipY, M.galaxyCellRadius)) do
+    local discoveryTarget, discoveryDistance =
+        M.nearestUndiscoveredGalaxy(shipX, shipY, discoveredGalaxies)
+    local plotted = world.nearbyGalaxies(shipX, shipY, M.galaxyCellRadius)
+    local targetAlreadyPlotted = false
+    for _, galaxy in ipairs(plotted) do
+        if discoveryTarget and galaxy.id == discoveryTarget.id then targetAlreadyPlotted = true end
+    end
+    if discoveryTarget and not targetAlreadyPlotted then
+        plotted[#plotted + 1] = discoveryTarget
+    end
+    for _, galaxy in ipairs(plotted) do
+        local sun = world.sunPosition(galaxy)
         local mx, my, inside = M.project(galaxy.x, galaxy.y, shipX, shipY)
+        local _, _, _, centerDistance = M.project(sun.x, sun.y, shipX, shipY)
         local isContaining = containing and galaxy.id == containing.id
+        local isDiscovered = discoveredGalaxies and discoveredGalaxies[galaxy.id] or false
+        local isDiscoveryTarget = discoveryTarget and galaxy.id == discoveryTarget.id or false
+        local discoveryAlpha = M.discoveryAlpha(
+            isDiscoveryTarget and discoveryDistance or centerDistance,
+            galaxy.radius,
+            isContaining,
+            isDiscovered)
+        if not isContaining and not isDiscovered and not isDiscoveryTarget then discoveryAlpha = 0 end
+        local layers = M.discoveryLayerAlphas(discoveryAlpha)
         galaxies[#galaxies + 1] = {
             id = galaxy.id,
             name = world.galaxyName(galaxy),
@@ -209,14 +278,17 @@ function M.view(shipX, shipY)
             inside = inside,
             hub = galaxy.id ~= "milkyway",
             isContaining = isContaining or false,
+            isDiscovered = isDiscovered,
+            isDiscoveryTarget = isDiscoveryTarget,
+            discoveryAlpha = discoveryAlpha,
+            layerAlpha = layers,
         }
         -- Item 20b: only emit the large galaxy boundary ring for the
         -- containing galaxy; neighbouring galaxies skip this ring so
         -- their boundaries don't visually overlap on the minimap.
-        if isContaining then
+        if discoveryAlpha > 0 then
             -- Galaxy boundary ring centered on the sun (not galaxy center
             -- which is Earth/origin for milkyway) — user 2026-09-07
-            local sun = world.sunPosition(galaxy)
             local sunBx, sunBy = M.project(sun.x, sun.y, shipX, shipY)
             local scaled = galaxy.radius * M.mapRadius / M.viewRadius
             rings[#rings + 1] = {
@@ -227,19 +299,23 @@ function M.view(shipX, shipY)
                 radius = math.max(2, math.min(scaled, M.mapRadius)),
                 kind = "galaxy",
                 inside = inside,
+                discoveryAlpha = layers.ring,
+                drawAtRim = isDiscoveryTarget,
             }
         end
         -- Item 10 change B: project the offset hub planet so PlayScene can
         -- draw it as a distinct marker (magenta diamond) next to the gold
         -- galaxy-center/sun dot.
         local hubObj = world.hubPlanet(galaxy)
-        if hubObj and isContaining then
+        if hubObj and discoveryAlpha > 0 then
             local hx, hy, hInside = M.project(hubObj.x, hubObj.y, shipX, shipY)
             hubMarkers[#hubMarkers + 1] = {
                 id = galaxy.id,
                 x = hx,
                 y = hy,
                 inside = hInside,
+                discoveryAlpha = layers.details,
+                galaxy = galaxy,
             }
         end
     end
@@ -252,12 +328,20 @@ function M.view(shipX, shipY)
     -- minimap. Drawn as "line" circles in the gold color.
     -- Concentric rings around the central star for ALL galaxies including
     -- milkyway. User confirmed: sun-centered rings must stay. (2026-09-07)
-    if containing then
-        local sun = world.sunPosition(containing)
-        local ringCount = M.concentricRingCount(containing)
+    for _, galaxy in ipairs(plotted) do
+        local isContaining = containing and galaxy.id == containing.id
+        local isDiscovered = discoveredGalaxies and discoveredGalaxies[galaxy.id] or false
+        local isDiscoveryTarget = discoveryTarget and galaxy.id == discoveryTarget.id or false
+        local sun = world.sunPosition(galaxy)
+        local _, _, _, centerDistance = M.project(sun.x, sun.y, shipX, shipY)
+        local alpha = M.discoveryAlpha(centerDistance, galaxy.radius, isContaining, isDiscovered)
+        if not isContaining and not isDiscovered and not isDiscoveryTarget then alpha = 0 end
+        local detailAlpha = M.discoveryLayerAlphas(alpha).details
+        if detailAlpha > 0 then
+        local ringCount = M.concentricRingCount(galaxy)
         local sunMx, sunMy, sunInside2 = M.project(sun.x, sun.y, shipX, shipY)
         for i = 1, ringCount do
-            local worldRadius = containing.radius * (i / ringCount)
+            local worldRadius = galaxy.radius * (i / ringCount)
             local scaledRadius = worldRadius * M.mapRadius / M.viewRadius
             rings[#rings + 1] = {
                 x = sunMx,
@@ -265,8 +349,11 @@ function M.view(shipX, shipY)
                 radius = math.max(2, math.min(scaledRadius, M.mapRadius)),
                 kind = "concentricRing",
                 inside = sunInside2,
-                id = containing.id,
+                id = galaxy.id,
+                discoveryAlpha = detailAlpha,
+                drawAtRim = isDiscoveryTarget,
             }
+        end
         end
     end
     -- Always-on hub arrow (item 10 change A): show arrow whenever a
@@ -304,6 +391,11 @@ function M.view(shipX, shipY)
                 distance = ndist,
                 name = world.galaxyName(checkpointGalaxy),
                 id = checkpointId,
+                discoveryAlpha = M.discoveryAlpha(
+                    math.sqrt((checkpointGalaxy.x - shipX) ^ 2 + (checkpointGalaxy.y - shipY) ^ 2),
+                    checkpointGalaxy.radius,
+                    containing and containing.id == checkpointId,
+                    discoveredGalaxies and discoveredGalaxies[checkpointId]),
             }
         end
     end
@@ -349,6 +441,7 @@ function M.view(shipX, shipY)
         checkpointId = checkpointId,
         nearestGalaxyRimMarker = nearestGalaxyRimMarker,
         secondGalaxyRimMarker = secondGalaxyRimMarker,
+        discoveryTargetId = discoveryTarget and discoveryTarget.id or nil,
     }
 end
 

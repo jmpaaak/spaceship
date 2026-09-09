@@ -59,7 +59,13 @@ function PM.drawMinimap(self)
     local hud = self:hudLines()
     local galaxyShift = hud.galaxy and _M.hudGalaxyShift or 0
     local hudHeight = _M.hudHeight(self.expedition.phase, hud, galaxyShift)
-    local view = minimap.view(self.ship.x, self.ship.y)
+    -- Presentation-only visit memory: entering a galaxy still follows the
+    -- existing world.galaxyContaining rule; fading never mutates gameplay's
+    -- planet/sample `discovered` state.
+    self.minimapDiscoveredGalaxies = self.minimapDiscoveredGalaxies or { milkyway = true }
+    local currentGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
+    if currentGalaxy then self.minimapDiscoveredGalaxies[currentGalaxy.id] = true end
+    local view = minimap.view(self.ship.x, self.ship.y, self.minimapDiscoveredGalaxies)
     local size = minimap.size
     local cx = viewport.width - size / 2 - 3
     local cy = hudHeight + size / 2 + 32  -- extra 30px gap to avoid text overlap
@@ -80,13 +86,14 @@ function PM.drawMinimap(self)
     -- Rings: galaxy boundary ring and concentric rings (item 13)
     for _, ring in ipairs(view.rings or {}) do
         if ring.kind == "concentricRing" then
-            if ring.inside ~= false then
-                love.graphics.setColor(0.9, 0.75, 0.3, 0.08)
+            if ring.inside ~= false or ring.drawAtRim then
+                love.graphics.setColor(0.9, 0.75, 0.3, 0.08 * (ring.discoveryAlpha or 1))
                 love.graphics.circle("line", cx + ring.x, cy + ring.y, ring.radius)
             end
-        elseif ring.kind == "galaxy" and ring.inside ~= false then
+        elseif ring.kind == "galaxy" and (ring.inside ~= false or ring.drawAtRim) then
             local ringImg = mm.galaxyRing
-            love.graphics.setColor(PM.galaxyChartLineColor(ring.id))
+            local rr, rg, rb, ra = PM.galaxyChartLineColor(ring.id)
+            love.graphics.setColor(rr, rg, rb, ra * (ring.discoveryAlpha or 1))
             if ringImg then
                 drawMinimapSprite(ringImg, cx + ring.x, cy + ring.y, ring.radius * 2)
             else
@@ -101,25 +108,37 @@ function PM.drawMinimap(self)
             love.graphics.circle("fill", cx + view.sun.x, cy + view.sun.y, 2.6)
         end
     end
-    -- Galaxy markers: only draw the containing galaxy's marker on the minimap.
+    -- Galaxy markers: the one discovery target uses fixed geometry and only
+    -- changes alpha, avoiding the old one-frame size/visibility pop.
     for _, galaxy in ipairs(view.galaxies) do
-        if not galaxy.isContaining then
-            -- skip non-containing galaxy markers entirely
+        local alpha = galaxy.discoveryAlpha or (galaxy.isContaining and 1 or 0)
+        local layers = galaxy.layerAlpha or { mist = alpha, star = alpha }
+        if alpha > 0 then
+            local gx, gy = cx + galaxy.x, cy + galaxy.y
+            local fr, fg, fb = PM.galaxyChartFillColor(galaxy.id)
+            -- First contact is only a soft, fixed-size silhouette.
+            love.graphics.setColor(fr, fg, fb, 0.12 * layers.mist)
+            love.graphics.circle("fill", gx, gy, minimap.markerGalaxyHubRadius * 1.35)
+        end
+        if alpha <= 0 then
+            -- outside the deterministic pre-detection band
         elseif galaxy.hub then
             -- Checkpoint galaxy: sprite or pulsing dot+ring
-            local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
+            local pulse = galaxy.isDiscoveryTarget and 1
+                or (0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4)))
             local fr, fg, fb = PM.galaxyChartFillColor(galaxy.id)
             if mm.checkpointStar then
-                love.graphics.setColor(fr, fg, fb, pulse * 0.7 + 0.3)
+                love.graphics.setColor(fr, fg, fb, (pulse * 0.7 + 0.3) * layers.star)
                 drawMinimapSprite(mm.checkpointStar, cx + galaxy.x, cy + galaxy.y, minimap.markerGalaxyHubRadius * 3)
             else
-                love.graphics.setColor(fr, fg, fb)
+                love.graphics.setColor(fr, fg, fb, layers.star)
                 love.graphics.circle("fill", cx + galaxy.x, cy + galaxy.y, 2.3)
-                love.graphics.setColor(1, 0.95, 0.6, pulse)
+                love.graphics.setColor(1, 0.95, 0.6, pulse * layers.star)
                 love.graphics.circle("line", cx + galaxy.x, cy + galaxy.y, 4)
             end
         else
-            love.graphics.setColor(PM.galaxyChartFillColor(galaxy.id))
+            local fr, fg, fb = PM.galaxyChartFillColor(galaxy.id)
+            love.graphics.setColor(fr, fg, fb, layers.star)
             local homeOrPlain = galaxy.id == "milkyway" and mm.galaxyHome or mm.galaxyPlain
             local diam = galaxy.id == "milkyway"
                 and minimap.markerGalaxyHomeRadius * 2
@@ -131,9 +150,10 @@ function PM.drawMinimap(self)
     end
     -- Item 10 change B: hub markers — distinct magenta/cyan diamond glyph
     for _, hubMk in ipairs(view.hubMarkers or {}) do
-        if hubMk.inside ~= false then
+        local detailAlpha = hubMk.discoveryAlpha or 1
+        if hubMk.inside ~= false and detailAlpha > 0 then
             local pulse = 0.45 + 0.35 * math.abs(math.sin((self.time or 0) * 2.4))
-            love.graphics.setColor(0.85, 0.35, 0.95, pulse * 0.7 + 0.3)
+            love.graphics.setColor(0.85, 0.35, 0.95, (pulse * 0.7 + 0.3) * detailAlpha)
             local hx, hy = cx + hubMk.x, cy + hubMk.y
             local r = 3.0
             love.graphics.polygon("fill",
@@ -141,7 +161,7 @@ function PM.drawMinimap(self)
                 hx + r, hy,
                 hx, hy + r,
                 hx - r, hy)
-            love.graphics.setColor(0.85, 0.35, 0.95, pulse * 0.5)
+            love.graphics.setColor(0.85, 0.35, 0.95, pulse * 0.5 * detailAlpha)
             love.graphics.circle("line", hx, hy, 5)
         end
     end
@@ -180,11 +200,11 @@ function PM.drawMinimap(self)
         end
         -- Hub/checkpoint label
         for _, hubMk in ipairs(view.hubMarkers or {}) do
-            if hubMk.inside ~= false then
+            local detailAlpha = hubMk.discoveryAlpha or 1
+            if hubMk.inside ~= false and detailAlpha > 0 then
                 local hx, hy = cx + hubMk.x, cy + hubMk.y
-                local containingGalaxy = world.galaxyContaining(self.ship.x, self.ship.y)
-                local hubLabel = world.hubStarName(containingGalaxy) or "HUB"
-                love.graphics.setColor(0.85, 0.35, 0.95, 0.7)
+                local hubLabel = world.hubStarName(hubMk.galaxy or currentGalaxy) or "HUB"
+                love.graphics.setColor(0.85, 0.35, 0.95, 0.7 * detailAlpha)
                 love.graphics.printf(hubLabel, hx + 6, hy - 6, 100, "left")
                 love.graphics.setColor(0.6, 0.6, 0.6, 0.7)
             end
@@ -235,12 +255,14 @@ function PM.drawMinimap(self)
         local marker = view.nearestGalaxyRimMarker
         local mx = cx + marker.dx * rim
         local my = cy + marker.dy * rim
-        love.graphics.setColor(unpack(PM.rimMarker1Color))
-        love.graphics.circle("fill", mx, my, PM.rimMarker1Radius)
+        local markerAlpha = marker.discoveryAlpha or 0
+        love.graphics.setColor(PM.rimMarker1Color[1], PM.rimMarker1Color[2],
+            PM.rimMarker1Color[3], PM.rimMarker1Color[4] * markerAlpha)
+        if markerAlpha > 0 then love.graphics.circle("fill", mx, my, PM.rimMarker1Radius) end
         local prevRimFont = love.graphics.getFont()
         love.graphics.setFont(fonts.get(11))
         local distLabel = string.format("%.0f", marker.distance / 100)
-        love.graphics.printf(distLabel, mx - 20, my + 5, 40, "center")
+        if markerAlpha > 0 then love.graphics.printf(distLabel, mx - 20, my + 5, 40, "center") end
         love.graphics.setFont(prevRimFont)
     end
     -- Second galaxy rim marker

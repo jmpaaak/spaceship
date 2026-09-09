@@ -709,6 +709,66 @@ local function testMinimapGalaxyContainingFlag()
         "exactly one galaxy should be containing at origin, got " .. containingCount)
 end
 
+-- INBOX-75: the next undiscovered galaxy fades in continuously before the
+-- real galaxy boundary, with deterministic staging for star/ring/details.
+local function testMinimapGalaxyDiscoveryFade()
+    local minimapMod = require("game.minimap")
+    local radius = 1000
+    local lead = minimapMod.discoveryLeadDistance
+
+    assert(minimapMod.discoveryAlpha(radius + lead + 1, radius, false, false) == 0,
+        "outside the pre-detection band discoveryAlpha must be zero")
+    local midpoint = minimapMod.discoveryAlpha(radius + lead * 0.5, radius, false, false)
+    assert(midpoint > 0 and midpoint < 1,
+        "inside the pre-detection band discoveryAlpha must be continuous")
+    assert(minimapMod.discoveryAlpha(radius, radius, false, false) == 1,
+        "at the real discovery radius discoveryAlpha must be one")
+    assert(minimapMod.discoveryAlpha(radius + lead, radius, true, false) == 1,
+        "the current galaxy must remain fully visible")
+    assert(minimapMod.discoveryAlpha(radius + lead, radius, false, true) == 1,
+        "an already discovered galaxy must remain fully visible")
+
+    local previous = 0
+    for i = 0, 100 do
+        local distance = radius + lead * (1 - i / 100)
+        local alpha = minimapMod.discoveryAlpha(distance, radius, false, false)
+        assert(alpha >= previous and alpha >= 0 and alpha <= 1,
+            "approach alpha must be bounded and monotonically increasing")
+        previous = alpha
+    end
+
+    local early = minimapMod.discoveryLayerAlphas(0.2)
+    local middle = minimapMod.discoveryLayerAlphas(0.55)
+    local full = minimapMod.discoveryLayerAlphas(1)
+    assert(early.mist > 0 and early.star > 0 and early.ring == 0 and early.details == 0,
+        "early detection must show only mist and the central star")
+    assert(middle.star > middle.ring and middle.ring > middle.details,
+        "central star, boundary, and details must reveal in that order")
+    assert(full.mist == 1 and full.star == 1 and full.ring == 1 and full.details == 1,
+        "all discovery layers must be fully visible at the boundary")
+
+    local worldMod = require("game.world")
+    local target = minimapMod.nearestUndiscoveredGalaxy(0, 0, { milkyway = true })
+    assert(target, "the minimap must select a deterministic next undiscovered galaxy")
+    local approachX = target.x + target.radius + lead * 0.5
+    local approachView = minimapMod.view(approachX, target.y, { milkyway = true })
+    assert(approachView.discoveryTargetId == target.id,
+        "only the nearest undiscovered galaxy must become the reveal target")
+    local targetEntry
+    for _, galaxy in ipairs(approachView.galaxies) do
+        if galaxy.id == target.id then targetEntry = galaxy end
+    end
+    assert(targetEntry and targetEntry.discoveryAlpha > 0 and targetEntry.discoveryAlpha < 1,
+        "the target galaxy view entry must carry its continuous discovery alpha")
+    local sawFadingBoundary = false
+    for _, ring in ipairs(approachView.rings) do
+        if ring.id == target.id and ring.kind == "galaxy" then
+            sawFadingBoundary = ring.discoveryAlpha > 0 and ring.discoveryAlpha < 1
+        end
+    end
+    assert(sawFadingBoundary, "the target boundary ring must share the staged fade")
+end
+
 function M.run()
     testGalaxyStructure()
     testGalaxyOverlapPrevention()
@@ -719,6 +779,7 @@ function M.run()
     testMinimapGalaxyOverlapPrevention()
     testMinimapGalaxyRimMarker()
     testMinimapGalaxyContainingFlag()
+    testMinimapGalaxyDiscoveryFade()
 end
 
 M.testMinimapStencilClip = testMinimapStencilClip

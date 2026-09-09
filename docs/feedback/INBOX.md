@@ -5,7 +5,6 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-(75) **미니맵 다음 은하계 팝인 제거 — 거리 기반 조기 탐지 페이드** (msg `1546747455004213329`)
   - 담당: 미니맵 표현 모듈 `game/scenes/play_minimap.lua` 또는 현재 미니맵 전용 모듈. `play.lua`에는 계산/드로우 로직을 붙이지 않는다.
   - 현재 다음 은하가 탐지 임계값을 넘는 순간 아이콘/중심별/경계가 한꺼번에 나타나 “갑자기 생김”. 이산 visible boolean을 제거하고 거리 기반 연속 `discoveryAlpha`를 사용한다.
   - 실제 발견 반경보다 바깥의 사전 탐지 구간에서 alpha 0으로 시작해 접근할수록 smoothstep으로 1까지 증가. 처음에는 희미한 점/안개 실루엣만, 가까워질수록 중심별→경계 링→세부 천체 순서로 드러난다.
@@ -125,6 +124,9 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(75) **미니맵 다음 은하계 팝인 제거 — 거리 기반 조기 탐지 페이드** (msg `1546747455004213329`)
+  - 완료(2026-09-09): `game/minimap.lua`에서 조기 탐지 거리 `discoveryLeadDistance`를 도입해 `discoveryAlpha`를 계산하도록 수정하고, `game/scenes/play_minimap.lua`에서 팝인 현상 없이 부드러운 페이드인(안개 → 중심별 → 경계 링 순서)이 되도록 렌더링에 반영했다. `game/tests/legacy_galaxy_structure.lua`에 `testMinimapGalaxyDiscoveryFade` 테스트를 추가해 단조 증가 및 부분 페이드 구조를 검증했다.
 
 (74) **BOOST 버튼 터치가 우주선 위치 이동 입력으로 전파되지 않게 소비** (msg `1546744727726624919`)
   - 완료(2026-09-09): `game/scenes/play_boost.lua`가 `touchpressed`와 기존 hit-test/충전 소비를 함께 소유하고, `play_input.lua`는 BOOST에 우선 위임한다. 버튼 내부 touch/mouse는 충전 0일 때도 소비되고 기존 UI pointer capture가 release까지 drag의 이동 전파를 막으며, 외부 press는 기존 조이스틱 입력을 유지한다. `game/tests/play_boost_input.lua`와 `game/tests/play_input.lua`의 press/drag/release 회귀 테스트로 검증했다.
