@@ -6,14 +6,6 @@
 
 
 
-(60) **중심 행성(허브) 표본 획득 SFX = Pixabay Loud Space Launch** (OOB 2026-09-08)
-  - 담당: `game/sfx.lua` 새 def `hub_sample` + 허브 탐사/표본 획득 한 줄 호출. play.lua 거대 로직 금지.
-  - 클립: Pixabay **Loud Space Launch** (id 351055, IdoBerg, ~6s, Pixabay Content License).
-    출처: https://pixabay.com/sound-effects/film-special-effects-loud-space-launch-351055/
-  - 허브(`planet.hub`) 최초 탐사/`exploreHub`/허브 표본 획득 시에만 `sfx.play("hub_sample")`. 일반 행성 collect와 섞지 말 것.
-  - 중심별(태양 우물) `star_sample` 루프와는 별개. 태양 우물 10초 생존 보상도 허브가 아니면 hub_sample 쓰지 말 것.
-  - 파일: `assets/sfx/hub_sample.mp3`. 테스트: `game/tests/hub_sample_sfx.lua`.
-
 (61) **슬롯 당첨량 전수 점검 — 수확은 상점 1업 단위로 실제 적용** (msg `1546713497088299108`)
   - 담당: `game/expedition.lua` `earthSlotSpin` + `game/scenes/play_slot.lua` 정산. play.lua 금지.
   - 계약 (사용자 확정): 슬롯 보상 = **상점 해당 업그레이드 1회분 대비**.
@@ -103,6 +95,15 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(60) **중심 행성(허브) 표본 획득 SFX = Pixabay Loud Space Launch** (OOB 2026-09-08)
+  - 담당: `game/sfx.lua` 새 def `hub_sample` + 허브 탐사/표본 획득 한 줄 호출. play.lua 거대 로직 금지.
+  - 클립: Pixabay **Loud Space Launch** (id 351055, IdoBerg, ~6s, Pixabay Content License).
+    출처: https://pixabay.com/sound-effects/film-special-effects-loud-space-launch-351055/
+  - 허브(`planet.hub`) 최초 탐사/`exploreHub`/허브 표본 획득 시에만 `sfx.play("hub_sample")`. 일반 행성 collect와 섞지 말 것.
+  - 중심별(태양 우물) `star_sample` 루프와는 별개. 태양 우물 10초 생존 보상도 허브가 아니면 hub_sample 쓰지 말 것.
+  - 파일: `assets/sfx/hub_sample.mp3`. 테스트: `game/tests/hub_sample_sfx.lua`.
+  - 완료(2026-09-09): `sfx.defs.hub_sample` + `play_update.lua` 허브 최초 탐사 분기 한 줄 `sfx.play("hub_sample")`. 일반 collect/`star_sample`과 분리. Pixabay 403으로 procedural 6s 발사음 fallback (`tools/gen_hub_sample_sfx.py`, seed 351055). `game/tests/hub_sample_sfx.lua` GREEN.
 
 (59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
   - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).

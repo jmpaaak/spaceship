@@ -9,6 +9,7 @@ M.defs = {
     star_sample     = { path = "assets/sfx/star_sample.mp3",     loop = true  },
     collision       = { path = "assets/sfx/collision.mp3",       loop = false },
     collect         = { path = "assets/sfx/collect.mp3",         loop = false },
+    hub_sample      = { path = "assets/sfx/hub_sample.mp3",      loop = false },
     slot_spin       = { path = "assets/sfx/slot_spin.ogg",       loop = false },
     boost           = { path = "assets/sfx/boost.ogg",           loop = false },
 }

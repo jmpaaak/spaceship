@@ -419,6 +419,7 @@ function scene:update(dt)
                     -- INBOX (47): hub planets open full settlement shop.
                     -- 1. exploreHub for gear drop (before settlement changes phase)
                     if not self.expedition.hubExplored[planet.galaxyId] then
+                        sfx.play("hub_sample")
                         local gear = require("game.gear")
                         local pool = {}
                         local hull = gear.loadHullParts() or {}
