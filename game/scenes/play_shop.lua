@@ -199,11 +199,6 @@ function PS.drawSettlementOverlay(self)
     drawShopItem(r2, shopColumnLeftX, shopColumnLeftW, shopEff.yieldAction, shopEff.yieldStatus, shopEff.yieldPreview, nextLaunch.yieldActionCompact, nextLaunch.yieldStatus, nextLaunch.yieldPreview, nextLaunch.yieldAffordable, shopIconsYS.yield, self.hoverRow == 2 and self.hoverCol == "left")
     if not nextLaunch.shipHidden then
         drawShopItem(r2, shopColumnRightX, shopColumnRightW, shopEff.shipAction, shopEff.shipStatus, shopEff.shipPreview, nextLaunch.shipActionCompact, nextLaunch.shipStatus, nextLaunch.shipPreviewCompact, nextLaunch.shipAffordable, shopIconsYS.ship, self.hoverRow == 2 and self.hoverCol == "right", nextLaunch.shipTradeoffLine)
-    else
-        -- INBOX-30: show "SCOUT ✓" label in ship slot when scout is active
-        local row = r2 + 8 + rowStep
-        love.graphics.setColor(0.45, 1, 0.55)
-        love.graphics.printf("SCOUT \226\156\147", shopColumnRightX, row, shopColumnRightW, "center")
     end
 
     local r3 = M.settlementTouchRows[3].top

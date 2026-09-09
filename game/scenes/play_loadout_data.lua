@@ -66,7 +66,6 @@ function M.install(scene, deps)
             shipAction = i18n.t("select_scout")
             shipActionCompact = i18n.t("select_scout_compact")
             shipAffordable = true
-            shipStatus = i18n.t("owned_label")
             previewShipId = "scout"
         end
         local previewDurability = run.baseDurability

@@ -301,6 +301,7 @@ function M.run()
 
     require("game.tests.shop_gear_rules").run()
     require("game.tests.gear_sell").run()
+    require("game.tests.scout_status_hidden").run()
     require("game.tests.sfx").run()
     require("game.tests.title_to_launch_gate").run()
     require("game.tests.hud_record_label").run()

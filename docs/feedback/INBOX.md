@@ -6,9 +6,9 @@
 
 
 (77) **은하 상점 장비 구매·판매·정찰선 문구·회복 밸런스 정리** (msg `1546761251697328169`, R1 완료 후 진행)
-  - (1) 은하계 별 상점에서 한 번에 구매 가능한 장비는 **최대 1개**로 제한한다. 담당: 새 순수 모듈 `game/shop_gear_rules.lua` + `game/scenes/play_shop.lua` 소비. 상점 오퍼/구매 상태를 별·은하 상점 방문 단위로 추적하고, 1개 구매 후 같은 상점의 추가 장비 구매 버튼은 비활성화한다. 지구 업그레이드·슬롯 구매에는 적용하지 않는다.
+  - (1) ✅ 은하계 별 상점에서 한 번에 구매 가능한 장비는 **최대 1개**로 제한한다. 담당: 새 순수 모듈 `game/shop_gear_rules.lua` + `game/scenes/play_shop.lua` 소비. 상점 오퍼/구매 상태를 별·은하 상점 방문 단위로 추적하고, 1개 구매 후 같은 상점의 추가 장비 구매 버튼은 비활성화한다. 지구 업그레이드·슬롯 구매에는 적용하지 않는다. `game/tests/shop_gear_rules.lua` GREEN (2026-09-09).
   - (2) ✅ 장착 장비 상세 툴팁에서 선택한 장비를 **언제든 판매**할 수 있게 한다. 담당: `game/shop_gear_rules.lua` 판매가 계산/인벤토리 제거 + `game/scenes/play_hud.lua` 판매 버튼. 비행 중 판매, 판매 직후 돈·슬롯·시너지·스탯 갱신, 50px 터치영역, 빈 슬롯·중복 탭 방어를 `game/tests/gear_sell.lua`로 검증 (2026-09-09).
-  - (3) 정찰선 구매 후 상점 카드에 남는 `SCOUT X`/`SCOUT ✓` 상태 텍스트를 전부 제거한다. 담당: `game/scenes/play_loadout_data.lua` + i18n 소비부. 정찰선을 이미 구매/선택한 경우 카드에는 불필요한 상태표시를 남기지 않는다.
+  - (3) ✅ 정찰선 구매 후 상점 카드에 남는 `SCOUT X`/`SCOUT ✓` 상태 텍스트를 전부 제거한다. 담당: `game/scenes/play_loadout_data.lua` + i18n 소비부. 정찰선을 이미 구매/선택한 경우 카드에는 불필요한 상태표시를 남기지 않는다. `game/tests/scout_status_hidden.lua` GREEN (2026-09-09).
   - (4) `hullRegen` 등 회복류 아이템의 실제 초당 회복량을 현재의 **1/20**로 낮춘다. 담당: 새 순수 모듈 `game/recovery_effects.lua`를 `game/expedition.lua`가 소비하거나 JSON 값을 일괄 조정. 표시값과 실제 틱이 반드시 일치하며 최소 5 HP/s처럼 적용되던 값은 0.25 HP/s 수준으로 감소한다. 상점/도킹의 즉시 완전회복은 아이템 지속회복이 아니므로 제외한다.
   - 테스트: `game/tests/shop_gear_rules.lua`(상점당 1개 한도, 두 번째 구매 거부, 다른 상점 독립), `game/tests/gear_sell.lua`(비행/정착 중 판매, 돈·슬롯·시너지 즉시 반영), `game/tests/scout_status_hidden.lua`, `game/tests/recovery_effects.lua`(기존 회복량 대비 정확히 1/20 및 표시 일치). 최종 `make test` + `make verify` GREEN.
 

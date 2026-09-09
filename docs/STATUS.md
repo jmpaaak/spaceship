@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 77(2): equipped hull and engine cards can now be sold from their detail tooltip in every phase, including flight, using the localized `[S] SELL` button or its 50px touch target.
-- `game/shop_gear_rules.lua` owns atomic sell-value/payment/inventory removal; `game/expedition_gear.lua` immediately refreshes loadout aliases and ship stats and clamps durability after sale. Missing cards and duplicate taps cannot pay twice.
-- Added `game/tests/gear_sell.lua`; RED was observed on the former flight-phase rejection, then `make test LOVE=/Users/jm/.local/bin/love` passed after implementation.
+- INBOX 77(3): purchased-but-inactive scout cards retain the selection action but no longer show the redundant `OWNED` status; active scout slots no longer render `SCOUT ✓` (or its unsupported-glyph `SCOUT X` fallback).
+- Removed the now-unused `owned_label` translations and added `game/tests/scout_status_hidden.lua` coverage for both purchased and selected scout states.
+- RED was observed on the former owned-card status label; the engine-hosted suite and `make verify LOVE=/Users/jm/.local/bin/love` pass after implementation.
 
 ## Next slice
 
-- INBOX 77(3): remove all residual `SCOUT X` / `SCOUT ✓` state text from purchased or selected scout cards in `game/scenes/play_loadout_data.lua` and its i18n consumers, with `game/tests/scout_status_hidden.lua` coverage.
+- INBOX 77(4): reduce persistent gear recovery effects such as `hullRegen` to exactly 1/20 of their current effective rate while keeping displayed and applied rates consistent; exclude immediate shop/docking full heals.
