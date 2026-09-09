@@ -651,6 +651,9 @@ function M:draw()
                 end
                 blockX = blockX + M.hpBlockSize + M.hpBlockGap
             end
+            love.graphics.setFont(fonts.get(11))
+            love.graphics.setColor(0.5, 0.5, 0.5)
+            love.graphics.print("x10", blockX, blockY + math.floor((M.hpBlockSize - 11) / 2))
         else
             for i = 1, run.maxDurability do
                 if i <= run.durability then

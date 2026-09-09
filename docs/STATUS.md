@@ -1,10 +1,9 @@
 ## Current Status
 
-- Extracted sector planet generation from `game/world.lua` (838→796 lines) into `game/world_planets.lua`.
-- `world.planets()` remains the public API and delegates to the new module.
-- Resolved INBOX 64: `game/world_planets.lua` now generates polar coordinates utilizing new salts and prevents planet overlap across sector boundaries.
-- The `testSameGxXSpread` stddev assertion, along with all scatter layout tests, passes correctly.
+- Resolved INBOX 65: Added `x10` text label next to the HUD's durability blocks when `maxDurability >= 10`.
+- The text is rendered using the standard Galmuri 11px font setting (`fonts.get(11)`) and colored gray to match the blocks' outline.
+- Test `game/tests/hp_block_x10.lua` added and passing, which asserts the presence of the `x10` print and font configuration in `game/scenes/play_scene_draw.lua`.
 
 ## Next slice
 
-- INBOX 65: Add `x10` label next to the HUD's durability blocks when `maxDurability >= 10`. Update `game/scenes/play_hud.lua` (or delegate from play.lua if not extracted yet).
+- INBOX 66: Implement Booster+ regenerative mechanic. Update `game/expedition.lua` to treat `boostCharge` as a cap, recharge 1 boost every 5 seconds during ascent, and extend boost duration from 0.8s to 1.0s.

@@ -7,11 +7,6 @@
 
 
 
-(65) **내구 칸이 1칸=10HP일 때 끝에 x10** (OOB 2026-09-08)
-  - 담당: `game/scenes/play_hud.lua`로 HP 블록 드로우를 옮기거나 기존 HUD 블록에 라벨만. play.lua는 한 줄 위임(이미 거대 파일).
-  - `maxDurability >= 10`이면 큰 칸=10HP (이미 있음)인데 **칸들 오른쪽 끝에 `x10` 텍스트가 없음**. Galmuri 11px 배수. 색은 HP 칸과 같거나 회색.
-  - 10 미만은 1칸=1HP, `x10` 없음.
-  - 테스트: `game/tests/hp_block_x10.lua`.
 
 (66) **부스터+ 있으면 5초마다 1개 충전, 효과 1초** (msg `1546717606822674452`)
   - 담당: `game/expedition.lua` (`boostsRemaining`/`spendBoost`/충전 틱) + `game/scenes/play_boost.lua`. play.lua의 중복 `timer=0.8` 히트는 위임만.
@@ -64,6 +59,13 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+(65) **내구 칸이 1칸=10HP일 때 끝에 x10** (OOB 2026-09-08)
+  - 담당: `game/scenes/play_hud.lua`로 HP 블록 드로우를 옮기거나 기존 HUD 블록에 라벨만. play.lua는 한 줄 위임(이미 거대 파일).
+  - `maxDurability >= 10`이면 큰 칸=10HP (이미 있음)인데 **칸들 오른쪽 끝에 `x10` 텍스트가 없음**. Galmuri 11px 배수. 색은 HP 칸과 같거나 회색.
+  - 10 미만은 1칸=1HP, `x10` 없음.
+  - 테스트: `game/tests/hp_block_x10.lua`.
+  - 완료: hp_block_x10 테스트 추가 및 x10 라벨 렌더링 구현
+
  
  (64) **행성 배치가 세로줄/규칙 격자처럼 보이면 안 됨** (msg `1546715845642682451`)
    - 완료(2026-09-09): `game/world_planets.lua`에서 행성 좌표 생성 시 두 축과 `i`를 곱한 새로운 해시를 사용해 극좌표(거리/각도) 방식으로 재시드했다. `world.sectorSize / 2` 내에서 넓게 분산되도록 `maxR`을 설정했으며, 인접 섹터 행성 간 최소 거리(반경합+10)를 강제해 겹침과 줄 정렬을 방지했다. `game/tests/planet_scatter.lua`가 요구하는 동일 열 분산 기준과 각도 불규칙성, 비겹침 검증을 모두 통과했다.
