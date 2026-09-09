@@ -89,6 +89,10 @@ function M.selectPlanetArtwork(planet, assets)
     local pixelSprite = (assets.pixel or {})[planetType]
     local sprite
     if planet.hub then
+        if assets.hubSheet then
+            sprite = pixelSprite or assets.hub or assets.default
+            return sprite, assets.hubSheet
+        end
         local studioHubSprite = (assets.studioHub or {})[planetType]
         if studioHubSprite then
             return studioHubSprite, nil

@@ -119,8 +119,8 @@ function M.run()
         hubSheet = legacyHubSheet,
         studioHub = { ice = studioNeptune },
     })
-    assert(hubSprite == studioNeptune and hubSheet == nil,
-        "INBOX 78: a decoded Neptune derivative must take priority in the ice-hub draw path")
+    assert(hubSprite == legacyIceHub and hubSheet == legacyHubSheet,
+        "INBOX 78-E: a decoded hub rotation sheet must take priority over the static Neptune still")
 
     local studioPluto = {}
     local legacyBareHub = {}
@@ -130,8 +130,8 @@ function M.run()
         hubSheet = legacyHubSheet,
         studioHub = { bare = studioPluto, ice = studioNeptune },
     })
-    assert(hubSprite == studioPluto and hubSheet == nil,
-        "INBOX 78: a decoded Pluto derivative must take priority only in the bare-hub draw path")
+    assert(hubSprite == legacyBareHub and hubSheet == legacyHubSheet,
+        "INBOX 78-E: a decoded hub rotation sheet must take priority over the static Pluto still")
 
     hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "bare" }, {
         default = {},
@@ -150,8 +150,8 @@ function M.run()
         hubSheet = legacyHubSheet,
         studioHub = { gas = studioSaturn },
     })
-    assert(hubSprite == studioSaturn and hubSheet == nil,
-        "INBOX 78: a decoded Saturn derivative must take priority only in the gas-hub draw path")
+    assert(hubSprite == legacyGasHub and hubSheet == legacyHubSheet,
+        "INBOX 78-E: a decoded hub rotation sheet must take priority over the static Saturn still")
 
     hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "gas" }, {
         default = {},
@@ -170,8 +170,8 @@ function M.run()
         hubSheet = legacyHubSheet,
         studioHub = { dry = studioUranus },
     })
-    assert(hubSprite == studioUranus and hubSheet == nil,
-        "INBOX 78: a decoded Uranus derivative must take priority only in the dry-hub draw path")
+    assert(hubSprite == legacyDryHub and hubSheet == legacyHubSheet,
+        "INBOX 78-E: a decoded hub rotation sheet must take priority over the static Uranus still")
 
     hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "dry" }, {
         default = {},
@@ -190,8 +190,8 @@ function M.run()
         hubSheet = legacyHubSheet,
         studioHub = { lava = studioVenus },
     })
-    assert(hubSprite == studioVenus and hubSheet == nil,
-        "INBOX 78: a decoded Venus derivative must take priority only in the lava-hub draw path")
+    assert(hubSprite == legacyLavaHub and hubSheet == legacyHubSheet,
+        "INBOX 78-E: a decoded hub rotation sheet must take priority over the static Venus still")
 
     hubSprite, hubSheet = api.selectPlanetArtwork({ hub = true, galaxyStarType = "lava" }, {
         default = {},

@@ -4,12 +4,13 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(78-E) **Grok sprite-gen으로 중심별·허브 회전 시트 재시도** (msg `1547172375605547069`)
-  - Codex 로그인 중단. 담당: 실제 `POST http://127.0.0.1:4176/api/sprite-generate` provider=`grok`.
-  - 대상: 중심별 sun + 허브 neptune 8프레임 rotate. extract/chroma 실패분은 런타임에 넣지 않음.
-  - 함선 starter/scout는 이미 Grok으로 연결됨. 성공 시트만 Pixel Perfect 후처리 후 런타임 연결.
-
 ## 처리 완료
+(78-E) **Grok sprite-gen으로 중심별·허브 회전 시트 재시도** (msg `1547172375605547069`)
+  - Codex 로그인 중단. 실제 `POST /api/sprite-generate` provider=`grok`.
+  - 허브: `hub-neptune-mttvrkd3` raw 4프레임 생성 후 extract 500. 초록 크로마 키잉 + `POST /api/pixel-perfect`로 128×512 시트 조립. 초록 잔여 0, 원형 실루엣 확인. `assets/planet/hub_sheet.png`에 연결하고 `selectPlanetArtwork`가 허브 시트를 정적 스튜디오 still보다 우선.
+  - 중심별: `star-sun-mttqq9fw` raw는 있으나 후처리 프레임 0이 청색으로 정체성이 깨져 런타임 시트 불변.
+  - [DONE 2026-09-09]
+
 (78-C) **sprite-gen 재시도** (msg `1547135235815243869`)
   - 실제 `POST http://127.0.0.1:4176/api/sprite-generate` 호출. Codex는 `login status: Not logged in`이라 사용하지 않음. Grok (`/Users/jm/.local/bin/grok`)은 프로브 OK 후 provider로 사용.
   - 함선: starter `ship-starter-mttql07m`, scout `ship-scout-mttqoqio` 생성 성공. 128px 4프레임 아틀라스에서 첫 셀을 64×64 런타임 still로 연결 (`assets/ship/ship_default.png`, `assets/ship/ship_scout.png`). 게임 드로우 경로는 단일 still + `love.graphics.rotate`라 13방향 시트는 현재 런타임에 없음.
