@@ -266,32 +266,7 @@ function M.run()
 
     require("game.tests.legacy_hub_relaunch_regen").run()
 
-    -- INBOX 61(33): hub planet must never overlap the central star.
-    -- The distance from galaxy center to hub center must be >= starRadius + hub.radius + 40.
-    do
-        local world = require("game.world")
-        local checked = 0
-        for gx = -10, 10 do
-            for gy = -10, 10 do
-                local g = world.galaxy(gx, gy)
-                if g and g.id ~= "milkyway" then
-                    local hub = world.hubPlanet(g)
-                    if hub then
-                        local dx = hub.x - g.x
-                        local dy = hub.y - g.y
-                        local dist = math.sqrt(dx * dx + dy * dy)
-                        local minSafe = world.starRadius + hub.radius + 40
-                        assert(dist >= minSafe,
-                            string.format("INBOX 61(33): hub %s at dist %.1f overlaps star (need >= %.1f)",
-                                hub.id, dist, minSafe))
-                        checked = checked + 1
-                    end
-                end
-            end
-        end
-        assert(checked >= 3, "INBOX 61(33): need at least 3 galaxies checked, got " .. checked)
-        print("  INBOX-61(33) hub-star no-overlap OK (" .. checked .. " galaxies)")
-    end
+    require("game.tests.legacy_hub_star_no_overlap").run()
 
     -- INBOX 61(35): slot reels must cover all 5 symbols, not just MONEY/PART/SPEED.
     do
@@ -533,6 +508,7 @@ function M.run()
     require("game.tests.self_test_title_author_extraction").run()
     require("game.tests.self_test_slot_distance_scaling_extraction").run()
     require("game.tests.self_test_hub_relaunch_regen_extraction").run()
+    require("game.tests.self_test_hub_star_no_overlap_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
