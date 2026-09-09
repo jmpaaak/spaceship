@@ -4,6 +4,11 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
+(78-E) **Grok sprite-gen으로 중심별·허브 회전 시트 재시도** (msg `1547172375605547069`)
+  - Codex 로그인 중단. 담당: 실제 `POST http://127.0.0.1:4176/api/sprite-generate` provider=`grok`.
+  - 대상: 중심별 sun + 허브 neptune 8프레임 rotate. extract/chroma 실패분은 런타임에 넣지 않음.
+  - 함선 starter/scout는 이미 Grok으로 연결됨. 성공 시트만 Pixel Perfect 후처리 후 런타임 연결.
+
 ## 처리 완료
 (78-C) **sprite-gen 재시도** (msg `1547135235815243869`)
   - 실제 `POST http://127.0.0.1:4176/api/sprite-generate` 호출. Codex는 `login status: Not logged in`이라 사용하지 않음. Grok (`/Users/jm/.local/bin/grok`)은 프로브 OK 후 provider로 사용.
