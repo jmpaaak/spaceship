@@ -26,17 +26,22 @@ function M.run()
         "INBOX (49): title ship must be ship_default.png")
     assert(layout.filter == "nearest",
         "INBOX (49): title ship filter must be nearest")
-    assert(layout.scale >= 6,
-        "INBOX (49): title ship must be large, scale>=" .. 6
-            .. " got " .. tostring(layout.scale))
+    assert(layout.scale == 7,
+        "INBOX (70): title ship nearest scale must stay ×7, got "
+            .. tostring(layout.scale))
     local viewport = require("game.viewport")
     assert(layout.w == 64 * layout.scale and layout.h == 64 * layout.scale)
     assert(math.abs(layout.x - (viewport.width - layout.w) / 2) < 0.01,
         "INBOX (49): title ship must be horizontally centered")
     assert(layout.y >= 0, "INBOX (49): ship must stay on canvas")
+    local bottom = layout.y + layout.h
+    local gap = 488 - bottom
     assert(layout.y + layout.h <= 488,
         "INBOX (49): ship must sit above Jimmy's (y=488), bottom="
-            .. tostring(layout.y + layout.h))
+            .. tostring(bottom))
+    assert(gap >= 0 and gap <= 4,
+        "INBOX (70): ship bottom must sit 0~4px above Jimmy's (y=488), gap="
+            .. tostring(gap) .. " bottom=" .. tostring(bottom))
 
     local titleSrc = love.filesystem.read("game/scenes/title.lua") or ""
     assert(titleSrc:find('setFilter("nearest", "nearest")', 1, true),

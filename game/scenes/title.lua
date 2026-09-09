@@ -49,7 +49,8 @@ function M._generateStars(count)
     return stars
 end
 
--- INBOX (49): starter ship sits large, nearest, centered above Jimmy's (y=488).
+-- INBOX (70): starter ship sits large, nearest, centered just above Jimmy's (y=488).
+-- Rest gap is 4px (0~4px). Idle bob is unchanged.
 function M.shipLayout(iw, ih)
     iw = iw or 64
     ih = ih or 64
@@ -61,7 +62,7 @@ function M.shipLayout(iw, ih)
         filter = "nearest",
         scale = scale,
         x = (viewport.width - w) / 2,
-        y = 488 - h - 24,
+        y = 488 - h - 4,
         w = w,
         h = h,
     }

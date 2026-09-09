@@ -11,12 +11,6 @@
 
 
 
-(70) **타이틀 함선과 Jimmy's/우주선 텍스트 간격 거의 없음** (msg `1546720287251243148`)
-  - 담당: `game/scenes/title.lua` `shipLayout`. play.lua 금지.
-  - 지금: 함선 하단과 Jimmy's(y=488) 사이 **24px** + idle bob |oy|≤8 이라 더 벌어짐.
-  - 함선 하단을 Jimmy's 바로 위에 붙임. 갭 **0~4px** (bob이 겹치지 않을 최소만). 스케일 ×7 nearest 유지.
-  - 테스트: `game/tests/title_ship_icon.lua` — ship bottom ≈ 488 (갭 ≤4).
-
 (71) **타이틀에 만든이 메뉴 (mok 참고)** (msg `1546720287251243148`)
   - 담당: `game/scenes/credits.lua` (새 씬) + `title.lua` 버튼 + `main.lua` 전환. play.lua 금지.
   - mok `story/main_menu.lua` `drawCredits`: 제목 만든이, `기획 · 개발` + 메일.
@@ -29,6 +23,13 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+(70) **타이틀 함선과 Jimmy's/우주선 텍스트 간격 거의 없음** (msg `1546720287251243148`)
+  - 담당: `game/scenes/title.lua` `shipLayout`. play.lua 금지.
+  - 지금: 함선 하단과 Jimmy's(y=488) 사이 **24px** + idle bob |oy|≤8 이라 더 벌어짐.
+  - 함선 하단을 Jimmy's 바로 위에 붙임. 갭 **0~4px** (bob이 겹치지 않을 최소만). 스케일 ×7 nearest 유지.
+  - 테스트: `game/tests/title_ship_icon.lua` — ship bottom ≈ 488 (갭 ≤4).
+  - 완료(2026-09-09): `shipLayout` y를 `488 - h - 4`로 붙여 rest gap 4px. ×7 nearest 유지. idle bob 진폭 변경 없음. `game/tests/title_ship_icon.lua` GREEN (gap=4, scale=7). play.lua 미변경.
+
 (69) **표본 계열 = 부품 수트 4종 (void / nebula / solar / pulsar)** (msg `1546719861651021824`)
   - 담당: `game/world.lua` `hueFamilies` + `expedition.collectSample` 스트릭 키. play.lua는 hueKey 전달만.
   - 지금: azure / ember / void 3색. 부품은 `gear.knownSuits` **solar, nebula, void, pulsar** 4종. 사용자가 복잡하다고 해서 **표본 계열을 부품과 동일하게**.

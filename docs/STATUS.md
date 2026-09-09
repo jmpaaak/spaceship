@@ -1,9 +1,8 @@
 ## Current Status
 
-- Resolved INBOX 69: Remapped specimen hue families to match the four gear suits: solar (0.00-0.25), nebula (0.25-0.50), void (0.50-0.75), and pulsar (0.75-1.00).
-- Replaced all legacy "azure" and "ember" occurrences with "solar" and "nebula" across JSON data, gear IDs, file paths, and test files. Localized specimen catalog using existing `i18n.lua` suit labels (솔라/네뷸라/보이드/펄서).
-- Verified by `game/tests/sample_suits.lua`, full `make test`, and `make verify` (all GREEN).
+- Resolved INBOX 70: title starter ship rest gap above Jimmy's (y=488) is now 4px (`shipLayout` y = 488 - h - 4). Nearest scale ×7 unchanged. Idle bob amplitude unchanged.
+- Verified by `game/tests/title_ship_icon.lua` (gap ≤4, scale==7) and full engine unit run (`SPACESHIP_UNIT_OK`).
 
 ## Next slice
 
-- INBOX 70: Adjust the vertical spacing between the title scene ship and "Jimmy's" / spaceship text to 0~4px.
+- INBOX 71: add a title Credits/만든이 menu (new `game/scenes/credits.lua` + title button + main.lua transition).
