@@ -6,11 +6,6 @@
 
 
 
-(64) **행성 배치가 세로줄/규칙 격자처럼 보이면 안 됨** (msg `1546715845642682451`)
-  - 담당: `game/world.lua` `M.planets`. play.lua 금지.
-  - 원인: `sectorSize=192` 격자 + 섹터당 0~1개라 세로/가로 줄로 읽힘. x는 `hash(sectorX+i*7, sectorY, 40)`, y는 `hash(sectorX, sectorY+i*13, 60)` — 같은 열 섹터에서 x 분산이 약함.
-  - 수정: 섹터 안 위치를 **극좌표/두 축 모두 i·salt를 곱한 해시**로 재시드 (world.lua hash 버그 교훈: i를 좌표에 곱 + LCG 3회는 이미 있음). 인접 섹터 행성 간 최소 거리 강제(겹침/줄 정렬 깨기). 은하 원 안에서는 각도를 고르게 쓰지 말고 해시 각+반경.
-  - 테스트: `game/tests/planet_scatter.lua` — 같은 gx 줄에서 x 좌표 분산이 섹터 폭의 상당 비율, 등간격 세로줄 패턴 실패.
 
 (65) **내구 칸이 1칸=10HP일 때 끝에 x10** (OOB 2026-09-08)
   - 담당: `game/scenes/play_hud.lua`로 HP 블록 드로우를 옮기거나 기존 HUD 블록에 라벨만. play.lua는 한 줄 위임(이미 거대 파일).
@@ -69,6 +64,9 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+ 
+ (64) **행성 배치가 세로줄/규칙 격자처럼 보이면 안 됨** (msg `1546715845642682451`)
+   - 완료(2026-09-09): `game/world_planets.lua`에서 행성 좌표 생성 시 두 축과 `i`를 곱한 새로운 해시를 사용해 극좌표(거리/각도) 방식으로 재시드했다. `world.sectorSize / 2` 내에서 넓게 분산되도록 `maxR`을 설정했으며, 인접 섹터 행성 간 최소 거리(반경합+10)를 강제해 겹침과 줄 정렬을 방지했다. `game/tests/planet_scatter.lua`가 요구하는 동일 열 분산 기준과 각도 불규칙성, 비겹침 검증을 모두 통과했다.
 
 (63) **회전 버려진 우주정거장 도킹** (msg `1546715845642682451`)
   - 담당: `game/world.lua` + `game/stations.lua` (새 모듈, 순수) + `game/scenes/play_station.lua` (드로우/도킹). play.lua는 require + 한 줄 위임만. `tools/gen_station.py` 에셋.

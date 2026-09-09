@@ -1,9 +1,10 @@
 ## Current Status
 
 - Extracted sector planet generation from `game/world.lua` (838→796 lines) into `game/world_planets.lua`.
-- `world.planets()` remains the public API and delegates to the new module; hash/galaxyContaining/sectorSize are injected.
-- Characterization: `game/tests/world_planets_extraction.lua` (RED before the file existed, then GREEN). Existing world-generation tests still pass.
+- `world.planets()` remains the public API and delegates to the new module.
+- Resolved INBOX 64: `game/world_planets.lua` now generates polar coordinates utilizing new salts and prevents planet overlap across sector boundaries.
+- The `testSameGxXSpread` stddev assertion, along with all scatter layout tests, passes correctly.
 
 ## Next slice
 
-- INBOX 64: scatter planet coordinates in `game/world_planets.lua` (polar/hash reseed + adjacent-sector min distance). Do not grow `world.lua`.
+- INBOX 65: Add `x10` label next to the HUD's durability blocks when `maxDurability >= 10`. Update `game/scenes/play_hud.lua` (or delegate from play.lua if not extracted yet).
