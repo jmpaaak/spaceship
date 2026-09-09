@@ -1,5 +1,6 @@
 local gearModule = require("game.gear")
 local enginePartsModule = require("game.engine_parts")
+local shopGearRules = require("game.shop_gear_rules")
 
 local M = {}
 
@@ -76,23 +77,13 @@ function M.unequipGear(api, run, category, id)
 end
 
 function M.sellGear(api, run, category, id)
-    if run.phase ~= "settlement" then
-        return false, "sellGear: only allowed during the settlement/shop phase"
-    end
-    local list = category == "hull" and run.equippedGear or run.equippedEngineParts
-    local part
-    for _, candidate in ipairs(list or {}) do
-        if candidate.id == id then part = candidate break end
-    end
-    if not part then
-        return false, string.format("sellGear: '%s' is not equipped in %s", tostring(id), tostring(category))
-    end
-    local value = gearModule.sellValue(part)
-    if not api.unequipGear(run, category, id) then
-        return false, "sellGear: unequip failed unexpectedly"
-    end
-    run.money = run.money + value
-    return true, value
+    local ok, result = shopGearRules.sellEquipped(run, category, id)
+    if not ok then return false, result end
+    run.equippedGear = run.gearLoadout.hull
+    run.equippedEngineParts = run.gearLoadout.engine
+    M.refreshShipStats(api, run)
+    run.durability = math.min(run.durability, run.maxDurability)
+    return true, result
 end
 
 function M.buyGear(api, run, category, part)

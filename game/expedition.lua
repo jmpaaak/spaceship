@@ -180,12 +180,10 @@ end
 -- loadout cap (game/engine_parts.lua), the only way to try a different
 -- combination once slots are full is to free one up -- M.sellGear removes
 -- an equipped card from its slot AND refunds money for it in one atomic
--- action (gear.sellValue's rarity/edition-scaled refund), restricted to
--- the settlement/shop phase like every other money-moving action in this
--- module (M.buyDurabilityUpgrade etc.) so it can't be spammed mid-flight for a
--- free money glitch. Returns true, nil on success or false, error-message
--- on failure (wrong phase, unknown id) -- never partially applies (no
--- money change without a successful unequip, and vice versa).
+-- action (gear.sellValue's rarity/edition-scaled refund). INBOX 77(2) permits
+-- this action in every phase so the equipped-card tooltip always works.
+-- Returns true, value on success or false, error-message on failure; no money
+-- changes without successful removal.
 function M.sellGear(run, category, id)
     return expeditionGear.sellGear(M, run, category, id)
 end

@@ -29,7 +29,11 @@ end
 function M.keypressed(self, key, deps)
     local expedition = deps.expedition
     if self.gearPopup then
-        if key == "escape" or key == "n" or key == "space" then self.gearPopup = nil end
+        if key == "s" and self.sellGearPopup then
+            self:sellGearPopup()
+        elseif key == "escape" or key == "n" or key == "space" then
+            self.gearPopup = nil
+        end
         return true
     end
     if self.shopModal then
@@ -168,8 +172,12 @@ end
 function M.touchpressed(self, id, x, y, deps)
     local expedition = deps.expedition
     if self.gearPopup then
+        local sell = self.gearPopupSellRect and self:gearPopupSellRect() or nil
         local slot = self:hitHudGearSlot(x, y)
-        if slot then
+        if sell and hit(sell, x, y) then
+            pcall(love.system.vibrate, 0.05)
+            self:sellGearPopup()
+        elseif slot then
             slot.slotRect = slot.rect
             self.gearPopup = slot
             pcall(love.system.vibrate, 0.02)

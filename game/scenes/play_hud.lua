@@ -5,6 +5,8 @@
 local i18n       = require("game.i18n")
 local fonts      = require("game.fonts")
 local viewport   = require("game.viewport")
+local expedition = require("game.expedition")
+local gear       = require("game.gear")
 
 local PH = {}
 
@@ -22,6 +24,24 @@ local function rarityRgb(rarity)
 end
 PH.rarityRgb = rarityRgb
 
+function PH.gearPopupSellRect(self)
+    local popup = self.gearPopup
+    if not (popup and popup.part and popup.slotRect) then return nil end
+    local tipW = 320
+    local tipX = popup.slotRect.x + popup.slotRect.w + 8
+    if tipX + tipW > viewport.width - 8 then tipX = popup.slotRect.x - tipW - 8 end
+    local tipY = math.min(popup.slotRect.y, viewport.height - 8 - 320)
+    return { x = tipX + 12, y = tipY + 258, w = tipW - 24, h = 50 }
+end
+
+function PH.sellGearPopup(self)
+    local popup = self.gearPopup
+    if not (popup and popup.part and popup.part.id and popup.category) then return false end
+    local ok, result = expedition.sellGear(self.expedition, popup.category, popup.part.id)
+    if ok then self.gearPopup = nil end
+    return ok, result
+end
+
 ---------------------------------------------------------------------------
 -- drawGearPopup(self) — Balatro-style gear tooltip next to the slot
 ---------------------------------------------------------------------------
@@ -33,7 +53,7 @@ function PH.drawGearPopup(self)
     -- Balatro-style: small tooltip next to the gear slot, not full-screen overlay
     local slotIdx = self.gearPopup.slotIndex or 0
     local slotRect = self.gearPopup.slotRect
-    local tipW, tipH = 320, 256
+    local tipW, tipH = 320, 320
     local tipX, tipY
     if slotRect then
         tipX = slotRect.x + slotRect.w + 8
@@ -148,6 +168,15 @@ function PH.drawGearPopup(self)
         end
         love.graphics.printf(hint.desc, tipX + 12, hintY + nameH + 2, tipW - 24, "center")
     end
+    local sell = PH.gearPopupSellRect(self)
+    if sell then
+        love.graphics.setColor(0.62, 0.22, 0.18, 1)
+        love.graphics.rectangle("fill", sell.x, sell.y, sell.w, sell.h, 8, 8)
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setFont(fonts.get(22))
+        love.graphics.printf(i18n.t("gear_popup_sell", gear.sellValue(part)),
+            sell.x, sell.y + 11, sell.w, "center")
+    end
     love.graphics.setFont(prevPopupFont)
 end
 
@@ -191,6 +220,8 @@ end
 function PH.install(M)
     _M = M
     M.drawGearPopup     = PH.drawGearPopup
+    M.gearPopupSellRect = PH.gearPopupSellRect
+    M.sellGearPopup     = PH.sellGearPopup
     M.drawPauseOverlay  = PH.drawPauseOverlay
 end
 

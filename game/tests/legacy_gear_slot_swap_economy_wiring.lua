@@ -6,8 +6,7 @@ local M = {}
 -- Item 9(c): "카드 획득... 과 교체가 잦아지는 루프를 설계한다." With a fixed
 -- 6/3-slot loadout, sellGear is the swap-loop's release valve -- it frees
 -- an equipped slot and refunds money in one atomic action, scaled by
--- gear.raritySellValue/editionSellBonus, restricted to the
--- settlement/shop phase so it can't be abused mid-flight.
+-- gear.raritySellValue/editionSellBonus, including in flight.
 function M.run()
     -- gear.sellValue: rarity scales the refund, and an edition adds a flat
     -- premium on top of the base rarity value.
@@ -21,8 +20,7 @@ function M.run()
     -- erroring (defensive, not schema validation).
     assert(gear.sellValue({}) == 4)
 
-    -- Selling is only allowed during settlement -- attempting mid-flight
-    -- must fail without moving money or touching the slot list.
+    -- INBOX 77(2): equipped cards can be sold during flight too.
     local flightRun = expedition.new({ money = 50 })
     local commonCard = {
         id = "hull_scrap_plate", name = "Scrap Plate", nameKo = "고철 장갑판", icon = "▭",
@@ -31,11 +29,10 @@ function M.run()
     }
     assert(expedition.equipGear(flightRun, "hull", commonCard))
     flightRun.phase = "ascending"
-    local flightOk, flightErr = expedition.sellGear(flightRun, "hull", "hull_scrap_plate")
-    assert(not flightOk, "selling gear must be rejected outside the settlement phase")
-    assert(flightErr and #flightErr > 0)
-    assert(flightRun.money == 50, "a rejected sell must not change money")
-    assert(#flightRun.equippedGear == 1, "a rejected sell must not remove the equipped card")
+    local flightOk, flightValue = expedition.sellGear(flightRun, "hull", "hull_scrap_plate")
+    assert(flightOk and flightValue == 4, "selling equipped gear must work during flight")
+    assert(flightRun.money == 54, "a flight sale must immediately credit money")
+    assert(#flightRun.equippedGear == 0, "a flight sale must free the equipped slot")
 
     -- During settlement, selling an equipped hull card must remove it AND
     -- credit exactly its sell value.
