@@ -1,12 +1,13 @@
 ## Current Status
 
-- INBOX 78 verification (partial): added the isolated `ascending-studio-ordinary` real-runtime scenario and captured the approved bare-planet derivative at the measured ordinary-planet maximum radius (33 internal pixels).
-- The real LÖVE run reported decoded `assets/planet/studio/pp_bare.png:128x128`, then wrote the 1440×2560 Retina PNG at `docs/assets/captures/ascending-studio-ordinary.png`; `docs/assets/CELESTIAL_RUNTIME_CAPTURES.json` records the fixture, reproducible command, SHA-256, and crop inspection (427 unique RGB values).
-- TDD evidence: the engine-hosted test first failed because `game.capture_scenarios` did not exist, then passed after the fixture and decoded-artwork evidence contract were implemented. `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
+- INBOX 78 verification (complete): added `ascending-studio-star` and `ascending-studio-hub` real-runtime scenarios. Captured the approved central star (`star_sun`) and hub planet (`hub_neptune`) derivatives at runtime.
+- The real LÖVE run reported decoded `assets/star/studio/star_sun.png:128x128` and `assets/planet/studio/hub_neptune.png:128x128`. Wrote 1440×2560 Retina PNGs at `docs/assets/captures/ascending-studio-star.png` and `docs/assets/captures/ascending-studio-hub.png`.
+- `docs/assets/CELESTIAL_RUNTIME_CAPTURES.json` records the fixtures, reproducible commands, SHA-256 hashes, and crop inspections (unique RGB values) for both.
+- TDD evidence: implemented `applyStudioStar` and `applyStudioHub` in `game/capture_scenarios.lua`. Fixed missing image mapping fields and hub galaxy radius requirements. `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
+- Moved INBOX 78 to `## 처리 완료` (Lane C remains human-gated).
 
 ## Next slice
 
-- INBOX 78 verification: add and inspect one isolated actual-runtime capture for a wired central star, recording it beside the ordinary-planet evidence before proceeding to the representative hub and ship captures.
-
+- INBOX R1: Start modularizing large files (`game/scenes/play.lua`, `game/self_test.lua`, `game/expedition.lua`) as prioritized in the feedback queue.
 
 > 이전 cycle 이력은 `docs/STATUS_HISTORY.md`에 있다. 특정 과거 버그를 추적할 때만 그 파일을 검색하고, 평소에는 읽지 않는다.

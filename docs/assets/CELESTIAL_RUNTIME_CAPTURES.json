@@ -29,6 +29,55 @@
         "non_dark_pixels": 19952,
         "result": "PASS: decoded approved derivative is visible at the ordinary-planet maximum measured runtime diameter; hard pixel detail and alpha silhouette remain visible with NEAREST filtering."
       }
+    },
+    {
+      "kind": "central_star",
+      "asset_id": "star_sun_nasa_gsfc_20171208_archive_e002035",
+      "runtime_asset": "assets/star/studio/star_sun.png",
+      "runtime_asset_dimensions": [128, 128],
+      "capture_phase": "ascending-studio-star",
+      "command": "GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-studio-star /Users/jm/.local/bin/love .",
+      "path": "docs/assets/captures/ascending-studio-star.png",
+      "dimensions": [1440, 2560],
+      "pixel_ratio": 2,
+      "sha256": "0e22c416675d77bab1ac50f3defaef91205bebd072f45e498b0dcfab3ab256f5",
+      "fixture": {
+        "phase": "ascending",
+        "ship": [0, -900],
+        "star": [120, -960],
+        "galaxy_star_type": "earth"
+      },
+      "runtime_evidence": "SPACESHIP_CAPTURE_ASSET:assets/star/studio/star_sun.png:128x128",
+      "inspection": {
+        "unique_rgb": 2898,
+        "result": "PASS: decoded approved central star derivative is visible at runtime; hard pixel detail and alpha silhouette remain visible with NEAREST filtering."
+      }
+    },
+    {
+      "kind": "hub_planet",
+      "asset_id": "hub_neptune_nasa_pia00046",
+      "runtime_asset": "assets/planet/studio/hub_neptune.png",
+      "runtime_asset_dimensions": [128, 128],
+      "capture_phase": "ascending-studio-hub",
+      "command": "GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-studio-hub /Users/jm/.local/bin/love .",
+      "path": "docs/assets/captures/ascending-studio-hub.png",
+      "dimensions": [1440, 2560],
+      "pixel_ratio": 2,
+      "sha256": "49cefd755bb84b6a8ba8efcb2884c4eb5c39ec8c096239c08f51cecd582776d5",
+      "fixture": {
+        "phase": "ascending",
+        "ship": [0, -900],
+        "planet": [120, -960],
+        "radius": 45,
+        "galaxy_star_type": "ice",
+        "hub": true,
+        "shop": true
+      },
+      "runtime_evidence": "SPACESHIP_CAPTURE_ASSET:assets/planet/studio/hub_neptune.png:128x128",
+      "inspection": {
+        "unique_rgb": 2546,
+        "result": "PASS: decoded approved hub derivative is visible at runtime; hard pixel detail and alpha silhouette remain visible with NEAREST filtering."
+      }
     }
   ]
 }

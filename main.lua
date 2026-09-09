@@ -163,6 +163,18 @@ function love.load()
             scenes.current, require("game.world"), require("game.expedition"))
         print("SPACESHIP_CAPTURE_ASSET:" ..
             captureScenarios.ordinaryPlanetArtworkEvidence(scenes.current))
+    elseif capturePhase == "ascending-studio-star" then
+        local captureScenarios = require("game.capture_scenarios")
+        captureScenarios.applyStudioStar(
+            scenes.current, require("game.world"), require("game.expedition"))
+        print("SPACESHIP_CAPTURE_ASSET:" ..
+            captureScenarios.studioStarArtworkEvidence(scenes.current))
+    elseif capturePhase == "ascending-studio-hub" then
+        local captureScenarios = require("game.capture_scenarios")
+        captureScenarios.applyStudioHub(
+            scenes.current, require("game.world"), require("game.expedition"))
+        print("SPACESHIP_CAPTURE_ASSET:" ..
+            captureScenarios.studioHubArtworkEvidence(scenes.current))
     elseif capturePhase == "ascending-wide-warning" then
         local scene = scenes.current
         require("game.expedition").launch(scene.expedition)
