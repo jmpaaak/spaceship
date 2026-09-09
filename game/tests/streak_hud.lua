@@ -36,31 +36,36 @@ function M.run()
     assert(PlayScene.streakHudLabel(run) == "x1.0",
         "INBOX 67: streak 0 must show x1.0, got " .. tostring(PlayScene.streakHudLabel(run)))
 
-    expedition.collectSample(run, 100, "azure")
+    expedition.collectSample(run, 100, "solar")
     assert(run.sampleStreakCount == 1)
-    assert(PlayScene.streakHudLabel(run) == "AZURE x1.0",
-        "INBOX 67: first azure sample must show AZURE x1.0, got "
+    assert(PlayScene.streakHudLabel(run) == "SOLAR x1.0",
+        "INBOX 67: first solar sample must show SOLAR x1.0, got "
             .. tostring(PlayScene.streakHudLabel(run)))
 
-    expedition.collectSample(run, 100, "azure")
+    expedition.collectSample(run, 100, "solar")
     assert(run.sampleStreakCount == 2)
-    assert(PlayScene.streakHudLabel(run) == "AZURE x1.2",
-        "INBOX 67: second azure sample must show AZURE x1.2, got "
+    assert(PlayScene.streakHudLabel(run) == "SOLAR x1.2",
+        "INBOX 67: second solar sample must show SOLAR x1.2, got "
             .. tostring(PlayScene.streakHudLabel(run)))
 
-    expedition.collectSample(run, 100, "azure")
-    assert(PlayScene.streakHudLabel(run) == "AZURE x1.4",
-        "INBOX 67: third azure sample must show AZURE x1.4, got "
+    expedition.collectSample(run, 100, "solar")
+    assert(PlayScene.streakHudLabel(run) == "SOLAR x1.4",
+        "INBOX 67: third solar sample must show SOLAR x1.4, got "
             .. tostring(PlayScene.streakHudLabel(run)))
 
-    expedition.collectSample(run, 100, "ember")
-    assert(PlayScene.streakHudLabel(run) == "EMBER x1.0",
-        "INBOX 67: hue switch must reset to EMBER x1.0, got "
+    expedition.collectSample(run, 100, "nebula")
+    assert(PlayScene.streakHudLabel(run) == "NEBULA x1.0",
+        "INBOX 67: hue switch must reset to NEBULA x1.0, got "
             .. tostring(PlayScene.streakHudLabel(run)))
 
     expedition.collectSample(run, 100, "void")
     assert(PlayScene.streakHudLabel(run) == "VOID x1.0",
         "INBOX 67: void family must use VOID, got "
+            .. tostring(PlayScene.streakHudLabel(run)))
+
+    expedition.collectSample(run, 100, "pulsar")
+    assert(PlayScene.streakHudLabel(run) == "PULSAR x1.0",
+        "INBOX 67: pulsar family must use PULSAR, got "
             .. tostring(PlayScene.streakHudLabel(run)))
 
     -- Label must use expedition.streakMultiplier(sampleStreakCount, run).

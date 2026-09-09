@@ -19,7 +19,7 @@ function M.run()
         "R1-C: extracted sample-streak suite must expose run()")
     assert(suite:find("awarded3 == 140", 1, true),
         "R1-C: extracted suite must retain consecutive same-family multiplier coverage")
-    assert(suite:find('collectSample(streakRun, 100, "ember")', 1, true),
+    assert(suite:find('collectSample(streakRun, 100, "nebula")', 1, true),
         "R1-C: extracted suite must retain family-switch reset coverage")
     assert(suite:find('streakRun.phase == "destroyed"', 1, true),
         "R1-C: extracted suite must retain destruction reset coverage")

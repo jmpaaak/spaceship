@@ -9,25 +9,28 @@ function M.run()
     assert(world.sampleTier({ y = -799 }) == "rare")
     assert(world.sampleTier({ y = -800 }) == "epic")
 
-    -- Specimen catalog (9 = 3 hue families x 3 tiers): every entry has a
-    -- unique id, and specimenKind maps a planet to a stable id/label pair
-    -- that matches the catalog exactly.
+    -- Specimen catalog (12 = 4 gear-suit families x 3 tiers): every entry
+    -- has a unique id, and specimenKind maps a planet to a stable id/label
+    -- pair that matches the catalog exactly.
     local catalog = world.specimenCatalog()
-    assert(#catalog == 9)
+    assert(#catalog == 12)
     local seenIds = {}
     for _, entry in ipairs(catalog) do
         assert(not seenIds[entry.id], "duplicate specimen id " .. entry.id)
         seenIds[entry.id] = true
     end
-    local azureCommonId, azureCommonLabel = world.specimenKind({ hue = 0.1, y = -50 })
-    assert(azureCommonId == "azure_common")
-    assert(azureCommonLabel == "AZURE DUST")
-    local emberRareId, emberRareLabel = world.specimenKind({ hue = 0.5, y = -500 })
-    assert(emberRareId == "ember_rare")
-    assert(emberRareLabel == "EMBER SHARD")
-    local voidEpicId, voidEpicLabel = world.specimenKind({ hue = 0.9, y = -900 })
-    assert(voidEpicId == "void_epic")
-    assert(voidEpicLabel == "VOID CORE")
+    local solarCommonId, solarCommonLabel = world.specimenKind({ hue = 0.1, y = -50 })
+    assert(solarCommonId == "solar_common")
+    assert(solarCommonLabel == "SOLAR DUST")
+    local nebulaRareId, nebulaRareLabel = world.specimenKind({ hue = 0.4, y = -500 })
+    assert(nebulaRareId == "nebula_rare")
+    assert(nebulaRareLabel == "NEBULA SHARD")
+    local voidRareId, voidRareLabel = world.specimenKind({ hue = 0.6, y = -500 })
+    assert(voidRareId == "void_rare")
+    assert(voidRareLabel == "VOID SHARD")
+    local pulsarEpicId, pulsarEpicLabel = world.specimenKind({ hue = 0.9, y = -900 })
+    assert(pulsarEpicId == "pulsar_epic")
+    assert(pulsarEpicLabel == "PULSAR CORE")
     assert(world.sampleTier({ y = -5000 }) == "epic")
 end
 

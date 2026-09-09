@@ -260,7 +260,7 @@ function love.load()
         require("game.expedition").launch(scene.expedition)
         scene.expedition.altitude = 500
         scene.expedition.sampleStreakCount = 2
-        scene.expedition.sampleStreakFamily = "azure"
+        scene.expedition.sampleStreakFamily = "solar"
         scene.ship.y = -500
         scene.ship.x = 0
         local world = require("game.world")
@@ -409,10 +409,10 @@ function love.load()
         -- mix of filled and empty squares instead of an all-empty grid.
         local scene = scenes.current
         scene.collectedSpecimens = {
-            azure_common = true,
-            ember_rare = true,
+            solar_common = true,
+            nebula_rare = true,
             void_epic = true,
-            azure_rare = true,
+            pulsar_rare = true,
         }
     elseif capturePhase == "play" then
         -- Capture for verifying star/planet density at 720×1280 canvas

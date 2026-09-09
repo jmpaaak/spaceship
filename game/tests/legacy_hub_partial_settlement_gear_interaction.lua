@@ -15,7 +15,7 @@ function M.run()
     local sellRun = expedition.new()
     expedition.launch(sellRun)
     assert(expedition.equipGear(sellRun, "hull", sellCard))
-    expedition.collectSample(sellRun, 5, "azure")
+    expedition.collectSample(sellRun, 5, "solar")
     assert(sellRun.pendingSampleValue == 15,
         "collectSample with sampleSellValue +10 gear must accumulate 15 into pendingSampleValue, got "
             .. tostring(sellRun.pendingSampleValue))
@@ -36,7 +36,7 @@ function M.run()
     local moneyRun = expedition.new()
     expedition.launch(moneyRun)
     assert(expedition.equipGear(moneyRun, "hull", moneyCard))
-    expedition.collectSample(moneyRun, 8, "ember")
+    expedition.collectSample(moneyRun, 8, "nebula")
     assert(moneyRun.pendingSampleValue == 8,
         "collectSample with money-only gear must not inflate pendingSampleValue (expected 8, got "
             .. tostring(moneyRun.pendingSampleValue) .. ")")

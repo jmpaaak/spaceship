@@ -13,26 +13,26 @@ function M.run()
     local run = expedition.new()
     expedition.launch(run)
 
-    -- Build a 3-collect azure streak.
-    expedition.collectSample(run, 10, "azure")  -- sampleStreakCount == 1
-    expedition.collectSample(run, 10, "azure")  -- sampleStreakCount == 2
-    expedition.collectSample(run, 10, "azure")  -- sampleStreakCount == 3
+    -- Build a 3-collect solar streak.
+    expedition.collectSample(run, 10, "solar")  -- sampleStreakCount == 1
+    expedition.collectSample(run, 10, "solar")  -- sampleStreakCount == 2
+    expedition.collectSample(run, 10, "solar")  -- sampleStreakCount == 3
     assert(run.sampleStreakCount == 3,
         "three same-family collects must build streak to 3, got " .. tostring(run.sampleStreakCount))
-    assert(run.sampleStreakFamily == "azure",
-        "sampleStreakFamily must be azure after three azure collects, got " .. tostring(run.sampleStreakFamily))
+    assert(run.sampleStreakFamily == "solar",
+        "sampleStreakFamily must be solar after three solar collects, got " .. tostring(run.sampleStreakFamily))
 
     -- Hub settle: drains pendingSampleValue but must NOT touch streak.
     expedition.settleAtHub(run)
     assert(run.sampleStreakCount == 3,
         "settleAtHub must NOT reset sampleStreakCount (in-flight combo survives hub visit), got "
             .. tostring(run.sampleStreakCount))
-    assert(run.sampleStreakFamily == "azure",
+    assert(run.sampleStreakFamily == "solar",
         "settleAtHub must NOT reset sampleStreakFamily, got " .. tostring(run.sampleStreakFamily))
 
-    -- A 4th azure collect after hub settle must continue the streak (streak
+    -- A 4th solar collect after hub settle must continue the streak (streak
     -- count 4, not reset to 1).
-    local _, _, mult4 = expedition.collectSample(run, 10, "azure")
+    local _, _, mult4 = expedition.collectSample(run, 10, "solar")
     assert(run.sampleStreakCount == 4,
         "first collect AFTER hub settle must increment streak to 4, not reset to 1, got "
             .. tostring(run.sampleStreakCount))
@@ -48,12 +48,12 @@ function M.run()
 
     -- Switching hue family DOES break the streak (unrelated to hub settle;
     -- regression safety: this should still work exactly as before).
-    expedition.collectSample(run, 10, "ember")
+    expedition.collectSample(run, 10, "nebula")
     assert(run.sampleStreakCount == 1,
         "collecting a different hue family must reset streak to 1, got "
             .. tostring(run.sampleStreakCount))
-    assert(run.sampleStreakFamily == "ember",
-        "sampleStreakFamily must update to ember after hue switch, got "
+    assert(run.sampleStreakFamily == "nebula",
+        "sampleStreakFamily must update to nebula after hue switch, got "
             .. tostring(run.sampleStreakFamily))
 end
 

@@ -16,16 +16,16 @@ function M.run()
     assert(expedition.streakMultiplier(1) == 1)
     assert(expedition.streakMultiplier(2) == 1.2)
     assert(expedition.streakMultiplier(3) == 1.4)
-    local ok1, awarded1, mult1 = expedition.collectSample(streakRun, 100, "azure")
+    local ok1, awarded1, mult1 = expedition.collectSample(streakRun, 100, "solar")
     assert(ok1 and awarded1 == 100 and mult1 == 1,
-        "first azure sample must award base value at x1.0 streak (" .. tostring(awarded1) .. ")")
-    local ok2, awarded2, mult2 = expedition.collectSample(streakRun, 100, "azure")
+        "first solar sample must award base value at x1.0 streak (" .. tostring(awarded1) .. ")")
+    local ok2, awarded2, mult2 = expedition.collectSample(streakRun, 100, "solar")
     assert(ok2 and awarded2 == 120 and mult2 == 1.2,
-        "second consecutive azure sample must award x1.2 streak (" .. tostring(awarded2) .. ")")
-    local ok3, awarded3, mult3 = expedition.collectSample(streakRun, 100, "azure")
+        "second consecutive solar sample must award x1.2 streak (" .. tostring(awarded2) .. ")")
+    local ok3, awarded3, mult3 = expedition.collectSample(streakRun, 100, "solar")
     assert(ok3 and awarded3 == 140 and mult3 == 1.4,
-        "third consecutive azure sample must award x1.4 streak (" .. tostring(awarded3) .. ")")
-    local ok4, awarded4, mult4 = expedition.collectSample(streakRun, 100, "ember")
+        "third consecutive solar sample must award x1.4 streak (" .. tostring(awarded3) .. ")")
+    local ok4, awarded4, mult4 = expedition.collectSample(streakRun, 100, "nebula")
     assert(ok4 and awarded4 == 100 and mult4 == 1,
         "switching hue family must reset the streak back to x1.0 (" .. tostring(awarded4) .. ")")
     assert(streakRun.pendingSampleValue == 100 + 120 + 140 + 100

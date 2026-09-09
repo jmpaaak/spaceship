@@ -129,14 +129,14 @@
       ]
     },
     {
-      "id": "hull_azure_collector",
+      "id": "hull_solar_collector",
       "suit": "nebula",
-      "name": "Azure Collector",
+      "name": "Solar Collector",
       "nameKo": "아주르 수집기",
       "icon": "◇",
       "rarity": "common",
       "tags": [
-        "azure",
+        "solar",
         "economy"
       ],
       "editions": [],
@@ -148,14 +148,14 @@
       ]
     },
     {
-      "id": "hull_ember_vent",
+      "id": "hull_nebula_vent",
       "suit": "solar",
-      "name": "Ember Vent",
+      "name": "Nebula Vent",
       "nameKo": "엠버 배기구",
       "icon": "◆",
       "rarity": "common",
       "tags": [
-        "ember",
+        "nebula",
         "altitude"
       ],
       "editions": [],
@@ -301,7 +301,7 @@
       "icon": "◭",
       "rarity": "rare",
       "tags": [
-        "azure",
+        "solar",
         "defense"
       ],
       "editions": [],
@@ -319,14 +319,14 @@
       ]
     },
     {
-      "id": "hull_ember_core",
+      "id": "hull_nebula_core",
       "suit": "solar",
-      "name": "Ember Core",
+      "name": "Nebula Core",
       "nameKo": "엠버 코어",
       "icon": "◉",
       "rarity": "uncommon",
       "tags": [
-        "ember",
+        "nebula",
         "altitude"
       ],
       "editions": [],
@@ -456,14 +456,14 @@
       ]
     },
     {
-      "id": "hull_azure_prism",
+      "id": "hull_solar_prism",
       "suit": "nebula",
-      "name": "Azure Prism",
+      "name": "Solar Prism",
       "nameKo": "아주르 프리즘",
       "icon": "◇",
       "rarity": "rare",
       "tags": [
-        "azure",
+        "solar",
         "altitude"
       ],
       "editions": [],
@@ -481,14 +481,14 @@
       ]
     },
     {
-      "id": "hull_ember_plating",
+      "id": "hull_nebula_plating",
       "suit": "solar",
-      "name": "Ember Plating",
+      "name": "Nebula Plating",
       "nameKo": "엠버 플레이팅",
       "icon": "◆",
       "rarity": "uncommon",
       "tags": [
-        "ember",
+        "nebula",
         "defense"
       ],
       "editions": [],
@@ -775,7 +775,7 @@
       "icon": "✦",
       "rarity": "legendary",
       "tags": [
-        "azure",
+        "solar",
         "economy",
         "control"
       ],

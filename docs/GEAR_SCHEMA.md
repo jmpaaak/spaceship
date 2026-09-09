@@ -136,7 +136,7 @@ altitude/climb-rate payoff), mirroring Balatro's joker-combo philosophy:
 
 The bundled `game/data/hull_parts.json` pool now has **36 cards** (well
 above item 9's "최소 20~30종" target), each tagged with at least one synergy
-tag — including a dedicated `azure`/`ember`/`void` tag per hue family
+tag — including a dedicated `solar`/`nebula`/`void` tag per hue family
 (matching `world.hueFamilies`) plus cross-cutting `speed`/`altitude`/
 `defense`/`economy`/`control` tags — so a wide variety of 2-3 card
 tag-overlap combos are available to build around. `game/self_test.lua`'s
@@ -244,8 +244,8 @@ actual `run` state. This lane's follow-up slice closed that gap within the
 A deeper audit than the existing "every effect type appears somewhere"
 `testGearEffectTypeContentCoverage` check found that 9 of
 `game/data/engine_parts.json`'s 14 cards (`engine_basic_thruster`,
-`engine_afterburner`, `engine_fusion_core`, `engine_azure_coolant_jet`,
-`engine_ember_burst_valve`, `engine_void_phase_thruster`,
+`engine_afterburner`, `engine_fusion_core`, `engine_solar_coolant_jet`,
+`engine_nebula_burst_valve`, `engine_void_phase_thruster`,
 `engine_solar_sail_flap`, `engine_burst_capacitor`,
 `engine_singularity_drive` — every original pre-item-10(b) engine card)
 carried ONLY effect types documented as hull-only-scoped

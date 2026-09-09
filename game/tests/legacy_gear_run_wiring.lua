@@ -21,11 +21,11 @@ function M.run()
     -- ascent beyond the base climbSpeed (item 9's core payoff, now actually
     -- wired into gameplay instead of only existing as a pure function).
     local hullPool = gear.loadHullParts()
-    local climbCard = gear.findById(hullPool, "hull_ember_core") -- climbSpeed +5, no synergy tag overlap needed alone
-    assert(climbCard, "fixture hull card 'hull_ember_core' must exist in the bundled pool")
+    local climbCard = gear.findById(hullPool, "hull_nebula_core") -- climbSpeed +5, no synergy tag overlap needed alone
+    assert(climbCard, "fixture hull card 'hull_nebula_core' must exist in the bundled pool")
     local ok, err = expedition.equipGear(run, "hull", climbCard)
     assert(ok, "equipping a hull card into a fresh run must succeed: " .. tostring(err))
-    assert(#run.equippedGear == 1 and run.equippedGear[1].id == "hull_ember_core")
+    assert(#run.equippedGear == 1 and run.equippedGear[1].id == "hull_nebula_core")
 
     expedition.launch(run)
     expedition.update(run, 1)
@@ -43,7 +43,7 @@ function M.run()
     assert(#run.equippedEngineParts == 1 and #run.equippedGear == 1,
         "equipping an engine part must not change the hull gear list")
 
-    assert(expedition.unequipGear(run, "hull", "hull_ember_core"))
+    assert(expedition.unequipGear(run, "hull", "hull_nebula_core"))
     assert(#run.equippedGear == 0 and #run.equippedEngineParts == 1,
         "unequipping a hull card must not affect the engine parts list")
 

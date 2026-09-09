@@ -1,4 +1,4 @@
--- Persists the player's discovered specimen ids ("azure_common", ...)
+-- Persists the player's discovered specimen ids ("solar_common", ...)
 -- across runs/destructions, the same way best_altitude_store.lua persists
 -- the best altitude: a plain-text file read/written through love.filesystem
 -- (or an injected fake in tests). Unlike money/samples, this collection is

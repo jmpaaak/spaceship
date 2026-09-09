@@ -19,7 +19,7 @@ function M.run()
     -- pre-wiring baseline computed from streak/yield alone).
     local bareRun = expedition.new()
     bareRun.phase = "ascending"
-    local ok, awarded, _, retriggers = expedition.collectSample(bareRun, 100, "azure")
+    local ok, awarded, _, retriggers = expedition.collectSample(bareRun, 100, "solar")
     assert(ok, "collectSample must succeed while ascending")
     assert(awarded == 100, "an unequipped run's awarded sample value must be unchanged, got " .. tostring(awarded))
     assert(retriggers == 0, "an unequipped run must report zero chain retriggers, got " .. tostring(retriggers))
@@ -35,7 +35,7 @@ function M.run()
         effects = { { type = "chainTrigger", value = 1 } },
     }
     assert(expedition.equipGear(run, "hull", chainCard))
-    local ok2, awarded2, _, retriggers2 = expedition.collectSample(run, 100, "azure")
+    local ok2, awarded2, _, retriggers2 = expedition.collectSample(run, 100, "solar")
     assert(ok2)
     assert(retriggers2 == 1, "a +1 chainTrigger card must report exactly one retrigger, got " .. tostring(retriggers2))
     assert(awarded2 == 200,
@@ -49,7 +49,7 @@ function M.run()
     local engineRun = expedition.new()
     engineRun.phase = "ascending"
     assert(expedition.equipGear(engineRun, "engine", chainCard))
-    local ok3, awarded3 = expedition.collectSample(engineRun, 100, "azure")
+    local ok3, awarded3 = expedition.collectSample(engineRun, 100, "solar")
     assert(ok3 and awarded3 == 200, "an engine-slot chainTrigger card must also double the awarded value, got " .. tostring(awarded3))
 end
 

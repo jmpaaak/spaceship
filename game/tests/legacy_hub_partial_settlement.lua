@@ -10,7 +10,7 @@ function M.run()
     run.money = 100
 
     -- Normal planet collection.
-    expedition.collectSample(run, 10, "azure")
+    expedition.collectSample(run, 10, "solar")
     assert(run.pendingSampleValue == 10,
         "normal collection should only increase pendingSampleValue")
     assert(run.money == 100,

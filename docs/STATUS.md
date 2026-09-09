@@ -1,10 +1,9 @@
 ## Current Status
 
-- Resolved INBOX 68: removed the three admin HUD buttons (speed+/hull+/yield+) under pause/help.
-- `play_layout.lua` no longer defines `adminButtons` / `adminButtonRect`. `play_scene_draw.lua` no longer draws that stack. `play_input.lua` no longer hit-tests it. `play.lua` does not pass those deps.
-- `expedition.adminUpgrade` remains as a test helper. (67) streak HUD (`self:drawStreakHud()`) still draws under pause/help.
-- Verified by `game/tests/admin_buttons_gone.lua` (engine unit GREEN).
+- Resolved INBOX 69: Remapped specimen hue families to match the four gear suits: solar (0.00-0.25), nebula (0.25-0.50), void (0.50-0.75), and pulsar (0.75-1.00).
+- Replaced all legacy "azure" and "ember" occurrences with "solar" and "nebula" across JSON data, gear IDs, file paths, and test files. Localized specimen catalog using existing `i18n.lua` suit labels (솔라/네뷸라/보이드/펄서).
+- Verified by `game/tests/sample_suits.lua`, full `make test`, and `make verify` (all GREEN).
 
 ## Next slice
 
-- INBOX 69: remap specimen hue families to the four gear suits (solar / nebula / void / pulsar).
+- INBOX 70: Adjust the vertical spacing between the title scene ship and "Jimmy's" / spaceship text to 0~4px.

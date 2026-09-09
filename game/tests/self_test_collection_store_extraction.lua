@@ -18,10 +18,10 @@ function M.run()
         "R1-C: collection-store characterization body must leave self_test")
     assert(suite:find("function M.run()", 1, true),
         "R1-C: extracted collection-store suite must expose run()")
-    assert(suite:find('specimenStore:record("azure_common") == true', 1, true)
-            and suite:find('reloadedStore:record("azure_common") == false', 1, true),
+    assert(suite:find('specimenStore:record("solar_common") == true', 1, true)
+            and suite:find('reloadedStore:record("solar_common") == false', 1, true),
         "R1-C: extracted suite must retain first-discovery and persisted-id coverage")
-    assert(suite:find("specimenScene.collectedSpecimens.azure_common == true", 1, true),
+    assert(suite:find("specimenScene.collectedSpecimens.solar_common == true", 1, true),
         "R1-C: extracted suite must retain PlayScene injected-store initialization coverage")
     print("  R1-C self_test collection-store extraction OK")
 end

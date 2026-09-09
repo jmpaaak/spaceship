@@ -133,14 +133,14 @@
       ]
     },
     {
-      "id": "engine_azure_coolant_jet",
+      "id": "engine_solar_coolant_jet",
       "suit": "void",
-      "name": "Azure Coolant Jet",
+      "name": "Solar Coolant Jet",
       "nameKo": "청옥 냉각 제트",
       "icon": "◐",
       "rarity": "uncommon",
       "tags": [
-        "azure",
+        "solar",
         "speed"
       ],
       "editions": [],
@@ -156,14 +156,14 @@
       ]
     },
     {
-      "id": "engine_ember_burst_valve",
+      "id": "engine_nebula_burst_valve",
       "suit": "solar",
-      "name": "Ember Burst Valve",
+      "name": "Nebula Burst Valve",
       "nameKo": "적염 분사 밸브",
       "icon": "◑",
       "rarity": "uncommon",
       "tags": [
-        "ember",
+        "nebula",
         "altitude"
       ],
       "editions": [],
@@ -586,7 +586,7 @@
       "icon": "◈",
       "rarity": "legendary",
       "tags": [
-        "ember",
+        "nebula",
         "speed",
         "economy"
       ],

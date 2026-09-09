@@ -267,7 +267,7 @@ def signal_process_group(group_id: int, sig: int | signal.Signals) -> bool:
         return False
     except PermissionError:
         # macOS returns EPERM when the unreaped session leader is the only
-        # remaining group member; its PID still reserves the PGID, so no
+        # remaining group mnebula; its PID still reserves the PGID, so no
         # unrelated group can be targeted before the later wait().
         return False
 

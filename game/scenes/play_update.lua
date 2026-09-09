@@ -676,7 +676,7 @@ function scene:update(dt)
                     and not self.cometDiscovered[comet.id] then
                     self.cometDiscovered[comet.id] = true
                     local value = world.cometSampleValue(comet)
-                    local _, awarded = expedition.collectSample(self.expedition, value, "ember")
+                    local _, awarded = expedition.collectSample(self.expedition, value, world.hueFamily(comet.hue or 0).key)
                     awarded = awarded or value
                     sfx.play("collect")
                     table.insert(self.floatingTexts, {

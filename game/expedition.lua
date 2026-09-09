@@ -336,7 +336,7 @@ function M.streakMultiplier(streakCount, run)
 end
 
 -- hueKey is the optional hue-family key from world.hueFamily/specimenKind
--- (e.g. "azure"/"ember"/"void"). When provided, consecutive calls with the
+-- (e.g. "solar"/"nebula"/"void"/"pulsar"). When provided, consecutive calls with the
 -- same hueKey build a streak that multiplies the awarded value on top of
 -- the SAMPLE YIELD upgrade; a different hueKey (or no hueKey) resets the
 -- streak back to the base rate for that call.

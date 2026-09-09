@@ -203,7 +203,7 @@ function M.galaxyBackgroundColor(galaxy)
     local families = {
         { 0.05, 0.015, 0.06 }, -- violet
         { 0.01, 0.045, 0.05 }, -- teal
-        { 0.06, 0.015, 0.02 }, -- ember red
+        { 0.06, 0.015, 0.02 }, -- nebula red
     }
     local family = families[1 + math.floor(hue * 3) % 3]
     local jitter = (hash(galaxy.gx, galaxy.gy, 561) - 0.5) * 0.02
@@ -481,16 +481,18 @@ function M.sampleTier(planet)
     return "common"
 end
 
--- Specimen catalog: every collected sample belongs to one of 9 kinds
--- (3 hue families x 3 rarity tiers), mirroring how a card game gives each
--- collectible a distinct name/family instead of a single generic pickup.
+-- Specimen catalog: every collected sample belongs to one of 12 kinds
+-- (4 gear-suit hue families x 3 rarity tiers), mirroring how a card game
+-- gives each collectible a distinct name/family instead of a single
+-- generic pickup. Families match gear.knownSuits (INBOX 69).
 -- This backs the persistent "탐험 도감" (specimen log) shown under the
 -- launch screen so players build a collection across runs, not just a
 -- cash total that resets on destruction.
 local hueFamilies = {
-    { key = "azure", label = "AZURE", threshold = 0.33 },
-    { key = "ember", label = "EMBER", threshold = 0.66 },
-    { key = "void", label = "VOID", threshold = math.huge },
+    { key = "solar",  label = "SOLAR",  threshold = 0.25 },
+    { key = "nebula", label = "NEBULA", threshold = 0.50 },
+    { key = "void",   label = "VOID",   threshold = 0.75 },
+    { key = "pulsar", label = "PULSAR", threshold = math.huge },
 }
 M.hueFamilies = hueFamilies
 
@@ -508,19 +510,19 @@ function M.hueFamily(hue)
     return hueFamilies[#hueFamilies]
 end
 
--- Returns a stable specimen id ("azure_common") and a human label
--- ("AZURE DUST") for a given planet. Used both to award collection credit
+-- Returns a stable specimen id ("solar_common") and a human label
+-- ("SOLAR DUST") for a given planet. Used both to award collection credit
 -- on pickup and to render the specimen log grid.
 function M.specimenKind(planet)
     local family = M.hueFamily(planet.hue or 0)
     local tier = M.sampleTier(planet)
     local id = family.key .. "_" .. tier
-    local label = family.label .. " " .. tierNames[tier]
+    local label = i18n.t("suit_" .. family.key) .. " " .. tierNames[tier]
     return id, label, tier
 end
 
--- Full ordered catalog (9 entries: azure/ember/void x common/rare/epic) so
--- the specimen log can render "?" placeholders for anything not yet found,
+-- Full ordered catalog (12 entries: solar/nebula/void/pulsar x common/rare/epic)
+-- so the specimen log can render "?" placeholders for anything not yet found,
 -- independent of any specific run's discovery order.
 function M.specimenCatalog()
     local catalog = {}
@@ -528,7 +530,7 @@ function M.specimenCatalog()
         for _, tier in ipairs({ "common", "rare", "epic" }) do
             catalog[#catalog + 1] = {
                 id = family.key .. "_" .. tier,
-                label = family.label .. " " .. tierNames[tier],
+                label = i18n.t("suit_" .. family.key) .. " " .. tierNames[tier],
                 tier = tier,
                 hueKey = family.key,
             }

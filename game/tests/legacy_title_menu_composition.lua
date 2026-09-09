@@ -72,12 +72,12 @@ function M.run()
         write = function(fn, d) specData[fn] = d; return true end,
     }
     local cs = collStore.new("test-spec.txt", fakeFS2)
-    cs:record("azure_common")
+    cs:record("solar_common")
     local loaded = cs:load()
-    assert(loaded["azure_common"], "INBOX 61(24b): collection must record specimen")
+    assert(loaded["solar_common"], "INBOX 61(24b): collection must record specimen")
     cs:reset()
     local loaded2 = cs:load()
-    assert(not loaded2["azure_common"], "INBOX 61(24b): reset must wipe specimens")
+    assert(not loaded2["solar_common"], "INBOX 61(24b): reset must wipe specimens")
 
     -- (g) i18n keys exist
     local i18n = require("game.i18n")

@@ -40,8 +40,8 @@ function M.run()
 
     -- Two irradiated parts sharing a tag must stack BOTH of their synergy
     -- bonus contributions on top of the flat per-pair amount.
-    local doubleIrradA = { id = "di-a", tags = { "ember" }, edition = "irradiated", effects = {} }
-    local doubleIrradB = { id = "di-b", tags = { "ember" }, edition = "irradiated", effects = {} }
+    local doubleIrradA = { id = "di-a", tags = { "nebula" }, edition = "irradiated", effects = {} }
+    local doubleIrradB = { id = "di-b", tags = { "nebula" }, edition = "irradiated", effects = {} }
     local doubleBoosted = gear.tagSynergyMultiplier({ doubleIrradA, doubleIrradB })
     local expectedDouble = 1 + gear.synergyBonusPerSharedPair + 2 * gear.editionSynergyBonusAdd("irradiated")
     assert(math.abs(doubleBoosted - expectedDouble) < 1e-9,

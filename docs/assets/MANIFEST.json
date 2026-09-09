@@ -25,11 +25,11 @@
     "qa": "pipeline smoke test 2026-09-03: visually verified plausible top-down spaceship silhouette; NOT yet wired into game/scenes/play.lua runtime"
   },
   {
-    "path": "assets/sprites/specimens/azure_common.png",
+    "path": "assets/sprites/specimens/solar_common.png",
     "source_url": "https://www.aetherforgeai.com/en/free-assets",
     "terms_url": "https://www.aetherforgeai.com/en/free-assets",
     "asset_id": "fd5b7763-7f98-4604-81c5-75b7b8aded8d",
-    "prompt": "AetherAI Free Asset catalog pick for specimen azure_common (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
+    "prompt": "AetherAI Free Asset catalog pick for specimen solar_common (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
     "model": "AetherAI Free Asset",
     "style": "Simple",
     "settings": "{\"catalog\":\"free-assets\",\"category\":\"Minerals & Gem Materials\",\"cdn\":\"https://cdn.aetherforgeai.com/assets/fd5b7763-7f98-4604-81c5-75b7b8aded8d.png\",\"originalPngSha256\":\"a8b90ba82ff05fe71d2c992733bd83f025e5d51cbf06d82dcb034839708992c9\",\"originalDimensions\":[512,512],\"derivation\":\"integer nearest 512 to 32\",\"acquiredVia\":\"official-ui\"}",
@@ -40,11 +40,11 @@
     "qa": "GAME_CAPTURE_PHASE=launch 2026-09-03: 9 gem chips visible on specimen strip, no HUD clip"
   },
   {
-    "path": "assets/sprites/specimens/azure_rare.png",
+    "path": "assets/sprites/specimens/solar_rare.png",
     "source_url": "https://www.aetherforgeai.com/en/free-assets",
     "terms_url": "https://www.aetherforgeai.com/en/free-assets",
     "asset_id": "3c7dceb3-49b2-47f4-aa74-f18a1a3c390d",
-    "prompt": "AetherAI Free Asset catalog pick for specimen azure_rare (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
+    "prompt": "AetherAI Free Asset catalog pick for specimen solar_rare (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
     "model": "AetherAI Free Asset",
     "style": "Simple",
     "settings": "{\"catalog\":\"free-assets\",\"category\":\"Minerals & Gem Materials\",\"cdn\":\"https://cdn.aetherforgeai.com/assets/3c7dceb3-49b2-47f4-aa74-f18a1a3c390d.png\",\"originalPngSha256\":\"5df54a7545e893cd61f05167466f58a7ccf33861d4149248ba5189b6dc9ae63f\",\"originalDimensions\":[512,512],\"derivation\":\"integer nearest 512 to 32\",\"acquiredVia\":\"official-ui\"}",
@@ -55,11 +55,11 @@
     "qa": "GAME_CAPTURE_PHASE=launch 2026-09-03: 9 gem chips visible on specimen strip, no HUD clip"
   },
   {
-    "path": "assets/sprites/specimens/azure_epic.png",
+    "path": "assets/sprites/specimens/solar_epic.png",
     "source_url": "https://www.aetherforgeai.com/en/free-assets",
     "terms_url": "https://www.aetherforgeai.com/en/free-assets",
     "asset_id": "04588c31-5066-427f-8fe0-9f7f1d90c66e",
-    "prompt": "AetherAI Free Asset catalog pick for specimen azure_epic (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
+    "prompt": "AetherAI Free Asset catalog pick for specimen solar_epic (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
     "model": "AetherAI Free Asset",
     "style": "Simple",
     "settings": "{\"catalog\":\"free-assets\",\"category\":\"Minerals & Gem Materials\",\"cdn\":\"https://cdn.aetherforgeai.com/assets/04588c31-5066-427f-8fe0-9f7f1d90c66e.png\",\"originalPngSha256\":\"5ccbe4572b75a832723f4005edbf11328737b1b03583abfdb72466dfb35a11dd\",\"originalDimensions\":[512,512],\"derivation\":\"integer nearest 512 to 32\",\"acquiredVia\":\"official-ui\"}",
@@ -70,11 +70,11 @@
     "qa": "GAME_CAPTURE_PHASE=launch 2026-09-03: 9 gem chips visible on specimen strip, no HUD clip"
   },
   {
-    "path": "assets/sprites/specimens/ember_common.png",
+    "path": "assets/sprites/specimens/nebula_common.png",
     "source_url": "https://www.aetherforgeai.com/en/free-assets",
     "terms_url": "https://www.aetherforgeai.com/en/free-assets",
     "asset_id": "31ca54a0-46b4-4562-b589-ca9e3ca8ae60",
-    "prompt": "AetherAI Free Asset catalog pick for specimen ember_common (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
+    "prompt": "AetherAI Free Asset catalog pick for specimen nebula_common (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
     "model": "AetherAI Free Asset",
     "style": "Simple",
     "settings": "{\"catalog\":\"free-assets\",\"category\":\"Minerals & Gem Materials\",\"cdn\":\"https://cdn.aetherforgeai.com/assets/31ca54a0-46b4-4562-b589-ca9e3ca8ae60.png\",\"originalPngSha256\":\"33d5a07b56719ddf1488a0a8bb76eec349a0092752f58e6613b4d51d9c2b54a8\",\"originalDimensions\":[512,512],\"derivation\":\"integer nearest 512 to 32\",\"acquiredVia\":\"official-ui\"}",
@@ -85,11 +85,11 @@
     "qa": "GAME_CAPTURE_PHASE=launch 2026-09-03: 9 gem chips visible on specimen strip, no HUD clip"
   },
   {
-    "path": "assets/sprites/specimens/ember_rare.png",
+    "path": "assets/sprites/specimens/nebula_rare.png",
     "source_url": "https://www.aetherforgeai.com/en/free-assets",
     "terms_url": "https://www.aetherforgeai.com/en/free-assets",
     "asset_id": "7b99f324-aada-4a72-856f-7bab235d9a6c",
-    "prompt": "AetherAI Free Asset catalog pick for specimen ember_rare (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
+    "prompt": "AetherAI Free Asset catalog pick for specimen nebula_rare (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
     "model": "AetherAI Free Asset",
     "style": "Simple",
     "settings": "{\"catalog\":\"free-assets\",\"category\":\"Minerals & Gem Materials\",\"cdn\":\"https://cdn.aetherforgeai.com/assets/7b99f324-aada-4a72-856f-7bab235d9a6c.png\",\"originalPngSha256\":\"0ab96ce009b82a9f5608abaab13b5ba0435d0b0e2017979e3b410fec9919903f\",\"originalDimensions\":[512,512],\"derivation\":\"integer nearest 512 to 32\",\"acquiredVia\":\"official-ui\"}",
@@ -100,11 +100,11 @@
     "qa": "GAME_CAPTURE_PHASE=launch 2026-09-03: 9 gem chips visible on specimen strip, no HUD clip"
   },
   {
-    "path": "assets/sprites/specimens/ember_epic.png",
+    "path": "assets/sprites/specimens/nebula_epic.png",
     "source_url": "https://www.aetherforgeai.com/en/free-assets",
     "terms_url": "https://www.aetherforgeai.com/en/free-assets",
     "asset_id": "ad31f9d2-fd3c-4358-b873-9d56d077d382",
-    "prompt": "AetherAI Free Asset catalog pick for specimen ember_epic (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
+    "prompt": "AetherAI Free Asset catalog pick for specimen nebula_epic (Minerals & Gem Materials, Simple style). Official catalog PNG nearest-downscaled 512\u219232. No people, no faces, no hands or other body parts.",
     "model": "AetherAI Free Asset",
     "style": "Simple",
     "settings": "{\"catalog\":\"free-assets\",\"category\":\"Minerals & Gem Materials\",\"cdn\":\"https://cdn.aetherforgeai.com/assets/ad31f9d2-fd3c-4358-b873-9d56d077d382.png\",\"originalPngSha256\":\"dc61c3457ded8a594bf3bd4f0f181c9aac391dd36a549398d13abc902956f457\",\"originalDimensions\":[512,512],\"derivation\":\"integer nearest 512 to 32\",\"acquiredVia\":\"official-ui\"}",
@@ -3118,12 +3118,12 @@
     "qa": "PIL part icon, gen_part_icons.py"
   },
   {
-    "path": "assets/part_icons/engine_azure_coolant_jet.png",
+    "path": "assets/part_icons/engine_solar_coolant_jet.png",
     "user_supplied": true,
     "source_url": "tools/gen_part_icons.py",
     "terms_url": "tools/gen_part_icons.py",
-    "asset_id": "part-icon-engine_azure_coolant_jet-001",
-    "prompt": "PIL-generated part icon engine_azure_coolant_jet: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "asset_id": "part-icon-engine_solar_coolant_jet-001",
+    "prompt": "PIL-generated part icon engine_solar_coolant_jet: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
     "model": "PIL/Pillow",
     "style": "procedural",
     "settings": {
@@ -3238,12 +3238,12 @@
     "qa": "PIL part icon, gen_part_icons.py"
   },
   {
-    "path": "assets/part_icons/engine_ember_burst_valve.png",
+    "path": "assets/part_icons/engine_nebula_burst_valve.png",
     "user_supplied": true,
     "source_url": "tools/gen_part_icons.py",
     "terms_url": "tools/gen_part_icons.py",
-    "asset_id": "part-icon-engine_ember_burst_valve-001",
-    "prompt": "PIL-generated part icon engine_ember_burst_valve: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "asset_id": "part-icon-engine_nebula_burst_valve-001",
+    "prompt": "PIL-generated part icon engine_nebula_burst_valve: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
     "model": "PIL/Pillow",
     "style": "procedural",
     "settings": {
@@ -3698,12 +3698,12 @@
     "qa": "PIL part icon, gen_part_icons.py"
   },
   {
-    "path": "assets/part_icons/hull_azure_collector.png",
+    "path": "assets/part_icons/hull_solar_collector.png",
     "user_supplied": true,
     "source_url": "tools/gen_part_icons.py",
     "terms_url": "tools/gen_part_icons.py",
-    "asset_id": "part-icon-hull_azure_collector-001",
-    "prompt": "PIL-generated part icon hull_azure_collector: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "asset_id": "part-icon-hull_solar_collector-001",
+    "prompt": "PIL-generated part icon hull_solar_collector: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
     "model": "PIL/Pillow",
     "style": "procedural",
     "settings": {
@@ -3718,12 +3718,12 @@
     "qa": "PIL part icon, gen_part_icons.py"
   },
   {
-    "path": "assets/part_icons/hull_azure_prism.png",
+    "path": "assets/part_icons/hull_solar_prism.png",
     "user_supplied": true,
     "source_url": "tools/gen_part_icons.py",
     "terms_url": "tools/gen_part_icons.py",
-    "asset_id": "part-icon-hull_azure_prism-001",
-    "prompt": "PIL-generated part icon hull_azure_prism: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "asset_id": "part-icon-hull_solar_prism-001",
+    "prompt": "PIL-generated part icon hull_solar_prism: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
     "model": "PIL/Pillow",
     "style": "procedural",
     "settings": {
@@ -3858,12 +3858,12 @@
     "qa": "PIL part icon, gen_part_icons.py"
   },
   {
-    "path": "assets/part_icons/hull_ember_core.png",
+    "path": "assets/part_icons/hull_nebula_core.png",
     "user_supplied": true,
     "source_url": "tools/gen_part_icons.py",
     "terms_url": "tools/gen_part_icons.py",
-    "asset_id": "part-icon-hull_ember_core-001",
-    "prompt": "PIL-generated part icon hull_ember_core: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "asset_id": "part-icon-hull_nebula_core-001",
+    "prompt": "PIL-generated part icon hull_nebula_core: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
     "model": "PIL/Pillow",
     "style": "procedural",
     "settings": {
@@ -3878,12 +3878,12 @@
     "qa": "PIL part icon, gen_part_icons.py"
   },
   {
-    "path": "assets/part_icons/hull_ember_plating.png",
+    "path": "assets/part_icons/hull_nebula_plating.png",
     "user_supplied": true,
     "source_url": "tools/gen_part_icons.py",
     "terms_url": "tools/gen_part_icons.py",
-    "asset_id": "part-icon-hull_ember_plating-001",
-    "prompt": "PIL-generated part icon hull_ember_plating: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "asset_id": "part-icon-hull_nebula_plating-001",
+    "prompt": "PIL-generated part icon hull_nebula_plating: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
     "model": "PIL/Pillow",
     "style": "procedural",
     "settings": {
@@ -3898,12 +3898,12 @@
     "qa": "PIL part icon, gen_part_icons.py"
   },
   {
-    "path": "assets/part_icons/hull_ember_vent.png",
+    "path": "assets/part_icons/hull_nebula_vent.png",
     "user_supplied": true,
     "source_url": "tools/gen_part_icons.py",
     "terms_url": "tools/gen_part_icons.py",
-    "asset_id": "part-icon-hull_ember_vent-001",
-    "prompt": "PIL-generated part icon hull_ember_vent: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
+    "asset_id": "part-icon-hull_nebula_vent-001",
+    "prompt": "PIL-generated part icon hull_nebula_vent: 32x32 RGBA chunky 4px pixels, suit-colored silhouette",
     "model": "PIL/Pillow",
     "style": "procedural",
     "settings": {

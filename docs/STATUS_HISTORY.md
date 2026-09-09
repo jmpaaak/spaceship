@@ -377,11 +377,11 @@
 
 ## 표본 등급 연속 채집 STREAK 배율 (완료)
 
-- `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록 1번 "점진적 시너지/빌드업"을 처리했다. 같은 hue family(azure/ember/void) 표본을 연속으로 채집하면 곱연산 STREAK 배율이 붙는다.
+- `docs/feedback/INBOX.md` 발라트로 핵심 게임성 이식 목록 1번 "점진적 시너지/빌드업"을 처리했다. 같은 hue family(solar/nebula/void) 표본을 연속으로 채집하면 곱연산 STREAK 배율이 붙는다.
 - `game/expedition.lua`에 `M.streakMultiplier(streakCount)`(`streakCount <= 1`은 `x1.0`, 이후 매 연속 채집마다 `+0.2`: `x1.0/x1.2/x1.4/x1.6...`)를 추가했다. `M.collectSample(run, value, hueKey)`가 선택적 세 번째 인자 `hueKey`(`world.hueFamily(planet.hue).key`)를 받아 이전 채집과 같은 `hueKey`면 `run.sampleStreakCount`를 증가시키고, 다르거나 `nil`이면 1로 리셋한다. 지급액은 `value * sampleYieldMultiplier(run) * streakMultiplier`로 계산되며 세 번째 반환값으로 실제 적용된 배율을 노출한다.
 - `run.sampleStreakCount`·`run.sampleStreakFamily` 신규 필드를 `M.new`에서 초기화하고, 재출발(`M.launch`)과 파괴(`destroy`) 모두 다른 원정 상태와 동일하게 0/`nil`로 리셋한다.
 - `game/scenes/play.lua`의 표본 획득 처리가 행성의 `world.hueFamily(planet.hue).key`를 `collectSample`에 전달하고, 반환된 배율이 `1`보다 크면 메시지를 `SAMPLE +$N  STREAK x1.4  {planet.id}` 형식으로 표시한다(배율 `1`이면 기존 `SAMPLE +$N  {planet.id}` 형식 유지). 플로팅 `+$N` 텍스트는 항상 실제 지급액(`awarded`, 배율 반영)을 표시한다.
-- engine-hosted 테스트(RED 확인: `expedition.streakMultiplier`가 nil이라 `game/self_test.lua:458`에서 즉시 실패하는 것을 확인한 뒤 구현)가 `streakMultiplier(0/1/2/3)`의 정확한 배율과, 연속 3회 같은 `hueKey`(`azure`) 채집이 `x1.0→x1.2→x1.4`로 지급액(`100→120→140`)이 증가하는지, 다른 `hueKey`(`ember`)로 전환 시 배율이 `x1.0`으로 리셋되는지, 파괴 시 `sampleStreakCount`/`sampleStreakFamily` 초기화와 재출발 뒤에도 초기화 상태 유지를 검증한다.
+- engine-hosted 테스트(RED 확인: `expedition.streakMultiplier`가 nil이라 `game/self_test.lua:458`에서 즉시 실패하는 것을 확인한 뒤 구현)가 `streakMultiplier(0/1/2/3)`의 정확한 배율과, 연속 3회 같은 `hueKey`(`solar`) 채집이 `x1.0→x1.2→x1.4`로 지급액(`100→120→140`)이 증가하는지, 다른 `hueKey`(`nebula`)로 전환 시 배율이 `x1.0`으로 리셋되는지, 파괴 시 `sampleStreakCount`/`sampleStreakFamily` 초기화와 재출발 뒤에도 초기화 상태 유지를 검증한다.
 - `make test`, `GAME_HEADLESS=1 GAME_UNIT=1 love .` 모두 GREEN. `make verify LOVE=/Users/jm/.local/bin/love` 전체 통과(`SPACESHIP_UNIT_OK`, `SPACESHIP_SMOKE_OK` x2, `LOVE_BUNDLE_OK:build/game.love:25`).
 - `main.lua`에 `GAME_CAPTURE_PHASE=ascending-streak` 개발 전용 진입 경로를 추가해(같은 hue family 스트릭 2를 미리 시딩한 뒤 세 번째 채집이 실제로 발생하도록 구성) 실제 LÖVE runtime capture(`1440×2560`)로 플로팅 텍스트가 `+$140`(원본 표본 가치 `100` x streak `1.4`)로 렌더링되는 것을 vision으로 확인했다(`build/spaceship-runtime-preview-ascending-streak.png`, 로컬 산출물로 커밋 제외). 같은 캡처에서 표본 획득과 동시에 충돌(같은 프레임, `radius+5` 이내)이 함께 발생해 바닥 메시지가 이후의 `COLLISION -0  HULL 3/3`으로 덮어써지는 것도 확인했는데, 이는 이번 슬라이스와 무관한 기존 메시지 우선순위 동작(같은 프레임에 여러 이벤트가 발생하면 나중 이벤트의 메시지가 이긴다)이며 플로팅 텍스트(`+$140`)가 실제 STREAK 배율 검증의 핵심 증거다.
 - 남은 다음 슬라이스 후보: (1) `docs/feedback/INBOX.md` 발라트로 이식 목록 중 남은 항목(점진적 시너지/빌드업 STREAK 배율, 숫자 롤업 피드백, 선택 안의 트레이드오프 통일, 불확실성 속의 기대감 접근 글로우 가속), (2) 낮은 잔액 상태의 `SHORT $N` 분기를 실제 캡처로 추가 확인, (3) YIELD/SHIP/HULL/STEERING 터치 행과 텍스트 줄의 느슨한 y 정렬을 더 타이트하게 정리, (4) AetherAI-only 최종 에셋(공식 로그인/export 가용성) 확인.
@@ -806,7 +806,7 @@
 - `game/minimap.lua`: `M.nearestCheckpointDirection(shipX, shipY)` 순수 함수 추가 — `checkpointSearchCellRadius`(`galaxyCellRadius`+4) 범위에서 가장 가까운 비-milkyway 은하의 방향/거리를 반환. `M.view()`가 `checkpointBeyond/Dx/Dy/Distance/Id`를 노출.
 - `game/scenes/play.lua`의 `drawMinimap()`: `hub=true`(체크포인트) 은하는 기존보다 큰 점 + 시간에 따라 pulse하는 반짝이는 링으로 그려 일반 은하 점과 구분. 미니맵 밖에 있는 가장 가까운 체크포인트는 기존 지구-복귀 화살표(주황)와 겹치지 않는 자홍색 화살표로 표시. 기존에 사용자가 긍정한 "현재 위치 은하 = 고리 표기" 방식은 그대로 보존.
 - `game/self_test.lua`의 `testMinimap`: `nearestCheckpointDirection`의 단위벡터/거리/빈 결과 케이스, `checkpointBeyond` 노출, `galaxyBackgroundColor`의 홈 은하 고정값·비홈 은하 결정성·차별성 회귀 테스트 추가.
-- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-checkpoint-tint`, 1080×1920, `main.lua`에 기존재하던 캡처 하네스 사용)를 vision으로 확인: 미니맵의 두 은하 점 모두 반짝이는 노란 링(체크포인트 마커)이 태양 마커·지구(청록 점)와 뚜렷이 구분되어 보임, 배경 클리어 픽셀이 `(16, 5, 6)`으로 붉은(ember) 계열 틴트가 적용됨(홈 남색이 아님)을 확인.
+- 실제 LÖVE 런타임 캡처(`GAME_CAPTURE=1 GAME_CAPTURE_PHASE=ascending-checkpoint-tint`, 1080×1920, `main.lua`에 기존재하던 캡처 하네스 사용)를 vision으로 확인: 미니맵의 두 은하 점 모두 반짝이는 노란 링(체크포인트 마커)이 태양 마커·지구(청록 점)와 뚜렷이 구분되어 보임, 배경 클리어 픽셀이 `(16, 5, 6)`으로 붉은(nebula) 계열 틴트가 적용됨(홈 남색이 아님)을 확인.
 - `make test` GREEN(`make verify` 대상 LÖVE 헤드리스 유닛+스모크, asset manifest 유닛 전부 OK).
 - 남은 다음 슬라이스: `docs/feedback/INBOX.md`의 "UI/HUD 대대적 정리 6개 항목" 중 1번(배경 별 밀도 증가) 또는 2~3번(고도→거리 라벨링, 연료 무제한 HUD 정리)부터 착수.
 

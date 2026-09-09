@@ -51,9 +51,9 @@ function M.run()
     -- collections on the boosted run must return the boosted multiplier on
     -- the third call (mult grows 1.0 -> 1.3 -> 1.6).
     boostedRun.phase = "ascending"
-    local ok1, _, mult1 = expedition.collectSample(boostedRun, 100, "azure")
-    local ok2, _, mult2 = expedition.collectSample(boostedRun, 100, "azure")
-    local ok3, _, mult3 = expedition.collectSample(boostedRun, 100, "azure")
+    local ok1, _, mult1 = expedition.collectSample(boostedRun, 100, "solar")
+    local ok2, _, mult2 = expedition.collectSample(boostedRun, 100, "solar")
+    local ok3, _, mult3 = expedition.collectSample(boostedRun, 100, "solar")
     assert(ok1 and ok2 and ok3)
     assert(math.abs(mult1 - 1) < 1e-9)
     assert(math.abs(mult2 - 1.3) < 1e-9, "second same-family collect must use the boosted rate: got " .. tostring(mult2))

@@ -183,14 +183,9 @@ end
 ---------------------------------------------------------------------------
 -- streakHudLabel(run) — INBOX 67: always-on specimen streak multiplier
 -- Uses expedition.streakMultiplier(sampleStreakCount, run). Streak 0/1
--- still shows x1.0 (never blank). With a hue family: "AZURE x1.4".
+-- still shows x1.0 (never blank). With a hue family: "SOLAR x1.4".
+-- Family names match gear suits via i18n.suitLabel (EN SOLAR / KO 솔라).
 ---------------------------------------------------------------------------
-local familyLabels = {
-    azure = "AZURE",
-    ember = "EMBER",
-    void = "VOID",
-}
-
 function PH.streakHudLabel(run)
     run = run or {}
     local count = run.sampleStreakCount or 0
@@ -198,7 +193,10 @@ function PH.streakHudLabel(run)
     local rate = string.format("x%.1f", mult)
     local family = run.sampleStreakFamily
     if type(family) == "string" and family ~= "" then
-        local name = familyLabels[family] or string.upper(family)
+        local name = i18n.suitLabel(family)
+        if name == "" or name == family then
+            name = string.upper(family)
+        end
         return name .. " " .. rate
     end
     return rate

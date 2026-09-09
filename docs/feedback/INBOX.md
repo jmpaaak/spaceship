@@ -9,18 +9,7 @@
 
 
 
-(69) **표본 계열 = 부품 수트 4종 (void / nebula / solar / pulsar)** (msg `1546719861651021824`)
-  - 담당: `game/world.lua` `hueFamilies` + `expedition.collectSample` 스트릭 키. play.lua는 hueKey 전달만.
-  - 지금: azure / ember / void 3색. 부품은 `gear.knownSuits` **solar, nebula, void, pulsar** 4종. 사용자가 복잡하다고 해서 **표본 계열을 부품과 동일하게**.
-  - 매핑 (hue 4등분):
-    - 0.00–0.25 **solar**
-    - 0.25–0.50 **nebula**
-    - 0.50–0.75 **void**
-    - 0.75–1.00 **pulsar**
-  - 도감 `specimenKind` id도 `solar_common` 등으로. azure/ember 문자열 제거. i18n 라벨 KO/EN: 솔라/네뷸라/보이드/펄서 (기호 금지).
-  - (67) HUD는 `SOLAR x1.4`처럼 이 4종 이름 사용.
-  - 스트릭 규칙은 그대로 (같은 계열 연속 +0.2/스텝). 시너지 pulsarBurst/darkMatter는 기어 수트 기준 유지 — 표본 계열과 이름이 같아져도 로직은 기어 장착 수트.
-  - 테스트: `game/tests/sample_suits.lua` — hueFamily 4키, 같은 solar 연속 시 스트릭, nebula로 바꾸면 리셋.
+
 
 (70) **타이틀 함선과 Jimmy's/우주선 텍스트 간격 거의 없음** (msg `1546720287251243148`)
   - 담당: `game/scenes/title.lua` `shipLayout`. play.lua 금지.
@@ -40,6 +29,20 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+(69) **표본 계열 = 부품 수트 4종 (void / nebula / solar / pulsar)** (msg `1546719861651021824`)
+  - 담당: `game/world.lua` `hueFamilies` + `expedition.collectSample` 스트릭 키. play.lua는 hueKey 전달만.
+  - 지금: azure / ember / void 3색. 부품은 `gear.knownSuits` **solar, nebula, void, pulsar** 4종. 사용자가 복잡하다고 해서 **표본 계열을 부품과 동일하게**.
+  - 매핑 (hue 4등분):
+    - 0.00–0.25 **solar**
+    - 0.25–0.50 **nebula**
+    - 0.50–0.75 **void**
+    - 0.75–1.00 **pulsar**
+  - 도감 `specimenKind` id도 `solar_common` 등으로. azure/ember 문자열 제거. i18n 라벨 KO/EN: 솔라/네뷸라/보이드/펄서 (기호 금지).
+  - (67) HUD는 `SOLAR x1.4`처럼 이 4종 이름 사용.
+  - 스트릭 규칙은 그대로 (같은 계열 연속 +0.2/스텝). 시너지 pulsarBurst/darkMatter는 기어 수트 기준 유지 — 표본 계열과 이름이 같아져도 로직은 기어 장착 수트.
+  - 테스트: `game/tests/sample_suits.lua` — hueFamily 4키, 같은 solar 연속 시 스트릭, nebula로 바꾸면 리셋.
+  - 완료(2026-09-09): hueFamilies를 solar, nebula, void, pulsar 4종으로 매핑 완료. 모든 에셋/코드/테스트에서 azure/ember를 solar/nebula로 일괄 변경 및 i18n 라벨 적용 완료.
+
 (68) **어드민 속도+/내구+/수확+ 버튼 3개 제거** (msg `1546718466558533652`)
   - 담당: `game/scenes/play.lua`의 `adminButtons` / `adminButtonRect` / draw+touch. 함수 `expedition.adminUpgrade`는 테스트용으로 남겨도 됨 — **화면 버튼만 삭제**.
   - 우측 상단 pause 아래 스택 전부 제거. (67) 배율 표시만 남김.

@@ -12,23 +12,23 @@ function M.run()
     local specimenStore = collectionStore.new(testCollection)
     local emptyIds = specimenStore:load()
     assert(next(emptyIds) == nil)
-    assert(specimenStore:record("azure_common") == true)
-    assert(specimenStore:record("azure_common") == false)
-    assert(specimenStore:record("ember_rare") == true)
+    assert(specimenStore:record("solar_common") == true)
+    assert(specimenStore:record("solar_common") == false)
+    assert(specimenStore:record("nebula_rare") == true)
     local reloadedStore = collectionStore.new(testCollection)
     local reloadedIds = reloadedStore:load()
-    assert(reloadedIds.azure_common == true)
-    assert(reloadedIds.ember_rare == true)
+    assert(reloadedIds.solar_common == true)
+    assert(reloadedIds.nebula_rare == true)
     assert(reloadedIds.void_epic == nil)
-    assert(reloadedStore:record("azure_common") == false)
+    assert(reloadedStore:record("solar_common") == false)
     assert(love.filesystem.remove(testCollection))
 
     -- PlayScene initializes collectedSpecimens from an injected collectionStore.
     local specimenScene = PlayScene.new({
         bestAltitudeStore = { load = function() return 0 end, save = function() return false end },
-        collectionStore = { load = function() return { azure_common = true } end, record = function() return true end },
+        collectionStore = { load = function() return { solar_common = true } end, record = function() return true end },
     })
-    assert(specimenScene.collectedSpecimens.azure_common == true)
+    assert(specimenScene.collectedSpecimens.solar_common == true)
 end
 
 return M
