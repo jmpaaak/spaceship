@@ -35,6 +35,14 @@ M.hubs = {
         height = 128,
         sha256 = "9124d59137bd7016ba170fc1a13932effaade126e45f768bd224aabb120b1764",
     },
+    lava = {
+        id = "hub_venus_nasa_pia00104",
+        runtimePath = "assets/planet/studio/hub_venus.png",
+        masterPath = "docs/assets/masters/planet/hub_venus_nasa_pia00104_master.png",
+        width = 128,
+        height = 128,
+        sha256 = "53cabe7fa57bdb551aff57502d97c203dac4c4c1fbcb3d05d81da62618b911b4",
+    },
 }
 
 return M
