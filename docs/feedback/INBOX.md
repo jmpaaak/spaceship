@@ -4,10 +4,15 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(79b) **Love 창 깜빡임 원인 재확인** (msg `1547197200784949288`)
-  - 담당: 실행 중 love 프로세스 PID/cwd/부모 실측. 추측 금지.
-
 ## 처리 완료
+(79c) **Love 창이 방금 또 깜빡임** (msg `1547202111937323009`)
+  - 실측: gostro 루프 `make test`가 `run_love_qa.sh`로 Love를 다시 켬. `GAME_QA=1` 1×1 창도 Dock 아이콘이 깜빡임. `GOSTRO_LOOP`/`GAME_QA`/`GAME_HEADLESS`면 `t.window=false`로 창 모듈 자체를 끔. `make test` GREEN, 테스트 후 love 프로세스 없음.
+  - [DONE 2026-09-09]
+
+(79b) **Love 창 깜빡임 원인 재확인** (msg `1547197200784949288`)
+  - 실측: Spaceship Love 프로세스 없음. 현재 창은 gostro 자율 루프 `loop.sh` → `run_agent.py` → `agy`가 `love build/test --filter arrow_art`를 GAME_HEADLESS 없이 실행. `build/test`에 conf.lua 없음. mok `tests/childhood_assets`도 짧게 떴다 사라짐.
+  - [DONE 2026-09-09]
+
 (79) **Love2D 테스트 창이 켜졌다 꺼졌다 반복하지 않게** (msg `1547191744909549568`)
   - 원인: Spaceship 헤드리스는 창 모듈을 꺼도 macOS Love.app이 Dock 아이콘을 띄울 수 있고, gostro `make verify`의 시각 QA는 `love.window.setMode`로 창을 연속 생성함.
   - Spaceship/`love2d-game-skeleton`/`gostro` `conf.lua`: `GAME_HEADLESS=1`이면 `t.window=false` + window/graphics/audio 모듈 비활성. Makefile은 `SDL_VIDEODRIVER=dummy`.
