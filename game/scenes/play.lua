@@ -48,8 +48,6 @@ local playLayout = require("game.scenes.play_layout")
 playLayout.install(M, viewport)
 local settlementTouchRows = M.settlementTouchRows
 local pauseButton = M.pauseButton
-local adminButtons = playLayout.adminButtons
-local adminButtonRect = playLayout.adminButtonRect
 
 -- Pure equipped-gear HUD layout and hit testing.
 require("game.scenes.play_hud_gear").install(M)
@@ -136,8 +134,6 @@ require("game.scenes.play_input").install(M, {
     world = world,
     settlementTouchRows = settlementTouchRows,
     pauseButton = pauseButton,
-    adminButtons = adminButtons,
-    adminButtonRect = adminButtonRect,
 })
 -- Omnidirectional movement: both horizontal (ship.x) and vertical (ship.y)
 -- are driven directly by joystick/keyboard input at effectiveSpeed, with no
@@ -741,8 +737,6 @@ M.gearPopupChipVertical = true  -- INBOX 61(7): chips stacked vertically
 
 
 require("game.scenes.play_scene_draw").install(M, {
-    adminButtonRect = adminButtonRect,
-    adminButtons = adminButtons,
     drawCollectOrbitRing = drawCollectOrbitRing,
     drawFloatingIconSprite = drawFloatingIconSprite,
     drawHudSpriteOrPoly = drawHudSpriteOrPoly,

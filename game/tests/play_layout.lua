@@ -27,9 +27,6 @@ function M.run()
             and pause.mainMenu.y == pause.restart.y + pause.restart.h + 20,
         "R1: pause actions must remain centered and vertically separated")
 
-    local ax, ay, aw, ah = layout.adminButtonRect(2, 300)
-    assert(ax == 640 and ay == 394 and aw == 72 and ah == 36,
-        "R1: admin controls must retain their stacked layout")
     assert(api.settlementRowBackgroundColor(1) == api.settlementRowBackgroundColors[1]
             and api.settlementRowBackgroundColor(3) == api.settlementRowBackgroundColors[1],
         "R1: settlement row shading must retain alternating colors")
@@ -39,8 +36,8 @@ function M.run()
         "R1: play.lua must delegate control and settlement layout")
     assert(not playSource:find("local settlementTouchRows%s*=%s*{"),
         "R1: settlement touch-row definitions must leave play.lua")
-    assert(not playSource:find("local function adminButtonRect"),
-        "R1: admin button layout must leave play.lua")
+    assert(not playSource:find("adminButtons") and not playSource:find("adminButtonRect"),
+        "R1: admin HUD stack must not remain in play.lua")
 
     print("  R1 play_layout module OK")
 end

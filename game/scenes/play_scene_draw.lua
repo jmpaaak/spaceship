@@ -2,8 +2,6 @@ local Module = {}
 
 function Module.install(scene, deps)
     local M = scene
-    local adminButtonRect = deps.adminButtonRect
-    local adminButtons = deps.adminButtons
     local drawCollectOrbitRing = deps.drawCollectOrbitRing
     local drawFloatingIconSprite = deps.drawFloatingIconSprite
     local drawHudSpriteOrPoly = deps.drawHudSpriteOrPoly
@@ -762,18 +760,6 @@ function M:draw()
             iconCx - gap / 2 - barW, iconCy - barH / 2, barW, barH)
         love.graphics.rectangle("fill",
             iconCx + gap / 2, iconCy - barH / 2, barW, barH)
-        local prevAdminFont = love.graphics.getFont()
-        local adminFont = fonts.get(22)
-        love.graphics.setFont(adminFont)
-        for i, btn in ipairs(adminButtons) do
-            local ax, ay, aw, ah = adminButtonRect(i, pb.y)
-            love.graphics.setColor(0.15, 0.18, 0.28, 0.75)
-            love.graphics.rectangle("fill", ax, ay, aw, ah, 6, 6)
-            love.graphics.setColor(0.85, 0.9, 1, 0.85)
-            love.graphics.rectangle("line", ax, ay, aw, ah, 6, 6)
-            love.graphics.printf(i18n.t(btn.labelKey), ax, ay + 6, aw, "center")
-        end
-        love.graphics.setFont(prevAdminFont)
         self:drawHelpButton()
         self:drawStreakHud()
     end

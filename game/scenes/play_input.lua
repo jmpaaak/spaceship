@@ -248,13 +248,6 @@ function M.touchpressed(self, id, x, y, deps)
             pcall(love.system.vibrate, 0.02)
             return true
         end
-        for i, button in ipairs(deps.adminButtons) do
-            local ax, ay, aw, ah = deps.adminButtonRect(i, deps.pauseButton.y)
-            if x >= ax and x < ax + aw and y >= ay and y < ay + ah then
-                expedition.adminUpgrade(self.expedition, button.kind)
-                return true
-            end
-        end
         local slot = self:hitHudGearSlot(x, y)
         if slot then
             slot.slotRect = slot.rect

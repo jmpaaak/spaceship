@@ -9,11 +9,6 @@
 
 
 
-(68) **어드민 속도+/내구+/수확+ 버튼 3개 제거** (msg `1546718466558533652`)
-  - 담당: `game/scenes/play.lua`의 `adminButtons` / `adminButtonRect` / draw+touch. 함수 `expedition.adminUpgrade`는 테스트용으로 남겨도 됨 — **화면 버튼만 삭제**.
-  - 우측 상단 pause 아래 스택 전부 제거. (67) 배율 표시만 남김.
-  - 테스트: `game/tests/admin_buttons_gone.lua` — play.lua에 adminButtons 테이블/드로우 없음.
-
 (69) **표본 계열 = 부품 수트 4종 (void / nebula / solar / pulsar)** (msg `1546719861651021824`)
   - 담당: `game/world.lua` `hueFamilies` + `expedition.collectSample` 스트릭 키. play.lua는 hueKey 전달만.
   - 지금: azure / ember / void 3색. 부품은 `gear.knownSuits` **solar, nebula, void, pulsar** 4종. 사용자가 복잡하다고 해서 **표본 계열을 부품과 동일하게**.
@@ -45,6 +40,12 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+(68) **어드민 속도+/내구+/수확+ 버튼 3개 제거** (msg `1546718466558533652`)
+  - 담당: `game/scenes/play.lua`의 `adminButtons` / `adminButtonRect` / draw+touch. 함수 `expedition.adminUpgrade`는 테스트용으로 남겨도 됨 — **화면 버튼만 삭제**.
+  - 우측 상단 pause 아래 스택 전부 제거. (67) 배율 표시만 남김.
+  - 테스트: `game/tests/admin_buttons_gone.lua` — play.lua에 adminButtons 테이블/드로우 없음.
+  - 완료(2026-09-09): HUD 스택 삭제. `play_layout.lua`에서 adminButtons/adminButtonRect 제거, `play_scene_draw.lua` 드로우 루프 제거, `play_input.lua` 터치 히트 제거. `play.lua`는 더 이상 위임하지 않음. `expedition.adminUpgrade`는 테스트 헬퍼로 유지. (67) `drawStreakHud`는 pause/help 아래에 유지. `game/tests/admin_buttons_gone.lua` GREEN.
+
 (67) **표본 연속 배율을 우측 도움말/일시정지 아래에 상시 표시** (msg `1546718466558533652`)
   - 담당: `game/scenes/play_hud.lua` (또는 play_help 옆). play.lua는 한 줄 위임. 어드민 버튼이 있던 자리.
   - `expedition.streakMultiplier(sampleStreakCount, run)` 현재 값. 예: `x1.0` / `x1.2` / `AZURE x1.4`. 계열 이름(azure/ember/void) + 배수.

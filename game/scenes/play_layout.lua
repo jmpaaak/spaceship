@@ -60,12 +60,6 @@ M.settlementTouchRows = {
     },
 }
 
-M.adminButtons = {
-    { kind = "speed", labelKey = "admin_speed" },
-    { kind = "hull", labelKey = "admin_hull" },
-    { kind = "yield", labelKey = "admin_yield" },
-}
-
 M.shopActionColumnX, M.shopActionColumnW = 24, 400
 M.shopStatusColumnX, M.shopStatusColumnW = 430, 260
 M.shopColumnLeftX, M.shopColumnLeftW = 24, 330
@@ -94,11 +88,6 @@ function M.pauseMenuRects(viewportWidth, viewportHeight)
         restart = { x = cx - btnW / 2, y = baseY, w = btnW, h = btnH },
         mainMenu = { x = cx - btnW / 2, y = baseY + btnH + gap, w = btnW, h = btnH },
     }
-end
-
-function M.adminButtonRect(index, pauseY)
-    local w, h, gap = 72, 36, 6
-    return 720 - w - 8, (pauseY or 8) + 52 + (index - 1) * (h + gap), w, h
 end
 
 function M.settlementRowBackgroundColor(index, colors)

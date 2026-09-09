@@ -43,8 +43,6 @@ local function fixture(phase)
             { key = "relaunch", top = 1010, bottom = 1180 },
         },
         pauseButton = { x = 616, y = 8, w = 44, h = 44 },
-        adminButtons = {},
-        adminButtonRect = function() return 0, 0, 0, 0 end,
         layout = {
             shopModalButtons = function()
                 return { x = 200, y = 700, w = 140, h = 60 },
