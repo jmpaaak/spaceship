@@ -249,18 +249,7 @@ function M.run()
 
     require("game.tests.legacy_title_menu_composition").run()
 
-    -- INBOX-61(30): Jimmy's author line on title screen
-    do
-        local i18n = require("game.i18n")
-        i18n.setLocale("en")
-        assert(i18n.t("title_author") == "Jimmy's",
-            "INBOX-61(30): EN title_author must be 'Jimmy's'")
-        i18n.setLocale("ko")
-        assert(i18n.t("title_author") == "Jimmy's",
-            "INBOX-61(30): KO title_author must be 'Jimmy's'")
-        i18n.setLocale("en")
-        print("  INBOX-61(30) Jimmy title author OK")
-    end
+    require("game.tests.legacy_title_author").run()
 
 
     require("game.tests.bgm").run()
@@ -676,6 +665,7 @@ function M.run()
     require("game.tests.self_test_leaderboard_client_extraction").run()
     require("game.tests.self_test_last_checkpoint_extraction").run()
     require("game.tests.self_test_title_menu_composition_extraction").run()
+    require("game.tests.self_test_title_author_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
