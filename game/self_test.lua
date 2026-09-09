@@ -239,32 +239,7 @@ function M.run()
 
     require("game.tests.legacy_pause_menu_title").run()
 
-    -- INBOX 61(22): danger_warning i18n + starDangerTextMultiplier constant
-    do
-        local i18n = require("game.i18n")
-        local world = require("game.world")
-
-        -- danger_warning key must exist in both locales
-        for _, loc in ipairs({"en", "ko"}) do
-            i18n.setLocale(loc)
-            local val = i18n.t("danger_warning")
-            assert(val and val ~= "danger_warning",
-                "INBOX 61(22): i18n key 'danger_warning' missing for locale " .. loc)
-        end
-        i18n.setLocale("en")
-        assert(i18n.t("danger_warning") == "DANGER",
-            "INBOX 61(22): EN danger_warning must be 'DANGER'")
-
-        -- starDangerTextMultiplier must be >1 (outer ring beyond well)
-        assert(world.starDangerTextMultiplier and world.starDangerTextMultiplier > 1,
-            "INBOX 61(22): starDangerTextMultiplier must be > 1")
-        -- dangerOuter must be larger than wellRadius
-        local dangerOuter = world.starWellRadius * world.starDangerTextMultiplier
-        assert(dangerOuter > world.starWellRadius,
-            "INBOX 61(22): danger text outer radius must exceed well radius")
-
-        print("  INBOX-61(22) danger warning text + constants OK")
-    end
+    require("game.tests.legacy_danger_warning").run()
 
     -- ===== INBOX 61(23): Leaderboard button + scene + config =====
     do
@@ -959,6 +934,7 @@ function M.run()
     require("game.tests.self_test_slot_speed_reward_separation_extraction").run()
     require("game.tests.self_test_earth_gear_offer_i18n_extraction").run()
     require("game.tests.self_test_pause_menu_title_extraction").run()
+    require("game.tests.self_test_danger_warning_extraction").run()
 
     print("SPACESHIP_UNIT_OK")
 end
