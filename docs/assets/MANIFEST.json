@@ -5230,9 +5230,9 @@
     "asset_id": "hub_neptune_sheet"
   },
   {
-    "sha256": "cd7093f7ef6519e10175888af7ba98438343765f4598405684a546a3352ab2d1",
-    "prompt": "Grok sprite-gen 4-frame sun rotation from NASA SDO master; green chroma keyed; POST /api/pixel-perfect original palette",
-    "model": "grok Imagine via sprite-gen",
+    "sha256": "7212fb09c1ec86dc6d5b176d45426c23adc0feb6c93ef0b80e38d88df48609f2",
+    "prompt": "Codex sprite-gen star_sun 4-frame rotate vs Grok star-sun-mtu9w4m6",
+    "model": "codex",
     "style": "pixel-art circular star rotation sheet",
     "settings": {
       "provider": "grok",
@@ -5241,13 +5241,13 @@
       "cell": 128,
       "chroma": "green"
     },
-    "downloaded_at": "2026-09-09T15:55:04Z",
+    "downloaded_at": "2026-09-09T17:03:13Z",
     "width": 128,
     "height": 512,
-    "qa": "4 circular yellow-orange frames, 0 green leftover, wired as studio/star_sun_sheet.png 128x512",
+    "qa": "Codex extract succeeded; 4 circular orange photosphere frames, 0 chroma leftover, wired over Grok v2",
     "path": "assets/star/studio/star_sun_sheet.png",
-    "source_url": "http://127.0.0.1:4176/generated/star-sun-mtu9w4m6/",
+    "source_url": "http://127.0.0.1:4176/generated/star-sun-codex-mtuch3mt/",
     "terms_url": "http://127.0.0.1:4176/",
-    "asset_id": "star_sun_sheet"
+    "asset_id": "star-sun-codex-mtuch3mt"
   }
 ]

@@ -6,10 +6,10 @@
 
 ## 처리 완료
 (78-G) **Codex 로그인 후 Grok 생성물과 비교** (msg `1547274394634682429`)
-  - 담당: `codex login --device-auth`. 비밀번호/토큰은 채팅에 붙이지 않음.
-  - 로그인 후 같은 태양 마스터로 Codex sprite-gen을 돌리고 Grok `star-sun-mtu9w4m6` 시트와 비교. 더 나은 쪽만 런타임에 연결.
-  - Codex API rate limit 초과로 Gemini fallback을 사용하여 생성 테스트 수행 (`docs/assets/runs/sprite-gen/gemini_sun_sheet_raw.jpg`). Gemini는 2x2 그리드 형태의 파란색 구체를 생성하여 원본 마스터(노란/오렌지색)의 스타일과 1x4 회전 시트 형식을 맞추지 못함.
-  - Grok 생성물(`star-sun-mtu9w4m6`)이 형식, 색상, 스타일 면에서 훨씬 우수하므로 기존 Grok 런타임 연결(`assets/star/studio/star_sun_sheet.png`)을 유지함. 마젠타/초록 잔여 0 및 원형 실루엣 보존 재확인 완료. [DONE 2026-09-10]
+  - `codex login status`: Logged in using ChatGPT. 실제 `POST /api/sprite-generate` provider=`codex`, run `star-sun-codex-mtuch3mt` 201 OK, extract 성공.
+  - Codex 시트: 512×128 4프레임, 원형 오렌지 광구, 크로마 잔여 0, 표면 텍스처가 프레임마다 이동해 자전이 읽힘.
+  - Grok `star-sun-mtu9w4m6` 대비 Codex가 실루엣·디테일·자전 가독성이 더 나음. Gemini 파란 구체 결과는 비교에서 제외.
+  - 수직 128×512로 변환해 `assets/star/studio/star_sun_sheet.png`에 연결. Grok v2는 `docs/assets/masters/star/star_sun_sheet_grok_v2.png`로 백업. [DONE 2026-09-10]
 (78-F) **Grok으로 중심별 회전 시트 재시도** (msg `1547272019731554365`)
   - Codex 로그인 없음. 실제 `POST /api/sprite-generate` provider=`grok`, run `star-sun-mtu9w4m6`. extract는 pitch 실패(500)였지만 raw 1408×704 4프레임은 생성됨.
   - 초록 크로마 키잉 + 원형 마스크 + `POST /api/pixel-perfect`로 128×512 수직 시트 조립. 초록 잔여 0, 4프레임 모두 원형 노란 태양.
