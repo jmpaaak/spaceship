@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 75 is complete and moved to 처리 완료. Added a continuous distance-based discovery alpha (`discoveryAlpha`) in `game/minimap.lua` for the next undiscovered galaxy.
-- The minimap rendering in `game/scenes/play_minimap.lua` now smoothly fades in the galaxy elements (mist/star -> boundary ring -> details) based on distance, preventing the pop-in effect.
-- Added `testMinimapGalaxyDiscoveryFade` to `game/tests/legacy_galaxy_structure.lua` to verify the continuous alpha behavior. Tests passed.
+- INBOX 59 is partially complete: the former 229,041-byte `assets/sfx/collision.mp3` is preserved byte-for-byte as `assets/sfx/collect.mp3`, and `game/sfx.lua` now routes existing planet/moon/comet `collect` calls to that clip.
+- `game/tests/sfx.lua` verifies the MP3 path, format, and complete preserved length. The focused engine-hosted suite is GREEN.
+- INBOX 76 was removed from pending as superseded by completed INBOX 78: the obsolete 8766-only Asset Studio/server no longer exists, with a regression test preventing its return.
 
 ## Next slice
 
-- INBOX 76: Fix Asset Studio 8766 POST 501 error by running the POST-supported server from the repository on port 8766. Add clipboard image paste support (`Ctrl+V`/`Cmd+V`) to load images into the source image pipeline with `sourceKind="clipboard"`.
+- Finish INBOX 59 by obtaining the specified Pixabay Space Explosion with reverb (id 101449), replacing `assets/sfx/collision.mp3`, recording its license/source, and verifying planet collision volume 0.6 plus debris volume 0.9.

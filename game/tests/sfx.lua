@@ -17,8 +17,8 @@ function M.run()
         "INBOX 61(36): star_sample path")
     assert(sfx.defs.collision.path == "assets/sfx/collision.mp3",
         "INBOX 61(36): collision path")
-    assert(sfx.defs.collect.path == "assets/sfx/collect.wav",
-        "INBOX (50): collect path")
+    assert(sfx.defs.collect.path == "assets/sfx/collect.mp3",
+        "INBOX (59): collect must use the former collision clip")
     assert(sfx.defs.slot_spin.path == "assets/sfx/slot_spin.ogg",
         "INBOX (50): slot_spin path")
     assert(sfx.defs.boost.path == "assets/sfx/boost.ogg",
@@ -43,7 +43,10 @@ function M.run()
         assert(data:sub(1, #magic) == magic,
             "INBOX (50): " .. path .. " must start with " .. label)
     end
-    assertSfxFile("assets/sfx/collect.wav", "RIFF", "WAV")
+    assertSfxFile("assets/sfx/collect.mp3", string.char(255), "MP3")
+    local collectData = love.filesystem.read("assets/sfx/collect.mp3")
+    assert(#collectData == 229041,
+        "INBOX (59): collect must preserve the complete former collision clip")
     assertSfxFile("assets/sfx/slot_spin.ogg", "OggS", "OGG")
     assertSfxFile("assets/sfx/boost.ogg", "OggS", "OGG")
 

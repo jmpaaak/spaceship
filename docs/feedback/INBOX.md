@@ -5,20 +5,6 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-  - 담당: 미니맵 표현 모듈 `game/scenes/play_minimap.lua` 또는 현재 미니맵 전용 모듈. `play.lua`에는 계산/드로우 로직을 붙이지 않는다.
-  - 현재 다음 은하가 탐지 임계값을 넘는 순간 아이콘/중심별/경계가 한꺼번에 나타나 “갑자기 생김”. 이산 visible boolean을 제거하고 거리 기반 연속 `discoveryAlpha`를 사용한다.
-  - 실제 발견 반경보다 바깥의 사전 탐지 구간에서 alpha 0으로 시작해 접근할수록 smoothstep으로 1까지 증가. 처음에는 희미한 점/안개 실루엣만, 가까워질수록 중심별→경계 링→세부 천체 순서로 드러난다.
-  - 탐지 중 아이콘 위치는 고정하고 크기 점프 금지. 랜덤 깜빡임·즉시 완전 표시 금지. 멀어질 때는 같은 곡선으로 자연스럽게 사라지되 실제 `discovered` 저장 상태는 기존 규칙 유지.
-  - 현재 은하와 이미 발견한 은하는 alpha=1. 다음 미발견 은하에만 적용. 미니맵 boundary ring 중심은 계속 `sunPosition` 기준.
-  - 테스트: 탐지구간 바깥 alpha=0, 중간 0<alpha<1, 발견선 alpha=1, 연속성/단조 증가, 이미 발견 alpha=1. 캡처 비교에서 한 프레임 팝인 없음.
-
-(76) **Asset Studio 8766 POST 501 수정 + 클립보드 이미지 붙여넣기** (msg `1546748006118858835`)
-  - 담당: `tools/serve_editors.py`, `tools/asset-studio/editor.js`, `tools/asset-studio/index.html`, 관련 Python 테스트. 게임 Lua 불변.
-  - 원인: 현재 8766은 `/tmp/serve_editors.py`의 GET-only `BaseHTTPRequestHandler`로 실행되어 `POST /api/sprite-gen`이 501. 저장소의 POST 지원 서버를 8766에서 실행하고 `/asset-studio/` 기존 URL도 그대로 alias 제공한다.
-  - `Ctrl+V`/macOS `Cmd+V` paste 이벤트에서 `clipboardData.items`의 첫 `image/*` blob을 읽어 source image로 로드. URL/파일 업로드와 동일 파이프라인 사용. 텍스트만 붙여넣으면 일반 입력 동작 방해 금지.
-  - 클립보드 이미지는 `sourceKind="clipboard"`; 체크무늬를 원본에 굽지 말고 깨끗한 RGBA로 POST. 상태창에 붙여넣기 성공/실패 표시.
-  - 테스트: POST가 501이 아닌 200/503 계약, `/asset-studio/` alias 200, paste image 핸들러 존재·sourceKind clipboard, 텍스트 paste 무시, no-store 캐시.
-
 (59) **충돌 SFX Pixabay 교체 + 기존 충돌음을 표본 획득으로** (msg `1546711868477931601`)
   - 담당: `game/sfx.lua` + `assets/sfx/`. play.lua 호출 이름은 유지 (`collision` / `collect`).
   - 충돌: `assets/sfx/collision.mp3`를 Pixabay **Space Explosion with reverb** (id 101449, morganpurkis/Freesound, ~4s, Pixabay Content License)로 교체.
@@ -26,6 +12,7 @@
   - 기존 충돌 클립은 **표본 획득**으로 이동: 행성/달/혜성 `sfx.play("collect")`가 옛 `collision.mp3`를 쓰게. 현재 8bit `collect.wav`는 이 용도에서 뺌 (파일 남겨도 되지만 collect def는 옛 collision 클립).
   - (54) 파편 충돌도 새 explosion 클립을 1.5배 볼륨으로. 행성 충돌 기본 vol은 기존 collision 값.
   - 크레딧: `docs/GENERATED_ASSET_LOG.md` + 필요 시 i18n. 테스트: `game/tests/sfx.lua` 경로/매직/호출 갱신.
+  - 부분완료(2026-09-09): 기존 `collision.mp3`를 바이트 그대로 `collect.mp3`에 보존하고 `collect` 정의를 새 경로로 전환했다. 일반 행성/달/혜성의 기존 `sfx.play("collect")` 호출은 이제 옛 충돌음을 사용한다. Pixabay explosion 다운로드·`collision.mp3` 교체·크레딧 기록은 다음 조각이다.
 
 (60) **중심 행성(허브) 표본 획득 SFX = Pixabay Loud Space Launch** (OOB 2026-09-08)
   - 담당: `game/sfx.lua` 새 def `hub_sample` + 허브 탐사/표본 획득 한 줄 호출. play.lua 거대 로직 금지.
@@ -124,6 +111,9 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(76) **Asset Studio 8766 POST 501 수정 + 클립보드 이미지 붙여넣기** (msg `1546748006118858835`)
+  - 완료(2026-09-09, 후속 (78)로 대체): 통합 Asset Studio 단일화 결정으로 구형 8766 전용 `tools/asset-studio/`와 `tools/serve_editors.py`가 제거되어 수정 대상과 501 경로 자체가 없어졌다. `tools/test_legacy_asset_studio_removed.py`가 해당 서버/UI의 재도입을 막으며 현재 스튜디오는 4176 통합 경로를 사용한다.
 
 (75) **미니맵 다음 은하계 팝인 제거 — 거리 기반 조기 탐지 페이드** (msg `1546747455004213329`)
   - 완료(2026-09-09): `game/minimap.lua`에서 조기 탐지 거리 `discoveryLeadDistance`를 도입해 `discoveryAlpha`를 계산하도록 수정하고, `game/scenes/play_minimap.lua`에서 팝인 현상 없이 부드러운 페이드인(안개 → 중심별 → 경계 링 순서)이 되도록 렌더링에 반영했다. `game/tests/legacy_galaxy_structure.lua`에 `testMinimapGalaxyDiscoveryFade` 테스트를 추가해 단조 증가 및 부분 페이드 구조를 검증했다.
