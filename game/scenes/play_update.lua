@@ -618,6 +618,55 @@ function scene:update(dt)
         end
         -- INBOX (35): comet spawning + collection/collision
         if self.expedition.phase == "ascending" then
+
+        -- Station logic
+        local stationModule = require("game.station")
+        if self.expedition.phase == "ascending" then
+            stationModule.tickSpawn(self.time, self.ship.x, self.ship.y, viewport.width, viewport.height)
+            for _, st in ipairs(stationModule.nearbyStations(self.ship.x, self.ship.y, self.time, dt, viewport.width, viewport.height)) do
+                if not st.docked then
+                    local speedLimit = expedition.effectiveSpeed(self.expedition) * 0.8
+                    local res = stationModule.checkDocking(st, self.ship.x, self.ship.y, self.ship.vx, self.ship.vy, speedLimit)
+                    if res == "docked" then
+                        st.docked = true
+                        -- heal full
+                        self.expedition.durability = self.expedition.maxDurability
+                        -- reward
+                        local moonValue = world.sampleValue(st) * 1.5
+                        local value = math.floor(moonValue + 0.5)
+                        expedition.collectSample(self.expedition, value, "moon")
+                        sfx.play("collect")
+                        table.insert(self.floatingTexts, {
+                            text = "DOCKED! HP FULL",
+                            x = st.x,
+                            y = st.y - 20,
+                            timer = 2.0,
+                            kind = "sample",
+                        })
+                        self.shipShake = 0.3
+                    elseif res == "crash" then
+                        st.docked = true -- prevent multiple hits
+                        local damage = world.collisionDamage(st)
+                        table.insert(self.floatingTexts, {
+                            text = i18n.t("floating_damage_text", damage),
+                            x = self.ship.x + 60,
+                            y = self.ship.y,
+                            timer = 1.0,
+                            kind = "damage",
+                        })
+                        self.shipShake = shipShakeDuration
+                        self.shipShakeMagnitude = 1.4
+                        if expedition.damage(self.expedition, damage) then
+                            self:persistBestAltitude()
+                            self.message = i18n.t("ship_destroyed_message", math.floor(self.expedition.bestAltitude))
+                            sfx.play("crash")
+                            pulseHaptic(self, 0.4)
+                            break
+                        end
+                    end
+                end
+            end
+        end
             world.tickCometSpawn(self.time, self.ship.x, self.ship.y, viewport.width, viewport.height)
             for _, comet in ipairs(world.nearbyComets(self.ship.x, self.ship.y, self.time, viewport.width, viewport.height)) do
                 local dx, dy = comet.x - self.ship.x, comet.y - self.ship.y

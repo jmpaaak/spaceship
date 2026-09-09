@@ -428,6 +428,7 @@ function M.new(options)
     local debrisImages = loadSpriteMap(debrisImagePaths)
     local moonImage = loadSprite("assets/moon/moon_generic.png")
     local cometImage = loadSprite("assets/comet/comet_generic.png")
+    local stationImage = loadSprite("assets/station/station.png")
     local suitIconImages = loadSpriteMap({
         solar = "assets/suit_icons/solar.png",
         nebula = "assets/suit_icons/nebula.png",
@@ -569,6 +570,7 @@ function M.new(options)
         debrisImagePaths = debrisImagePaths,
         moonImage = moonImage,
         cometImage = cometImage,
+        stationImage = stationImage,
         suitIconImages = suitIconImages,
         hudIconImages = hudIconImages,
         minimapImages = minimapImages,

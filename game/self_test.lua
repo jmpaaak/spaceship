@@ -191,6 +191,7 @@ function M.run()
     require("game.tests.legacy_rcs_gradient").run()
 
     require("game.tests.legacy_comet_system").run()
+    require("game.tests.station_dock").run()
 
     require("game.tests.legacy_flat_sample_value").run()
 

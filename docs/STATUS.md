@@ -1,9 +1,11 @@
 ## Current Status
 
-- INBOX 62 is complete: `slot_spin` SFX plays at 0.3 (half of the global 0.6).
-- `sfx.defs.slot_spin` now has `volume = 0.3`; `sfx.play` uses `volume or def.volume or 0.6`. Other SFX defs have no `volume` field and stay at 0.6.
-- `play_slot.lua` still has a single `sfx.play("slot_spin")` line (no per-call volume arg). `game/tests/sfx.lua` is GREEN.
+- INBOX 63 is complete: Added abandoned space-station objects (`game/station.lua`).
+- Stations spawn with the same probability/interval as comets (independent stream).
+- Stations rotate slowly and have a 50-degree docking arc.
+- If the ship enters the arc slowly, it docks (heals full HP, rewards 1.5x moon sample value). If it hits outside the arc or too fast, it crashes and takes damage.
+- PIL-generated sprite `assets/station/station.png` added and logged. Tests added in `game/tests/station_dock.lua`.
 
 ## Next slice
 
-- INBOX 63: rotating abandoned space-station docking (`game/world.lua` + `game/stations.lua` + `game/scenes/play_station.lua`).
+- INBOX 64: Refactor planet coordinate generation to avoid grid-like layout (`game/world.lua`).

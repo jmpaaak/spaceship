@@ -161,6 +161,7 @@ function M.keypressed(self, key, deps)
                 self.moonDiscovered = {}
                 self.moonCollided = {}
                 deps.world.resetComets(self.time)
+                require('game.station').reset(self.time)
             end
             self.message = ""
         end

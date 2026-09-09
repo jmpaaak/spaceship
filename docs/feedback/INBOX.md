@@ -6,14 +6,6 @@
 
 
 
-(63) **회전 버려진 우주정거장 도킹** (msg `1546715845642682451`)
-  - 담당: `game/world.lua` + `game/stations.lua` (새 모듈, 순수) + `game/scenes/play_station.lua` (드로우/도킹). play.lua는 require + 한 줄 위임만. `tools/gen_station.py` 에셋.
-  - 행성과 **별도** 오브젝트. 혜성(운성)과 **동일 등장 확률**: `cometSpawnInterval=30`, `cometSpawnChance=0.30`, 첫 스폰 60초 보장과 같은 타이머/롤 (독립 스트림, 혜성과 같은 틱에 안 겹쳐도 됨).
-  - 정거장은 천천히 회전. 도킹 가능 영역은 **원주의 일부 아크**(대략 40~60°)만. 함선이 그 아크에 맞춰 천천히 진입해야 성공. 아크 밖/너무 빠르면 충돌(행성 충돌 데미지 경로).
-  - 도킹 성공: 회전 정지. 보상 = `moonSampleValue * 1.5` (반올림) + **내구도 완전 회복** (`durability = maxDurability`). 한 정거장 1회.
-  - 스프라이트: 웹에서 버려진 우주정거장 레퍼런스 검색 → 픽셀화 → `assets/station/station.png` (+ 가능하면 회전 시트). NASA/위키미디어 등 사용 가능한 소스. `docs/GENERATED_ASSET_LOG.md` 기록. ComfyUI 금지, PIL/`tools/` ≤50줄 또는 검색 PNG 픽셀화.
-  - 테스트: `game/tests/station_dock.lua` — 스폰 확률 상수 혜성과 동일, 아크 히트만 도킹, 성공 시 회전 정지·힐·1.5×위성 금액.
-
 (64) **행성 배치가 세로줄/규칙 격자처럼 보이면 안 됨** (msg `1546715845642682451`)
   - 담당: `game/world.lua` `M.planets`. play.lua 금지.
   - 원인: `sectorSize=192` 격자 + 섹터당 0~1개라 세로/가로 줄로 읽힘. x는 `hash(sectorX+i*7, sectorY, 40)`, y는 `hash(sectorX, sectorY+i*13, 60)` — 같은 열 섹터에서 x 분산이 약함.
@@ -77,6 +69,15 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(63) **회전 버려진 우주정거장 도킹** (msg `1546715845642682451`)
+  - 담당: `game/world.lua` + `game/stations.lua` (새 모듈, 순수) + `game/scenes/play_station.lua` (드로우/도킹). play.lua는 require + 한 줄 위임만. `tools/gen_station.py` 에셋.
+  - 행성과 **별도** 오브젝트. 혜성(운성)과 **동일 등장 확률**: `cometSpawnInterval=30`, `cometSpawnChance=0.30`, 첫 스폰 60초 보장과 같은 타이머/롤 (독립 스트림, 혜성과 같은 틱에 안 겹쳐도 됨).
+  - 정거장은 천천히 회전. 도킹 가능 영역은 **원주의 일부 아크**(대략 40~60°)만. 함선이 그 아크에 맞춰 천천히 진입해야 성공. 아크 밖/너무 빠르면 충돌(행성 충돌 데미지 경로).
+  - 도킹 성공: 회전 정지. 보상 = `moonSampleValue * 1.5` (반올림) + **내구도 완전 회복** (`durability = maxDurability`). 한 정거장 1회.
+  - 스프라이트: 웹에서 버려진 우주정거장 레퍼런스 검색 → 픽셀화 → `assets/station/station.png` (+ 가능하면 회전 시트). NASA/위키미디어 등 사용 가능한 소스. `docs/GENERATED_ASSET_LOG.md` 기록. ComfyUI 금지, PIL/`tools/` ≤50줄 또는 검색 PNG 픽셀화.
+  - 테스트: `game/tests/station_dock.lua` — 스폰 확률 상수 혜성과 동일, 아크 히트만 도킹, 성공 시 회전 정지·힐·1.5×위성 금액.
+
 
 (62) **룰렛 시작 SFX 볼륨 절반** (OOB 2026-09-08)
   - 담당: `game/sfx.lua`. play.lua 금지.

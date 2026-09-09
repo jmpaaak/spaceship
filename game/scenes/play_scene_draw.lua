@@ -353,6 +353,31 @@ function M:draw()
             end
         end
     end
+
+    -- Draw stations
+    local stationModule = require("game.station")
+    -- We can't use dt here easily so we pass dt=0 to nearbyStations just to get the list without moving them
+    for _, st in ipairs(stationModule.stations) do
+        local cx, cy = math.floor(st.x - cameraX), math.floor(st.y - cameraY)
+        local margin = 100
+        if cx >= -margin and cx <= viewport.width + margin and cy >= -margin and cy <= viewport.height + margin then
+            if self.stationImage then
+                local iw, ih = self.stationImage:getDimensions()
+                local scale = (st.radius * 2) / math.max(iw, ih)
+                love.graphics.draw(self.stationImage, cx, cy, st.rotation, scale, scale, iw / 2, ih / 2)
+            else
+                love.graphics.setColor(0.5, 0.5, 0.5)
+                love.graphics.circle("fill", cx, cy, st.radius)
+            end
+            -- Draw docking arc
+            local currentArcAngle = (st.initialArcAngle + st.rotation) % (math.pi * 2)
+            love.graphics.setColor(0, 1, 0, 0.5)
+            love.graphics.setLineWidth(3)
+            love.graphics.arc("line", "open", cx, cy, st.radius + 5, currentArcAngle - st.arcSpan/2, currentArcAngle + st.arcSpan/2)
+            love.graphics.setLineWidth(1)
+            love.graphics.setColor(1, 1, 1, 1)
+        end
+    end
     for _, comet in ipairs(world.nearbyComets(self.ship.x, self.ship.y, self.time, viewport.width, viewport.height)) do
         local cx, cy = math.floor(comet.x - cameraX), math.floor(comet.y - cameraY)
         if cx > -60 and cx < viewport.width + 60 and cy > -60 and cy < viewport.height + 60 then
