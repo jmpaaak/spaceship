@@ -4,6 +4,12 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
+(78-C) **sprite-gen 재시도** (msg `1547135235815243869`)
+  - 담당: 통합 Asset Studio `http://127.0.0.1:4176/api/sprite-generate` 실제 호출. 브라우저 resize/PIL 위장 금지.
+  - 대상: 함선 카탈로그(starter/scout) + 중심별/허브행성 8프레임 seamless rotate. 기존 함선 13방향/정체성 유지. sprite-gen 원본 → Pixel Perfect 후처리 → 런타임 시트 분리.
+  - Codex/Grok 자격은 실제 프로브 후 사용 가능한 provider만 사용. 401/402 실패 응답은 에셋으로 기록하지 않는다.
+  - 검증: PNG 디코드, 프레임 수/치수, 매니페스트, 런타임 로드. `make test` + `make verify` GREEN.
+
 ## 처리 완료
 (71) **타이틀에 만든이 메뉴 (mok 참고)** (msg `1546720287251243148`)
   - 담당: `game/scenes/credits.lua` (새 씬) + `title.lua` 버튼 + `main.lua` 전환. play.lua 금지.
