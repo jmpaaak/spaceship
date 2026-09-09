@@ -1,8 +1,12 @@
 ## Current Status
 
-- Resolved INBOX 71: title Credits/만든이 menu. Fifth title button under SETTINGS (KO 만든이 / EN CREDITS). New `game/scenes/credits.lua` body: 기획 · 개발, jmpaxk@gmail.com (jimmy), LÖVE 11.5 · Galmuri, reused `title_bgm_credit`. Back/escape returns to title via `main.lua` onCredits. play.lua unchanged.
-- Verified by `game/tests/credits_menu.lua` and full engine unit run (`SPACESHIP_UNIT_OK`).
+- INBOX 78-C: retried sprite-gen through live `POST /api/sprite-generate` on 4176.
+  - Codex still logged out; Grok probe OK and used as the only provider.
+  - Starter and scout ships generated and wired as 64×64 runtime stills from the first atlas cell.
+  - Central-star and hub rotation sheets were not accepted: extract pitch-crosscheck / undersized subject. Existing runtime sheets restored/unchanged.
+  - Provenance: `docs/assets/runs/sprite-gen/SPRITE_GEN_RETRY.json`.
 
 ## Next slice
 
-- Next pending INBOX item after 71 (처리 대기 is empty after this cycle — IDLE unless new Discord rows land).
+- 처리 대기 is empty after this cycle — IDLE unless new Discord rows land.
+- Remaining 78-C work if credentials improve: 8-frame celestial rotation sheets without magenta/box leftovers.

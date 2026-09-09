@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "purpose": "INBOX 78-C sprite-gen retry via live POST /api/sprite-generate",
+  "probes": {
+    "codex": "codex login status: Not logged in (exit 1)",
+    "grok": "PATH /Users/jm/.local/bin/grok; grok -p OK succeeded; used as provider",
+    "studio": "http://127.0.0.1:4176/index.html listening (pid 75607, pixel-asset-studio)"
+  },
+  "successes": [
+    {
+      "id": "ship-starter",
+      "kind": "ship",
+      "endpoint": "http://127.0.0.1:4176/api/sprite-generate",
+      "provider": "grok",
+      "runId": "ship-starter-mttql07m",
+      "generated_at": "2026-09-09T16:05:31+09:00",
+      "sheet": {
+        "path": "docs/assets/runs/sprite-gen/ship-starter-sprite-sheet-alpha.png",
+        "dimensions": [
+          512,
+          128
+        ],
+        "mode": "RGBA",
+        "sha256": "adba687afb8d7ec39ec0fff4cf9d157cd8a7ad8dacb1746b178c48d7c7128c0b"
+      },
+      "runtime_still": {
+        "path": "assets/ship/ship_default.png",
+        "dimensions": [
+          64,
+          64
+        ],
+        "mode": "RGBA",
+        "sha256": "2511195eefb2a1597a4bb36571c2d0aae287bc65be2fc1db53ec008669f115db",
+        "derivation": "first 128px cell of sprite-gen atlas, alpha-bbox crop, integer NEAREST fit into 64x64"
+      },
+      "manifest": "docs/assets/runs/sprite-gen/ship-starter-manifest.json",
+      "wired": true,
+      "note": "Game currently rotates a single still with love.graphics.rotate; 13-direction sheets are not in the live draw path."
+    },
+    {
+      "id": "ship-scout",
+      "kind": "ship",
+      "endpoint": "http://127.0.0.1:4176/api/sprite-generate",
+      "provider": "grok",
+      "runId": "ship-scout-mttqoqio",
+      "generated_at": "2026-09-09T16:05:31+09:00",
+      "sheet": {
+        "path": "docs/assets/runs/sprite-gen/ship-scout-sprite-sheet-alpha.png",
+        "dimensions": [
+          512,
+          128
+        ],
+        "mode": "RGBA",
+        "sha256": "d7a9fac111472d8309a80737807538ffb139fd5d392c51fe2127a5e1c01f0cee"
+      },
+      "runtime_still": {
+        "path": "assets/ship/ship_scout.png",
+        "dimensions": [
+          64,
+          64
+        ],
+        "mode": "RGBA",
+        "sha256": "1b88de98044d9073ba4cb57e9374de95f9e0414fa02a5d66556538a995dff5aa",
+        "derivation": "first 128px cell of sprite-gen atlas, alpha-bbox crop, integer NEAREST fit into 64x64"
+      },
+      "manifest": "docs/assets/runs/sprite-gen/ship-scout-manifest.json",
+      "wired": true,
+      "note": "Game currently rotates a single still with love.graphics.rotate; 13-direction sheets are not in the live draw path."
+    }
+  ],
+  "failures": [
+    {
+      "id": "star-sun",
+      "kind": "central_star_rotate",
+      "runId": "star-sun-mttqq9fw",
+      "provider": "grok",
+      "http_status": 500,
+      "error": "extract pitch-crosscheck: grid detection harmonic mismatch; raw RGB 1408x704 written but atlas not accepted",
+      "wired": false
+    },
+    {
+      "id": "hub-neptune",
+      "kind": "hub_planet_rotate",
+      "runId": "hub-neptune-mttqtrbz",
+      "provider": "grok",
+      "http_status": 201,
+      "error": "atlas extracted but subject occupied only ~20x19 px inside 128 cell; rejected as unusable rotation sheet",
+      "wired": false
+    },
+    {
+      "id": "hub-neptune-256",
+      "kind": "hub_planet_rotate",
+      "runId": "hub-neptune-mttr49um",
+      "provider": "grok",
+      "http_status": 500,
+      "error": "extract failed on 256px green-chroma spin row",
+      "wired": false
+    }
+  ]
+}

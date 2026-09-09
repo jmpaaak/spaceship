@@ -47,6 +47,8 @@ OFFICIAL_SOURCE_PREFIXES = (
     # 2026-09-03: ComfyUI moved to a remote GPU server -- keep both the old
     # local URL (already-recorded manifest entries) and the new one.
     "http://222.238.86.132:8188/",
+    # 2026-09-09: unified Asset Studio sprite-gen / pixel-perfect on 4176.
+    "http://127.0.0.1:4176/",
 )
 
 # Fields still required even for user_supplied entries (provenance + QA

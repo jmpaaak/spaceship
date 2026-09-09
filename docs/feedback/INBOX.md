@@ -4,13 +4,13 @@
 
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
-(78-C) **sprite-gen 재시도** (msg `1547135235815243869`)
-  - 담당: 통합 Asset Studio `http://127.0.0.1:4176/api/sprite-generate` 실제 호출. 브라우저 resize/PIL 위장 금지.
-  - 대상: 함선 카탈로그(starter/scout) + 중심별/허브행성 8프레임 seamless rotate. 기존 함선 13방향/정체성 유지. sprite-gen 원본 → Pixel Perfect 후처리 → 런타임 시트 분리.
-  - Codex/Grok 자격은 실제 프로브 후 사용 가능한 provider만 사용. 401/402 실패 응답은 에셋으로 기록하지 않는다.
-  - 검증: PNG 디코드, 프레임 수/치수, 매니페스트, 런타임 로드. `make test` + `make verify` GREEN.
-
 ## 처리 완료
+(78-C) **sprite-gen 재시도** (msg `1547135235815243869`)
+  - 실제 `POST http://127.0.0.1:4176/api/sprite-generate` 호출. Codex는 `login status: Not logged in`이라 사용하지 않음. Grok (`/Users/jm/.local/bin/grok`)은 프로브 OK 후 provider로 사용.
+  - 함선: starter `ship-starter-mttql07m`, scout `ship-scout-mttqoqio` 생성 성공. 128px 4프레임 아틀라스에서 첫 셀을 64×64 런타임 still로 연결 (`assets/ship/ship_default.png`, `assets/ship/ship_scout.png`). 게임 드로우 경로는 단일 still + `love.graphics.rotate`라 13방향 시트는 현재 런타임에 없음.
+  - 중심별 `star-sun-mttqq9fw`: raw 1408×704는 생성됐으나 extract pitch-crosscheck 실패(500). 후처리 프레임에 마젠타 테두리·검정 박스가 남아 런타임 시트는 기존 `star_sun_sheet.png`로 복구. 허브 `hub-neptune` 128셀은 주제가 ~20px로 너무 작아 거부, 256셀 재시도도 extract 실패. 허브 런타임 시트 불변.
+  - 기록: `docs/assets/runs/sprite-gen/SPRITE_GEN_RETRY.json`. [DONE 2026-09-09]
+
 (71) **타이틀에 만든이 메뉴 (mok 참고)** (msg `1546720287251243148`)
   - 담당: `game/scenes/credits.lua` (새 씬) + `title.lua` 버튼 + `main.lua` 전환. play.lua 금지.
   - mok `story/main_menu.lua` `drawCredits`: 제목 만든이, `기획 · 개발` + 메일.
