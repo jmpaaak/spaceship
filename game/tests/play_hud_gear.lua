@@ -120,12 +120,13 @@ function M.run()
         durabilityUpgradeCost = 20, sampleYieldUpgradeCost = 30, steeringUpgradeCost = 40,
         sampleYieldUpgradeLevel = 1, sampleYieldUpgradeAmount = 0.1,
         steeringUpgradeLevel = 2, steeringUpgradeAmount = 1, scoutClimbSpeedBonus = 20,
+        baseSpeed = 60,
     }
     local dataScene = setmetatable({ expedition = dataRun }, { __index = dataApi })
     local launchLines = dataApi.loadoutLines(dataScene)
     assert(launchLines.ship == nil and launchLines.shipLabel == "STARTER"
-        and launchLines.steering == "steer_speed_line:65",
-        "R1: extracted launch presentation data must preserve labels and effective speed")
+        and launchLines.steering == "steer_speed_line:5",
+        "R1: extracted launch presentation data must normalize displayed speed against base speed")
     assert(#launchLines.synergies == 1 and launchLines.synergies[1] == "synergy_solarSystem",
         "R1: extracted launch presentation data must preserve ordered active synergies")
     local tradeoff = dataApi.scoutTradeoffLines(dataRun)

@@ -19,11 +19,11 @@ function M.run()
         "R1-C: extracted loadout-lines suite must expose run()")
     assert(suite:find('starterLoadout.ship == nil', 1, true)
             and suite:find('starterLoadout.stats == "HULL 3"', 1, true)
-            and suite:find('starterLoadout.steering == "60"', 1, true),
+            and suite:find('starterLoadout.steering == "0"', 1, true),
         "R1-C: extracted suite must retain starter loadout coverage")
     assert(suite:find('upgradedLoadout.ship == "SHIP SCOUT"', 1, true)
             and suite:find('upgradedLoadout.upgrades == "HULL LV.1"', 1, true)
-            and suite:find('upgradedLoadout.steering == "181"', 1, true),
+            and suite:find('upgradedLoadout.steering == "121"', 1, true),
         "R1-C: extracted suite must retain purchased scout and upgrade coverage")
     assert(suite:find("expedition.damage(loadoutScene.expedition", 1, true)
             and suite:find('resetLoadout.ship == nil', 1, true)

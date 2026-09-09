@@ -27,7 +27,7 @@ function M.run()
     assert(starterNextLaunch.yieldPreview == "HARVEST x1.10")
     assert(starterNextLaunch.yieldStatus == "SHORT $5" and not starterNextLaunch.yieldAffordable)
     assert(starterNextLaunch.steeringAction == "T/G SPEED LV.0>1 $5")
-    assert(starterNextLaunch.steeringPreview == "61")
+    assert(starterNextLaunch.steeringPreview == "1")
     assert(starterNextLaunch.steeringStatus == "SHORT $5" and not starterNextLaunch.steeringAffordable)
     -- Compact column labels for the HULL/STEERING shared touch row (see
     -- settlementTouchRows: HULL occupies the left half, STEERING the right
@@ -38,9 +38,9 @@ function M.run()
     -- drawn in the column instead, without changing the existing full
     -- strings other callers may still rely on.
     assert(starterNextLaunch.hullActionCompact == "HULL 3 -> 4 $10")
-    assert(starterNextLaunch.steeringActionCompact == "SPEED 60 -> 61 $5")
+    assert(starterNextLaunch.steeringActionCompact == "SPEED 0 -> 1 $5")
     assert(starterNextLaunch.hullPreviewCompact == "HULL 4")
-    assert(starterNextLaunch.steeringPreviewCompact == "61")
+    assert(starterNextLaunch.steeringPreviewCompact == "1")
     -- Same compact treatment for the YIELD/SHIP shared touch row (see
     -- settlementTouchRows: YIELD occupies the left half, SHIP the right
     -- half). yieldAction ("T/Y YIELD LV.0>1 $60", 92-97px) and shipAction

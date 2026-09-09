@@ -45,7 +45,7 @@ function M.run()
         if c.align == "right" then
             rightAligned = rightAligned + 1
             if c.text:find("SCOUT") or c.text:find("기본선") or c.text:find("정찰선") then sawShip = true end
-            if c.text:find("SPEED %d") or c.text:find("속도 %d") then sawSpeed = true end
+            if c.text == "SPEED 122" or c.text == "속도 122" then sawSpeed = true end
             if c.text:find("HULL %d+/%d+") then sawHull = true end
             if c.text:find("HARVEST x%d+%.%d+") then sawHarvest = true end
         end

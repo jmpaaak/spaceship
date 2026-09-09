@@ -96,6 +96,8 @@ function M.run()
 
     require("game.tests.legacy_steering_upgrade").run()
 
+    require("game.tests.speed_display").run()
+
     require("game.tests.legacy_ship_shop").run()
 
     require("game.tests.legacy_settlement_shop_input").run()

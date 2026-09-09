@@ -1,4 +1,6 @@
 -- Launch and settlement loadout presentation assembly, isolated from play.lua.
+local speedDisplay = require("game.speed_display")
+
 local M = {}
 
 function M.install(scene, deps)
@@ -13,6 +15,7 @@ function M.install(scene, deps)
 
     function scene.loadoutLines(subject)
         local run = subject.expedition
+        local displayedSpeed = speedDisplay.value(expedition.effectiveSpeed(run), run.baseSpeed)
         local synergies = gear.activeSynergies(run.equippedGear or {}, run.equippedEngineParts or {})
         local synergyOrder = {
             "solarSystem", "nebulaField", "eventHorizon",
@@ -31,7 +34,7 @@ function M.install(scene, deps)
             shipLabel = string.upper(run.selectedShipId),
             stats = i18n.t("stats_line", run.maxDurability),
             upgrades = i18n.t("upgrades_line", run.durabilityUpgradeLevel),
-            steering = i18n.t("steer_speed_line", expedition.effectiveSpeed(run)),
+            steering = i18n.t("steer_speed_line", displayedSpeed),
             synergies = synergyLabels,
         }
     end
@@ -77,6 +80,7 @@ function M.install(scene, deps)
         local hullStatus, hullAffordable = purchaseStatus(run.money, run.durabilityUpgradeCost)
         local yieldStatus, yieldAffordable = purchaseStatus(run.money, run.sampleYieldUpgradeCost)
         local steeringStatus, steeringAffordable = purchaseStatus(run.money, run.steeringUpgradeCost)
+        local displayedSpeed = speedDisplay.value(expedition.effectiveSpeed(run), run.baseSpeed)
 
         local nextBaseAndGear = run.baseDurability
             + (run.durabilityUpgradeLevel + 1) * run.durabilityUpgradeAmount
@@ -130,12 +134,12 @@ function M.install(scene, deps)
             steeringAction = i18n.t("steering_action_line", run.steeringUpgradeLevel,
                 run.steeringUpgradeLevel + 1, steeringCost),
             steeringActionCompact = i18n.t("steering_action_compact",
-                expedition.effectiveSpeed(run),
-                expedition.effectiveSpeed(run) + run.steeringUpgradeAmount, steeringCost),
+                displayedSpeed,
+                displayedSpeed + run.steeringUpgradeAmount, steeringCost),
             steeringPreview = i18n.t("steer_speed_line",
-                expedition.effectiveSpeed(run) + run.steeringUpgradeAmount),
+                displayedSpeed + run.steeringUpgradeAmount),
             steeringPreviewCompact = i18n.t("steering_preview_compact",
-                expedition.effectiveSpeed(run) + run.steeringUpgradeAmount),
+                displayedSpeed + run.steeringUpgradeAmount),
             steeringStatus = steeringStatus,
             steeringAffordable = steeringAffordable,
         }

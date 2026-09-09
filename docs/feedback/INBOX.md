@@ -5,13 +5,6 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-(72) **속도 HUD를 기본 속도 대비 0부터 표시** (msg `1546739180812509205`)
-  - 담당: 새 순수 모듈 `game/speed_display.lua` + `game/scenes/play_hud.lua` 소비. `play.lua`/`expedition.lua` 거대 파일에는 표시 계산을 추가하지 말 것.
-  - 물리/조작감은 현재 기본 속도 `baseSpeed=60`을 그대로 유지한다. HUD·상점 등 사용자에게 보이는 **현재 속도만** `effectiveSpeed - baseSpeed`로 정규화하여 시작값을 `0`으로 표시한다.
-  - 따라서 기본 상태 `0`, 속도 +1 업그레이드 후 `1`, 부품/부스트 포함 시 실제 증가분을 표시한다. 내부 이동·RCS 색상 계산(실제 `effectiveSpeed/999`)은 바꾸지 않는다.
-  - 상점 미리보기도 `속도 0 -> 1`로 통일하여 `60 -> 61`과 섞이지 않게 한다. 번역 KO/EN 동일 기준.
-  - 테스트: `game/tests/speed_display.lua` — base 60/effective 60→0, 61→1, 80→20; 물리 `effectiveSpeed`는 60 유지; RCS 실제속도 기준 유지.
-
 (73) **Asset Studio 업로드 이미지에 고정 원형/타원 덮어쓰기 제거** (msg `1546743276339232869`)
   - 담당: `tools/serve_editors.py` + `tools/asset-studio/editor.js` + `tools/test_serve_editors.py`. 게임 Lua 불변.
   - 원인: sprite-gen import 실패 시 `generate_pil_fallback()`이 입력과 무관하게 중앙 wobble 원형(74~90행)과 accent ellipse(92~101행)를 항상 그림. 업로드 이미지가 있어도 그 위에 도형이 덮여 결과가 비슷한 원형으로 고정됨.
@@ -147,6 +140,9 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(72) **속도 HUD를 기본 속도 대비 0부터 표시** (msg `1546739180812509205`)
+  - 완료(2026-09-09): 순수 `game/speed_display.lua`의 `effectiveSpeed - baseSpeed` 값을 비행 HUD/함선 요약과 상점·출격 표시가 공유한다. 기본/업그레이드 미리보기는 KO/EN 모두 `0 -> 1`이며 이동 속도 60과 RCS의 실제 속도 비율은 유지된다. `game/tests/speed_display.lua` 및 관련 HUD/상점 회귀 테스트로 검증했다.
 
 (77) **은하 상점 장비 구매·판매·정찰선 문구·회복 밸런스 정리** (msg `1546761251697328169`)
   - 완료(2026-09-09): 은하 상점 방문당 장비 1개 구매 제한, 장착 장비의 비행/정착 중 판매, 정찰선 카드의 중복 `SCOUT X`/`SCOUT ✓` 상태 제거를 각각 `game/shop_gear_rules.lua`, `game/scenes/play_shop.lua`, `game/scenes/play_hud.lua`, `game/scenes/play_loadout_data.lua`에 반영했다.

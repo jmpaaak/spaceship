@@ -14,7 +14,7 @@ function M.run()
         "loadout ship line should be hidden while only STARTER is owned")
     assert(starterLoadout.stats == "HULL 3")
     assert(starterLoadout.upgrades == "HULL LV.0")
-    assert(starterLoadout.steering == "60")
+    assert(starterLoadout.steering == "0")
 
     loadoutScene.expedition.phase = "settlement"
     loadoutScene.expedition.money = loadoutScene.expedition.durabilityUpgradeCost
@@ -29,7 +29,7 @@ function M.run()
     assert(upgradedLoadout.ship == "SHIP SCOUT")
     assert(upgradedLoadout.stats == "HULL 2")
     assert(upgradedLoadout.upgrades == "HULL LV.1")
-    assert(upgradedLoadout.steering == "181")
+    assert(upgradedLoadout.steering == "121")
 
     assert(expedition.launch(loadoutScene.expedition))
     assert(expedition.damage(loadoutScene.expedition, loadoutScene.expedition.maxDurability))
@@ -39,7 +39,7 @@ function M.run()
         "loadout ship line should be hidden again after a meta-wipe reset")
     assert(resetLoadout.stats == "HULL 3")
     assert(resetLoadout.upgrades == "HULL LV.0")
-    assert(resetLoadout.steering == "60")
+    assert(resetLoadout.steering == "0")
 end
 
 return M

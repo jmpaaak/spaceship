@@ -10,6 +10,7 @@ local i18n       = require("game.i18n")
 local fonts      = require("game.fonts")
 local viewport   = require("game.viewport")
 local expedition = require("game.expedition")
+local speedDisplay = require("game.speed_display")
 
 local PM = {}
 
@@ -289,7 +290,8 @@ function PM.drawShipStatsSummary(self)
     local shipName = i18n.t("ship_name_" .. (run.selectedShipId or "starter"))
     love.graphics.printf(i18n.t("ship_stats_ship", shipName), textX, statsY, textW, "right")
     statsY = statsY + PM.shipStatsLineStep
-    love.graphics.printf(i18n.t("ship_stats_speed", expedition.effectiveSpeed(run)), textX, statsY, textW, "right")
+    local displayedSpeed = speedDisplay.value(expedition.effectiveSpeed(run), run.baseSpeed)
+    love.graphics.printf(i18n.t("ship_stats_speed", displayedSpeed), textX, statsY, textW, "right")
     statsY = statsY + PM.shipStatsLineStep
     local harvestMul = expedition.sampleYieldMultiplier(run)
     love.graphics.printf(i18n.t("ship_stats_harvest", harvestMul), textX, statsY, textW, "right")

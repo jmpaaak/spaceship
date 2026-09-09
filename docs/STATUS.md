@@ -1,9 +1,9 @@
 ## Current Status
 
-- INBOX 77 is complete and moved to 처리 완료. Persistent `hullRegen` now applies at exactly 1/20 of its authored rate through pure `game/recovery_effects.lua`; authored 5 restores and displays 0.25 HP/s.
-- `game/expedition_run.lua` and EN/KO `game/i18n.lua` consume the same conversion. Immediate shop/docking heals remain unchanged.
-- Added engine-hosted `game/tests/recovery_effects.lua` and updated the legacy relaunch/regen timing regression. RED was observed for the missing module; `make verify LOVE=/Users/jm/.local/bin/love` is GREEN.
+- INBOX 72 is complete and moved to 처리 완료. Pure `game/speed_display.lua` normalizes user-facing speed as `effectiveSpeed - baseSpeed`; fresh runs display 0, a +1 upgrade previews 1, and gear bonuses remain visible as their actual increase.
+- Launch/shop presentation and the in-flight ship summary consume the normalized value in both EN and KO. Movement still uses physical `effectiveSpeed` 60 and RCS still uses the actual `effectiveSpeed/999` gradient.
+- Added engine-hosted `game/tests/speed_display.lua` and updated HUD/shop regressions. RED was observed for the missing module; `make verify LOVE=/Users/jm/.local/bin/love` is GREEN, including packaged-game verification.
 
 ## Next slice
 
-- INBOX 72: add pure `game/speed_display.lua` normalization so user-facing speed starts at 0 (`effectiveSpeed - baseSpeed`) without changing movement physics or RCS calculations, then wire the HUD/shop preview with focused tests.
+- INBOX 73: remove Asset Studio's fixed circle/ellipse fallback from uploaded-image processing, return contained NEAREST-resized uploads unchanged, and expose the selected engine with focused server/UI tests.
