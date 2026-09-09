@@ -117,7 +117,8 @@ require("game.scenes.play_shop").install(M)
 -- install() copies drawGearPopup, drawPauseOverlay onto M.
 require("game.scenes.play_hud").install(M)
 -- Boost logic extracted to play_boost.lua (MODULE_STRUCTURE).
-require("game.scenes.play_boost").install(M)
+local playBoost = require("game.scenes.play_boost")
+playBoost.install(M)
 -- Destroyed-phase layout + keep-one card + Balatro card draw extracted to play_gameover.lua (MODULE_STRUCTURE).
 require("game.scenes.play_gameover").install(M)
 -- Help (?) button + overlay extracted to play_help.lua (MODULE_STRUCTURE).
@@ -128,6 +129,7 @@ require("game.scenes.play_slot").install(M)
 require("game.scenes.play_joystick").install(M)
 -- Input routing and pointer-consumption contract extracted for R1-A1.
 require("game.scenes.play_input").install(M, {
+    playBoost = playBoost,
     expedition = expedition,
     i18n = i18n,
     viewport = viewport,

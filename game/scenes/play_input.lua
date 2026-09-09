@@ -261,12 +261,12 @@ function M.touchpressed(self, id, x, y, deps)
             pcall(love.system.vibrate, 0.02)
             return true
         end
-        local ox, oy = self.joystickOrigin(x, y)
-        -- hitBoostButton consumes its visible button even when disabled, so a
-        -- zero-charge BOOST tap cannot leak into world steering.
-        if self.hitBoostButton and self:hitBoostButton(x, y) then
+        -- The BOOST module consumes its visible button even when disabled, so
+        -- a zero-charge press cannot leak into world steering.
+        if deps.playBoost.touchpressed(self, id, x, y) then
             return true
         end
+        local ox, oy = self.joystickOrigin(x, y)
         self.touches[id] = { x = x, y = y, originX = ox, originY = oy }
         return true
     end

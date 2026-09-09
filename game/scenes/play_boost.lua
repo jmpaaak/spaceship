@@ -112,6 +112,16 @@ function PB:hitBoostButton(x, y)
 end
 
 ---------------------------------------------------------------------------
+-- touchpressed
+---------------------------------------------------------------------------
+-- BOOST owns its press semantics. The scene input router only decides when
+-- this control gets first refusal; returning true prevents that pointer from
+-- being registered as world/joystick movement (including an empty charge).
+function PB.touchpressed(self, id, x, y)
+    return self:hitBoostButton(x, y)
+end
+
+---------------------------------------------------------------------------
 -- install(M)
 ---------------------------------------------------------------------------
 function PB.install(M)

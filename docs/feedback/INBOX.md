@@ -5,21 +5,6 @@
 프로세스 (사용자 2026-09-07): Discord 요청은 **코드보다 먼저** 이 섹션에 한 줄+커밋. 빈 처리 대기 = IDLE.
 
 
-(73) **Asset Studio 업로드 이미지에 고정 원형/타원 덮어쓰기 제거** (msg `1546743276339232869`)
-  - 담당: `tools/serve_editors.py` + `tools/asset-studio/editor.js` + `tools/test_serve_editors.py`. 게임 Lua 불변.
-  - 원인: sprite-gen import 실패 시 `generate_pil_fallback()`이 입력과 무관하게 중앙 wobble 원형(74~90행)과 accent ellipse(92~101행)를 항상 그림. 업로드 이미지가 있어도 그 위에 도형이 덮여 결과가 비슷한 원형으로 고정됨.
-  - 입력 이미지가 있으면 RGBA를 비율 유지 contain/투명 패딩 후 NEAREST 픽셀 리사이즈하여 **그대로 반환**하고 어떤 절차적 원·타원도 추가하지 않는다.
-  - 입력 이미지 없이 실제 sprite-gen도 없으면 가짜 원형을 생성하지 말고 명확한 `generator unavailable` 오류를 UI에 표시한다. 브라우저 로컬 xorshift 원형 fallback도 제거한다.
-  - API 응답/UI에 사용 엔진(`sprite-gen`/`uploaded-image`) 표시. 캐시된 구 JS를 피하도록 asset-studio 응답에 no-store 적용.
-  - 테스트: 서로 다른 두 입력 PNG 결과가 서로 다르고 원본 픽셀을 보존; 고정 ellipse 없음; 무입력+generator 없음은 오류; HTTP 캐시 금지.
-
-(74) **BOOST 버튼 터치가 우주선 위치 이동 입력으로 전파되지 않게 소비** (msg `1546744727726624919`)
-  - 담당: `game/scenes/play_boost.lua`가 버튼 hit-test와 입력 소비 여부를 소유. `play.lua`는 `if playBoost.touchpressed(...) then return end` 한 줄 위임만. 조이스틱 모듈과 역할을 섞지 않는다.
-  - BOOST 버튼을 누르면 부스트 충전 소비/효과만 실행하고, 동일한 touch/mouse press가 우주선 목표 위치 이동·조이스틱·launch 입력으로 절대 전달되지 않아야 한다.
-  - `touchpressed`와 마우스 입력 에뮬레이션 양쪽에서 소비 boolean을 반환한다. 버튼 영역 밖 입력은 기존 이동 동작을 그대로 유지한다.
-  - 손가락을 버튼에서 시작해 밖으로 움직이거나 떼어도 이동 제어가 뒤늦게 활성화되지 않도록 해당 pointer ID를 release까지 캡처한다.
-  - 테스트: `game/tests/play_boost_input.lua` — 버튼 내부 press→boost 1회/이동 0회; 외부 press→이동; 버튼 시작 후 drag/release→이동 0회; 충전 0이어도 버튼 터치는 소비.
-
 (75) **미니맵 다음 은하계 팝인 제거 — 거리 기반 조기 탐지 페이드** (msg `1546747455004213329`)
   - 담당: 미니맵 표현 모듈 `game/scenes/play_minimap.lua` 또는 현재 미니맵 전용 모듈. `play.lua`에는 계산/드로우 로직을 붙이지 않는다.
   - 현재 다음 은하가 탐지 임계값을 넘는 순간 아이콘/중심별/경계가 한꺼번에 나타나 “갑자기 생김”. 이산 visible boolean을 제거하고 거리 기반 연속 `discoveryAlpha`를 사용한다.
@@ -140,6 +125,12 @@
   - 뒤로 → 타이틀. 테스트: `game/tests/credits_menu.lua`.
 
 ## 처리 완료
+
+(74) **BOOST 버튼 터치가 우주선 위치 이동 입력으로 전파되지 않게 소비** (msg `1546744727726624919`)
+  - 완료(2026-09-09): `game/scenes/play_boost.lua`가 `touchpressed`와 기존 hit-test/충전 소비를 함께 소유하고, `play_input.lua`는 BOOST에 우선 위임한다. 버튼 내부 touch/mouse는 충전 0일 때도 소비되고 기존 UI pointer capture가 release까지 drag의 이동 전파를 막으며, 외부 press는 기존 조이스틱 입력을 유지한다. `game/tests/play_boost_input.lua`와 `game/tests/play_input.lua`의 press/drag/release 회귀 테스트로 검증했다.
+
+(73) **Asset Studio 업로드 이미지에 고정 원형/타원 덮어쓰기 제거** (msg `1546743276339232869`)
+  - 완료(2026-09-08, 후속 (78)로 대체): 후속 통합 Asset Studio 단일화 작업에서 해당 구형 `tools/asset-studio/`, `tools/serve_editors.py`, 브라우저 fallback 및 서버 테스트를 모두 제거했다. `tools/test_legacy_asset_studio_removed.py`가 가짜 원형 fallback을 포함한 구형 전용 스튜디오/서버의 재도입을 금지하므로 이 삭제된 경로에 별도 수정할 코드는 없다.
 
 (72) **속도 HUD를 기본 속도 대비 0부터 표시** (msg `1546739180812509205`)
   - 완료(2026-09-09): 순수 `game/speed_display.lua`의 `effectiveSpeed - baseSpeed` 값을 비행 HUD/함선 요약과 상점·출격 표시가 공유한다. 기본/업그레이드 미리보기는 KO/EN 모두 `0 -> 1`이며 이동 속도 60과 RCS의 실제 속도 비율은 유지된다. `game/tests/speed_display.lua` 및 관련 HUD/상점 회귀 테스트로 검증했다.

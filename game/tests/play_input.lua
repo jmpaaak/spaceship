@@ -1,5 +1,6 @@
 local input = require("game.scenes.play_input")
 local playJoystick = require("game.scenes.play_joystick")
+local playBoost = require("game.scenes.play_boost")
 
 local M = {}
 
@@ -24,7 +25,9 @@ local function fixture(phase)
             }
         end,
     }
+    playBoost.install(target)
     input.install(target, {
+        playBoost = playBoost,
         viewport = { width = 720, height = 1280 },
         settlementTouchRows = {
             { top = 400, bottom = 570, columns = {
@@ -84,6 +87,7 @@ local function fixture(phase)
 end
 
 function M.run()
+    require("game.tests.play_boost_input").run()
     print("  [R1-A1] play_input module tests...")
 
     local shop, launchCount = fixture("settlement")
@@ -198,6 +202,13 @@ function M.run()
             and disabledBoost.touches.finger == nil
             and disabledBoost.uiCapturedPointers.finger,
         "R1-A1: disabled BOOST button must consume and capture its pointer")
+    assert(disabledBoost:touchmoved("finger", 300, 800) == true
+            and disabledBoost.touches.finger == nil,
+        "INBOX 74: dragging a BOOST-started pointer must not activate movement")
+    assert(disabledBoost:touchreleased("finger") == true
+            and not disabledBoost.uiCapturedPointers.finger
+            and disabledBoost.touches.finger == nil,
+        "INBOX 74: releasing a BOOST-started pointer must clear capture without movement")
 
     local playSource = love.filesystem.read("game/scenes/play.lua") or ""
     assert(playSource:find('require%("game%.scenes%.play_input"%)'),
