@@ -35,7 +35,8 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 - INBOX 최상단이 기능이어도 거대 파일에 붙어야 하면 **먼저 쪼갠다**. 이미 독립 모듈 경로가 있는 항목만 기능 진행.
 - 처리 대기를 **파일/모듈이 안 겹치는 단위로 최대로** 워크트리 병렬화한다. 겹치면 분리 후 병렬.
 - JSON/`tools/`/순수 `game/*.lua`처럼 이미 독립인 항목은 모듈화를 기다리지 말고 즉시 WT.
-- INBOX 항목에는 담당 모듈 경로를 적는다. 안 적으면 전부 `play.lua`에 붙어 1레인이 된다.
+- INBOX 추가 시 담당 모듈 경로를 **백틱으로** 적는다. 예: (`game/play.lua`).
+- **백틱이 없으면 직렬.** 백틱 없는 경로 언급은 병렬 대상이 아니다.
 - R1 추출은 `.hermes/skills/love2d-behavior-preserving-refactor/SKILL.md`의 **스캔 → 책임 하나/패턴 하나 → 기존 테스트 → 참조 갱신** 순서를 적용한다. 정책 변경·무차별 정규식 치환·테스트 재승인을 섞지 않는다.
 
 
@@ -82,3 +83,11 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 - Do not edit or stop the `man-of-korea` loop.
 - Do not claim device QA without an actual device result.
 - One fresh cycle owns the checkout at a time; respect `loop/STOP`.
+
+## 토큰 절약 규칙 (컨텍스트 관리)
+
+- **테스트 출력**: `node --test` / `make verify` 등 긴 출력은 pass/fail 숫자 요약만 캡처. 전체 stdout을 컨텍스트에 두지 마라.
+- **긴 로그**: 로그·덤프는 파일(`logs/` 또는 `scratch/`)에 저장하고, 필요한 구간만 `offset`+`limit`으로 읽어라.
+- **독립 서브태스크**: 에셋 생성·린트·빌드·분석처럼 메인 흐름과 독립적인 작업은 서브에이전트로 위임해 중간 출력을 격리하라.
+- **대형 소스 파일**: ≥80KB 파일은 절대 통째로 읽지 마라. `search_files`로 심볼을 찾고 주변 ≤80줄만 읽어라.
+- **사이클 완료 후**: 큰 작업 묶음 하나가 끝나면 새 세션 시작을 권장 — 컨텍스트 압력 초기화.
