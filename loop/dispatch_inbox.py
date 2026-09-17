@@ -113,11 +113,23 @@ def lane_parent(root: Path) -> Path:
 
 
 def running_loop(worktree: Path) -> bool:
+    """Match a loop process by cwd; command lines do not contain the worktree path."""
     try:
-        out = subprocess.check_output(["pgrep", "-fl", "loop.sh"], text=True)
+        pids = subprocess.check_output(
+            ["pgrep", "-f", "loop/loop.sh"], text=True,
+            stderr=subprocess.DEVNULL,
+        ).split()
     except subprocess.CalledProcessError:
         return False
-    return str(worktree) in out
+    expected = str(worktree.resolve())
+    for pid in pids:
+        cwd_rows = subprocess.run(
+            ["lsof", "-a", "-p", pid, "-d", "cwd", "-Fn"],
+            text=True, capture_output=True,
+        ).stdout.splitlines()
+        if any(row == f"n{expected}" for row in cwd_rows):
+            return True
+    return False
 
 
 def committed_lane_is_complete(root: Path, lane: Path, item: dict) -> bool:
