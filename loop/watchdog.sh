@@ -29,6 +29,11 @@ PROJECT_NAME="$(basename "${ROOT_DIR}")"
 LANES_PARENT_DIR="${1:-}"
 WATCHDOG_LOG="${ROOT_DIR}/logs/watchdog.log"
 mkdir -p "${ROOT_DIR}/logs"
+WATCHDOG_LOCK="${TMPDIR:-/tmp}/${PROJECT_NAME}.autodev-watchdog.lock"
+if ! mkdir "${WATCHDOG_LOCK}" 2>/dev/null; then
+  exit 0
+fi
+trap 'rmdir "${WATCHDOG_LOCK}" 2>/dev/null || true' EXIT
 
 log() {
   printf '[%s] %s\n' "$(date '+%Y-%m-%dT%H:%M:%S%z')" "$1" | tee -a "${WATCHDOG_LOG}"
@@ -51,7 +56,16 @@ is_loop_running() {
 # worktree -- avoids racing a human or subagent resolving conflicts.
 has_in_progress_merge() {
   local worktree_dir="$1"
-  [[ -f "${worktree_dir}/.git/MERGE_HEAD" ]] || [[ -d "${worktree_dir}/.git/rebase-merge" ]] || [[ -d "${worktree_dir}/.git/rebase-apply" ]]
+  local merge_head rebase_merge rebase_apply
+  merge_head="$(git -C "${worktree_dir}" rev-parse --git-path MERGE_HEAD 2>/dev/null || true)"
+  rebase_merge="$(git -C "${worktree_dir}" rev-parse --git-path rebase-merge 2>/dev/null || true)"
+  rebase_apply="$(git -C "${worktree_dir}" rev-parse --git-path rebase-apply 2>/dev/null || true)"
+  [[ "${merge_head}" = /* ]] || merge_head="${worktree_dir}/${merge_head}"
+  [[ "${rebase_merge}" = /* ]] || rebase_merge="${worktree_dir}/${rebase_merge}"
+  [[ "${rebase_apply}" = /* ]] || rebase_apply="${worktree_dir}/${rebase_apply}"
+  [[ -n "${merge_head}" && -f "${merge_head}" ]] ||
+    [[ -n "${rebase_merge}" && -d "${rebase_merge}" ]] ||
+    [[ -n "${rebase_apply}" && -d "${rebase_apply}" ]]
 }
 
 # If STOP exists but INBOX has pending work, treat STOP as stale idle-stop
@@ -59,22 +73,34 @@ has_in_progress_merge() {
 # loop/STOP with first line containing MANUAL.
 inbox_has_pending() {
   local worktree_dir="$1"
-  local inbox="${worktree_dir}/docs/feedback/INBOX.md"
-  [[ -f "${inbox}" ]] || return 1
-  python3 - "${inbox}" <<'PY'
+  python3 - "${worktree_dir}" <<'PY'
 from pathlib import Path
+import re
 import sys
-text = Path(sys.argv[1]).read_text(encoding="utf-8")
-_, marker, after = text.partition("## 처리 대기")
-if not marker:
-    raise SystemExit(1)
-section = after.split("## 처리 완료", 1)[0]
-for line in section.splitlines():
-    s = line.strip()
-    if not s or s.startswith("(") or s.startswith("<!--"):
+root = Path(sys.argv[1])
+candidates = [root / "docs" / "feedback" / "INBOX.md", root / "loop" / "INBOX"]
+item_re = re.compile(r"^(?:-\s*)?(?:\[|\()[A-Za-z]+\d+[a-z]?(?:\]|\))\s+\S", re.I)
+for inbox in candidates:
+    if not inbox.is_file():
         continue
-    if s.startswith("-") or (s[:1].isdigit() and "." in s[:4]):
-        raise SystemExit(0)
+    text = inbox.read_text(encoding="utf-8")
+    if "## 처리 대기" in text:
+        section = text.split("## 처리 대기", 1)[1].split("## 처리 완료", 1)[0]
+        for line in section.splitlines():
+            s = line.strip()
+            if not s or s.startswith("<!--"):
+                continue
+            if s.startswith("-") or (s[:1].isdigit() and "." in s[:4]) or item_re.match(s):
+                raise SystemExit(0)
+    else:
+        for line in text.splitlines():
+            s = line.strip()
+            if item_re.match(s):
+                raise SystemExit(0)
+            # Guard: "## P#" markdown heading is NOT a valid item; warn and skip
+            if re.match(r"^#+\s+P\d+", s):
+                import sys
+                print(f"INBOX FORMAT ERROR: '{s}' is a markdown heading, not a [P#] item. Use: [P45] description...", file=sys.stderr)
 raise SystemExit(1)
 PY
 }
@@ -124,9 +150,13 @@ check_and_restart() {
   local label="$2"
   if is_loop_running "${worktree_dir}"; then
     log "OK ${label}: loop.sh running for ${worktree_dir}."
-  else
-    start_loop "${worktree_dir}" "${label}"
+    return
   fi
+  if ! inbox_has_pending "${worktree_dir}"; then
+    log "SKIP ${label}: no pending INBOX, not restarting."
+    return
+  fi
+  start_loop "${worktree_dir}" "${label}"
 }
 
 # 1. Primary loop for this project checkout.

@@ -100,3 +100,13 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 - 번역 적용 시 `html[lang]`을 함께 갱신하고 언어 전환의 레이아웃 이동을 최소화한다.
 - 첫 visible frame이 이미 선택 언어인지 회귀 테스트로 고정한다. 언어와 무관한 API 때문에 first paint를 지연하지 않는다.
 
+## Fleet orchestration contract (deadlock prevention)
+
+- Main checkout starts each cycle by running `python3 loop/dispatch_inbox.py` and inspecting existing worktrees. A clean lane that is ahead of `main` and has no pending lane INBOX is a completed handoff: validate its focused tests, integrate it before spawning replacement work, then remove the corresponding main INBOX item. Never redispatch or overwrite that lane.
+- Respect explicit dependencies such as `(P45a/P45b 완료 후)` or `(after A1)`. A dependent item stays blocked while any named prerequisite remains pending.
+- Items sharing owned backtick paths stay in one lane and are processed sequentially; never drop later items from that component.
+- In a `*-lanes/*` worktree run only focused/targeted tests and the relevant build. Do not run the full repository suite there. After batching completed-lane integrations, the main checkout runs the full suite exactly once.
+- Keep long-running test output visible (`tee` is allowed); never fully redirect it to a file. The supervisor idle timeout is at least 720 seconds.
+- Preserve dirty lanes and any STOP whose first line contains `MANUAL`. On merge/rebase conflict, do not let the watchdog restart the lane; record the blocker and use a MANUAL STOP.
+- Reuse an existing lane branch/worktree instead of blindly recreating it. A successful worktree allocation is not proof of active work; verify the lane process and eventual tested commit.
+

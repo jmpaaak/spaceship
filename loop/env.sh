@@ -11,6 +11,6 @@ MAX_TURNS="${MAX_TURNS:-60}"
 # Idle is no-stdout (remote ComfyUI waits are silent). 600s covers a typical
 # XL render; RUN_BUDGET 1200s is the wall-clock ceiling and is independent.
 RUN_BUDGET_SECONDS="${RUN_BUDGET_SECONDS:-1200}"
-MAX_IDLE_SECONDS="${MAX_IDLE_SECONDS:-600}"
+MAX_IDLE_SECONDS="${MAX_IDLE_SECONDS:-720}"
 WAIT_SECONDS="${WAIT_SECONDS:-10}"
 MAX_LOOPS="${MAX_LOOPS:-0}"

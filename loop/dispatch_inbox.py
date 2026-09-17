@@ -29,7 +29,7 @@ PATH_RE = re.compile(
     r"|[A-Za-z0-9_./-]+\.(?:js|mjs|css|html|dart|lua|py|md|json|plist)"
     r")`"
 )
-ITEM_RE = re.compile(r"^\[P\d+\]\s+.+$")
+ITEM_RE = re.compile(r"^(?:-\s*)?(?:\[|\()([A-Za-z]+\d+[a-z]?)(?:\]|\))\s+.+$", re.IGNORECASE)
 BULLET_RE = re.compile(r"^-\s+")
 MAX_LANES = 10
 
@@ -67,13 +67,24 @@ def _item_from_block(lines: list[str]) -> dict:
     text = "\n".join(lines).strip()
     title = text.splitlines()[0].strip()
     paths = sorted({m.group(1).lstrip("/") for m in PATH_RE.finditer(text)})
-    p_tag = re.match(r"^\[(P\d+)\]", title)
-    u_tag = re.search(r"\((U\d+|W\d+)\)", title)
-    slug_src = (p_tag.group(1) if p_tag else "") or (u_tag.group(1).lower() if u_tag else "")
+    tag_match = ITEM_RE.match(title)
+    legacy_tag = re.search(r"\((U\d+|W\d+)\)", title, re.IGNORECASE)
+    slug_src = (tag_match.group(1) if tag_match else "") or (legacy_tag.group(1).lower() if legacy_tag else "")
     if not slug_src:
         slug_src = re.sub(r"[^a-z0-9]+", "-", title.encode("ascii", "ignore").decode().lower()).strip("-")
     slug = (slug_src or "item")[:24]
-    return {"title": title[:180], "paths": paths, "slug": slug, "text": text}
+    tag = tag_match.group(1) if tag_match else None
+    dependencies: list[str] = []
+    for clause in re.findall(r"\(([^)]*?(?:완료 후|after)[^)]*)\)", text, re.IGNORECASE):
+        dependencies.extend(re.findall(r"[A-Za-z]+\d+[a-z]?", clause, re.IGNORECASE))
+    return {
+        "title": title[:180],
+        "paths": paths,
+        "slug": slug,
+        "text": text,
+        "tag": tag,
+        "dependencies": sorted(set(dependencies)),
+    }
 
 
 def components(items: list[dict]) -> list[list[dict]]:
@@ -109,6 +120,34 @@ def running_loop(worktree: Path) -> bool:
     return str(worktree) in out
 
 
+def committed_lane_is_complete(root: Path, lane: Path, item: dict) -> bool:
+    """A completed lane must not be restarted or have its INBOX overwritten."""
+    if not lane.is_dir():
+        return False
+    try:
+        ahead = int(subprocess.check_output(
+            ["git", "rev-list", "--count", "main..HEAD"],
+            cwd=lane,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip() or "0")
+    except (subprocess.CalledProcessError, ValueError):
+        return False
+    if ahead <= 0:
+        return False
+    try:
+        committed = subprocess.check_output(
+            ["git", "show", "HEAD:loop/INBOX"], cwd=lane, text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        return False
+    tags = item.get("tags") or ([item.get("tag")] if item.get("tag") else [])
+    return bool(tags) and all(
+        f"[{tag}]" not in committed and f"({tag})" not in committed for tag in tags
+    )
+
+
 def scaffold_and_start(root: Path, slug: str, item: dict) -> str:
     parent = lane_parent(root)
     parent.mkdir(parents=True, exist_ok=True)
@@ -123,11 +162,25 @@ def scaffold_and_start(root: Path, slug: str, item: dict) -> str:
     else:
         _minimal_worktree(root, parent, slug)
     lane = parent / slug
-    stop = lane / "loop" / "STOP"
-    if stop.is_file():
-        stop.unlink()
+    if committed_lane_is_complete(root, lane, item):
+        return f"completed; awaiting main merge {lane}"
     if running_loop(lane):
         return f"already running {lane}"
+    try:
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            cwd=lane, text=True, stderr=subprocess.DEVNULL,
+        ).strip()
+    except subprocess.CalledProcessError:
+        dirty = "unknown"
+    if dirty:
+        return f"dirty lane preserved; manual review required {lane}"
+    stop = lane / "loop" / "STOP"
+    if stop.is_file():
+        first = stop.read_text(encoding="utf-8", errors="replace").splitlines()[:1]
+        if first and "MANUAL" in first[0].upper():
+            return f"manual stop preserved {lane}"
+        stop.unlink()
     inbox = lane / "loop" / "INBOX"
     inbox.parent.mkdir(parents=True, exist_ok=True)
     inbox.write_text(item["text"].rstrip() + "\n", encoding="utf-8")
@@ -147,9 +200,14 @@ def scaffold_and_start(root: Path, slug: str, item: dict) -> str:
 def _minimal_worktree(root: Path, parent: Path, slug: str) -> None:
     branch = f"{root.name}-{slug}"
     dest = parent / slug
-    subprocess.run(["git", "branch", branch], cwd=root, check=False)
     if not dest.exists():
-        subprocess.run(["git", "worktree", "add", str(dest), branch], cwd=root, check=False)
+        exists = subprocess.run(
+            ["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
+            cwd=root,
+        ).returncode == 0
+        if not exists:
+            subprocess.run(["git", "branch", branch], cwd=root, check=True)
+        subprocess.run(["git", "worktree", "add", str(dest), branch], cwd=root, check=True)
     loop_src, loop_dst = root / "loop", dest / "loop"
     loop_dst.mkdir(parents=True, exist_ok=True)
     for name in ("loop.sh", "env.sh", "run_agent.py", "preflight.py",
@@ -167,8 +225,24 @@ def plan(items: list[dict]) -> tuple[list[dict], list[list[dict]]]:
     if not groups:
         return [], []
     main = groups[0]
-    extra = [g[:1] for g in groups[1:] if g[0]["paths"]][:MAX_LANES]
+    # Keep every item in an overlapping-file component. Dropping g[1:] made
+    # later items (for example P45c sharing product.html with P45b) disappear.
+    extra = [g for g in groups[1:] if g[0]["paths"]][:MAX_LANES]
     return main, extra
+
+
+def combined_group_item(group: list[dict]) -> dict:
+    if len(group) == 1:
+        return group[0]
+    return {
+        "title": " + ".join(item["title"] for item in group)[:180],
+        "paths": sorted({path for item in group for path in item["paths"]}),
+        "slug": "-".join(item["slug"] for item in group)[:48],
+        "text": "\n".join(item["text"].rstrip() for item in group) + "\n",
+        "tag": group[0].get("tag"),
+        "tags": [item["tag"] for item in group if item.get("tag")],
+        "dependencies": sorted({dep for item in group for dep in item.get("dependencies", [])}),
+    }
 
 
 def main() -> int:
@@ -188,18 +262,25 @@ def main() -> int:
     if not items:
         print("[dispatch] inbox empty")
         return 0
-    main_items, extra = plan(items)
-    print(f"[dispatch] {len(items)} pending, {len(extra)} independent lane(s) possible")
+    pending_tags = {item["tag"] for item in items if item.get("tag")}
+    blocked = [item for item in items if set(item.get("dependencies", [])) & pending_tags]
+    ready = [item for item in items if item not in blocked]
+    main_items, extra = plan(ready)
+    print(f"[dispatch] {len(items)} pending, {len(ready)} dependency-ready, {len(extra)} independent lane(s) possible")
+    for item in blocked:
+        waiting = sorted(set(item.get("dependencies", [])) & pending_tags)
+        print(f"[dispatch] blocked {item.get('tag') or item['slug']}: waiting for {', '.join(waiting)}")
     print("[dispatch] main lane:")
     for item in main_items:
         print(f"  - {item['title'][:90]}  files={item['paths'] or 'unknown→serial'}")
     for group in extra:
-        item = group[0]
-        print(f"[dispatch] parallel lane {item['slug']}: {item['title'][:90]}  files={item['paths']}")
+        item = combined_group_item(group)
+        tags = ", ".join(member.get("tag") or member["slug"] for member in group)
+        print(f"[dispatch] parallel lane {item['slug']} ({tags}): {item['title'][:90]}  files={item['paths']}")
     if not args.apply:
         return 0
     for group in extra:
-        item = group[0]
+        item = combined_group_item(group)
         print("[dispatch]", scaffold_and_start(root, item["slug"], item))
     return 0
 
