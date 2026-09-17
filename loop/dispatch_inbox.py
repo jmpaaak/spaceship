@@ -31,7 +31,7 @@ PATH_RE = re.compile(
 )
 ITEM_RE = re.compile(r"^(?:-\s*)?(?:\[|\()([A-Za-z]+\d+[a-z]?)(?:\]|\))\s+.+$", re.IGNORECASE)
 BULLET_RE = re.compile(r"^-\s+")
-MAX_LANES = 3
+MAX_LANES = 10
 
 
 def inbox_path(root: Path) -> Path:
@@ -125,15 +125,13 @@ def committed_lane_is_complete(root: Path, lane: Path, item: dict) -> bool:
     if not lane.is_dir():
         return False
     try:
-        ahead = int(subprocess.check_output(
-            ["git", "rev-list", "--count", "main..HEAD"],
-            cwd=lane,
-            text=True,
+        cherry = subprocess.check_output(
+            ["git", "cherry", "main", "HEAD"], cwd=lane, text=True,
             stderr=subprocess.DEVNULL,
-        ).strip() or "0")
-    except (subprocess.CalledProcessError, ValueError):
+        )
+    except subprocess.CalledProcessError:
         return False
-    if ahead <= 0:
+    if not any(line.startswith("+") for line in cherry.splitlines()):
         return False
     try:
         committed = subprocess.check_output(
@@ -222,6 +220,87 @@ def _minimal_worktree(root: Path, parent: Path, slug: str) -> None:
             dest_f.chmod(src.stat().st_mode)
 
 
+def _worktree_paths(root: Path) -> list[Path]:
+    try:
+        output = subprocess.check_output(
+            ["git", "worktree", "list", "--porcelain"], cwd=root, text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        return []
+    return [Path(line.removeprefix("worktree ")).resolve()
+            for line in output.splitlines() if line.startswith("worktree ")]
+
+
+def _lane_pending(lane: Path) -> bool:
+    dedicated = lane / "loop" / "INBOX"
+    path = dedicated if dedicated.is_file() else inbox_path(lane)
+    if not path.is_file():
+        return False
+    return bool(parse_items(path.read_text(encoding="utf-8", errors="replace")))
+
+
+def _unintegrated_commits(lane: Path) -> bool:
+    """Use patch equivalence so cherry-picked work is not counted as backlog."""
+    try:
+        output = subprocess.check_output(
+            ["git", "cherry", "main", "HEAD"], cwd=lane, text=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        return False
+    return any(line.startswith("+") for line in output.splitlines())
+
+
+def _lane_matches_pending(lane: Path, pending_keys: set[str]) -> bool:
+    name = lane.name.lower()
+    tokens = set(re.findall(r"[a-z]+\d+[a-z]?", name, re.IGNORECASE))
+    tokens.add(name)
+    return bool(tokens & {key.lower() for key in pending_keys})
+
+
+def lane_admission_state(root: Path, root_items: list[dict] | None = None) -> tuple[int, list[str]]:
+    """Return active lane count and blockers that require integration first."""
+    active = 0
+    blockers: list[str] = []
+    if root_items is None:
+        path = inbox_path(root)
+        root_items = parse_items(path.read_text(encoding="utf-8", errors="replace")) if path.is_file() else []
+    pending_keys = {
+        key for item in root_items for key in (item.get("tag"), item.get("slug")) if key
+    }
+    for lane in _worktree_paths(root):
+        if lane == root:
+            continue
+        managed = (lane / "loop" / "AUTO_RESUME").is_file()
+        running = running_loop(lane)
+        relevant = _lane_matches_pending(lane, pending_keys)
+        pending = _lane_pending(lane)
+        try:
+            status = subprocess.check_output(
+                ["git", "status", "--porcelain", "--untracked-files=no"],
+                cwd=lane, text=True, stderr=subprocess.DEVNULL,
+            ).strip()
+        except subprocess.CalledProcessError:
+            status = "git-status-error"
+        conflicted = any(line[:2] in {"DD", "AU", "UD", "UA", "DU", "AA", "UU"}
+                         for line in status.splitlines())
+        unintegrated = _unintegrated_commits(lane)
+        if relevant and conflicted:
+            blockers.append(f"{lane.name}: merge conflict")
+        elif relevant and unintegrated and not pending and not status:
+            blockers.append(f"{lane.name}: completed handoff awaiting integration")
+        elif relevant and status and not running:
+            blockers.append(f"{lane.name}: dirty stopped lane")
+        if running or (relevant and managed and pending):
+            active += 1
+    return active, blockers
+
+
+def admission_slots(active: int, blockers: list[str]) -> int:
+    return 0 if blockers else max(0, MAX_LANES - active)
+
+
 def plan(items: list[dict]) -> tuple[list[dict], list[list[dict]]]:
     """Return (main_items, parallel_groups). First group stays on main."""
     groups = components(items)
@@ -269,7 +348,14 @@ def main() -> int:
     blocked = [item for item in items if set(item.get("dependencies", [])) & pending_tags]
     ready = [item for item in items if item not in blocked]
     main_items, extra = plan(ready)
-    print(f"[dispatch] {len(items)} pending, {len(ready)} dependency-ready, {len(extra)} independent lane(s) possible")
+    active_lanes, integration_blockers = lane_admission_state(root, items)
+    slots = admission_slots(active_lanes, integration_blockers)
+    extra = extra[:slots]
+    print(f"[dispatch] {len(items)} pending, {len(ready)} dependency-ready, "
+          f"{active_lanes} active lane(s), {slots} open slot(s), "
+          f"{len(extra)} independent lane(s) possible")
+    for blocker in integration_blockers:
+        print(f"[dispatch] integration backlog: {blocker}; new lanes paused")
     for item in blocked:
         waiting = sorted(set(item.get("dependencies", [])) & pending_tags)
         print(f"[dispatch] blocked {item.get('tag') or item['slug']}: waiting for {', '.join(waiting)}")

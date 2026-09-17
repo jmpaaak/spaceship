@@ -38,5 +38,17 @@ class OrchestrationContractTest(unittest.TestCase):
         self.assertIn('AUTO_RESUME marker', source)
         self.assertIn('AUTO_RESUME', (LOOP / 'dispatch_inbox.py').read_text())
 
+    def test_dynamic_lane_backpressure(self):
+        self.assertEqual(dispatch.MAX_LANES, 10)
+        self.assertEqual(dispatch.admission_slots(0, []), 10)
+        self.assertEqual(dispatch.admission_slots(4, []), 6)
+        self.assertEqual(dispatch.admission_slots(10, []), 0)
+        self.assertEqual(
+            dispatch.admission_slots(0, ["P9: completed handoff awaiting integration"]),
+            0,
+        )
+        self.assertTrue(dispatch._lane_matches_pending(Path('/tmp/P45b-P45c'), {'P45b'}))
+        self.assertFalse(dispatch._lane_matches_pending(Path('/tmp/P49'), {'P50'}))
+
 if __name__ == "__main__":
     unittest.main()
