@@ -31,7 +31,7 @@ PATH_RE = re.compile(
 )
 ITEM_RE = re.compile(r"^(?:-\s*)?(?:\[|\()([A-Za-z]+\d+[a-z]?)(?:\]|\))\s+.+$", re.IGNORECASE)
 BULLET_RE = re.compile(r"^-\s+")
-MAX_LANES = 10
+MAX_LANES = 3
 
 
 def inbox_path(root: Path) -> Path:
