@@ -184,6 +184,9 @@ def scaffold_and_start(root: Path, slug: str, item: dict) -> str:
     inbox = lane / "loop" / "INBOX"
     inbox.parent.mkdir(parents=True, exist_ok=True)
     inbox.write_text(item["text"].rstrip() + "\n", encoding="utf-8")
+    (lane / "loop" / "AUTO_RESUME").write_text(
+        "Managed by dispatch_inbox.py; watchdog restart allowed.\n", encoding="utf-8"
+    )
     logs = lane / "logs"
     logs.mkdir(exist_ok=True)
     subprocess.Popen(

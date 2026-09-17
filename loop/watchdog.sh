@@ -137,7 +137,12 @@ start_loop() {
     log "SKIP ${label}: no loop/loop.sh in ${worktree_dir}."
     return
   fi
+  if [[ "${worktree_dir}" != "${ROOT_DIR}" && ! -f "${worktree_dir}/loop/AUTO_RESUME" ]]; then
+    log "SKIP ${label}: legacy/unmanaged lane has no loop/AUTO_RESUME marker."
+    return
+  fi
   log "RESTART ${label}: no running loop.sh found for ${worktree_dir}, starting one."
+  mkdir -p "${worktree_dir}/logs"
   (
     cd "${worktree_dir}" || exit 1
     nohup ./loop/loop.sh >>"${worktree_dir}/logs/watchdog-restart.out" 2>&1 &

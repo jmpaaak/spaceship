@@ -35,6 +35,8 @@ class OrchestrationContractTest(unittest.TestCase):
         self.assertIn('grep -qi "MANUAL"', source)
         self.assertIn('no pending INBOX, not restarting', source)
         self.assertIn('autodev-watchdog.lock', source)
+        self.assertIn('AUTO_RESUME marker', source)
+        self.assertIn('AUTO_RESUME', (LOOP / 'dispatch_inbox.py').read_text())
 
 if __name__ == "__main__":
     unittest.main()

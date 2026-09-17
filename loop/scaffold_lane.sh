@@ -49,6 +49,7 @@ fi
 
 LANE_LOOP_DIR="${LANE_DIR}/loop"
 mkdir -p "${LANE_LOOP_DIR}"
+printf 'Managed by scaffold_lane.sh; watchdog restart allowed.\n' > "${LANE_LOOP_DIR}/AUTO_RESUME"
 
 # Copy the loop machinery verbatim (paths inside loop.sh/run_agent.py are
 # resolved relative to SCRIPT_DIR/ROOT_DIR at runtime, so no rewriting needed).
