@@ -50,6 +50,10 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 4. Otherwise choose one small user-visible or state-machine slice from the top pending requirement.
 5. Use test-driven development: add a failing engine-hosted test, observe RED, implement, then run focused GREEN tests.
 6. Run `make verify LOVE=/Users/jm/.local/bin/love` before a checkpoint commit.
+   Load `karpathy-guidelines` before writing/reviewing/refactoring code.
+   Load `verification-before-completion` and use that command output before claiming done.
+   Do not vendor Oxlint `install-anti-slop` into this Lua tree.
+   Reply styles `attention-kind` / `spartan` / `rundown` apply only when the user asks.
 7. Update `docs/STATUS.md` with verified facts for this cycle only (do not rewrite old history) and the exact next slice. Commit owned changes with a specific message. Push only after tests pass and the worktree is clean.
 8. Token-optimization rule (2026-09-03): whenever this cycle judges a pending item in `docs/feedback/INBOX.md` fully done (or fully human-gated — nothing left that code/assets/tests can do until the user approves/logs in/etc.), move it out of `## 처리 대기` into `## 처리 완료` immediately, in the same commit, with the completion evidence (or a "human-gated: still waiting on <specific user action>" note). Do not leave a finished/blocked item sitting in the pending section only to re-confirm "still human-gated, no change" again next cycle — every cycle after this one, and the human's periodic progress report, has to re-read whatever stays in `## 처리 대기`, so leaving stale entries there wastes tokens on every future cycle.
    **Do not move an item to 처리 완료 just because it was written down.** Specs with no code/folder yet (e.g. asset studio) stay in 처리 대기. Discord chat files requests into 처리 대기 *before* implementing — empty 처리 대기 is IDLE (user 2026-09-07).
@@ -110,3 +114,5 @@ Durability destruction must wipe unbanked samples, money, purchased ship, and up
 - Preserve dirty lanes and any STOP whose first line contains `MANUAL`. On merge/rebase conflict, do not let the watchdog restart the lane; record the blocker and use a MANUAL STOP.
 - Only dispatcher-managed lanes carry `loop/AUTO_RESUME`; the watchdog must never revive a legacy/unmanaged lane without that marker. Reuse an existing lane branch/worktree instead of blindly recreating it. A successful worktree allocation is not proof of active work; verify the lane process and eventual tested commit.
 - Parallel capacity is dynamic, not a fixed low cap: allow up to 10 active managed lanes only while the integration backlog is empty. If any completed handoff, merge conflict, or dirty stopped lane exists, spawn zero replacement lanes until main reconciles it. Count currently running or managed-pending lanes against the ten-slot ceiling. Use `git cherry main HEAD` patch equivalence so already cherry-picked work is not mistaken for backlog.
+
+**중요 — INBOX 단일 소스:** 모든 신규 작업 항목은 `docs/feedback/INBOX.md`의 `## 처리 대기` 섹션에만 추가할 것. `loop/INBOX`는 레거시이며 신규 항목 추가 금지.
